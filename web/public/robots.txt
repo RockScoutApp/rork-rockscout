@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+
+# RockScout.net — sitemap at /sitemap.xml
+Sitemap: https://rockscout.net/sitemap.xml
+# Last updated: 2026-07-20

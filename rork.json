@@ -1,0 +1,23 @@
+{
+  "$schema": "https://rork.com/schema/rork.json",
+  "apps": [
+    {
+      "name": "RockScout",
+      "path": "android-rockhound",
+      "framework": "kotlin",
+      "settings": {
+        "androidPackage": "com.rork.rockscout"
+      }
+    },
+    {
+      "name": "Functions",
+      "path": "functions",
+      "framework": "cloudflare"
+    },
+    {
+      "name": "RockScout Website",
+      "path": "web",
+      "framework": "web"
+    }
+  ]
+}

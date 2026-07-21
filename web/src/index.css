@@ -1,0 +1,199 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* RockScout design system — earthy mineral palette matching the Android app.
+   Citrine amber accent, Aqua highlights, deep rock tones. NOT generic AI purple. */
+@layer base {
+  :root {
+    /* Type */
+    --font-display: "Fraunces", ui-serif, Georgia, serif;
+    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+    /* Surfaces */
+    --background: 30 23% 7%;            /* near-black warm charcoal */
+    --foreground: 36 40% 92%;           /* warm bone */
+
+    --card: 32 20% 11%;                 /* polished slate */
+    --card-foreground: 36 40% 92%;
+
+    --popover: 32 22% 9%;
+    --popover-foreground: 36 40% 92%;
+
+    /* Brand — Citrine amber (from app Color.kt #E8A33D) */
+    --primary: 36 80% 58%;
+    --primary-foreground: 30 35% 10%;   /* ink on amber */
+
+    /* Secondary — Aqua/copper (from app #DC9A6E) */
+    --secondary: 20 62% 65%;
+    --secondary-foreground: 30 35% 10%;
+
+    --muted: 32 14% 18%;
+    --muted-foreground: 36 20% 68%;
+
+    --accent: 172 30% 28%;              /* deep malachite teal */
+    --accent-foreground: 36 40% 92%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 36 40% 92%;
+
+    --border: 32 14% 20%;
+    --input: 32 14% 22%;
+    --ring: 36 80% 58%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 32 22% 9%;
+    --sidebar-foreground: 36 40% 92%;
+    --sidebar-primary: 36 80% 58%;
+    --sidebar-primary-foreground: 30 35% 10%;
+    --sidebar-accent: 32 14% 18%;
+    --sidebar-accent-foreground: 36 40% 92%;
+    --sidebar-border: 32 14% 20%;
+    --sidebar-ring: 36 80% 58%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, hsl(36 80% 58% / 0.10), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 85% 20%, hsl(172 30% 28% / 0.10), transparent 70%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+  }
+
+  ::selection {
+    background: hsl(36 80% 58% / 0.35);
+    color: hsl(36 40% 96%);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Subtle sparkle particle motif (echoes the app's specimen-card sparkles) */
+  @keyframes sparkle-twinkle {
+    0%, 100% { opacity: 0; transform: scale(0.6); }
+    50% { opacity: 1; transform: scale(1); }
+  }
+
+  .sparkle {
+    animation: sparkle-twinkle var(--sparkle-duration, 3s) ease-in-out infinite;
+    animation-delay: var(--sparkle-delay, 0s);
+  }
+
+  @keyframes fade-rise {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-rise {
+    animation: fade-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes float-slow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .float-slow {
+    animation: float-slow 6s ease-in-out infinite;
+  }
+
+  .geode-gradient {
+    background:
+      radial-gradient(circle at 30% 30%, hsl(36 80% 58% / 0.15), transparent 50%),
+      radial-gradient(circle at 70% 70%, hsl(172 30% 28% / 0.18), transparent 55%),
+      radial-gradient(circle at 50% 50%, hsl(20 62% 65% / 0.08), transparent 60%);
+  }
+
+  .citrine-glow {
+    box-shadow:
+      0 0 0 1px hsl(36 80% 58% / 0.25),
+      0 8px 30px -8px hsl(36 80% 58% / 0.4);
+  }
+
+  /* Vintage field-guide paper grain layered over dark mineral base */
+  .grain {
+    position: relative;
+  }
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.06;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* Mineral specimen chip — small floating tag */
+  .specimen-chip {
+    background: linear-gradient(160deg, hsl(var(--card)), hsl(32 22% 6%));
+    border: 1px solid hsl(var(--border));
+    box-shadow:
+      0 1px 0 hsl(36 40% 92% / 0.04) inset,
+      0 12px 30px -12px hsl(0 0% 0% / 0.7);
+  }
+
+  /* Amber shimmering text for hero accent words */
+  .amber-shimmer {
+    background: linear-gradient(
+      100deg,
+      hsl(36 80% 58%) 0%,
+      hsl(28 90% 66%) 30%,
+      hsl(48 86% 70%) 50%,
+      hsl(28 90% 66%) 70%,
+      hsl(36 80% 58%) 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 6s linear infinite;
+  }
+
+  /* Tilted floating specimen cards around the phone */
+  .tilt-float {
+    animation: tilt-float 7s ease-in-out infinite;
+  }
+
+  /* Edge-faded marquee track */
+  .marquee-mask {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  }
+
+  /* Numbered field-guide step numeral */
+  .step-numeral {
+    font-family: var(--font-display);
+    font-feature-settings: "ss01";
+    background: linear-gradient(180deg, hsl(36 80% 58%), hsl(20 62% 45%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Dashed field-guide border accent */
+  .field-border {
+    border: 1px dashed hsl(var(--border));
+  }
+}

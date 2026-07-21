@@ -1,0 +1,15 @@
+# Explicit cache-control for Cloudflare Pages (deploy kick 2026-07-21 cycle 3).
+# HTML is always revalidated so new deploys are visible instantly.
+/*
+  cache-control: public, max-age=0, must-revalidate
+
+/index.html
+  cache-control: public, max-age=0, must-revalidate
+
+# Hashed bundles: filenames change every build, so cache aggressively.
+/assets/*
+  cache-control: public, max-age=31536000, immutable
+
+# Site images: 1 day.
+/images/*
+  cache-control: public, max-age=86400

@@ -1,0 +1,489 @@
+package com.rork.rockscout.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Launch
+import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Diamond
+import androidx.compose.material.icons.filled.EmojiNature
+import androidx.compose.material.icons.filled.Gavel
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Science
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import coil3.compose.AsyncImage
+import com.rork.rockscout.data.SafeLinkOpener
+import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.GEM_MINERAL_HERO_URL
+import com.rork.rockscout.ui.components.GEM_IMG_CUT_GEMS
+import com.rork.rockscout.ui.components.GEM_IMG_MUSEUM
+import com.rork.rockscout.ui.components.GEM_IMG_LAPIDARY
+import com.rork.rockscout.ui.components.GEM_IMG_AMMONITE
+import com.rork.rockscout.ui.components.GEM_IMG_PEGMATITE
+import com.rork.rockscout.ui.components.InlineContentImage
+import com.rork.rockscout.ui.components.BookStyleImage
+import com.rork.rockscout.ui.components.ScreenScaffold
+import com.rork.rockscout.ui.theme.Aqua
+import com.rork.rockscout.ui.theme.Citrine
+import com.rork.rockscout.ui.theme.DarkTextMid
+import com.rork.rockscout.ui.theme.TextHigh
+import com.rork.rockscout.ui.theme.TextMid
+import com.rork.rockscout.ui.components.glowingBorder
+
+private data class ResourceCategory(
+    val title: String,
+    val icon: ImageVector,
+    val accent: Color,
+    val links: List<ResourceLink>,
+)
+
+private data class ResourceLink(
+    val name: String,
+    val description: String,
+    val url: String,
+)
+
+@Composable
+fun ResourceLinksScreen(navController: NavController) {
+    val context = LocalContext.current
+
+    ScreenScaffold(title = "Rock & Gem Resources", onBack = { navController.popBackStack() }) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 40.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            // Hero banner image
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color(0xFF1A1812))
+                        .glowingBorder(1.dp, Color(0xFF1A1812).copy(alpha = 0.35f), RoundedCornerShape(20.dp)),
+                ) {
+                    AsyncImage(
+                        model = GEM_MINERAL_HERO_URL,
+                        contentDescription = "Collection of colorful gemstones and minerals",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(Color.Transparent, Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.7f))
+                                )
+                            ),
+                        contentAlignment = Alignment.BottomStart,
+                    ) {
+                        Text(
+                            "A curated collection of trusted websites for rock, gem, mineral, and fossil research. Tap any card to open it in your browser.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White,
+                            modifier = Modifier.padding(16.dp),
+                        )
+                    }
+                }
+            }
+
+            // Inline content images interspersed between resource categories
+            item {
+                InlineContentImage(
+                    imageUrl = GEM_IMG_CUT_GEMS,
+                    contentDescription = "Collection of cut and polished gemstones on dark velvet",
+                    caption = "Cut and faceted gemstones — the end result of lapidary art",
+                )
+            }
+            item {
+                ResourceCategoryCard(
+                    category = resourceCategories[0],
+                    onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
+                )
+            }
+            item {
+                InlineContentImage(
+                    imageUrl = GEM_IMG_MUSEUM,
+                    contentDescription = "Museum mineral display case with crystal specimens",
+                    caption = "Museum mineral collections — a wealth of reference data",
+                )
+            }
+            item {
+                ResourceCategoryCard(
+                    category = resourceCategories[1],
+                    onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
+                )
+            }
+            item {
+                InlineContentImage(
+                    imageUrl = GEM_IMG_LAPIDARY,
+                    contentDescription = "Lapidary faceting machine cutting a gemstone",
+                    caption = "Faceting machine — where rough stones become gems",
+                )
+            }
+            item {
+                ResourceCategoryCard(
+                    category = resourceCategories[2],
+                    onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
+                )
+            }
+            item {
+                InlineContentImage(
+                    imageUrl = GEM_IMG_AMMONITE,
+                    contentDescription = "Fossil ammonite in sedimentary rock",
+                    caption = "Ammonite fossil — paleontology meets rockhounding",
+                )
+            }
+            item {
+                ResourceCategoryCard(
+                    category = resourceCategories[3],
+                    onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
+                )
+            }
+            item {
+                InlineContentImage(
+                    imageUrl = GEM_IMG_PEGMATITE,
+                    contentDescription = "Pegmatite pocket with large tourmaline and quartz crystals",
+                    caption = "Pegmatite pocket — where giant crystals grow",
+                )
+            }
+            item {
+                ResourceCategoryCard(
+                    category = resourceCategories[4],
+                    onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
+                )
+            }
+            item {
+                ResourceCategoryCard(
+                    category = resourceCategories[5],
+                    onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResourceCategoryCard(
+    category: ResourceCategory,
+    onLinkClick: (ResourceLink) -> Unit,
+) {
+    DarkCard(modifier = Modifier.fillMaxWidth(), accent = category.accent) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(52.dp)
+                    .clip(CircleShape)
+                    .background(category.accent.copy(alpha = 0.22f))
+                    .glowingBorder(1.dp, category.accent.copy(alpha = 0.35f), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(category.icon, contentDescription = null, tint = category.accent, modifier = Modifier.size(26.dp))
+            }
+            Spacer(Modifier.width(14.dp))
+            Text(
+                category.title,
+                style = MaterialTheme.typography.titleLarge,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+        Spacer(Modifier.height(14.dp))
+        // Book-style illustration in upper right for first two categories
+        if (category.title.contains("Gem", ignoreCase = true)) {
+            Row(verticalAlignment = Alignment.Top) {
+                Text(
+                    "\u2192 These trusted resources cover identification, valuation, and lapidary techniques.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = DarkTextMid,
+                    modifier = Modifier.weight(1f).padding(end = 10.dp),
+                )
+                BookStyleImage(
+                    imageUrl = GEM_IMG_CUT_GEMS,
+                    contentDescription = "Cut and polished gemstones",
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+        } else if (category.title.contains("Museum", ignoreCase = true) || category.title.contains("Reference", ignoreCase = true)) {
+            Row(verticalAlignment = Alignment.Top) {
+                BookStyleImage(
+                    imageUrl = GEM_IMG_MUSEUM,
+                    contentDescription = "Museum mineral display case",
+                )
+                Spacer(Modifier.width(10.dp))
+                Text(
+                    "\u2192 Museum collections are the gold standard for comparing your finds.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = DarkTextMid,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+        } else if (category.title.contains("Fossil", ignoreCase = true) || category.title.contains("Paleo", ignoreCase = true)) {
+            Row(verticalAlignment = Alignment.Top) {
+                Text(
+                    "\u2192 Fossil resources help you identify specimens from every geologic period.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = DarkTextMid,
+                    modifier = Modifier.weight(1f).padding(end = 10.dp),
+                )
+                BookStyleImage(
+                    imageUrl = GEM_IMG_AMMONITE,
+                    contentDescription = "Ammonite fossil specimen",
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            category.links.forEach { link ->
+                ResourceLinkRow(
+                    link = link,
+                    accent = category.accent,
+                    onClick = { onLinkClick(link) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ResourceLinkRow(
+    link: ResourceLink,
+    accent: Color,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xFF15130E))
+            .glowingBorder(1.dp, Color(0xFF15130E).copy(alpha = 0.35f), RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                link.name,
+                style = MaterialTheme.typography.titleMedium,
+                color = TextHigh,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                link.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = DarkTextMid,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Spacer(Modifier.width(12.dp))
+        Icon(
+            Icons.AutoMirrored.Filled.Launch,
+            contentDescription = "Open link",
+            tint = accent,
+            modifier = Modifier.size(22.dp),
+        )
+    }
+}
+
+private val resourceCategories = listOf(
+    ResourceCategory(
+        title = "Mineral & Gem Databases",
+        icon = Icons.Filled.Diamond,
+        accent = Citrine,
+        links = listOf(
+            ResourceLink(
+                "Mindat.org",
+                "The largest mineral database on Earth. Detailed locality, chemistry, and photo records for thousands of minerals.",
+                "https://www.mindat.org",
+            ),
+            ResourceLink(
+                "Minerals.net",
+                "The Mineral & Gemstone Kingdom — a visual guide to mineral species, rock types, and gem classifications.",
+                "https://www.minerals.net",
+            ),
+            ResourceLink(
+                "Webmineral",
+                "Crystallography, chemical formulas, physical properties, and locality data for minerals.",
+                "https://www.webmineral.com",
+            ),
+            ResourceLink(
+                "Smithsonian NMNH Mineral Sciences",
+                "The National Museum of Natural History's mineral collections and research resources.",
+                "https://naturalhistory.si.edu/research/mineral-sciences",
+            ),
+        ),
+    ),
+    ResourceCategory(
+        title = "Gemology & Faceting",
+        icon = Icons.Filled.Science,
+        accent = Color(0xFF9B7BD8),
+        links = listOf(
+            ResourceLink(
+                "International Gem Society (IGS)",
+                "Gem identification, encyclopedia articles, and a retail gem price guide.",
+                "https://www.gemsociety.org",
+            ),
+            ResourceLink(
+                "GIA Gem Encyclopedia",
+                "The Gemological Institute of America's authoritative encyclopedia on gemstone history, lore, and properties.",
+                "https://www.gia.edu/gem-encyclopedia",
+            ),
+            ResourceLink(
+                "Gemology Online",
+                "Community forum and reference materials for gemologists and lapidary artists.",
+                "https://www.gemonline.com",
+            ),
+        ),
+    ),
+    ResourceCategory(
+        title = "General Geology & Earth Science",
+        icon = Icons.Filled.Public,
+        accent = Aqua,
+        links = listOf(
+            ResourceLink(
+                "Geology.com",
+                "Educational hub for earth science, rock identification, and news about the rock cycle.",
+                "https://geology.com",
+            ),
+            ResourceLink(
+                "USGS Geology",
+                "Maps, data, and research from the United States Geological Survey.",
+                "https://www.usgs.gov/programs/geology-minerals-energy-and-geophysics-science-center",
+            ),
+            ResourceLink(
+                "USGS Mineral Resources Program",
+                "Interactive maps and databases for mineral deposits and resource assessments.",
+                "https://www.usgs.gov/programs/mineral-resources-program",
+            ),
+            ResourceLink(
+                "Geological Society of America",
+                "Professional geology organization with publications, field guides, and meeting resources.",
+                "https://www.geosociety.org",
+            ),
+            ResourceLink(
+                "British Geological Survey",
+                "UK-focused geology maps, data, and research with global relevance.",
+                "https://www.bgs.ac.uk",
+            ),
+        ),
+    ),
+    ResourceCategory(
+        title = "Paleontology & Fossils",
+        icon = Icons.Filled.EmojiNature,
+        accent = Color(0xFF8BBF6A),
+        links = listOf(
+            ResourceLink(
+                "Smithsonian Paleobiology",
+                "Fossil collections, deep-time research, and the history of life from the Smithsonian.",
+                "https://paleobiology.si.edu",
+            ),
+            ResourceLink(
+                "Paleontology Portal (Paleoportal)",
+                "Explore fossils by region, time period, and taxonomy with museum-quality data.",
+                "https://paleoportal.org",
+            ),
+            ResourceLink(
+                "Fossilworks",
+                "Gateway to the Paleobiology Database — search fossil occurrences, taxa, and time ranges.",
+                "https://www.fossilworks.org",
+            ),
+            ResourceLink(
+                "The Paleontological Society",
+                "Professional paleontology organization with resources, publications, and education.",
+                "https://www.paleosoc.org",
+            ),
+            ResourceLink(
+                "iDigBio",
+                "Integrated Digitized Biocollections — millions of fossil and specimen records from museums.",
+                "https://www.idigbio.org",
+            ),
+            ResourceLink(
+                "Fossil Forum",
+                "Active community for fossil identification, collecting ethics, and trip reports.",
+                "https://www.thefossilforum.com",
+            ),
+        ),
+    ),
+    ResourceCategory(
+        title = "Government & Public Land Resources",
+        icon = Icons.Filled.Gavel,
+        accent = Color(0xFFE2574C),
+        links = listOf(
+            ResourceLink(
+                "Bureau of Land Management",
+                "US public land rules, permits, and recreational rock collecting guidelines.",
+                "https://www.blm.gov",
+            ),
+            ResourceLink(
+                "US Forest Service",
+                "National forest and grassland information, including recreation and collection rules.",
+                "https://www.fs.usda.gov",
+            ),
+            ResourceLink(
+                "National Park Service",
+                "Park-specific regulations — collecting rocks, fossils, or minerals is prohibited in most national parks.",
+                "https://www.nps.gov",
+            ),
+        ),
+    ),
+    ResourceCategory(
+        title = "Publications & Rockhounding",
+        icon = Icons.Filled.Book,
+        accent = Color(0xFFD9B26A),
+        links = listOf(
+            ResourceLink(
+                "Rock & Gem Magazine",
+                "The premier publication for lapidary, mineral hobbyists, and the rockhounding community.",
+                "https://www.rockngem.com",
+            ),
+            ResourceLink(
+                "Mindat Localities",
+                "Detailed locality reports and photos from rockhounds around the world.",
+                "https://www.mindat.org/localities/",
+            ),
+            ResourceLink(
+                "American Federation of Mineralogical Societies",
+                "Umbrella organization for local gem and mineral clubs across the US.",
+                "https://www.amfed.org",
+            ),
+        ),
+    ),
+)

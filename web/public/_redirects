@@ -1,0 +1,5 @@
+# Single Page App rewrites for Cloudflare Pages.
+# Ensures client-side React Router routes (e.g. /privacy, /support)
+# resolve to index.html instead of 404 on direct visits and refreshes.
+/* /index.html 200
+

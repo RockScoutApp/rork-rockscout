@@ -1,0 +1,2224 @@
+package com.rork.rockscout.ui.components
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
+import coil3.compose.AsyncImagePainter
+import coil3.compose.rememberAsyncImagePainter
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import coil3.size.Size
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import coil3.compose.AsyncImage
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Image
+import com.rork.rockscout.data.RockClass
+import com.rork.rockscout.data.Specimen
+import com.rork.rockscout.data.SpecimenImages
+import com.rork.rockscout.ui.theme.Amethyst
+import com.rork.rockscout.ui.theme.Aqua
+import com.rork.rockscout.ui.theme.AquaDeep
+import com.rork.rockscout.ui.theme.Citrine
+import com.rork.rockscout.ui.theme.CitrineDeep
+import com.rork.rockscout.ui.theme.Fossil
+import com.rork.rockscout.ui.theme.Igneous
+import com.rork.rockscout.ui.theme.Metamorphic
+import com.rork.rockscout.ui.theme.Ink
+import com.rork.rockscout.ui.theme.Obsidian
+import com.rork.rockscout.ui.theme.Sedimentary
+import com.rork.rockscout.ui.theme.Slate800
+import com.rork.rockscout.ui.theme.Slate900
+import com.rork.rockscout.ui.theme.StoneLine
+import com.rork.rockscout.R
+import com.rork.rockscout.ui.theme.DarkTextHigh
+import com.rork.rockscout.ui.theme.DarkTextMid
+import com.rork.rockscout.ui.theme.DarkTextLow
+import com.rork.rockscout.ui.theme.TextHigh
+import com.rork.rockscout.ui.theme.TextLow
+import com.rork.rockscout.ui.components.SculptedButton
+import com.rork.rockscout.ui.components.sculpted
+import com.rork.rockscout.ui.components.LongPressableImage
+import com.rork.rockscout.ui.components.glowingBorder
+
+/** URL for the full-page black volcanic rock background image. */
+const val BLACK_ROCK_BACKGROUND_URL =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/142d5488-88c9-4b7f-b480-dd7c1e24f6a9.png"
+
+/** URLs for element-category-specific background textures, keyed by category name.
+ *  Each image represents the visual character of that element category. */
+val ELEMENT_CATEGORY_BG: Map<String, String> = mapOf(
+    "Alkali metal" to "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/e9e5fd32-828a-4a68-800f-b4333f51acbc.png",
+    "Alkaline earth metal" to "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/40dba593-bcaa-4138-9857-bf4e0c260a5b.png",
+    "Transition metal" to "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/f9d97072-531f-4e6b-87a8-71051d9163ec.png",
+    "Post-transition metal" to "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/2b072f54-2c7e-450a-98b8-7b99f4757636.png",
+    "Metalloid" to "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/16a3e6f4-68af-4a9b-91f2-a8e8caf1569b.png",
+    "Polyatomic nonmetal" to "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/bfa93415-e941-4783-b155-bcd88c4dacc9.png",
+    "Diatomic nonmetal" to "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/3f7860d8-a1c9-4da5-a013-4db9a059a290.png",
+    "Noble gas" to "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/f9b308ca-6915-433d-8f29-ea88a8286581.png",
+    "Lanthanide" to "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/8b6b4ea4-0eaa-45cc-8f7e-ec3535e1d50e.png",
+    "Actinide" to "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/3fc1a1fd-476d-426d-885a-54413212ebd1.png",
+    "Unknown" to BLACK_ROCK_BACKGROUND_URL,
+)
+
+/** Hero image URLs for the exploring informational tabs. */
+const val METEORITE_HERO_URL =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/0e4b8440-e027-40a3-a45c-03464a032ebd.png"
+const val BLM_HERO_URL =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/52dfa9da-d97b-4cb6-8652-95c591a0da90.png"
+const val TECTONIC_HERO_URL =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/e1f178b5-881d-4e0e-8417-9bf5838a0420.png"
+const val GEM_MINERAL_HERO_URL =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/e7703d3b-aee3-43a8-a6a9-378169a022d2.png"
+
+/** Inline content images for the Meteorite Hunting tab. */
+const val METEORITE_IMG_CHONDRITE =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/14e3a107-51e2-477f-ba18-daaf35d39b53.png"
+const val METEORITE_IMG_WIDMANSTATTEN =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/499fef6e-35dd-4573-9cec-d6ddc9f0e30a.png"
+const val METEORITE_IMG_PALLASITE =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/9d0795e4-18a8-4647-a761-362b174b1fb5.png"
+const val METEORITE_IMG_DRY_LAKE_BED =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/d00ed235-17c4-42a2-9aa2-e5c6bc679374.png"
+const val METEORITE_IMG_MAGNET_CANE =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/7ae2ef7e-ed50-433c-84bc-d1a055dc63ea.png"
+
+/** Inline content images for the BLM Guide tab. */
+const val BLM_IMG_ROCKHOUND =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/33ff15aa-1b28-4685-a9d1-0af2a1c9a6dc.png"
+const val BLM_IMG_CANYON =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/a2ce9843-2aef-4692-8bc4-dfd640d77cfc.png"
+const val BLM_IMG_CAMPING =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/1771cc62-2c21-46e4-82b5-bf6df6bfea45.png"
+const val BLM_IMG_TRAILHEAD =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/eae26efa-d7b6-4411-9838-64c29ae034be.png"
+const val BLM_IMG_PANORAMIC =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/a20b298e-4268-42c5-8b0c-f51e775c4678.png"
+
+/** Inline content images for the Tectonics & Volcanoes tab. */
+const val TECTONIC_IMG_DIVERGENT =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/2216369f-e4bc-49ac-b32b-ea1d535b895b.png"
+const val TECTONIC_IMG_SUBDUCTION =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/029772c3-0dda-4df0-aeaa-0c877cf10159.png"
+const val TECTONIC_IMG_TRANSFORM =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/e24d4352-d023-49fe-9753-02e5eebd15b6.png"
+const val TECTONIC_IMG_HOTSPOT =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/15c8e2af-59a8-4496-9629-d47ded7aab8f.png"
+const val TECTONIC_IMG_BASALT =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/bb45a3a0-c9c1-49ed-bd3b-92de4d0bebe2.png"
+
+/** Inline content images for the Rock & Gem Resources tab. */
+const val GEM_IMG_CUT_GEMS =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/d845c867-382a-43cc-9e35-e3e424d6285f.png"
+const val GEM_IMG_MUSEUM =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/b220d2b5-b1cc-4302-832f-dabdd0359fb4.png"
+const val GEM_IMG_LAPIDARY =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/ce4fde84-ac4a-47ef-b6aa-6f5d164405ba.png"
+const val GEM_IMG_AMMONITE =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/36993054-0feb-4de6-b263-9d0f870606a3.png"
+const val GEM_IMG_PEGMATITE =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/9ed6c263-a2a9-45e1-ad59-09116c69f17b.png"
+
+// ── Book-style inline images for explorer/learn tabs ──────────────────────
+// Small corner-positioned images placed within DarkCard text sections,
+// sized to ~90dp so they don't dominate but are clearly visible.
+// Used in RockInfo, Paleontology, PrehistoricOrganisms, and BLM screens.
+
+const val GEO_IMG_STREAK_TEST =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/dbf1c798-8474-4c74-9b4c-37158d370898.png"
+const val GEO_IMG_CRYSTAL_HABIT =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/dda688f4-8638-45d6-af14-592af5802b13.png"
+const val GEO_IMG_MOHS_SCRATCH =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/acbfee49-7de8-4518-8071-d605ac419c1a.png"
+const val GEO_IMG_ACID_TEST =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/bed6ba4b-f531-4cd6-ab6b-ae2b379aab4c.png"
+
+const val PALEO_IMG_TRILOBITE =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/4c86902a-c538-45df-81d0-a2fc16ef0a47.png"
+const val PALEO_IMG_AMMONITE =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/513b7306-ae75-4097-9d4d-bcd594832700.png"
+const val PALEO_IMG_DINO_TRACK =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/54cfa859-cab8-486a-aea0-8d5cb12d6dcc.png"
+const val PALEO_IMG_PETRIFIED_WOOD =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/f9e96187-a4ef-4dbc-8746-0735d822bc21.png"
+const val PALEO_IMG_STROMATOLITE =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/f66533f4-8d40-47ee-9460-3889a0c2132a.png"
+
+const val PREHISTORIC_IMG_ARCHAEOPTERYX =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/98fe48e5-e81e-4c93-afdc-aaedfb83ff31.png"
+const val PREHISTORIC_IMG_TIKTAALIK =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/d9ef3c90-a34a-4103-9936-12d3b14360f5.png"
+const val PREHISTORIC_IMG_SKELETON =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/24f080db-5f04-4c43-a124-3c6e5b9df11a.png"
+
+const val BLM_IMG_ROCK_HAMMER =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/4bf5b02a-8b93-4cf6-8843-938cdfff99d5.png"
+const val BLM_IMG_DESERT_VARNISH =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/48a62fbc-61ca-40ef-b783-de7516f46691.png"
+
+/** Book-style inline image — a small rounded image placed in a corner
+ *  within a DarkCard's text content, like illustrations in a book.
+ *  Sized to ~90dp so it's visible but doesn't dominate the text.
+ *  Text wraps around it naturally via Row layout. Tapping opens the
+ *  full-screen image viewer so readers can enlarge the illustration.
+ *
+ *  @param imageUrl the image URL to display
+ *  @param contentDescription accessibility description
+ *  @param alignment corner placement: TopStart, TopEnd, BottomStart, or BottomEnd
+ *  @param modifier optional layout modifier
+ */
+@Composable
+fun BookStyleImage(
+    imageUrl: String,
+    contentDescription: String,
+    alignment: Alignment = Alignment.TopEnd,
+    modifier: Modifier = Modifier,
+    size: Dp = 92.dp,
+) {
+    var viewerOpen by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val request = remember(imageUrl) {
+        ImageRequest.Builder(context)
+            .data(imageUrl)
+            .crossfade(true)
+            .size(Size.ORIGINAL)
+            .build()
+    }
+    Box(
+        modifier = modifier
+            .size(size)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF1A1812))
+            .glowingBorder(1.dp, Color(0xFF1A1812).copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+            .clickable { viewerOpen = true },
+        contentAlignment = Alignment.Center,
+    ) {
+        AsyncImage(
+            model = request,
+            contentDescription = contentDescription,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+        )
+    }
+    if (viewerOpen) {
+        FullScreenImageViewer(
+            imageUrls = listOf(imageUrl),
+            initialPage = 0,
+            onDismiss = { viewerOpen = false },
+        )
+    }
+}
+
+/** Inline content image — a medium-sized rounded image placed sporadically
+ *  between text sections in informational screens. Sized to match specimen
+ *  card thumbnails (about 120-160dp tall, full width). Dark gradient overlay
+ *  at the bottom keeps any optional caption legible. Tapping always opens the
+ *  full-screen image viewer; pass [onClick] only when you need to override the
+ *  tap behavior (e.g., navigation instead of enlargement). */
+@Composable
+fun InlineContentImage(
+    imageUrl: String,
+    contentDescription: String,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
+    caption: String? = null,
+) {
+    var viewerOpen by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val request = remember(imageUrl) {
+        ImageRequest.Builder(context)
+            .data(imageUrl)
+            .crossfade(true)
+            .size(Size.ORIGINAL)
+            .build()
+    }
+    val baseModifier = if (onClick != null) {
+        modifier.fillMaxWidth().clickable(onClick = onClick)
+    } else {
+        modifier.fillMaxWidth().clickable { viewerOpen = true }
+    }
+    Box(
+        modifier = baseModifier
+            .height(160.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xFF1A1812))
+            .glowingBorder(1.dp, Color(0xFF1A1812).copy(alpha = 0.35f), RoundedCornerShape(16.dp)),
+        contentAlignment = Alignment.BottomStart,
+    ) {
+        AsyncImage(
+            model = request,
+            contentDescription = contentDescription,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+        )
+        if (caption != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color.Transparent, Color.Transparent, Color.Black.copy(alpha = 0.65f))
+                        )
+                    ),
+            )
+            Text(
+                text = caption,
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.White,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(12.dp),
+            )
+        }
+    }
+}
+
+/** Full-screen dark volcanic rock background — very dark, almost black basalt
+ *  texture with subtle mineral flecks. Used on element state pages and any screen
+ *  that needs a darker, less colorful background than the agate slice. */
+@Composable
+fun BlackRockBackground(content: @Composable () -> Unit) {
+    val context = LocalContext.current
+    val request = remember(BLACK_ROCK_BACKGROUND_URL) {
+        ImageRequest.Builder(context)
+            .data(BLACK_ROCK_BACKGROUND_URL)
+            .crossfade(false)
+            .size(Size.ORIGINAL)
+            .build()
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        coil3.compose.AsyncImage(
+            model = request,
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+        )
+        // Dark scrim — keeps text/icons legible over the volcanic rock texture
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Black.copy(alpha = 0.35f),
+                            Color.Black.copy(alpha = 0.28f),
+                            Color.Black.copy(alpha = 0.35f),
+                            Color.Black.copy(alpha = 0.45f),
+                        )
+                    )
+                )
+        )
+        content()
+    }
+}
+
+/** Full-screen ambient background using the polished agate slice image.
+ *  The image is cropped to fill the screen at high resolution and covered
+ *  with a subtle dark scrim so the darker dashboard tiles and light text
+ *  stay legible while the stone colors and tones remain visible. */
+@Composable
+fun RockBackground(content: @Composable () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.agate_background),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop,
+        )
+        // Dark scrim — keeps the agate colors visible while making tiles/text pop
+        // Lightened slightly so the background reads a touch brighter and dark tiles pop.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Black.copy(alpha = 0.42f),
+                            Color.Black.copy(alpha = 0.32f),
+                            Color.Black.copy(alpha = 0.38f),
+                            Color.Black.copy(alpha = 0.46f),
+                        )
+                    )
+                )
+        )
+        content()
+    }
+}
+
+/** Draws a mineral-rich rock surface: dense grain speckles, crystalline sparkles
+ *  (mica / quartz flecks), and thin stone veins. Seeded so the pattern is stable
+ *  across recompositions and never hurts legibility. */
+@Composable
+private fun MineralTextureOverlay() {
+    androidx.compose.foundation.Canvas(
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        val w = size.width
+        val h = size.height
+        // Deterministic pseudo-random generator so the texture stays still
+        var seed = 1234567L
+        fun nextFloat(): Float {
+            seed = (seed * 1103515245 + 12345) and 0x7FFFFFFF
+            return (seed.toFloat() / 0x7FFFFFFF.toFloat())
+        }
+
+        // ── Stone grain speckles ─────────────────────────────────────────────
+        val speckleCount = 420
+        val speckleColors = listOf(
+            Color(0xFFB8A88A),
+            Color(0xFFC9B89A),
+            Color(0xFFD8C8A8),
+            Color(0xFFA89B8C),
+            Color(0xFFC0B095),
+            Color(0xFF9E8B6D),
+        )
+        repeat(speckleCount) {
+            val x = nextFloat() * w
+            val y = nextFloat() * h
+            val r = nextFloat() * 2.2f + 0.5f
+            val alpha = nextFloat() * 0.16f + 0.06f
+            val color = speckleColors[(seed % speckleColors.size).toInt()]
+            drawCircle(
+                color = color.copy(alpha = alpha),
+                radius = r,
+                center = androidx.compose.ui.geometry.Offset(x, y),
+            )
+        }
+
+        // ── Crystalline sparkles (mica / quartz flecks) ────────────────────────
+        val sparkleCount = 56
+        val sparkleColors = listOf(
+            Color(0xFFFFF8E7).copy(alpha = 0.80f),
+            Color(0xFFFDE9B8).copy(alpha = 0.70f),
+            Color(0xFFE8F4F3).copy(alpha = 0.60f),
+            Color(0xFFFFFFFF).copy(alpha = 0.75f),
+        )
+        repeat(sparkleCount) {
+            val x = nextFloat() * w
+            val y = nextFloat() * h
+            val r = nextFloat() * 1.8f + 0.8f
+            val color = sparkleColors[(seed % sparkleColors.size).toInt()]
+            // Soft halo around each sparkle
+            drawCircle(
+                color = color.copy(alpha = color.alpha * 0.35f),
+                radius = r * 2.4f,
+                center = androidx.compose.ui.geometry.Offset(x, y),
+            )
+            // Bright core
+            drawCircle(
+                color = color,
+                radius = r,
+                center = androidx.compose.ui.geometry.Offset(x, y),
+            )
+        }
+
+        // ── Veins — thin quartz-like lines in the stone ───────────────────────
+        val veinCount = 24
+        val veinColors = listOf(
+            Color(0xFFD8C8A8).copy(alpha = 0.22f),
+            Color(0xFFC9B89A).copy(alpha = 0.18f),
+            Color(0xFFE8A33D).copy(alpha = 0.16f),
+            Aqua.copy(alpha = 0.14f),
+        )
+        repeat(veinCount) {
+            val x = nextFloat() * w
+            val y = nextFloat() * h
+            val len = nextFloat() * 120f + 40f
+            val angle = nextFloat() * 6.28f
+            val curve = nextFloat() * 40f - 20f
+            val endX = x + kotlin.math.cos(angle) * len
+            val endY = y + kotlin.math.sin(angle) * len
+            val c1X = x + kotlin.math.cos(angle + 0.5f) * (len * 0.5f) + curve
+            val c1Y = y + kotlin.math.sin(angle + 0.5f) * (len * 0.5f)
+            val c2X = endX - kotlin.math.cos(angle - 0.5f) * (len * 0.5f) - curve
+            val c2Y = endY - kotlin.math.sin(angle - 0.5f) * (len * 0.5f)
+            val path = Path().apply {
+                moveTo(x, y)
+                cubicTo(c1X, c1Y, c2X, c2Y, endX, endY)
+            }
+            val stroke = nextFloat() * 1.2f + 0.4f
+            val color = veinColors[(seed % veinColors.size).toInt()]
+            drawPath(
+                color = color,
+                path = path,
+                style = Stroke(width = stroke, cap = StrokeCap.Round),
+            )
+        }
+    }
+}
+
+/** Gamer-style rock texture overlay — a dark, mineral-rich surface with dense
+ *  grain speckles, glowing crystalline flecks (mica / quartz / amethyst), and
+ *  thin neon-ish veins. Designed to sit on top of a dark gradient so text and
+ *  UI elements stay legible while the surface reads as polished igneous stone.
+ *  Seeded so the pattern is stable across recompositions. */
+@Composable
+fun GamerRockTexture(
+    modifier: Modifier = Modifier,
+    speckleTint: Color = Color(0xFFB8A88A),
+    veinColors: List<Color> = listOf(
+        Citrine.copy(alpha = 0.32f),
+        Aqua.copy(alpha = 0.28f),
+        Amethyst.copy(alpha = 0.24f),
+        Color(0xFFD8C8A8).copy(alpha = 0.20f),
+    ),
+) {
+    androidx.compose.foundation.Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        var seed = 7654321L
+        fun nextFloat(): Float {
+            seed = (seed * 1103515245 + 12345) and 0x7FFFFFFF
+            return seed.toFloat() / 0x7FFFFFFF.toFloat()
+        }
+
+        // ── Dense stone grain speckles ────────────────────────────────────────
+        val speckleCount = (w * h / 1400f).toInt().coerceIn(120, 520)
+        val speckleColors = listOf(
+            speckleTint,
+            Color(0xFFC9B89A),
+            Color(0xFFA89B8C),
+            Color(0xFF9E8B6D),
+            Color(0xFF7A6F5C),
+        )
+        repeat(speckleCount) {
+            val x = nextFloat() * w
+            val y = nextFloat() * h
+            val r = nextFloat() * 2.0f + 0.4f
+            val alpha = nextFloat() * 0.22f + 0.05f
+            val color = speckleColors[(seed % speckleColors.size).toInt()]
+            drawCircle(
+                color = color.copy(alpha = alpha),
+                radius = r,
+                center = androidx.compose.ui.geometry.Offset(x, y),
+            )
+        }
+
+        // ── Glowing crystalline flecks (mica / quartz / amethyst) ───────────────
+        val fleckCount = (w * h / 9000f).toInt().coerceIn(20, 90)
+        val fleckColors = listOf(
+            Color(0xFFFFF8E7).copy(alpha = 0.85f),
+            Color(0xFFFDE9B8).copy(alpha = 0.75f),
+            Color(0xFFE8F4F3).copy(alpha = 0.70f),
+            Color(0xFFC9B8FF).copy(alpha = 0.65f),
+            Color(0xFFFFD98A).copy(alpha = 0.80f),
+        )
+        repeat(fleckCount) {
+            val x = nextFloat() * w
+            val y = nextFloat() * h
+            val r = nextFloat() * 1.6f + 0.6f
+            val color = fleckColors[(seed % fleckColors.size).toInt()]
+            // Soft glow halo
+            drawCircle(
+                color = color.copy(alpha = color.alpha * 0.30f),
+                radius = r * 3.0f,
+                center = androidx.compose.ui.geometry.Offset(x, y),
+            )
+            // Bright core
+            drawCircle(
+                color = color,
+                radius = r,
+                center = androidx.compose.ui.geometry.Offset(x, y),
+            )
+        }
+
+        // ── Neon-ish mineral veins ─────────────────────────────────────────────
+        val veinCount = (w * h / 12000f).toInt().coerceIn(12, 40)
+        repeat(veinCount) {
+            val x = nextFloat() * w
+            val y = nextFloat() * h
+            val len = nextFloat() * (maxOf(w, h) * 0.25f) + 30f
+            val angle = nextFloat() * 6.28f
+            val curve = nextFloat() * 50f - 25f
+            val endX = x + kotlin.math.cos(angle) * len
+            val endY = y + kotlin.math.sin(angle) * len
+            val c1X = x + kotlin.math.cos(angle + 0.5f) * (len * 0.5f) + curve
+            val c1Y = y + kotlin.math.sin(angle + 0.5f) * (len * 0.5f)
+            val c2X = endX - kotlin.math.cos(angle - 0.5f) * (len * 0.5f) - curve
+            val c2Y = endY - kotlin.math.sin(angle - 0.5f) * (len * 0.5f)
+            val path = Path().apply {
+                moveTo(x, y)
+                cubicTo(c1X, c1Y, c2X, c2Y, endX, endY)
+            }
+            val stroke = nextFloat() * 1.4f + 0.5f
+            val color = veinColors[(seed % veinColors.size).toInt()]
+            drawPath(
+                color = color,
+                path = path,
+                style = Stroke(width = stroke, cap = StrokeCap.Round),
+            )
+        }
+    }
+}
+
+/** Standard screen wrapper with a back row title bar over the rock background.
+ *  Includes built-in pull-to-refresh on all screens. */
+@Composable
+fun ScreenScaffold(
+    title: String,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    actions: @Composable RowScope.() -> Unit = {},
+    background: @Composable (@Composable () -> Unit) -> Unit = { RockBackground(it) },
+    content: @Composable () -> Unit,
+) {
+    var isRefreshing by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    background {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 8.dp, end = 16.dp, top = 52.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .sculpted(
+                            shape = CircleShape,
+                            accent = Aqua,
+                            shadowElevation = 4.dp,
+                            circular = true,
+                            onClick = onBack,
+                        )
+                        .clip(CircleShape)
+                        .background(Color.Black),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = TextHigh,
+                    )
+                }
+                Spacer(Modifier.width(4.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Aqua,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                actions()
+            }
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = {
+                    isRefreshing = true
+                    scope.launch {
+                        delay(800)
+                        com.rork.rockscout.data.AppRepository.instance.saveProfileChanges()
+                        isRefreshing = false
+                    }
+                },
+                // Use weight(1f) so the content area takes the remaining space below
+                // the header, then apply imePadding and navigationBarsPadding so
+                // scrollable content resizes when the keyboard opens and stays above
+                // the system gesture nav bar.
+                modifier = modifier
+                    .weight(1f)
+                    .imePadding()
+                    .navigationBarsPadding(),
+            ) {
+                content()
+            }
+        }
+    }
+}
+
+fun rockClassColor(rockClass: RockClass): Color = when (rockClass) {
+    RockClass.IGNEOUS -> Igneous
+    RockClass.SEDIMENTARY -> Sedimentary
+    RockClass.METAMORPHIC -> Metamorphic
+    RockClass.MINERAL -> Citrine
+    RockClass.CRYSTAL -> Color(0xFF9B7BD8)
+    RockClass.FOSSIL -> Fossil
+}
+
+/** Light, class-tinted card background gradient. Each rock class gets its own
+ *  subtle color identity (warm, sandy, blue-gray, amber, purple, sepia) while
+ *  staying dark enough at the bottom for the white title and dark text rows to
+ *  remain legible. The top of the gradient carries the class tint; the bottom
+ *  fades to a dark base so text contrast is preserved. */
+fun rockClassCardGradient(rockClass: RockClass): List<Color> = when (rockClass) {
+    RockClass.IGNEOUS -> listOf(Color(0xFF4A2A1F), Color(0xFF2A1810), Color(0xFF1E1208))
+    RockClass.SEDIMENTARY -> listOf(Color(0xFF473820), Color(0xFF2A2010), Color(0xFF1E1608))
+    RockClass.METAMORPHIC -> listOf(Color(0xFF2D3540), Color(0xFF1A2028), Color(0xFF12161E))
+    RockClass.MINERAL -> listOf(Color(0xFF473320), Color(0xFF2A1E10), Color(0xFF1E1408))
+    RockClass.CRYSTAL -> listOf(Color(0xFF362A40), Color(0xFF1E1828), Color(0xFF14101E))
+    RockClass.FOSSIL -> listOf(Color(0xFF473A2A), Color(0xFF2A2014), Color(0xFF1E160A))
+}
+
+/** Maps a specimen's specific category string (e.g. "Silicate — Sorosilicate",
+ *  "Carbonate mineral", "Extrusive volcanic rock") to a distinct color so each
+ *  category group gets its own visually unique pill color on cards and detail screens. */
+fun categoryColor(category: String): Color {
+    val c = category.lowercase()
+    return when {
+        // — Mineral chemistry groups —
+        c.startsWith("silicate") || c.contains("phyllosilicate serpentine") ||
+            c.startsWith("silicate (") -> Color(0xFF26A69A)          // Teal
+        c.startsWith("oxide") || c.startsWith("oxide ") -> Color(0xFFE65100) // Burnt orange
+        c.startsWith("sulfide") || c.startsWith("sulfide ") -> Color(0xFFD4AF37) // Gold
+        c.startsWith("carbonate") || c.contains("copper carbonate") ->
+            Color(0xFF42A5F5)                                      // Sky blue
+        c.startsWith("sulfate") -> Color(0xFFAB47BC)               // Lavender
+        c.startsWith("halide") -> Color(0xFF66BB6A)                 // Mint green
+        c.startsWith("phosphate") -> Color(0xFFEF5350)              // Coral pink
+        c.startsWith("native element") -> Color(0xFFB0BEC5)         // Silver/platinum
+        c.startsWith("borate") -> Color(0xFFEC407A)                 // Rose
+        c.startsWith("arsenate") || c.startsWith("arsenide") ->
+            Color(0xFFB71C1C)                                      // Dark red
+        c.startsWith("tungstate") || c.startsWith("molybdate") ||
+            c.startsWith("vanadate") || c.startsWith("chromate") ->
+            Color(0xFF827717)                                      // Olive
+        c.startsWith("biogenic mineral") || c.startsWith("biogenic gem") ->
+            Color(0xFF80CBC4)                                      // Light teal
+
+        // — Igneous / volcanic —
+        c.startsWith("igneous") || c.startsWith("intrusive") ||
+            c.startsWith("extrusive") || c.startsWith("volcanic") ||
+            c.startsWith("pyroclastic") || c.startsWith("ultramafic") ->
+            Color(0xFFFF5722)                                      // Fiery red-orange
+        c.startsWith("alkaline igneous") || c.contains("alkaline") ->
+            Color(0xFFFF8A65)                                      // Light coral
+
+        // — Sedimentary —
+        c.startsWith("sedimentary") || c.startsWith("clastic") ||
+            c.startsWith("chemical") || c.startsWith("biogenic sed") ||
+            c.contains("banded iron") -> Color(0xFF8D6E63)          // Earthy amber
+
+        // — Metamorphic —
+        c.startsWith("metamorphic") || c.startsWith("foliated") ||
+            c.startsWith("non-foliated") || c.startsWith("contact meta") ||
+            c.startsWith("fault-rock") || c.startsWith("high-grade") ||
+            c.startsWith("low-grade") || c.startsWith("medium-grade") ||
+            c.startsWith("metamorphosed") || c.startsWith("talc-rich") ->
+            Color(0xFF7E57C2)                                      // Purple
+        c.startsWith("rock (metamorphic") -> Color(0xFF7E57C2)     // Purple
+
+        // — Fossils (by organism group) —
+        c.startsWith("fossil") || c.startsWith("arthropod") ||
+            c.startsWith("brachiopod") || c.startsWith("cephalopod") ||
+            c.startsWith("cnidarian") || c.startsWith("echinoderm") ||
+            c.startsWith("fish") || c.startsWith("mammal") ||
+            c.startsWith("reptile") || c.startsWith("plant") ||
+            c.startsWith("mollusk") || c.startsWith("hemichordate") ||
+            c.startsWith("microfossil") || c.startsWith("microbial") ||
+            c.startsWith("porifera") || c.startsWith("trace fossil") ||
+            c.startsWith("coprolites") || c.startsWith("dinosaur") ->
+            Color(0xFFA1887F)                                      // Sepia brown
+
+        // — Meteorites —
+        c.startsWith("meteorite") || c.startsWith("impact") ||
+            c.contains("tektite") -> Color(0xFF607D8B)              // Steel blue-gray
+
+        // — Organic —
+        c.startsWith("organic") -> Color(0xFF558B2F)                // Forest green
+
+        // — Opal / hydrated silica —
+        c.startsWith("hydrated silica") -> Color(0xFF7986CB)        // Periwinkle
+
+        // — Glass —
+        c.startsWith("volcanic glass") || c.startsWith("natural glass") ||
+            c.startsWith("man-made glass") -> Color(0xFFFFB300)     // Amber
+
+        // — Assemblage / special groupings —
+        c.startsWith("geode") || c.startsWith("pegmatite") ||
+            c.startsWith("hydrothermal") || c.endsWith("assemblage") ||
+            c.contains("assemblage") -> Color(0xFF3949AB)           // Indigo
+
+        // — Copper / mixed ore —
+        c.startsWith("copper") || c.startsWith("mixed copper") ||
+            c.startsWith("sulfide ore") -> Color(0xFFD84315)        // Deep copper
+
+        // — Anthropogenic / industrial / user —
+        c.startsWith("anthropogenic") || c.startsWith("industrial") ||
+            c.startsWith("user submitted") || c.startsWith("field guides") ->
+            Color(0xFF757575)                                      // Gray
+
+        // — Special phenomena —
+        c.startsWith("enhydros") || c.contains("petroleum") ||
+            c.contains("hydrocarbon") || c.contains("fluid inclusion") ->
+            Color(0xFF6A1B9A)                                      // Deep purple
+        c.startsWith("mineral inclusions") || c.startsWith("pseudomorph") ||
+            c.startsWith("optical phenomena") || c.contains("chatoyancy") ->
+            Color(0xFFC2185B)                                      // Magenta
+        c.startsWith("copper-inclusion") -> Color(0xFFD84315)      // Deep copper
+        c.startsWith("fluorescent") -> Color(0xFF00E5FF)           // Bright cyan
+        c.startsWith("other amazing") -> Color(0xFF5C6BC0)         // Indigo-light
+
+        // Fallback — use a warm amber
+        else -> Color(0xFFB8860B)                                  // Dark goldenrod
+    }
+}
+
+/** Extracts a short, pill-friendly label from a full category string.
+ *  e.g. "Silicate — Sorosilicate" → "Silicate", "Carbonate mineral" → "Carbonate",
+ *  "Extrusive volcanic rock" → "Volcanic", "Sulfide mineral" → "Sulfide". */
+fun shortCategoryLabel(category: String): String {
+    val dashIdx = category.indexOfAny(charArrayOf('\u2014', '\u2013', '-'))
+    if (dashIdx > 0) return category.substring(0, dashIdx).trim()
+    // No dash — grab the first word if it's a known prefix, otherwise first two words
+    val words = category.trim().split(Regex("\\s+"))
+    val first = words.firstOrNull()?.lowercase() ?: return category
+    return when (first) {
+        "silicate", "oxide", "sulfide", "carbonate", "sulfate", "halide",
+        "phosphate", "borate", "arsenate", "arsenide", "tungstate", "molybdate",
+        "vanadate", "chromate", "native", "biogenic", "hydrated",
+        "fluorescent", "anthropogenic", "industrial", "user",
+        "alkaline", "clastic", "chemical", "biogenic", "metamorphic",
+        "foliated", "non-foliated", "contact", "fault-rock", "high-grade",
+        "low-grade", "medium-grade", "metamorphosed", "talc-rich",
+        "volcanic", "pyroclastic", "ultramafic", "igneous", "intrusive",
+        "extrusive", "sedimentary", "rock", "meteorite", "impact",
+        "organic", "trace", "coprolites", "dinosaur", "geode",
+        "pegmatite", "hydrothermal", "copper", "mixed", "sulfide",
+        "enhydros", "mineral", "pseudomorph", "optical", "copper-inclusion",
+        "field", "other", "natural", "man-made" -> {
+            // Take first two words for better context
+            if (words.size >= 2 && first != "native" && first != "rock" &&
+                first != "biogenic" && first != "volcanic" && first != "natural" &&
+                first != "man-made" && first != "field" && first != "other" &&
+                first != "igneous" && first != "intrusive" && first != "extrusive") {
+                words.take(2).joinToString(" ")
+            } else {
+                words.first()
+            }
+        }
+        else -> words.first()
+    }
+}
+
+/** Brightens a color toward white if it's too dark for legible text on dark card
+ *  backgrounds. Preserves the accent's hue identity while ensuring readability. */
+fun brightenForText(color: Color, threshold: Float = 0.55f, amount: Float = 0.4f): Color {
+    val lum = 0.299f * color.red + 0.587f * color.green + 0.114f * color.blue
+    return if (lum < threshold) {
+        Color(
+            color.red + (1f - color.red) * amount,
+            color.green + (1f - color.green) * amount,
+            color.blue + (1f - color.blue) * amount,
+        )
+    } else color
+}
+
+/** Small rounded label used for categories, rarity, hardness, etc. */
+@Composable
+fun TagChip(
+    text: String,
+    modifier: Modifier = Modifier,
+    color: Color = Citrine,
+    filled: Boolean = false,
+    textColor: Color? = null,
+) {
+    val shape = RoundedCornerShape(8.dp)
+    Box(
+        modifier = modifier
+            .clip(shape)
+            .background(if (filled) color else color.copy(alpha = 0.14f))
+            .glowingBorder(1.dp, color.copy(alpha = if (filled) 0.9f else 0.55f), shape)
+            .padding(horizontal = 10.dp, vertical = 5.dp)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelMedium,
+            color = textColor ?: if (filled) Ink else brightenForText(color),
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/** Compact rounded label for tight horizontal rows on specimen cards. */
+@Composable
+fun CompactTagChip(
+    text: String,
+    modifier: Modifier = Modifier,
+    color: Color = Citrine,
+    filled: Boolean = false,
+    textColor: Color? = null,
+) {
+    val shape = RoundedCornerShape(6.dp)
+    Box(
+        modifier = modifier
+            .clip(shape)
+            .background(if (filled) color else color.copy(alpha = 0.14f))
+            .glowingBorder(1.dp, color.copy(alpha = if (filled) 0.9f else 0.50f), shape)
+            .padding(horizontal = 7.dp, vertical = 3.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelSmall,
+            color = textColor ?: if (filled) Ink else brightenForText(color),
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/** Clean horizontal rarity indicator — small colored dot + label text.
+ *  Replaces the bulky TagChip for rarity display on specimen cards.
+ *  Pass [textFontSize] to enlarge the label (e.g. on redesigned specimen cards). */
+@Composable
+fun RarityIndicator(
+    rarity: String,
+    modifier: Modifier = Modifier,
+    accent: Color = Citrine,
+    textColor: Color = DarkTextMid,
+    dotSize: Dp = 7.dp,
+    textFontSize: TextUnit? = null,
+) {
+    val rarityColor = when {
+        rarity.contains("Rare", ignoreCase = true) && !rarity.contains("Uncommon", ignoreCase = true) ->
+            Color(0xFFE2574C)
+        rarity.contains("Uncommon", ignoreCase = true) ->
+            Color(0xFFE8A33D)
+        else -> Color(0xFF5CC98C)
+    }
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(dotSize)
+                .clip(CircleShape)
+                .background(rarityColor)
+                .glowingBorder(1.dp, Color.White.copy(alpha = 0.20f), CircleShape),
+        )
+        Text(
+            text = rarity,
+            style = if (textFontSize != null) {
+                MaterialTheme.typography.labelMedium.copy(fontSize = textFontSize)
+            } else {
+                MaterialTheme.typography.labelMedium
+            },
+            color = textColor,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f, fill = false),
+        )
+    }
+}
+
+/** Dark-themed clickable card matching the homepage dashboard tiles.
+ *  Deep dark gradient background with accent-colored border and glow overlay. */
+@Composable
+fun DarkCard(
+    modifier: Modifier = Modifier,
+    accent: Color = Citrine,
+    contentPadding: PaddingValues = PaddingValues(16.dp),
+    content: @Composable () -> Unit,
+) {
+    val shape = RoundedCornerShape(20.dp)
+    Box(
+        modifier = modifier
+            .sculpted(shape = shape, accent = accent, shadowElevation = 6.dp)
+            .clip(shape)
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFF2A2820), Color(0xFF1E1C16), Color(0xFF16140F))
+                )
+            )
+            .glowingBorder(BorderStroke(3.dp, accent.copy(alpha = 0.50f)), shape)
+    ) {
+        // Accent glow overlay at top
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.TopCenter)
+                .height(100.dp)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(accent.copy(alpha = 0.15f), Color.Transparent)
+                    )
+                )
+        )
+        Column(
+            modifier = Modifier
+                .padding(contentPadding)
+        ) {
+            content()
+        }
+    }
+}
+
+/** A glassy surface card with a subtle stone border. */
+@Composable
+fun StoneCard(
+    modifier: Modifier = Modifier,
+    border: BorderStroke = BorderStroke(3.dp, StoneLine.copy(alpha = 0.85f)),
+    contentPadding: PaddingValues = PaddingValues(16.dp),
+    content: @Composable () -> Unit,
+) {
+    val shape = RoundedCornerShape(20.dp)
+    Column(
+        modifier = modifier
+            .sculpted(shape = shape, accent = StoneLine, shadowElevation = 8.dp)
+            .clip(shape)
+            .background(
+                Brush.verticalGradient(
+                    listOf(Slate800.copy(alpha = 0.7f), Slate900.copy(alpha = 0.9f))
+                )
+            )
+            .glowingBorder(border, shape)
+            .padding(contentPadding)
+    ) {
+        content()
+    }
+}
+
+/** Circular emoji "specimen" badge with a colored ring matching its class. */
+@Composable
+fun SpecimenGlyph(
+    emoji: String,
+    accent: Color,
+    size: Int = 52,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .size(size.dp)
+            .clip(CircleShape)
+            .background(
+                Brush.radialGradient(
+                    listOf(accent.copy(alpha = 0.30f), accent.copy(alpha = 0.06f))
+                )
+            )
+            .glowingBorder(2.dp, accent.copy(alpha = 0.55f), CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text = emoji, style = MaterialTheme.typography.headlineSmall)
+    }
+}
+
+/** Square thumbnail for a specimen card — shows the main image, or the emoji fallback. */
+@Composable
+fun SpecimenThumbnail(
+    specimen: Specimen,
+    accent: Color,
+    modifier: Modifier = Modifier,
+    size: Dp = 48.dp,
+    thumbnailUrl: String? = null,
+    onClick: () -> Unit = {},
+    showBorder: Boolean = false,
+) {
+    val imageUrls = SpecimenImages.urls[specimen.id] ?: specimen.imageUrls
+    val displayUrls = (thumbnailUrl?.let { listOf(it) } ?: imageUrls).filter { it.isNotBlank() }
+
+    Box(
+        modifier = modifier
+            .size(size)
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                Brush.radialGradient(
+                    listOf(accent.copy(alpha = 0.28f), Color(0xFF1A1812))
+                )
+            )
+            .then(
+                if (showBorder) Modifier.glowingBorder(2.dp, accent.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+                else Modifier
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (displayUrls.isEmpty()) {
+            Text(
+                text = specimen.emoji,
+                style = MaterialTheme.typography.titleLarge,
+            )
+        } else {
+            LongPressableImage(
+                model = displayUrls.first(),
+                contentDescription = specimen.name,
+                modifier = Modifier.size(size),
+                contentScale = ContentScale.Crop,
+                onClick = onClick,
+            )
+        }
+    }
+}
+
+/** Maps a [RockClass] to its Formation Environment badge metadata:
+ *  an emoji + short label + class-tinted color. Used by [FormationEnvironmentBadge]
+ *  on specimen cards to visually distinguish volcanic, sedimentary, and metamorphic
+ *  (plus mineral, crystal, and fossil) formation environments. */
+private fun formationEnvironmentMeta(rockClass: RockClass): Triple<String, String, Color> =
+    when (rockClass) {
+        RockClass.IGNEOUS     -> Triple("\uD83C\uDF0B", "Volcanic",    Igneous)
+        RockClass.SEDIMENTARY -> Triple("\uD83C\uDFD7\uFE0F", "Sedimentary", Sedimentary)
+        RockClass.METAMORPHIC -> Triple("\u26F0\uFE0F", "Metamorphic", Metamorphic)
+        RockClass.MINERAL     -> Triple("\uD83E\uDEA8", "Mineral",     Citrine)
+        RockClass.CRYSTAL     -> Triple("\uD83D\uDC8E", "Crystal",     Amethyst)
+        RockClass.FOSSIL      -> Triple("\uD83E\uDEA5", "Fossil",      Fossil)
+    }
+
+/** Prominent "Formation Environment" badge for a specimen card — an icon+label
+ *  pill tinted with the specimen's class color (volcanic orange, sedimentary gold,
+ *  metamorphic slate-blue, mineral amber, crystal purple, fossil sepia).
+ *  Sits below the title on the same row as the category text so the card's
+ *  formation environment is immediately visible at a glance. */
+@Composable
+fun FormationEnvironmentBadge(
+    rockClass: RockClass,
+    modifier: Modifier = Modifier,
+) {
+    val (emoji, label, classColor) = formationEnvironmentMeta(rockClass)
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(classColor.copy(alpha = 0.18f))
+            .glowingBorder(1.dp, classColor.copy(alpha = 0.65f), RoundedCornerShape(10.dp))
+            .padding(horizontal = 8.dp, vertical = 3.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = emoji,
+            style = MaterialTheme.typography.labelSmall,
+            fontSize = 12.sp,
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = brightenForText(classColor, amount = 0.30f),
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 11.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/** Auto-scaling tagline text — starts at body large, scales down to a minimum
+ *  readable size so the full tagline always renders without truncation.
+ *  The text color matches the card's glowing border accent so the tagline
+ *  reads as part of the card's color identity, sitting directly on the card
+ *  background with no shadow box behind it. */
+@Composable
+private fun AutoSizeTaglineText(
+    text: String,
+    accent: Color,
+    modifier: Modifier = Modifier,
+) {
+    var fontSize by remember(text) { mutableFloatStateOf(17f) }
+    Text(
+        text = text,
+        modifier = modifier,
+        fontSize = fontSize.sp,
+        color = brightenForText(accent, amount = 0.25f),
+        fontStyle = FontStyle.Italic,
+        fontWeight = FontWeight.Medium,
+        maxLines = 4,
+        overflow = TextOverflow.Visible,
+        onTextLayout = { result ->
+            if (result.didOverflowHeight && fontSize > 12f) {
+                fontSize = (fontSize - 0.5f).coerceAtLeast(12f)
+            }
+        },
+    )
+}
+
+/** Horizontal specimen card with thumbnail, stacked text rows, a dark tagline box
+ *  at the bottom-left, and a compact heart + add/share button stack at the
+ *  bottom-right corner. Cards fill the full available width.
+ *
+ *  The specimen thumbnail sits on the left with a subtle accent border. Text content
+ *  (title, type pill, location rows, rarity) is aligned in a single vertical stack.
+ *  The tagline sits in a dark semi-transparent rounded box at the bottom-left. The
+ *  heart icon and compact circular Add/Share button are stacked vertically at the
+ *  far bottom-right corner, ~1dp from the card borders, with 1dp between them. */
+/** A single location chip used inside the specimen card's two-row locations
+ *  block. A pin icon + enlarged location text, capped to one line. */
+@Composable
+private fun LocationChipRow(location: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Filled.LocationOn,
+            contentDescription = null,
+            tint = DarkTextMid,
+            modifier = Modifier.size(16.dp),
+        )
+        Text(
+            text = location,
+            style = MaterialTheme.typography.labelMedium,
+            color = DarkTextMid,
+            fontSize = 13.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/** Subtle, continuously animated sparkles tinted to the specimen's rock class
+ *  color. Each sparkle has a randomized base position (seeded by specimen id so
+ *  it stays stable across recompositions), randomized twinkle period / phase /
+ *  duration, and a tiny drift, so they twinkle independently in different spots
+ *  at different times and never synchronize. Peak alpha and radii are kept low so
+ *  readability of text, the image, and the heart is never affected.
+ *
+ *  The overlay is a draw-only Canvas with no pointer input, so taps pass through
+ *  to underlying buttons and the heart automatically. Safe zones (image, title
+ *  band, location rows, rarity/tagline bands, heart corner) are excluded from
+ *  sparkle placement.
+ *
+ *  @param rockClass drives the sparkle tint via [rockClassColor]
+ *  @param seedId    specimen id used to seed stable per-card positions
+ *  @param modifier  layout modifier (should match the card's inner content area) */
+@Composable
+fun SpecimenSparkleOverlay(
+    rockClass: RockClass,
+    seedId: String,
+    modifier: Modifier = Modifier,
+    imageSize: Dp = 48.dp,
+) {
+    val baseColor = rockClassColor(rockClass)
+    val density = LocalDensity.current
+
+    // Card width / height arrive via onSizeChanged so we can place sparkles in
+    // pixels and exclude the safe zones. Default to a sensible size until measured.
+    var canvasW by remember { mutableFloatStateOf(0f) }
+    var canvasH by remember { mutableFloatStateOf(0f) }
+
+    // One infinite transition drives every sparkle on this card.
+    val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = "sparkles")
+
+    // Seeded PRNG so each card's sparkle field is stable across recompositions.
+    fun seedLong(): Long {
+        var h = 1125899906842597L
+        for (c in seedId) {
+            h = 31L * h + c.code
+        }
+        return h and 0x7FFFFFFFFFFFFFFFL
+    }
+
+    val sparkleCount = 38
+
+    // Pre-compute per-sparkle static params (position, timing) once per card.
+    data class SparkleSpec(
+        val x: Float,
+        val y: Float,
+        val radius: Float,
+        val peakAlpha: Float,
+        val periodMs: Int,
+        val phaseFraction: Float,
+        val driftAmp: Float,
+        val driftPhase: Float,
+        val driftSpeed: Float,
+        val twinkleScaleAmp: Float,
+        val starAngle: Float,
+    )
+
+    val sparkles = remember(seedId, canvasW, canvasH) {
+        var seed = seedLong()
+        fun nextFloat(): Float {
+            seed = (seed * 1103515245 + 12345) and 0x7FFFFFFF
+            return seed.toFloat() / 0x7FFFFFFF.toFloat()
+        }
+        // Safe-zone geometry in px. Matches the SpecimenListItem layout:
+        //  - image: left 16dp, top 16dp, size matches the caller's imageSize
+        //  - title band: starts at left (16 + imageSize + 16)dp, top 16dp, ~2 lines of 20sp
+        //  - type pill, rarity, and locations live in the right text column
+        //  - tagline band: bottom ~28dp
+        //  - heart corner: top-right ~52dp wide
+        val imgSizePx = with(density) { imageSize.toPx() }
+        val padStartPx = with(density) { 16.dp.toPx() }
+        val padTopPx = with(density) { 16.dp.toPx() }
+        val gapPx = with(density) { 16.dp.toPx() }
+        val titleHeightPx = with(density) { 52.dp.toPx() } // ~2 lines of 20sp
+        val heartCornerPx = with(density) { 56.dp.toPx() }
+        val bottomBandPx = with(density) { 60.dp.toPx() } // tagline + heart area
+        val sideMarginPx = with(density) { 14.dp.toPx() }
+
+        // Safe landing band: keep sparkles out of the readable text/image areas
+        // but allow them across the rest of the card surface so they actually show.
+        val imgRightPx = padStartPx + imgSizePx
+        val textLeftPx = imgRightPx + gapPx
+        val titleBottomPx = padTopPx + titleHeightPx
+        val bottomSafePx = canvasH - bottomBandPx
+        val heartLeftPx = canvasW - heartCornerPx
+
+        // Candidate landing zones (in px):
+        //  1. Top strip above the title
+        //  2. Right margin strip of the title row, to the left of the heart corner,
+        //     below the title text and above the type/rarity/locations block.
+        //  3. Thin vertical gap between image and text columns
+        //  4. Left/right side margins below the image.
+        //  5. A narrow horizontal band just above the bottom block.
+        fun placeX(): Float = when ((nextFloat() * 5f).toInt()) {
+            0 -> imgRightPx + nextFloat() * (textLeftPx - imgRightPx)     // image/text gap
+            1 -> padStartPx + nextFloat() * (imgRightPx - padStartPx)     // over image area
+            2 -> textLeftPx + nextFloat() * ((heartLeftPx - textLeftPx) * 0.65f) // left-of-heart strip
+            3 -> nextFloat() * sideMarginPx                               // left margin
+            else -> canvasW - sideMarginPx + nextFloat() * sideMarginPx   // right margin
+        }
+        fun placeY(): Float {
+            // Avoid the title band on the text side and the bottom tagline/heart block.
+            val y = when ((nextFloat() * 4f).toInt()) {
+                0 -> nextFloat() * padTopPx                                   // very top strip
+                1 -> padTopPx + nextFloat() * (imgSizePx - padTopPx)            // over image area
+                2 -> titleBottomPx + nextFloat() * ((bottomSafePx - titleBottomPx).coerceAtLeast(1f))
+                else -> titleBottomPx + nextFloat() * ((bottomSafePx - titleBottomPx).coerceAtLeast(1f))
+            }
+            return y.coerceIn(2f, (canvasH - 2f).coerceAtLeast(2f))
+        }
+
+        // Guard against the zero-size canvas on first composition: canvasW/H
+        // start at 0f and are only set by onSizeChanged AFTER layout. Without
+        // this guard, coerceIn(2f, -2f) throws IllegalArgumentException and
+        // crashes the whole screen — every SpecimenListItem renders one of these
+        // overlays, so the very first card takes down the Specimen Database (and
+        // any other screen using SpecimenListItem). The Canvas draw block already
+        // early-returns when w<=0, so these placeholder positions are never drawn.
+        val maxX = (canvasW - 2f).coerceAtLeast(2f)
+        val maxY = (canvasH - 2f).coerceAtLeast(2f)
+        List(sparkleCount) {
+            SparkleSpec(
+                x = placeX().coerceIn(2f, maxX),
+                y = placeY().coerceIn(2f, maxY),
+                radius = (nextFloat() * 1.4f + 1.0f) * with(density) { 1.dp.toPx() },
+                peakAlpha = nextFloat() * 0.25f + 0.70f,
+                periodMs = (2200 + (nextFloat() * 2600f).toInt()),  // 2.2–4.8s
+                phaseFraction = nextFloat(),
+                driftAmp = nextFloat() * with(density) { 3.dp.toPx() },
+                driftPhase = nextFloat() * 6.2831855f,
+                driftSpeed = 0.4f + nextFloat() * 0.6f,
+                twinkleScaleAmp = 0.30f + nextFloat() * 0.40f,
+                starAngle = nextFloat() * 6.2831855f,
+            )
+        }
+    }
+
+    // Build one animated alpha + one animated drift per sparkle. Use a single
+    // infinite transition; each sparkle gets its own remembered animation spec
+    // with a randomized phase by offsetting the start delay via a 0..1 fraction
+    // mapped to its period.
+    val alphas = sparkles.mapIndexed { i, s ->
+        transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                animation = androidx.compose.animation.core.tween(
+                    durationMillis = s.periodMs,
+                    delayMillis = (s.phaseFraction * s.periodMs).toInt(),
+                    easing = androidx.compose.animation.core.FastOutSlowInEasing,
+                ),
+                repeatMode = androidx.compose.animation.core.RepeatMode.Reverse,
+            ),
+            label = "sparkle-a-$i",
+        )
+    }
+    val drifts = sparkles.mapIndexed { i, s ->
+        transition.animateFloat(
+            initialValue = 0f,
+            targetValue = (2f * kotlin.math.PI).toFloat(),
+            animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                animation = androidx.compose.animation.core.tween(
+                    durationMillis = (6000 / s.driftSpeed).toInt(),
+                    delayMillis = (s.phaseFraction * 6000).toInt(),
+                    easing = androidx.compose.animation.core.LinearEasing,
+                ),
+                repeatMode = androidx.compose.animation.core.RepeatMode.Restart,
+            ),
+            label = "sparkle-d-$i",
+        )
+    }
+
+    androidx.compose.foundation.Canvas(
+        modifier = modifier.onSizeChanged { canvasW = it.width.toFloat(); canvasH = it.height.toFloat() }
+    ) {
+        val w = size.width
+        val h = size.height
+        if (w <= 0f || h <= 0f) return@Canvas
+        sparkles.forEachIndexed { i, s ->
+            val a = alphas[i].value
+            if (a <= 0.01f) return@forEachIndexed
+            // Triangle-wave the reverse animation so alpha rises 0->peak then 0
+            // (RepeatMode.Reverse already gives 0->1->0; scale to peakAlpha).
+            val alpha = (a * s.peakAlpha).coerceAtMost(s.peakAlpha)
+            // Scale breathes with the twinkle.
+            val scale = 1f - s.twinkleScaleAmp + (a * s.twinkleScaleAmp * 2f)
+            val r = (s.radius * scale).coerceAtLeast(0.5f)
+            // Slow drift along a sine.
+            val dx = kotlin.math.cos(s.driftPhase + drifts[i].value) * s.driftAmp
+            val dy = kotlin.math.sin(s.driftPhase + drifts[i].value) * s.driftAmp
+            val cx = (s.x + dx).coerceIn(2f, w - 2f)
+            val cy = (s.y + dy).coerceIn(2f, h - 2f)
+            // Use a brightened tint so sparkles pop against the dark card gradient.
+            val tint = brightenForText(baseColor, threshold = 0.45f, amount = 0.45f)
+            // Soft additive halo tinted to the class color.
+            drawCircle(
+                color = tint.copy(alpha = alpha * 0.55f),
+                radius = r * 4.0f,
+                center = androidx.compose.ui.geometry.Offset(cx, cy),
+            )
+            // Bright colored core.
+            drawCircle(
+                color = tint.copy(alpha = alpha),
+                radius = r * 1.15f,
+                center = androidx.compose.ui.geometry.Offset(cx, cy),
+            )
+            // White-hot center so the sparkle reads as a real glint.
+            drawCircle(
+                color = Color.White.copy(alpha = alpha * 0.95f),
+                radius = r * 0.65f,
+                center = androidx.compose.ui.geometry.Offset(cx, cy),
+            )
+            // Four-point star cross for extra visibility.
+            val starR = r * 2.6f
+            for (j in 0..3) {
+                val angle = s.starAngle + j * (kotlin.math.PI / 2f).toFloat()
+                val x1 = cx + kotlin.math.cos(angle) * starR
+                val y1 = cy + kotlin.math.sin(angle) * starR
+                val x2 = cx - kotlin.math.cos(angle) * starR
+                val y2 = cy - kotlin.math.sin(angle) * starR
+                drawLine(
+                    color = Color.White.copy(alpha = alpha * 0.75f),
+                    start = androidx.compose.ui.geometry.Offset(x1.toFloat(), y1.toFloat()),
+                    end = androidx.compose.ui.geometry.Offset(x2.toFloat(), y2.toFloat()),
+                    strokeWidth = r * 0.30f,
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun SpecimenListItem(
+    specimen: Specimen,
+    accent: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
+    onImageClick: () -> Unit = {},
+    title: String = specimen.name,
+    subtitle: @Composable RowScope.() -> Unit = {},
+    trailing: @Composable RowScope.() -> Unit = {},
+    addShare: @Composable (() -> Unit)? = null,
+    heart: @Composable (() -> Unit)? = null,
+    showCategory: Boolean = false,
+    categoryLabel: String = shortCategoryLabel(specimen.category),
+    imageSize: Dp = 48.dp,
+    thumbnailUrl: String? = null,
+    showTagline: Boolean = true,
+    heartSize: Dp = 44.dp,
+    addShareHeight: Dp = 44.dp,
+    selectionMode: Boolean = false,
+    isSelected: Boolean = false,
+    onToggleSelection: (() -> Unit)? = null,
+) {
+    val hasHeart = heart != null
+    val hasAddShare = addShare != null
+    val hasTagline = showTagline && specimen.tagline.isNotBlank()
+    val hasButtons = hasHeart || hasAddShare
+    val hasBottomSection = hasTagline || hasButtons
+
+    val shape = RoundedCornerShape(20.dp)
+    Box(
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .sculpted(shape = shape, accent = accent, shadowElevation = 6.dp)
+                .clip(shape)
+                .background(
+                    Brush.verticalGradient(rockClassCardGradient(specimen.rockClass))
+                )
+                .glowingBorder(3.dp, accent.copy(alpha = 0.50f), shape)
+                .clickable {
+                    if (selectionMode && onToggleSelection != null) onToggleSelection() else onClick()
+                },
+        ) {
+            // Accent glow overlay at top
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter)
+                    .height(100.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(accent.copy(alpha = 0.15f), Color.Transparent)
+                        )
+                    ),
+            )
+
+            // Animated class-tinted sparkle overlay. Draw-only Canvas, no
+            // pointerInput, so taps pass through to the card, heart, and image.
+            // Sits above the gradient/glow but below the text/image column.
+            SpecimenSparkleOverlay(
+                rockClass = specimen.rockClass,
+                seedId = specimen.id,
+                imageSize = imageSize,
+                modifier = Modifier.fillMaxSize(),
+            )
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                // ── Top section: thumbnail + text rows ──
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, top = 16.dp, end = 16.dp),
+                    verticalAlignment = Alignment.Top,
+                ) {
+                    // Selection checkbox on the left when in selection mode.
+                    if (selectionMode && onToggleSelection != null) {
+                        Checkbox(
+                            checked = isSelected,
+                            onCheckedChange = { onToggleSelection() },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = accent,
+                                uncheckedColor = DarkTextLow,
+                                checkmarkColor = Color(0xFF1C1A14),
+                            ),
+                            modifier = Modifier.size(32.dp),
+                        )
+                        Spacer(Modifier.width(12.dp))
+                    }
+                    SpecimenThumbnail(
+                        specimen = specimen,
+                        accent = accent,
+                        size = imageSize,
+                        thumbnailUrl = thumbnailUrl,
+                        onClick = onImageClick,
+                        showBorder = true,
+                    )
+                    Spacer(Modifier.width(16.dp))
+                    // Right-hand text column. Title is fixed at the top; the
+                    // type/rarity/locations block fills the remaining height and uses
+                    // SpaceEvenly so the rarity sits exactly at the vertical midpoint
+                    // between the type pill and the first location row.
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        verticalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        // Title block at the top of the right column.
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                        ) {
+                            // Title — bumped up 2sp (titleLarge is 18sp → 20sp) for
+                            // easier reading. Reserve 2 rows so long names have room.
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp,
+                                minLines = 2,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            // Custom subtitle content from callers. Rendered in a Row
+                            // so the RowScope receiver matches the subtitle signature;
+                            // callers commonly use this for category/rarity chips.
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                subtitle()
+                            }
+                            // Legacy trailing content (when no heart)
+                            if (!hasHeart) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    trailing()
+                                }
+                            }
+                        }
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth().weight(1f),
+                            verticalArrangement = Arrangement.SpaceEvenly,
+                        ) {
+                            // Type pill / formation environment badge.
+                            if (showCategory) {
+                                val (emoji, _, classColor) = formationEnvironmentMeta(specimen.rockClass)
+                                Row(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(classColor.copy(alpha = 0.18f))
+                                        .glowingBorder(1.dp, classColor.copy(alpha = 0.65f), RoundedCornerShape(12.dp))
+                                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = emoji,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontSize = 14.sp,
+                                    )
+                                    Text(
+                                        text = categoryLabel,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = brightenForText(classColor, amount = 0.30f),
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 13.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            } else {
+                                // Even when the category text is hidden, still show the
+                                // formation environment pill so every card carries it.
+                                FormationEnvironmentBadge(
+                                    rockClass = specimen.rockClass,
+                                )
+                            }
+
+                            // Rarity — enlarged dot + label, sits evenly spaced from the
+                            // type pill above and the first location row below.
+                            RarityIndicator(
+                                specimen.rarity,
+                                accent = accent,
+                                dotSize = 11.dp,
+                                textFontSize = 14.sp,
+                            )
+
+                            // Locations block — now part of the same vertical stack so
+                            // SpaceBetween centers the rarity between type and locations.
+                            val locations = specimen.whereFound.filter { it.isNotBlank() }.take(3)
+                            if (locations.isNotEmpty()) {
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                                ) {
+                                    // Row 1 — up to two locations
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        locations.take(2).forEach { loc -> LocationChipRow(loc) }
+                                    }
+                                    // Row 2 — the remaining location(s)
+                                    if (locations.size > 2) {
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            locations.drop(2).forEach { loc -> LocationChipRow(loc) }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // No full-width locations block here anymore; locations live inside
+                // the right-hand text column so they share the same vertical spacing
+                // as the title, type, and rarity.
+
+                // ── Bottom section: tagline (left) + heart/add stack (right) ──
+                // Tagline now sits directly on the card background — no dark shadow
+                // box. Text color matches the glowing border accent for cohesion.
+                // Tagline moved up 2dp (top padding 6dp → 4dp) to tighten the gap.
+                if (hasBottomSection) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 1.dp, top = 4.dp, bottom = 12.dp),
+                        verticalAlignment = Alignment.Bottom,
+                    ) {
+                        // Tagline text — sits directly on the card, accent-colored
+                        if (hasTagline) {
+                            AutoSizeTaglineText(
+                                text = specimen.tagline,
+                                accent = accent,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = if (hasButtons) 8.dp else 0.dp),
+                            )
+                        } else {
+                            Spacer(Modifier.weight(1f))
+                        }
+
+                        // Heart + Add stack — right column, 1dp gap between them
+                        if (hasButtons) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(1.dp),
+                            ) {
+                                if (hasHeart) {
+                                    heart()
+                                }
+                                if (hasAddShare) {
+                                    addShare()
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Spacer(Modifier.height(8.dp))
+                }
+            }
+        }
+    }
+}
+
+/** A single zoomable photo used by [FullScreenImageViewer]. Handles pinch-to-zoom,
+ *  pan, and long-press-to-save in a single gesture detector so the gestures don't
+ *  compete with each other. The tap-to-dismiss / tap-to-reset behaviour is handled
+ *  by the caller's outer Box so it only fires on the background, not on the image.
+ *  Pinch is the only zoom gesture — double-tap-to-zoom is intentionally omitted so
+ *  users inspect textures deliberately with two fingers. */
+@Composable
+private fun ZoomablePhoto(
+    url: String,
+    contentDescription: String,
+    scale: Float,
+    offsetX: Float,
+    offsetY: Float,
+    onScaleChange: (Float) -> Unit,
+    onPanChange: (Float, Float) -> Unit,
+    onLongPress: () -> Unit,
+) {
+    val context = LocalContext.current
+    val request = remember(url) {
+        ImageRequest.Builder(context)
+            .data(url)
+            .crossfade(true)
+            .size(Size.ORIGINAL)
+            .build()
+    }
+    val painter = rememberAsyncImagePainter(request)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTransformGestures { _, pan, zoom, _ ->
+                    val newScale = (scale * zoom).coerceIn(1f, 6f)
+                    if (newScale > 1f) {
+                        onScaleChange(newScale)
+                        onPanChange(pan.x, pan.y)
+                    } else {
+                        onScaleChange(1f)
+                    }
+                }
+            }
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onLongPress = { onLongPress() },
+                )
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Image(
+            painter = painter,
+            contentDescription = contentDescription,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer(
+                    scaleX = scale,
+                    scaleY = scale,
+                    translationX = offsetX,
+                    translationY = offsetY,
+                ),
+            contentScale = ContentScale.Fit,
+        )
+        when (painter.state) {
+            is AsyncImagePainter.State.Loading -> {
+                ShimmerPlaceholder(modifier = Modifier.fillMaxSize())
+            }
+            is AsyncImagePainter.State.Error -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Image,
+                        contentDescription = "Image failed to load",
+                        tint = Color.White.copy(alpha = 0.4f),
+                        modifier = Modifier.size(48.dp),
+                    )
+                }
+            }
+            else -> Unit
+        }
+    }
+}
+
+/** Full-screen image viewer — opens a single specimen photo at high resolution
+ *  with pinch-to-zoom, pan, and long-press-to-save. Users tap each image
+ *  individually to enlarge it; there is no swipe-to-page, no left/right arrows,
+ *  and no page counter so zoom and pan gestures are never confused with paging. */
+@Composable
+fun FullScreenImageViewer(
+    imageUrls: List<String>,
+    initialPage: Int = 0,
+    onDismiss: () -> Unit,
+) {
+    if (imageUrls.isEmpty()) return
+
+    val selectedUrl = imageUrls.getOrNull(initialPage.coerceIn(0, imageUrls.lastIndex)) ?: imageUrls.first()
+
+    var currentScale by remember { mutableFloatStateOf(1f) }
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    var offsetY by remember { mutableFloatStateOf(0f) }
+    var longPressSaveUrl by remember { mutableStateOf<String?>(null) }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = true,
+            dismissOnClickOutside = false,
+        ),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.95f))
+                // Single tap: zoom out if zoomed in, otherwise dismiss. Only wire up
+                // tap here when the image is at scale 1f so it doesn't compete with
+                // the pan/zoom gesture detector on the image itself.
+                .pointerInput(currentScale) {
+                    detectTapGestures(
+                        onTap = {
+                            if (currentScale > 1f) {
+                                currentScale = 1f
+                                offsetX = 0f
+                                offsetY = 0f
+                            } else onDismiss()
+                        },
+                    )
+                },
+        ) {
+            ZoomablePhoto(
+                url = selectedUrl,
+                contentDescription = "Specimen photo",
+                scale = currentScale,
+                offsetX = offsetX,
+                offsetY = offsetY,
+                onScaleChange = { newScale ->
+                    currentScale = newScale
+                    if (newScale <= 1f) {
+                        offsetX = 0f
+                        offsetY = 0f
+                    }
+                },
+                onPanChange = { dx, dy ->
+                    offsetX += dx
+                    offsetY += dy
+                },
+                onLongPress = { longPressSaveUrl = selectedUrl },
+            )
+
+            // Close button — top left
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(24.dp)
+                    .size(44.dp)
+                    .sculpted(
+                        shape = CircleShape,
+                        accent = Color.White,
+                        shadowElevation = 5.dp,
+                        circular = true,
+                        onClick = onDismiss,
+                    )
+                    .clip(CircleShape)
+                    .background(Color.Black),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = "Close",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+
+
+
+        }
+
+        // Long-press-to-save dialog — same "Save photo?" flow used by LongPressableImage.
+        longPressSaveUrl?.let { url ->
+            LongPressSaveDialog(
+                imageUrl = url,
+                onDismiss = { longPressSaveUrl = null },
+            )
+        }
+    }
+}
+
+/** Standalone single-image zoomable viewer — opens ONE photo full-screen with
+ *  no swipe-to-next behavior. Each enlarged image has its own independent pinch-
+ *  to-zoom and pan state, so zooming one photo never affects another. There are no
+ *  pager dots, left/right arrows, or "1 / 2" counter because there is only one
+ *  image at a time (master build task O).
+ *
+ *  The viewer is a full-screen black overlay with a centered image, a close button
+ *  top-left, and a long-press "Save photo?" action mirroring [FullScreenImageViewer]. */
+@Composable
+fun StandaloneZoomableImageViewer(
+    imageUrl: String,
+    onDismiss: () -> Unit,
+) {
+    if (imageUrl.isBlank()) return
+
+    var scale by remember { mutableFloatStateOf(1f) }
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    var offsetY by remember { mutableFloatStateOf(0f) }
+    var longPressSaveUrl by remember { mutableStateOf<String?>(null) }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = true,
+            dismissOnClickOutside = false,
+        ),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.95f))
+                .pointerInput(scale) {
+                    detectTapGestures(
+                        onTap = {
+                            if (scale > 1f) {
+                                scale = 1f
+                                offsetX = 0f
+                                offsetY = 0f
+                            } else onDismiss()
+                        },
+                    )
+                },
+        ) {
+            ZoomablePhoto(
+                url = imageUrl,
+                contentDescription = "Specimen photo",
+                scale = scale,
+                offsetX = offsetX,
+                offsetY = offsetY,
+                onScaleChange = { newScale ->
+                    scale = newScale
+                    if (newScale <= 1f) {
+                        offsetX = 0f
+                        offsetY = 0f
+                    }
+                },
+                onPanChange = { dx, dy ->
+                    offsetX += dx
+                    offsetY += dy
+                },
+                onLongPress = { longPressSaveUrl = imageUrl },
+            )
+
+            // Close button — top left
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(24.dp)
+                    .size(44.dp)
+                    .sculpted(
+                        shape = CircleShape,
+                        accent = Color.White,
+                        shadowElevation = 5.dp,
+                        circular = true,
+                        onClick = onDismiss,
+                    )
+                    .clip(CircleShape)
+                    .background(Color.Black),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = "Close",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+        }
+
+        longPressSaveUrl?.let { url ->
+            LongPressSaveDialog(
+                imageUrl = url,
+                onDismiss = { longPressSaveUrl = null },
+            )
+        }
+    }
+}
+
+/** "Save photo?" dialog used by [FullScreenImageViewer] and [StandaloneZoomableImageViewer]
+ *  when a user long-presses an enlarged image. Mirrors the save flow in
+ *  [LongPressableImage]: saves to the device gallery and adds the URL to the
+ *  in-app My Saved Images collection. */
+@Composable
+private fun LongPressSaveDialog(
+    imageUrl: String,
+    onDismiss: () -> Unit,
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = rememberCoroutineScope()
+    var saveMessage by remember { mutableStateOf<String?>(null) }
+    var showToast by remember { mutableStateOf(false) }
+
+    if (!showToast) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                Text(
+                    text = "Save photo?",
+                    color = Aqua,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            text = {
+                Text(
+                    text = "This will save the image to your gallery and add it to My Saved Images.",
+                    color = TextHigh,
+                )
+            },
+            confirmButton = {
+                SculptedButton(
+                    text = "Save photo",
+                    onClick = {
+                        onDismiss()
+                        scope.launch {
+                            val result = saveImageToGalleryAndCollection(context, imageUrl)
+                            saveMessage = result
+                            showToast = true
+                        }
+                    },
+                    accent = Citrine,
+                    containerColor = Citrine,
+                    textColor = Ink,
+                    shape = RoundedCornerShape(12.dp),
+                    icon = Icons.Filled.Download,
+                )
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    Text("Cancel", color = DarkTextMid)
+                }
+            },
+            containerColor = Slate900,
+        )
+    } else {
+        AlertDialog(
+            onDismissRequest = { showToast = false; onDismiss() },
+            title = null,
+            text = {
+                Text(
+                    text = saveMessage ?: "Saved",
+                    color = TextHigh,
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showToast = false; onDismiss() }) {
+                    Text("OK", color = Aqua)
+                }
+            },
+            containerColor = Slate900,
+        )
+    }
+}
+
+/** A labelled stat shown in detail screens (e.g. Hardness · 7).
+ *  Clean two-column layout: subtle dot, muted label, and a right-aligned
+ *  value that wraps neatly within its own weighted column. */
+@Composable
+fun StatRow(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    accent: Color = Citrine,
+    showDivider: Boolean = true,
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            verticalAlignment = Alignment.Top,
+        ) {
+            // Small accent dot
+            Box(
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(accent.copy(alpha = 0.85f))
+                    .glowingBorder(1.dp, accent.copy(alpha = 0.35f), CircleShape),
+            )
+            Spacer(Modifier.width(12.dp))
+            // Label
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = DarkTextMid,
+                modifier = Modifier.width(110.dp),
+            )
+            // Value — aligned right, wraps within its own column
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium,
+                color = DarkTextHigh,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        if (showDivider) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(Color.White.copy(alpha = 0.06f)),
+            )
+        }
+    }
+}
+
+/** Reusable lockout banner shown on gated screens (field captures, wishlist,
+ *  my rocks, favorite spots) when a free user's 1-week trial has expired and
+ *  no donated full-feature unlock is active. Routes the user to the paywall.
+ *
+ *  Phase 8 strict lockout — educational browsing and field-capture share-only
+ *  mode stay open; everything else locks. */
+@Composable
+fun LockedFeatureBanner(
+    onSubscribe: () -> Unit,
+    modifier: Modifier = Modifier,
+    message: String = "Your 1-week trial has ended. Subscribe or donate to unlock this feature.",
+) {
+    DarkCard(
+        accent = Citrine,
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(
+                modifier = Modifier.size(52.dp).clip(CircleShape)
+                    .background(Citrine.copy(alpha = 0.18f))
+                    .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) { Text("\uD83D\uDD12", style = MaterialTheme.typography.headlineMedium) }
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "Locked",
+                style = MaterialTheme.typography.titleLarge,
+                color = Citrine,
+                fontWeight = FontWeight.Bold,
+            )
+            Spacer(Modifier.height(6.dp))
+            Text(
+                message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = DarkTextMid,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+            Spacer(Modifier.height(14.dp))
+            SculptedButton(
+                text = "Subscribe or Donate",
+                onClick = onSubscribe,
+                accent = Citrine,
+                containerColor = Citrine,
+                textColor = androidx.compose.ui.graphics.Color.Black,
+                shape = RoundedCornerShape(14.dp),
+            )
+        }
+    }
+}

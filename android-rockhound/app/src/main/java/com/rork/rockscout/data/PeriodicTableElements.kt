@@ -1,0 +1,177 @@
+package com.rork.rockscout.data
+
+/**
+ * Read-only periodic table of elements data with rockhound-relevant context.
+ */
+@Suppress("unused")
+object PeriodicTableElements {
+
+    enum class ElementState(val label: String) {
+        SOLID("Solid"),
+        LIQUID("Liquid"),
+        GAS("Gas"),
+        UNKNOWN("Unknown"),
+    }
+
+    enum class ElementCategory(val label: String, val colorHex: Long) {
+        ALKALI_METAL("Alkali metal", 0xFFFF6B6B),
+        ALKALINE_EARTH_METAL("Alkaline earth metal", 0xFFFFD93D),
+        TRANSITION_METAL("Transition metal", 0xFF6BCBFF),
+        POST_TRANSITION_METAL("Post-transition metal", 0xFF96CEB4),
+        METALLOID("Metalloid", 0xFFB8B8B8),
+        POLYATOMIC_NONMETAL("Polyatomic nonmetal", 0xFF9D65FF),
+        DIATOMIC_NONMETAL("Diatomic nonmetal", 0xFF4ECDC4),
+        NOBLE_GAS("Noble gas", 0xFFFF9F43),
+        LANTHANIDE("Lanthanide", 0xFFFF6B9D),
+        ACTINIDE("Actinide", 0xFF7D8B8B),
+        UNKNOWN("Unknown", 0xFFAAAAAA),
+    }
+
+    data class Element(
+        val atomicNumber: Int,
+        val symbol: String,
+        val name: String,
+        val atomicMass: String,
+        val category: ElementCategory,
+        val group: Int,
+        val period: Int,
+        val electronConfiguration: String,
+        val summary: String,
+        val inRocks: String,
+    )
+
+    private val LIQUID_NUMBERS = setOf(35, 80)
+    private val GAS_NUMBERS = setOf(1, 2, 7, 8, 9, 10, 17, 18, 36, 54, 86, 118)
+    private val UNKNOWN_STATE_RANGE = 104..117
+
+    fun stateFor(atomicNumber: Int): ElementState = when {
+        atomicNumber in LIQUID_NUMBERS -> ElementState.LIQUID
+        atomicNumber in GAS_NUMBERS -> ElementState.GAS
+        atomicNumber in UNKNOWN_STATE_RANGE -> ElementState.UNKNOWN
+        else -> ElementState.SOLID
+    }
+
+    val elements: List<Element> = listOf(
+        Element(1, "H", "Hydrogen", "1.008", ElementCategory.DIATOMIC_NONMETAL, 1, 1, "1s¹", "The lightest and most abundant element in the universe; a colorless gas on Earth that bonds with oxygen to make water.", "Bound into water in every hydrated mineral; released as volcanic steam and trapped in opal and gypsum."),
+        Element(2, "He", "Helium", "4.0026", ElementCategory.NOBLE_GAS, 18, 1, "1s²", "A noble gas so light it escapes Earth's atmosphere; mined from natural gas reservoirs.", "Trapped in uranium and thorium minerals as an alpha-decay product; extracted from natural gas."),
+        Element(3, "Li", "Lithium", "6.94", ElementCategory.ALKALI_METAL, 1, 2, "[He] 2s¹", "The lightest solid metal; essential for rechargeable batteries.", "Found in spodumene, lepidolite, and petalite pegmatites; also in Nevada clay deposits."),
+        Element(4, "Be", "Beryllium", "9.0122", ElementCategory.ALKALINE_EARTH_METAL, 2, 2, "[He] 2s²", "A hard, lightweight metal used in aerospace alloys and brilliant gem crystals.", "The heart of beryl — emerald and aquamarine; also mined as bertrandite."),
+        Element(5, "B", "Boron", "10.81", ElementCategory.METALLOID, 13, 2, "[He] 2s² 2p¹", "A metalloid used in borax, glass, and brilliant green fireworks.", "Borax, kernite, and ulexite form in evaporites; tourmaline is a borosilicate mineral."),
+        Element(6, "C", "Carbon", "12.011", ElementCategory.POLYATOMIC_NONMETAL, 14, 2, "[He] 2s² 2p²", "The backbone of life and the source of diamonds, graphite, coal, and fossil fuels.", "Diamond and graphite are pure carbon; calcite and aragonite are calcium carbonates; fossils are carbon-based."),
+        Element(7, "N", "Nitrogen", "14.007", ElementCategory.DIATOMIC_NONMETAL, 15, 2, "[He] 2s² 2p³", "A colorless gas that makes up most of Earth's atmosphere.", "Rare in minerals; occurs as nitratine (Chile saltpeter) in desert evaporites."),
+        Element(8, "O", "Oxygen", "15.999", ElementCategory.DIATOMIC_NONMETAL, 16, 2, "[He] 2s² 2p⁴", "The most abundant element in Earth's crust, locked in oxides and silicates.", "Makes up about half the mass of common rocks — from quartz (SiO₂) to hematite (Fe₂O₃)."),
+        Element(9, "F", "Fluorine", "18.998", ElementCategory.DIATOMIC_NONMETAL, 17, 2, "[He] 2s² 2p⁵", "The most reactive nonmetal; never found free in nature.", "Fluorite (CaF₂) is the classic fluorescent mineral; also in topaz, cryolite, and apatite."),
+        Element(10, "Ne", "Neon", "20.180", ElementCategory.NOBLE_GAS, 18, 2, "[He] 2s² 2p⁶", "A noble gas that glows red-orange in signs; extracted from liquid air.", "Not found in minerals; trapped in tiny amounts in volcanic gases and natural gas."),
+        Element(11, "Na", "Sodium", "22.990", ElementCategory.ALKALI_METAL, 1, 3, "[Ne] 3s¹", "A soft, reactive metal and a major component of many rock-forming minerals.", "Common in albite, halite (NaCl), sodalite, and many feldspars."),
+        Element(12, "Mg", "Magnesium", "24.305", ElementCategory.ALKALINE_EARTH_METAL, 2, 3, "[Ne] 3s²", "A light metal abundant in Earth's mantle; essential to chlorophyll.", "Dominant in olivine, pyroxene, amphibole, dolomite, magnesite, and serpentine."),
+        Element(13, "Al", "Aluminum", "26.982", ElementCategory.POST_TRANSITION_METAL, 13, 3, "[Ne] 3s² 3p¹", "The most abundant metal in Earth's crust; used in cans, foil, and aircraft.", "A major component of feldspars, micas, clay minerals, corundum, and most garnets; bauxite is the main ore."),
+        Element(14, "Si", "Silicon", "28.085", ElementCategory.METALLOID, 14, 3, "[Ne] 3s² 3p²", "The second-most abundant element in the crust; the backbone of silicate minerals.", "Quartz, feldspar, mica, olivine, and pyroxene are built on silicon-oxygen tetrahedra."),
+        Element(15, "P", "Phosphorus", "30.974", ElementCategory.POLYATOMIC_NONMETAL, 15, 3, "[Ne] 3s² 3p³", "An essential element for life; used in fertilizers and matches.", "Apatite is the main phosphate mineral; phosphorite deposits and fossil bones are also rich in phosphorus."),
+        Element(16, "S", "Sulfur", "32.06", ElementCategory.POLYATOMIC_NONMETAL, 16, 3, "[Ne] 3s² 3p⁴", "A bright yellow nonmetal that smells like rotten eggs and forms volcanic crystals.", "Native sulfur forms around volcanoes; pyrite (FeS₂) and gypsum (CaSO₄·2H₂O) are common."),
+        Element(17, "Cl", "Chlorine", "35.45", ElementCategory.DIATOMIC_NONMETAL, 17, 3, "[Ne] 3s² 3p⁵", "A reactive greenish gas used in pools and disinfectants; half of table salt.", "Halite (NaCl) and sylvite (KCl) are the classic chloride minerals."),
+        Element(18, "Ar", "Argon", "39.948", ElementCategory.NOBLE_GAS, 18, 3, "[Ne] 3s² 3p⁶", "The third-most abundant gas in the atmosphere; used in welding and light bulbs.", "Trapped in volcanic rocks and natural gas; a decay product of potassium-40."),
+        Element(19, "K", "Potassium", "39.098", ElementCategory.ALKALI_METAL, 1, 4, "[Ar] 4s¹", "A soft, reactive metal essential for plant growth and a key feldspar component.", "Major component of orthoclase and microcline feldspars; sylvite is a potassium chloride evaporite."),
+        Element(20, "Ca", "Calcium", "40.078", ElementCategory.ALKALINE_EARTH_METAL, 2, 4, "[Ar] 4s²", "A metal that builds bones, shells, and the limestone mountain ranges.", "Calcite, aragonite, dolomite, gypsum, and apatite all carry calcium; limestone is mostly calcium carbonate."),
+        Element(21, "Sc", "Scandium", "44.956", ElementCategory.TRANSITION_METAL, 3, 4, "[Ar] 3d¹ 4s²", "A rare, lightweight metal that strengthens high-end aluminum alloys.", "Trace amounts in rare-earth minerals and thortveitite; rarely concentrated enough to mine."),
+        Element(22, "Ti", "Titanium", "47.867", ElementCategory.TRANSITION_METAL, 4, 4, "[Ar] 3d² 4s²", "A strong, corrosion-resistant metal; the ninth-most abundant element in the crust.", "Ilmenite and rutile are the main ores; star sapphires contain rutile needles."),
+        Element(23, "V", "Vanadium", "50.942", ElementCategory.TRANSITION_METAL, 5, 4, "[Ar] 3d³ 4s²", "A hard metal that strengthens steel and colors some minerals green and red.", "Vanadinite is a colorful lead-vanadate; vanadium also substitutes into ruby and emerald."),
+        Element(24, "Cr", "Chromium", "51.996", ElementCategory.TRANSITION_METAL, 6, 4, "[Ar] 3d⁵ 4s¹", "A shiny metal used in stainless steel and the green color of emerald.", "Chromite is the main ore; chromium gives emerald and chrome diopside their green color."),
+        Element(25, "Mn", "Manganese", "54.938", ElementCategory.TRANSITION_METAL, 7, 4, "[Ar] 3d⁵ 4s²", "A metal that paints rocks pink, black, and brown; essential for steel.", "Pyrolusite, rhodochrosite, and psilomelane are common manganese minerals."),
+        Element(26, "Fe", "Iron", "55.845", ElementCategory.TRANSITION_METAL, 8, 4, "[Ar] 3d⁶ 4s²", "The most abundant element on Earth by mass; the metal of the Industrial Age.", "Hematite, magnetite, limonite, and pyrite are the main ores; iron colors red jasper and bloodstone."),
+        Element(27, "Co", "Cobalt", "58.933", ElementCategory.TRANSITION_METAL, 9, 4, "[Ar] 3d⁷ 4s²", "A hard, magnetic metal used in blue pigments and batteries.", "Cobaltite and erythrite are classic cobalt minerals; trace cobalt gives blue glass its color."),
+        Element(28, "Ni", "Nickel", "58.693", ElementCategory.TRANSITION_METAL, 10, 4, "[Ar] 3d⁸ 4s²", "A silvery metal used in coins and stainless steel.", "Pentlandite and garnierite are the main ores; meteorites contain nickel-iron alloy."),
+        Element(29, "Cu", "Copper", "63.546", ElementCategory.TRANSITION_METAL, 11, 4, "[Ar] 3d¹⁰ 4s¹", "A reddish metal used since ancient times for tools and wiring; a famous collector mineral.", "Native copper, chalcopyrite, bornite, malachite, azurite, and chrysocolla are prized by rockhounds."),
+        Element(30, "Zn", "Zinc", "65.38", ElementCategory.TRANSITION_METAL, 12, 4, "[Ar] 3d¹⁰ 4s²", "A bluish-white metal used to galvanize steel and make brass.", "Sphalerite is the main zinc ore; smithsonite and hemimorphite are colorful secondary minerals."),
+        Element(31, "Ga", "Gallium", "69.723", ElementCategory.POST_TRANSITION_METAL, 13, 4, "[Ar] 3d¹⁰ 4s² 4p¹", "A soft metal that melts in your hand; used in LEDs and solar panels.", "Not a primary mineral; recovered as a byproduct of aluminum and zinc mining."),
+        Element(32, "Ge", "Germanium", "72.630", ElementCategory.METALLOID, 14, 4, "[Ar] 3d¹⁰ 4s² 4p²", "A brittle metalloid used in fiber optics and infrared lenses.", "Trace amounts in sphalerite and some silver ores; rarely forms its own minerals."),
+        Element(33, "As", "Arsenic", "74.922", ElementCategory.METALLOID, 15, 4, "[Ar] 3d¹⁰ 4s² 4p³", "A toxic metalloid also found in beautiful ore minerals.", "Arsenopyrite, orpiment, and realgar are classic arsenic minerals; mohawkite is arsenic-rich copper."),
+        Element(34, "Se", "Selenium", "78.96", ElementCategory.POLYATOMIC_NONMETAL, 16, 4, "[Ar] 3d¹⁰ 4s² 4p⁴", "A nonmetal that conducts electricity better when light shines on it.", "Rare in minerals; occurs in some sulfide ores and as selenides of silver and lead."),
+        Element(35, "Br", "Bromine", "79.904", ElementCategory.DIATOMIC_NONMETAL, 17, 4, "[Ar] 3d¹⁰ 4s² 4p⁵", "A reddish-brown liquid at room temperature; used in flame retardants and pools.", "Found in evaporite deposits such as halite and sylvite, usually as bromide salts."),
+        Element(36, "Kr", "Krypton", "83.798", ElementCategory.NOBLE_GAS, 18, 4, "[Ar] 3d¹⁰ 4s² 4p⁶", "A heavy noble gas used in high-performance lamps and lasers.", "Trapped in tiny amounts in natural gas and some volcanic emissions."),
+        Element(37, "Rb", "Rubidium", "85.468", ElementCategory.ALKALI_METAL, 1, 5, "[Kr] 5s¹", "A soft, reactive metal used in atomic clocks.", "Trace amounts in lepidolite and other lithium-bearing micas; rarely mined."),
+        Element(38, "Sr", "Strontium", "87.62", ElementCategory.ALKALINE_EARTH_METAL, 2, 5, "[Kr] 5s²", "A metal that burns bright red in fireworks and builds seashells.", "Celestine and strontianite are the main minerals; strontium substitutes into calcium carbonate fossils."),
+        Element(39, "Y", "Yttrium", "88.906", ElementCategory.TRANSITION_METAL, 3, 5, "[Kr] 4d¹ 5s²", "A rare metal used in LEDs, lasers, and superconductors.", "Found in rare-earth minerals such as xenotime and monazite."),
+        Element(40, "Zr", "Zirconium", "91.224", ElementCategory.TRANSITION_METAL, 4, 5, "[Kr] 4d² 5s²", "A metal with an oxide that withstands extreme heat; used in nuclear fuel rods.", "Zircon is the classic zirconium silicate — a common accessory mineral and brilliant gem."),
+        Element(41, "Nb", "Niobium", "92.906", ElementCategory.TRANSITION_METAL, 5, 5, "[Kr] 4d⁴ 5s¹", "A metal that makes steel tough and is used in superconducting magnets.", "Columbite and pyrochlore are the main ores; common in pegmatites and carbonatites."),
+        Element(42, "Mo", "Molybdenum", "95.95", ElementCategory.TRANSITION_METAL, 6, 5, "[Kr] 4d⁵ 5s¹", "A metal that strengthens steel; famous for its soft, greasy sulfide mineral.", "Molybdenite is the silvery ore; common in porphyry copper deposits."),
+        Element(43, "Tc", "Technetium", "98", ElementCategory.TRANSITION_METAL, 7, 5, "[Kr] 4d⁵ 5s²", "The lightest element with no stable isotopes; synthetic and radioactive.", "Not found naturally in minerals; produced in nuclear reactors."),
+        Element(44, "Ru", "Ruthenium", "101.07", ElementCategory.TRANSITION_METAL, 8, 5, "[Kr] 4d⁷ 5s¹", "A rare, hard platinum-group metal used in electronics and catalysts.", "Occurs in minute amounts in platinum and nickel ores."),
+        Element(45, "Rh", "Rhodium", "102.91", ElementCategory.TRANSITION_METAL, 9, 5, "[Kr] 4d⁸ 5s¹", "A silvery-white platinum-group metal with high reflectivity and value.", "Found in tiny amounts in platinum and nickel ores; used in catalytic converters."),
+        Element(46, "Pd", "Palladium", "106.42", ElementCategory.TRANSITION_METAL, 10, 5, "[Kr] 4d¹⁰", "A soft platinum-group metal used in catalytic converters and jewelry.", "Occurs in platinum and nickel ores; minor constituent of native platinum."),
+        Element(47, "Ag", "Silver", "107.87", ElementCategory.TRANSITION_METAL, 11, 5, "[Kr] 4d¹⁰ 5s¹", "A shiny metal prized for coins, jewelry, and photography since ancient times.", "Native silver, argentite, cerargyrite, and galena are classic silver minerals."),
+        Element(48, "Cd", "Cadmium", "112.41", ElementCategory.TRANSITION_METAL, 12, 5, "[Kr] 4d¹⁰ 5s²", "A soft, toxic metal used in batteries and yellow pigments.", "Greenockite is a rare cadmium sulfide mineral; mostly recovered from zinc smelting."),
+        Element(49, "In", "Indium", "114.82", ElementCategory.POST_TRANSITION_METAL, 13, 5, "[Kr] 4d¹⁰ 5s² 5p¹", "A soft metal used in touch screens and solar panels.", "Not a primary mineral; recovered as a byproduct of zinc mining."),
+        Element(50, "Sn", "Tin", "118.71", ElementCategory.POST_TRANSITION_METAL, 14, 5, "[Kr] 4d¹⁰ 5s² 5p²", "A metal used since the Bronze Age to make alloys and solder.", "Cassiterite is the main ore; tin has been mined in Cornwall, Bolivia, and Southeast Asia."),
+        Element(51, "Sb", "Antimony", "121.76", ElementCategory.METALLOID, 15, 5, "[Kr] 4d¹⁰ 5s² 5p³", "A brittle metalloid used in batteries, flame retardants, and pewter.", "Stibnite is the classic antimony sulfide — long metallic gray crystals; also native antimony."),
+        Element(52, "Te", "Tellurium", "127.60", ElementCategory.METALLOID, 16, 5, "[Kr] 4d¹⁰ 5s² 5p⁴", "A brittle metalloid used in solar cells and alloys.", "Sylvanite and calaverite are gold-silver telluride minerals; rare in the crust."),
+        Element(53, "I", "Iodine", "126.90", ElementCategory.DIATOMIC_NONMETAL, 17, 5, "[Kr] 4d¹⁰ 5s² 5p⁵", "A violet-black solid that sublimes into a purple gas; essential for thyroid health.", "Found in evaporite brines and some seaweed; rare in discrete mineral form."),
+        Element(54, "Xe", "Xenon", "131.29", ElementCategory.NOBLE_GAS, 18, 5, "[Kr] 4d¹⁰ 5s² 5p⁶", "A heavy noble gas used in high-end lamps and ion propulsion.", "Trapped in tiny amounts in natural gas and some volcanic emissions."),
+        Element(55, "Cs", "Cesium", "132.91", ElementCategory.ALKALI_METAL, 1, 6, "[Xe] 6s¹", "A soft, gold-colored metal that melts in your hand; used in atomic clocks.", "Found in trace amounts in pollucite and some pegmatites; rare in the crust."),
+        Element(56, "Ba", "Barium", "137.33", ElementCategory.ALKALINE_EARTH_METAL, 2, 6, "[Xe] 6s²", "A metal that gives fireworks a green color and is used in drilling mud.", "Barite is the heavy sulfate mineral; also in witherite and some feldspars."),
+        Element(57, "La", "Lanthanum", "138.91", ElementCategory.LANTHANIDE, 3, 6, "[Xe] 5d¹ 6s²", "A soft, silvery rare-earth metal used in optics and catalysts.", "Found in monazite and bastnäsite, the main rare-earth minerals."),
+        Element(58, "Ce", "Cerium", "140.12", ElementCategory.LANTHANIDE, 3, 6, "[Xe] 4f¹ 5d¹ 6s²", "The most abundant rare-earth metal; used in polishing glass and catalytic converters.", "Monazite and bastnäsite are the main cerium ores; also common in allanite."),
+        Element(59, "Pr", "Praseodymium", "140.91", ElementCategory.LANTHANIDE, 3, 6, "[Xe] 4f³ 6s²", "A rare-earth metal that gives glass and enamels a yellow-green color.", "Recovered from monazite and bastnäsite."),
+        Element(60, "Nd", "Neodymium", "144.24", ElementCategory.LANTHANIDE, 3, 6, "[Xe] 4f⁴ 6s²", "A rare-earth metal famous for strong magnets and lavender glass.", "Found in monazite and bastnäsite."),
+        Element(61, "Pm", "Promethium", "145", ElementCategory.LANTHANIDE, 3, 6, "[Xe] 4f⁵ 6s²", "A radioactive rare-earth metal that does not occur naturally on Earth.", "Synthetic; not found in any mineral or rock."),
+        Element(62, "Sm", "Samarium", "150.36", ElementCategory.LANTHANIDE, 3, 6, "[Xe] 4f⁶ 6s²", "A rare-earth metal used in magnets and nuclear reactor control rods.", "Recovered from monazite and bastnäsite."),
+        Element(63, "Eu", "Europium", "151.96", ElementCategory.LANTHANIDE, 3, 6, "[Xe] 4f⁷ 6s²", "A rare-earth metal that glows red in TV and fluorescent-lamp phosphors.", "Found in trace amounts in monazite and bastnäsite."),
+        Element(64, "Gd", "Gadolinium", "157.25", ElementCategory.LANTHANIDE, 3, 6, "[Xe] 4f⁷ 5d¹ 6s²", "A rare-earth metal used in MRI contrast agents and magnetic alloys.", "Recovered from monazite and bastnäsite."),
+        Element(65, "Tb", "Terbium", "158.93", ElementCategory.LANTHANIDE, 3, 6, "[Xe] 4f⁹ 6s²", "A rare-earth metal used in green phosphors and efficient lighting.", "Recovered from monazite and bastnäsite."),
+        Element(66, "Dy", "Dysprosium", "162.50", ElementCategory.LANTHANIDE, 3, 6, "[Xe] 4f¹⁰ 6s²", "A rare-earth metal critical for high-performance magnets and electric motors.", "Recovered from monazite and bastnäsite."),
+        Element(67, "Ho", "Holmium", "164.93", ElementCategory.LANTHANIDE, 3, 6, "[Xe] 4f¹¹ 6s²", "A rare-earth metal with the highest magnetic strength of any element.", "Recovered from monazite and bastnäsite."),
+        Element(68, "Er", "Erbium", "167.26", ElementCategory.LANTHANIDE, 3, 6, "[Xe] 4f¹² 6s²", "A rare-earth metal that gives glass a pink color and amplifies fiber-optic signals.", "Recovered from monazite and bastnäsite."),
+        Element(69, "Tm", "Thulium", "168.93", ElementCategory.LANTHANIDE, 3, 6, "[Xe] 4f¹³ 6s²", "The least abundant rare-earth metal; used in portable X-ray devices.", "Recovered from monazite and bastnäsite."),
+        Element(70, "Yb", "Ytterbium", "173.05", ElementCategory.LANTHANIDE, 3, 6, "[Xe] 4f¹⁴ 6s²", "A rare-earth metal used in atomic clocks and some laser systems.", "Recovered from monazite and bastnäsite."),
+        Element(71, "Lu", "Lutetium", "174.97", ElementCategory.LANTHANIDE, 3, 6, "[Xe] 4f¹⁴ 5d¹ 6s²", "The heaviest lanthanide; used in PET scan detectors and catalysts.", "Recovered from monazite and bastnäsite."),
+        Element(72, "Hf", "Hafnium", "178.49", ElementCategory.TRANSITION_METAL, 4, 6, "[Xe] 4f¹⁴ 5d² 6s²", "A metal used in nuclear reactor control rods and high-temperature ceramics.", "Always found with zirconium in zircon; recovered from zircon refining."),
+        Element(73, "Ta", "Tantalum", "180.95", ElementCategory.TRANSITION_METAL, 5, 6, "[Xe] 4f¹⁴ 5d³ 6s²", "A corrosion-resistant metal used in capacitors and surgical implants.", "Tantalite and columbite are the main ores; common in pegmatites."),
+        Element(74, "W", "Tungsten", "183.84", ElementCategory.TRANSITION_METAL, 6, 6, "[Xe] 4f¹⁴ 5d⁴ 6s²", "A very dense metal with the highest melting point of any element.", "Wolframite and scheelite are the main ores; famous for its hardness."),
+        Element(75, "Re", "Rhenium", "186.21", ElementCategory.TRANSITION_METAL, 7, 6, "[Xe] 4f¹⁴ 5d⁵ 6s²", "One of the rarest metals in the crust; used in jet-engine turbine blades.", "Found in trace amounts in molybdenite."),
+        Element(76, "Os", "Osmium", "190.23", ElementCategory.TRANSITION_METAL, 8, 6, "[Xe] 4f¹⁴ 5d⁶ 6s²", "The densest naturally occurring element; used in alloys and pen tips.", "Occurs in minute amounts in platinum ores."),
+        Element(77, "Ir", "Iridium", "192.22", ElementCategory.TRANSITION_METAL, 9, 6, "[Xe] 4f¹⁴ 5d⁷ 6s²", "A hard, corrosion-resistant platinum-group metal.", "Found in tiny amounts in platinum deposits; the iridium layer marks the K-Pg impact."),
+        Element(78, "Pt", "Platinum", "195.08", ElementCategory.TRANSITION_METAL, 10, 6, "[Xe] 4f¹⁴ 5d⁹ 6s¹", "A dense, silvery metal prized for jewelry and catalytic converters.", "Native platinum occurs in ultramafic igneous rocks and placer deposits; sperrylite is platinum arsenide."),
+        Element(79, "Au", "Gold", "196.97", ElementCategory.TRANSITION_METAL, 11, 6, "[Xe] 4f¹⁴ 5d¹⁰ 6s¹", "The famous yellow metal that has symbolized wealth for thousands of years.", "Native gold, electrum, and gold tellurides occur in quartz veins and placer deposits."),
+        Element(80, "Hg", "Mercury", "200.59", ElementCategory.TRANSITION_METAL, 12, 6, "[Xe] 4f¹⁴ 5d¹⁰ 6s²", "The only metal that is liquid at room temperature; used historically in mining.", "Cinnabar is the red mercury sulfide ore; once used to extract gold and silver."),
+        Element(81, "Tl", "Thallium", "204.38", ElementCategory.POST_TRANSITION_METAL, 13, 6, "[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p¹", "A soft, toxic metal used in electronics and once as a rat poison.", "Rare in minerals; found in trace amounts in some sulfide ores."),
+        Element(82, "Pb", "Lead", "207.2", ElementCategory.POST_TRANSITION_METAL, 14, 6, "[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p²", "A heavy, soft metal used since ancient times for pipes and bullets.", "Galena is the classic lead sulfide; cerussite and anglesite are secondary lead minerals."),
+        Element(83, "Bi", "Bismuth", "208.98", ElementCategory.POST_TRANSITION_METAL, 15, 6, "[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p³", "A brittle metal with a rainbow oxide tarnish and low toxicity for a heavy metal.", "Native bismuth is uncommon; bismuthinite is the sulfide. Lab-grown bismuth crystals are famous."),
+        Element(84, "Po", "Polonium", "209", ElementCategory.METALLOID, 16, 6, "[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁴", "A radioactive element discovered by Marie Curie.", "Not a primary mineral element; occurs as trace decay products in uranium ores."),
+        Element(85, "At", "Astatine", "210", ElementCategory.METALLOID, 17, 6, "[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁵", "A rare, radioactive halogen with no stable isotopes.", "Not found naturally in appreciable amounts."),
+        Element(86, "Rn", "Radon", "222", ElementCategory.NOBLE_GAS, 18, 6, "[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p⁶", "A radioactive noble gas that seeps from the ground and can accumulate in basements.", "A decay product of uranium and thorium in rocks; a health hazard in poorly ventilated spaces."),
+        Element(87, "Fr", "Francium", "223", ElementCategory.ALKALI_METAL, 1, 7, "[Rn] 7s¹", "A highly radioactive alkali metal with no stable isotopes.", "Not found naturally except in vanishingly small traces from decay chains."),
+        Element(88, "Ra", "Radium", "226", ElementCategory.ALKALINE_EARTH_METAL, 2, 7, "[Rn] 7s²", "A radioactive metal once used in glowing watch dials.", "Found in trace amounts in uranium and thorium ores such as uraninite."),
+        Element(89, "Ac", "Actinium", "227", ElementCategory.ACTINIDE, 3, 7, "[Rn] 6d¹ 7s²", "A radioactive actinide with no stable isotopes.", "Not found naturally in appreciable amounts."),
+        Element(90, "Th", "Thorium", "232.04", ElementCategory.ACTINIDE, 3, 7, "[Rn] 6d² 7s²", "A radioactive metal abundant enough to be a potential nuclear fuel.", "Thorite and monazite are the main thorium minerals."),
+        Element(91, "Pa", "Protactinium", "231.04", ElementCategory.ACTINIDE, 3, 7, "[Rn] 5f² 6d¹ 7s²", "A radioactive actinide that is rare in nature.", "Found in trace amounts in uranium and thorium ores."),
+        Element(92, "U", "Uranium", "238.03", ElementCategory.ACTINIDE, 3, 7, "[Rn] 5f³ 6d¹ 7s²", "A radioactive metal famous as nuclear fuel and for its colorful secondary minerals.", "Uraninite is the main ore; autunite, torbernite, and carnotite are beautiful uranium minerals."),
+        Element(93, "Np", "Neptunium", "237", ElementCategory.ACTINIDE, 3, 7, "[Rn] 5f⁴ 6d¹ 7s²", "A synthetic radioactive element produced in nuclear reactors.", "Not found naturally in appreciable amounts."),
+        Element(94, "Pu", "Plutonium", "244", ElementCategory.ACTINIDE, 3, 7, "[Rn] 5f⁶ 7s²", "A synthetic radioactive element used in nuclear weapons and reactors.", "Trace amounts may form in uranium ores from neutron capture."),
+        Element(95, "Am", "Americium", "243", ElementCategory.ACTINIDE, 3, 7, "[Rn] 5f⁷ 7s²", "A synthetic radioactive element used in smoke detectors.", "Not found naturally."),
+        Element(96, "Cm", "Curium", "247", ElementCategory.ACTINIDE, 3, 7, "[Rn] 5f⁷ 6d¹ 7s²", "A synthetic radioactive element named after Marie Curie.", "Not found naturally."),
+        Element(97, "Bk", "Berkelium", "247", ElementCategory.ACTINIDE, 3, 7, "[Rn] 5f⁹ 7s²", "A synthetic radioactive element made in nuclear reactors.", "Not found naturally."),
+        Element(98, "Cf", "Californium", "251", ElementCategory.ACTINIDE, 3, 7, "[Rn] 5f¹⁰ 7s²", "A synthetic radioactive element used in neutron sources.", "Not found naturally."),
+        Element(99, "Es", "Einsteinium", "252", ElementCategory.ACTINIDE, 3, 7, "[Rn] 5f¹¹ 7s²", "A synthetic radioactive element first discovered in nuclear fallout.", "Not found naturally."),
+        Element(100, "Fm", "Fermium", "257", ElementCategory.ACTINIDE, 3, 7, "[Rn] 5f¹² 7s²", "A synthetic radioactive element named after Enrico Fermi.", "Not found naturally."),
+        Element(101, "Md", "Mendelevium", "258", ElementCategory.ACTINIDE, 3, 7, "[Rn] 5f¹³ 7s²", "A synthetic radioactive element named after Dmitri Mendeleev.", "Not found naturally."),
+        Element(102, "No", "Nobelium", "259", ElementCategory.ACTINIDE, 3, 7, "[Rn] 5f¹⁴ 7s²", "A synthetic radioactive element named after Alfred Nobel.", "Not found naturally."),
+        Element(103, "Lr", "Lawrencium", "262", ElementCategory.ACTINIDE, 3, 7, "[Rn] 5f¹⁴ 7s² 7p¹", "A synthetic radioactive element named after Ernest Lawrence.", "Not found naturally."),
+        Element(104, "Rf", "Rutherfordium", "267", ElementCategory.TRANSITION_METAL, 4, 7, "[Rn] 5f¹⁴ 6d² 7s²", "A synthetic superheavy element named after Ernest Rutherford.", "Not found naturally."),
+        Element(105, "Db", "Dubnium", "268", ElementCategory.TRANSITION_METAL, 5, 7, "[Rn] 5f¹⁴ 6d³ 7s²", "A synthetic superheavy element named after Dubna, Russia.", "Not found naturally."),
+        Element(106, "Sg", "Seaborgium", "269", ElementCategory.TRANSITION_METAL, 6, 7, "[Rn] 5f¹⁴ 6d⁴ 7s²", "A synthetic superheavy element named after Glenn Seaborg.", "Not found naturally."),
+        Element(107, "Bh", "Bohrium", "270", ElementCategory.TRANSITION_METAL, 7, 7, "[Rn] 5f¹⁴ 6d⁵ 7s²", "A synthetic superheavy element named after Niels Bohr.", "Not found naturally."),
+        Element(108, "Hs", "Hassium", "269", ElementCategory.TRANSITION_METAL, 8, 7, "[Rn] 5f¹⁴ 6d⁶ 7s²", "A synthetic superheavy element named after the German state of Hesse.", "Not found naturally."),
+        Element(109, "Mt", "Meitnerium", "278", ElementCategory.TRANSITION_METAL, 9, 7, "[Rn] 5f¹⁴ 6d⁷ 7s²", "A synthetic superheavy element named after Lise Meitner.", "Not found naturally."),
+        Element(110, "Ds", "Darmstadtium", "281", ElementCategory.TRANSITION_METAL, 10, 7, "[Rn] 5f¹⁴ 6d⁸ 7s²", "A synthetic superheavy element named after Darmstadt, Germany.", "Not found naturally."),
+        Element(111, "Rg", "Roentgenium", "282", ElementCategory.TRANSITION_METAL, 11, 7, "[Rn] 5f¹⁴ 6d⁹ 7s²", "A synthetic superheavy element named after Wilhelm Röntgen.", "Not found naturally."),
+        Element(112, "Cn", "Copernicium", "285", ElementCategory.TRANSITION_METAL, 12, 7, "[Rn] 5f¹⁴ 6d¹⁰ 7s²", "A synthetic superheavy element named after Nicolaus Copernicus.", "Not found naturally."),
+        Element(113, "Nh", "Nihonium", "286", ElementCategory.POST_TRANSITION_METAL, 13, 7, "[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p¹", "A synthetic superheavy element named after Japan (Nihon).", "Not found naturally."),
+        Element(114, "Fl", "Flerovium", "289", ElementCategory.POST_TRANSITION_METAL, 14, 7, "[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p²", "A synthetic superheavy element named after the Flerov Laboratory.", "Not found naturally."),
+        Element(115, "Mc", "Moscovium", "290", ElementCategory.POST_TRANSITION_METAL, 15, 7, "[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p³", "A synthetic superheavy element named after Moscow.", "Not found naturally."),
+        Element(116, "Lv", "Livermorium", "293", ElementCategory.POST_TRANSITION_METAL, 16, 7, "[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁴", "A synthetic superheavy element named after Lawrence Livermore Laboratory.", "Not found naturally."),
+        Element(117, "Ts", "Tennessine", "294", ElementCategory.DIATOMIC_NONMETAL, 17, 7, "[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁵", "A synthetic superheavy element named after Tennessee.", "Not found naturally."),
+        Element(118, "Og", "Oganesson", "294", ElementCategory.NOBLE_GAS, 18, 7, "[Rn] 5f¹⁴ 6d¹⁰ 7s² 7p⁶", "A synthetic superheavy element named after Yuri Oganessian.", "Not found naturally."),
+    )
+
+    fun bySymbol(symbol: String): Element? = elements.firstOrNull { it.symbol.equals(symbol, ignoreCase = true) }
+    fun byNumber(number: Int): Element? = elements.firstOrNull { it.atomicNumber == number }
+}
