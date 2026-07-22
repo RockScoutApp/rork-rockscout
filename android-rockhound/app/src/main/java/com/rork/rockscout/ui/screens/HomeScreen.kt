@@ -969,25 +969,33 @@ private fun HomeTagline(
     onContactUsClick: () -> Unit = {},
     onLegalClick: () -> Unit = {},
 ) {
-    Row(
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.Bottom,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        // Left: Note to Fellow RockScouts button
+        // Top row: all three pills in a single horizontal row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            ContactUsPillButton(
+                onClick = onContactUsClick,
+                modifier = Modifier.weight(1f),
+            )
+            HowToUsePillButton(
+                onClick = onHowToUseClick,
+                modifier = Modifier.weight(1f),
+            )
+            LegalPillButton(
+                onClick = onLegalClick,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        // Note to Fellow RockScouts button below the pills
         NoteToFellowRockScoutsButton(
             onClick = onNoteClick,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.fillMaxWidth(),
         )
-        // Right: stacked Contact Us pill (top) + How to Use pill (bottom)
-        // How to Use bottom edge aligns with the bottom of the Note box.
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            ContactUsPillButton(onClick = onContactUsClick)
-            HowToUsePillButton(onClick = onHowToUseClick)
-            LegalPillButton(onClick = onLegalClick)
-        }
     }
 }
 
