@@ -4,10 +4,16 @@
     android:viewportWidth="24"
     android:viewportHeight="24"
     android:tint="#FFFFFF">
-    <!-- White silhouette of the RockScout pickaxe app icon for the
-         notification status bar. Single-color glyph on transparent
-         background, as required by NotificationCompat.setSmallIcon. -->
+    <!-- Pickaxe silhouette — a single-color white glyph on transparent
+         background, as required for NotificationCompat.setSmallIcon.
+         Drawn within the 24x24 safe area (padding ~2dp). -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M4.5,20.5l2.2,-2.2c-0.5,-0.4 -0.8,-1.0 -1.0,-1.7c-0.2,-0.7 -0.1,-1.4 0.2,-2.0c0.3,-0.6 0.8,-1.1 1.4,-1.4l5.2,-3.0l6.2,-6.2c0.5,-0.5 1.2,-0.6 1.8,-0.3c0.6,0.3 0.9,0.9 0.9,1.6c0,0.5 -0.2,1.0 -0.6,1.3l-1.4,1.4l-6.2,6.2l-3.0,5.2c-0.3,0.6 -0.8,1.1 -1.4,1.4c-0.6,0.3 -1.3,0.4 -2.0,0.2c-0.7,-0.2 -1.3,-0.5 -1.7,-1.0zM17.0,5.0l-1.4,1.4l0.7,0.7c0.4,0.4 0.4,1.0 0,1.4l-0.7,0.7l1.4,1.4l0.7,-0.7c0.4,-0.4 1.0,-0.4 1.4,0l0.7,0.7L21.6,8.3c0.4,-0.4 0.4,-1.0 0,-1.4l-2.2,-2.2c-0.4,-0.4 -1.0,-0.4 -1.4,0L17.0,5.0z" />
+        android:pathData="M20.4,3.6c-1.2,-1.2 -3.4,-1.4 -5.8,-0.6c1.0,0.2 2.0,0.7 2.8,1.5c0.8,0.8 1.3,1.8 1.5,2.8C19.7,7.0 19.6,4.8 20.4,3.6z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M17.4,8.0l-1.3,-1.3l-9.5,9.5l-3.2,4.5l4.5,-3.2z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M6.6,6.6c-1.0,1.0 -1.6,2.5 -1.6,4.0l1.8,0c0,-1.0 0.4,-2.0 1.1,-2.8z" />
 </vector>

@@ -102,8 +102,6 @@ import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.AchievementCatalog
 import com.rork.rockscout.data.Achievement
 import com.rork.rockscout.data.AuthRepository
-import com.rork.rockscout.data.FriendRepository
-import com.rork.rockscout.data.HunterStatus
 import com.rork.rockscout.data.IdentifyAccessManager
 import com.rork.rockscout.data.NotificationRepository
 import com.rork.rockscout.data.PostRepository
@@ -204,8 +202,6 @@ fun ProfileScreen(
     val unreadCount by notificationRepo.unreadCount.collectAsStateWithLifecycle()
     val postRepo = PostRepository.instance
     val myPosts by postRepo.myPosts.collectAsStateWithLifecycle()
-    val friendRepo = FriendRepository.instance
-    val myFriends by friendRepo.friends.collectAsStateWithLifecycle()
     val postLikes by postRepo.postLikes.collectAsStateWithLifecycle()
     val postComments by postRepo.postComments.collectAsStateWithLifecycle()
     val commentLikes by postRepo.commentLikes.collectAsStateWithLifecycle()
@@ -266,12 +262,11 @@ fun ProfileScreen(
 
     val listState = rememberLazyListState()
 
-    // Load connections, message requests, friends, and notifications when signed in.
+    // Load connections, message requests, and notifications when signed in.
     androidx.compose.runtime.LaunchedEffect(isSignedIn, profile.clubEnabled) {
         if (isSignedIn && profile.clubEnabled) {
             social.loadConnections()
             social.loadRequests()
-            friendRepo.loadFriends()
         }
         if (isSignedIn) {
             notificationRepo.loadNotifications()
@@ -540,20 +535,6 @@ fun ProfileScreen(
                     StatTile("Wishlist", wishlist.size.toString(), Icons.Filled.PlaylistAdd, Color(0xFF9B7BD8), Modifier.weight(1f)) { navController.navigate(Routes.WISHLIST) }
                     StatTile("Spots", favorites.size.toString(), Icons.Filled.Place, Color(0xFFE2574C), Modifier.weight(1f)) { navController.navigate(Routes.FAVORITES) }
                 }
-            }
-
-            // ─── RockScout Friends section (directly above Profile Posts) ───
-            item { SectionLabel("RockScout Friends") }
-            item {
-                RockScoutFriendsSection(
-                    friends = myFriends,
-                    isSignedIn = isSignedIn,
-                    onFriendTap = { friendId -> navController.navigate(Routes.userProfile(friendId)) },
-                    onSeeAll = { navController.navigate(Routes.friends()) },
-                    onSignIn = { navController.navigate(Routes.SIGN_IN) },
-                    onEnableFriends = { navController.navigate(Routes.SOCIAL_SETTINGS) },
-                    clubEnabled = profile.clubEnabled,
-                )
             }
 
             // ─── Post feed (5 most recent posts, empty box if none) ───
@@ -1272,139 +1253,6 @@ private fun SectionLabel(text: String) {
         fontWeight = FontWeight.ExtraBold,
         modifier = Modifier.padding(top = if (isPosts) 8.dp else 4.dp, bottom = if (isPosts) 4.dp else 0.dp),
     )
-}
-
-/** Horizontal strip of connected RockScout friends shown on the Profile screen,
- *  directly above the Profile Posts section. Tapping a friend opens their public
- *  profile; the "See all" button jumps to the unified RockScout Friends screen. */
-@Composable
-private fun RockScoutFriendsSection(
-    friends: List<SocialRepository.HunterProfile>,
-    isSignedIn: Boolean,
-    clubEnabled: Boolean,
-    onFriendTap: (String) -> Unit,
-    onSeeAll: () -> Unit,
-    onSignIn: () -> Unit,
-    onEnableFriends: () -> Unit,
-) {
-    DarkCard(modifier = Modifier.fillMaxWidth(), accent = Citrine) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            if (!isSignedIn) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        "Sign in to see your RockScout Friends.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = DarkTextMid,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    SculptedOutlinedButton(
-                        text = "Sign in",
-                        onClick = onSignIn,
-                        accent = Citrine,
-                        textColor = Citrine,
-                    )
-                }
-            } else if (!clubEnabled) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        "Enable RockScout Friends in Social Settings to connect with other hunters.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = DarkTextMid,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    SculptedOutlinedButton(
-                        text = "Enable",
-                        onClick = onEnableFriends,
-                        accent = Aqua,
-                        textColor = Aqua,
-                    )
-                }
-            } else if (friends.isEmpty()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        "No RockScout Friends yet. Send friend requests from the Scan or Trade screens.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = DarkTextMid,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    SculptedOutlinedButton(
-                        text = "Find hunters",
-                        onClick = onSeeAll,
-                        accent = Citrine,
-                        textColor = Citrine,
-                    )
-                }
-            } else {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    androidx.compose.foundation.lazy.LazyRow(
-                        modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        contentPadding = PaddingValues(end = 8.dp),
-                    ) {
-                        items(friends, key = { it.id }) { friend ->
-                            Column(
-                                modifier = Modifier
-                                    .width(64.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .clickable { onFriendTap(friend.id) }
-                                    .padding(vertical = 4.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                            ) {
-                                val friendStatus = remember(friend.status) {
-                                    HunterStatus.entries.firstOrNull { status ->
-                                        status.name.equals(friend.status, ignoreCase = true) ||
-                                            status.label.equals(friend.status, ignoreCase = true)
-                                    } ?: HunterStatus.OFF_GRID
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .size(44.dp)
-                                        .clip(CircleShape)
-                                        .background(Brush.linearGradient(listOf(Citrine.copy(alpha = 0.45f), Aqua.copy(alpha = 0.25f))))
-                                        .glowingBorder(1.5.dp, profileBorderColor(friendStatus), CircleShape),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text(friend.avatar_emoji, style = MaterialTheme.typography.titleMedium)
-                                }
-                                Spacer(Modifier.height(4.dp))
-                                Text(
-                                    friend.display_name,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = DarkTextHigh,
-                                    fontWeight = FontWeight.SemiBold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    textAlign = TextAlign.Center,
-                                )
-                            }
-                        }
-                    }
-                    SculptedOutlinedButton(
-                        text = "See all",
-                        onClick = onSeeAll,
-                        accent = Citrine,
-                        textColor = Citrine,
-                    )
-                }
-            }
-        }
-    }
 }
 
 
