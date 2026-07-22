@@ -31,8 +31,6 @@ import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Unarchive
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -72,8 +70,6 @@ import com.rork.rockscout.ui.theme.Ink
 import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.TextMid
 
-/** Sort mode for the comment section of a community post. */
-private enum class CommunityCommentSortMode { Collapsed, Popular, Newest }
 
 /**
  * Compact card for the community feed. Shows author, title, tagline,
@@ -204,81 +200,12 @@ fun CommunityPostCard(
 
         Spacer(Modifier.height(10.dp))
 
-        // ─── Comment sort toggle + title row ───
-        var commentSortMode by remember(post.id) {
-            mutableStateOf(CommunityCommentSortMode.Collapsed)
-        }
+        // ─── Comment expand toggle + title row ───
+        var commentsExpanded by remember(post.id) { mutableStateOf(false) }
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            if (comments.isNotEmpty()) {
-                var pillMenuExpanded by remember(post.id) { mutableStateOf(false) }
-                Box {
-                    Row(
-                        modifier = Modifier
-                            .height(28.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(
-                                if (commentSortMode != CommunityCommentSortMode.Collapsed)
-                                    Citrine.copy(alpha = 0.20f)
-                                else Color(0xFF2A2820)
-                            )
-                            .glowingBorder(
-                                1.dp,
-                                Citrine.copy(
-                                    alpha = if (commentSortMode != CommunityCommentSortMode.Collapsed) 0.85f else 0.45f
-                                ),
-                                RoundedCornerShape(14.dp),
-                            )
-                            .clickable { pillMenuExpanded = true }
-                            .padding(horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        Icon(
-                            imageVector = if (commentSortMode != CommunityCommentSortMode.Collapsed)
-                                Icons.Filled.ExpandLess
-                            else Icons.Filled.ExpandMore,
-                            contentDescription = "Toggle comments",
-                            tint = Citrine,
-                            modifier = Modifier.size(14.dp),
-                        )
-                        Text(
-                            text = comments.size.toString(),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Citrine,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = pillMenuExpanded,
-                        onDismissRequest = { pillMenuExpanded = false },
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text("Most popular comments", color = DarkTextHigh) },
-                            onClick = {
-                                commentSortMode = CommunityCommentSortMode.Popular
-                                pillMenuExpanded = false
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Newest comments", color = DarkTextHigh) },
-                            onClick = {
-                                commentSortMode = CommunityCommentSortMode.Newest
-                                pillMenuExpanded = false
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text("Collapse", color = DarkTextHigh) },
-                            onClick = {
-                                commentSortMode = CommunityCommentSortMode.Collapsed
-                                pillMenuExpanded = false
-                            },
-                        )
-                    }
-                }
-            }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     post.title,
@@ -521,41 +448,28 @@ fun CommunityPostCard(
             }
         }
 
-        // ─── Comments (expanded only) ───
+        // ─── Comments (only the most popular comment shows on the main card) ───
         AnimatedVisibility(visible = isExpanded && comments.isNotEmpty()) {
             Spacer(Modifier.height(10.dp))
             val topLevel = comments.filter { it.parent_comment_id == null }
             val rankedTopLevel = remember(comments, commentLikes) {
                 topLevel.sortedByDescending { commentLikes[it.id]?.size ?: 0 }
             }
-            val newestTopLevel = remember(comments) {
-                topLevel.sortedByDescending { it.created_at }
-            }
             val topComment = rankedTopLevel.firstOrNull()
-            val topCommentReplyCount = topComment?.let { c ->
-                comments.count { it.parent_comment_id == c.id }
-            } ?: 0
-            val collapsible = rankedTopLevel.size > 1 || topCommentReplyCount > 1
+            val hasMore = topLevel.size > 1 || (topComment?.let { c -> comments.count { it.parent_comment_id == c.id } } ?: 0) > 0
 
-            val visibleTopLevel: List<CommunityRepository.CommentRow> = when (commentSortMode) {
-                CommunityCommentSortMode.Collapsed -> rankedTopLevel.take(1)
-                CommunityCommentSortMode.Popular -> rankedTopLevel
-                CommunityCommentSortMode.Newest -> newestTopLevel
-            }
+            // Collapsed: show the single most popular top-level comment only.
+            // Expanded: show every top-level comment and each reply as a separate row.
+            val visibleTopLevel: List<CommunityRepository.CommentRow> =
+                if (commentsExpanded) rankedTopLevel else rankedTopLevel.take(1)
 
             visibleTopLevel.forEach { comment ->
                 val allReplies = comments.filter { it.parent_comment_id == comment.id }
                 val rankedReplies = remember(comments, commentLikes, comment.id) {
                     allReplies.sortedByDescending { commentLikes[it.id]?.size ?: 0 }
                 }
-                val newestReplies = remember(comments, comment.id) {
-                    allReplies.sortedByDescending { it.created_at }
-                }
-                val visibleReplies: List<CommunityRepository.CommentRow> = when (commentSortMode) {
-                    CommunityCommentSortMode.Collapsed -> rankedReplies.take(1)
-                    CommunityCommentSortMode.Popular -> rankedReplies
-                    CommunityCommentSortMode.Newest -> newestReplies
-                }
+                val visibleReplies: List<CommunityRepository.CommentRow> =
+                    if (commentsExpanded) rankedReplies else emptyList()
 
                 CommunityCommentRow(
                     comment = comment,
@@ -577,8 +491,6 @@ fun CommunityPostCard(
                                 likeCount = commentLikes[reply.id]?.size ?: 0,
                                 isLiked = likedCommentIds.contains(reply.id),
                                 onLike = { onCommentLike(reply.id) },
-                                // Nested replies hide their own Reply action so parent and child
-                                // comments don't stack Reply buttons (master build task M).
                                 onReply = {},
                                 isReplying = replyingToCommentId == reply.id,
                                 isReply = true,
@@ -602,6 +514,42 @@ fun CommunityPostCard(
                     )
                 }
                 if (comment != visibleTopLevel.last()) Spacer(Modifier.height(6.dp))
+            }
+
+            // Expand / collapse button when there are more comments/replies to show
+            if (hasMore) {
+                Spacer(Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(if (commentsExpanded) Citrine.copy(alpha = 0.20f) else Color(0xFF2A2820))
+                            .glowingBorder(1.dp, Citrine.copy(alpha = 0.55f), RoundedCornerShape(20.dp))
+                            .clickable { commentsExpanded = !commentsExpanded }
+                            .padding(horizontal = 14.dp, vertical = 6.dp),
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Icon(
+                                imageVector = if (commentsExpanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                                contentDescription = if (commentsExpanded) "Collapse comments" else "Expand comments",
+                                tint = Citrine,
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Text(
+                                if (commentsExpanded) "Collapse comments" else "${comments.size} comment${if (comments.size != 1) "s" else ""}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Citrine,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                }
             }
         }
 
