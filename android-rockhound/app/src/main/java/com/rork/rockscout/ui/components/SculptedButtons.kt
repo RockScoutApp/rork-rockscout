@@ -104,7 +104,6 @@ fun SculptedButton(
                 color = if (enabled) textColor else textColor.copy(alpha = 0.4f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
@@ -168,7 +167,6 @@ fun SculptedOutlinedButton(
                 color = if (enabled) textColor else textColor.copy(alpha = 0.4f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
@@ -268,7 +266,6 @@ fun SculptedTextButton(
             color = if (enabled) textColor else textColor.copy(alpha = 0.4f),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

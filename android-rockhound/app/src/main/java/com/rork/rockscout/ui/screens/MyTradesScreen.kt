@@ -413,7 +413,10 @@ private fun MyTradeCard(
             }
             Spacer(Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(5.dp))
@@ -430,6 +433,7 @@ private fun MyTradeCard(
                             style = MaterialTheme.typography.labelSmall,
                             color = if (listing.type == ListingType.HAVE) Color.Black else accent,
                             fontWeight = FontWeight.Bold,
+                            maxLines = 1,
                         )
                     }
                     Spacer(Modifier.width(6.dp))
@@ -438,6 +442,9 @@ private fun MyTradeCard(
                         style = MaterialTheme.typography.labelSmall,
                         color = Aqua,
                         fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
                     )
                 }
                 Spacer(Modifier.height(2.dp))

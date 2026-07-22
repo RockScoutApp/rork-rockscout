@@ -364,6 +364,8 @@ fun FieldCaptureCard(
                         dateFormat.format(Date(capture.timestamp)),
                         style = MaterialTheme.typography.labelSmall,
                         color = DarkTextLow,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     if (capture.imageUris.size > 1) {
                         Spacer(Modifier.width(10.dp))

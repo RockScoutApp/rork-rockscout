@@ -580,6 +580,8 @@ internal fun ListingCard(
                             style = MaterialTheme.typography.labelSmall,
                             color = Aqua,
                             fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                         )
                     }
                 }
