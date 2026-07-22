@@ -81,6 +81,7 @@ import androidx.compose.ui.platform.LocalContext
 import coil3.compose.AsyncImage
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -101,6 +102,8 @@ import com.rork.rockscout.data.TripPdfExporter
 import com.rork.rockscout.data.SpecimenMarker
 import com.rork.rockscout.data.UserPinSubmissionStore
 import com.rork.rockscout.data.ProfanityFilter
+import com.rork.rockscout.data.WeatherRepository
+import com.rork.rockscout.data.WeatherSnapshot
 import com.rork.rockscout.ui.components.AnimatedAvatarIcon
 import com.rork.rockscout.ui.components.FireworksOverlay
 import com.rork.rockscout.ui.components.MapLayerStyle
@@ -2069,6 +2072,11 @@ internal fun TripDetailSheet(
                         trip.targetSpecimens.forEach { TagChip(it, color = Aqua) }
                     }
                 }
+                // ── Weather forecast for trip stops ──
+                if (trip.stops.isNotEmpty()) {
+                    Spacer(Modifier.height(16.dp))
+                    TripWeatherSection(trip = trip)
+                }
                 if (trip.gearChecklist.isNotEmpty()) {
                     Spacer(Modifier.height(12.dp))
                     Text("Gear", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
@@ -2419,4 +2427,133 @@ private fun CustomPinPickerSheet(
     }
 
     MapViewLifecycleEffect(mapView)
+}
+
+/**
+ * Weather forecast section for trip stops. Fetches current conditions for each
+ * stop with coordinates and displays them in a compact card.
+ */
+@Composable
+private fun TripWeatherSection(trip: Trip) {
+    val scope = rememberCoroutineScope()
+    val weatherState = remember(trip.id) { mutableStateOf<Map<String, WeatherSnapshot>>(emptyMap()) }
+    var isRefreshing by remember(trip.id) { mutableStateOf(false) }
+
+    // Collect stops with coordinates so we can fetch weather for each
+    val stopsWithCoords = remember(trip.stops) {
+        trip.stops.mapNotNull { stop ->
+            val coords = if (stop.isCustomPin && stop.latitude != null && stop.longitude != null) {
+                Pair(stop.latitude, stop.longitude)
+            } else {
+                SeedData.locationById(stop.locationId)?.let { Pair(it.latitude, it.longitude) }
+            }
+            coords?.let { Triple(stop.locationId, stop.locationName, it) }
+        }
+    }
+
+    LaunchedEffect(trip.id, stopsWithCoords.size) {
+        if (stopsWithCoords.isEmpty()) return@LaunchedEffect
+        isRefreshing = true
+        scope.launch {
+            val results = mutableMapOf<String, WeatherSnapshot>()
+            stopsWithCoords.forEach { (id, _, coords) ->
+                val snap = WeatherRepository.fetch("trip_${trip.id}_$id", coords.first, coords.second)
+                if (snap != null) results[id] = snap
+            }
+            weatherState.value = results
+            isRefreshing = false
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(
+                Icons.Filled.CloudDone,
+                contentDescription = null,
+                tint = Color(0xFF6FA8C7),
+                modifier = Modifier.size(18.dp),
+            )
+            Text(
+                "Weather at your stops",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF6FA8C7),
+            )
+            if (isRefreshing) {
+                androidx.compose.material3.CircularProgressIndicator(
+                    modifier = Modifier.size(14.dp),
+                    strokeWidth = 2.dp,
+                    color = Color(0xFF6FA8C7),
+                )
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+
+        if (stopsWithCoords.isEmpty()) {
+            Text(
+                "Add stops with locations to see weather forecasts.",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextLow,
+            )
+        } else {
+            stopsWithCoords.forEach { (stopId, name, coords) ->
+                val snap = weatherState.value[stopId]
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFF6FA8C7).copy(alpha = 0.08f))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        if (snap != null) snap.conditionEmoji else "⏳",
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            name,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        if (snap != null) {
+                            Text(
+                                "${snap.temperatureF}°F · ${snap.conditionLabel} · ${snap.precipProbability}% rain · ${snap.windMph} mph wind",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextLow,
+                            )
+                        } else if (!isRefreshing) {
+                            Text(
+                                "Weather unavailable — check connection",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextLow,
+                            )
+                        }
+                    }
+                    if (snap != null) {
+                        Text(
+                            "${snap.temperatureF}°",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = Color(0xFF6FA8C7),
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Forecast from Open-Meteo. Updated every 30 minutes. Check conditions before you drive out.",
+                style = MaterialTheme.typography.labelSmall,
+                color = TextLow,
+            )
+        }
+    }
 }

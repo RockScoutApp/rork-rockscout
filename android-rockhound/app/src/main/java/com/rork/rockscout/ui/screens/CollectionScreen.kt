@@ -23,9 +23,12 @@ import androidx.compose.material.icons.filled.FolderZip
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.Label
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.DatePickerDefaults
@@ -62,6 +65,7 @@ import com.rork.rockscout.data.IdentifyAccessManager
 import com.rork.rockscout.data.PurchaseManager
 import com.rork.rockscout.data.SeedData
 import com.rork.rockscout.data.SpecimenImages
+import com.rork.rockscout.data.SpecimenLabelGenerator
 import com.rork.rockscout.ui.components.LockedFeatureBanner
 import com.rork.rockscout.ui.components.CategoryFilterRow
 import com.rork.rockscout.ui.components.ListCategoryFilter
@@ -86,16 +90,22 @@ import com.rork.rockscout.ui.components.shortCategoryLabel
 import com.rork.rockscout.ui.components.LongPressableImage
 import com.rork.rockscout.ui.components.DeleteConfirmDialog
 import com.rork.rockscout.ui.navigation.Routes
+import com.rork.rockscout.ui.theme.Amethyst
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.Danger
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.TextMid
 import com.rork.rockscout.ui.theme.TextLow
+import com.rork.rockscout.ui.components.glowingBorder
 import android.net.Uri
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.style.TextOverflow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -157,6 +167,13 @@ fun CollectionScreen(navController: NavController) {
 
     val dateFormat = remember { SimpleDateFormat("MMM d, yyyy", Locale.getDefault()) }
 
+    // Tab state: 0 = Collection, 1 = Stats, 2 = Labels
+    var selectedTab by remember { mutableIntStateOf(0) }
+    // Label generator selection mode
+    var labelSelectionMode by remember { mutableStateOf(false) }
+    val labelSelectedIds = remember { mutableStateOf<Set<String>>(emptySet()) }
+    var isGeneratingLabels by remember { mutableStateOf(false) }
+
     ScreenScaffold(title = "My Rocks", onBack = { navController.popBackStack() }) {
         if (featureLocked) {
             LockedFeatureBanner(
@@ -183,6 +200,257 @@ fun CollectionScreen(navController: NavController) {
                     } ?: false
                 }
             }
+            // ── Tab bar ──
+            val tabAccent = if (selectedTab == 0) Citrine else if (selectedTab == 1) Aqua else Amethyst
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 20.dp, end = 20.dp, bottom = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                TabButton("Collection", selectedTab == 0, Citrine) { selectedTab = 0 }
+                TabButton("Stats", selectedTab == 1, Aqua) { selectedTab = 1 }
+                TabButton("Labels", selectedTab == 2, Amethyst) { selectedTab = 2 }
+            }
+
+            if (selectedTab == 1) {
+                // ── Statistics Dashboard tab ──
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(start = 20.dp, end = 20.dp, bottom = 40.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    CollectionStatisticsDashboard(collection = collection)
+                }
+            } else if (selectedTab == 2) {
+                // ── Label Generator tab ──
+                if (collection.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize().padding(40.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            "Add specimens to your collection to generate labels.",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = TextMid,
+                        )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 20.dp, end = 20.dp, bottom = 40.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    "Select specimens to generate labels.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = TextMid,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                SculptedOutlinedButton(
+                                    text = if (labelSelectionMode) "Done" else "Select",
+                                    onClick = {
+                                        if (labelSelectionMode) {
+                                            labelSelectionMode = false
+                                            labelSelectedIds.value = emptySet()
+                                        } else {
+                                            labelSelectionMode = true
+                                        }
+                                    },
+                                    accent = Amethyst,
+                                    textColor = Amethyst,
+                                    icon = Icons.Filled.Label,
+                                    enabled = collection.isNotEmpty(),
+                                )
+                            }
+                        }
+                        item {
+                            if (labelSelectionMode && labelSelectedIds.value.isNotEmpty()) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        "${labelSelectedIds.value.size} selected",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = Amethyst,
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.weight(1f, fill = false),
+                                    )
+                                    SculptedOutlinedButton(
+                                        text = "All",
+                                        onClick = {
+                                            labelSelectedIds.value = collection.map { it.specimenId }.toSet()
+                                        },
+                                        accent = Amethyst,
+                                        textColor = Amethyst,
+                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                                    )
+                                    SculptedButton(
+                                        text = if (isGeneratingLabels) "Generating…" else "Generate Labels",
+                                        onClick = {
+                                            if (isGeneratingLabels) return@SculptedButton
+                                            isGeneratingLabels = true
+                                            scope.launch {
+                                                withContext(Dispatchers.IO) {
+                                                    val ids = labelSelectedIds.value.toList()
+                                                    ids.forEach { specimenId ->
+                                                        val spec = SeedData.specimenById(specimenId)
+                                                        val entry = collection.find { it.specimenId == specimenId }
+                                                        if (spec != null) {
+                                                            val labelBitmap = SpecimenLabelGenerator.generateLabel(
+                                                                specimenId = spec.id,
+                                                                name = spec.name,
+                                                                dateFound = entry?.let { dateFormat.format(Date(it.addedAt)) } ?: "",
+                                                                location = entry?.foundAt ?: spec.whereFound.firstOrNull() ?: "",
+                                                                accentHex = spec.colorHex,
+                                                            )
+                                                            com.rork.rockscout.ui.components.ShareCardImage.share(
+                                                                context = context,
+                                                                title = "${spec.name} — Label",
+                                                                subtitle = "RockScout specimen label",
+                                                                body = null,
+                                                                accentHex = spec.colorHex,
+                                                                photoBitmap = labelBitmap,
+                                                                fileName = "rockscout_label_${spec.id}",
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                                isGeneratingLabels = false
+                                                labelSelectionMode = false
+                                                labelSelectedIds.value = emptySet()
+                                            }
+                                        },
+                                        accent = Amethyst,
+                                        containerColor = Amethyst,
+                                        textColor = Color.White,
+                                        enabled = !isGeneratingLabels,
+                                        icon = Icons.Filled.QrCode,
+                                    )
+                                }
+                            }
+                        }
+                        items(sortedCollection.size) { index ->
+                            val entry = sortedCollection[index]
+                            val spec = SeedData.specimenById(entry.specimenId) ?: return@items
+                            val accent = rockClassColor(spec.rockClass)
+                            val isSelected = spec.id in labelSelectedIds.value
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                if (labelSelectionMode) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(if (isSelected) Amethyst.copy(alpha = 0.2f) else Color.Transparent)
+                                            .glowingBorder(
+                                                2.dp,
+                                                if (isSelected) Amethyst else TextLow,
+                                                RoundedCornerShape(6.dp),
+                                            )
+                                            .padding(4.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        if (isSelected) {
+                                            Icon(
+                                                Icons.Filled.Check,
+                                                contentDescription = null,
+                                                tint = Amethyst,
+                                                modifier = Modifier.size(18.dp),
+                                            )
+                                        }
+                                    }
+                                    Spacer(Modifier.width(10.dp))
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(accent.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(spec.emoji, style = MaterialTheme.typography.titleMedium)
+                                }
+                                Spacer(Modifier.width(10.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        spec.name,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    Text(
+                                        shortCategoryLabel(spec.category),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = accent,
+                                    )
+                                }
+                                if (!labelSelectionMode) {
+                                    SculptedIconButton(
+                                        icon = Icons.Filled.QrCode,
+                                        contentDescription = "Generate label",
+                                        onClick = {
+                                            scope.launch {
+                                                withContext(Dispatchers.IO) {
+                                                    val labelBitmap = SpecimenLabelGenerator.generateLabel(
+                                                        specimenId = spec.id,
+                                                        name = spec.name,
+                                                        dateFound = dateFormat.format(Date(entry.addedAt)),
+                                                        location = entry.foundAt.ifBlank { spec.whereFound.firstOrNull() ?: "" },
+                                                        accentHex = spec.colorHex,
+                                                    )
+                                                    com.rork.rockscout.ui.components.ShareCardImage.share(
+                                                        context = context,
+                                                        title = "${spec.name} — Label",
+                                                        subtitle = "RockScout specimen label",
+                                                        body = null,
+                                                        accentHex = spec.colorHex,
+                                                        photoBitmap = labelBitmap,
+                                                        fileName = "rockscout_label_${spec.id}",
+                                                    )
+                                                }
+                                            }
+                                        },
+                                        accent = Amethyst,
+                                        iconTint = Amethyst,
+                                        size = 36.dp,
+                                        shadowElevation = 3.dp,
+                                    )
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(44.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(Color.Transparent)
+                                            .clickable {
+                                                labelSelectedIds.value = labelSelectedIds.value.toMutableSet().apply {
+                                                    if (contains(spec.id)) remove(spec.id) else add(spec.id)
+                                                }.toSet()
+                                            },
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+            // ── Original Collection tab ──
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 20.dp, end = 20.dp, bottom = 40.dp),
@@ -630,6 +898,7 @@ fun CollectionScreen(navController: NavController) {
                     }
                 }
             }
+            } // end else (Collection tab)
         }
     }
 
@@ -758,5 +1027,34 @@ fun EmptyState(emoji: String, title: String, message: String) {
         Text(title, style = MaterialTheme.typography.headlineMedium, color = Aqua)
         Spacer(Modifier.height(8.dp))
         Text(message, style = MaterialTheme.typography.bodyLarge, color = Aqua, modifier = Modifier.padding(horizontal = 16.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+    }
+}
+
+@Composable
+private fun TabButton(
+    label: String,
+    isSelected: Boolean,
+    accent: Color,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isSelected) accent.copy(alpha = 0.18f) else Color(0xFF242019).copy(alpha = 0.5f))
+            .glowingBorder(
+                if (isSelected) 2.dp else 1.dp,
+                if (isSelected) accent.copy(alpha = 0.6f) else Color(0xFF4A4338).copy(alpha = 0.3f),
+                RoundedCornerShape(12.dp),
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            label,
+            style = MaterialTheme.typography.labelLarge,
+            color = if (isSelected) accent else TextLow,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+        )
     }
 }

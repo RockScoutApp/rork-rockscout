@@ -73,6 +73,7 @@ import com.rork.rockscout.ui.screens.RockScoutsMapScreen
 import com.rork.rockscout.data.AuthRepository
 import com.rork.rockscout.data.ReferralRepository
 import com.rork.rockscout.data.ReportRepository
+import com.rork.rockscout.ui.components.NightModeOverlay
 import com.rork.rockscout.ui.components.ReportWarningDialog
 import com.rork.rockscout.ui.screens.DeveloperConsoleScreen
 import com.rork.rockscout.ui.screens.DiscoverHuntersScreen
@@ -86,6 +87,10 @@ import com.rork.rockscout.ui.screens.NotificationsScreen
 import com.rork.rockscout.ui.screens.HowToUseScreen
 import com.rork.rockscout.ui.screens.ThankYouScreen
 import com.rork.rockscout.ui.screens.DisclaimerScreen
+import com.rork.rockscout.ui.screens.MineralCareGuideScreen
+import com.rork.rockscout.ui.screens.FluorescenceUvReferenceScreen
+import com.rork.rockscout.ui.screens.CrystalSystemReferenceScreen
+import com.rork.rockscout.ui.screens.LapidaryBasicsGuideScreen
 import com.rork.rockscout.ui.screens.isDisclaimerAccepted
 
 object Routes {
@@ -153,6 +158,10 @@ object Routes {
     const val HOW_TO_USE = "how_to_use"
     const val THANK_YOU = "thank_you/{tokens}/{days}"
     const val DISCLAIMER = "disclaimer?isGate={isGate}"
+    const val MINERAL_CARE = "mineral_care"
+    const val FLUORESCENCE_UV = "fluorescence_uv"
+    const val CRYSTAL_SYSTEMS = "crystal_systems"
+    const val LAPIDARY_BASICS = "lapidary_basics"
 
     fun location(id: String) = "location/$id"
     fun element(atomicNumber: Int) = "element/$atomicNumber"
@@ -636,6 +645,13 @@ fun AppNavigation(
                 specimenId = entry.arguments?.getString("specimenId").orEmpty(),
             )
         }
+        composable(Routes.MINERAL_CARE) { MineralCareGuideScreen(navController) }
+        composable(Routes.FLUORESCENCE_UV) { FluorescenceUvReferenceScreen(navController) }
+        composable(Routes.CRYSTAL_SYSTEMS) { CrystalSystemReferenceScreen(navController) }
+        composable(Routes.LAPIDARY_BASICS) { LapidaryBasicsGuideScreen(navController) }
     }
+        // Night-mode red overlay sits on top of the entire NavHost so it
+        // covers every screen, sheet, and dialog when the toggle is on.
+        NightModeOverlay()
     }
 }

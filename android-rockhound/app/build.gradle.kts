@@ -111,5 +111,6 @@ dependencies {
     implementation(libs.play.review.ktx)
     implementation(libs.osmdroid.android)
     implementation(libs.play.services.ads)
+    implementation(libs.zxing.core)
     debugImplementation(libs.androidx.ui.tooling)
 }

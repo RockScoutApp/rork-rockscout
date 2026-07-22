@@ -28,6 +28,7 @@ import com.rork.rockscout.data.DigSiteDiscoveryStore
 import com.rork.rockscout.data.CustomSpecimenStore
 import com.rork.rockscout.data.LocationSubmissionStore
 import com.rork.rockscout.data.LocalDataStore
+import com.rork.rockscout.data.NightModeManager
 import com.rork.rockscout.data.SpecimenSubmissionStore
 import com.rork.rockscout.data.MockDataSeeder
 import com.rork.rockscout.data.NotificationRepository
@@ -117,6 +118,10 @@ class RockScoutApplication : Application() {
 
         safeInit("app-repository-mark-loaded") {
             AppRepository.instance.markLoaded()
+        }
+
+        safeInit("night-mode") {
+            NightModeManager.initialize()
         }
 
         safeInit("heal-osmdroid-tile-cache") {

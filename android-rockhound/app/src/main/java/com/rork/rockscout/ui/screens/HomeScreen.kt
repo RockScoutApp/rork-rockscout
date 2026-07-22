@@ -50,7 +50,9 @@ import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.MailOutline
+import androidx.compose.material.icons.filled.Brightness3
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Nature
 import androidx.compose.material.icons.filled.PhotoLibrary
@@ -61,6 +63,9 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonSearch
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CleaningServices
+import androidx.compose.material.icons.filled.Construction
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Backspace
 import androidx.compose.material.icons.filled.Close
@@ -118,6 +123,7 @@ import kotlinx.coroutines.launch
 import com.rork.rockscout.data.AchievementsRepository
 import com.rork.rockscout.data.AdditionalSpecimens
 import com.rork.rockscout.data.AppRepository
+import com.rork.rockscout.data.NightModeManager
 import com.rork.rockscout.data.AssemblageSpecimens
 import com.rork.rockscout.data.ExpandedSpecimens
 import com.rork.rockscout.data.ExpandedVarieties
@@ -412,6 +418,14 @@ fun HomeScreen(navController: NavController) {
             "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/13d72c22-f574-47c4-a23c-a6a9ae6b65bb.png"),
         HomeTile("Periodic Table", "118 elements · Where each element appears in rocks & gems", Icons.Filled.Science, Color(0xFF7CB5EC), Routes.PERIODIC_TABLE,
             "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/040be3bf-71ab-46d0-b6be-4598df22a18b.png"),
+        HomeTile("Mineral Care & Cleaning", "Don't ruin your finds · Safe cleaning for every mineral type", Icons.Filled.CleaningServices, Color(0xFF5CC98C), Routes.MINERAL_CARE,
+            SpecimenImages.urls["fluorite"]?.firstOrNull()),
+        HomeTile("Fluorescence & UV", "Which minerals glow under UV light & what colors", Icons.Filled.Lightbulb, Color(0xFF9B7BD8), Routes.FLUORESCENCE_UV,
+            SpecimenImages.urls["fluorite"]?.firstOrNull()),
+        HomeTile("Crystal Systems", "The 7 crystal shapes with visual examples", Icons.Filled.Diamond, Color(0xFF6FA8C7), Routes.CRYSTAL_SYSTEMS,
+            SpecimenImages.urls["quartz"]?.firstOrNull()),
+        HomeTile("Lapidary Basics", "Cut, polish & cab your finds into jewelry", Icons.Filled.Construction, Color(0xFFE8A33D), Routes.LAPIDARY_BASICS,
+            SpecimenImages.urls["agate"]?.firstOrNull()),
     )
 
     val featuredSpecimens = remember {
@@ -1102,6 +1116,41 @@ private fun HomeHeader(
             }
 
             Spacer(Modifier.width(6.dp))
+
+            // 1b. Night / Red Light mode toggle — quick access for UV collecting.
+            val nightModeEnabled by NightModeManager.enabled.collectAsStateWithLifecycle()
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .sculpted(
+                        shape = CircleShape,
+                        accent = if (nightModeEnabled) Color(0xFFE2574C) else DarkTextMid,
+                        shadowElevation = 6.dp,
+                        circular = true,
+                        onClick = { NightModeManager.toggle() },
+                    )
+                    .clip(CircleShape)
+                    .background(
+                        Brush.radialGradient(
+                            listOf(Slate900.copy(alpha = 0.92f), Obsidian.copy(alpha = 0.88f))
+                        )
+                    )
+                    .glowingBorder(
+                        3.dp,
+                        if (nightModeEnabled) Color(0xFFE2574C).copy(alpha = 0.75f) else DarkTextMid.copy(alpha = 0.4f),
+                        CircleShape,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    if (nightModeEnabled) Icons.Filled.NightsStay else Icons.Filled.Brightness3,
+                    contentDescription = if (nightModeEnabled) "Night mode on — tap to turn off" else "Night mode off — tap to turn on",
+                    tint = if (nightModeEnabled) Color(0xFFE2574C) else DarkTextMid,
+                    modifier = Modifier.size(22.dp),
+                )
+            }
+
+            Spacer(Modifier.width(4.dp))
 
             // 2. Notification bell with unread badge.
             BadgeIconButton(

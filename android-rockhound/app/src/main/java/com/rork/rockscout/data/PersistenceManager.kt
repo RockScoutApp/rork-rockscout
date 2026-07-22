@@ -87,6 +87,7 @@ object PersistenceManager {
     // current without the user having to remember.
     private const val KEY_NIGHTLY_SYNC_ENABLED = "nightly_sync_enabled"
     private const val KEY_NIGHTLY_SYNC_LAST_RUN = "nightly_sync_last_run_ms"
+    private const val KEY_NIGHT_MODE_ENABLED = "night_mode_enabled"
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -424,6 +425,18 @@ object PersistenceManager {
     fun loadNightlySyncLastRun(): Long {
         ensureInitialized()
         return prefs.getLong(KEY_NIGHTLY_SYNC_LAST_RUN, 0L)
+    }
+
+    // ----------------------------------------------------------- night mode
+    /** Red-light / night-vision mode for UV collecting. Persists across launches. */
+    fun saveNightModeEnabled(enabled: Boolean) {
+        ensureInitialized()
+        prefs.edit().putBoolean(KEY_NIGHT_MODE_ENABLED, enabled).apply()
+    }
+
+    fun isNightModeEnabled(): Boolean {
+        ensureInitialized()
+        return prefs.getBoolean(KEY_NIGHT_MODE_ENABLED, false)
     }
 
     // ---------------------------------------------------------- parking spot
