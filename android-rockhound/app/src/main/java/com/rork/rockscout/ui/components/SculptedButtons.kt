@@ -42,19 +42,20 @@ import com.rork.rockscout.ui.theme.TextHigh
  * A fully 3D sculpted solid-fill button — raised stone-slab bevel,
  * accent-tinted drop shadow, and press-down sink animation.
  *
- * @param text    label shown inside the button.
+ * @param text    optional label shown inside the button. When null, the button
+ *                shows only the [icon] centered inside it.
  * @param onClick click handler.
  * @param accent  tint colour for the shadow and border glow.
  * @param modifier optional modifier.
  * @param enabled when false, the button is dimmed and not clickable.
- * @param icon    optional leading icon.
+ * @param icon    optional leading icon. Required when [text] is null.
  * @param shape   clip shape (default rounded rect).
  * @param shadowElevation outer drop-shadow strength.
  * @param contentPadding internal padding.
  */
 @Composable
 fun SculptedButton(
-    text: String,
+    text: String? = null,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     accent: Color = Citrine,
@@ -91,20 +92,24 @@ fun SculptedButton(
             if (icon != null) {
                 Icon(
                     imageVector = icon,
-                    contentDescription = null,
+                    contentDescription = text,
                     tint = if (enabled) textColor else textColor.copy(alpha = 0.4f),
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(if (text == null) 24.dp else 20.dp),
                 )
-                Spacer(Modifier.width(8.dp))
+                if (text != null) {
+                    Spacer(Modifier.width(8.dp))
+                }
             }
-            Text(
-                text = text,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold,
-                color = if (enabled) textColor else textColor.copy(alpha = 0.4f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            if (text != null) {
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = if (enabled) textColor else textColor.copy(alpha = 0.4f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

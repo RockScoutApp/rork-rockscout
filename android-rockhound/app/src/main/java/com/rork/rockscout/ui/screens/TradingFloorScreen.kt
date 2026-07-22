@@ -294,7 +294,6 @@ fun TradingFloorScreen(navController: NavController) {
                     )
                 }
                 SculptedButton(
-                    text = "Post",
                     onClick = { editingListing = null; initialEditorType = ListingType.HAVE; showEditor = true },
                     accent = Citrine,
                     containerColor = Citrine,
