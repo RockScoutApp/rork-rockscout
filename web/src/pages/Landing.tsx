@@ -649,98 +649,55 @@ const FIELD_STORIES: FieldStory[] = [
 ];
 
 type GearItem = { emoji: string; name: string; price: string; url: string };
-type GearCategory = { name: string; intro: string; items: GearItem[] };
 
-const GEAR_CATEGORIES: GearCategory[] = [
-  {
-    name: "Identification & magnification",
-    intro: "A 10x jeweler's loupe is the single most useful field tool a rockhound can carry — it reveals crystal habit, cleavage, and inclusion detail you simply can't see with the naked eye. Pair it with a streak plate and a pocket Mohs kit and you can narrow down most specimens before you ever pull out your phone.",
-    items: [
-      { emoji: "🔍", name: "10x Jeweler's Loupe", price: "$8 – $15", url: "https://www.amazon.com/s?k=10x+jewelers+loupe&tag=rockscout-20" },
-      { emoji: "🔍", name: "30x Triplet Loupe", price: "$20 – $40", url: "https://www.amazon.com/s?k=30x+triplet+loupe&tag=rockscout-20" },
-      { emoji: "🔬", name: "Headband Magnifier", price: "$15 – $50", url: "https://www.amazon.com/s?k=headband+magnifier+hands+free&tag=rockscout-20" },
-      { emoji: "🗿", name: "Mohs Hardness Kit", price: "$25 – $60", url: "https://www.amazon.com/s?k=mohs+hardness+kit&tag=rockscout-20" },
-      { emoji: "🖨️", name: "Streak Plate", price: "$5 – $10", url: "https://www.amazon.com/s?k=streak+plate+unglazed+porcelain&tag=rockscout-20" },
-    ],
-  },
-  {
-    name: "Extraction & breaking",
-    intro: "The right hammer makes all the difference: a geologist's pick for prying float, a 3 lb crack hammer for breaking nodules, and a chisel set for splitting bedding planes. Always wear safety glasses — rock fragments travel fast.",
-    items: [
-      { emoji: "🔨", name: "Rock Pick Hammer", price: "$25 – $50", url: "https://www.amazon.com/s?k=rock+pick+hammer+geology&tag=rockscout-20" },
-      { emoji: "🔨", name: "Estwing Rock Pick", price: "$45 – $80", url: "https://www.amazon.com/s?k=estwing+rock+pick&tag=rockscout-20" },
-      { emoji: "🛠", name: "Rock Chisel Set", price: "$15 – $35", url: "https://www.amazon.com/s?k=rock+chisel+set+geology&tag=rockscout-20" },
-      { emoji: "🔨", name: "3 lb Crack Hammer", price: "$25 – $45", url: "https://www.amazon.com/s?k=3lb+crack+hammer&tag=rockscout-20" },
-      { emoji: "🪝", name: "Pick and Hook Tool Set", price: "$12 – $25", url: "https://www.amazon.com/s?k=pick+and+hook+tool+set&tag=rockscout-20" },
-      { emoji: "✏️", name: "Pneumatic Air Scribe / Prep Pen", price: "$40 – $120", url: "https://www.amazon.com/s?k=pneumatic+air+scribe+prep+pen&tag=rockscout-20" },
-    ],
-  },
-  {
-    name: "Field transport & storage",
-    intro: "Specimens are heavy and fragile — a padded field bag keeps them from rattling together on the hike out, and a daypack with hydration carries the rest of your kit. Wrap delicate crystals individually and label finds on the spot before the details fade.",
-    items: [
-      { emoji: "🎒", name: "Field Collection Bag", price: "$20 – $45", url: "https://www.amazon.com/s?k=rockhound+field+bag&tag=rockscout-20" },
-      { emoji: "🎒", name: "Waterproof Field Bag", price: "$25 – $60", url: "https://www.amazon.com/s?k=waterproof+dry+bag+field&tag=rockscout-20" },
-      { emoji: "🎒", name: "Hiking Daypack", price: "$40 – $130", url: "https://www.amazon.com/s?k=hiking+backpack+daypack&tag=rockscout-20" },
-      { emoji: "🪣", name: "Telescoping Rock Scoop", price: "$30 – $90", url: "https://www.amazon.com/s?k=telescoping+rock+scoop&tag=rockscout-20" },
-      { emoji: "🪰", name: "Mesh Sifting Sieve", price: "$20 – $60", url: "https://www.amazon.com/s?k=mesh+sifting+sieve+geology&tag=rockscout-20" },
-      { emoji: "🥤", name: "Collapsible Strainer", price: "$8 – $20", url: "https://www.amazon.com/s?k=collapsible+colander+strainer&tag=rockscout-20" },
-      { emoji: "🧹", name: "Stiff Plastic-Bristle Brush", price: "$5 – $15", url: "https://www.amazon.com/s?k=stiff+bristle+brush+cleaning&tag=rockscout-20" },
-      { emoji: "🧲", name: "Fishing Magnets", price: "$15 – $60", url: "https://www.amazon.com/s?k=fishing+magnet+neodymium+rope&tag=rockscout-20" },
-      { emoji: "⛏️", name: "Foldable Shovel", price: "$20 – $50", url: "https://www.amazon.com/s?k=foldable+shovel+compact&tag=rockscout-20" },
-      { emoji: "🛒", name: "Gorilla Cart", price: "$80 – $150", url: "https://www.amazon.com/s?k=gorilla+cart+garden&tag=rockscout-20" },
-    ],
-  },
-  {
-    name: "UV & night hunting",
-    intro: "A 365nm UV flashlight turns fluorescent minerals — fluorite, calcite, willemite, hackmanite — into glowing beacons in the dark. Serious collectors eventually add a shortwave 254nm light, which reveals a whole different set of fluorescence but requires UV-safety glasses and careful handling.",
-    items: [
-      { emoji: "🔦", name: "365nm UV Flashlight", price: "$15 – $40", url: "https://www.amazon.com/s?k=365nm+uv+flashlight&tag=rockscout-20" },
-      { emoji: "🟣", name: "Shortwave UV Light", price: "$80 – $300", url: "https://www.amazon.com/s?k=shortwave+uv+light+254nm&tag=rockscout-20" },
-    ],
-  },
-  {
-    name: "Navigation, notes & reference",
-    intro: "Cell service disappears fast in the backcountry. A handheld GPS plus a Rite-in-the-Rain notebook gives you a paper backup of find coordinates and field notes that won't die, freeze, or get wiped — and a small spray bottle is the cleanest way to wet a specimen and read its true color.",
-    items: [
-      { emoji: "📓", name: "Rite-in-the-Rain Notebook", price: "$10 – $25", url: "https://www.amazon.com/s?k=rite+in+the+rain+notebook&tag=rockscout-20" },
-      { emoji: "💧", name: "Small Spray Bottle", price: "$3 – $8", url: "https://www.amazon.com/s?k=small+spray+bottle&tag=rockscout-20" },
-      { emoji: "🗺", name: "Handheld GPS Unit", price: "$100 – $300", url: "https://www.amazon.com/s?k=handheld+gps+geocaching&tag=rockscout-20" },
-    ],
-  },
-  {
-    name: "Safety & comfort",
-    intro: "Most rockhound trips are day-long outdoor expeditions, not museum strolls. Boots, kneepads, gloves, and a sun hat keep you hunting longer; safety glasses are non-optional when hammers are swinging; and bug spray plus hand warmers cover the two ends of the season.",
-    items: [
-      { emoji: "🌧️", name: "Rain Gear / Shell", price: "$30 – $150", url: "https://www.amazon.com/s?k=rain+gear+waterproof+jacket+pants&tag=rockscout-20" },
-      { emoji: "🥽", name: "Chest Waders", price: "$50 – $180", url: "https://www.amazon.com/s?k=fishing+waders+chest&tag=rockscout-20" },
-      { emoji: "🥾", name: "Waterproof Hiking Boots", price: "$80 – $200", url: "https://www.amazon.com/s?k=waterproof+hiking+boots+ankle&tag=rockscout-20" },
-      { emoji: "👒", name: "Sun Hat / Beach Hat", price: "$15 – $40", url: "https://www.amazon.com/s?k=sun+hat+upf+wide+brim&tag=rockscout-20" },
-      { emoji: "🥽", name: "Safety Glasses", price: "$5 – $20", url: "https://www.amazon.com/s?k=safety+glasses+impact&tag=rockscout-20" },
-      { emoji: "🧤", name: "Waterproof Gloves", price: "$15 – $40", url: "https://www.amazon.com/s?k=waterproof+work+gloves&tag=rockscout-20" },
-      { emoji: "🦵", name: "Kneepads", price: "$15 – $40", url: "https://www.amazon.com/s?k=kneepads+work+padded&tag=rockscout-20" },
-      { emoji: "🧘", name: "Kneeling Pad", price: "$10 – $25", url: "https://www.amazon.com/s?k=foam+kneeling+pad&tag=rockscout-20" },
-      { emoji: "🦟", name: "Bug Spray", price: "$5 – $15", url: "https://www.amazon.com/s?k=bug+spray+deet+repellent&tag=rockscout-20" },
-      { emoji: "🔥", name: "Hand Warmers", price: "$5 – $20", url: "https://www.amazon.com/s?k=hand+warmers+disposable+rechargeable&tag=rockscout-20" },
-    ],
-  },
-  {
-    name: "Gold prospecting, display & camping",
-    intro: "Beyond hunting specimens, most collectors end up in three adjacent hobbies: gold prospecting (a pan and sluice pay for themselves in fun alone), displaying their finds (Riker mounts and display cases), and camping near remote dig sites where a tent, sleeping bag, and lantern turn a day trip into a weekend.",
-    items: [
-      { emoji: "🥏", name: "Gold Pan", price: "$10 – $40", url: "https://www.amazon.com/s?k=gold+pan+prospecting&tag=rockscout-20" },
-      { emoji: "💰", name: "Portable Gold Sluice", price: "$60 – $200", url: "https://www.amazon.com/s?k=portable+gold+sluice+folding&tag=rockscout-20" },
-      { emoji: "🪨", name: "Rock Collection Starter Kit", price: "$20 – $60", url: "https://www.amazon.com/s?k=rock+collection+starter+kit+minerals&tag=rockscout-20" },
-      { emoji: "📦", name: "Mineral & Crystal Display Cases", price: "$15 – $80", url: "https://www.amazon.com/s?k=mineral+display+case+riker+mount&tag=rockscout-20" },
-      { emoji: "💎", name: "Lapidary Equipment", price: "$100 – $500", url: "https://www.amazon.com/s?k=lapidary+equipment+cabbing+machine&tag=rockscout-20" },
-      { emoji: "⛺", name: "Camping Equipment", price: "$50 – $300", url: "https://www.amazon.com/s?k=camping+gear+bundle+essentials&tag=rockscout-20" },
-      { emoji: "⛺", name: "Camping Tent", price: "$80 – $250", url: "https://www.amazon.com/s?k=camping+tent+3+person&tag=rockscout-20" },
-      { emoji: "🛌", name: "Sleeping Bag", price: "$50 – $180", url: "https://www.amazon.com/s?k=sleeping+bag+3+season+30+degree&tag=rockscout-20" },
-      { emoji: "💡", name: "Solar / Battery Lantern", price: "$20 – $60", url: "https://www.amazon.com/s?k=solar+battery+camping+lantern&tag=rockscout-20" },
-      { emoji: "📻", name: "Midland NOAA Weather Radio", price: "$30 – $70", url: "https://www.amazon.com/s?k=midland+noaa+weather+radio+hand+crank&tag=rockscout-20" },
-      { emoji: "👀", name: "Underwater Viewing Bucket", price: "$25 – $60", url: "https://www.amazon.com/s?k=underwater+viewing+bucket&tag=rockscout-20" },
-    ],
-  },
+const GEAR_ITEMS: GearItem[] = [
+  { emoji: "🔍", name: "10x Jeweler's Loupe", price: "$8 – $15", url: "https://www.amazon.com/s?k=10x+jewelers+loupe&tag=rockscout-20" },
+  { emoji: "🔍", name: "30x Triplet Loupe", price: "$20 – $40", url: "https://www.amazon.com/s?k=30x+triplet+loupe&tag=rockscout-20" },
+  { emoji: "🔬", name: "Headband Magnifier", price: "$15 – $50", url: "https://www.amazon.com/s?k=headband+magnifier+hands+free&tag=rockscout-20" },
+  { emoji: "🗿", name: "Mohs Hardness Kit", price: "$25 – $60", url: "https://www.amazon.com/s?k=mohs+hardness+kit&tag=rockscout-20" },
+  { emoji: "🖨️", name: "Streak Plate", price: "$5 – $10", url: "https://www.amazon.com/s?k=streak+plate+unglazed+porcelain&tag=rockscout-20" },
+  { emoji: "🔨", name: "Rock Pick Hammer", price: "$25 – $50", url: "https://www.amazon.com/s?k=rock+pick+hammer+geology&tag=rockscout-20" },
+  { emoji: "🔨", name: "Estwing Rock Pick", price: "$45 – $80", url: "https://www.amazon.com/s?k=estwing+rock+pick&tag=rockscout-20" },
+  { emoji: "🛠", name: "Rock Chisel Set", price: "$15 – $35", url: "https://www.amazon.com/s?k=rock+chisel+set+geology&tag=rockscout-20" },
+  { emoji: "🔨", name: "3 lb Crack Hammer", price: "$25 – $45", url: "https://www.amazon.com/s?k=3lb+crack+hammer&tag=rockscout-20" },
+  { emoji: "🪝", name: "Pick and Hook Tool Set", price: "$12 – $25", url: "https://www.amazon.com/s?k=pick+and+hook+tool+set&tag=rockscout-20" },
+  { emoji: "✏️", name: "Pneumatic Air Scribe / Prep Pen", price: "$40 – $120", url: "https://www.amazon.com/s?k=pneumatic+air+scribe+prep+pen&tag=rockscout-20" },
+  { emoji: "🎒", name: "Field Collection Bag", price: "$20 – $45", url: "https://www.amazon.com/s?k=rockhound+field+bag&tag=rockscout-20" },
+  { emoji: "🎒", name: "Waterproof Field Bag", price: "$25 – $60", url: "https://www.amazon.com/s?k=waterproof+dry+bag+field&tag=rockscout-20" },
+  { emoji: "🎒", name: "Hiking Daypack", price: "$40 – $130", url: "https://www.amazon.com/s?k=hiking+backpack+daypack&tag=rockscout-20" },
+  { emoji: "🪣", name: "Telescoping Rock Scoop", price: "$30 – $90", url: "https://www.amazon.com/s?k=telescoping+rock+scoop&tag=rockscout-20" },
+  { emoji: "🪰", name: "Mesh Sifting Sieve", price: "$20 – $60", url: "https://www.amazon.com/s?k=mesh+sifting+sieve+geology&tag=rockscout-20" },
+  { emoji: "🥤", name: "Collapsible Strainer", price: "$8 – $20", url: "https://www.amazon.com/s?k=collapsible+colander+strainer&tag=rockscout-20" },
+  { emoji: "🧹", name: "Stiff Plastic-Bristle Brush", price: "$5 – $15", url: "https://www.amazon.com/s?k=stiff+bristle+brush+cleaning&tag=rockscout-20" },
+  { emoji: "🧲", name: "Fishing Magnets", price: "$15 – $60", url: "https://www.amazon.com/s?k=fishing+magnet+neodymium+rope&tag=rockscout-20" },
+  { emoji: "⛏️", name: "Foldable Shovel", price: "$20 – $50", url: "https://www.amazon.com/s?k=foldable+shovel+compact&tag=rockscout-20" },
+  { emoji: "🛒", name: "Gorilla Cart", price: "$80 – $150", url: "https://www.amazon.com/s?k=gorilla+cart+garden&tag=rockscout-20" },
+  { emoji: "🔦", name: "365nm UV Flashlight", price: "$15 – $40", url: "https://www.amazon.com/s?k=365nm+uv+flashlight&tag=rockscout-20" },
+  { emoji: "🟣", name: "Shortwave UV Light", price: "$80 – $300", url: "https://www.amazon.com/s?k=shortwave+uv+light+254nm&tag=rockscout-20" },
+  { emoji: "📓", name: "Rite-in-the-Rain Notebook", price: "$10 – $25", url: "https://www.amazon.com/s?k=rite+in+the+rain+notebook&tag=rockscout-20" },
+  { emoji: "💧", name: "Small Spray Bottle", price: "$3 – $8", url: "https://www.amazon.com/s?k=small+spray+bottle&tag=rockscout-20" },
+  { emoji: "🗺", name: "Handheld GPS Unit", price: "$100 – $300", url: "https://www.amazon.com/s?k=handheld+gps+geocaching&tag=rockscout-20" },
+  { emoji: "🌧️", name: "Rain Gear / Shell", price: "$30 – $150", url: "https://www.amazon.com/s?k=rain+gear+waterproof+jacket+pants&tag=rockscout-20" },
+  { emoji: "🥽", name: "Chest Waders", price: "$50 – $180", url: "https://www.amazon.com/s?k=fishing+waders+chest&tag=rockscout-20" },
+  { emoji: "🥾", name: "Waterproof Hiking Boots", price: "$80 – $200", url: "https://www.amazon.com/s?k=waterproof+hiking+boots+ankle&tag=rockscout-20" },
+  { emoji: "👒", name: "Sun Hat / Beach Hat", price: "$15 – $40", url: "https://www.amazon.com/s?k=sun+hat+upf+wide+brim&tag=rockscout-20" },
+  { emoji: "🥽", name: "Safety Glasses", price: "$5 – $20", url: "https://www.amazon.com/s?k=safety+glasses+impact&tag=rockscout-20" },
+  { emoji: "🧤", name: "Waterproof Gloves", price: "$15 – $40", url: "https://www.amazon.com/s?k=waterproof+work+gloves&tag=rockscout-20" },
+  { emoji: "🦵", name: "Kneepads", price: "$15 – $40", url: "https://www.amazon.com/s?k=kneepads+work+padded&tag=rockscout-20" },
+  { emoji: "🧘", name: "Kneeling Pad", price: "$10 – $25", url: "https://www.amazon.com/s?k=foam+kneeling+pad&tag=rockscout-20" },
+  { emoji: "🦟", name: "Bug Spray", price: "$5 – $15", url: "https://www.amazon.com/s?k=bug+spray+deet+repellent&tag=rockscout-20" },
+  { emoji: "🔥", name: "Hand Warmers", price: "$5 – $20", url: "https://www.amazon.com/s?k=hand+warmers+disposable+rechargeable&tag=rockscout-20" },
+  { emoji: "🥏", name: "Gold Pan", price: "$10 – $40", url: "https://www.amazon.com/s?k=gold+pan+prospecting&tag=rockscout-20" },
+  { emoji: "💰", name: "Portable Gold Sluice", price: "$60 – $200", url: "https://www.amazon.com/s?k=portable+gold+sluice+folding&tag=rockscout-20" },
+  { emoji: "🪨", name: "Rock Collection Starter Kit", price: "$20 – $60", url: "https://www.amazon.com/s?k=rock+collection+starter+kit+minerals&tag=rockscout-20" },
+  { emoji: "📦", name: "Mineral & Crystal Display Cases", price: "$15 – $80", url: "https://www.amazon.com/s?k=mineral+display+case+riker+mount&tag=rockscout-20" },
+  { emoji: "💎", name: "Lapidary Equipment", price: "$100 – $500", url: "https://www.amazon.com/s?k=lapidary+equipment+cabbing+machine&tag=rockscout-20" },
+  { emoji: "⛺", name: "Camping Equipment", price: "$50 – $300", url: "https://www.amazon.com/s?k=camping+gear+bundle+essentials&tag=rockscout-20" },
+  { emoji: "⛺", name: "Camping Tent", price: "$80 – $250", url: "https://www.amazon.com/s?k=camping+tent+3+person&tag=rockscout-20" },
+  { emoji: "🛌", name: "Sleeping Bag", price: "$50 – $180", url: "https://www.amazon.com/s?k=sleeping+bag+3+season+30+degree&tag=rockscout-20" },
+  { emoji: "💡", name: "Solar / Battery Lantern", price: "$20 – $60", url: "https://www.amazon.com/s?k=solar+battery+camping+lantern&tag=rockscout-20" },
+  { emoji: "📻", name: "Midland NOAA Weather Radio", price: "$30 – $70", url: "https://www.amazon.com/s?k=midland+noaa+weather+radio+hand+crank&tag=rockscout-20" },
+  { emoji: "👀", name: "Underwater Viewing Bucket", price: "$25 – $60", url: "https://www.amazon.com/s?k=underwater+viewing+bucket&tag=rockscout-20" },
 ];
 
 const FieldStories = () => (
@@ -771,50 +728,32 @@ const FieldStories = () => (
           >
             {story.type === "gear" ? (
               <>
-                <div className="absolute inset-0">
-                  <img
-                    src="/images/rockhound-gear.webp"
-                    alt="Rockhound field gear laid out on a tailgate ready for a dig trip"
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
-                </div>
                 <div className="relative flex h-full flex-col p-5">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="font-display text-lg font-semibold text-primary drop-shadow">Gear up for the field</p>
+                    <p className="font-display text-lg font-semibold text-foreground">Gear up for the field</p>
                     <span className="hidden rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary sm:inline-block">
                       Amazon
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-primary/90">The same gear guide linked inside the app — curated for every kind of rockhound. Browse by category below.</p>
-                  <div className="mt-3 flex-1 space-y-2.5 overflow-y-auto pr-1 [scrollbar-width:thin]">
-                    {GEAR_CATEGORIES.map((cat) => (
-                      <div key={cat.name}>
-                        <p className="font-display text-[11px] font-bold uppercase tracking-wider text-primary">
-                          {cat.name}
-                        </p>
-                        <p className="mt-0.5 text-[10px] leading-snug text-primary/80">{cat.intro}</p>
-                        <ul className="mt-1 grid grid-cols-1 gap-1 sm:grid-cols-2">
-                          {cat.items.map((item) => (
-                            <li key={item.name}>
-                              <a
-                                href={item.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 rounded-xl bg-black/40 px-2.5 py-1.5 text-xs text-primary backdrop-blur-sm transition-colors hover:bg-black/60"
-                              >
-                                <span className="text-sm" aria-hidden>{item.emoji}</span>
-                                <span className="flex-1 truncate">{item.name}</span>
-                                <ExternalLink className="h-3 w-3 shrink-0 opacity-60" />
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                  <p className="mt-1 text-xs text-muted-foreground">The same gear guide linked inside the app — curated for every kind of rockhound.</p>
+                  <ul className="mt-3 flex-1 space-y-1 overflow-y-auto pr-1 [scrollbar-width:thin]">
+                    {GEAR_ITEMS.map((item) => (
+                      <li key={item.name}>
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 rounded-xl border border-border/70 bg-card px-2.5 py-1.5 text-xs text-card-foreground transition-colors hover:border-primary/40 hover:bg-primary/5"
+                        >
+                          <span className="text-sm" aria-hidden>{item.emoji}</span>
+                          <span className="flex-1 truncate">{item.name}</span>
+                          <span className="shrink-0 text-muted-foreground">{item.price}</span>
+                          <ExternalLink className="h-3 w-3 shrink-0 opacity-60" />
+                        </a>
+                      </li>
                     ))}
-                  </div>
-                  <p className="mt-2 text-[10px] leading-tight text-primary/70">
+                  </ul>
+                  <p className="mt-2 text-[10px] leading-tight text-muted-foreground">
                     As an Amazon Associate, RockScout earns from qualifying purchases.
                   </p>
                 </div>
