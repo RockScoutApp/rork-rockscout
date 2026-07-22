@@ -609,7 +609,7 @@ type FieldStory =
 const FIELD_STORIES: FieldStory[] = [
   {
     type: "gear",
-    span: "md:col-span-2 md:row-span-1",
+    span: "md:col-span-2 md:row-span-2",
   },
   {
     type: "story",
@@ -617,20 +617,6 @@ const FIELD_STORIES: FieldStory[] = [
     alt: "Rockhounds gathered around a campfire at night with buckets of specimens and tents",
     caption: "Share finds around the campfire. The trade board and messenger keep the crew swapping stories and specimens long after the fire burns out — your collecting crew stays together between trips.",
     span: "md:col-span-2 md:row-span-2",
-  },
-  {
-    type: "story",
-    src: "/images/trip-planning.webp",
-    alt: "Group of rockhounds planning a trip over maps on a tailgate",
-    caption: "Plan group trips to dig sites. The Trip Planner handles multi-stop routes, gear checklists, and custom pins so everyone shows up at the right outcrop with the right tools.",
-    span: "md:col-span-1 md:row-span-1",
-  },
-  {
-    type: "story",
-    src: "/images/field-journal.webp",
-    alt: "Rockhound writing notes in a field journal surrounded by specimens",
-    caption: "Log every specimen in your field journal. Auto-weather, photos, and notes are pinned to each entry so the day lives on after you drive home — searchable and shareable from your profile.",
-    span: "md:col-span-1 md:row-span-1",
   },
   {
     type: "story",
@@ -644,6 +630,20 @@ const FIELD_STORIES: FieldStory[] = [
     src: "/images/uv-night-hunt.webp",
     alt: "Collectors searching a rocky beach at dusk with UV flashlights",
     caption: "UV night hunts for fluorescent minerals. A 365nm flashlight turns fluorite, calcite, and willemite into glowing beacons in the dark — log the finds with the Field Camera and let the AI ID them once you're back in signal.",
+    span: "md:col-span-2 md:row-span-1",
+  },
+  {
+    type: "story",
+    src: "/images/trip-planning.webp",
+    alt: "Group of rockhounds planning a trip over maps on a tailgate",
+    caption: "Plan group trips to dig sites. The Trip Planner handles multi-stop routes, gear checklists, and custom pins so everyone shows up at the right outcrop with the right tools.",
+    span: "md:col-span-2 md:row-span-1",
+  },
+  {
+    type: "story",
+    src: "/images/field-journal.webp",
+    alt: "Rockhound writing notes in a field journal surrounded by specimens",
+    caption: "Log every specimen in your field journal. Auto-weather, photos, and notes are pinned to each entry so the day lives on after you drive home — searchable and shareable from your profile.",
     span: "md:col-span-2 md:row-span-1",
   },
 ];
@@ -778,23 +778,23 @@ const FieldStories = () => (
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-black/40" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
                 </div>
                 <div className="relative flex h-full flex-col p-5">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="font-display text-lg font-semibold text-white drop-shadow">Gear up for the field</p>
-                    <span className="hidden rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white/90 sm:inline-block">
+                    <p className="font-display text-lg font-semibold text-primary drop-shadow">Gear up for the field</p>
+                    <span className="hidden rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary sm:inline-block">
                       Amazon
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-white/70">The same gear guide linked inside the app — curated for every kind of rockhound. Browse by category below.</p>
+                  <p className="mt-1 text-xs text-primary/90">The same gear guide linked inside the app — curated for every kind of rockhound. Browse by category below.</p>
                   <div className="mt-3 flex-1 space-y-2.5 overflow-y-auto pr-1 [scrollbar-width:thin]">
                     {GEAR_CATEGORIES.map((cat) => (
                       <div key={cat.name}>
-                        <p className="font-display text-[11px] font-bold uppercase tracking-wider text-white/85">
+                        <p className="font-display text-[11px] font-bold uppercase tracking-wider text-primary">
                           {cat.name}
                         </p>
-                        <p className="mt-0.5 text-[10px] leading-snug text-white/55">{cat.intro}</p>
+                        <p className="mt-0.5 text-[10px] leading-snug text-primary/80">{cat.intro}</p>
                         <ul className="mt-1 grid grid-cols-1 gap-1 sm:grid-cols-2">
                           {cat.items.map((item) => (
                             <li key={item.name}>
@@ -802,7 +802,7 @@ const FieldStories = () => (
                                 href={item.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-2 rounded-xl bg-white/10 px-2.5 py-1.5 text-xs text-white/90 backdrop-blur-sm transition-colors hover:bg-white/20"
+                                className="flex items-center gap-2 rounded-xl bg-black/40 px-2.5 py-1.5 text-xs text-primary backdrop-blur-sm transition-colors hover:bg-black/60"
                               >
                                 <span className="text-sm" aria-hidden>{item.emoji}</span>
                                 <span className="flex-1 truncate">{item.name}</span>
@@ -814,7 +814,7 @@ const FieldStories = () => (
                       </div>
                     ))}
                   </div>
-                  <p className="mt-2 text-[10px] leading-tight text-white/50">
+                  <p className="mt-2 text-[10px] leading-tight text-primary/70">
                     As an Amazon Associate, RockScout earns from qualifying purchases.
                   </p>
                 </div>
@@ -831,7 +831,7 @@ const FieldStories = () => (
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
                 </div>
                 <figcaption className="absolute bottom-0 left-0 w-full p-4">
-                  <p className="font-display text-sm font-semibold leading-snug text-white drop-shadow">{story.caption}</p>
+                  <p className="font-display text-sm font-semibold leading-snug text-primary drop-shadow">{story.caption}</p>
                 </figcaption>
               </>
             )}
