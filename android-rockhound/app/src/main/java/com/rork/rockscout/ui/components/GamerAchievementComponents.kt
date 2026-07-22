@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.rork.rockscout.data.Badge
@@ -303,25 +304,29 @@ fun GamerStreakCard(
                 )
             }
             Spacer(Modifier.width(14.dp))
-            Column(modifier = Modifier.weight(1f)) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     "DAILY STREAK",
                     style = MaterialTheme.typography.labelMedium,
                     color = if (active) Aqua else Color.White.copy(alpha = 0.85f),
                     fontWeight = FontWeight.ExtraBold,
+                    maxLines = 1,
                 )
                 Text(
                     if (active) "$currentStreak day${if (currentStreak > 1) "s" else ""} in a row"
                     else "No active streak — identify or capture a rock today!",
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     "Longest streak: $longestStreak days",
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.labelSmall,
                     color = Color.White.copy(alpha = 0.85f),
                     fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
                 )
             }
         }

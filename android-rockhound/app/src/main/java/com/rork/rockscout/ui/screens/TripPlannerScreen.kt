@@ -198,9 +198,43 @@ fun TripPlannerScreen(navController: NavController) {
     ScreenScaffold(
         title = "Trip Planner",
         onBack = { navController.popBackStack() },
-        actions = {
+        background = { innerContent ->
+            Box(modifier = Modifier.fillMaxSize()) {
+                Image(
+                    painter = painterResource(id = R.drawable.trip_planner_background),
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+                AsyncImage(
+                    model = "https://r2-pub.rork.com/attachments/78k8yy4tgahby3o9opb6j.png",
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+                // Darker scrim so the busy photo is visible but every tile stays legible.
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(
+                                    Color.Black.copy(alpha = 0.42f),
+                                    Color.Black.copy(alpha = 0.52f),
+                                    Color.Black.copy(alpha = 0.62f),
+                                    Color.Black.copy(alpha = 0.72f),
+                                )
+                            )
+                        )
+                )
+                innerContent()
+            }
+        },
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             val pillShape = RoundedCornerShape(50.dp)
             Row(
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -272,52 +306,18 @@ fun TripPlannerScreen(navController: NavController) {
                     }
                 }
             }
-        },
-        background = { innerContent ->
-            Box(modifier = Modifier.fillMaxSize()) {
-                Image(
-                    painter = painterResource(id = R.drawable.trip_planner_background),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
+            if (trips.isEmpty()) {
+                EmptyState(
+                    emoji = "\uD83D\uDDFA\uFE0F",
+                    title = "No trips planned yet",
+                    message = "Build a multi-stop rockhounding trip with weather, daylight windows, and a gear checklist. Tap the + above to start.",
                 )
-                AsyncImage(
-                    model = "https://r2-pub.rork.com/attachments/78k8yy4tgahby3o9opb6j.png",
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
-                // Darker scrim so the busy photo is visible but every tile stays legible.
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(
-                                    Color.Black.copy(alpha = 0.42f),
-                                    Color.Black.copy(alpha = 0.52f),
-                                    Color.Black.copy(alpha = 0.62f),
-                                    Color.Black.copy(alpha = 0.72f),
-                                )
-                            )
-                        )
-                )
-                innerContent()
-            }
-        },
-    ) {
-        if (trips.isEmpty()) {
-            EmptyState(
-                emoji = "\uD83D\uDDFA\uFE0F",
-                title = "No trips planned yet",
-                message = "Build a multi-stop rockhounding trip with weather, daylight windows, and a gear checklist. Tap the + above to start.",
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 40.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 40.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
                 item {
                     Box(
                         modifier = Modifier
@@ -555,6 +555,7 @@ fun TripPlannerScreen(navController: NavController) {
             preFilledCoords = pendingLocationCoords,
         )
     }
+}
 }
 
 @Composable

@@ -254,18 +254,20 @@ fun FieldJournalScreen(navController: NavController) {
     }
 
     if (showEditor) {
-        JournalEditorDialog(
+        JournalEditorScreen(
             initial = editingEntry,
             availableCaptures = captures,
             availableTrips = repo.trips.value,
-            onDismiss = { showEditor = false },
+            onDismiss = { showEditor = false; editingEntry = null },
             onSave = { saved ->
                 val isNew = !repo.journalEntries.value.any { it.id == saved.id }
                 repo.saveJournalEntry(saved)
                 if (isNew) AchievementsRepository.award(XpSource.JOURNAL_ENTRY)
                 showEditor = false
+                editingEntry = null
             },
         )
+        return
     }
 
     detailEntry?.let { entry ->
@@ -450,7 +452,7 @@ private fun JournalCard(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun JournalEditorDialog(
+private fun JournalEditorScreen(
     initial: JournalEntry?,
     availableCaptures: List<com.rork.rockscout.data.CapturedPhoto>,
     availableTrips: List<Trip>,
@@ -525,13 +527,17 @@ private fun JournalEditorDialog(
         }
     } }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
-        title = { Text(if (isEdit) "Edit Entry" else "New Journal Entry", style = MaterialTheme.typography.headlineSmall) },
-        text = {
-            Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).imePadding()) {
+    ScreenScaffold(
+        title = if (isEdit) "Edit Entry" else "New Journal Entry",
+        onBack = onDismiss,
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(
                         value = location,
@@ -552,14 +558,16 @@ private fun JournalEditorDialog(
                     }
                 }
                 Spacer(Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                     Text("Trip: ", style = MaterialTheme.typography.bodyMedium)
                     val trip = availableTrips.firstOrNull { it.id == selectedTripId }
                     Text(
                         trip?.name ?: "—",
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (trip != null) Aqua else TextLow,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).padding(end = 8.dp),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     SculptedOutlinedButton(
                         text = if (trip != null) "Change" else "Link a trip",
@@ -568,6 +576,7 @@ private fun JournalEditorDialog(
                         textColor = Citrine,
                     )
                     if (trip != null) {
+                        Spacer(Modifier.width(6.dp))
                         SculptedIconButton(icon = Icons.Filled.Close, contentDescription = "Unlink trip", onClick = { selectedTripId = null }, accent = Citrine, iconTint = TextLow, size = 36.dp, shadowElevation = 3.dp)
                     }
                 }
@@ -841,35 +850,48 @@ private fun JournalEditorDialog(
                         }
                     }
                 }
+                Spacer(Modifier.height(8.dp))
             }
-        },
-        confirmButton = {
-            SculptedButton(
-                text = if (isEdit) "Save Changes" else "Save Entry",
-                onClick = {
-                    val entry = JournalEntry(
-                        id = initial?.id ?: UUID.randomUUID().toString(),
-                        date = dateMillis,
-                        location = ProfanityFilter.filter(location.trim()),
-                        digSiteId = selectedDigSiteId,
-                        tripId = selectedTripId,
-                        weatherSummary = ProfanityFilter.filter(weatherSummary.trim()),
-                        notes = ProfanityFilter.filter(notes.trim()),
-                        attachedCaptureIds = attachedCaptureIds.toList(),
-                        photoUris = photoUris.toList(),
-                        specimenMarkers = specimenMarkers.toList(),
-                        createdAt = initial?.createdAt ?: System.currentTimeMillis(),
-                    )
-                    onSave(entry)
-                },
-                accent = Aqua,
-                containerColor = Aqua,
-                textColor = Color.Black,
-                enabled = location.isNotBlank() || notes.isNotBlank(),
-            )
-        },
-        dismissButton = { SculptedTextButton(text = "Cancel", onClick = onDismiss, accent = Citrine, textColor = Citrine) },
-    )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                SculptedTextButton(
+                    text = "Cancel",
+                    onClick = onDismiss,
+                    accent = Citrine,
+                    textColor = Citrine,
+                    modifier = Modifier.weight(1f),
+                )
+                SculptedButton(
+                    text = if (isEdit) "Save Changes" else "Save Entry",
+                    onClick = {
+                        val entry = JournalEntry(
+                            id = initial?.id ?: UUID.randomUUID().toString(),
+                            date = dateMillis,
+                            location = ProfanityFilter.filter(location.trim()),
+                            digSiteId = selectedDigSiteId,
+                            tripId = selectedTripId,
+                            weatherSummary = ProfanityFilter.filter(weatherSummary.trim()),
+                            notes = ProfanityFilter.filter(notes.trim()),
+                            attachedCaptureIds = attachedCaptureIds.toList(),
+                            photoUris = photoUris.toList(),
+                            specimenMarkers = specimenMarkers.toList(),
+                            createdAt = initial?.createdAt ?: System.currentTimeMillis(),
+                        )
+                        onSave(entry)
+                    },
+                    accent = Aqua,
+                    containerColor = Aqua,
+                    textColor = Color.Black,
+                    modifier = Modifier.weight(1.5f),
+                    enabled = location.isNotBlank() || notes.isNotBlank(),
+                )
+            }
+        }
+    }
 
     if (showLocationPicker) {
         SimpleLocationPicker(

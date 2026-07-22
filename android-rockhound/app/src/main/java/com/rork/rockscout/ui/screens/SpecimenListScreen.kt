@@ -221,12 +221,20 @@ fun SpecimenListScreen(navController: NavController) {
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.weight(1f),
                 )
+            }
+            // Action pills — moved under the header so the title has the full width.
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 TagChip(
                     "${filtered.size} specimens",
                     color = Citrine,
-                    modifier = Modifier.padding(end = 4.dp),
+                    modifier = Modifier.padding(end = 6.dp),
                 )
-                Spacer(Modifier.width(6.dp))
                 // Offline-ready badge: shown once the bulk download completes, so
                 // the user can see at a glance that the catalog is fully cached.
                 if (isOfflineReady) {
@@ -302,7 +310,7 @@ fun SpecimenListScreen(navController: NavController) {
                         )
                     }
                 }
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.weight(1f))
                 SculptedIconButton(
                     icon = Icons.Filled.CloudUpload,
                     contentDescription = "Submit specimen",
