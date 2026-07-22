@@ -1,6 +1,5 @@
 package com.rork.rockscout.ui.screens
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -117,7 +116,6 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
-import com.rork.rockscout.data.HunterStatus
 import com.rork.rockscout.data.RegionData
 import com.rork.rockscout.data.LevelTier
 import com.rork.rockscout.data.SocialRepository
@@ -196,7 +194,6 @@ fun ProfileScreen(
     val sessionStatus by auth.sessionStatus.collectAsStateWithLifecycle()
     val isSignedIn = sessionStatus is com.rork.rockscout.data.SessionStatus.Authenticated
     val signedInEmail = (sessionStatus as? com.rork.rockscout.data.SessionStatus.Authenticated)?.session?.user?.email
-    val connections by social.connections.collectAsStateWithLifecycle()
     val incomingMessageRequests by social.incomingRequests.collectAsStateWithLifecycle()
     val messagingCount by social.totalMessagingCount.collectAsStateWithLifecycle()
     val notificationRepo = NotificationRepository.instance
@@ -219,7 +216,6 @@ fun ProfileScreen(
     var replyImageErrors by remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
     var pendingDeletePostId by remember { mutableStateOf<String?>(null) }
     var showArchivedPosts by remember { mutableStateOf(false) }
-    var showDeleteAccountConfirm by remember { mutableStateOf(false) }
     val archivedPosts by postRepo.archivedPosts.collectAsStateWithLifecycle()
 
     // Sync my collection, wishlist, and favorite spots to the local users table so other
@@ -262,22 +258,7 @@ fun ProfileScreen(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { _ -> /* Results handled implicitly */ }
 
-    var clubMembers by remember { mutableStateOf<List<SocialRepository.HunterProfile>>(emptyList()) }
-    var howThisWorksExpanded by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
-
-    BackHandler(enabled = howThisWorksExpanded) { howThisWorksExpanded = false }
-
-    // Scroll directly to the RockScout Friends section when opened from the
-    // home-screen RockScout Social button. The target index accounts for the
-    // profile header, level card, stat row, Posts label, and any post items.
-    androidx.compose.runtime.LaunchedEffect(openToFriends, myPosts.size) {
-        if (openToFriends) {
-            val postsCount = if (myPosts.isEmpty()) 1 else myPosts.size
-            val friendsSectionIndex = 4 + postsCount
-            listState.animateScrollToItem(friendsSectionIndex)
-        }
-    }
 
     // Load connections, message requests, and notifications when signed in.
     androidx.compose.runtime.LaunchedEffect(isSignedIn, profile.clubEnabled) {
@@ -287,17 +268,6 @@ fun ProfileScreen(
         }
         if (isSignedIn) {
             notificationRepo.loadNotifications()
-        }
-    }
-    androidx.compose.runtime.LaunchedEffect(connections) {
-        if (connections.isNotEmpty()) {
-            val fetched = mutableMapOf<String, SocialRepository.HunterProfile>()
-            connections.chunked(50).forEach { chunk ->
-                social.fetchProfiles(chunk).forEach { fetched[it.id] = it }
-            }
-            clubMembers = connections.mapNotNull { fetched[it] }
-        } else {
-            clubMembers = emptyList()
         }
     }
 
@@ -566,7 +536,9 @@ fun ProfileScreen(
             }
 
             // ─── Post feed (5 most recent posts, empty box if none) ───
-            item { SectionLabel("Posts") }
+            // ─── Profile Posts ───────────────────────────────────────────
+            // Your public post feed. Only shown on your own profile.
+            item { SectionLabel("Profile Posts") }
             if (myPosts.isEmpty()) {
                 item {
                     EmptyPostBox(
@@ -698,297 +670,6 @@ fun ProfileScreen(
                 }
             }
 
-            // ─── Merged RockScout Social box ───────────────────────────────
-            // Sign-in tile sits at the TOP of one large card, followed by the
-            // Friends toggle, then the Browse / Scan / Friends sub-tiles. The
-            // toggle is always visible (even after sign-in) so users can turn
-            // social on/off from the profile tab. Each sub-tile remains
-            // independently tappable and functional.
-            item { SectionLabel("RockScout Friends") }
-            item {
-                SocialCard(modifier = Modifier.fillMaxWidth(), accent = Citrine) {
-                    // ── Sign-in / account tile (top of the merged box) ──
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background((if (isSignedIn) Success else TextLow).copy(alpha = 0.18f)),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Login,
-                                contentDescription = null,
-                                tint = if (isSignedIn) Success else TextLow,
-                            )
-                        }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = if (isSignedIn) "Signed in" else "Sign in to RockScout",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Text(
-                                text = signedInEmail ?: "Required to use RockScout.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = DarkTextMid,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                        }
-                        if (isSignedIn) {
-                            OutlinedButton(
-                                onClick = {
-                                    coroutineScope.launch { auth.signOut() }
-                                },
-                                shape = RoundedCornerShape(50.dp),
-                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = Color.White,
-                                ),
-                            ) {
-                                Text("Sign out", style = MaterialTheme.typography.labelMedium)
-                            }
-                        } else {
-                            Button(
-                                onClick = { navController.navigate(Routes.SIGN_IN) },
-                                shape = RoundedCornerShape(50.dp),
-                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Citrine,
-                                    contentColor = Ink,
-                                ),
-                            ) {
-                                Text("Sign in", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold)
-                            }
-                        }
-                    }
-
-                    Spacer(Modifier.height(8.dp))
-                    HorizontalDivider(color = Color(0x22FFFFFF), thickness = 1.dp)
-                    Spacer(Modifier.height(8.dp))
-
-                    // RockScout Friends toggle has moved to the Home screen.
-                    // Single wider Scan tile with an aqua tint like the Friends tab.
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        SocialSubTile(
-                            icon = Icons.Filled.LocationOn,
-                            label = "Scan",
-                            subtitle = "Find nearby",
-                            accent = Aqua,
-                            iconTint = Aqua,
-                            modifier = Modifier.fillMaxWidth(0.66f),
-                            onClick = { navController.navigate(Routes.SCAN) },
-                        )
-                    }
-
-                    // When social is ON, show sub-tiles + scan radius + status + friends list
-                    if (profile.clubEnabled) {
-                        // Friends / Browse / Map sub-tiles (moved from LocationAndSocialBox)
-                        Spacer(Modifier.height(14.dp))
-                        HorizontalDivider(color = Color(0x22FFFFFF), thickness = 1.dp)
-                        Spacer(Modifier.height(14.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        ) {
-                            SocialSubTile(
-                                icon = Icons.Filled.Group,
-                                label = "Friends & messages",
-                                subtitle = null,
-                                accent = Color(0xFF4CF0E8),
-                                iconTint = Color(0xFFEAFFFE),
-                                modifier = Modifier.weight(1f),
-                                backgroundImage = R.drawable.social_tile_bg,
-                                onClick = { navController.navigate(Routes.friends()) },
-                            )
-                            SocialSubTile(
-                                icon = Icons.Filled.PersonSearch,
-                                label = "Browse users",
-                                subtitle = null,
-                                accent = Color(0xFF7BEFFF),
-                                iconTint = Color(0xFFEAFFFE),
-                                modifier = Modifier.weight(1f),
-                                backgroundImage = R.drawable.social_background,
-                                onClick = { navController.navigate(Routes.DISCOVER_HUNTERS) },
-                            )
-                            SocialSubTile(
-                                icon = Icons.Filled.Map,
-                                label = "Ping maps",
-                                subtitle = null,
-                                accent = Color(0xFF4CF0E8),
-                                iconTint = Color(0xFFEAFFFE),
-                                modifier = Modifier.weight(1f),
-                                backgroundImage = R.drawable.trip_planner_background,
-                                onClick = { navController.navigate(Routes.ROCKSCOUTS_MAP) },
-                            )
-                        }
-
-                        Spacer(Modifier.height(14.dp))
-                        HorizontalDivider(color = Color(0x22FFFFFF), thickness = 1.dp)
-                        Spacer(Modifier.height(14.dp))
-                        Text("Scan radius", style = MaterialTheme.typography.labelMedium, color = DarkTextLow, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            listOf(5, 25, 50, 100, 250).forEach { miles ->
-                                val selected = profile.scanRadiusMiles == miles
-                                val premiumLocked = miles == 250 && !isPremium
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(if (selected) Citrine.copy(alpha = 0.30f) else Color(0xFF3A3830))
-                                        .glowingBorder(2.dp, Citrine.copy(alpha = 0.75f), RoundedCornerShape(10.dp))
-                                        .clickable {
-                                            if (premiumLocked) {
-                                                navController.navigate(Routes.PAYWALL)
-                                            } else {
-                                                repo.setScanRadiusMiles(miles)
-                                            }
-                                        }
-                                        .padding(vertical = 8.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text(
-                                        text = if (premiumLocked) "$miles mi\nPREMIUM" else "$miles mi",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = if (selected) Ink else TextMid,
-                                        fontWeight = FontWeight.Bold,
-                                        textAlign = TextAlign.Center,
-                                    )
-                                }
-                            }
-                        }
-                        // How this works — collapsible explainer
-                        Spacer(Modifier.height(14.dp))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(10.dp))
-                                .clickable { howThisWorksExpanded = !howThisWorksExpanded }
-                                .padding(vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                "How this works",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = Citrine,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                if (howThisWorksExpanded) "\u25B4" else "\u25BE",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = Citrine,
-                            )
-                        }
-                        if (howThisWorksExpanded) {
-                            Spacer(Modifier.height(8.dp))
-                            HowThisWorksStep("1.", "Scan", "Tap Scan for RockScouts to see other hunters near you who are on the hunt right now. You'll see their name and a rough distance \u2014 never their exact spot.")
-                            Spacer(Modifier.height(6.dp))
-                            HowThisWorksStep("2.", "Message", "Tap Send message on someone's card to send a message request. If they accept, you two become connected and can chat in the app.")
-                            Spacer(Modifier.height(6.dp))
-                            HowThisWorksStep(
-                                "3.",
-                                "Ping",
-                                "Once you're connected, open the RockScouts Map and tap Ping my location. Move the pin to a safe meet-up spot, then tap Set Ping. Your connected friend sees it on their map for 12 hours. Nobody else does.",
-                                emphasis = "Only connected RockScout Friends can see each other's pings.",
-                            )
-                            Spacer(Modifier.height(6.dp))
-                            HowThisWorksStep("4.", "Safety", "Your exact location is never shared with strangers. Only your connected RockScout Friends see your pings, and only the ones you set yourself.")
-                            Spacer(Modifier.height(10.dp))
-                        }
-
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            "Your RockScout Friends (${clubMembers.size})",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Aqua,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        if (clubMembers.isEmpty()) {
-                            Spacer(Modifier.height(6.dp))
-                            Text(
-                                "No connections yet. Scan for RockScouts and send a message request to start building your Friends list.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = DarkTextMid,
-                            )
-                        } else {
-                            Spacer(Modifier.height(8.dp))
-                            clubMembers.forEach { member ->
-                                ClubMemberRow(
-                                    name = member.display_name,
-                                    emoji = member.avatar_emoji,
-                                    level = member.level,
-                                    isPremium = member.premium_badge,
-                                    collectionCount = member.collection_count,
-                                    wishlistCount = member.wishlist_count,
-                                    status = when (member.status) {
-                                        "on-the-hunt" -> HunterStatus.ON_THE_HUNT
-                                        "wishing" -> HunterStatus.WISHING
-                                        "looking-for-trades" -> HunterStatus.LOOKING_FOR_TRADES
-                                        else -> HunterStatus.OFF_GRID
-                                    },
-                                    onTap = { navController.navigate(Routes.userProfile(member.id)) },
-                                    onRemove = {
-                                        coroutineScope.launch {
-                                            social.removeConnection(member.id)
-                                            social.loadConnections()
-                                        }
-                                    },
-                                    onCollectionClick = { navController.navigate(Routes.userCollection(member.id)) },
-                                    onWishlistClick = { navController.navigate(Routes.userWishlist(member.id)) },
-                                )
-                                if (member != clubMembers.last()) {
-                                    Spacer(Modifier.height(8.dp))
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // ─── Account deletion ───
-            if (isSignedIn) {
-                item { SectionLabel("Account") }
-                item {
-                    DarkCard(modifier = Modifier.fillMaxWidth(), accent = Danger) {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Text(
-                                "Delete account",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                "Remove your account and all stored data from this device. This cannot be undone.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = DarkTextMid,
-                            )
-                            Spacer(Modifier.height(10.dp))
-                            SculptedOutlinedButton(
-                                text = "Delete my account",
-                                onClick = { showDeleteAccountConfirm = true },
-                                modifier = Modifier.fillMaxWidth(),
-                                accent = Danger,
-                                icon = Icons.Filled.Close,
-                            )
-                        }
-                    }
-                }
-            }
 
             // ─── Referral card ───
             item { SectionLabel("Enlist a RockScout") }
@@ -1191,24 +872,6 @@ fun ProfileScreen(
                 }
             },
             onDismiss = { showArchivedPosts = false },
-        )
-    }
-
-    // Account deletion confirmation
-    if (showDeleteAccountConfirm) {
-        DeleteConfirmDialog(
-            title = "Delete your account?",
-            message = "This will permanently delete your RockScout account, collection, captures, posts, messages, and all other data stored on this device. This action cannot be undone.",
-            onConfirm = {
-                showDeleteAccountConfirm = false
-                coroutineScope.launch {
-                    auth.deleteAccount()
-                    navController.navigate(Routes.SIGN_IN) {
-                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                    }
-                }
-            },
-            onDismiss = { showDeleteAccountConfirm = false },
         )
     }
 
@@ -1551,145 +1214,6 @@ private fun SectionLabel(text: String) {
         fontWeight = FontWeight.ExtraBold,
         modifier = Modifier.padding(top = if (isPosts) 8.dp else 4.dp, bottom = if (isPosts) 4.dp else 0.dp),
     )
-}
-
-@Composable
-private fun HowThisWorksStep(
-    number: String,
-    title: String,
-    body: String,
-    emphasis: String = "",
-) {
-    Row(verticalAlignment = Alignment.Top) {
-        Text(
-            number,
-            style = MaterialTheme.typography.labelMedium,
-            color = Citrine,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(end = 6.dp),
-        )
-        Column {
-            Text(
-                title,
-                style = MaterialTheme.typography.labelMedium,
-                color = DarkTextHigh,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(
-                body,
-                style = MaterialTheme.typography.bodySmall,
-                color = DarkTextMid,
-            )
-            if (emphasis.isNotBlank()) {
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    emphasis,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = DarkTextHigh,
-                    fontWeight = FontWeight.SemiBold,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun ClubMemberRow(
-    name: String,
-    emoji: String,
-    level: Int,
-    isPremium: Boolean,
-    collectionCount: Int,
-    wishlistCount: Int,
-    status: HunterStatus,
-    onTap: () -> Unit,
-    onRemove: () -> Unit,
-    onCollectionClick: () -> Unit,
-    onWishlistClick: () -> Unit,
-) {
-    val statusAccent = statusAccent(status)
-    val statusLabel = status.label
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF3A3830))
-            .glowingBorder(1.dp, Color(0xFF3A3830).copy(alpha = 0.35f), RoundedCornerShape(12.dp))
-            .clickable(onClick = onTap)
-            .padding(horizontal = 10.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(Brush.linearGradient(listOf(statusAccent.copy(alpha = 0.40f), Aqua.copy(alpha = 0.20f)))),
-            contentAlignment = Alignment.Center,
-        ) { Text(emoji, style = MaterialTheme.typography.titleMedium) }
-        Spacer(Modifier.width(10.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    name,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = DarkTextHigh,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                )
-                if (isPremium) {
-                    Spacer(Modifier.width(4.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(Citrine.copy(alpha = 0.30f))
-                            .padding(horizontal = 4.dp, vertical = 1.dp),
-                    ) {
-                        Text("PREMIUM", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                HunterStatusIcon(status = status, size = 16.dp)
-                Spacer(Modifier.width(4.dp))
-                Text(
-                    statusLabel,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Aqua,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                )
-            }
-            Text("Lvl $level", style = MaterialTheme.typography.labelSmall, color = Aqua)
-            Spacer(Modifier.height(6.dp))
-            ProfileStatBar(
-                collectionCount = collectionCount,
-                wishlistCount = wishlistCount,
-                onCollectionClick = onCollectionClick,
-                onWishlistClick = onWishlistClick,
-            )
-        }
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .sculpted(
-                    shape = CircleShape,
-                    accent = Citrine,
-                    shadowElevation = 3.dp,
-                    circular = true,
-                    onClick = onRemove,
-                )
-                .clip(CircleShape)
-                .background(Color.Black),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Close,
-                contentDescription = "Remove connection",
-                tint = Color.White,
-                modifier = Modifier.size(18.dp),
-            )
-        }
-    }
 }
 
 

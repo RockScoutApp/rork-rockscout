@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -77,12 +78,16 @@ import com.rork.rockscout.data.StorageUsageCalculator
 import com.rork.rockscout.data.WorkScheduler
 import com.rork.rockscout.data.SeedData
 import com.rork.rockscout.ui.components.BulkDownloadCard
+import com.rork.rockscout.ui.components.DeleteConfirmDialog
+import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.SculptedOutlinedButton
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.sculpted
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
+import com.rork.rockscout.ui.theme.Danger
 import com.rork.rockscout.ui.theme.Ink
 import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.TextMid
@@ -131,6 +136,7 @@ fun SocialSettingsScreen(
     // callback only flips the matching toggle on when the user actually grants
     // POST_NOTIFICATIONS. Pre-TIRAMISU devices are always treated as granted.
     var pendingNotifToggle by remember { mutableStateOf<String?>(null) }
+    var showDeleteAccountConfirm by remember { mutableStateOf(false) }
     val permissionsLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { results ->
@@ -927,8 +933,58 @@ fun SocialSettingsScreen(
                 )
             }
 
+            // ── Account deletion ──
+            // Placed at the very bottom of social settings so it is out of the
+            // way but still reachable. Only visible while signed in.
+            if (isSignedIn) {
+                Spacer(Modifier.height(24.dp))
+                SectionHeader("Account")
+                DarkCard(modifier = Modifier.fillMaxWidth(), accent = Danger) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            "Delete account",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Remove your account and all stored data from this device. This cannot be undone.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextMid,
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        SculptedOutlinedButton(
+                            text = "Delete my account",
+                            onClick = { showDeleteAccountConfirm = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            accent = Danger,
+                            icon = Icons.Filled.Close,
+                        )
+                    }
+                }
+            }
+
             Spacer(Modifier.height(40.dp))
         }
+    }
+
+    // Account deletion confirmation
+    if (showDeleteAccountConfirm) {
+        DeleteConfirmDialog(
+            title = "Delete your account?",
+            message = "This will permanently delete your RockScout account, collection, captures, posts, messages, and all other data stored on this device. This action cannot be undone.",
+            onConfirm = {
+                showDeleteAccountConfirm = false
+                scope.launch {
+                    auth.deleteAccount()
+                    navController.navigate(Routes.SIGN_IN) {
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                    }
+                }
+            },
+            onDismiss = { showDeleteAccountConfirm = false },
+        )
     }
 }
 
