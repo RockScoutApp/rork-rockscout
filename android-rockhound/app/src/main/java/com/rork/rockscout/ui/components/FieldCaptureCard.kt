@@ -31,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
@@ -77,6 +78,8 @@ import com.rork.rockscout.data.ImageReviewRepository
 import com.rork.rockscout.data.AuthRepository
 import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.ProfanityFilter
+import com.rork.rockscout.ui.components.SavedImagesPickerDialog
+import com.rork.rockscout.ui.components.processSavedImage
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.Danger
@@ -149,6 +152,7 @@ fun FieldCaptureCard(
     val coroutineScope = rememberCoroutineScope()
     var imageModerating by remember { mutableStateOf(false) }
     var moderationRejected by remember { mutableStateOf<String?>(null) }
+    var showSavedImagePicker by remember { mutableStateOf(false) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -620,31 +624,72 @@ fun FieldCaptureCard(
             )
         }
 
-        // "Add to Specimen" button when not editing
+        // "Add to Specimen" buttons when not editing
         if (!isEditing) {
             Spacer(Modifier.height(8.dp))
             val addShape = RoundedCornerShape(10.dp)
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(addShape)
-                    .background(accent.copy(alpha = 0.10f))
-                    .glowingBorder(1.dp, accent.copy(alpha = 0.30f), addShape)
-                    .clickable(enabled = !imageModerating) { galleryLauncher.launch("image/*") }
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Icon(Icons.Filled.Add, contentDescription = null, tint = accent, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(
-                    "Add to Specimen",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = accent,
-                    fontWeight = FontWeight.SemiBold,
-                )
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(addShape)
+                        .background(accent.copy(alpha = 0.10f))
+                        .glowingBorder(1.dp, accent.copy(alpha = 0.30f), addShape)
+                        .clickable(enabled = !imageModerating) { galleryLauncher.launch("image/*") }
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = null, tint = accent, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "Gallery",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = accent,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(addShape)
+                        .background(accent.copy(alpha = 0.10f))
+                        .glowingBorder(1.dp, accent.copy(alpha = 0.30f), addShape)
+                        .clickable(enabled = !imageModerating) { showSavedImagePicker = true }
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Filled.Download, contentDescription = null, tint = accent, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "Saved Images",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = accent,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
             }
         }
+    }
+
+    if (showSavedImagePicker) {
+        SavedImagesPickerDialog(
+            onDismiss = { showSavedImagePicker = false },
+            onImageSelected = { image ->
+                showSavedImagePicker = false
+                coroutineScope.launch {
+                    imageModerating = true
+                    moderationRejected = null
+                    val path = processSavedImage(context, image, "capture_images", "field_capture")
+                    imageModerating = false
+                    if (path != null) onAddImage(path)
+                }
+            },
+        )
     }
 }
 

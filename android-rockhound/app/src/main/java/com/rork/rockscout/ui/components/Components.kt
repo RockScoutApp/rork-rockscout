@@ -25,7 +25,11 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -53,6 +57,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
@@ -91,6 +96,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Image
 import com.rork.rockscout.data.RockClass
+import com.rork.rockscout.data.AppRepository
+import com.rork.rockscout.data.AuthRepository
+import com.rork.rockscout.data.ImageModerator
+import com.rork.rockscout.data.ImageReviewRepository
+import com.rork.rockscout.data.ImageUtils
+import com.rork.rockscout.data.ModerationTriState
+import com.rork.rockscout.data.SavedImage
 import com.rork.rockscout.data.Specimen
 import com.rork.rockscout.data.SpecimenImages
 import com.rork.rockscout.ui.theme.Amethyst
@@ -2327,6 +2339,123 @@ fun LockedFeatureBanner(
                 textColor = androidx.compose.ui.graphics.Color.Black,
                 shape = RoundedCornerShape(14.dp),
             )
+        }
+    }
+}
+
+/** Modal dialog that lets the user pick a photo from their in-app Saved Images collection.
+ *  Tapping an image immediately calls [onImageSelected] with the chosen [SavedImage]. */
+@Composable
+fun SavedImagesPickerDialog(
+    onDismiss: () -> Unit,
+    onImageSelected: (SavedImage) -> Unit,
+) {
+    val savedImages by AppRepository.instance.savedImages.collectAsStateWithLifecycle()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        containerColor = Slate900,
+        title = { Text("Pick from Saved Images", style = MaterialTheme.typography.headlineSmall, color = Aqua) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth().height(420.dp)) {
+                if (savedImages.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            "No saved images yet. Long-press any photo in the app to save one.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = DarkTextMid,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        items(savedImages, key = { it.id }) { image ->
+                            Box(
+                                modifier = Modifier
+                                    .aspectRatio(1f)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color(0xFF1A1812))
+                                    .glowingBorder(1.dp, Color(0xFF1A1812).copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+                                    .clickable { onImageSelected(image) },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                AsyncImage(
+                                    model = image.url,
+                                    contentDescription = "Saved image",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = DarkTextMid)
+            }
+        },
+    )
+}
+
+/** Copies a saved image into the requested destination folder, runs it through the same
+ *  moderation pipeline as a gallery pick, and returns the persistent path (or null if
+ *  it was rejected). */
+suspend fun processSavedImage(
+    context: android.content.Context,
+    savedImage: SavedImage,
+    subdir: String,
+    type: String,
+): String? {
+    val sourceUri = if (savedImage.localUri != null) {
+        android.net.Uri.parse(savedImage.localUri)
+    } else {
+        android.net.Uri.parse(savedImage.url)
+    }
+    val persistentPath = ImageUtils.copyUriToInternalStorage(context, sourceUri, subdir) ?: return null
+
+    val base64 = ImageUtils.uriToModerationBase64(context, android.net.Uri.parse(persistentPath))
+    if (base64 == null) {
+        android.widget.Toast.makeText(context, "Could not load saved image.", android.widget.Toast.LENGTH_SHORT).show()
+        return null
+    }
+    val verdict = ImageModerator.scan(base64, "image/jpeg")
+    return when (verdict.triState) {
+        ModerationTriState.CLEAN -> persistentPath
+        ModerationTriState.EXPLICIT -> {
+            android.widget.Toast.makeText(
+                context,
+                verdict.reason.ifBlank { "This image can't be used because it violates our family-friendly policies." },
+                android.widget.Toast.LENGTH_LONG,
+            ).show()
+            null
+        }
+        ModerationTriState.QUESTIONABLE -> {
+            val userId = AuthRepository.instance.currentUserId
+            val userName = AppRepository.instance.profile.value.name
+            val avatar = AppRepository.instance.profile.value.avatarEmoji
+            ImageReviewRepository.instance.submitReview(
+                userId = userId ?: "unknown",
+                userName = userName,
+                userAvatar = avatar,
+                imageUri = persistentPath,
+                type = type,
+                reason = verdict.reason,
+            )
+            android.widget.Toast.makeText(
+                context,
+                "Image submitted for review. It'll be visible once approved.",
+                android.widget.Toast.LENGTH_LONG,
+            ).show()
+            persistentPath
         }
     }
 }

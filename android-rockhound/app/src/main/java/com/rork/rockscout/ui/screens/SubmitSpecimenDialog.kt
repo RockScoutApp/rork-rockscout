@@ -28,6 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -65,9 +66,11 @@ import com.rork.rockscout.data.ModerationTriState
 import com.rork.rockscout.data.ProfanityFilter
 import com.rork.rockscout.data.SeedData
 import com.rork.rockscout.data.SpecimenSubmissionStore
+import com.rork.rockscout.ui.components.SavedImagesPickerDialog
 import com.rork.rockscout.ui.components.SculptedButton
 import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.noAutoFocus
+import com.rork.rockscout.ui.components.processSavedImage
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
@@ -98,6 +101,7 @@ fun SubmitSpecimenDialog(
     var customLocation by remember { mutableStateOf("") }
     var useCustomLocation by remember { mutableStateOf(false) }
     var isModerating by remember { mutableStateOf(false) }
+    var showSavedImagePicker by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -238,22 +242,42 @@ fun SubmitSpecimenDialog(
                         }
                     }
                     if (imageUris.size < 4) {
-                        Box(
-                            modifier = Modifier
-                                .size(72.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(Aqua.copy(alpha = 0.12f))
-                                .glowingBorder(2.dp, Aqua.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
-                                .clickable { galleryLauncher.launch("image/*") },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(Icons.Filled.Add, "Add photo", tint = Aqua, modifier = Modifier.size(24.dp))
-                                Text(
-                                    "${imageUris.size}/4",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = Aqua,
-                                )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Aqua.copy(alpha = 0.12f))
+                                    .glowingBorder(2.dp, Aqua.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                                    .clickable { galleryLauncher.launch("image/*") },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(Icons.Filled.Add, "Add photo", tint = Aqua, modifier = Modifier.size(24.dp))
+                                    Text(
+                                        "${imageUris.size}/4",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Aqua,
+                                    )
+                                }
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .size(72.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Citrine.copy(alpha = 0.12f))
+                                    .glowingBorder(2.dp, Citrine.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                                    .clickable { showSavedImagePicker = true },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Icon(Icons.Filled.Download, "Saved images", tint = Citrine, modifier = Modifier.size(24.dp))
+                                    Text(
+                                        "Saved",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Citrine,
+                                    )
+                                }
                             }
                         }
                     }
@@ -388,5 +412,22 @@ fun SubmitSpecimenDialog(
                 )
             }
         }
+    }
+
+    if (showSavedImagePicker) {
+        SavedImagesPickerDialog(
+            onDismiss = { showSavedImagePicker = false },
+            onImageSelected = { image ->
+                showSavedImagePicker = false
+                if (imageUris.size < 4) {
+                    scope.launch {
+                        isModerating = true
+                        val path = processSavedImage(context, image, "specimen_submissions", "specimen_submission")
+                        isModerating = false
+                        if (path != null) imageUris.add(path)
+                    }
+                }
+            },
+        )
     }
 }

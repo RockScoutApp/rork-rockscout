@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CollectionsBookmark
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Lock
@@ -93,6 +94,7 @@ import com.rork.rockscout.data.ImageUtils
 import com.rork.rockscout.data.JournalEntry
 import com.rork.rockscout.data.ModerationTriState
 import com.rork.rockscout.data.PostRepository
+import com.rork.rockscout.data.SavedImage
 import com.rork.rockscout.data.ProfanityFilter
 import com.rork.rockscout.data.RocksAreAmazingSpecimens
 import com.rork.rockscout.data.SeedData
@@ -109,8 +111,10 @@ import com.rork.rockscout.ui.theme.Ink
 import com.rork.rockscout.ui.theme.Success
 import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.TextMid
+import com.rork.rockscout.ui.components.SavedImagesPickerDialog
 import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.YooperliteHeart
+import com.rork.rockscout.ui.components.processSavedImage
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
@@ -828,6 +832,8 @@ private fun CommentInputRow(
         }
     }
 
+    var showSavedImagePicker by remember { mutableStateOf(false) }
+
     Column(modifier = modifier.fillMaxWidth()) {
         // Image preview
         if (imageUri != null && imageUri != "__loading__" && !imageUri.startsWith("__error:")) {
@@ -919,6 +925,23 @@ private fun CommentInputRow(
                         modifier = Modifier.size(18.dp),
                     )
                 }
+                Spacer(Modifier.width(6.dp))
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF3A3830))
+                        .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), CircleShape)
+                        .clickable { showSavedImagePicker = true },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Filled.Download,
+                        contentDescription = "Attach saved image",
+                        tint = Citrine,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
                 Spacer(Modifier.width(8.dp))
             }
             OutlinedTextField(
@@ -957,6 +980,22 @@ private fun CommentInputRow(
                 )
             }
         }
+    }
+
+    if (showSavedImagePicker) {
+        SavedImagesPickerDialog(
+            onDismiss = { showSavedImagePicker = false },
+            onImageSelected = { image: SavedImage ->
+                showSavedImagePicker = false
+                if (onImagePicked != null) {
+                    onImagePicked("__loading__")
+                    scope.launch {
+                        val path = processSavedImage(context, image, "comment_images", "comment_image")
+                        onImagePicked(path ?: "__error:Could not use saved image.")
+                    }
+                }
+            },
+        )
     }
 }
 
@@ -1452,6 +1491,7 @@ private fun ComposeTextPost(
     val scope = rememberCoroutineScope()
     var imageModerating by remember { mutableStateOf(false) }
     var imageError by remember { mutableStateOf<String?>(null) }
+    var showSavedImagePicker by remember { mutableStateOf(false) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -1584,20 +1624,20 @@ private fun ComposeTextPost(
                         .weight(1f)
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color(0xFF2A2820))
-                        .glowingBorder(1.dp, Aqua.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
-                        .clickable { galleryLauncher.launch("image/*") }
+                        .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                        .clickable { showSavedImagePicker = true }
                         .padding(vertical = 14.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Icon(
-                        Icons.Filled.CameraAlt,
-                        contentDescription = "Take a photo",
-                        tint = Aqua,
+                        Icons.Filled.Download,
+                        contentDescription = "Choose from saved images",
+                        tint = Citrine,
                         modifier = Modifier.size(24.dp),
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "Camera",
+                        "Saved Images",
                         style = MaterialTheme.typography.labelMedium,
                         color = DarkTextHigh,
                         fontWeight = FontWeight.Bold,
@@ -1740,6 +1780,25 @@ private fun ComposeTextPost(
                 shape = RoundedCornerShape(12.dp),
             )
         }
+    }
+
+    if (showSavedImagePicker) {
+        SavedImagesPickerDialog(
+            onDismiss = { showSavedImagePicker = false },
+            onImageSelected = { image ->
+                showSavedImagePicker = false
+                scope.launch {
+                    imageModerating = true
+                    imageError = null
+                    val path = processSavedImage(context, image, "profile_posts", "profile_post")
+                    imageModerating = false
+                    if (path != null) {
+                        onPhotoChange(path)
+                        imageError = null
+                    }
+                }
+            },
+        )
     }
 }
 

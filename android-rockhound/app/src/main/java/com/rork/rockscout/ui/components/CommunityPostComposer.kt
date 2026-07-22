@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -58,6 +59,8 @@ import com.rork.rockscout.data.ImageReviewRepository
 import com.rork.rockscout.data.AuthRepository
 import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.ui.theme.Aqua
+import com.rork.rockscout.ui.components.SavedImagesPickerDialog
+import com.rork.rockscout.ui.components.processSavedImage
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
@@ -91,6 +94,7 @@ fun CommunityPostComposer(
     var error by remember { mutableStateOf<String?>(null) }
     var imageModerating by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf(CommunityRepository.Category.GENERAL) }
+    var showSavedImagePicker by remember { mutableStateOf(false) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -243,26 +247,26 @@ fun CommunityPostComposer(
                             fontWeight = FontWeight.Bold,
                         )
                     }
-                    // Camera button (placeholder — launches gallery picker for now)
+                    // Saved images button
                     Column(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color(0xFF2A2820))
-                            .glowingBorder(1.dp, Aqua.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
-                            .clickable { galleryLauncher.launch("image/*") }
+                            .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                            .clickable { showSavedImagePicker = true }
                             .padding(vertical = 16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Icon(
-                            Icons.Filled.CameraAlt,
-                            contentDescription = "Take a photo",
-                            tint = Aqua,
+                            Icons.Filled.Download,
+                            contentDescription = "Choose from saved images",
+                            tint = Citrine,
                             modifier = Modifier.size(28.dp),
                         )
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            "Camera",
+                            "Saved Images",
                             style = MaterialTheme.typography.labelMedium,
                             color = DarkTextHigh,
                             fontWeight = FontWeight.Bold,
@@ -474,6 +478,25 @@ fun CommunityPostComposer(
             }
             Spacer(Modifier.height(16.dp))
         }
+    }
+
+    if (showSavedImagePicker) {
+        SavedImagesPickerDialog(
+            onDismiss = { showSavedImagePicker = false },
+            onImageSelected = { image ->
+                showSavedImagePicker = false
+                scope.launch {
+                    imageModerating = true
+                    error = null
+                    val path = processSavedImage(context, image, "community_posts", "community_post")
+                    imageModerating = false
+                    if (path != null) {
+                        photoUri = path
+                        error = null
+                    }
+                }
+            },
+        )
     }
 }
 

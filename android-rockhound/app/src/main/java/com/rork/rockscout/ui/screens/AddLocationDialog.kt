@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddLocation
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudDone
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material3.AlertDialog
@@ -73,7 +74,9 @@ import com.rork.rockscout.data.LocationSubmissionStore
 import com.rork.rockscout.data.LocationType
 import com.rork.rockscout.data.ProfanityFilter
 import com.rork.rockscout.ui.components.AddLocationSheet
+import com.rork.rockscout.ui.components.SavedImagesPickerDialog
 import com.rork.rockscout.ui.components.SculptedButton
+import com.rork.rockscout.ui.components.processSavedImage
 import com.rork.rockscout.ui.components.SculptedOutlinedButton
 import com.rork.rockscout.ui.components.SculptedTextButton
 import com.rork.rockscout.ui.components.noAutoFocus
@@ -135,6 +138,7 @@ fun AddLocationDialog(
     var isSubmitting by remember { mutableStateOf(false) }
     var submitStatus by remember { mutableStateOf<String?>(null) }
     var moderationError by remember { mutableStateOf<String?>(null) }
+    var showSavedImagePicker by remember { mutableStateOf(false) }
 
     // Camera launcher
     val cameraLauncher = rememberLauncherForActivityResult(
@@ -367,6 +371,20 @@ fun AddLocationDialog(
                                     Spacer(Modifier.height(2.dp))
                                     Text("Gallery", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Medium)
                                 }
+                                Column(
+                                    modifier = Modifier
+                                        .size(80.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(Slate800.copy(alpha = 0.5f))
+                                        .glowingBorder(1.5.dp, Citrine.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                                        .clickable { showSavedImagePicker = true },
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ) {
+                                    Icon(Icons.Filled.Download, contentDescription = "Saved Images", tint = Citrine, modifier = Modifier.size(24.dp))
+                                    Spacer(Modifier.height(2.dp))
+                                    Text("Saved Images", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Medium)
+                                }
                             }
                         }
                     }
@@ -533,6 +551,19 @@ fun AddLocationDialog(
                 showPinPicker = false
             },
             defaultSubmitAsRockLocation = false,
+        )
+    }
+
+    if (showSavedImagePicker) {
+        SavedImagesPickerDialog(
+            onDismiss = { showSavedImagePicker = false },
+            onImageSelected = { image ->
+                showSavedImagePicker = false
+                scope.launch {
+                    val path = processSavedImage(context, image, "location_submissions", "location_submission")
+                    if (path != null) photoUris.add(Uri.parse(path))
+                }
+            },
         )
     }
 }

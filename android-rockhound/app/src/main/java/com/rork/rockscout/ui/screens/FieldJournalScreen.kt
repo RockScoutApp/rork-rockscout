@@ -31,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PersonAdd
@@ -90,8 +91,10 @@ import com.rork.rockscout.ui.components.CardAction
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.FullScreenImageViewer
 import com.rork.rockscout.ui.components.LongPressableImage
+import com.rork.rockscout.ui.components.SavedImagesPickerDialog
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.SculptedButton
+import com.rork.rockscout.ui.components.processSavedImage
 import com.rork.rockscout.ui.components.PinDropMap
 import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.SculptedOutlinedButton
@@ -477,6 +480,7 @@ private fun JournalEditorScreen(
     var showLocationPicker by remember { mutableStateOf(false) }
     var showCapturePicker by remember { mutableStateOf(false) }
     var showTripPicker by remember { mutableStateOf(false) }
+    var showSavedImagePicker by remember { mutableStateOf(false) }
     var weatherSummary by remember { mutableStateOf(initial?.weatherSummary ?: "") }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -632,13 +636,22 @@ private fun JournalEditorScreen(
                             ) { Icon(Icons.Filled.Close, "Remove", tint = Color.White, modifier = Modifier.size(14.dp)) }
                         }
                     }
-                    Box(
-                        modifier = Modifier.size(64.dp).clip(RoundedCornerShape(10.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant)
-                            .glowingBorder(2.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(10.dp))
-                            .clickable { galleryLauncher.launch("image/*") },
-                        contentAlignment = Alignment.Center,
-                    ) { Icon(Icons.Filled.Add, "Add photo", tint = Citrine) }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(
+                            modifier = Modifier.size(64.dp).clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .glowingBorder(2.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(10.dp))
+                                .clickable { galleryLauncher.launch("image/*") },
+                            contentAlignment = Alignment.Center,
+                        ) { Icon(Icons.Filled.Add, "Add photo", tint = Citrine) }
+                        Box(
+                            modifier = Modifier.size(64.dp).clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .glowingBorder(2.dp, Citrine.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
+                                .clickable { showSavedImagePicker = true },
+                            contentAlignment = Alignment.Center,
+                        ) { Icon(Icons.Filled.Download, "Saved images", tint = Citrine) }
+                    }
                 }
 
                 Spacer(Modifier.height(12.dp))
@@ -926,6 +939,18 @@ private fun JournalEditorScreen(
             },
         )
     }
+    if (showSavedImagePicker) {
+        SavedImagesPickerDialog(
+            onDismiss = { showSavedImagePicker = false },
+            onImageSelected = { image ->
+                showSavedImagePicker = false
+                scope.launch {
+                    val path = processSavedImage(context, image, "journal_photos", "journal_photo")
+                    if (path != null) photoUris.add(path)
+                }
+            },
+        )
+    }
 }
 
 @Composable
@@ -1048,6 +1073,7 @@ private fun CapturePickerSheet(
         confirmButton = {},
         dismissButton = { SculptedTextButton(text = "Cancel", onClick = onDismiss, accent = Citrine, textColor = Citrine) },
     )
+
 }
 
 @Composable

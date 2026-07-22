@@ -38,6 +38,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Group
@@ -132,6 +133,7 @@ import com.rork.rockscout.ui.components.CreatePostSheet
 import com.rork.rockscout.ui.components.DeleteConfirmDialog
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.EmptyPostBox
+import com.rork.rockscout.ui.components.SavedImagesPickerDialog
 import com.rork.rockscout.ui.components.HunterStatusDropdown
 import com.rork.rockscout.ui.components.HunterStatusIcon
 import com.rork.rockscout.ui.components.PostCard
@@ -1030,6 +1032,7 @@ private fun EditProfileSheet(
     var nameError by remember { mutableStateOf<String?>(null) }
     var bgModerating by remember { mutableStateOf(false) }
     var bgRejected by remember { mutableStateOf<String?>(null) }
+    var showSavedImagePicker by remember { mutableStateOf(false) }
     // Track the original name so we know whether the user actually changed it
     // (needed to avoid blocking the save when they kept their own name).
     val originalName = remember { name.trim() }
@@ -1097,6 +1100,31 @@ private fun EditProfileSheet(
                     Spacer(Modifier.width(8.dp))
                     Text(
                         if (backgroundImagePath.isNullOrBlank()) "Add Background" else "Change Background",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Citrine,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Citrine.copy(alpha = 0.15f))
+                    .glowingBorder(2.dp, Citrine.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+                    .clickable { showSavedImagePicker = true }
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Filled.Download,
+                        contentDescription = "Saved images",
+                        tint = Citrine,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "Saved Images",
                         style = MaterialTheme.typography.labelLarge,
                         color = Citrine,
                         fontWeight = FontWeight.Bold,
@@ -1201,6 +1229,17 @@ private fun EditProfileSheet(
             Text("Save Changes", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
         }
         Spacer(Modifier.height(16.dp))
+    }
+
+    if (showSavedImagePicker) {
+        SavedImagesPickerDialog(
+            onDismiss = { showSavedImagePicker = false },
+            onImageSelected = { image ->
+                showSavedImagePicker = false
+                val uri = image.localUri?.let { android.net.Uri.parse(it) } ?: android.net.Uri.parse(image.url)
+                onBackgroundSelected(uri)
+            },
+        )
     }
 }
 

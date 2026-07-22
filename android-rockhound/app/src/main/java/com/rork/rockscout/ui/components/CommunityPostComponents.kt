@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Forum
@@ -61,6 +62,9 @@ import com.rork.rockscout.data.ImageModerator
 import com.rork.rockscout.data.ImageReviewRepository
 import com.rork.rockscout.data.ImageUtils
 import com.rork.rockscout.data.ModerationTriState
+import com.rork.rockscout.data.SavedImage
+import com.rork.rockscout.ui.components.SavedImagesPickerDialog
+import com.rork.rockscout.ui.components.processSavedImage
 import kotlinx.coroutines.launch
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
@@ -772,6 +776,8 @@ private fun CommunityCommentInputRow(
         }
     }
 
+    var showSavedImagePicker by remember { mutableStateOf(false) }
+
     Column(modifier = modifier.fillMaxWidth()) {
         // Image preview
         if (imageUri != null && imageUri != "__loading__" && !imageUri.startsWith("__error:")) {
@@ -863,6 +869,23 @@ private fun CommunityCommentInputRow(
                         modifier = Modifier.size(18.dp),
                     )
                 }
+                Spacer(Modifier.width(6.dp))
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF3A3830))
+                        .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), CircleShape)
+                        .clickable { showSavedImagePicker = true },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Filled.Download,
+                        contentDescription = "Attach saved image",
+                        tint = Citrine,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
                 Spacer(Modifier.width(8.dp))
             }
             OutlinedTextField(
@@ -901,5 +924,21 @@ private fun CommunityCommentInputRow(
                 )
             }
         }
+    }
+
+    if (showSavedImagePicker) {
+        SavedImagesPickerDialog(
+            onDismiss = { showSavedImagePicker = false },
+            onImageSelected = { image: SavedImage ->
+                showSavedImagePicker = false
+                if (onImagePicked != null) {
+                    onImagePicked("__loading__")
+                    scope.launch {
+                        val path = processSavedImage(context, image, "comment_images", "comment_image")
+                        onImagePicked(path ?: "__error:Could not use saved image.")
+                    }
+                }
+            },
+        )
     }
 }

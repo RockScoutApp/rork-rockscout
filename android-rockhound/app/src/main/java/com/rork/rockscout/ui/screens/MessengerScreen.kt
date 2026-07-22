@@ -34,6 +34,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material3.CircularProgressIndicator
@@ -76,7 +77,9 @@ import com.rork.rockscout.data.SessionStatus
 import com.rork.rockscout.data.SocialRepository
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.ReportSubmittedDialog
+import com.rork.rockscout.ui.components.SavedImagesPickerDialog
 import com.rork.rockscout.ui.components.SculptedButton
+import com.rork.rockscout.ui.components.processSavedImage
 import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.SculptedOutlinedButton
 import com.rork.rockscout.ui.components.SculptedTextButton
@@ -406,6 +409,7 @@ private fun ThreadView(
     var showPreview by remember { mutableStateOf(false) }
     var imageModerating by remember { mutableStateOf(false) }
     var moderationError by remember { mutableStateOf<String?>(null) }
+    var showSavedImagePicker by remember { mutableStateOf(false) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -678,6 +682,23 @@ private fun ThreadView(
                             modifier = Modifier.size(24.dp),
                         )
                     }
+                    Spacer(Modifier.width(6.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF3A3830))
+                            .glowingBorder(1.dp, Color(0xFF3A3830).copy(alpha = 0.35f), CircleShape)
+                            .clickable(enabled = !imageModerating) { showSavedImagePicker = true },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            Icons.Filled.Download,
+                            contentDescription = "Send saved image",
+                            tint = if (!imageModerating) Citrine else DarkTextMid,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
                     Spacer(Modifier.width(8.dp))
                     OutlinedTextField(
                         value = replyBody,
@@ -750,6 +771,20 @@ private fun ThreadView(
             messages = messages,
             myUserId = myUserId,
             onClose = { showPreview = false },
+        )
+    }
+    if (showSavedImagePicker) {
+        SavedImagesPickerDialog(
+            onDismiss = { showSavedImagePicker = false },
+            onImageSelected = { image ->
+                showSavedImagePicker = false
+                scope.launch {
+                    imageModerating = true
+                    val path = processSavedImage(context, image, "message_images", "message_image")
+                    imageModerating = false
+                    if (path != null) onSendImage(path)
+                }
+            },
         )
     }
 }

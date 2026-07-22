@@ -33,6 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Collections
@@ -106,8 +107,10 @@ import com.rork.rockscout.ui.components.LongPressableImage
 import com.rork.rockscout.ui.components.SculptedButton
 import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.SculptedOutlinedButton
+import com.rork.rockscout.ui.components.SavedImagesPickerDialog
 import com.rork.rockscout.ui.components.SculptedTextButton
 import com.rork.rockscout.ui.components.ScreenScaffold
+import com.rork.rockscout.ui.components.processSavedImage
 import com.rork.rockscout.ui.components.ShareCardImage
 import com.rork.rockscout.ui.components.ShareToProfileComposer
 import com.rork.rockscout.ui.components.TagChip
@@ -776,6 +779,7 @@ internal fun ListingEditorDialog(
     var showCapturePicker by remember { mutableStateOf(false) }
     var showCollectionPicker by remember { mutableStateOf(false) }
     var showWishlistPicker by remember { mutableStateOf(false) }
+    var showSavedImagePicker by remember { mutableStateOf(false) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -935,6 +939,12 @@ internal fun ListingEditorDialog(
                             onClick = { showCollectionPicker = true },
                             modifier = Modifier.weight(1f),
                         )
+                        SourceButton(
+                            label = "Saved Images",
+                            icon = Icons.Filled.Download,
+                            onClick = { showSavedImagePicker = true },
+                            modifier = Modifier.weight(1f),
+                        )
                     }
                     Spacer(Modifier.height(6.dp))
                     Row(
@@ -953,6 +963,7 @@ internal fun ListingEditorDialog(
                             onClick = { cameraLauncher.launch(null) },
                             modifier = Modifier.weight(1f),
                         )
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 } else {
                     OutlinedButton(
@@ -1207,6 +1218,23 @@ internal fun ListingEditorDialog(
                     if (tags.isEmpty()) tags.addAll(listOf(spec.id, spec.rockClass.label.lowercase()))
                 }
                 showWishlistPicker = false
+            },
+        )
+    }
+    if (showSavedImagePicker) {
+        SavedImagesPickerDialog(
+            onDismiss = { showSavedImagePicker = false },
+            onImageSelected = { image ->
+                showSavedImagePicker = false
+                scope.launch {
+                    val path = processSavedImage(context, image, "trade_listings", "trade_listing")
+                    if (path != null) {
+                        photoUri = path
+                        sourceCaptureId = null
+                        sourceCollectionSpecimenId = null
+                        sourceWishlistSpecimenId = null
+                    }
+                }
             },
         )
     }
