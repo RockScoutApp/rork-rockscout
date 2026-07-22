@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -129,9 +128,10 @@ fun CardMockupScreen(
 
 /**
  * New specimen card matching the approved sketch:
- * - Tall image on the left (130dp)
- * - Type pill + 2 famous-location pills + rarity pill on the right (stacked)
- * - Description spanning full width below, capped at 3 lines, vertically centered
+ * - Full-width title row on the very top (whole name fits across one horizontal row)
+ * - Below: tall image (left) + type pill, two famous-location pills (horizontal row),
+ *   and colored rarity pill (right)
+ * - Larger rock-class-colored tagline below, capped at 3 lines, vertically centered
  * - Heart + add buttons stacked vertically on the right edge of the description
  */
 @Composable
@@ -139,13 +139,12 @@ private fun NewSpecimenCardMock(
     specimen: Specimen,
 ) {
     val accent = rockClassAccent(specimen.rockClass)
+    val taglineColor = brightenText(accent, 0.45f)
     var liked by remember { mutableStateOf(false) }
     var added by remember { mutableStateOf(false) }
 
     val shape = RoundedCornerShape(20.dp)
-    Box(
-        modifier = Modifier.fillMaxWidth(),
-    ) {
+    Box(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -158,11 +157,25 @@ private fun NewSpecimenCardMock(
                 )
                 .glowingBorder(3.dp, accent.copy(alpha = 0.50f), shape),
         ) {
-            // ── Top row: tall image (left) + pills (right) ──
+            // ── Row 1: Full-width title (whole name fits across one horizontal row) ──
+            Text(
+                text = specimen.name,
+                style = MaterialTheme.typography.titleLarge,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 8.dp),
+            )
+
+            // ── Row 2: image (left) + type / locations / rarity (right) ──
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(12.dp),
+                    .padding(start = 12.dp, end = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 // Tall image — 130dp square
@@ -194,49 +207,44 @@ private fun NewSpecimenCardMock(
                     }
                 }
 
-                // Right column: title + pills
+                // Right column: type pill, locations (horizontal row), rarity pill
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .height(130.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    // Title
-                    Text(
-                        text = specimen.name,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 19.sp,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-
-                    // Type pill
+                    // Type pill — keeps the rock-class emoji in front of the text
                     Pill(
-                        text = shortTypeLabel(specimen.category),
+                        text = rockClassEmoji(specimen.rockClass) + " " + specimen.rockClass.label,
                         color = accent,
                         filled = false,
                     )
 
-                    // Two famous-location pills
-                    specimen.whereFound.take(2).forEach { loc ->
-                        Pill(
-                            text = loc,
-                            color = Aqua,
-                            filled = false,
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Filled.LocationOn,
-                                    contentDescription = null,
-                                    tint = Aqua,
-                                    modifier = Modifier.size(13.dp),
-                                )
-                            },
-                        )
+                    // Two famous-location pills in a single horizontal row
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        specimen.whereFound.take(2).forEach { loc ->
+                            Pill(
+                                text = loc,
+                                color = Aqua,
+                                filled = false,
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Filled.LocationOn,
+                                        contentDescription = null,
+                                        tint = Aqua,
+                                        modifier = Modifier.size(13.dp),
+                                    )
+                                },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
                     }
 
-                    // Rarity pill — colored
+                    // Rarity pill — full rarity word, colored by tier
                     Pill(
                         text = specimen.rarity,
                         color = rarityColor(specimen.rarity),
@@ -245,34 +253,32 @@ private fun NewSpecimenCardMock(
                 }
             }
 
-            // ── Bottom row: description (left) + heart/add buttons (right) ──
+            // ── Row 3: tagline (left, larger + class-colored) + heart/add (right) ──
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 12.dp, end = 10.dp, top = 2.dp, bottom = 12.dp),
+                    .padding(start = 14.dp, end = 10.dp, top = 10.dp, bottom = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                // Description — 3 lines, centered vertically when shorter
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .height(58.dp),
+                        .height(64.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = specimen.tagline,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = DarkTextMid,
-                        fontSize = 13.5.sp,
-                        lineHeight = 18.sp,
+                        color = taglineColor,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 15.sp,
+                        lineHeight = 20.sp,
                         maxLines = 3,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Start,
                     )
                 }
 
-                // Heart + add buttons stacked vertically
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -304,10 +310,11 @@ private fun Pill(
     color: Color,
     filled: Boolean,
     leadingIcon: @Composable (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
 ) {
     val shape = RoundedCornerShape(8.dp)
     Row(
-        modifier = Modifier
+        modifier = modifier
             .clip(shape)
             .background(if (filled) color else color.copy(alpha = 0.16f))
             .glowingBorder(1.dp, color.copy(alpha = if (filled) 0.9f else 0.55f), shape)
@@ -382,12 +389,14 @@ private fun rarityColor(rarity: String): Color {
     }
 }
 
-/** Short label from a category string. */
-private fun shortTypeLabel(category: String): String {
-    val dashIdx = category.indexOfAny(charArrayOf('\u2014', '\u2013', '-'))
-    if (dashIdx > 0) return category.substring(0, dashIdx).trim()
-    val words = category.trim().split(Regex("\\s+"))
-    return words.take(2).joinToString(" ")
+/** Rock-class emoji used in front of the type pill text. */
+private fun rockClassEmoji(rockClass: RockClass): String = when (rockClass) {
+    RockClass.IGNEOUS -> "\uD83C\uDF0B"
+    RockClass.SEDIMENTARY -> "\uD83C\uDFD7\uFE0F"
+    RockClass.METAMORPHIC -> "\u26F0\uFE0F"
+    RockClass.MINERAL -> "\uD83E\uDEA8"
+    RockClass.CRYSTAL -> "\uD83D\uDC8E"
+    RockClass.FOSSIL -> "\uD83E\uDEA5"
 }
 
 /** Brighten a color for legible text on dark backgrounds. */
