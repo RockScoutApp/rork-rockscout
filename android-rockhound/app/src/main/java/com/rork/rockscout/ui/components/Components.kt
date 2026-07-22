@@ -1506,6 +1506,10 @@ fun SpecimenListItem(
     val hasButtons = hasHeart || hasAddShare
     val hasBottomSection = hasTagline || hasButtons
 
+    val imageUrls = SpecimenImages.urls[specimen.id] ?: specimen.imageUrls
+    val displayUrls = (thumbnailUrl?.let { listOf(it) } ?: imageUrls).filter { it.isNotBlank() }
+    val imageHeight = (imageSize.value * 1.31f).dp
+
     val shape = RoundedCornerShape(20.dp)
     Box(
         modifier = modifier.fillMaxWidth(),
@@ -1549,11 +1553,16 @@ fun SpecimenListItem(
             Column(
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                // ── Top section: thumbnail + text rows ──
+                // ── Image (left) + 5 evenly-spaced rows (right) ──
+                // The image sets a fixed height; the right column fills that height
+                // and is split into 5 equal-weight rows so top/bottom align to the
+                // image edges and rows stay evenly spaced regardless of name length.
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 16.dp, top = 16.dp, end = 16.dp),
+                        .height(imageHeight + 12.dp)
+                        .padding(start = 12.dp, end = 12.dp, top = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.Top,
                 ) {
                     // Selection checkbox on the left when in selection mode.
@@ -1568,175 +1577,248 @@ fun SpecimenListItem(
                             ),
                             modifier = Modifier.size(32.dp),
                         )
-                        Spacer(Modifier.width(12.dp))
                     }
-                    SpecimenThumbnail(
-                        specimen = specimen,
-                        accent = accent,
-                        size = imageSize,
-                        thumbnailUrl = thumbnailUrl,
-                        onClick = onImageClick,
-                        showBorder = true,
-                    )
-                    Spacer(Modifier.width(16.dp))
-                    // Right-hand text column. Title is fixed at the top; the
-                    // type/rarity/locations block fills the remaining height and uses
-                    // SpaceEvenly so the rarity sits exactly at the vertical midpoint
-                    // between the type pill and the first location row.
+
+                    // Tall image — fixed size, bottom edge stays anchored
+                    Box(
+                        modifier = Modifier
+                            .width(imageSize)
+                            .height(imageHeight)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(
+                                Brush.radialGradient(
+                                    listOf(accent.copy(alpha = 0.28f), Color(0xFF1A1812))
+                                )
+                            )
+                            .glowingBorder(2.dp, accent.copy(alpha = 0.6f), RoundedCornerShape(14.dp)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (displayUrls.isNotEmpty()) {
+                            LongPressableImage(
+                                model = displayUrls.first(),
+                                contentDescription = specimen.name,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                                onClick = onImageClick,
+                            )
+                        } else {
+                            Text(
+                                text = specimen.emoji,
+                                style = MaterialTheme.typography.displaySmall,
+                            )
+                        }
+                    }
+
+                    // Right column: 5 evenly-spaced rows, each weight(1f),
+                    // content vertically centered within its row.
+                    // Row 1: name line 1
+                    // Row 2: name line 2 (blank if name fits on one line)
+                    // Row 3: type pill
+                    // Row 4: two location pills
+                    // Row 5: rarity pill (aligned with image bottom)
                     Column(
                         modifier = Modifier
                             .weight(1f)
-                            .fillMaxHeight(),
-                        verticalArrangement = Arrangement.SpaceBetween,
+                            .height(imageHeight),
                     ) {
-                        // Title block at the top of the right column.
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(2.dp),
+                        // Row 1 — name line 1
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.CenterStart,
                         ) {
-                            // Title — bumped up 2sp (titleLarge is 18sp → 20sp) for
-                            // easier reading. Reserve 2 rows so long names have room.
                             Text(
-                                text = title,
-                                style = MaterialTheme.typography.titleLarge,
+                                text = title.specimenLineOne(),
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 20.sp,
-                                minLines = 2,
-                                maxLines = 2,
+                                fontSize = 19.sp,
+                                lineHeight = 22.sp,
+                                maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
-                            // Custom subtitle content from callers. Rendered in a Row
-                            // so the RowScope receiver matches the subtitle signature;
-                            // callers commonly use this for category/rarity chips.
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            ) {
-                                subtitle()
-                            }
-                            // Legacy trailing content (when no heart)
-                            if (!hasHeart) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.End,
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    trailing()
-                                }
+                        }
+
+                        // Row 2 — name line 2 (blank if name is one line)
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.CenterStart,
+                        ) {
+                            val second = title.specimenLineTwo()
+                            if (second.isNotEmpty()) {
+                                Text(
+                                    text = second,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 19.sp,
+                                    lineHeight = 22.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
                             }
                         }
 
-                        Column(
-                            modifier = Modifier.fillMaxWidth().weight(1f),
-                            verticalArrangement = Arrangement.SpaceEvenly,
+                        // Row 3 — type pill
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.CenterStart,
                         ) {
-                            // Type pill / formation environment badge.
                             if (showCategory) {
                                 val (emoji, _, classColor) = formationEnvironmentMeta(specimen.rockClass)
                                 Row(
                                     modifier = Modifier
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(classColor.copy(alpha = 0.18f))
-                                        .glowingBorder(1.dp, classColor.copy(alpha = 0.65f), RoundedCornerShape(12.dp))
-                                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(classColor.copy(alpha = 0.16f))
+                                        .glowingBorder(1.dp, classColor.copy(alpha = 0.55f), RoundedCornerShape(8.dp))
+                                        .padding(horizontal = 9.dp, vertical = 4.dp),
                                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Text(
                                         text = emoji,
                                         style = MaterialTheme.typography.labelSmall,
-                                        fontSize = 14.sp,
+                                        fontSize = 12.sp,
                                     )
                                     Text(
                                         text = categoryLabel,
                                         style = MaterialTheme.typography.labelSmall,
                                         color = brightenForText(classColor, amount = 0.30f),
                                         fontWeight = FontWeight.SemiBold,
-                                        fontSize = 13.sp,
+                                        fontSize = 11.5.sp,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
                                     )
                                 }
                             } else {
-                                // Even when the category text is hidden, still show the
-                                // formation environment pill so every card carries it.
                                 FormationEnvironmentBadge(
                                     rockClass = specimen.rockClass,
                                 )
                             }
+                        }
 
-                            // Rarity — enlarged dot + label, sits evenly spaced from the
-                            // type pill above and the first location row below.
-                            RarityIndicator(
-                                specimen.rarity,
-                                accent = accent,
-                                dotSize = 11.dp,
-                                textFontSize = 14.sp,
-                            )
-
-                            // Locations block — now part of the same vertical stack so
-                            // SpaceBetween centers the rarity between type and locations.
-                            val locations = specimen.whereFound.filter { it.isNotBlank() }.take(3)
-                            if (locations.isNotEmpty()) {
-                                Column(
-                                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                                ) {
-                                    // Row 1 — up to two locations
+                        // Row 4 — two famous-location pills in one horizontal row
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.CenterStart,
+                        ) {
+                            val locations = specimen.whereFound.filter { it.isNotBlank() }.take(2)
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                locations.forEach { loc ->
                                     Row(
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(Aqua.copy(alpha = 0.16f))
+                                            .glowingBorder(1.dp, Aqua.copy(alpha = 0.55f), RoundedCornerShape(8.dp))
+                                            .padding(horizontal = 9.dp, vertical = 4.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
-                                        locations.take(2).forEach { loc -> LocationChipRow(loc) }
-                                    }
-                                    // Row 2 — the remaining location(s)
-                                    if (locations.size > 2) {
-                                        Row(
-                                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                        ) {
-                                            locations.drop(2).forEach { loc -> LocationChipRow(loc) }
-                                        }
+                                        Icon(
+                                            Icons.Filled.LocationOn,
+                                            contentDescription = null,
+                                            tint = Aqua,
+                                            modifier = Modifier.size(13.dp),
+                                        )
+                                        Text(
+                                            text = loc,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = brightenForText(Aqua),
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 11.5.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
                                     }
                                 }
+                            }
+                        }
+
+                        // Row 5 — rarity pill (aligned with image bottom)
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth(),
+                            contentAlignment = Alignment.CenterStart,
+                        ) {
+                            val rColor = specimenRarityColor(specimen.rarity)
+                            Row(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(rColor)
+                                    .glowingBorder(1.dp, rColor.copy(alpha = 0.9f), RoundedCornerShape(8.dp))
+                                    .padding(horizontal = 9.dp, vertical = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = specimen.rarity,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Ink,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 11.5.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
                             }
                         }
                     }
                 }
 
-                // No full-width locations block here anymore; locations live inside
-                // the right-hand text column so they share the same vertical spacing
-                // as the title, type, and rarity.
+                // ── Subtitle + trailing row (thin strip between image and tagline) ──
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 14.dp, end = 16.dp, top = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    subtitle()
+                    Spacer(Modifier.weight(1f))
+                    if (!hasHeart) {
+                        trailing()
+                    }
+                }
 
-                // ── Bottom section: tagline (left) + heart/add stack (right) ──
-                // Tagline now sits directly on the card background — no dark shadow
-                // box. Text color matches the glowing border accent for cohesion.
-                // Tagline moved up 2dp (top padding 6dp → 4dp) to tighten the gap.
+                // ── Tagline (left, class-colored) + heart/add (right) ──
                 if (hasBottomSection) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 16.dp, end = 1.dp, top = 4.dp, bottom = 12.dp),
-                        verticalAlignment = Alignment.Bottom,
+                            .padding(start = 14.dp, end = 10.dp, top = 10.dp, bottom = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        // Tagline text — sits directly on the card, accent-colored
-                        if (hasTagline) {
-                            AutoSizeTaglineText(
-                                text = specimen.tagline,
-                                accent = accent,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(end = if (hasButtons) 8.dp else 0.dp),
-                            )
-                        } else {
-                            Spacer(Modifier.weight(1f))
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(64.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (hasTagline) {
+                                AutoSizeTaglineText(
+                                    text = specimen.tagline,
+                                    accent = accent,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            } else {
+                                Spacer(Modifier.fillMaxSize())
+                            }
                         }
 
-                        // Heart + Add stack — right column, 1dp gap between them
                         if (hasButtons) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(1.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp),
                             ) {
                                 if (hasHeart) {
                                     heart()
@@ -1752,6 +1834,32 @@ fun SpecimenListItem(
                 }
             }
         }
+    }
+}
+
+/** Split a name into its first line for the 2-row name layout. */
+private fun String.specimenLineOne(): String {
+    val trimmed = trim()
+    return if (trimmed.length <= 14) trimmed else trimmed.substringBefore(' ', trimmed)
+}
+
+/** Second line of the name for the 2-row name layout (empty if it fits on one line). */
+private fun String.specimenLineTwo(): String {
+    val trimmed = trim()
+    if (trimmed.length <= 14) return ""
+    val first = trimmed.substringBefore(' ', trimmed)
+    val rest = trimmed.substring(first.length).trim()
+    return if (rest.isEmpty()) "" else rest
+}
+
+/** Map rarity string to color for the filled rarity pill. */
+private fun specimenRarityColor(rarity: String): Color {
+    val r = rarity.lowercase()
+    return when {
+        r.contains("very rare") -> Color(0xFFB71C1C)
+        r.contains("rare") && !r.contains("uncommon") -> Color(0xFFE2574C)
+        r.contains("uncommon") -> Color(0xFFE8A33D)
+        else -> Color(0xFF5CC98C)
     }
 }
 
