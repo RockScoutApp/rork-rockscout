@@ -50,8 +50,6 @@ import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.ui.window.Dialog as ComposeDialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -765,7 +763,8 @@ private fun TripEditorDialog(
     val targetSpecimens = remember { mutableStateListOf<String>().apply { initial?.targetSpecimens?.let { addAll(it) } } }
     val gearChecklist = remember { mutableStateListOf<String>().apply { initial?.gearChecklist?.let { addAll(it) } } }
     var notes by remember { mutableStateOf(initial?.notes ?: "") }
-    // Specimen markers — edit mode only
+    // Specimen markers — available for both new and edit trips so the user can
+    // drop pins while planning a brand-new adventure, not just when revising one.
     val specimenMarkers = remember { mutableStateListOf<SpecimenMarker>().apply { initial?.specimenMarkers?.let { addAll(it) } } }
     var pendingPinLat by remember { mutableStateOf<Double?>(null) }
     var pendingPinLng by remember { mutableStateOf<Double?>(null) }
@@ -781,7 +780,7 @@ private fun TripEditorDialog(
     var pendingRemoveStop by remember { mutableStateOf<Int?>(null) }
     var pendingRemoveTarget by remember { mutableStateOf<Int?>(null) }
     var pendingRemoveGear by remember { mutableStateOf<Int?>(null) }
-    // Specimen marker filter (edit mode only)
+    // Specimen marker filter (new + edit trips)
     var selectedFilter by remember { mutableStateOf("All") }
     // Auto-save draft state
     var draftSavedAt by remember { mutableStateOf<Long?>(null) }
@@ -790,9 +789,21 @@ private fun TripEditorDialog(
 
     val draftKey = initial?.id ?: "new"
 
-    // Build a Trip snapshot for the route map (edit mode only)
+    // Build a Trip snapshot for the route map. We now synthesize a transient
+    // id for brand-new trips so the route map renders as soon as two stops are
+    // added — no need to wait for a save anymore.
     val tripForMap = remember(initial, stops, specimenMarkers) {
-        if (initial != null) initial.copy(stops = stops.toList(), specimenMarkers = specimenMarkers.toList()) else null
+        (initial ?: Trip(
+            id = draftKey,
+            name = name.ifBlank { "New Trip" },
+            date = dateMillis,
+            stops = emptyList(),
+            targetSpecimens = emptyList(),
+            gearChecklist = emptyList(),
+            notes = "",
+            createdAt = System.currentTimeMillis(),
+            specimenMarkers = emptyList(),
+        )).copy(stops = stops.toList(), specimenMarkers = specimenMarkers.toList())
     }
 
     // Filtered specimen markers for display on map and list
@@ -863,75 +874,41 @@ private fun TripEditorDialog(
         }
     }
 
-    ComposeDialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false,
-            decorFitsSystemWindows = false,
-        ),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFF12110D))
-                .imePadding(),
-        ) {
-            // Top bar with close button (top-left) and title
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFF1E1C16))
-                    .padding(horizontal = 12.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                SculptedIconButton(
-                    icon = Icons.Filled.Close,
-                    contentDescription = "Close",
-                    onClick = { clearDraft(); onDismiss() },
-                    accent = Citrine,
-                    iconTint = Color.White,
-                    backgroundColor = Slate800,
-                    size = 40.dp,
-                )
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    if (isEdit) "Edit Trip" else "New Trip",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Citrine,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
-                )
-                // Auto-save indicator
-                if (draftSavedAt != null) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.padding(end = 4.dp),
-                    ) {
-                        Icon(
-                            Icons.Filled.CloudDone,
-                            contentDescription = null,
-                            tint = Citrine,
-                            modifier = Modifier.size(14.dp),
-                        )
-                        Text(
-                            "Saved",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Citrine,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
+    ScreenScaffold(
+        title = if (isEdit) "Edit Trip" else "New Trip",
+        onBack = { clearDraft(); onDismiss() },
+        actions = {
+            // Auto-save indicator
+            if (draftSavedAt != null) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(end = 4.dp),
+                ) {
+                    Icon(
+                        Icons.Filled.CloudDone,
+                        contentDescription = null,
+                        tint = Citrine,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Text(
+                        "Saved",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Citrine,
+                        fontWeight = FontWeight.SemiBold,
+                    )
                 }
-                // Share Trip text summary button
-                SculptedIconButton(
-                    icon = Icons.Filled.Share,
-                    contentDescription = "Share trip text summary",
-                    onClick = {
+            }
+            // Share Trip text summary button
+            SculptedIconButton(
+                icon = Icons.Filled.Share,
+                contentDescription = "Share trip text summary",
+                onClick = {
                         val finalName = name.ifBlank { "Untitled Trip" }
                         val routeText = stops.joinToString(" → ") { it.locationName }.ifBlank { "No stops yet" }
                         val targetText = if (targetSpecimens.isNotEmpty())
                             "\nHunting: ${targetSpecimens.joinToString(", ")}" else ""
-                        val markerCount = if (isEdit) "\nSpecimen markers: ${specimenMarkers.size}" else ""
+                        val markerCount = "\nSpecimen markers: ${specimenMarkers.size}"
                         val summary = """${finalName}
 ${SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(dateMillis))}
 ${stops.size} stop${if (stops.size != 1) "s" else ""}: $routeText$targetText$markerCount
@@ -950,41 +927,18 @@ Planned with RockScout""".trimIndent()
                     size = 40.dp,
                     shadowElevation = 3.dp,
                 )
-                Spacer(Modifier.width(8.dp))
-                SculptedButton(
-                    text = if (isEdit) "Save" else "Create",
-                    onClick = {
-                        val finalName = name.ifBlank { "Untitled Trip" }
-                        val trip = Trip(
-                            id = initial?.id ?: UUID.randomUUID().toString(),
-                            name = finalName,
-                            date = dateMillis,
-                            stops = stops.mapIndexed { idx, s -> s.copy(order = idx) },
-                            targetSpecimens = targetSpecimens.toList(),
-                            gearChecklist = gearChecklist.toList(),
-                            notes = notes,
-                            createdAt = initial?.createdAt ?: System.currentTimeMillis(),
-                            specimenMarkers = if (isEdit) specimenMarkers.toList() else emptyList(),
-                        )
-                        clearDraft()
-                        onSave(trip)
-                    },
-                    accent = Citrine,
-                    containerColor = Citrine,
-                    textColor = Color.Black,
-                    enabled = name.isNotBlank(),
-                )
-            }
-
+        },
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
             // Scrollable content
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .weight(1f)
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp),
             ) {
-                // ── Route map (edit mode only, at top) ──
-                if (isEdit && tripForMap != null && tripForMap.stops.size > 1) {
+                // ── Route map (shown for both new and edit trips once there are 2+ stops) ──
+                if (tripForMap.stops.size > 1) {
                     Text(
                         "Route Map",
                         style = MaterialTheme.typography.titleMedium,
@@ -1159,79 +1113,78 @@ Planned with RockScout""".trimIndent()
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Default),
                 )
 
-                // ── Specimen Markers section (edit mode only, below route map) ──
-                if (isEdit) {
-                    Spacer(Modifier.height(20.dp))
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Aqua.copy(alpha = 0.10f))
-                            .glowingBorder(1.dp, Aqua.copy(alpha = 0.3f), RoundedCornerShape(10.dp))
-                            .padding(horizontal = 14.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(Icons.Filled.LocationOn, contentDescription = null, tint = Aqua, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(10.dp))
-                        Text(
-                            "Specimen Markers",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Aqua,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Text(
-                            "${specimenMarkers.size}",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = Aqua,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                    Spacer(Modifier.height(8.dp))
-
-                    // ── Filter chips row ──
-                    val filterCategories = listOf("All", "Crystal", "Mineral", "Fossil", "Gemstone", "Quartz", "Other")
-                    val filterColors = mapOf(
-                        "All" to Citrine,
-                        "Crystal" to Aqua,
-                        "Mineral" to Citrine,
-                        "Fossil" to Color(0xFFB8860B),
-                        "Gemstone" to Amethyst,
-                        "Quartz" to Color(0xFFE8D33D),
-                        "Other" to Color(0xFF808890),
+                // ── Specimen Markers section (new + edit trips, below route map) ──
+                Spacer(Modifier.height(20.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Aqua.copy(alpha = 0.10f))
+                        .glowingBorder(1.dp, Aqua.copy(alpha = 0.3f), RoundedCornerShape(10.dp))
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Filled.LocationOn, contentDescription = null, tint = Aqua, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        "Specimen Markers",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Aqua,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f),
                     )
-                    Row(
-                        modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        filterCategories.forEach { category ->
-                            val isSelected = selectedFilter == category
-                            val chipColor = filterColors[category] ?: Citrine
-                            Box(
-                                modifier = Modifier
-                                    .height(36.dp)
-                                    .clip(RoundedCornerShape(18.dp))
-                                    .background(if (isSelected) chipColor.copy(alpha = 0.25f) else Slate800)
-                                    .glowingBorder(
-                                        1.5.dp,
-                                        if (isSelected) chipColor else chipColor.copy(alpha = 0.3f),
-                                        RoundedCornerShape(18.dp),
-                                    )
-                                    .clickable { selectedFilter = category }
-                                    .padding(horizontal = 12.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(
-                                    category,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = if (isSelected) chipColor else DarkTextMid,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    maxLines = 1,
+                    Text(
+                        "${specimenMarkers.size}",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Aqua,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+
+                // ── Filter chips row ──
+                val filterCategories = listOf("All", "Crystal", "Mineral", "Fossil", "Gemstone", "Quartz", "Other")
+                val filterColors = mapOf(
+                    "All" to Citrine,
+                    "Crystal" to Aqua,
+                    "Mineral" to Citrine,
+                    "Fossil" to Color(0xFFB8860B),
+                    "Gemstone" to Amethyst,
+                    "Quartz" to Color(0xFFE8D33D),
+                    "Other" to Color(0xFF808890),
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    filterCategories.forEach { category ->
+                        val isSelected = selectedFilter == category
+                        val chipColor = filterColors[category] ?: Citrine
+                        Box(
+                            modifier = Modifier
+                                .height(36.dp)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(if (isSelected) chipColor.copy(alpha = 0.25f) else Slate800)
+                                .glowingBorder(
+                                    1.5.dp,
+                                    if (isSelected) chipColor else chipColor.copy(alpha = 0.3f),
+                                    RoundedCornerShape(18.dp),
                                 )
-                            }
+                                .clickable { selectedFilter = category }
+                                .padding(horizontal = 12.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                category,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = if (isSelected) chipColor else DarkTextMid,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                maxLines = 1,
+                            )
                         }
                     }
+                }
                     Spacer(Modifier.height(8.dp))
                     Text(
                         "Tap the map to drop a pin, then tap Set Pin to save it.",
@@ -1411,10 +1364,48 @@ Planned with RockScout""".trimIndent()
                             color = DarkTextMid,
                         )
                     }
-                }
 
                 // Bottom padding for scroll
                 Spacer(Modifier.height(40.dp))
+            }
+            // Bottom action bar — Cancel + Save/Create (matches JournalEditorScreen)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                SculptedTextButton(
+                    text = "Cancel",
+                    onClick = { clearDraft(); onDismiss() },
+                    accent = Citrine,
+                    textColor = Citrine,
+                    modifier = Modifier.weight(1f),
+                )
+                SculptedButton(
+                    text = if (isEdit) "Save" else "Create",
+                    onClick = {
+                        val finalName = name.ifBlank { "Untitled Trip" }
+                        val trip = Trip(
+                            id = initial?.id ?: UUID.randomUUID().toString(),
+                            name = finalName,
+                            date = dateMillis,
+                            stops = stops.mapIndexed { idx, s -> s.copy(order = idx) },
+                            targetSpecimens = targetSpecimens.toList(),
+                            gearChecklist = gearChecklist.toList(),
+                            notes = notes,
+                            createdAt = initial?.createdAt ?: System.currentTimeMillis(),
+                            specimenMarkers = specimenMarkers.toList(),
+                        )
+                        clearDraft()
+                        onSave(trip)
+                    },
+                    accent = Citrine,
+                    containerColor = Citrine,
+                    textColor = Color.Black,
+                    modifier = Modifier.weight(1.5f),
+                    enabled = name.isNotBlank(),
+                )
             }
         }
     }
