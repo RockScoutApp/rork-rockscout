@@ -136,6 +136,7 @@ import com.rork.rockscout.ui.components.EmptyPostBox
 import com.rork.rockscout.ui.components.SavedImagesPickerDialog
 import com.rork.rockscout.ui.components.HunterStatusDropdown
 import com.rork.rockscout.ui.components.HunterStatusIcon
+import com.rork.rockscout.data.HunterStatus
 import com.rork.rockscout.ui.components.PostCard
 import com.rork.rockscout.ui.components.ProfileStatBar
 import com.rork.rockscout.ui.components.SculptedOutlinedButton
@@ -196,6 +197,7 @@ fun ProfileScreen(
     val sessionStatus by auth.sessionStatus.collectAsStateWithLifecycle()
     val isSignedIn = sessionStatus is com.rork.rockscout.data.SessionStatus.Authenticated
     val signedInEmail = (sessionStatus as? com.rork.rockscout.data.SessionStatus.Authenticated)?.session?.user?.email
+    val connections by social.connections.collectAsStateWithLifecycle()
     val incomingMessageRequests by social.incomingRequests.collectAsStateWithLifecycle()
     val messagingCount by social.totalMessagingCount.collectAsStateWithLifecycle()
     val notificationRepo = NotificationRepository.instance
@@ -261,6 +263,15 @@ fun ProfileScreen(
     ) { _ -> /* Results handled implicitly */ }
 
     val listState = rememberLazyListState()
+
+    var clubMembers by remember { mutableStateOf<List<SocialRepository.HunterProfile>>(emptyList()) }
+    var howThisWorksExpanded by remember { mutableStateOf(false) }
+    androidx.activity.compose.BackHandler(enabled = howThisWorksExpanded) { howThisWorksExpanded = false }
+
+    // Load club members (connected RockScout Friends) whenever the connection list changes.
+    androidx.compose.runtime.LaunchedEffect(connections) {
+        clubMembers = if (connections.isNotEmpty()) social.fetchProfiles(connections) else emptyList()
+    }
 
     // Load connections, message requests, and notifications when signed in.
     androidx.compose.runtime.LaunchedEffect(isSignedIn, profile.clubEnabled) {
@@ -535,6 +546,39 @@ fun ProfileScreen(
                     StatTile("Wishlist", wishlist.size.toString(), Icons.Filled.PlaylistAdd, Color(0xFF9B7BD8), Modifier.weight(1f)) { navController.navigate(Routes.WISHLIST) }
                     StatTile("Spots", favorites.size.toString(), Icons.Filled.Place, Color(0xFFE2574C), Modifier.weight(1f)) { navController.navigate(Routes.FAVORITES) }
                 }
+            }
+
+            // ─── RockScout Friends section (directly above Profile Posts) ───
+            item { SectionLabel("RockScout Friends") }
+            item {
+                RockScoutFriendsSection(
+                    isSignedIn = isSignedIn,
+                    signedInEmail = signedInEmail,
+                    clubEnabled = profile.clubEnabled,
+                    clubMembers = clubMembers,
+                    scanRadiusMiles = profile.scanRadiusMiles,
+                    isPremium = isPremium,
+                    howThisWorksExpanded = howThisWorksExpanded,
+                    onHowThisWorksToggle = { howThisWorksExpanded = !howThisWorksExpanded },
+                    onSignIn = { navController.navigate(Routes.SIGN_IN) },
+                    onSignOut = { coroutineScope.launch { auth.signOut() } },
+                    onEnableFriends = { navController.navigate(Routes.SOCIAL_SETTINGS) },
+                    onScan = { navController.navigate(Routes.SCAN) },
+                    onFriends = { navController.navigate(Routes.friends()) },
+                    onBrowse = { navController.navigate(Routes.DISCOVER_HUNTERS) },
+                    onPingMap = { navController.navigate(Routes.ROCKSCOUTS_MAP) },
+                    onSetScanRadius = { miles -> repo.setScanRadiusMiles(miles) },
+                    onPaywall = { navController.navigate(Routes.PAYWALL) },
+                    onMemberTap = { memberId -> navController.navigate(Routes.userProfile(memberId)) },
+                    onMemberRemove = { memberId ->
+                        coroutineScope.launch {
+                            social.removeConnection(memberId)
+                            social.loadConnections()
+                        }
+                    },
+                    onMemberCollection = { memberId -> navController.navigate(Routes.userCollection(memberId)) },
+                    onMemberWishlist = { memberId -> navController.navigate(Routes.userWishlist(memberId)) },
+                )
             }
 
             // ─── Post feed (5 most recent posts, empty box if none) ───
@@ -1255,6 +1299,349 @@ private fun SectionLabel(text: String) {
     )
 }
 
+
+@Composable
+private fun RockScoutFriendsSection(
+    isSignedIn: Boolean,
+    signedInEmail: String?,
+    clubEnabled: Boolean,
+    clubMembers: List<SocialRepository.HunterProfile>,
+    scanRadiusMiles: Int,
+    isPremium: Boolean,
+    howThisWorksExpanded: Boolean,
+    onHowThisWorksToggle: () -> Unit,
+    onSignIn: () -> Unit,
+    onSignOut: () -> Unit,
+    onEnableFriends: () -> Unit,
+    onScan: () -> Unit,
+    onFriends: () -> Unit,
+    onBrowse: () -> Unit,
+    onPingMap: () -> Unit,
+    onSetScanRadius: (Int) -> Unit,
+    onPaywall: () -> Unit,
+    onMemberTap: (String) -> Unit,
+    onMemberRemove: (String) -> Unit,
+    onMemberCollection: (String) -> Unit,
+    onMemberWishlist: (String) -> Unit,
+) {
+    SocialCard(modifier = Modifier.fillMaxWidth(), accent = Citrine) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Sign-in / account tile
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background((if (isSignedIn) Success else TextLow).copy(alpha = 0.18f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Login,
+                        contentDescription = null,
+                        tint = if (isSignedIn) Success else TextLow,
+                    )
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = if (isSignedIn) "Signed in" else "Sign in to RockScout",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = signedInEmail ?: "Required to use RockScout.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = DarkTextMid,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                if (isSignedIn) {
+                    OutlinedButton(
+                        onClick = onSignOut,
+                        shape = RoundedCornerShape(50.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                    ) { Text("Sign out", style = MaterialTheme.typography.labelMedium) }
+                } else {
+                    Button(
+                        onClick = onSignIn,
+                        shape = RoundedCornerShape(50.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Citrine, contentColor = Ink),
+                    ) { Text("Sign in", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold) }
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+            HorizontalDivider(color = Color(0x22FFFFFF), thickness = 1.dp)
+            Spacer(Modifier.height(8.dp))
+
+            // Single wider Scan tile
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                SocialSubTile(
+                    icon = Icons.Filled.LocationOn,
+                    label = "Scan",
+                    subtitle = "Find nearby",
+                    accent = Aqua,
+                    iconTint = Aqua,
+                    modifier = Modifier.fillMaxWidth(0.66f),
+                    onClick = onScan,
+                )
+            }
+
+            // When social is ON, show sub-tiles + scan radius + status + friends list
+            if (clubEnabled) {
+                Spacer(Modifier.height(14.dp))
+                HorizontalDivider(color = Color(0x22FFFFFF), thickness = 1.dp)
+                Spacer(Modifier.height(14.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    SocialSubTile(
+                        icon = Icons.Filled.Group,
+                        label = "Friends &",
+                        subtitle = "messages",
+                        accent = Color(0xFF4CF0E8),
+                        iconTint = Color(0xFFEAFFFE),
+                        modifier = Modifier.weight(1f),
+                        onClick = onFriends,
+                    )
+                    SocialSubTile(
+                        icon = Icons.Filled.PersonSearch,
+                        label = "Browse",
+                        subtitle = "users",
+                        accent = Color(0xFF4CF0E8),
+                        iconTint = Color(0xFFEAFFFE),
+                        modifier = Modifier.weight(1f),
+                        onClick = onBrowse,
+                    )
+                    SocialSubTile(
+                        icon = Icons.Filled.Map,
+                        label = "Ping",
+                        subtitle = "maps",
+                        accent = Color(0xFF4CF0E8),
+                        iconTint = Color(0xFFEAFFFE),
+                        modifier = Modifier.weight(1f),
+                        onClick = onPingMap,
+                    )
+                }
+
+                Spacer(Modifier.height(14.dp))
+                HorizontalDivider(color = Color(0x22FFFFFF), thickness = 1.dp)
+                Spacer(Modifier.height(14.dp))
+                Text("Scan radius", style = MaterialTheme.typography.labelMedium, color = DarkTextLow, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(8.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(5, 25, 50, 100, 250).forEach { miles ->
+                        val selected = scanRadiusMiles == miles
+                        val proLocked = miles == 250 && !isPremium
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (selected) Citrine.copy(alpha = 0.30f) else Color(0xFF3A3830))
+                                .border(2.dp, Citrine.copy(alpha = 0.75f), RoundedCornerShape(10.dp))
+                                .clickable { if (proLocked) onPaywall() else onSetScanRadius(miles) }
+                                .padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = if (proLocked) "$miles mi\nPREMIUM" else "$miles mi",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (selected) Ink else TextMid,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(14.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .clickable(onClick = onHowThisWorksToggle)
+                        .padding(vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("How this works", style = MaterialTheme.typography.labelMedium, color = Citrine, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.width(6.dp))
+                    Text(if (howThisWorksExpanded) "\u25B4" else "\u25BE", style = MaterialTheme.typography.labelMedium, color = Citrine)
+                }
+                if (howThisWorksExpanded) {
+                    Spacer(Modifier.height(8.dp))
+                    HowThisWorksStep("1.", "Scan", "Tap Scan for RockScouts to see other hunters near you who are on the hunt right now. You'll see their name and a rough distance — never their exact spot.")
+                    Spacer(Modifier.height(6.dp))
+                    HowThisWorksStep("2.", "Message", "Tap Send message on someone's card to send a message request. If they accept, you two become connected and can chat in the app.")
+                    Spacer(Modifier.height(6.dp))
+                    HowThisWorksStep(
+                        "3.", "Ping", "Once you're connected, open the RockScouts Map and tap Ping my location. Move the pin to a safe meet-up spot, then tap Set Ping. Your connected friend sees it on their map for 12 hours. Nobody else does.",
+                        emphasis = "Only connected RockScout Friends can see each other's pings.",
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    HowThisWorksStep("4.", "Safety", "Your exact location is never shared with strangers. Only your connected RockScout Friends see your pings, and only the ones you set yourself.")
+                    Spacer(Modifier.height(10.dp))
+                }
+
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Your RockScout Friends (${clubMembers.size})",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Aqua,
+                    fontWeight = FontWeight.Bold,
+                )
+                if (clubMembers.isEmpty()) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "No connections yet. Scan for RockScouts and send a message request to start building your Friends list.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = DarkTextMid,
+                    )
+                } else {
+                    Spacer(Modifier.height(8.dp))
+                    clubMembers.forEach { member ->
+                        ClubMemberRow(
+                            name = member.display_name,
+                            emoji = member.avatar_emoji,
+                            level = member.level,
+                            isPremium = member.premium_badge,
+                            collectionCount = member.collection_count,
+                            wishlistCount = member.wishlist_count,
+                            status = when (member.status) {
+                                "on-the-hunt" -> HunterStatus.ON_THE_HUNT
+                                "wishing" -> HunterStatus.WISHING
+                                "looking-for-trades" -> HunterStatus.LOOKING_FOR_TRADES
+                                else -> HunterStatus.OFF_GRID
+                            },
+                            onTap = { onMemberTap(member.id) },
+                            onRemove = { onMemberRemove(member.id) },
+                            onCollectionClick = { onMemberCollection(member.id) },
+                            onWishlistClick = { onMemberWishlist(member.id) },
+                        )
+                        if (member != clubMembers.last()) {
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HowThisWorksStep(
+    number: String,
+    title: String,
+    body: String,
+    emphasis: String = "",
+) {
+    Row(verticalAlignment = Alignment.Top) {
+        Text(
+            number,
+            style = MaterialTheme.typography.labelMedium,
+            color = Citrine,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(end = 6.dp),
+        )
+        Column {
+            Text(title, style = MaterialTheme.typography.labelMedium, color = DarkTextHigh, fontWeight = FontWeight.Bold)
+            Text(body, style = MaterialTheme.typography.bodySmall, color = DarkTextMid)
+            if (emphasis.isNotBlank()) {
+                Spacer(Modifier.height(4.dp))
+                Text(emphasis, style = MaterialTheme.typography.bodySmall, color = DarkTextHigh, fontWeight = FontWeight.SemiBold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ClubMemberRow(
+    name: String,
+    emoji: String,
+    level: Int,
+    isPremium: Boolean,
+    collectionCount: Int,
+    wishlistCount: Int,
+    status: HunterStatus,
+    onTap: () -> Unit,
+    onRemove: () -> Unit,
+    onCollectionClick: () -> Unit,
+    onWishlistClick: () -> Unit,
+) {
+    val statusAccent = statusAccent(status)
+    val statusLabel = status.label
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF3A3830))
+            .clickable(onClick = onTap)
+            .padding(horizontal = 10.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(Brush.linearGradient(listOf(statusAccent.copy(alpha = 0.40f), Aqua.copy(alpha = 0.20f)))),
+            contentAlignment = Alignment.Center,
+        ) { Text(emoji, style = MaterialTheme.typography.titleMedium) }
+        Spacer(Modifier.width(10.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    name,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = DarkTextHigh,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                )
+                if (isPremium) {
+                    Spacer(Modifier.width(4.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(Citrine.copy(alpha = 0.30f))
+                            .padding(horizontal = 4.dp, vertical = 1.dp),
+                    ) { Text("PREMIUM", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Bold) }
+                }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                HunterStatusIcon(status = status, size = 16.dp)
+                Spacer(Modifier.width(4.dp))
+                Text(
+                    statusLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Aqua,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                )
+            }
+            Text("Lvl $level", style = MaterialTheme.typography.labelSmall, color = Aqua)
+            Spacer(Modifier.height(6.dp))
+            ProfileStatBar(
+                collectionCount = collectionCount,
+                wishlistCount = wishlistCount,
+                onCollectionClick = onCollectionClick,
+                onWishlistClick = onWishlistClick,
+            )
+        }
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .sculpted(shape = CircleShape, accent = Citrine, shadowElevation = 3.dp, circular = true, onClick = onRemove)
+                .clip(CircleShape)
+                .background(Color.Black),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(imageVector = Icons.Filled.Close, contentDescription = "Remove connection", tint = Color.White, modifier = Modifier.size(18.dp))
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
