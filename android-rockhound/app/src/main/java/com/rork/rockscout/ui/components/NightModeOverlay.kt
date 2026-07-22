@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rork.rockscout.data.NightModeManager
@@ -16,7 +17,11 @@ import com.rork.rockscout.data.NightModeManager
 /**
  * Full-screen red overlay for night UV collecting. When [NightModeManager] is
  * enabled, a deep red translucent layer covers the entire app to preserve
- * dark-adapted vision. Taps pass through to the UI beneath.
+ * dark-adapted vision. Red light does not bleach rhodopsin in the rod cells,
+ * so users can operate the app under UV light without losing their night vision.
+ *
+ * Taps pass through to the UI beneath because the overlay only draws a
+ * background colour and does not intercept pointer events.
  *
  * The overlay sits at the top of the z-stack in the root Box so it covers
  * every screen, sheet, and dialog.
@@ -32,7 +37,15 @@ fun NightModeOverlay() {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0x8C000000)),
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            Color(0xCC1A0000),
+                            Color(0xA0120000),
+                            Color(0xCC1A0000),
+                        ),
+                    ),
+                ),
         )
     }
 }
