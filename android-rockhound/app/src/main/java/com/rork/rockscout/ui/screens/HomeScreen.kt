@@ -300,31 +300,38 @@ fun HomeScreen(navController: NavController) {
     var shareToProfileAchievement by remember { mutableStateOf<AchievementCelebrationData?>(null) }
     var shareToProfileBadge by remember { mutableStateOf<BadgeCelebrationData?>(null) }
 
-    // Back press should dismiss any open overlay before navigating back
-    BackHandler(enabled = showFellowRockScoutsNote) { showFellowRockScoutsNote = false }
-    BackHandler(enabled = showFieldCamera) { showFieldCamera = false }
-    BackHandler(enabled = showPinPad) { showPinPad = false }
-    BackHandler(enabled = shouldShowTrialInfo) { /* block back press — must tap Confirm */ }
-    BackHandler(enabled = showSmsVerify) { showSmsVerify = false }
-    BackHandler(enabled = celebrationLevel != null) { celebrationLevel = null }
-    BackHandler(enabled = achievementCelebration != null) {
-        achievementCelebration = null
-        com.rork.rockscout.data.AchievementsRepository.clearCelebration()
+    // Consolidated back handler — dismisses the topmost overlay in priority
+    // order before falling through to NavController pop. Replaces ~14 separate
+    // BackHandler registrations to cut dispatch overhead and recompositions.
+    BackHandler {
+        when {
+            showFellowRockScoutsNote -> showFellowRockScoutsNote = false
+            showFieldCamera -> showFieldCamera = false
+            showPinPad -> showPinPad = false
+            shouldShowTrialInfo -> { /* block — must tap Confirm */ }
+            showSmsVerify -> showSmsVerify = false
+            celebrationLevel != null -> celebrationLevel = null
+            achievementCelebration != null -> {
+                achievementCelebration = null
+                com.rork.rockscout.data.AchievementsRepository.clearCelebration()
+            }
+            completedAchievement != null -> {
+                completedAchievement = null
+                com.rork.rockscout.data.AchievementsRepository.clearAchievementCelebration()
+            }
+            earnedBadge != null -> {
+                earnedBadge = null
+                com.rork.rockscout.data.AchievementsRepository.clearBadgeCelebration()
+            }
+            viewerUrls.isNotEmpty() -> viewerUrls = emptyList()
+            shareToProfileCelebration != null -> shareToProfileCelebration = null
+            shareToProfileAchievement != null -> shareToProfileAchievement = null
+            shareToProfileBadge != null -> shareToProfileBadge = null
+            pendingNewUserReward != null -> ReferralRepository.clearPendingNewUserReward()
+            pendingSenderReward != null -> ReferralRepository.clearPendingSenderReward()
+            else -> navController.popBackStack()
+        }
     }
-    BackHandler(enabled = completedAchievement != null) {
-        completedAchievement = null
-        com.rork.rockscout.data.AchievementsRepository.clearAchievementCelebration()
-    }
-    BackHandler(enabled = earnedBadge != null) {
-        earnedBadge = null
-        com.rork.rockscout.data.AchievementsRepository.clearBadgeCelebration()
-    }
-    BackHandler(enabled = viewerUrls.isNotEmpty()) { viewerUrls = emptyList() }
-    BackHandler(enabled = shareToProfileCelebration != null) { shareToProfileCelebration = null }
-    BackHandler(enabled = shareToProfileAchievement != null) { shareToProfileAchievement = null }
-    BackHandler(enabled = shareToProfileBadge != null) { shareToProfileBadge = null }
-    BackHandler(enabled = pendingNewUserReward != null) { ReferralRepository.clearPendingNewUserReward() }
-    BackHandler(enabled = pendingSenderReward != null) { ReferralRepository.clearPendingSenderReward() }
 
     androidx.compose.runtime.LaunchedEffect(achievementsState.lastCelebrationMs) {
         if (achievementsState.lastCelebrationMs > 0L && achievementCelebration == null) {

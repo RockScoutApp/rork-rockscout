@@ -43,8 +43,16 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private var lastOnResumeMs: Long = 0L
+
     override fun onResume() {
         super.onResume()
+        // Throttle location + update network work so rapid back-navigation
+        // doesn't re-fire both on every screen return (caused ANRs on heavy
+        // screens). Minimum 4-second gap between refreshes.
+        val now = System.currentTimeMillis()
+        if (now - lastOnResumeMs < 4000L) return
+        lastOnResumeMs = now
         LocationRefresher.refresh(this)
         UpdateManager.checkForUpdate(this)
     }

@@ -445,7 +445,7 @@ private fun MineralTextureOverlay() {
         }
 
         // ── Stone grain speckles ─────────────────────────────────────────────
-        val speckleCount = 420
+        val speckleCount = 180
         val speckleColors = listOf(
             Color(0xFFB8A88A),
             Color(0xFFC9B89A),
@@ -468,7 +468,7 @@ private fun MineralTextureOverlay() {
         }
 
         // ── Crystalline sparkles (mica / quartz flecks) ────────────────────────
-        val sparkleCount = 56
+        val sparkleCount = 28
         val sparkleColors = listOf(
             Color(0xFFFFF8E7).copy(alpha = 0.80f),
             Color(0xFFFDE9B8).copy(alpha = 0.70f),
@@ -495,7 +495,7 @@ private fun MineralTextureOverlay() {
         }
 
         // ── Veins — thin quartz-like lines in the stone ───────────────────────
-        val veinCount = 24
+        val veinCount = 12
         val veinColors = listOf(
             Color(0xFFD8C8A8).copy(alpha = 0.22f),
             Color(0xFFC9B89A).copy(alpha = 0.18f),
@@ -555,7 +555,7 @@ fun GamerRockTexture(
         }
 
         // ── Dense stone grain speckles ────────────────────────────────────────
-        val speckleCount = (w * h / 1400f).toInt().coerceIn(120, 520)
+        val speckleCount = (w * h / 2800f).toInt().coerceIn(60, 220)
         val speckleColors = listOf(
             speckleTint,
             Color(0xFFC9B89A),
@@ -577,7 +577,7 @@ fun GamerRockTexture(
         }
 
         // ── Glowing crystalline flecks (mica / quartz / amethyst) ───────────────
-        val fleckCount = (w * h / 9000f).toInt().coerceIn(20, 90)
+        val fleckCount = (w * h / 18000f).toInt().coerceIn(10, 45)
         val fleckColors = listOf(
             Color(0xFFFFF8E7).copy(alpha = 0.85f),
             Color(0xFFFDE9B8).copy(alpha = 0.75f),
@@ -605,7 +605,7 @@ fun GamerRockTexture(
         }
 
         // ── Neon-ish mineral veins ─────────────────────────────────────────────
-        val veinCount = (w * h / 12000f).toInt().coerceIn(12, 40)
+        val veinCount = (w * h / 24000f).toInt().coerceIn(6, 20)
         repeat(veinCount) {
             val x = nextFloat() * w
             val y = nextFloat() * h

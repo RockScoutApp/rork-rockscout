@@ -396,10 +396,8 @@ fun AppNavigation(
                 slideInHorizontally(tween(300)) { it / 4 } + fadeIn(tween(300))
             },
             exitTransition = { fadeOut(tween(200)) },
-            popEnterTransition = { fadeIn(tween(250)) },
-            popExitTransition = {
-                slideOutHorizontally(tween(300)) { it / 4 } + fadeOut(tween(250))
-            },
+            popEnterTransition = { fadeIn(tween(150)) },
+            popExitTransition = { fadeOut(tween(150)) },
         ) {
         composable(Routes.HOME) { HomeScreen(navController) }
         composable(Routes.IDENTIFY) { IdentifyScreen(navController) }

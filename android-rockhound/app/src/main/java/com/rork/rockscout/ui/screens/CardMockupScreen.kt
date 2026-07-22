@@ -7,11 +7,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -127,12 +130,16 @@ fun CardMockupScreen(
 }
 
 /**
- * New specimen card matching the approved sketch:
- * - Full-width title row on the very top (whole name fits across one horizontal row)
- * - Below: tall image (left) + type pill, two famous-location pills (horizontal row),
- *   and colored rarity pill (right)
- * - Larger rock-class-colored tagline below, capped at 3 lines, vertically centered
- * - Heart + add buttons stacked vertically on the right edge of the description
+ * New specimen card matching the approved sketch (revised layout):
+ * - Image on the far left, taller and wider (bottom edge fixed, grows up/right).
+ * - Next to the image (vertical stack, same height as image):
+ *     Row 1–2: specimen name (up to 2 lines, larger bold text)
+ *     Type pill (rock-class emoji + label)
+ *     Two famous-location pills in one horizontal row
+ *     Rarity pill — full rarity word, colored by tier, pinned to the bottom
+ *     so its bottom edge is even with the bottom of the image.
+ * - Below the image row: larger rock-class-colored tagline (up to 3 lines,
+ *   vertically centered when shorter) + heart/add buttons on the right edge.
  */
 @Composable
 private fun NewSpecimenCardMock(
@@ -157,31 +164,20 @@ private fun NewSpecimenCardMock(
                 )
                 .glowingBorder(3.dp, accent.copy(alpha = 0.50f), shape),
         ) {
-            // ── Row 1: Full-width title (whole name fits across one horizontal row) ──
-            Text(
-                text = specimen.name,
-                style = MaterialTheme.typography.titleLarge,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 8.dp),
-            )
-
-            // ── Row 2: image (left) + type / locations / rarity (right) ──
+            // ── Image (left) + name / type / locations / rarity (right) ──
+            // The right column's content determines the row height; the image
+            // fills that height so its bottom stays aligned with the rarity pill.
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 12.dp, end = 12.dp),
+                    .padding(start = 12.dp, end = 12.dp, top = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                // Tall image — 130dp square
+                // Tall image — width 150dp, height fills the right column
                 Box(
                     modifier = Modifier
-                        .size(130.dp)
+                        .width(150.dp)
+                        .fillMaxHeight()
                         .clip(RoundedCornerShape(14.dp))
                         .background(
                             Brush.radialGradient(
@@ -207,14 +203,25 @@ private fun NewSpecimenCardMock(
                     }
                 }
 
-                // Right column: type pill, locations (horizontal row), rarity pill
+                // Right column: name (2 rows) → type → locations → rarity (bottom)
                 Column(
                     modifier = Modifier
                         .weight(1f)
-                        .height(130.dp),
+                        .height(IntrinsicSize.Min),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    // Type pill — keeps the rock-class emoji in front of the text
+                    // Specimen name — up to 2 lines, larger bold text
+                    Text(
+                        text = specimen.name,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 19.sp,
+                        lineHeight = 22.sp,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+
+                    // Type pill — rock-class emoji in front of the label
                     Pill(
                         text = rockClassEmoji(specimen.rockClass) + " " + specimen.rockClass.label,
                         color = accent,
@@ -244,7 +251,8 @@ private fun NewSpecimenCardMock(
                         }
                     }
 
-                    // Rarity pill — full rarity word, colored by tier
+                    // Rarity pill — full rarity word, colored by tier, pinned to bottom
+                    Spacer(modifier = Modifier.weight(1f))
                     Pill(
                         text = specimen.rarity,
                         color = rarityColor(specimen.rarity),
@@ -253,7 +261,7 @@ private fun NewSpecimenCardMock(
                 }
             }
 
-            // ── Row 3: tagline (left, larger + class-colored) + heart/add (right) ──
+            // ── Tagline (left, larger + class-colored) + heart/add (right) ──
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
