@@ -382,6 +382,8 @@ fun HomeScreen(navController: NavController) {
             SpecimenImages.urls["fluorite"]?.firstOrNull()),
         HomeTile("Specimen Database", "${SeedData.allSpecimens.size} entries · Browse every specimen in the app", Icons.Filled.CollectionsBookmark, Color(0xFF6FA8C7), Routes.SPECIMEN_LIST,
             SpecimenImages.urls["pyrite"]?.firstOrNull()),
+        HomeTile("Card Mock-Up", "Preview the redesigned specimen card", Icons.Filled.CollectionsBookmark, Color(0xFFE8A33D), Routes.CARD_MOCKUP,
+            SpecimenImages.urls["amethyst"]?.firstOrNull()),
         HomeTile("My Saved Images", "${savedImages.size} saved · Photos you've saved from the app", Icons.Filled.Download, Color(0xFF44AACC), Routes.SAVED_IMAGES,
             SpecimenImages.urls["amazonite-smoky-quartz-assemblage"]?.firstOrNull()),
     )

@@ -43,6 +43,7 @@ import com.rork.rockscout.ui.screens.SearchScreen
 import com.rork.rockscout.ui.screens.ElementDetailScreen
 import com.rork.rockscout.ui.screens.PeriodicTableScreen
 import com.rork.rockscout.ui.screens.SpecimenDetailScreen
+import com.rork.rockscout.ui.screens.CardMockupScreen
 import com.rork.rockscout.ui.screens.SpecimenListScreen
 import com.rork.rockscout.ui.screens.RocksAreAmazingScreen
 import com.rork.rockscout.ui.screens.SavedImagesScreen
@@ -152,6 +153,7 @@ object Routes {
     const val NOTIFICATIONS = "notifications"
     const val HOW_TO_USE = "how_to_use"
     const val THANK_YOU = "thank_you/{tokens}/{days}"
+    const val CARD_MOCKUP = "card_mockup"
     const val DISCLAIMER = "disclaimer?isGate={isGate}"
 
     fun location(id: String) = "location/$id"
@@ -428,6 +430,7 @@ fun AppNavigation(
             )
         }
         composable(Routes.SPECIMEN_LIST) { SpecimenListScreen(navController) }
+        composable(Routes.CARD_MOCKUP) { CardMockupScreen(navController) }
         composable(Routes.BLM_GUIDE) { BlmGuideScreen(navController) }
         composable(
             Routes.BLM_STATE_DETAIL,
