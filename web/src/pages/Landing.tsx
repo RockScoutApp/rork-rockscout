@@ -828,10 +828,10 @@ const FieldStories = () => (
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
                 </div>
-                <figcaption className="absolute bottom-0 left-0 w-full p-5">
-                  <p className="font-display text-lg font-semibold text-white drop-shadow">{story.caption}</p>
+                <figcaption className="absolute bottom-0 left-0 w-full p-4">
+                  <p className="font-display text-sm font-semibold leading-snug text-white drop-shadow">{story.caption}</p>
                 </figcaption>
               </>
             )}
