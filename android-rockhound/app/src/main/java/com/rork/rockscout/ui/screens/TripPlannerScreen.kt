@@ -831,8 +831,27 @@ private fun TripEditorDialog(
         total
     }
 
+    fun clearDraft() {
+        runCatching {
+            java.io.File(context.filesDir, "trip_draft_$draftKey.json").delete()
+        }
+        draftSavedAt = null
+    }
+
     // ── Auto-save draft logic ──
     LaunchedEffect(name, dateMillis, stops.toList(), targetSpecimens.toList(), gearChecklist.toList(), notes, specimenMarkers.toList()) {
+        val hasContent = name.isNotBlank() ||
+            stops.isNotEmpty() ||
+            targetSpecimens.isNotEmpty() ||
+            gearChecklist.isNotEmpty() ||
+            notes.isNotBlank() ||
+            specimenMarkers.isNotEmpty()
+        if (!hasContent) {
+            // No meaningful content yet — delete any stale draft so an empty form
+            // never prompts for restore on the next visit.
+            clearDraft()
+            return@LaunchedEffect
+        }
         kotlinx.coroutines.delay(3000)
         runCatching {
             val draftJson = kotlinx.serialization.json.Json.encodeToString(
@@ -865,12 +884,6 @@ private fun TripEditorDialog(
             } else {
                 draftFile.delete()
             }
-        }
-    }
-
-    fun clearDraft() {
-        runCatching {
-            java.io.File(context.filesDir, "trip_draft_$draftKey.json").delete()
         }
     }
 
@@ -1455,6 +1468,20 @@ Planned with RockScout""".trimIndent()
                         text = "Discard",
                         onClick = {
                             clearDraft()
+                            // Reset the form to defaults so the old draft isn't re-saved
+                            // and the "Saved" indicator does not appear.
+                            name = ""
+                            dateMillis = System.currentTimeMillis() + 7L * 24 * 60 * 60 * 1000
+                            stops.clear()
+                            targetSpecimens.clear()
+                            gearChecklist.clear()
+                            notes = ""
+                            specimenMarkers.clear()
+                            newMarkerName = ""
+                            newMarkerDesc = ""
+                            newMarkerCategory = "Other"
+                            newSpecimen = ""
+                            newGear = ""
                             showRestoreDraft = false
                         },
                         accent = DarkTextMid,
