@@ -732,6 +732,16 @@ object GemShowData {
         ),
     )
 
+    /** All shows — static enriched shows merged with user-submitted custom shows.
+     *  Used by the Gem Shows screen and proximity notifications. */
+    fun allShows(): List<GemShow> {
+        val custom = CustomGemShowStore.shows.value
+        return if (custom.isEmpty()) enrichedShows else enrichedShows + custom
+    }
+
+    /** Total show count (static + custom) for dynamic display. */
+    fun totalShowCount(): Int = enrichedShows.size + CustomGemShowStore.shows.value.size
+
     /** Shows grouped by month for easy browsing. */
     fun showsByMonth(): List<Pair<String, List<GemShow>>> {
         val monthOrder = listOf(
@@ -824,15 +834,17 @@ object GemShowData {
      * Shows occurring in the current or upcoming months, sorted so the nearest
      * upcoming month appears first.  Falls back to the full list grouped by
      * month when no shows are upcoming in the next 12 months.
+     *  Now includes user-submitted custom shows merged with the static list.
      */
     fun upcomingShows(currentMonth1: Int): List<GemShow> {
-        if (currentMonth1 !in 1..12) return enrichedShows
+        val allEnriched = allShows()
+        if (currentMonth1 !in 1..12) return allEnriched
         // Order: current month first, then each successive month, wrapping around.
         val ordered = (0 until 12).map { offset ->
             val m = ((currentMonth1 - 1 + offset) % 12) + 1
             m
         }
-        return enrichedShows.sortedBy { show ->
+        return allEnriched.sortedBy { show ->
             if (show.monthIndex == 0) 13 else ordered.indexOf(show.monthIndex)
         }
     }

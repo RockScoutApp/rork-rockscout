@@ -73,6 +73,7 @@ import com.rork.rockscout.data.ImageReviewRepository
 import com.rork.rockscout.data.LocationSubmissionStore
 import com.rork.rockscout.data.LocationType
 import com.rork.rockscout.data.ProfanityFilter
+import com.rork.rockscout.data.TripStopType
 import com.rork.rockscout.ui.components.AddLocationSheet
 import com.rork.rockscout.ui.components.SavedImagesPickerDialog
 import com.rork.rockscout.ui.components.SculptedButton
@@ -103,6 +104,22 @@ private val locationTypes = listOf(
     "Lapidary Club" to LocationType.LAPIDARY_CLUB,
 )
 
+private val campgroundTypes = listOf(
+    "BLM Campground" to LocationType.PUBLIC_DIG,
+    "State Park Campground" to LocationType.PUBLIC_DIG,
+    "Private Campground" to LocationType.PUBLIC_DIG,
+    "Dispersed Camping" to LocationType.PUBLIC_DIG,
+    "National Forest Campground" to LocationType.PUBLIC_DIG,
+    "RV Park" to LocationType.PUBLIC_DIG,
+)
+
+private val trailheadTypes = listOf(
+    "BLM Trailhead" to LocationType.PUBLIC_DIG,
+    "Forest Service Trailhead" to LocationType.PUBLIC_DIG,
+    "Park Trailhead" to LocationType.PUBLIC_DIG,
+    "Other Access Point" to LocationType.PUBLIC_DIG,
+)
+
 /**
  * Full-screen location submission form with photo capture, type dropdown,
  * address, comments, map pin-drop, web verification, and auto-approval.
@@ -110,6 +127,10 @@ private val locationTypes = listOf(
  * Replaces the simple pin-drop [AddLocationSheet] for the "Add a Location"
  * action on the Dig Sites screen. The pin-drop map is still used to set
  * coordinates — it's embedded as a step within this form.
+ *
+ * When [submissionMode] is set to "campground" or "trailhead", the title,
+ * subtitle, type dropdown options, and web verification call change to
+ * match the appropriate location category.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,6 +138,7 @@ fun AddLocationDialog(
     onDismiss: () -> Unit,
     onSubmitted: (approved: Boolean) -> Unit,
     preFilledCoords: Pair<Double, Double>? = null,
+    submissionMode: String = "dig_site",
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -124,6 +146,22 @@ fun AddLocationDialog(
     val profile by repo.profile.collectAsStateWithLifecycle()
     val auth = AuthRepository.instance
     val current by repo.currentLocation.collectAsStateWithLifecycle()
+
+    val effectiveTypes = when (submissionMode) {
+        "campground" -> campgroundTypes
+        "trailhead" -> trailheadTypes
+        else -> locationTypes
+    }
+    val dialogTitle = when (submissionMode) {
+        "campground" -> "Add a Campground"
+        "trailhead" -> "Add a Trailhead"
+        else -> "Add a Location"
+    }
+    val dialogSubtitle = when (submissionMode) {
+        "campground" -> "Submit a campground for the community trip planner."
+        "trailhead" -> "Submit a trailhead or access point for the community trip planner."
+        else -> "Submit a dig site, mine, quarry, or rock shop for the community."
+    }
 
     var name by remember { mutableStateOf("") }
     var selectedTypeIndex by remember { mutableStateOf(0) }
@@ -179,10 +217,10 @@ fun AddLocationDialog(
         ),
         title = {
             Column {
-                Text("Add a Location", style = MaterialTheme.typography.headlineSmall)
+                Text(dialogTitle, style = MaterialTheme.typography.headlineSmall)
                 Spacer(Modifier.height(2.dp))
                 Text(
-                    "Submit a dig site, mine, quarry, or rock shop for the community.",
+                    dialogSubtitle,
                     style = MaterialTheme.typography.bodySmall,
                     color = TextLow,
                 )
@@ -215,7 +253,7 @@ fun AddLocationDialog(
                     onExpandedChange = { typeMenuExpanded = it },
                 ) {
                     OutlinedTextField(
-                        value = locationTypes[selectedTypeIndex].first,
+                        value = effectiveTypes[selectedTypeIndex].first,
                         onValueChange = {},
                         readOnly = true,
                         modifier = Modifier.fillMaxWidth().menuAnchor().noAutoFocus(),
@@ -228,7 +266,7 @@ fun AddLocationDialog(
                         expanded = typeMenuExpanded,
                         onDismissRequest = { typeMenuExpanded = false },
                     ) {
-                        locationTypes.forEachIndexed { idx, (label, _) ->
+                        effectiveTypes.forEachIndexed { idx, (label, _) ->
                             DropdownMenuItem(
                                 text = { Text(label) },
                                 onClick = {
@@ -477,15 +515,25 @@ fun AddLocationDialog(
                             }
                         }
 
-                        // 3. Web verification
+                        // 3. Web verification (type-aware)
                         var webVerified = false
                         var webSnippet = ""
                         var webUrl = ""
                         withContext(Dispatchers.IO) {
                             webVerified = runCatching {
-                                DigSiteSearchService.verifyLocation(name, coords.first, coords.second) { snippet, url ->
-                                    webSnippet = snippet
-                                    webUrl = url
+                                when (submissionMode) {
+                                    "campground" -> DigSiteSearchService.verifyCampground(name, coords.first, coords.second) { snippet, url ->
+                                        webSnippet = snippet
+                                        webUrl = url
+                                    }
+                                    "trailhead" -> DigSiteSearchService.verifyTrailhead(name, coords.first, coords.second) { snippet, url ->
+                                        webSnippet = snippet
+                                        webUrl = url
+                                    }
+                                    else -> DigSiteSearchService.verifyLocation(name, coords.first, coords.second) { snippet, url ->
+                                        webSnippet = snippet
+                                        webUrl = url
+                                    }
                                 }
                             }.getOrDefault(false)
                         }
@@ -494,7 +542,7 @@ fun AddLocationDialog(
                         val submission = LocationSubmissionStore.LocationSubmission(
                             id = "loc-sub-${UUID.randomUUID()}",
                             name = name.trim(),
-                            type = locationTypes[selectedTypeIndex].first,
+                            type = effectiveTypes[selectedTypeIndex].first,
                             address = address.trim(),
                             comments = comments.trim(),
                             latitude = coords.first,
@@ -506,6 +554,7 @@ fun AddLocationDialog(
                             webVerified = webVerified,
                             webSnippet = webSnippet,
                             webUrl = webUrl,
+                            locationCategory = submissionMode,
                         )
 
                         if (webVerified) {

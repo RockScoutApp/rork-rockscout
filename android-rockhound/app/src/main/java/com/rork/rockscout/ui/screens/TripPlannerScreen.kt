@@ -29,6 +29,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Hiking
+import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronRight
@@ -135,6 +137,7 @@ import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Slate800
+import com.rork.rockscout.ui.theme.Success
 import com.rork.rockscout.ui.theme.TextLow
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.viewinterop.AndroidView
@@ -155,6 +158,10 @@ import com.rork.rockscout.ui.components.DeleteConfirmDialog
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.data.DigSiteSearchService
 import com.rork.rockscout.data.DigSiteDiscoveryStore
+import com.rork.rockscout.data.BlmData
+import com.rork.rockscout.data.BlmTrailhead
+import com.rork.rockscout.data.BlmCampground
+import com.rork.rockscout.data.TripStopType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -795,6 +802,11 @@ private fun TripEditorDialog(
     var showDatePicker by remember { mutableStateOf(false) }
     var showLocationPicker by remember { mutableStateOf(false) }
     var showCustomPinPicker by remember { mutableStateOf(false) }
+    var showTrailheadPicker by remember { mutableStateOf(false) }
+    var showCampgroundPicker by remember { mutableStateOf(false) }
+    var showAddLocationDialog by remember { mutableStateOf(false) }
+    var addLocationMode by remember { mutableStateOf("dig_site") }
+    var addStopMenuExpanded by remember { mutableStateOf(false) }
     var newSpecimen by remember { mutableStateOf("") }
     var newGear by remember { mutableStateOf("") }
     var pendingRemoveStop by remember { mutableStateOf<Int?>(null) }
@@ -1050,13 +1062,46 @@ Planned with RockScout""".trimIndent()
                         SculptedIconButton(icon = Icons.Filled.Delete, contentDescription = "Remove stop", onClick = { pendingRemoveStop = idx }, accent = Citrine, iconTint = TextLow, size = 32.dp, shadowElevation = 3.dp)
                     }
                 }
-                SculptedOutlinedButton(
-                    text = "+ Add a dig site stop",
-                    onClick = { showLocationPicker = true },
-                    accent = Citrine,
-                    textColor = Citrine,
-                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                )
+                // ── Add a stop dropdown ──
+                Box(modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+                    SculptedOutlinedButton(
+                        text = "+ Add a stop",
+                        onClick = { addStopMenuExpanded = true },
+                        accent = Citrine,
+                        textColor = Citrine,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    DropdownMenu(
+                        expanded = addStopMenuExpanded,
+                        onDismissRequest = { addStopMenuExpanded = false },
+                        modifier = Modifier.fillMaxWidth(0.88f),
+                    ) {
+                        DropdownMenuItem(
+                            text = { Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Filled.Explore, contentDescription = null, tint = Citrine, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(10.dp))
+                                Text("Dig Sites")
+                            } },
+                            onClick = { addStopMenuExpanded = false; showLocationPicker = true },
+                        )
+                        DropdownMenuItem(
+                            text = { Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Filled.Hiking, contentDescription = null, tint = Success, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(10.dp))
+                                Text("Trailheads")
+                            } },
+                            onClick = { addStopMenuExpanded = false; showTrailheadPicker = true },
+                        )
+                        DropdownMenuItem(
+                            text = { Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Filled.Terrain, contentDescription = null, tint = Citrine, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(10.dp))
+                                Text("Campgrounds")
+                            } },
+                            onClick = { addStopMenuExpanded = false; showCampgroundPicker = true },
+                        )
+                    }
+                }
                 Spacer(Modifier.height(4.dp))
                 SculptedOutlinedButton(
                     text = "+ Drop a custom pin",
@@ -1551,10 +1596,70 @@ Planned with RockScout""".trimIndent()
                     latitude = lat,
                     longitude = lng,
                     isCustomPin = true,
+                    stopType = TripStopType.CUSTOM_PIN.label.lowercase().replace(" ", "_"),
                 ))
                 showCustomPinPicker = false
             },
             defaultSubmitAsRockLocation = false,
+        )
+    }
+
+    if (showTrailheadPicker) {
+        TrailheadPickerSheet(
+            onDismiss = { showTrailheadPicker = false },
+            onPick = { trailhead ->
+                stops.add(TripStop(
+                    locationId = "trailhead-${trailhead.name.hashCode()}-${trailhead.state}",
+                    locationName = trailhead.name,
+                    order = stops.size,
+                    latitude = trailhead.latitude,
+                    longitude = trailhead.longitude,
+                    stopType = "trailhead",
+                ))
+                showTrailheadPicker = false
+            },
+            onAddNew = {
+                showTrailheadPicker = false
+                addLocationMode = "trailhead"
+                showAddLocationDialog = true
+            },
+        )
+    }
+
+    if (showCampgroundPicker) {
+        CampgroundPickerSheet(
+            onDismiss = { showCampgroundPicker = false },
+            onPick = { campground ->
+                stops.add(TripStop(
+                    locationId = "campground-${campground.name.hashCode()}-${campground.state}",
+                    locationName = campground.name,
+                    order = stops.size,
+                    latitude = campground.latitude,
+                    longitude = campground.longitude,
+                    stopType = "campground",
+                ))
+                showCampgroundPicker = false
+            },
+            onAddNew = {
+                showCampgroundPicker = false
+                addLocationMode = "campground"
+                showAddLocationDialog = true
+            },
+        )
+    }
+
+    if (showAddLocationDialog) {
+        AddLocationDialog(
+            onDismiss = { showAddLocationDialog = false },
+            onSubmitted = { approved ->
+                showAddLocationDialog = false
+                android.widget.Toast.makeText(
+                    context,
+                    if (approved) "Location submitted and auto-approved!" else "Location submitted for review.",
+                    android.widget.Toast.LENGTH_LONG,
+                ).show()
+            },
+            submissionMode = addLocationMode,
         )
     }
 
@@ -1857,6 +1962,216 @@ private fun LocationDropdown(
             }
         }
     }
+}
+
+/** Picker sheet for BLM trailheads — searchable, state-grouped list with same
+ *  card layout as the BLM Guide's Trailheads tab. Tapping a trailhead adds it
+ *  as a trip stop. An "Add a trailhead" button at the bottom opens the
+ *  submission form in trailhead mode. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TrailheadPickerSheet(
+    onDismiss: () -> Unit,
+    onPick: (BlmTrailhead) -> Unit,
+    onAddNew: () -> Unit,
+) {
+    val allTrailheads = remember { BlmData.trailheads }
+    var query by remember { mutableStateOf("") }
+
+    val filtered = remember(query) {
+        if (query.isBlank()) allTrailheads
+        else allTrailheads.filter {
+            it.name.contains(query, ignoreCase = true) ||
+                it.region.contains(query, ignoreCase = true) ||
+                it.state.contains(query, ignoreCase = true)
+        }
+    }
+    val grouped = remember(filtered) {
+        filtered.groupBy { it.state }.toList().sortedBy { it.first }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = { Text("Add a trailhead", style = MaterialTheme.typography.headlineSmall) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth().height(460.dp)) {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    label = { Text("Search by name or region") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().noAutoFocus(),
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "${filtered.size} trailhead${if (filtered.size == 1) "" else "s"}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextLow,
+                )
+                Spacer(Modifier.height(6.dp))
+                LazyColumn(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    grouped.forEach { (state, trailheads) ->
+                        item {
+                            Text(
+                                state,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Citrine,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = 4.dp),
+                            )
+                        }
+                        items(trailheads, key = { "${it.name}-${it.state}" }) { trailhead ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .sculpted(shape = RoundedCornerShape(10.dp), accent = Success, shadowElevation = 3.dp, onClick = { onPick(trailhead) })
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                                    .glowingBorder(2.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
+                                    .padding(12.dp),
+                            ) {
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Filled.Hiking, contentDescription = null, tint = Success, modifier = Modifier.size(18.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(trailhead.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                                    }
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(trailhead.region, style = MaterialTheme.typography.labelSmall, color = TextLow)
+                                    if (trailhead.description.isNotBlank()) {
+                                        Spacer(Modifier.height(4.dp))
+                                        Text(trailhead.description, style = MaterialTheme.typography.labelSmall, color = DarkTextMid, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                SculptedOutlinedButton(
+                    text = "+ Add a new trailhead",
+                    onClick = onAddNew,
+                    accent = Success,
+                    textColor = Success,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {},
+        dismissButton = { SculptedTextButton(text = "Cancel", onClick = onDismiss, accent = Citrine, textColor = Citrine) },
+    )
+}
+
+/** Picker sheet for BLM campgrounds — searchable, state-grouped list with same
+ *  card layout as the BLM Guide's Campgrounds tab. Tapping a campground adds it
+ *  as a trip stop. An "Add a campground" button at the bottom opens the
+ *  submission form in campground mode. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CampgroundPickerSheet(
+    onDismiss: () -> Unit,
+    onPick: (BlmCampground) -> Unit,
+    onAddNew: () -> Unit,
+) {
+    val allCampgrounds = remember { BlmData.campgrounds }
+    var query by remember { mutableStateOf("") }
+
+    val filtered = remember(query) {
+        if (query.isBlank()) allCampgrounds
+        else allCampgrounds.filter {
+            it.name.contains(query, ignoreCase = true) ||
+                it.region.contains(query, ignoreCase = true) ||
+                it.state.contains(query, ignoreCase = true)
+        }
+    }
+    val grouped = remember(filtered) {
+        filtered.groupBy { it.state }.toList().sortedBy { it.first }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = { Text("Add a campground", style = MaterialTheme.typography.headlineSmall) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth().height(460.dp)) {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    label = { Text("Search by name or region") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().noAutoFocus(),
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "${filtered.size} campground${if (filtered.size == 1) "" else "s"}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextLow,
+                )
+                Spacer(Modifier.height(6.dp))
+                LazyColumn(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    grouped.forEach { (state, campgrounds) ->
+                        item {
+                            Text(
+                                state,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Citrine,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = 4.dp),
+                            )
+                        }
+                        items(campgrounds, key = { "${it.name}-${it.state}" }) { campground ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .sculpted(shape = RoundedCornerShape(10.dp), accent = Citrine, shadowElevation = 3.dp, onClick = { onPick(campground) })
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                                    .glowingBorder(2.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
+                                    .padding(12.dp),
+                            ) {
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Filled.Terrain, contentDescription = null, tint = Citrine, modifier = Modifier.size(18.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(campground.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                                    }
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(campground.region, style = MaterialTheme.typography.labelSmall, color = TextLow)
+                                    if (campground.feeInfo.isNotBlank()) {
+                                        Spacer(Modifier.height(2.dp))
+                                        Text(campground.feeInfo, style = MaterialTheme.typography.labelSmall, color = Aqua, fontWeight = FontWeight.Medium)
+                                    }
+                                    if (campground.description.isNotBlank()) {
+                                        Spacer(Modifier.height(4.dp))
+                                        Text(campground.description, style = MaterialTheme.typography.labelSmall, color = DarkTextMid, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                SculptedOutlinedButton(
+                    text = "+ Add a new campground",
+                    onClick = onAddNew,
+                    accent = Citrine,
+                    textColor = Citrine,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {},
+        dismissButton = { SculptedTextButton(text = "Cancel", onClick = onDismiss, accent = Citrine, textColor = Citrine) },
+    )
 }
 
 @Composable

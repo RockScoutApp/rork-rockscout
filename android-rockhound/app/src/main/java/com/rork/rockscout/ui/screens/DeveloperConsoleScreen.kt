@@ -84,6 +84,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.rork.rockscout.ui.components.FullScreenImageViewer
+import com.rork.rockscout.ui.components.DevUserPopup
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
@@ -544,6 +548,7 @@ private fun SubscriptionsTab(navController: NavController) {
     var results by remember { mutableStateOf<List<SubscriptionAdminManager.AdminUser>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var searched by remember { mutableStateOf(false) }
+    var popupUserId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         analytics = SubscriptionAdminManager.computeAnalytics()
@@ -738,118 +743,84 @@ private fun SubscriptionsTab(navController: NavController) {
                     fontWeight = FontWeight.Medium,
                 )
             }
-            items(results, key = { it.id }) { user ->
-                AdminUserCard(
-                    user = user,
-                    onClick = { navController.navigate(Routes.devUserProfile(user.id)) },
-                )
+            // Compact 2-column spreadsheet-style name grid
+            item {
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 150.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    gridItems(results, key = { it.id }) { user ->
+                        DevUserNameCell(
+                            name = user.display_name.ifBlank { "(no name)" },
+                            avatar = user.avatar_emoji,
+                            isPremium = user.is_premium || user.premium_badge,
+                            isDeleted = false,
+                            onClick = { popupUserId = user.id },
+                        )
+                    }
+                }
             }
         }
     }
+
+    popupUserId?.let { uid ->
+        DevUserPopup(
+            userId = uid,
+            onDismiss = { popupUserId = null },
+        )
+    }
 }
 
+/** Compact spreadsheet-style name cell for the Users tab grid.
+ *  Shows avatar + name (truncated) + small status dot. Clicking opens DevUserPopup. */
 @Composable
-private fun AdminUserCard(
-    user: SubscriptionAdminManager.AdminUser,
+private fun DevUserNameCell(
+    name: String,
+    avatar: String,
+    isPremium: Boolean,
+    isDeleted: Boolean,
     onClick: () -> Unit,
 ) {
-    val accent = if (user.is_premium || user.premium_badge) Citrine else DarkTextMid
+    val accent = when {
+        isDeleted -> Danger
+        isPremium -> Citrine
+        else -> DarkTextMid
+    }
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .sculpted(shape = RoundedCornerShape(18.dp), accent = accent, shadowElevation = 5.dp, onClick = onClick)
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(12.dp))
             .background(
                 Brush.verticalGradient(
-                    listOf(Color(0xFF2A2820), Color(0xFF1E1C16), Color(0xFF16140F))
+                    listOf(Color(0xFF2A2820), Color(0xFF1E1C16))
                 )
             )
-            .glowingBorder(3.dp, accent.copy(alpha = 0.45f), RoundedCornerShape(18.dp))
-            .padding(16.dp),
+            .glowingBorder(2.dp, accent.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 10.dp, vertical = 10.dp),
     ) {
-        Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(accent.copy(alpha = 0.15f))
-                        .glowingBorder(3.dp, accent.copy(alpha = 0.45f), CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(user.avatar_emoji, style = MaterialTheme.typography.titleMedium)
-                }
-                Spacer(Modifier.width(14.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            user.display_name.ifBlank { "(no name)" },
-                            style = MaterialTheme.typography.titleMedium,
-                            color = DarkTextHigh,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                        )
-                        if (user.is_premium || user.premium_badge) {
-                            Spacer(Modifier.width(8.dp))
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(Citrine.copy(alpha = 0.22f))
-                                    .glowingBorder(2.dp, Citrine.copy(alpha = 0.45f), RoundedCornerShape(6.dp))
-                                    .padding(horizontal = 7.dp, vertical = 3.dp),
-                            ) {
-                                Text("PREMIUM", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-                    Text(
-                        user.email.ifBlank { "no email" },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = DarkTextMid,
-                        maxLines = 1,
-                    )
-                    Text(
-                        "Lvl ${user.level} · ${user.status.replace("-", " ")}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = DarkTextMid.copy(alpha = 0.7f),
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.06f))
-                        .glowingBorder(2.dp, Color.White.copy(alpha = 0.12f), CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "View",
-                        tint = DarkTextMid,
-                        modifier = Modifier.size(18.dp),
-                    )
-                }
-            }
-            user.subscription_override?.let { action ->
-                Spacer(Modifier.height(10.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    val ovColor = if (action == "renew") Success else Danger
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(ovColor.copy(alpha = 0.15f))
-                            .glowingBorder(2.dp, ovColor.copy(alpha = 0.4f), RoundedCornerShape(6.dp))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                    ) {
-                        Text(
-                            "Admin: $action",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = ovColor,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                }
-            }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(avatar, style = MaterialTheme.typography.titleSmall)
+            Spacer(Modifier.width(6.dp))
+            Text(
+                name,
+                style = MaterialTheme.typography.bodyMedium,
+                color = DarkTextHigh,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            Spacer(Modifier.width(4.dp))
+            Box(
+                modifier = Modifier
+                    .size(7.dp)
+                    .clip(CircleShape)
+                    .background(accent)
+                    .glowingBorder(1.dp, accent.copy(alpha = 0.35f), CircleShape),
+            )
         }
     }
 }
@@ -868,6 +839,8 @@ private fun ModerationTab() {
     var loading by remember { mutableStateOf(true) }
     var reinstating by remember { mutableStateOf<ReportRepository.ModerationGroup?>(null) }
     var screenshotViewerPath by remember { mutableStateOf<String?>(null) }
+    var modSearchQuery by remember { mutableStateOf("") }
+    var popupUserId by remember { mutableStateOf<String?>(null) }
 
     suspend fun reloadAll() {
         groups = ReportRepository.instance.getAllModerationGroups()
@@ -913,12 +886,87 @@ private fun ModerationTab() {
     val twoReports = groups.filter { it.reportCount == 2 }
     val banned = groups.filter { it.reportCount >= 3 }
 
+    // Filter reported users by search query (username or email)
+    val modSearchLower = modSearchQuery.trim().lowercase()
+    val allReportedGroups = (banned + twoReports + oneReport)
+    val filteredGroups = if (modSearchLower.isBlank()) allReportedGroups
+        else allReportedGroups.filter {
+            it.reportedName.lowercase().contains(modSearchLower) ||
+            run {
+                val user = LocalDataStore.getTable<com.rork.rockscout.data.LocalUser>(LocalDataStore.KEY_USERS)
+                    .firstOrNull { u -> u.id == it.reportedUserId }
+                user?.email?.lowercase()?.contains(modSearchLower) == true
+            }
+        }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize().navigationBarsPadding().imePadding(),
         contentPadding = PaddingValues(20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item { PageTitle("Moderation Queue", "Review reported users and image submissions") }
+
+               // ── Search bar for reported users ──
+        if (allReportedGroups.isNotEmpty()) {
+            item {
+                OutlinedTextField(
+                    value = modSearchQuery,
+                    onValueChange = { modSearchQuery = it },
+                    modifier = Modifier.fillMaxWidth().noAutoFocus(),
+                    placeholder = { Text("Search reported users by name or email…", color = DarkTextMid) },
+                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = DarkTextMid) },
+                    trailingIcon = {
+                        if (modSearchQuery.isNotEmpty()) {
+                            SculptedTextButton(
+                                text = "Clear",
+                                onClick = { modSearchQuery = "" },
+                                accent = Aqua,
+                                textColor = DarkTextMid,
+                            )
+                        }
+                    },
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFF2A2820),
+                        unfocusedContainerColor = Color(0xFF2A2820),
+                        focusedTextColor = DarkTextHigh,
+                        unfocusedTextColor = DarkTextHigh,
+                        focusedIndicatorColor = Citrine,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = Citrine,
+                    ),
+                    shape = RoundedCornerShape(14.dp),
+                )
+            }
+        }
+
+        // ── Reported users compact grid ──
+        if (filteredGroups.isNotEmpty()) {
+            item { SectionHeader("Reported Users", Warning, filteredGroups.size) }
+            item {
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 150.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    gridItems(filteredGroups, key = { it.reportedUserId }) { group ->
+                        val reportAccent = when {
+                            group.reportCount >= 3 -> Danger
+                            group.reportCount == 2 -> Warning
+                            else -> Citrine
+                        }
+                        DevUserNameCell(
+                            name = group.reportedName,
+                            avatar = group.reportedAvatar,
+                            isPremium = false,
+                            isDeleted = false,
+                            onClick = { popupUserId = group.reportedUserId },
+                        )
+                    }
+                }
+            }
+        }
 
         // ── Image Reviews section ──
         if (imageReviews.isNotEmpty()) {
@@ -962,34 +1010,6 @@ private fun ModerationTab() {
                     },
                 )
             }
-        }
-
-        if (banned.isNotEmpty()) {
-            item { SectionHeader("Banned (3+ reports)", Danger, banned.size) }
-            items(banned) { group -> ReportGroupCard(group, isBanned = true, onReinstate = { reinstating = group }, onRemoveReport = { reportId ->
-                scope.launch {
-                    ReportRepository.instance.removeReport(reportId)
-                    reloadAll()
-                }
-            }) }
-        }
-        if (twoReports.isNotEmpty()) {
-            item { SectionHeader("2 reports (2-week block)", Warning, twoReports.size) }
-            items(twoReports) { group -> ReportGroupCard(group, isBanned = false, onReinstate = null, onRemoveReport = { reportId ->
-                scope.launch {
-                    ReportRepository.instance.removeReport(reportId)
-                    reloadAll()
-                }
-            }) }
-        }
-        if (oneReport.isNotEmpty()) {
-            item { SectionHeader("1 report", Citrine, oneReport.size) }
-            items(oneReport) { group -> ReportGroupCard(group, isBanned = false, onReinstate = null, onRemoveReport = { reportId ->
-                scope.launch {
-                    ReportRepository.instance.removeReport(reportId)
-                    reloadAll()
-                }
-            }) }
         }
 
         // ── Appeals section ──
@@ -1079,6 +1099,14 @@ private fun ModerationTab() {
             // File may have been cleaned up — just clear state
             LaunchedEffect(Unit) { screenshotViewerPath = null }
         }
+    }
+
+    // Dev user popup overlay
+    popupUserId?.let { uid ->
+        DevUserPopup(
+            userId = uid,
+            onDismiss = { popupUserId = null },
+        )
     }
 }
 

@@ -145,6 +145,15 @@ data class CapturedPhoto(
  *  or a custom pin dropped by the user (food stops, gas, unnamed creek, etc.).
  *  Custom pins use a generated locationId ("custom-pin-{UUID}") and carry
  *  optional lat/lng so they appear on the route map and get directions. */
+/** Type of trip stop — determines how coordinates are resolved and whether
+ *  tapping the stop opens a detail page. */
+enum class TripStopType(val label: String) {
+    DIG_SITE("Dig Site"),
+    TRAILHEAD("Trailhead"),
+    CAMPGROUND("Campground"),
+    CUSTOM_PIN("Custom Pin"),
+}
+
 @Serializable
 data class TripStop(
     val locationId: String,
@@ -153,6 +162,9 @@ data class TripStop(
     val latitude: Double? = null,
     val longitude: Double? = null,
     val isCustomPin: Boolean = false,
+    /** Whether this stop is a dig site, trailhead, campground, or custom pin.
+     *  Defaults to DIG_SITE for backward compatibility with existing trips. */
+    val stopType: String = "dig_site",
 )
 
 /** A specimen marker pinned by the user on a trip's specimen marker map.

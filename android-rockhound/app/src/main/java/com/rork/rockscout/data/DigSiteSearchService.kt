@@ -168,6 +168,118 @@ object DigSiteSearchService {
         }
     }
 
+    /**
+     * Web-verify a user-submitted campground by searching for the name near the
+     * given coordinates. Returns true if the search finds a result mentioning
+     * campground/camping/RV keywords.
+     */
+    suspend fun verifyCampground(
+        name: String,
+        lat: Double,
+        lng: Double,
+        onResult: ((snippet: String, url: String) -> Unit)? = null,
+    ): Boolean = withContext(Dispatchers.IO) {
+        val allVals = runCatching { com.rork.rockscout.Config.allValues }.getOrDefault(emptyMap())
+        val toolkitUrl = allVals["EXPO_PUBLIC_TOOLKIT_URL"] ?: ""
+        val secret = allVals["EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY"] ?: ""
+        if (toolkitUrl.isBlank() || secret.isBlank()) return@withContext false
+
+        val query = "$name campground camping RV near ${"%.2f, %.2f".format(lat, lng)}"
+
+        val requestBody = buildJsonObject {
+            put("query", query)
+            put("type", "auto")
+            put("numResults", 5)
+            put("contents", buildJsonObject {
+                put("highlights", true)
+                put("text", true)
+            })
+        }.toString()
+
+        try {
+            val proxyUrl = "$toolkitUrl/v2/exa/search"
+            val response = client.post(proxyUrl) {
+                contentType(ContentType.Application.Json)
+                setBody(requestBody)
+                headers.append("Authorization", "Bearer $secret")
+            }
+            val raw: String = response.body()
+            val parsed = json.decodeFromString(ExaResponse.serializer(), raw)
+
+            val campKeywords = listOf("campground", "camp", "camping", "rv", "recreation", "dispersed", "tent", "hookup", "state park", "national forest")
+            val matchingResult = parsed.results.firstOrNull { result ->
+                val text = "${result.title ?: ""} ${result.highlights?.joinToString(" ") ?: ""} ${result.text ?: ""}".lowercase()
+                campKeywords.any { it in text } && (result.title?.contains(name, ignoreCase = true) == true || text.contains(name.lowercase()))
+            }
+            if (matchingResult != null) {
+                val snippet = (matchingResult.highlights?.firstOrNull() ?: matchingResult.text ?: "").take(300)
+                val url = matchingResult.url ?: ""
+                onResult?.invoke(snippet, url)
+                true
+            } else {
+                false
+            }
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    /**
+     * Web-verify a user-submitted trailhead by searching for the name near the
+     * given coordinates. Returns true if the search finds a result mentioning
+     * trailhead/hiking/trail/access keywords.
+     */
+    suspend fun verifyTrailhead(
+        name: String,
+        lat: Double,
+        lng: Double,
+        onResult: ((snippet: String, url: String) -> Unit)? = null,
+    ): Boolean = withContext(Dispatchers.IO) {
+        val allVals = runCatching { com.rork.rockscout.Config.allValues }.getOrDefault(emptyMap())
+        val toolkitUrl = allVals["EXPO_PUBLIC_TOOLKIT_URL"] ?: ""
+        val secret = allVals["EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY"] ?: ""
+        if (toolkitUrl.isBlank() || secret.isBlank()) return@withContext false
+
+        val query = "$name trailhead hiking trail access near ${"%.2f, %.2f".format(lat, lng)}"
+
+        val requestBody = buildJsonObject {
+            put("query", query)
+            put("type", "auto")
+            put("numResults", 5)
+            put("contents", buildJsonObject {
+                put("highlights", true)
+                put("text", true)
+            })
+        }.toString()
+
+        try {
+            val proxyUrl = "$toolkitUrl/v2/exa/search"
+            val response = client.post(proxyUrl) {
+                contentType(ContentType.Application.Json)
+                setBody(requestBody)
+                headers.append("Authorization", "Bearer $secret")
+            }
+            val raw: String = response.body()
+            val parsed = json.decodeFromString(ExaResponse.serializer(), raw)
+
+            val trailKeywords = listOf("trailhead", "trail", "hiking", "access", "parking", "forest service", "blm", "wilderness", "recreation")
+            val matchingResult = parsed.results.firstOrNull { result ->
+                val text = "${result.title ?: ""} ${result.highlights?.joinToString(" ") ?: ""} ${result.text ?: ""}".lowercase()
+                trailKeywords.any { it in text } && (result.title?.contains(name, ignoreCase = true) == true || text.contains(name.lowercase()))
+            }
+            if (matchingResult != null) {
+                val snippet = (matchingResult.highlights?.firstOrNull() ?: matchingResult.text ?: "").take(300)
+                val url = matchingResult.url ?: ""
+                onResult?.invoke(snippet, url)
+                true
+            } else {
+                false
+            }
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     /** Classify a discovered site as dig site, rock shop, or general. */
     private fun classifySite(name: String, description: String): String {
         val text = "$name $description".lowercase()
