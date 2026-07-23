@@ -5338,7 +5338,8 @@ object SeedData {
             ExpansionBatch17.specimens +
             ExpansionBatch18.specimens +
             ExpansionBatch19.specimens +
-            ExpansionBatch20.specimens
+            ExpansionBatch20.specimens +
+            ExpansionBatch21.specimens
         ).filter { it.id !in excludedFromMainDatabase && seen.add(it.id) } +
             CustomSpecimenStore.specimens.value.filter { it.id !in excludedFromMainDatabase && seen.add(it.id) }
     }

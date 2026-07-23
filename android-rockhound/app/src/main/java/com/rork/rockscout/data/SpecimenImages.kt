@@ -5064,9 +5064,208 @@ object SpecimenImages {
         "chloromelanite" to listOf(IMG_EB20_CHLOROMELANITE_ROUGH, IMG_EB20_CHLOROMELANITE_CAB)
     ) }
 
+    // ── Expansion Batch 21: Texas Cretaceous Fossils (2026-07-23) ──
+    private val urlChunk9: Map<String, List<String>> by lazy { mapOf(
+        "foraminifera-orbitolina" to listOf(
+            "$Q/a98359f7-8b6c-4820-8d29-904553f3b232.png",
+            "$Q/25c03b5c-2473-43fc-b6b7-b61206586c75.png",
+            "$Q/570fa182-f50a-452f-b708-0208f4f88ace.png"
+        ),
+        "brachiopod-kingena" to listOf(
+            "$Q/038541a9-619d-412e-afbd-8b4ca35104db.png",
+            "$Q/6e8fa474-37da-45b4-8ccc-f8f2fdb632a3.png",
+            "$Q/9858a5ed-7b74-4050-b3b2-d22b62cf41e3.png"
+        ),
+        "scallop-neithia" to listOf(
+            "$Q/b029b7e3-7b8c-424d-acd7-0a8634897b78.png",
+            "$Q/a60e9deb-61e8-4cb6-b864-97e3f25ca4f4.png",
+            "$Q/8680ceda-10ef-46ff-9f2a-a512f6fe8862.png"
+        ),
+        "algae-porocystis" to listOf(
+            "$Q/50326079-e623-4bea-af76-ca22695e91cb.png",
+            "$Q/ac33374a-3edf-4a5d-82a9-5bef43f11e8b.png",
+            "$Q/feb4f15a-7ea2-4014-8442-30611a169996.png"
+        ),
+        "crustacean-pagurus" to listOf(
+            "$Q/5e9cdca1-1f5e-4aa0-9db7-7085f8c89b6c.png",
+            "$Q/99899e52-c592-4ed8-8914-74c28da4b76e.png",
+            "$Q/bfa8a280-16ec-4c0e-83f1-013927b9c650.png"
+        ),
+        "gastropod-gyrodes" to listOf(
+            "$Q/dd88f9b5-3eaf-4e78-899d-e987acc01a54.png",
+            "$Q/f65fda64-fb63-47b0-8943-f04259913ebf.png",
+            "$Q/1f7c396e-a77c-4d2b-b296-80c48df3ed92.png"
+        ),
+        "echinoid-loriolia" to listOf(
+            "$Q/9137285a-9e77-406e-963d-a939784f5ec5.png",
+            "$Q/db7d6542-9511-4336-a7df-cb2875388daf.png",
+            "$Q/535cab95-4ddc-4480-a55a-590a383c684a.png"
+        ),
+        "mussel-lima" to listOf(
+            "$Q/5eccdad6-ffa4-47b6-a4bb-21b4f36a74ac.png",
+            "$Q/544a40d1-474f-4615-bfc1-cbce60e190fb.png",
+            "$Q/d67a5658-2396-44d4-b746-7a02429cb2d8.png"
+        ),
+        "echinoid-salenia" to listOf(
+            "$Q/ae4e9b4d-041a-4a5f-9c00-2ed6b2328e82.png",
+            "$Q/76b7d0a5-5f92-4485-a685-2788740b7737.png",
+            "$Q/80829d1f-1a41-455c-ada1-e8edd4752edf.png"
+        ),
+        "coral-unidentified" to listOf(
+            "$Q/9a68b12f-aaa7-40d1-a40b-9639a2ca61f8.png",
+            "$Q/6c296a99-ddee-45e9-a245-04d176339b1d.png",
+            "$Q/b1fa40c5-a9cd-45a7-add8-d92ceaf4e4c9.png"
+        ),
+        "gastropod-anchura" to listOf(
+            "$Q/13beefb0-6e23-4d27-9cdf-4a6602bccbc3.png",
+            "$Q/c7176d13-0812-4d47-9c04-3b6bfe5a1ffb.png",
+            "$Q/9c2a1365-1c35-488b-95dc-66c45bd14789.png"
+        ),
+        "oyster-ilymatogyra" to listOf(
+            "$Q/a9a03446-5b71-4cf1-aa61-93fb2486f916.png",
+            "$Q/ff6f67b2-4687-463f-aeb8-44c3cddd5f89.png",
+            "$Q/0f74abcb-0fc9-4e09-8058-094c350a1369.png"
+        ),
+        "gastropod-turritella" to listOf(
+            "$Q/de797ca7-6474-4eea-80ac-d24e1646da04.png",
+            "$Q/7bd91c09-6fba-49fc-863e-fe2c78e0074d.png",
+            "$Q/71b700ba-2fd5-49d8-90ff-65df887d825b.png"
+        ),
+        "coral-parasmilia" to listOf(
+            "$Q/9e6ff991-d4b8-437d-8b87-07906217571f.png",
+            "$Q/949654af-3b5e-48c9-ba8b-c7336c6eeed2.png",
+            "$Q/9063ad23-17fd-4781-8c37-99961cc5cf4a.png"
+        ),
+        "gastropod-nerinia" to listOf(
+            "$Q/f229638f-9021-4961-bfd5-13f4088d0a85.png",
+            "$Q/86854357-1e82-4427-acd2-e8693d72c36f.png",
+            "$Q/594dc8b6-0a6a-4179-883a-48148c48f746.png"
+        ),
+        "bivalve-pterotrigonia" to listOf(
+            "$Q/93098f5c-a8c6-4946-9194-e3a6fcd8a413.png",
+            "$Q/fd34de8f-7853-4383-8c51-300b9ad0125d.png",
+            "$Q/b4613402-c7ab-45c5-b90c-d2f608a6d28f.png"
+        ),
+        "ammonite-baculites" to listOf(
+            "$Q/7242fb0c-ccfc-4447-8b67-6acf2f3c89f1.png",
+            "$Q/551dc89d-7cb9-4c72-93de-bdf156cbae48.png",
+            "$Q/5599a27a-97c6-44fe-b7e7-cb26a3d5a9be.png"
+        ),
+        "echinoid-coenholectypus" to listOf(
+            "$Q/a8c52740-6a41-408d-9eb6-605415566096.png",
+            "$Q/6ca9bc83-81f2-402e-82b4-7bd2a9330675.png",
+            "$Q/e2f7a9ad-d312-48a4-8732-0f7a03452306.png"
+        ),
+        "bivalve-protocardia" to listOf(
+            "$Q/a7022395-011c-4928-93ed-5ec19a251624.png",
+            "$Q/0d729e12-ce6e-459e-95be-3b1717eada21.png",
+            "$Q/f0f1517b-f0ab-4a59-8401-3504b5362c13.png"
+        ),
+        "echinoid-pilotoxaster" to listOf(
+            "$Q/341d97dd-d872-46e1-ba66-236b9aa0d8cc.png",
+            "$Q/0181c45d-9a0e-43bc-b48f-73b37c6ef10d.png",
+            "$Q/ed6b1359-1c23-4d8b-8834-60d816d0ab63.png"
+        ),
+        "echinoid-phymosoma" to listOf(
+            "$Q/897bc405-6f6f-4aa2-b388-188b0e5f506f.png",
+            "$Q/ac27aad8-de06-446c-9622-defe81f19513.png",
+            "$Q/fbc476fd-d36f-423a-8e20-28598b0d0b06.png"
+        ),
+        "bivalve-pectin" to listOf(
+            "$Q/756a46ea-c4f2-4722-b024-bd37f69a9566.png",
+            "$Q/6518bbf0-6773-4d76-b7ab-4af5c2a7a0f9.png",
+            "$Q/0d15af06-d69e-4963-a6f0-80ec8b9a9ab3.png"
+        ),
+        "bivalve-rudist" to listOf(
+            "$Q/1d32a684-29ac-448a-add3-9d535658669e.png",
+            "$Q/021dc509-ccbc-41ee-b6ab-13772a962393.png",
+            "$Q/bf148440-b716-4c33-874e-18ebcb6287ec.png"
+        ),
+        "echinoid-heteraster" to listOf(
+            "$Q/3b2ad85c-4444-4a4f-86fe-9ae78a2623f5.png",
+            "$Q/e8475608-a95d-43e5-ae03-d61aad9a61ec.png",
+            "$Q/1cc5e4d3-ce3a-4ade-9e68-6ddf400c79eb.png"
+        ),
+        "oyster-pycnodonte" to listOf(
+            "$Q/70b86adb-e18a-4837-a818-c936d54ff741.png",
+            "$Q/e9b1cab9-ffcf-4b58-97f5-d368b2027a5c.png",
+            "$Q/7219cb66-5433-4dc5-a4ca-ab1c63f0a3c4.png"
+        ),
+        "ammonite-engonoceras" to listOf(
+            "$Q/ab9d9d94-7e75-4f29-aa49-3ea121ddfa2b.png",
+            "$Q/21e462f8-a958-4958-bd67-664b35fa06a6.png",
+            "$Q/d538a165-1cc4-4a27-b120-a1f3c02e9f6b.png"
+        ),
+        "oyster-ostrea" to listOf(
+            "$Q/5ad389ad-567f-4f2a-991a-21b22da985e3.png",
+            "$Q/cef63370-8981-4a31-90c5-30f91259e505.png",
+            "$Q/5476d7c2-f50e-40b1-bdc6-6ea8b7f59f5e.png"
+        ),
+        "ammonite-budaiceras" to listOf(
+            "$Q/dd8fd508-0202-42c8-86fd-4b5d70ff8050.png",
+            "$Q/8fb01634-e6f7-4674-9662-3dc992d68f4d.png",
+            "$Q/d1c12a92-9d79-4265-8ac2-8ebf8f4fc4a3.png"
+        ),
+        "oyster-texigryphaea" to listOf(
+            "$Q/99a60522-97d3-4da8-83b9-53d67f146606.png",
+            "$Q/fbc94a83-4884-4ca8-a8bf-b7c11b4171e1.png",
+            "$Q/8d9c15a0-3e0f-4475-b9dc-11bda0e2d59c.png"
+        ),
+        "gastropod-leptomaria" to listOf(
+            "$Q/697d8366-b716-4773-a8ef-f50f88626ca2.png",
+            "$Q/7ffb17cc-ccbe-402f-985e-d7e5ded03d28.png",
+            "$Q/e32fd2c0-334b-4388-88f8-226b73cd4770.png"
+        ),
+        "gastropod-tylostoma" to listOf(
+            "$Q/9dad5fa5-512b-4458-adb2-8b63e5fc94a7.png",
+            "$Q/e16b07ab-2ebd-4b49-b6e5-8bd13617ac13.png",
+            "$Q/067fe26e-e3e3-40e9-9a1e-d8ba789d1008.png"
+        ),
+        "clam-cyprimeria" to listOf(
+            "$Q/8ed3dc5c-e51e-47df-9258-ae80f379c94a.png",
+            "$Q/e11f004b-7902-455e-b75a-fa1a3f4d421f.png",
+            "$Q/d7da7282-ba08-46ee-beed-096a583d4932.png"
+        ),
+        "nautiloid-cymatoceras" to listOf(
+            "$Q/6ed4eb88-b1ce-40e6-a7e6-557ba2815bee.png",
+            "$Q/986dd01e-667b-43b9-b4c6-ed8cd2b243f3.png",
+            "$Q/f5db69bd-32df-44f1-bd2d-6c8fd7d52ba2.png"
+        ),
+        "oyster-ceratostreon" to listOf(
+            "$Q/dfa56684-2280-4e14-8301-61ab113feef6.png",
+            "$Q/1de5338f-5ef5-4c0c-b972-307f80bf1cbd.png",
+            "$Q/9848e774-b0f1-4764-b9fe-5a494f745d96.png"
+        ),
+        "clam-inoceramus" to listOf(
+            "$Q/186e940b-1b40-44c1-8d13-870a53aeff78.png",
+            "$Q/dc614748-4fee-481d-a503-c97c08f3aca1.png",
+            "$Q/baa4da40-bdf8-43f8-b74d-c262e3df49ec.png"
+        ),
+        "ammonite-turrilites" to listOf(
+            "$Q/d568e051-2ec9-4785-81ce-65dfb5db711a.png",
+            "$Q/2bb55095-9e07-42ff-9c78-2e4a7008d38a.png",
+            "$Q/f72ac4d7-fe99-4f33-8f84-c37680a10608.png"
+        ),
+        "gastropod-lunatia" to listOf(
+            "$Q/c8dc8188-24e1-43d3-96a9-9468d2b6c89c.png",
+            "$Q/963f8ce0-5168-4dd1-afdd-b6ab6621b871.png",
+            "$Q/134eb7ea-d760-449f-9dad-64a442067269.png"
+        ),
+        "clam-artica" to listOf(
+            "$Q/a663efde-68c7-46cf-a9fe-6205d2965a6f.png",
+            "$Q/607fecc9-9062-49dd-b22b-1b75567ea9ec.png",
+            "$Q/021cc2dc-805d-452b-ac64-44780615c1c4.png"
+        ),
+        "oyster-exogyra" to listOf(
+            "$Q/e3fd6f8b-324f-4a94-80cd-e471439118cd.png",
+            "$Q/5e28185c-8dd1-45dc-a977-72e9f083f355.png",
+            "$Q/a11216bf-f580-4cdc-aa60-45a0d57f8551.png"
+        )
+    ) }
+
     val urls: Map<String, List<String>> by lazy {
         try {
-            urlChunk1 + urlChunk2 + urlChunk3 + urlChunk4 + urlChunk5 + urlChunk6 + urlChunk7 + urlChunk8
+            urlChunk1 + urlChunk2 + urlChunk3 + urlChunk4 + urlChunk5 + urlChunk6 + urlChunk7 + urlChunk8 + urlChunk9
         } catch (e: Throwable) {
             Log.e("SpecimenImages", "Failed to build urls map", e)
             emptyMap()
