@@ -553,7 +553,7 @@ fun SocialSettingsScreen(
                 icon = Icons.Filled.Storage,
                 title = if (isMaxCache) "Maximum cache (2GB)" else "Standard cache (150MB)",
                 helper = if (isMaxCache)
-                    "Stores up to 2GB of specimen photos, satellite tiles, trip route caches, and location downloads — enough for all 2,800+ specimen images, every dig site map, and cached trip areas. Great for offline field trips."
+                    "Stores up to 2GB of recently viewed specimen photos, satellite tiles, trip route caches, and location downloads. Older items are cleared automatically when the cap is reached to make room for new ones."
                 else "Stores up to 150MB of recently viewed images and map tiles. Automatically manages itself — older items are removed as new ones come in.",
                 accent = if (isMaxCache) Citrine else TextLow,
                 checked = isMaxCache,
@@ -657,7 +657,7 @@ fun SocialSettingsScreen(
                     fontWeight = FontWeight.SemiBold,
                 )
                 Text(
-                    "Stores all 2,800+ specimen photos, satellite maps for every dig site, cached trip route areas, and location downloads on your device. Every image loads instantly with no signal. Ideal for rockhounds who hunt off-grid or browse the full catalog frequently.",
+                    "Caches up to 2GB of specimen photos, satellite maps, trip route areas, and location downloads. Older items are cleared automatically when the cap is reached, so it does not keep every image permanently. Good for heavier off-grid use without downloading the full 4GB library.",
                     style = MaterialTheme.typography.bodySmall,
                     color = TextMid,
                 )
