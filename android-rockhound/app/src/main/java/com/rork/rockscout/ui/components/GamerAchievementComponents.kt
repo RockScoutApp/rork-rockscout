@@ -208,7 +208,7 @@ fun GamerStreakCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(100.dp)
+            .height(116.dp)
             .sculpted(shape = shape, accent = if (active) Aqua else StoneLine, shadowElevation = 6.dp)
             .clip(shape)
             .background(
@@ -304,7 +304,7 @@ fun GamerStreakCard(
                 )
             }
             Spacer(Modifier.width(14.dp))
-            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     "DAILY STREAK",
                     style = MaterialTheme.typography.labelMedium,
