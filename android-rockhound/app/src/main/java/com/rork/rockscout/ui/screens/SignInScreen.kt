@@ -78,6 +78,9 @@ import kotlinx.coroutines.launch
 import com.rork.rockscout.ui.components.noAutoFocus
 import com.rork.rockscout.ui.components.SculptedIconButton
 import androidx.compose.material.icons.filled.CardGiftcard
+import androidx.compose.material.icons.filled.Mail
+import com.rork.rockscout.ui.theme.Danger
+import kotlinx.coroutines.delay
 
 /**
  * Self-contained RockScout sign-in / create-account screen. Primary path is
@@ -113,6 +116,16 @@ fun SignInScreen(
     var localError by remember { mutableStateOf<String?>(null) }
     var infoMessage by remember { mutableStateOf<String?>(null) }
 
+    // ─── Email verification state ───
+    var verificationCode by remember { mutableStateOf("") }
+    var resendCooldown by remember { mutableStateOf(0) }
+    var isVerifying by remember { mutableStateOf(false) }
+    var isResending by remember { mutableStateOf(false) }
+    var verifyError by remember { mutableStateOf<String?>(null) }
+    var verifyInfo by remember { mutableStateOf<String?>(null) }
+    val pendingEmail = auth.pendingVerificationEmail
+    val isPendingVerification = sessionStatus is SessionStatus.PendingVerification
+
     // Referral code entry — shown as a collapsible field on the sign-in screen.
     // The user enters the code BEFORE signing in; it is stored locally and
     // processed after sign-in completes (verified against the backend, free
@@ -121,6 +134,14 @@ fun SignInScreen(
     val referralCodeApplied by ReferralRepository.referralCodeApplied.collectAsStateWithLifecycle()
     var showReferralField by remember { mutableStateOf(false) }
     var referralCode by remember { mutableStateOf("") }
+
+    // Cooldown timer for resend button — ticks down every second.
+    LaunchedEffect(resendCooldown) {
+        if (resendCooldown > 0) {
+            delay(1000)
+            resendCooldown = resendCooldown - 1
+        }
+    }
 
     // Auto-dismiss on a successful authenticated session.
     // Before dismissing, process any pending referral code.
@@ -133,6 +154,12 @@ fun SignInScreen(
                 ReferralRepository.setPendingReferralCode(trimmed)
             }
             onSignedIn()
+        }
+        // Reset verification state when leaving pending state.
+        if (sessionStatus !is SessionStatus.PendingVerification) {
+            verificationCode = ""
+            verifyError = null
+            verifyInfo = null
         }
     }
 
@@ -219,6 +246,7 @@ fun SignInScreen(
             )
             Spacer(Modifier.height(28.dp))
 
+            if (!isPendingVerification) {
             // Email
             OutlinedTextField(
                 value = email,
@@ -414,53 +442,256 @@ fun SignInScreen(
                     )
                 }
             }
-
-            Spacer(Modifier.height(28.dp))
-
-            // Divider
-            Text(
-                text = "or",
-                color = TextMid,
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Spacer(Modifier.height(16.dp))
+            } // end if (!isPendingVerification) — form fields + referral
 
             // Google (secondary) — native Supabase Auth doesn't ship OAuth in-app
             // without a browser deep-link yet, so this is shown as a disabled
             // "coming soon" path. Email/password is the primary supported flow.
-            OutlinedButton(
-                onClick = { /* TODO: wire Google OAuth via deep-link */ },
-                enabled = false,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = TextMid,
-                ),
-            ) {
-                Text("Sign in with Google (coming soon)")
-            }
+            if (!isPendingVerification) {
+                Spacer(Modifier.height(28.dp))
 
-            Spacer(Modifier.height(24.dp))
-            Text(
-                text = "Made by a rockhounder, for rockhounders",
-                style = MaterialTheme.typography.bodySmall,
-                color = TextMid,
-                textAlign = TextAlign.Center,
-            )
-            // Back button only shown in non-gate mode — in gate mode there's
-            // nothing to go back to.
-            if (!isGate) {
+                // Divider
+                Text(
+                    text = "or",
+                    color = TextMid,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+                Spacer(Modifier.height(16.dp))
+
+                OutlinedButton(
+                    onClick = { /* TODO: wire Google OAuth via deep-link */ },
+                    enabled = false,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = TextMid,
+                    ),
+                ) {
+                    Text("Sign in with Google (coming soon)")
+                }
+
+                Spacer(Modifier.height(24.dp))
+                Text(
+                    text = "Made by a rockhounder, for rockhounders",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextMid,
+                    textAlign = TextAlign.Center,
+                )
+                // Back button only shown in non-gate mode — in gate mode there's
+                // nothing to go back to.
+                if (!isGate) {
+                    Spacer(Modifier.height(8.dp))
+                    TextButton(onClick = onBack) {
+                        Text(
+                            text = "Back",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = CitrineDeep,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
+            } else {
+                // ─── Email Verification Panel ───
+                // Shown when sessionStatus is PendingVerification. The user
+                // must enter the 6-digit code emailed to them before they can
+                // access the app.
                 Spacer(Modifier.height(8.dp))
-                TextButton(onClick = onBack) {
+                Text(
+                    text = "Verify your email",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TextHigh,
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "We sent a 6-digit code to",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextMid,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text = pendingEmail ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Citrine,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(Modifier.height(24.dp))
+
+                // Code input — single styled field, numeric keyboard, 6 digits
+                OutlinedTextField(
+                    value = verificationCode,
+                    onValueChange = {
+                        val filtered = it.filter { c -> c.isDigit() }.take(6)
+                        verificationCode = filtered
+                        verifyError = null
+                    },
+                    label = { Text("6-digit code") },
+                    leadingIcon = { Icon(Icons.Filled.Mail, contentDescription = null) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                    modifier = Modifier.fillMaxWidth().noAutoFocus(),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Slate800,
+                        unfocusedContainerColor = Slate800,
+                        focusedIndicatorColor = Citrine,
+                        unfocusedIndicatorColor = StoneLine,
+                        focusedLabelColor = CitrineDeep,
+                        unfocusedLabelColor = TextMid,
+                        focusedTextColor = TextHigh,
+                        unfocusedTextColor = TextHigh,
+                    ),
+                )
+
+                Spacer(Modifier.height(8.dp))
+                val vErr = verifyError
+                if (vErr != null) {
                     Text(
-                        text = "Back",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = CitrineDeep,
-                        fontWeight = FontWeight.SemiBold,
+                        text = vErr,
+                        color = Danger,
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
+                val vInfo = verifyInfo
+                if (vInfo != null) {
+                    Text(
+                        text = vInfo,
+                        color = Aqua,
+                        style = MaterialTheme.typography.bodySmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+
+                Spacer(Modifier.height(16.dp))
+                // Verify button
+                Button(
+                    onClick = {
+                        if (verificationCode.length != 6) {
+                            verifyError = "Please enter the full 6-digit code."
+                            return@Button
+                        }
+                        isVerifying = true
+                        verifyError = null
+                        verifyInfo = null
+                        scope.launch {
+                            auth.completeVerification(verificationCode)
+                                .onSuccess {
+                                    // LaunchedEffect(sessionStatus) will pick up
+                                    // Authenticated and dismiss the screen.
+                                }
+                                .onFailure { e ->
+                                    verifyError = e.message ?: "Verification failed"
+                                }
+                            isVerifying = false
+                        }
+                    },
+                    enabled = !isVerifying && verificationCode.length == 6,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Citrine,
+                        contentColor = Ink,
+                    ),
+                ) {
+                    if (isVerifying) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(22.dp),
+                            strokeWidth = 2.dp,
+                            color = Ink,
+                        )
+                    } else {
+                        Text(
+                            text = "Verify email",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp,
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(16.dp))
+                // Resend code button with cooldown
+                TextButton(
+                    onClick = {
+                        if (resendCooldown == 0 && !isResending) {
+                            isResending = true
+                            verifyError = null
+                            verifyInfo = null
+                            scope.launch {
+                                auth.resendVerificationCode()
+                                    .onSuccess {
+                                        verifyInfo = "New code sent! Check your email."
+                                        resendCooldown = 60
+                                    }
+                                    .onFailure { e ->
+                                        verifyError = e.message ?: "Failed to resend code"
+                                    }
+                                isResending = false
+                            }
+                        }
+                    },
+                    enabled = resendCooldown == 0 && !isResending,
+                ) {
+                    if (isResending) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = CitrineDeep,
+                        )
+                    } else if (resendCooldown > 0) {
+                        Text(
+                            text = "Resend code in ${resendCooldown}s",
+                            color = TextLow,
+                            fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    } else {
+                        Text(
+                            text = "Resend code",
+                            color = CitrineDeep,
+                            fontWeight = FontWeight.SemiBold,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(8.dp))
+                // Use a different email — cancels the pending verification
+                // and removes the unverified account.
+                TextButton(
+                    onClick = {
+                        scope.launch {
+                            auth.cancelPendingVerification()
+                        }
+                        verificationCode = ""
+                        verifyError = null
+                        verifyInfo = null
+                        password = ""
+                        confirmPassword = ""
+                        isSignUp = true
+                    },
+                ) {
+                    Text(
+                        text = "Use a different email",
+                        color = TextMid,
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+
+                Spacer(Modifier.height(24.dp))
+                Text(
+                    text = "Made by a rockhounder, for rockhounders",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextMid,
+                    textAlign = TextAlign.Center,
+                )
             }
         }
     }

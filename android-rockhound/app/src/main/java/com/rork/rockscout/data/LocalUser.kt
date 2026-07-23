@@ -31,6 +31,7 @@ data class LocalUser(
     val collection_ids: List<String> = emptyList(),
     val wishlist_ids: List<String> = emptyList(),
     val favorite_spot_ids: List<String> = emptyList(),
+    val email_verified: Boolean = true,
 ) {
     /** Convert to the HunterProfile shape used by scan results + friend lists. */
     fun toHunterProfile(): SocialRepository.HunterProfile = SocialRepository.HunterProfile(

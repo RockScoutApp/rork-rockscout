@@ -8,6 +8,7 @@ import { handleReferral } from "./referral";
 import { handleTrial } from "./trial";
 import { handleDevSmsVerify } from "./dev-sms-verify";
 import { handleDeleteAccount } from "./delete-account";
+import { handleEmailVerification } from "./email-verification";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -71,6 +72,14 @@ export default {
           TWILIO_AUTH_TOKEN?: string;
           TWILIO_PHONE_FROM?: string;
         },
+        CORS,
+      );
+    }
+
+    if (url.pathname === "/email-verification" && request.method === "POST") {
+      return handleEmailVerification(
+        request,
+        env as unknown as { RESEND_API_KEY?: string },
         CORS,
       );
     }

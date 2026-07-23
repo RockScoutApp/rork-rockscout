@@ -18,6 +18,9 @@ sealed class SessionStatus {
     data object Initializing : SessionStatus()
     /** Session is being refreshed (no-op in local mode). */
     data class Refreshing(val session: Session) : SessionStatus()
+    /** Account created but email not yet verified. The user must enter the
+     *  6-digit code sent to [email] before gaining access. */
+    data class PendingVerification(val email: String, val userId: String) : SessionStatus()
 }
 
 /** Local session containing the signed-in user's info. */
