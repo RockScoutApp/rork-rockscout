@@ -1908,21 +1908,21 @@ private fun specimenRarityColor(rarity: String): Color {
     }
 }
 
-/** A single zoomable photo used by [FullScreenImageViewer]. Handles pinch-to-zoom,
- *  pan, and long-press-to-save in a single gesture detector so the gestures don't
- *  compete with each other. The tap-to-dismiss / tap-to-reset behaviour is handled
- *  by the caller's outer Box so it only fires on the background, not on the image.
- *  Pinch is the only zoom gesture — double-tap-to-zoom is intentionally omitted so
- *  users inspect textures deliberately with two fingers. */
+/** A single zoomable photo used by [FullScreenImageViewer] and
+ *  [StandaloneZoomableImageViewer]. Handles pinch-to-zoom, pan, tap-to-dismiss,
+ *  tap-to-reset, and long-press-to-save.
+ *
+ *  State (scale, offset) is kept internally so the gesture lambdas always read
+ *  live values — passing scale as a parameter would capture a stale 1f inside
+ *  the pointerInput coroutine, breaking pinch-zoom and pan.
+ *
+ *  Pinch is the only zoom gesture — double-tap-to-zoom is intentionally omitted
+ *  so users inspect textures deliberately with two fingers. */
 @Composable
 private fun ZoomablePhoto(
     url: String,
     contentDescription: String,
-    scale: Float,
-    offsetX: Float,
-    offsetY: Float,
-    onScaleChange: (Float) -> Unit,
-    onPanChange: (Float, Float) -> Unit,
+    onDismiss: () -> Unit,
     onLongPress: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -1934,24 +1934,38 @@ private fun ZoomablePhoto(
             .build()
     }
     val painter = rememberAsyncImagePainter(request)
+
+    var scale by remember { mutableFloatStateOf(1f) }
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    var offsetY by remember { mutableFloatStateOf(0f) }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .pointerInput(Unit) {
-                detectTransformGestures { _, pan, zoom, _ ->
-                    val newScale = (scale * zoom).coerceIn(1f, 6f)
-                    if (newScale > 1f) {
-                        onScaleChange(newScale)
-                        onPanChange(pan.x, pan.y)
-                    } else {
-                        onScaleChange(1f)
-                    }
-                }
-            }
-            .pointerInput(Unit) {
                 detectTapGestures(
+                    onTap = {
+                        if (scale > 1f) {
+                            scale = 1f
+                            offsetX = 0f
+                            offsetY = 0f
+                        } else onDismiss()
+                    },
                     onLongPress = { onLongPress() },
                 )
+            }
+            .pointerInput(Unit) {
+                detectTransformGestures { _, pan, zoom, _ ->
+                    val newScale = (scale * zoom).coerceIn(1f, 6f)
+                    scale = newScale
+                    if (newScale > 1f) {
+                        offsetX += pan.x
+                        offsetY += pan.y
+                    } else {
+                        offsetX = 0f
+                        offsetY = 0f
+                    }
+                }
             },
         contentAlignment = Alignment.Center,
     ) {
@@ -2004,9 +2018,6 @@ fun FullScreenImageViewer(
 
     val selectedUrl = imageUrls.getOrNull(initialPage.coerceIn(0, imageUrls.lastIndex)) ?: imageUrls.first()
 
-    var currentScale by remember { mutableFloatStateOf(1f) }
-    var offsetX by remember { mutableFloatStateOf(0f) }
-    var offsetY by remember { mutableFloatStateOf(0f) }
     var longPressSaveUrl by remember { mutableStateOf<String?>(null) }
 
     Dialog(
@@ -2020,39 +2031,12 @@ fun FullScreenImageViewer(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.95f))
-                // Single tap: zoom out if zoomed in, otherwise dismiss. Only wire up
-                // tap here when the image is at scale 1f so it doesn't compete with
-                // the pan/zoom gesture detector on the image itself.
-                .pointerInput(currentScale) {
-                    detectTapGestures(
-                        onTap = {
-                            if (currentScale > 1f) {
-                                currentScale = 1f
-                                offsetX = 0f
-                                offsetY = 0f
-                            } else onDismiss()
-                        },
-                    )
-                },
+                .background(Color.Black.copy(alpha = 0.95f)),
         ) {
             ZoomablePhoto(
                 url = selectedUrl,
                 contentDescription = "Specimen photo",
-                scale = currentScale,
-                offsetX = offsetX,
-                offsetY = offsetY,
-                onScaleChange = { newScale ->
-                    currentScale = newScale
-                    if (newScale <= 1f) {
-                        offsetX = 0f
-                        offsetY = 0f
-                    }
-                },
-                onPanChange = { dx, dy ->
-                    offsetX += dx
-                    offsetY += dy
-                },
+                onDismiss = onDismiss,
                 onLongPress = { longPressSaveUrl = selectedUrl },
             )
 
@@ -2110,9 +2094,6 @@ fun StandaloneZoomableImageViewer(
 ) {
     if (imageUrl.isBlank()) return
 
-    var scale by remember { mutableFloatStateOf(1f) }
-    var offsetX by remember { mutableFloatStateOf(0f) }
-    var offsetY by remember { mutableFloatStateOf(0f) }
     var longPressSaveUrl by remember { mutableStateOf<String?>(null) }
 
     Dialog(
@@ -2126,36 +2107,12 @@ fun StandaloneZoomableImageViewer(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.95f))
-                .pointerInput(scale) {
-                    detectTapGestures(
-                        onTap = {
-                            if (scale > 1f) {
-                                scale = 1f
-                                offsetX = 0f
-                                offsetY = 0f
-                            } else onDismiss()
-                        },
-                    )
-                },
+                .background(Color.Black.copy(alpha = 0.95f)),
         ) {
             ZoomablePhoto(
                 url = imageUrl,
                 contentDescription = "Specimen photo",
-                scale = scale,
-                offsetX = offsetX,
-                offsetY = offsetY,
-                onScaleChange = { newScale ->
-                    scale = newScale
-                    if (newScale <= 1f) {
-                        offsetX = 0f
-                        offsetY = 0f
-                    }
-                },
-                onPanChange = { dx, dy ->
-                    offsetX += dx
-                    offsetY += dy
-                },
+                onDismiss = onDismiss,
                 onLongPress = { longPressSaveUrl = imageUrl },
             )
 
