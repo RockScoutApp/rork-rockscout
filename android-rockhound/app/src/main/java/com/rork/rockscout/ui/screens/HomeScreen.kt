@@ -1007,7 +1007,7 @@ private fun HomeTagline(
                 onClick = onHowToUseClick,
                 modifier = Modifier.weight(1f),
             )
-            LegalPillButton(
+            com.rork.rockscout.ui.components.LegalPillButton(
                 onClick = onLegalClick,
                 modifier = Modifier.weight(1f),
             )
@@ -3982,44 +3982,6 @@ private fun ContactUsPillButton(
             style = MaterialTheme.typography.labelLarge.copy(
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF7CB5EC),
-            ),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
-
-@Composable
-private fun LegalPillButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = modifier
-            .sculpted(
-                shape = RoundedCornerShape(16.dp),
-                accent = Citrine,
-                shadowElevation = 5.dp,
-                onClick = onClick,
-            )
-            .clip(RoundedCornerShape(16.dp))
-            .background(Slate900.copy(alpha = 0.75f))
-            .glowingBorder(2.dp, Citrine, RoundedCornerShape(16.dp))
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Gavel,
-            contentDescription = null,
-            tint = Citrine,
-            modifier = Modifier.size(18.dp),
-        )
-        Text(
-            text = "Legal",
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = FontWeight.Bold,
-                color = Citrine,
             ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

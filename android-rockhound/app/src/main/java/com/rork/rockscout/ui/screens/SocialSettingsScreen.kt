@@ -78,6 +78,7 @@ import com.rork.rockscout.data.StorageUsageCalculator
 import com.rork.rockscout.data.WorkScheduler
 import com.rork.rockscout.data.SeedData
 import com.rork.rockscout.ui.components.BulkDownloadCard
+import com.rork.rockscout.ui.components.LegalPillButton
 import com.rork.rockscout.ui.components.DeleteConfirmDialog
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.SculptedOutlinedButton
@@ -160,7 +161,15 @@ fun SocialSettingsScreen(
         pendingNotifToggle = null
     }
 
-    ScreenScaffold(title = "Social Settings", onBack = { navController.popBackStack() }) {
+    ScreenScaffold(
+        title = "Social Settings",
+        onBack = { navController.popBackStack() },
+        actions = {
+            LegalPillButton(
+                onClick = { navController.navigate(Routes.disclaimer(isGate = false)) },
+            )
+        },
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()

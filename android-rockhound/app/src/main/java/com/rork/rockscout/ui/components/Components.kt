@@ -42,6 +42,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Checkbox
@@ -720,6 +721,45 @@ fun ScreenScaffold(
                 content()
             }
         }
+    }
+}
+
+/** Compact Legal pill button used in screen headers to open the disclaimer. */
+@Composable
+fun LegalPillButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier
+            .sculpted(
+                shape = RoundedCornerShape(16.dp),
+                accent = Citrine,
+                shadowElevation = 5.dp,
+                onClick = onClick,
+            )
+            .clip(RoundedCornerShape(16.dp))
+            .background(Slate900.copy(alpha = 0.75f))
+            .glowingBorder(2.dp, Citrine, RoundedCornerShape(16.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Gavel,
+            contentDescription = null,
+            tint = Citrine,
+            modifier = Modifier.size(18.dp),
+        )
+        Text(
+            text = "Legal",
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontWeight = FontWeight.Bold,
+                color = Citrine,
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
