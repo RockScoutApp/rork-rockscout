@@ -271,6 +271,8 @@ class RockScoutApplication : Application() {
             MobileAds.initialize(this) {}
             MobileAds.setRequestConfiguration(
                 RequestConfiguration.Builder()
+                    .setTagForChildDirectedTreatment(RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_UNSPECIFIED)
+                    .setMaxAdContentRating(RequestConfiguration.MAX_AD_CONTENT_RATING_G)
                     .build()
             )
         }
