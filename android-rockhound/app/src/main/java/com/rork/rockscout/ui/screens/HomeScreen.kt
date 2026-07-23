@@ -602,7 +602,7 @@ fun HomeScreen(navController: NavController) {
                     label = "Gear Guide",
                     subtitle = "Curated kits for every level — from first hunt to advanced field collecting",
                     icon = Icons.Filled.Diamond,
-                    accent = Citrine,
+                    accent = Aqua,
                     imageUrl = "https://r2-pub.rork.com/attachments/78k8yy4tgahby3o9opb6j.png",
                     onClick = { navController.navigate(Routes.GEAR_GUIDE) },
                 )
