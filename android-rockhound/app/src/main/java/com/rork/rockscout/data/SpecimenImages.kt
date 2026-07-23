@@ -57,6 +57,10 @@ object SpecimenImages {
     private const val IMG_BERYL_MORGANITE = "$Q/db363b38-3d97-4bda-8dc2-d04c8d60e447.png"
     private const val IMG_BERYL_HELIODOR = "$Q/db4f4b53-478c-4b5e-a821-fe3057f62e1d.png"
     private const val IMG_BERYL_GOSHENITE = "$Q/d372a6d3-98e3-4b2a-ae89-c9919bd73881.png"
+    private const val IMG_BERYL_HELIODOR_WILD = "$Q/3d8590ac-2bb8-46e8-bb24-39631149cb20.png"
+    private const val IMG_BERYL_HELIODOR_MUSEUM = "$Q/f665052d-5ef4-47a7-8e22-f88c16a93941.png"
+    private const val IMG_BERYL_MORGANITE_WILD = "$Q/52b94fa9-e14d-48f5-a2c3-f90e2fb9c3c9.png"
+    private const val IMG_BERYL_MORGANITE_MUSEUM = "$Q/30ee6a70-6102-45d4-8448-1fdc5a52d5b9.png"
     private const val IMG_BERYL = "$Q/85ebf0e0-32d1-4916-9422-08d064c008c7.png"
     private const val IMG_BISMUTH_CRYSTAL = "$Q/f876baa4-cb5e-4734-9a7e-ffdc9c356aa9.png"
     private const val IMG_BIVALVE_FOSSIL = "$Q/b6b9b5ff-7271-452e-a48b-4936627e5345.png"
@@ -1504,6 +1508,9 @@ object SpecimenImages {
     private const val IMG_CELESTINE_WILD = "$Q/9e2e13da-f4f5-43d0-84ab-6f93a4d802a4.png"
     private const val IMG_CELESTINE_MUSEUM = "$Q/433adae3-3cb4-4aa9-8017-5f5279be071e.png"
     private const val IMG_CELESTINE_CABOCHON = "$Q/094bd0bc-253e-4649-8fd5-4bae144ef45b.png"
+    private const val IMG_CELESTINE_BLUE_ROUGH = "$Q/1f217af7-e1fb-49ae-848b-4ca07361cfc8.png"
+    private const val IMG_CELESTINE_BLUE_WILD = "$Q/eaa6b458-d06f-4871-83af-4d7b0a1898a9.png"
+    private const val IMG_CELESTINE_BLUE_MUSEUM = "$Q/8d292bd2-3a8c-4cb1-83b1-367fad578419.png"
     private const val IMG_CINNABAR_WILD = "$Q/9f335638-a154-4d4c-83ab-e258c53e5952.png"
     private const val IMG_CINNABAR_MUSEUM = "$Q/3109d07e-4ef9-4d36-9a6c-c7cc5addfe81.png"
     private const val IMG_CINNABAR_CABOCHON = "$Q/1e4612d7-0511-425c-af8c-7e53773693dc.png"
@@ -2796,6 +2803,8 @@ object SpecimenImages {
     private const val IMG_SILTSTONE_SED_MUSEUM = "$Q/0471fed2-92ae-4c30-b0d9-7975a6f2f0eb.png"
     // ── Missing specimen images — generated 2026-07-03 ──
     private const val IMG_CHIASTOLITE = "$Q/b30a9cca-98f7-418d-a550-a7aef377896c.png"
+    private const val IMG_CHIASTOLITE_WILD = "$Q/daf0e907-b377-4dc3-876a-6ca811a10286.png"
+    private const val IMG_CHIASTOLITE_MUSEUM = "$Q/350dd46d-0402-42fb-9534-87d6076d433f.png"
     private const val IMG_CLINOHUMITE = "$Q/d546e9e8-2f89-4984-b977-ff5c5db51e05.png"
     private const val IMG_EOSPHORITE = "$Q/7776b9f0-e049-4f18-bcb3-9aa59fc44efb.png"
     private const val IMG_VERMICULITE = "$Q/42f8a1bc-368a-4cdf-8107-3843eb5db565.png"
@@ -3026,7 +3035,15 @@ object SpecimenImages {
 
     // ── Database overhaul batch 2: garnet, goethite, datolite, peristerite, dolomite, dolostone ──
     private const val IMG_ANDRADITE_NEW = "$Q/21e4d87e-2b99-4fd6-97c5-20bc3bf28a27.png"
+    private const val IMG_ANDRADITE_ROUGH = "$Q/bcd2cd44-86da-4634-b78e-d8c56ef9314d.png"
+    private const val IMG_ANDRADITE_WILD = "$Q/ff86efc6-7c5a-4aea-b583-eaffaf7f9174.png"
+    private const val IMG_ANDRADITE_MUSEUM = "$Q/cb476450-c746-4bcd-ae89-68c11ac8305c.png"
+    private const val IMG_PYROPE_ROUGH = "$Q/db14243d-93a8-4fb7-890d-eda450d6cf18.png"
+    private const val IMG_PYROPE_WILD = "$Q/4b79c055-5586-4551-b449-ae0e6f017484.png"
+    private const val IMG_PYROPE_MUSEUM = "$Q/b8629ed7-5844-4142-9ddf-77a4ab611a5b.png"
     private const val IMG_TSAVORITE_NEW = "$Q/4d3ff41b-db56-481e-bf03-51f77ee3d66c.png"
+    private const val IMG_TSAVORITE_WILD = "$Q/b203d1bb-e316-4381-97d8-a9bdbde791d7.png"
+    private const val IMG_TSAVORITE_MUSEUM = "$Q/d83b5152-dcc3-44a2-952b-ce671a7b35af.png"
     private const val IMG_IRIDESCENT_GOETHITE_NEW = "$Q/06d48f1c-71d4-4ed3-bace-479206496d20.png"
     private const val IMG_DATOLITE_KEWEENAW = "$Q/e483ce5b-266c-46ac-8ee3-cf133e6d3d91.png"
     private const val IMG_DATOLITE_WILD_NEW = "$Q/72fe6871-e93c-44e9-9ee3-5212d8bddac1.png"
@@ -4103,8 +4120,6 @@ object SpecimenImages {
         "igneous-komatiite" to listOf(IMG_KOMATIITE, IMG_IGNEOUS_KOMATIITE_VAR),
         "igneous-pegmatite" to listOf(IMG_PEGMATITE, IMG_IGNEOUS_PEGMATITE_VAR),
         "sedimentary-evaporite" to listOf(IMG_SEDIMENTARY_EVAPORITE_SPECIMEN, IMG_EVAPORITE_HALITE_SPECIMEN, IMG_EVAPORITE_HALITE_MUSEUM),
-        "silicate-lepidolite" to listOf(IMG_LEPIDOLITE, IMG_LEPIDOLITE_SIL_WILD, IMG_LEPIDOLITE_SIL_MUSEUM),
-        "sulfide-cinnabar" to listOf(IMG_CINNABAR, IMG_CINNABAR_SULF_WILD, IMG_CINNABAR_SULF_MUSEUM),
         "industrial-borax" to listOf(IMG_BORAX, IMG_BORAX_VAR, IMG_BORAX_CLUSTER, IMG_INDUSTRIAL_BORAX_VAR),
         "igneous-carbonatite" to listOf(IMG_CARBONATITE, IMG_IGNEOUS_CARBONATITE_VAR),
         "igneous-peridotite-xenolith" to listOf(IMG_IGNEOUS_PERIDOTITE_XENOLITH_VAR, IMG_PERIDOTITE),
@@ -4200,14 +4215,13 @@ object SpecimenImages {
 
     private val urlChunk6: Map<String, List<String>> by lazy { mapOf(
         "barite-rose" to listOf(IMG_BARITE_DESERT_ROSE_NEW, IMG_DESERT_ROSE_WILD, IMG_DESERT_ROSE_MUSEUM),
-        "beryl-heliodor-crystal" to listOf(IMG_BERYL_HELIODOR, IMG_BERYL_WILD, IMG_BERYL_MUSEUM),
-        "beryl-morganite-crystal" to listOf(IMG_BERYL_MORGANITE, IMG_BERYL_WILD, IMG_BERYL_MUSEUM),
+        "beryl-heliodor-crystal" to listOf(IMG_BERYL_HELIODOR, IMG_BERYL_HELIODOR_WILD, IMG_BERYL_HELIODOR_MUSEUM),
+        "beryl-morganite-crystal" to listOf(IMG_BERYL_MORGANITE, IMG_BERYL_MORGANITE_WILD, IMG_BERYL_MORGANITE_MUSEUM),
         "beryl-red-bixbite" to listOf(IMG_RED_BERYL, IMG_RED_BERYL_FACETED, IMG_RED_BERYL_MUSEUM, IMG_RED_BERYL_WILD),
         "bismuth-native" to listOf("$Q/beb4bf8f-32db-4248-ace2-c226c2f8f998.png", "$Q/1d50bd32-0dbf-48e2-a50c-dc20121efb5a.png", "$Q/b16c5435-7c99-4e91-bf18-a09bc291be93.png"),
         "carbonate-magnesite" to listOf(IMG_MAGNESITE, IMG_MAGNESITE_WILD, IMG_MAGNESITE_MUSEUM),
-        "celestine-blue" to listOf(IMG_CELESTINE, IMG_CELESTINE_WILD, IMG_CELESTINE_MUSEUM),
-        "celestite" to listOf(IMG_CELESTINE, IMG_CELESTINE_WILD, IMG_CELESTINE_MUSEUM),
-        "chiastolite" to listOf(IMG_CHIASTOLITE, IMG_ANDALUSITE, IMG_ANDALUSITE_MUSEUM),
+        "celestine-blue" to listOf(IMG_CELESTINE_BLUE_ROUGH, IMG_CELESTINE_BLUE_WILD, IMG_CELESTINE_BLUE_MUSEUM),
+        "chiastolite" to listOf(IMG_CHIASTOLITE, IMG_CHIASTOLITE_WILD, IMG_CHIASTOLITE_MUSEUM),
         "clinohumite" to listOf(IMG_CLINOHUMITE_MUSEUM, IMG_CLINOHUMITE),
         "colemanite-druse" to listOf(IMG_COLEMANITE, IMG_COLEMANITE_WILD, IMG_COLEMANITE_MUSEUM),
         "cordierite-iolite" to listOf(IMG_IOLITE, IMG_IOLITE_WILD, IMG_IOLITE_MUSEUM),
@@ -4216,17 +4230,16 @@ object SpecimenImages {
         "fossil-crinoid-stem" to listOf(IMG_FOSSIL_CRINOID_STEM_REPLICA, IMG_CRINOID_WILD, IMG_CRINOID_MUSEUM),
         "fossil-ichthyosaur-bone" to listOf(IMG_ICHTHYOSAUR_VERTEBRA, IMG_ICHTHYOSAURUS_WILD, IMG_ICHTHYOSAURUS_MUSEUM),
         "garnet-almandine" to listOf(IMG_GARNET_ALMANDINE_SCHIST, IMG_GARNET_ALMANDINE_ROUGH, IMG_GARNET_ALMANDINE_MUSEUM),
-        "garnet-andradite" to listOf(IMG_ANDRADITE_NEW, IMG_GARNET_WILD, IMG_GARNET_MUSEUM),
-        "garnet-pyrope" to listOf(IMG_GARNET, IMG_GARNET_PURPLE, IMG_GARNET_WILD, IMG_GARNET_MUSEUM),
+        "garnet-andradite" to listOf(IMG_ANDRADITE_NEW, IMG_ANDRADITE_ROUGH, IMG_ANDRADITE_WILD, IMG_ANDRADITE_MUSEUM),
+        "garnet-pyrope" to listOf(IMG_PYROPE_ROUGH, IMG_PYROPE_WILD, IMG_PYROPE_MUSEUM),
         "garnet-spessartine" to listOf(IMG_SPESSARTINE, IMG_SPESSARTINE_WILD, IMG_SPESSARTINE_MUSEUM),
-        "garnet-tsavorite" to listOf(IMG_TSAVORITE_NEW, IMG_GROSSULAR_WILD, IMG_GROSSULAR_MUSEUM),
+        "garnet-tsavorite" to listOf(IMG_TSAVORITE_NEW, IMG_TSAVORITE_WILD, IMG_TSAVORITE_MUSEUM),
         "garnet-uvarovite" to listOf(IMG_UVAROVITE, IMG_UVAROVITE_WILD, IMG_UVAROVITE_MUSEUM),
         "gem-amblygonite" to listOf(IMG_AMBLYGONITE, IMG_AMBLYGONITE_WILD, IMG_AMBLYGONITE_MUSEUM),
         "gem-brazilianite" to listOf(IMG_BRAZILIANITE, IMG_BRAZILIANITE_FACETED, IMG_BRAZILIANITE_MUSEUM),
         // Greenstone-basalt — dedicated 3rd image (was borrowing IMG_BASALT_MUSEUM)
         "greenstone-basalt" to listOf("$Q/4948755b-6b2d-4abd-bc2a-9d5cf257c271.png", "$Q/5e5ceb23-be6b-40f8-9764-168a4ba59b2b.png", "$Q/db969595-857c-47d4-b29f-c7a46b0ba07e.png"),
         "gypsum-desert-rose" to listOf(IMG_GYPSUM_DESERT_ROSE_NEW, IMG_DESERT_ROSE_WILD, IMG_DESERT_ROSE_MUSEUM),
-        "gypsum-selenite" to listOf(IMG_GYPSUM, IMG_GYPSUM_WILD, IMG_GYPSUM_MUSEUM),
         "halide-cryolite" to listOf(IMG_CRYOLITE, IMG_CRYOLITE_WILD),
         "igneous-dacite" to listOf(IMG_DACITE, IMG_DACITE_WILD, IMG_DACITE_MUSEUM),
         "igneous-lamprophyre" to listOf(IMG_LAMPROPHYRE_MUSEUM, IMG_LAMPROPHYRE_WILD),
@@ -4237,7 +4250,6 @@ object SpecimenImages {
         "meteorite-hunting" to listOf(IMG_METEORITE_HUNTING),
         "meteorite-hexlandrite" to listOf(IMG_IRON_METEORITE_CROSS, IMG_IRON_METEORITE_FIELD),
         "mica-fuchsite" to listOf(IMG_FUCHSITE_MICA_ROUGH, IMG_FUCHSITE_MICA_WILD, IMG_FUCHSITE_MICA_MUSEUM, IMG_FUCHSITE_MICA_CABOCHON),
-        "mica-lepidolite" to listOf(IMG_LEPIDOLITE, IMG_LEPIDOLITE_WILD, IMG_LEPIDOLITE_MUSEUM),
         "mica-muscovite" to listOf(IMG_MUSCOVITE, IMG_MUSCOVITE_WILD, IMG_MUSCOVITE_MUSEUM),
         "native-platinum" to listOf(IMG_NATIVE_PLATINUM_MUSEUM, IMG_NATIVE_PLATINUM),
         "oxide-cassiterite" to listOf(IMG_CASSITERITE_CORNWALL, IMG_CASSITERITE_WILD, IMG_CASSITERITE_MUSEUM),
