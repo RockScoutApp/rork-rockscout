@@ -1232,8 +1232,7 @@ fun FormationEnvironmentBadge(
     }
 }
 
-/** Auto-scaling tagline text — starts at body large, scales down to a minimum
- *  readable size so the full tagline always renders without truncation.
+/** Fixed-size tagline text rendered at the larger body size.
  *  The text color matches the card's glowing border accent so the tagline
  *  reads as part of the card's color identity, sitting directly on the card
  *  background with no shadow box behind it. */
@@ -1243,21 +1242,15 @@ private fun AutoSizeTaglineText(
     accent: Color,
     modifier: Modifier = Modifier,
 ) {
-    var fontSize by remember(text) { mutableFloatStateOf(17f) }
     Text(
         text = text,
         modifier = modifier,
-        fontSize = fontSize.sp,
+        fontSize = 17.sp,
         color = brightenForText(accent, amount = 0.25f),
         fontStyle = FontStyle.Italic,
         fontWeight = FontWeight.Medium,
         maxLines = 4,
         overflow = TextOverflow.Visible,
-        onTextLayout = { result ->
-            if (result.didOverflowHeight && fontSize > 12f) {
-                fontSize = (fontSize - 0.5f).coerceAtLeast(12f)
-            }
-        },
     )
 }
 
