@@ -136,6 +136,7 @@ import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Slate800
 import com.rork.rockscout.ui.theme.TextLow
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.viewinterop.AndroidView
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -193,6 +194,22 @@ fun TripPlannerScreen(navController: NavController) {
                 )
                 repo.saveTrip(demo)
             }
+        }
+    }
+
+    // Intercept system back presses while any overlay is open so the user
+    // returns to the Trip Planner list instead of popping the entire screen.
+    BackHandler(
+        enabled = showEditor || detailTrip != null || shareToProfileTrip != null ||
+            pendingDeleteTrip != null || pendingArchiveTrip != null || showAddLocationDialog,
+    ) {
+        when {
+            showEditor -> { editingTrip = null; showEditor = false }
+            detailTrip != null -> detailTrip = null
+            shareToProfileTrip != null -> shareToProfileTrip = null
+            pendingDeleteTrip != null -> pendingDeleteTrip = null
+            pendingArchiveTrip != null -> pendingArchiveTrip = null
+            showAddLocationDialog -> { showAddLocationDialog = false; pendingLocationCoords = null }
         }
     }
 

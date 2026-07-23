@@ -379,7 +379,9 @@ private fun MyTradeCard(
 
     DarkCard(
         accent = accent,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onAction),
         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
     ) {
         Row(

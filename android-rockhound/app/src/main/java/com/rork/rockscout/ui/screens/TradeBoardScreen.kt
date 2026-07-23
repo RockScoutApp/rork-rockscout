@@ -927,10 +927,10 @@ internal fun ListingEditorDialog(
                 if (type == ListingType.HAVE) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
                         SourceButton(
-                            label = "Field Captures",
+                            label = "Field",
                             icon = Icons.Filled.PhotoLibrary,
                             onClick = { showCapturePicker = true },
                             modifier = Modifier.weight(1f),
@@ -942,17 +942,11 @@ internal fun ListingEditorDialog(
                             modifier = Modifier.weight(1f),
                         )
                         SourceButton(
-                            label = "Saved Images",
+                            label = "Saved",
                             icon = Icons.Filled.Download,
                             onClick = { showSavedImagePicker = true },
                             modifier = Modifier.weight(1f),
                         )
-                    }
-                    Spacer(Modifier.height(6.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
                         SourceButton(
                             label = "Gallery",
                             icon = Icons.Filled.Bookmarks,
@@ -965,7 +959,6 @@ internal fun ListingEditorDialog(
                             onClick = { cameraLauncher.launch(null) },
                             modifier = Modifier.weight(1f),
                         )
-                        Spacer(modifier = Modifier.weight(1f))
                     }
                 } else {
                     OutlinedButton(
@@ -1251,17 +1244,19 @@ private fun SourceButton(
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.height(38.dp),
         border = BorderStroke(1.dp, Aqua),
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(50.dp),
+        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
     ) {
-        Icon(icon, null, modifier = Modifier.size(16.dp))
-        Spacer(Modifier.width(6.dp))
+        Icon(icon, null, modifier = Modifier.size(13.dp), tint = Aqua)
+        Spacer(Modifier.width(3.dp))
         Text(
             label,
-            maxLines = 2,
+            maxLines = 1,
             overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, lineHeight = 12.sp),
+            color = Aqua,
         )
     }
 }
