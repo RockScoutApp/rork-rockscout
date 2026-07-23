@@ -1968,7 +1968,7 @@ object RocksAreAmazingSpecimens {
         ),
         Specimen(
             id = "amazing-concretions",
-            name = "Concretions",
+            name = "Concretion",
             rockClass = RockClass.SEDIMENTARY,
             category = "Other Amazing Formations",
             tagline = "Cemented mineral masses that hide surprising interiors — crack one open and never know what you'll find.",
