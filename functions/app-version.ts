@@ -8,14 +8,14 @@
  * Update STORE_URL to your Play Store listing once published.
  */
 
-const LATEST_VERSION_CODE = 2;
-const LATEST_VERSION_NAME = "1.1";
+const LATEST_VERSION_CODE = 5;
+const LATEST_VERSION_NAME = "1.1.3";
 const STORE_URL = "https://play.google.com/store/apps/details?id=com.rork.rockscout";
 // Direct APK download URL for in-app self-update (installs over the existing
 // app, no uninstall needed). Leave empty to fall back to the Play Store URL.
 // Update this + LATEST_VERSION_CODE each time you publish a new build.
 const APK_URL = "";
-const CHANGELOG = "Enhanced AI identifier now returns 5 ranked results with web cross-referencing, clarification questions for low-confidence matches, and 800+ specimen database.";
+const CHANGELOG = "1.1.3: Specimen image accuracy overhaul (rough & wild images verified via AI vision), 800+ specimen database, trip planner back-nav fix, trade listing editor, UI improvements.";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",

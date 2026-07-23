@@ -61,8 +61,21 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="rockscout" android:host="location" />
+                <data android:scheme="rockscout" android:host="locations" />
                 <data android:scheme="rockscout" android:host="specimen" />
                 <data android:scheme="rockscout" android:host="period" />
+                <data android:scheme="rockscout" android:host="friends" />
+                <data android:scheme="rockscout" android:host="messenger" />
+                <data android:scheme="rockscout" android:host="message_requests" />
+                <data android:scheme="rockscout" android:host="trade_board" />
+                <data android:scheme="rockscout" android:host="my_trades" />
+                <data android:scheme="rockscout" android:host="scan" />
+                <data android:scheme="rockscout" android:host="sign_in" />
+                <data android:scheme="rockscout" android:host="home" />
+                <data android:scheme="rockscout" android:host="profile" />
+                <data android:scheme="rockscout" android:host="contact_us" />
+                <data android:scheme="rockscout" android:host="notifications" />
+                <data android:scheme="rockscout" android:host="user_profile" />
             </intent-filter>
         </activity>
 
