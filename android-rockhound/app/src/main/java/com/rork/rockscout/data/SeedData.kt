@@ -5290,6 +5290,22 @@ object SeedData {
             "amazing-chatoyant-chrysoberyl",
             "amazing-cave-pearl",
             "amazing-cave-pearl-tv",
+            // RAA specimens using the "Variety Type" (no comma) format. Their comma-formatted
+            // type-variety copies are provided by RaaTypeVarietySpecimens for the main DB.
+            "amazing-actinolite-quartz",
+            "amazing-chlorite-quartz",
+            "amazing-dumortierite-quartz-new",
+            "amazing-hematite-quartz",
+            "amazing-bitumen-calcite",
+            "amazing-slag-amber",
+            "amazing-slag-blue",
+            "amazing-copper-smelting-slag",
+            "amazing-slag-green",
+            "amazing-iron-furnace-slag",
+            "amazing-leland-blue",
+            "amazing-slag-manganese",
+            "amazing-slag-purple",
+            "amazing-slag-steel-furnace",
             // Cat's Eye Beryl duplicate — merged into the canonical `chrysoberyl` card as
             // "Chrysoberyl, Cat's Eye"; remove the separate beryl-cats-eye variety entry.
             "beryl-cats-eye",

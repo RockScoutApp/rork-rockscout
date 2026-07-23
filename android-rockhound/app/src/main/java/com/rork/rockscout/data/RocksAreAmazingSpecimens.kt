@@ -373,7 +373,7 @@ object RocksAreAmazingSpecimens {
     val petroleumInclusions: List<Specimen> = listOf(
         Specimen(
             id = "amazing-bitumen-calcite",
-            name = "Calcite, Bitumen Included",
+            name = "Bitumen-Included Calcite",
             rockClass = RockClass.MINERAL,
             category = "Petroleum & Hydrocarbon Inclusions",
             tagline = "Golden calcite with asphalt-black bitumen trapped inside — a fossil hydrocarbon frozen in crystal.",
@@ -477,7 +477,7 @@ object RocksAreAmazingSpecimens {
     val mineralInclusions: List<Specimen> = listOf(
         Specimen(
             id = "amazing-actinolite-quartz",
-            name = "Quartz, Actinolite-Included (Thetis Hair Stone)",
+            name = "Actinolite-Included Quartz (Thetis Hair Stone)",
             rockClass = RockClass.CRYSTAL,
             category = "Mineral Inclusions in Crystals",
             tagline = "Delicate green needles of actinolite floating through crystal quartz — mineral grass frozen in ice.",
@@ -502,7 +502,7 @@ object RocksAreAmazingSpecimens {
         ),
         Specimen(
             id = "amazing-chlorite-quartz",
-            name = "Quartz, Chlorite-Included",
+            name = "Chlorite-Included Quartz",
             rockClass = RockClass.CRYSTAL,
             category = "Mineral Inclusions in Crystals",
             tagline = "Green clouds and phantom crystals suspended in clear quartz — nature captured mid-growth.",
@@ -527,7 +527,7 @@ object RocksAreAmazingSpecimens {
         ),
         Specimen(
             id = "amazing-dumortierite-quartz-new",
-            name = "Quartz, Dumortierite-Included",
+            name = "Dumortierite-Included Quartz",
             rockClass = RockClass.CRYSTAL,
             category = "Mineral Inclusions in Crystals",
             tagline = "Electric blue dumortierite fibers suspended in quartz — nature's fiber optic cable.",
@@ -552,7 +552,7 @@ object RocksAreAmazingSpecimens {
         ),
         Specimen(
             id = "amazing-hematite-quartz",
-            name = "Quartz, Hematite-Included (Fire Quartz)",
+            name = "Hematite-Included Quartz (Fire Quartz)",
             rockClass = RockClass.CRYSTAL,
             category = "Mineral Inclusions in Crystals",
             tagline = "Red-orange hematite flakes suspended in quartz — iron oxide frozen in crystal, glowing like embers.",
@@ -1402,7 +1402,7 @@ object RocksAreAmazingSpecimens {
     val industrialSlag: List<Specimen> = listOf(
         Specimen(
             id = "amazing-slag-amber",
-            name = "Slag Glass, Amber",
+            name = "Amber Slag Glass",
             rockClass = RockClass.MINERAL,
             category = "Industrial Slag & Slag Glass",
             tagline = "Warm honey to root-beer brown industrial glass — iron-rich slag with the color of fossilized tree resin.",
@@ -1427,7 +1427,7 @@ object RocksAreAmazingSpecimens {
         ),
         Specimen(
             id = "amazing-slag-blue",
-            name = "Slag Glass, Blue",
+            name = "Blue Slag Glass",
             rockClass = RockClass.MINERAL,
             category = "Industrial Slag & Slag Glass",
             tagline = "Rich cobalt-blue industrial glass — an iron smelting byproduct that rivals natural gemstones in color.",
@@ -1452,7 +1452,7 @@ object RocksAreAmazingSpecimens {
         ),
         Specimen(
             id = "amazing-copper-smelting-slag",
-            name = "Slag, Copper Smelting",
+            name = "Copper Smelting Slag",
             rockClass = RockClass.MINERAL,
             category = "Industrial Slag & Slag Glass",
             tagline = "Dark glassy waste streaked with green copper patina — the heavy footprint of millennia of copper production.",
@@ -1477,7 +1477,7 @@ object RocksAreAmazingSpecimens {
         ),
         Specimen(
             id = "amazing-slag-green",
-            name = "Slag Glass, Green",
+            name = "Green Slag Glass",
             rockClass = RockClass.MINERAL,
             category = "Industrial Slag & Slag Glass",
             tagline = "Deep emerald to olive industrial glass — copper smelting's unexpected gift to rockhounds.",
@@ -1502,7 +1502,7 @@ object RocksAreAmazingSpecimens {
         ),
         Specimen(
             id = "amazing-iron-furnace-slag",
-            name = "Slag, Iron Furnace",
+            name = "Iron Furnace Slag",
             rockClass = RockClass.MINERAL,
             category = "Industrial Slag & Slag Glass",
             tagline = "Heavy, vesicular stone from historic blast furnaces — the rough, industrial ancestor of colorful slag glass.",
@@ -1527,7 +1527,7 @@ object RocksAreAmazingSpecimens {
         ),
         Specimen(
             id = "amazing-leland-blue",
-            name = "Slag Glass, Leland Blue",
+            name = "Leland Blue Slag Glass",
             rockClass = RockClass.MINERAL,
             category = "Industrial Slag & Slag Glass",
             tagline = "The gem of Michigan's iron furnaces — blue slag glass from Leland, prized by Lake Michigan beachcombers.",
@@ -1552,7 +1552,7 @@ object RocksAreAmazingSpecimens {
         ),
         Specimen(
             id = "amazing-slag-manganese",
-            name = "Slag Glass, Manganese",
+            name = "Manganese Slag Glass",
             rockClass = RockClass.MINERAL,
             category = "Industrial Slag & Slag Glass",
             tagline = "Deep purple to black industrial glass — manganese smelting's dark, gem-like byproduct.",
@@ -1577,7 +1577,7 @@ object RocksAreAmazingSpecimens {
         ),
         Specimen(
             id = "amazing-slag-purple",
-            name = "Slag Glass, Purple",
+            name = "Purple Slag Glass",
             rockClass = RockClass.MINERAL,
             category = "Industrial Slag & Slag Glass",
             tagline = "Amethyst-colored industrial glass — manganese-rich slag that echoes the color of natural purple gems.",
@@ -1602,7 +1602,7 @@ object RocksAreAmazingSpecimens {
         ),
         Specimen(
             id = "amazing-slag-steel-furnace",
-            name = "Slag, Steel Furnace",
+            name = "Steel Furnace Slag",
             rockClass = RockClass.MINERAL,
             category = "Industrial Slag & Slag Glass",
             tagline = "Heavy, vesicular industrial slag from modern steel production — the raw waste of the industrial age.",
@@ -1631,7 +1631,7 @@ object RocksAreAmazingSpecimens {
     val coprolites: List<Specimen> = listOf(
         Specimen(
             id = "amazing-coprolite-crocodilian",
-            name = "Coprolite, Crocodilian",
+            name = "Crocodilian Coprolite",
             rockClass = RockClass.FOSSIL,
             category = "Coprolites & Trace Fossils",
             tagline = "Large, elongated fossilized crocodile dung — preserving the diet of ancient apex reptilian predators.",
@@ -1658,7 +1658,7 @@ object RocksAreAmazingSpecimens {
         ),
         Specimen(
             id = "amazing-coprolite-fish",
-            name = "Coprolite, Fish",
+            name = "Fish Coprolite",
             rockClass = RockClass.FOSSIL,
             category = "Coprolites & Trace Fossils",
             tagline = "Spiral-shaped fossilized fish dung — often packed with perfectly preserved fish scales.",
@@ -1685,7 +1685,7 @@ object RocksAreAmazingSpecimens {
         ),
         Specimen(
             id = "amazing-coprolite-herbivore",
-            name = "Coprolite, Herbivore Dinosaur",
+            name = "Herbivore Dinosaur Coprolite",
             rockClass = RockClass.FOSSIL,
             category = "Coprolites & Trace Fossils",
             tagline = "Fossilized plant-eater dung — preserving ancient plant fibers, seeds, and pollen from the age of dinosaurs.",
@@ -1712,7 +1712,7 @@ object RocksAreAmazingSpecimens {
         ),
         Specimen(
             id = "amazing-coprolite-jurassic",
-            name = "Coprolite, Jurassic Herbivore",
+            name = "Jurassic Herbivore Coprolite",
             rockClass = RockClass.FOSSIL,
             category = "Coprolites & Trace Fossils",
             tagline = "150-million-year-old dung from the Morrison Formation — preserving the plant diet of Jurassic giants.",
@@ -1739,7 +1739,7 @@ object RocksAreAmazingSpecimens {
         ),
         Specimen(
             id = "amazing-coprolite-shark",
-            name = "Coprolite, Shark",
+            name = "Shark Coprolite",
             rockClass = RockClass.FOSSIL,
             category = "Coprolites & Trace Fossils",
             tagline = "Iconic spiral-shaped fossilized shark dung — the most recognizable coprolite shape in paleontology.",
@@ -1766,7 +1766,7 @@ object RocksAreAmazingSpecimens {
         ),
         Specimen(
             id = "amazing-coprolite-trex",
-            name = "Coprolite, T. rex",
+            name = "T. rex Coprolite",
             rockClass = RockClass.FOSSIL,
             category = "Coprolites & Trace Fossils",
             tagline = "Fossilized Tyrannosaurus rex dung — the most famous prehistoric poop, packed with crushed bone.",
