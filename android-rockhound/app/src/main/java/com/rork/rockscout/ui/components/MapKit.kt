@@ -1203,7 +1203,7 @@ fun TripRouteMap(
                 }
             },
             label = "Trip tiles",
-            modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
+            modifier = Modifier.align(Alignment.TopEnd).padding(12.dp),
         )
 
         MapExpandButton(
