@@ -53,7 +53,6 @@ import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Brightness3
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.NightsStay
-import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Nature
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Diamond
@@ -491,7 +490,6 @@ fun HomeScreen(navController: NavController) {
                     onNoteClick = { showFellowRockScoutsNote = true },
                     onHowToUseClick = { navController.navigate(Routes.HOW_TO_USE) },
                     onContactUsClick = { navController.navigate(Routes.CONTACT_US) },
-                    onLegalClick = { navController.navigate(Routes.disclaimer(isGate = false)) },
                 )
             }
             item {
@@ -988,16 +986,17 @@ private fun HomeTagline(
     onNoteClick: () -> Unit,
     onHowToUseClick: () -> Unit = {},
     onContactUsClick: () -> Unit = {},
-    onLegalClick: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        // Top row: all three pills in a single horizontal row
+        // Top row: Contact Us, How to Use, and Night Vision toggle.
+        // The Legal button lives on the Profile / Social Settings screen.
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             ContactUsPillButton(
                 onClick = onContactUsClick,
@@ -1007,10 +1006,7 @@ private fun HomeTagline(
                 onClick = onHowToUseClick,
                 modifier = Modifier.weight(1f),
             )
-            com.rork.rockscout.ui.components.LegalPillButton(
-                onClick = onLegalClick,
-                modifier = Modifier.weight(1f),
-            )
+            NightVisionPillButton()
         }
         // Note to Fellow RockScouts button below the pills
         NoteToFellowRockScoutsButton(
@@ -1113,41 +1109,6 @@ private fun HomeHeader(
                     }
                 }
 
-            }
-
-            Spacer(Modifier.width(6.dp))
-
-            // 1b. Night / Red Light mode toggle — quick access for UV collecting.
-            val nightModeEnabled by NightModeManager.enabled.collectAsStateWithLifecycle()
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .sculpted(
-                        shape = CircleShape,
-                        accent = if (nightModeEnabled) Color(0xFFE2574C) else DarkTextMid,
-                        shadowElevation = 6.dp,
-                        circular = true,
-                        onClick = { NightModeManager.toggle() },
-                    )
-                    .clip(CircleShape)
-                    .background(
-                        Brush.radialGradient(
-                            listOf(Slate900.copy(alpha = 0.92f), Obsidian.copy(alpha = 0.88f))
-                        )
-                    )
-                    .glowingBorder(
-                        3.dp,
-                        if (nightModeEnabled) Color(0xFFE2574C).copy(alpha = 0.75f) else DarkTextMid.copy(alpha = 0.4f),
-                        CircleShape,
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    if (nightModeEnabled) Icons.Filled.NightsStay else Icons.Filled.Brightness3,
-                    contentDescription = if (nightModeEnabled) "Night mode on — tap to turn off" else "Night mode off — tap to turn on",
-                    tint = if (nightModeEnabled) Color(0xFFE2574C) else DarkTextMid,
-                    modifier = Modifier.size(22.dp),
-                )
             }
 
             Spacer(Modifier.width(4.dp))
@@ -3985,6 +3946,37 @@ private fun ContactUsPillButton(
             ),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/** Compact night-vision / red-light toggle pill for the home tagline row. */
+@Composable
+private fun NightVisionPillButton(
+    modifier: Modifier = Modifier,
+) {
+    val nightModeEnabled by NightModeManager.enabled.collectAsStateWithLifecycle()
+    val accent = if (nightModeEnabled) Color(0xFFE2574C) else DarkTextMid
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+        modifier = modifier
+            .sculpted(
+                shape = RoundedCornerShape(16.dp),
+                accent = accent,
+                shadowElevation = 5.dp,
+                onClick = { NightModeManager.toggle() },
+            )
+            .clip(RoundedCornerShape(16.dp))
+            .background(Slate900.copy(alpha = 0.75f))
+            .glowingBorder(2.dp, accent, RoundedCornerShape(16.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+    ) {
+        Icon(
+            imageVector = if (nightModeEnabled) Icons.Filled.NightsStay else Icons.Filled.Brightness3,
+            contentDescription = if (nightModeEnabled) "Night mode on — tap to turn off" else "Night mode off — tap to turn on",
+            tint = accent,
+            modifier = Modifier.size(22.dp),
         )
     }
 }
