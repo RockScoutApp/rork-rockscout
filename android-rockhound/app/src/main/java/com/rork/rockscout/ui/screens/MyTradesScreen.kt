@@ -57,6 +57,7 @@ import com.rork.rockscout.data.AuthRepository
 import com.rork.rockscout.data.ListingType
 import com.rork.rockscout.data.TradeInterestRepository
 import com.rork.rockscout.data.TradeListing
+import com.rork.rockscout.data.CapturedPhoto
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.FullScreenImageViewer
 import com.rork.rockscout.ui.components.LongPressableImage
@@ -101,8 +102,13 @@ fun MyTradesScreen(navController: NavController) {
         ))
     }
     val me = AuthRepository.instance.currentUserId
+    val captures by repo.captures.collectAsStateWithLifecycle()
+    val collection by repo.collection.collectAsStateWithLifecycle()
+    val wishlist by repo.wishlist.collectAsStateWithLifecycle()
     var viewerUrls by remember { mutableStateOf<List<String>>(emptyList()) }
     var viewerInitialPage by remember { mutableStateOf(0) }
+    var editingListing by remember { mutableStateOf<TradeListing?>(null) }
+    var showEditor by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         repo.expireStaleListings()
@@ -219,9 +225,10 @@ fun MyTradesScreen(navController: NavController) {
                                 MyTradeCard(
                                     listing = listing,
                                     navController = navController,
-                                    actionLabel = "View",
+                                    actionLabel = "Edit",
                                     onAction = {
-                                        navController.navigate(Routes.TRADING_FLOOR)
+                                        editingListing = listing
+                                        showEditor = true
                                     },
                                     onPhotoClick = { urls, page ->
                                         viewerUrls = urls
@@ -306,10 +313,10 @@ fun MyTradesScreen(navController: NavController) {
                                 MyTradeCard(
                                     listing = listing,
                                     navController = navController,
-                                    actionLabel = "Re-list",
+                                    actionLabel = "View",
                                     onAction = {
-                                        // Re-list a completed trade as a fresh 14-day listing.
-                                        repo.relistListing(listing)
+                                        editingListing = listing
+                                        showEditor = true
                                     },
                                     onPhotoClick = { urls, page ->
                                         viewerUrls = urls
@@ -342,11 +349,16 @@ fun MyTradesScreen(navController: NavController) {
                                 MyTradeCard(
                                     listing = listing,
                                     navController = navController,
-                                    actionLabel = "Re-list",
+                                    actionLabel = "Edit",
                                     onAction = {
-                                        repo.relistListing(listing)
+                                        editingListing = listing
+                                        showEditor = true
                                     },
-                                    meta = "Expired — re-list to put it back on the Trading Floor",
+                                    meta = "Expired — edit and re-list to put it back on the Trading Floor",
+                                    onPhotoClick = { urls, page ->
+                                        viewerUrls = urls
+                                        viewerInitialPage = page
+                                    },
                                 )
                             }
                         }
@@ -354,6 +366,22 @@ fun MyTradesScreen(navController: NavController) {
                 }
             }
         }
+    }
+
+    if (showEditor) {
+        ListingEditorDialog(
+            initial = editingListing,
+            initialType = editingListing?.type ?: ListingType.HAVE,
+            availableCaptures = captures,
+            collectionEntries = collection,
+            wishlistIds = wishlist,
+            onDismiss = { showEditor = false; editingListing = null },
+            onSave = { saved ->
+                repo.saveTradeListing(saved)
+                showEditor = false
+                editingListing = null
+            },
+        )
     }
 
     if (viewerUrls.isNotEmpty()) {
