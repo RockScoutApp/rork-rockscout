@@ -5177,8 +5177,8 @@ object SeedData {
             "amazing-copper-infused-agate",
             // Thunderegg RAA original excluded; TV copy stays
             "amazing-thunderegg",
-            // Star Sapphire RAA original excluded; main db entry stays
-            "amazing-asteriated-sapphire",
+            // Star Optics moved to RAA; no longer in the main specimen database
+            "gem-sapphire-star",
             // Hackmanite RAA non-fluorescent copy excluded; TV copy stays
             "amazing-tenebrescent-sodalite",
             // Pyrite Sun RAA original excluded; TV copy stays

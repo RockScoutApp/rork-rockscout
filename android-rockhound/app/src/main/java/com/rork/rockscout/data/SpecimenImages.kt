@@ -4084,7 +4084,7 @@ object SpecimenImages {
         "sulfide-enargite" to listOf(IMG_ENARGITE, IMG_ENARGITE_SULF_WILD, IMG_ENARGITE_SULF_MUSEUM),
         "silicate-zircon" to listOf(IMG_ZIRCON, IMG_ZIRCON_SIL_WILD, IMG_ZIRCON_SIL_MUSEUM),
         "fossil-cephalopod" to listOf(IMG_FOSSIL_CEPHALOPOD_SHELL_REPLICA, IMG_FOSSIL_CEPHALOPOD_VAR),
-        "gem-sapphire-star" to listOf(IMG_STAR_SAPPHIRE_BLUE, IMG_STAR_SAPPHIRE_RED, IMG_GEM_SAPPHIRE_STAR_VAR),
+        "gem-sapphire-star" to listOf(IMG_STAR_SAPPHIRE_BLUE, IMG_STAR_SAPPHIRE_RED, IMG_GEM_SAPPHIRE_STAR_VAR, IMG_STAR_SAPPHIRE_CAB),
         // Felsite — dedicated primary image (was borrowing IMG_RHYOLITE)
         "igneous-felsite" to listOf("$Q/c05730b5-a86d-45a6-92a7-d803d0360422.png", IMG_FELSITE_WILD, IMG_FELSITE_MUSEUM),
         "igneous-pitchstone" to listOf(IMG_PITCHSTONE_NEW, IMG_PITCHSTONE_WILD, IMG_PITCHSTONE_MUSEUM),
@@ -4153,7 +4153,7 @@ object SpecimenImages {
         "amazing-fluorescent-adamite" to listOf(IMG_FLUOR_ADAMITE_LW, IMG_FLUOR_ADAMITE_SW, IMG_FLUOR_ADAMITE_MW, IMG_FLUOR_ADAMITE_NAT),
         "amazing-fluorescent-syenite-yooperlite" to listOf(IMG_FLUOR_YOOPERLITE_LW, IMG_FLUOR_YOOPERLITE_SW, IMG_FLUOR_YOOPERLITE_MW, IMG_FLUOR_SYENITE_LW, IMG_FLUOR_SYENITE_SW, IMG_FLUOR_SYENITE_MW, IMG_FLUOR_YOOPERLITE_NAT, IMG_FLUOR_SYENITE_NAT),
         "amazing-chatoyant-chrysoberyl" to listOf(IMG_CATSEYE_CHRYSO, IMG_CATSEYE_CHRYSO_CAB),
-        "amazing-asteriated-sapphire" to listOf(IMG_STAR_SAPPHIRE, IMG_STAR_SAPPHIRE_CAB),
+        // amazing-asteriated-sapphire removed; Star Optics now uses gem-sapphire-star mapping above
         "amazing-iridescent-ammolite" to listOf(IMG_AMMOLITE, IMG_AMMOLITE_VAR, IMG_IRID_AMMOLITE, IMG_IRID_AMMOLITE_VAR),
         "amazing-labradorescence" to listOf(IMG_LABRADORITE_AMAZE, IMG_LABRADORITE_AMAZE_VAR),
         "amazing-fulgurite" to listOf(IMG_FULGURITE_AMAZE, IMG_FULGURITE_AMAZE_VAR),
