@@ -5348,6 +5348,7 @@ object SeedData {
             OpaliteSpecimen.specimens +
             KimberliteSpecimen.specimens +
             JaspilliteSpecimen.specimens +
+            AlabasterSpecimen.specimens +
             DatabaseOverhaulSpecimens.specimens +
             MasterBuildSpecimens.specimens +
             ExpansionBatch16.specimens +

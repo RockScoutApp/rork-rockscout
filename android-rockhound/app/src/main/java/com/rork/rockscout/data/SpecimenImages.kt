@@ -534,6 +534,11 @@ object SpecimenImages {
     private const val IMG_GOLDEN_SHEEN_OBSIDIAN = "$Q/16f4c33c-f318-4408-bf0e-393b83465c27.png"
     private const val IMG_MIDNIGHT_LACE_OBSIDIAN = "$Q/15d573d5-dcf5-42de-961a-e7b0a87b83b3.png"
 
+    // ── Alabaster (gypsum variety) — Wikipedia/mindat reference, AI-generated ──
+    private const val IMG_ALABASTER_ROUGH = "$Q/82c87b34-b2f3-48ab-9e69-3e48d8685631.png"
+    private const val IMG_ALABASTER_WILD = "$Q/bb5c27ed-e2b9-4560-9daa-5bc726d972e5.png"
+    private const val IMG_ALABASTER_MUSEUM = "$Q/7567b66d-56a0-4807-ad82-b190c984efb4.png"
+
     // ── NEW: Fossil soup, pearls, grape agate, fordite ──
     private const val IMG_FOSSIL_SOUP = "$Q/d4127405-a3c5-46c2-a5e2-bbb9cba02aba.png"
     private const val IMG_NATURAL_PEARLS = "$Q/28d0926e-1b79-469d-b5d6-56c55758cd45.png"
@@ -5171,7 +5176,8 @@ object SpecimenImages {
             "$Q/e3fd6f8b-324f-4a94-80cd-e471439118cd.png",
             "$Q/5e28185c-8dd1-45dc-a977-72e9f083f355.png",
             "$Q/a11216bf-f580-4cdc-aa60-45a0d57f8551.png"
-        )
+        ),
+        "alabaster" to listOf(IMG_ALABASTER_ROUGH, IMG_ALABASTER_WILD, IMG_ALABASTER_MUSEUM)
     ) }
 
     val urls: Map<String, List<String>> by lazy {
