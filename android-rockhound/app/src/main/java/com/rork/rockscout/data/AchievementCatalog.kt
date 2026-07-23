@@ -214,7 +214,7 @@ object AchievementCatalog {
         Achievement("lvl_50", "Diamond Hound", "Reach level 50.", "\uD83D\uDD6E", 50, 800, AchievementMetric.LEVEL),
     )
 
-    /** Total count (100 achievements). */
+    /** Total count (101 achievements). */
     val size: Int get() = all.size
 
     /** Lookup by id. */

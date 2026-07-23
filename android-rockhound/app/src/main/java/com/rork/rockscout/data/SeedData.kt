@@ -5360,7 +5360,7 @@ object SeedData {
             CustomSpecimenStore.specimens.value.filter { it.id !in excludedFromMainDatabase && seen.add(it.id) }
     }
 
-    /** O(1) lookup map for specimen by ID — avoids linear scans across 800+ entries. */
+    /** O(1) lookup map for specimen by ID — avoids linear scans across 900+ entries. */
     private val specimenMap: Map<String, Specimen> by lazy {
         allSpecimens.associateBy { it.id }
     }

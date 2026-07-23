@@ -914,7 +914,7 @@ fun SocialSettingsScreen(
                     title = { Text("Enable Maximum cache?", style = MaterialTheme.typography.headlineSmall) },
                     text = {
                         Text(
-                            "This will allow RockScout to use up to 2GB of storage on your device for offline specimen photos, satellite map tiles, cached trip routes, and location downloads. That's enough for all 2,800+ specimen images, every dig site map, and trip area caches with room to spare. Tap OK to enable.",
+                            "This will allow RockScout to use up to 2GB of storage on your device for offline specimen photos, satellite map tiles, cached trip routes, and location downloads. That's enough for all 3,450+ specimen images, every dig site map, and trip area caches with room to spare. Tap OK to enable.",
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     },

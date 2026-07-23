@@ -261,7 +261,7 @@ private val howToSections: List<HowToSection> = listOf(
             "Tap your avatar on the home screen to open your Profile.",
             "Your Player Card shows your level, XP progress, hunter status, and earned badges.",
             "Set your hunter status: Off Grid, Hunting, Digging, or Trading — each shows a color-coded profile border.",
-            "Browse 100 achievements and 30 badges on the Achievements page.",
+            "Browse 101 achievements and 31 badges on the Achievements page.",
             "Earn XP for every action — identifying rocks, adding to your collection, capturing field photos, trading, and more.",
             "Level up to unlock new tiers with unique emojis and brag-worthy celebration pop-ups.",
             "Share level-up and badge-earn cards to your profile feed or straight to social media.",
@@ -364,7 +364,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Citrine,
         title = "Gear Guide",
         steps = listOf(
-            "Tap the \"Gear Guide\" banner on the home screen to browse 40+ curated tools with Amazon links.",
+            "Tap the \"Gear Guide\" banner on the home screen to browse 48+ curated tools with Amazon links.",
             "Kits are organized from beginner to advanced — from a first loupe and rock hammer to lapidary equipment and UV lights.",
             "Each item shows a price range and a quick link so you can stock up before your next dig.",
             "As an Amazon Associate, RockScout earns from qualifying purchases — at no extra cost to you.",

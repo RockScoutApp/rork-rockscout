@@ -855,7 +855,7 @@ fun HomeScreen(navController: NavController) {
             )
         }
 
-        // Badge-earn celebration overlay (30-badge catalog)
+        // Badge-earn celebration overlay (31-badge catalog)
         earnedBadge?.let { badgeData ->
             BadgeCelebration(
                 data = badgeData,
@@ -4016,7 +4016,7 @@ private val fellowRockScoutsFeatures: List<FeatureEntry> = listOf(
     FeatureEntry(
         4,
         "Specimen Database",
-        "a massive 800+ entry encyclopedia with stunning photos, detailed properties, and where-to-find locations — your pocket field guide to the mineral kingdom. The AI identification pipeline actually sees these reference images alongside your photo for visual comparison. And it keeps growing: users can submit their own specimens for review and addition to the database!",
+        "a massive 918+ entry encyclopedia with stunning photos, detailed properties, and where-to-find locations — your pocket field guide to the mineral kingdom. The AI identification pipeline actually sees these reference images alongside your photo for visual comparison. And it keeps growing: users can submit their own specimens for review and addition to the database!",
     ),
     FeatureEntry(
         5,
@@ -4041,7 +4041,7 @@ private val fellowRockScoutsFeatures: List<FeatureEntry> = listOf(
     FeatureEntry(
         9,
         "Achievements, Badges, XP & Leveling",
-        "level up your rockhound game! Unlock 100 achievements and 30 badges, earn XP for every action, celebrate level-ups with confetti explosions, share brag-worthy level-up and badge cards, and watch milestone animations for referrals and donations",
+        "level up your rockhound game! Unlock 101 achievements and 31 badges, earn XP for every action, celebrate level-ups with confetti explosions, share brag-worthy level-up and badge cards, and watch milestone animations for referrals and donations",
     ),
     FeatureEntry(
         10,
@@ -4071,12 +4071,12 @@ private val fellowRockScoutsFeatures: List<FeatureEntry> = listOf(
     FeatureEntry(
         15,
         "Tokens & Subscriptions",
-        "power your hunts with a token bank for identifications, try everything free for 7 days, unlock unlimited IDs and every feature with $9.99/mo Premium, and support the app with one-time donations that grant tokens and bonus access. Plus a Storage setting in Social Settings lets you choose Standard (150MB) or Maximum (2GB) cache size — Maximum stores all 2,800+ specimen images and every dig site map for offline use",
+        "power your hunts with a token bank for identifications, try everything free for 7 days, unlock unlimited IDs and every feature with $9.99/mo Premium, and support the app with one-time donations that grant tokens and bonus access. Plus a Storage setting in Social Settings lets you choose Standard (150MB) or Maximum (2GB) cache size — Maximum stores all 3,450+ specimen images and every dig site map for offline use",
     ),
     FeatureEntry(
         16,
         "Gear Guide",
-        "curated beginner, intermediate, and advanced gear kits plus 15 essential rockhounding tools — loupes, rock hammers, hardness kits, UV flashlights, field notebooks, and more — with direct links to Amazon. Contextual gear recommendations appear on every specimen detail, dig site, and identification result so you always know what to bring",
+        "curated beginner, intermediate, and advanced gear kits plus 48+ curated rockhounding tools — loupes, rock hammers, hardness kits, UV flashlights, field notebooks, and more — with direct links to Amazon. Contextual gear recommendations appear on every specimen detail, dig site, and identification result so you always know what to bring",
     ),
     FeatureEntry(
         17,

@@ -72,7 +72,7 @@ const FEATURES = [
   {
     icon: Camera,
     title: "AI rock & mineral ID",
-    body: "Snap a photo and get a best-effort ID in seconds. RockScout cross-checks five sources — visual AI, 750+ specimen profiles, locality data, physical properties, and community consensus — so you get a confident match.",
+    body: "Snap a photo and get a best-effort ID in seconds. RockScout cross-checks five sources — visual AI, 918+ specimen profiles, locality data, physical properties, and community consensus — so you get a confident match.",
     tag: "5 ways to identify",
     image: "/images/rock-id-collection.webp",
     imageAlt: "A collection of colorful rocks and minerals with a magnifying glass",
@@ -114,7 +114,7 @@ const STEPS = [
     n: "02",
     icon: Atom,
     title: "Get a 5-source ID",
-    body: "Visual AI, 750+ specimen profiles, locality data, physical properties, and community consensus all weigh in to give you a best-effort match in seconds."
+    body: "Visual AI, 918+ specimen profiles, locality data, physical properties, and community consensus all weigh in to give you a best-effort match in seconds."
   },
   {
     n: "03",
@@ -131,7 +131,7 @@ const STEPS = [
 ];
 
 const STATS = [
-  { value: "750+", label: "Specimens in the database" },
+  { value: "918+", label: "Specimens in the database" },
   { value: "50", label: "US states & territories mapped" },
   { value: "4.9★", label: "Early tester rating" },
   { value: "Free", label: "To browse + field camera · Pro unlocks IDs & social" },
@@ -419,14 +419,14 @@ const FEATURES_LIST = [
   {
     icon: Camera,
     title: "AI rock & mineral ID",
-    desc: "Snap a photo and three models (Claude Haiku, Sonnet, Gemini Pro) cross-check five sources — visual AI, 750+ specimen profiles, locality data, physical properties, and community consensus — to give you a confident match in seconds. Free 7-day trial with 5 tokens; after that, Premium or a donation keeps it going.",
+    desc: "Snap a photo and three models (Claude Haiku, Sonnet, Gemini Pro) cross-check five sources — visual AI, 918+ specimen profiles, locality data, physical properties, and community consensus — to give you a confident match in seconds. Free 7-day trial with 5 tokens; after that, Premium or a donation keeps it going.",
     items: ["Visual reference compare", "Assemblage detection", "Clarifying questions", "Auto web cross-check"],
   },
   {
     icon: FlaskConical,
     title: "Specimen database",
-    desc: "750+ entries with photos, properties, and where-to-find locations. Spot a missing one? Submit photos of your find and approved entries go into the shared database for everyone.",
-    items: ["750+ profiles", "Community submissions"],
+    desc: "918+ entries with photos, properties, and where-to-find locations. Spot a missing one? Submit photos of your find and approved entries go into the shared database for everyone.",
+    items: ["918+ profiles", "Community submissions"],
   },
   {
     icon: Gem,
@@ -473,8 +473,8 @@ const FEATURES_LIST = [
   {
     icon: Trophy,
     title: "Achievements, XP & badges",
-    desc: "100 achievements and 30 badges with confetti level-ups. Earn XP for every action and share brag-worthy level-up cards.",
-    items: ["100 achievements", "30 badges", "XP & leveling"],
+    desc: "101 achievements and 31 badges with confetti level-ups. Earn XP for every action and share brag-worthy level-up cards.",
+    items: ["101 achievements", "31 badges", "XP & leveling"],
   },
   {
     icon: GraduationCap,
@@ -491,7 +491,7 @@ const FEATURES_LIST = [
   {
     icon: Backpack,
     title: "Gear, tokens & design",
-    desc: "Beginner-to-advanced Gear Guide with 40+ tools and Amazon links. 7-day free trial, $9.99/mo Premium, or one-time donations for tokens. Immersive 3D design with an optional 2GB offline cache mode plus a one-tap bulk download that caches every specimen photo, guide illustration, and hero image (~4 GB) so the whole app works fully offline.",
+    desc: "Beginner-to-advanced Gear Guide with 48+ tools and Amazon links. 7-day free trial, $9.99/mo Premium, or one-time donations for tokens. Immersive 3D design with an optional 2GB offline cache mode plus a one-tap bulk download that caches every specimen photo, guide illustration, and hero image (~4 GB) so the whole app works fully offline.",
     items: ["Gear Guide", "Tokens & Premium", "3D design", "2GB cache mode", "Bulk offline download (~4 GB)"],
   },
   {
