@@ -1143,7 +1143,6 @@ object SpecimenImages {
     private const val IMG_CHERT_MOZARKITE = "$Q/d0f92092-01f1-4d03-932c-e14d67d33b9a.png"
     private const val IMG_CHERT_PORCELLANITE = "$Q/6e2513ca-b25f-49f4-aee4-66ffa5d707e9.png"
     private const val IMG_CHERT_TRIPOLITIC = "$Q/2805eb6e-90f8-4717-8725-856746134a95.png"
-    private const val IMG_CHERT_OOLITIC = "$Q/8e4a72cf-e860-45a9-b9cc-1db76dbf99a3.png"
     // Batch 51: opal variety images
     private const val IMG_FIRE_OPAL_CAB_VAR = "$Q/dd40603f-4ceb-4467-a11b-4b78e803c5bf.png"
     private const val IMG_CRYSTAL_OPAL_VAR = "$Q/6d635b74-3e13-4749-955c-feea4c2a411f.png"
@@ -2762,7 +2761,6 @@ object SpecimenImages {
     private const val IMG_ARKOSE_SED_WILD = "$Q/bd89dba8-da88-407b-8591-bcc20a5f9238.png"
     private const val IMG_ARKOSE_SED_MUSEUM = "$Q/8908a0b3-4e1d-45f4-8348-b8450cfe8d24.png"
     private const val IMG_CHERT_NODULE_WILD = "$Q/abd8c13c-abee-4e78-b91f-7714dacb76da.png"
-    private const val IMG_CHERT_NODULE_MUSEUM = "$Q/207bef00-3e35-45ec-8d10-9505b9daf04b.png"
     private const val IMG_ENARGITE_SULF_WILD = "$Q/85e10004-4023-4965-a8e0-715a9475f050.png"
     private const val IMG_ENARGITE_SULF_MUSEUM = "$Q/5fbb2c04-244c-4d36-bdb8-7bfe70781d2e.png"
     private const val IMG_ZIRCON_SIL_WILD = "$Q/3b5484a0-e5e4-4aec-9bf9-96cdd8ed427d.png"
@@ -4116,7 +4114,6 @@ object SpecimenImages {
         "chert-mozarkite" to listOf(IMG_MOZARKITE_ROUGH, IMG_MOZARKITE_WILD, IMG_MOZARKITE_MUSEUM, IMG_MOZARKITE_CABOCHON),
         "chert-porcellanite" to listOf(IMG_PORCELLANITE_NEW, IMG_CHERT_PORCELLANITE, IMG_CHERT),
         "chert-tripolitic" to listOf(IMG_CHERT_TRIPOLITIC, IMG_CHERT_WILD),
-        "chert-oolitic" to listOf(IMG_CHERT_OOLITIC, IMG_CHERT_NODULE_MUSEUM),
         "igneous-basanite" to listOf(IMG_BASANITE_MUSEUM, IMG_BASANITE_WILD),
         "sedimentary-geode" to listOf(IMG_GEODE_WILD, IMG_GEODE_MUSEUM),
         "metamorphic-blueschist" to listOf(IMG_BLUESCHIST, IMG_METAMORPHIC_BLUESCHIST_VAR),
