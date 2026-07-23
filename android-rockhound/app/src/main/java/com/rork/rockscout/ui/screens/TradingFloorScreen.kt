@@ -121,6 +121,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.GppBad
 import androidx.compose.ui.platform.LocalView
 import com.rork.rockscout.data.ReportRepository
 import com.rork.rockscout.data.ReportScreenshotHelper
@@ -166,6 +167,8 @@ fun TradingFloorScreen(navController: NavController) {
     var reportSubmitted by remember { mutableStateOf(false) }
     val myProfile by repo.profile.collectAsStateWithLifecycle()
     val rootView = LocalView.current
+    var safetyCardVisible by remember { mutableStateOf(true) }
+    var warningCardVisible by remember { mutableStateOf(true) }
 
     LaunchedEffect(isSignedIn) {
         if (isSignedIn) {
@@ -305,32 +308,85 @@ fun TradingFloorScreen(navController: NavController) {
                 )
             }
 
-            // Safety note — placed on a solid dark surface so it stays legible over the
-            // busy Trading Floor background rather than floating directly on the photo.
-            // (Master build task R: shrunk by ~12dp and text size reduced for a tighter fit.)
-            DarkCard(
-                accent = Citrine,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Filled.Warning,
-                        contentDescription = null,
-                        tint = Aqua,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        "Trade safely: meet in a public, well-lit place, bring a friend when possible, and never ship first or send money before inspecting the specimen. Insist on a neutral location like a rock shop or library parking lot, and take clear photos of the trade as a record. Trust your gut — if a deal feels off, walk away. Scammers are out there; no legitimate trader will pressure you to pay before you can see what you're getting. All listings expire after 14 days to keep the board fresh.",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Aqua,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 11.sp,
-                        lineHeight = MaterialTheme.typography.labelSmall.lineHeight,
-                    )
+            // Safety note — closeable card that resets each time the user visits.
+            if (safetyCardVisible) {
+                DarkCard(
+                    accent = Citrine,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.Warning,
+                            contentDescription = null,
+                            tint = Aqua,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "Trade safely: meet in a public, well-lit place, bring a friend when possible, and never ship first or send money before inspecting the specimen. Insist on a neutral location like a rock shop or library parking lot, and take clear photos of the trade as a record. Trust your gut — if a deal feels off, walk away. Scammers are out there; no legitimate trader will pressure you to pay before you can see what you're getting. All listings expire after 14 days to keep the board fresh.",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Aqua,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 11.sp,
+                            lineHeight = MaterialTheme.typography.labelSmall.lineHeight,
+                            modifier = Modifier.weight(1f),
+                        )
+                        IconButton(
+                            onClick = { safetyCardVisible = false },
+                            modifier = Modifier.size(28.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Clear,
+                                contentDescription = "Close",
+                                tint = TextLow,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Anti-theft warning — closeable card with red danger accent.
+            if (warningCardVisible) {
+                DarkCard(
+                    accent = Danger,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.GppBad,
+                            contentDescription = null,
+                            tint = Danger,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "Theft or scamming is not tolerated AT ALL. If confirmed, your account will be immediately deleted. Appeals can be made, but don't get your hopes up. I review these personally.",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Danger,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp,
+                            lineHeight = MaterialTheme.typography.labelSmall.lineHeight,
+                            modifier = Modifier.weight(1f),
+                        )
+                        IconButton(
+                            onClick = { warningCardVisible = false },
+                            modifier = Modifier.size(28.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Clear,
+                                contentDescription = "Close",
+                                tint = TextLow,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
                 }
             }
 

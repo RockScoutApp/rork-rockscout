@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -50,6 +51,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
+import com.rork.rockscout.ui.theme.Danger
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Obsidian
 import com.rork.rockscout.ui.theme.Slate800
@@ -57,6 +59,7 @@ import com.rork.rockscout.ui.theme.TextHigh
 import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.TextMid
 import com.rork.rockscout.data.SafeLinkOpener
+import com.rork.rockscout.ui.components.AppealComposer
 import com.rork.rockscout.ui.components.glowingBorder
 
 private const val CONTACT_EMAIL = "RockScoutApp2026@yahoo.com"
@@ -74,6 +77,7 @@ fun ContactUsScreen(navController: NavController) {
     val context = LocalContext.current
     var isRefreshing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    var showAppealComposer by remember { mutableStateOf(false) }
 
     RockBackground {
         PullToRefreshBox(
@@ -203,6 +207,58 @@ fun ContactUsScreen(navController: NavController) {
                 }
             }
 
+            // Appeal a report or ban card
+            item {
+                DarkCard(
+                    accent = Danger,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showAppealComposer = true },
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(52.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    Brush.radialGradient(
+                                        listOf(Danger.copy(alpha = 0.30f), Danger.copy(alpha = 0.06f))
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                Icons.Filled.Gavel,
+                                contentDescription = "Appeal",
+                                tint = Danger,
+                                modifier = Modifier.size(26.dp),
+                            )
+                        }
+                        Spacer(Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Appeal a Report or Ban",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = Color.White,
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                text = "Were you reported or banned unfairly?",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Danger,
+                                fontWeight = FontWeight.Medium,
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                text = "Tap to submit an appeal with evidence",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = DarkTextMid,
+                            )
+                        }
+                    }
+                }
+            }
+
             // Disclaimer card
             item {
                 DarkCard(modifier = Modifier.fillMaxWidth(), accent = Aqua) {
@@ -277,6 +333,14 @@ fun ContactUsScreen(navController: NavController) {
             }
         }
         }
+        }
+
+        if (showAppealComposer) {
+            AppealComposer(
+                appealType = "report_ban",
+                title = "Appeal a Report or Ban",
+                onDismiss = { showAppealComposer = false },
+            )
         }
     }
 }
