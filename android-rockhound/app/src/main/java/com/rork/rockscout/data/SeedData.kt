@@ -5333,7 +5333,12 @@ object SeedData {
             KimberliteSpecimen.specimens +
             JaspilliteSpecimen.specimens +
             DatabaseOverhaulSpecimens.specimens +
-            MasterBuildSpecimens.specimens
+            MasterBuildSpecimens.specimens +
+            ExpansionBatch16.specimens +
+            ExpansionBatch17.specimens +
+            ExpansionBatch18.specimens +
+            ExpansionBatch19.specimens +
+            ExpansionBatch20.specimens
         ).filter { it.id !in excludedFromMainDatabase && seen.add(it.id) } +
             CustomSpecimenStore.specimens.value.filter { it.id !in excludedFromMainDatabase && seen.add(it.id) }
     }
