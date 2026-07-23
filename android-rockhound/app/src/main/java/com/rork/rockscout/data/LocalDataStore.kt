@@ -78,6 +78,7 @@ object LocalDataStore {
     const val KEY_IMAGE_REVIEWS = "image_reviews"
     const val KEY_LIST_LIKES = "list_likes"
     const val KEY_APPEALS = "appeals"
+    const val KEY_DELETED_ACCOUNT_LOGS = "deleted_account_logs"
     const val KEY_MOCK_SEEDED = "mock_data_seeded"
 
     // ---- Local-auth account keys ------------------------------------------

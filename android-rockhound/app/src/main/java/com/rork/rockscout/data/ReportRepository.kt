@@ -133,6 +133,16 @@ class ReportRepository private constructor() {
         }
     }
 
+    /** All reports as a flat list (newest first), for the Developer Console report log. */
+    suspend fun getAllReports(): List<LocalUserReport> {
+        return withContext(Dispatchers.IO) {
+            runCatching {
+                LocalDataStore.getTable<LocalUserReport>(LocalDataStore.KEY_USER_REPORTS)
+                    .sortedByDescending { it.created_at }
+            }.getOrDefault(emptyList())
+        }
+    }
+
     /** All reports grouped by reported user, for the Developer Console moderation panel. */
     suspend fun getAllModerationGroups(): List<ModerationGroup> {
         return withContext(Dispatchers.IO) {

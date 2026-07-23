@@ -223,12 +223,23 @@ object MockDataSeeder {
     data class LocalAppeal(
         val id: String,
         val user_id: String,
-        val type: String,          // "image_rejected" | "report_ban"
+        val type: String,          // "image_rejected" | "report_ban" | "account_deletion"
         val ref_id: String? = null,
         val reason: String,
         val image_uri: String? = null,
         val status: String,        // "pending" | "approved" | "denied"
         val created_at: Long,
+    )
+
+    @Serializable
+    data class LocalDeletedAccountLog(
+        val id: String,
+        val user_id: String,
+        val username: String,
+        val email: String,
+        val reason: String,
+        val deleted_at: Long,
+        val restored_at: Long? = null,
     )
 
     @Serializable
@@ -300,6 +311,7 @@ object MockDataSeeder {
         ensureTable(LocalDataStore.KEY_LIST_LIKES, emptyList<LocalListLike>())
         ensureTable(LocalDataStore.KEY_IMAGE_REVIEWS, emptyList<LocalImageReview>())
         ensureTable(LocalDataStore.KEY_APPEALS, emptyList<LocalAppeal>())
+        ensureTable(LocalDataStore.KEY_DELETED_ACCOUNT_LOGS, emptyList<LocalDeletedAccountLog>())
     }
 
     private inline fun <reified T> ensureTable(key: String, default: List<T>) {

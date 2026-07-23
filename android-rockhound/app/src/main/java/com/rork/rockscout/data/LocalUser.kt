@@ -32,6 +32,15 @@ data class LocalUser(
     val wishlist_ids: List<String> = emptyList(),
     val favorite_spot_ids: List<String> = emptyList(),
     val email_verified: Boolean = true,
+    /** Admin-controlled deletion: when true, the user sees a blocking popup and cannot access the app.
+     *  The account remains in the DB so it can be identified on sign-in and restored. */
+    val account_deleted: Boolean = false,
+    /** Reason for the admin deletion (shown to the user in the blocking popup). */
+    val deletion_reason: String? = null,
+    /** Timestamp (millis) when the admin deleted the account. */
+    val deleted_at: Long? = null,
+    /** Timestamp (millis) when the admin restored the account (null if never restored). */
+    val restored_at: Long? = null,
 ) {
     /** Convert to the HunterProfile shape used by scan results + friend lists. */
     fun toHunterProfile(): SocialRepository.HunterProfile = SocialRepository.HunterProfile(

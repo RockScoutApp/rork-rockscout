@@ -108,6 +108,7 @@ import kotlinx.coroutines.launch
 fun UserProfileScreen(
     navController: NavController,
     userId: String,
+    isAdminView: Boolean = false,
 ) {
     val auth = AuthRepository.instance
     val social = SocialRepository.instance
@@ -145,6 +146,11 @@ fun UserProfileScreen(
     var replyImageErrors by remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
     var showArchivedPosts by remember { mutableStateOf(false) }
     val archivedPosts by postRepo.archivedPosts.collectAsStateWithLifecycle()
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showRestoreDialog by remember { mutableStateOf(false) }
+    var deleteReason by remember { mutableStateOf("") }
+    var adminActionMessage by remember { mutableStateOf<String?>(null) }
+    var viewedUserDeleted by remember { mutableStateOf(false) }
 
     // Load the user's profile + posts + friendship status.
     LaunchedEffect(userId) {
@@ -159,6 +165,7 @@ fun UserProfileScreen(
             hunter = profiles.firstOrNull()
             // Fetch full profile (bio, home_region, level, xp) for the detailed view.
             fullUser = social.fetchUserProfile(userId)
+            viewedUserDeleted = fullUser?.account_deleted == true
             // Load their posts.
             postRepo.loadUserPosts(userId)
             postRepo.loadArchivedPosts(userId)
@@ -202,7 +209,7 @@ fun UserProfileScreen(
     val statusAccent = statusAccent(status)
 
     ScreenScaffold(title = h.display_name, onBack = { navController.popBackStack() }, actions = {
-        if (!isMe) {
+        if (!isMe && !isAdminView) {
             // Block button — next to the report button
             SculptedIconButton(
                 icon = Icons.Filled.Block,
@@ -450,6 +457,70 @@ fun UserProfileScreen(
                     }
                 }
             }
+            // ── Admin delete/restore section (only visible from dev console) ──
+            if (isAdminView) {
+                item {
+                    adminActionMessage?.let { msg ->
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Success.copy(alpha = 0.12f))
+                                .glowingBorder(2.dp, Success.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                        ) {
+                            Text(
+                                msg,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Success,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                        Spacer(Modifier.height(8.dp))
+                    }
+                    if (viewedUserDeleted) {
+                        // Restore button
+                        SculptedButton(
+                            text = "Restore Account",
+                            onClick = { showRestoreDialog = true },
+                            accent = Success,
+                            containerColor = Success,
+                            textColor = Ink,
+                            icon = Icons.Filled.Shield,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Danger.copy(alpha = 0.12f))
+                                .glowingBorder(2.dp, Danger.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                        ) {
+                            Text(
+                                "This account is currently DELETED. Reason: ${fullUser?.deletion_reason ?: "Unknown"}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Danger,
+                                fontWeight = FontWeight.Medium,
+                            )
+                        }
+                    } else {
+                        // Delete button
+                        SculptedButton(
+                            text = "Delete Account",
+                            onClick = { showDeleteDialog = true },
+                            accent = Danger,
+                            containerColor = Danger,
+                            textColor = Color.White,
+                            icon = Icons.Filled.Block,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                    Spacer(Modifier.height(16.dp))
+                }
+            }
+
             item {
                 Text(
                     "POSTS",
@@ -880,6 +951,112 @@ fun UserProfileScreen(
             },
             dismissButton = {
                 SculptedTextButton(text = "Cancel", onClick = { showRemoveConfirm = false }, accent = DarkTextMid, textColor = DarkTextMid)
+            },
+            containerColor = Color(0xFF1E1C16),
+            titleContentColor = DarkTextHigh,
+            textContentColor = DarkTextMid,
+        )
+    }
+
+    // ── Admin: Delete account dialog (with reason input) ──
+    if (showDeleteDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showDeleteDialog = false; deleteReason = "" },
+            title = { Text("Delete ${h.display_name}'s account?", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Text(
+                        "This will mark the account as deleted. The user will see a blocking popup on next sign-in and cannot access the app. You can restore the account later.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = DarkTextMid,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    androidx.compose.material3.OutlinedTextField(
+                        value = deleteReason,
+                        onValueChange = { deleteReason = com.rork.rockscout.data.ProfanityFilter.filter(it) },
+                        label = { Text("Reason for deletion") },
+                        placeholder = { Text("e.g. Confirmed scamming on trade board") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 2,
+                        colors = androidx.compose.material3.TextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFF2A2820),
+                            unfocusedContainerColor = Color(0xFF2A2820),
+                            focusedTextColor = DarkTextHigh,
+                            unfocusedTextColor = DarkTextHigh,
+                            focusedIndicatorColor = Danger,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            cursorColor = Danger,
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                    )
+                }
+            },
+            confirmButton = {
+                SculptedButton(
+                    text = "Delete Account",
+                    onClick = {
+                        val reason = deleteReason.trim().ifBlank { "Violation of community guidelines" }
+                        showDeleteDialog = false
+                        deleteReason = ""
+                        scope.launch {
+                            val result = auth.adminDeleteAccount(userId, reason)
+                            if (result.isSuccess) {
+                                viewedUserDeleted = true
+                                adminActionMessage = "Account deleted. The user will see the blocking popup on next sign-in."
+                            } else {
+                                adminActionMessage = "Failed to delete account: ${result.exceptionOrNull()?.message}"
+                            }
+                        }
+                    },
+                    accent = Danger,
+                    containerColor = Danger,
+                    textColor = Color.White,
+                    enabled = deleteReason.trim().isNotBlank(),
+                )
+            },
+            dismissButton = {
+                SculptedTextButton(text = "Cancel", onClick = { showDeleteDialog = false; deleteReason = "" }, accent = DarkTextMid, textColor = DarkTextMid)
+            },
+            containerColor = Color(0xFF1E1C16),
+            titleContentColor = DarkTextHigh,
+            textContentColor = DarkTextMid,
+        )
+    }
+
+    // ── Admin: Restore account dialog ──
+    if (showRestoreDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showRestoreDialog = false },
+            title = { Text("Restore ${h.display_name}'s account?", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    "This will un-delete the account and allow the user to sign in normally again.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = DarkTextMid,
+                )
+            },
+            confirmButton = {
+                SculptedButton(
+                    text = "Restore Account",
+                    onClick = {
+                        showRestoreDialog = false
+                        scope.launch {
+                            val result = auth.adminRestoreAccount(userId)
+                            if (result.isSuccess) {
+                                viewedUserDeleted = false
+                                adminActionMessage = "Account restored. The user can sign in normally."
+                            } else {
+                                adminActionMessage = "Failed to restore account: ${result.exceptionOrNull()?.message}"
+                            }
+                        }
+                    },
+                    accent = Success,
+                    containerColor = Success,
+                    textColor = Ink,
+                )
+            },
+            dismissButton = {
+                SculptedTextButton(text = "Cancel", onClick = { showRestoreDialog = false }, accent = DarkTextMid, textColor = DarkTextMid)
             },
             containerColor = Color(0xFF1E1C16),
             titleContentColor = DarkTextHigh,

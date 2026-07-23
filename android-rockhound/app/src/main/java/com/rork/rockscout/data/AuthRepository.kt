@@ -1,6 +1,7 @@
 package com.rork.rockscout.data
 
 import android.util.Log
+import com.rork.rockscout.data.MockDataSeeder.LocalDeletedAccountLog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -64,14 +65,24 @@ class AuthRepository private constructor() {
 
     /** Restore the saved session from local storage, if any. Called once
      *  from Application.onCreate. If the saved user's email is not verified,
-     *  the session is not restored — the user must sign in and verify. */
+     *  the session is not restored — the user must sign in and verify.
+     *  If the saved user's account has been admin-deleted, the session is
+     *  set to [SessionStatus.AccountDeleted] so the blocking popup shows. */
     fun initialize() {
         val savedEmail = LocalDataStore.getString(LocalDataStore.KEY_AUTH_EMAIL)
         val savedUserId = LocalDataStore.getString(LocalDataStore.KEY_AUTH_USER_ID)
         if (!savedEmail.isNullOrBlank() && !savedUserId.isNullOrBlank()) {
-            // Check if the user's email is verified before restoring.
             val users = LocalDataStore.getTable<LocalUser>(LocalDataStore.KEY_USERS)
             val user = users.firstOrNull { it.id == savedUserId }
+            if (user != null && user.account_deleted) {
+                // Admin-deleted account — show the blocking popup.
+                _sessionStatus.value = SessionStatus.AccountDeleted(
+                    email = savedEmail,
+                    userId = savedUserId,
+                    reason = user.deletion_reason ?: "Your account has been deleted by an administrator.",
+                )
+                return
+            }
             if (user != null && !user.email_verified) {
                 // Unverified account — don't restore the session.
                 // Clear the saved session so the auth gate shows.
@@ -256,6 +267,13 @@ class AuthRepository private constructor() {
                 if (sendResult is EmailVerificationApi.VerificationResult.Failed) {
                     Log.w("AuthRepository", "Sign-in verification code send failed: ${sendResult.message}")
                 }
+            } else if (user.account_deleted) {
+                // Admin-deleted account — show the blocking popup, do NOT restore session.
+                _sessionStatus.value = SessionStatus.AccountDeleted(
+                    email = user.email,
+                    userId = user.id,
+                    reason = user.deletion_reason ?: "Your account has been deleted by an administrator.",
+                )
             } else {
                 saveSession(user.id, user.email)
                 // Link RevenueCat to the user's account so purchases carry over.
@@ -324,6 +342,83 @@ class AuthRepository private constructor() {
     /** True when the user is currently authenticated. */
     val isAuthenticated: Boolean
         get() = sessionStatus.value is SessionStatus.Authenticated
+
+    /** The reason for the current AccountDeleted state (null when not in that state). */
+    val deletionReason: String?
+        get() = (sessionStatus.value as? SessionStatus.AccountDeleted)?.reason
+
+    /** The user ID for the current AccountDeleted state (null when not in that state). */
+    val deletedUserId: String?
+        get() = (sessionStatus.value as? SessionStatus.AccountDeleted)?.userId
+
+    /** Admin: delete a user's account by [userId] with the given [reason].
+     *  Marks the user as deleted (does NOT remove from the DB so they can be
+     *  identified on sign-in). Logs the deletion to the deleted-accounts log.
+     *  If the user is currently signed in, their session is set to AccountDeleted. */
+    suspend fun adminDeleteAccount(userId: String, reason: String): Result<Unit> {
+        return runCatching {
+            val users = LocalDataStore.getTable<LocalUser>(LocalDataStore.KEY_USERS)
+            val user = users.firstOrNull { it.id == userId }
+                ?: error("User not found.")
+            val now = System.currentTimeMillis()
+            // Mark the user as deleted in the users table.
+            LocalDataStore.updateTable<LocalUser>(LocalDataStore.KEY_USERS) { rows ->
+                rows.map { if (it.id == userId) it.copy(account_deleted = true, deletion_reason = reason, deleted_at = now, restored_at = null) else it }
+            }
+            // Log the deletion.
+            val logEntry = LocalDeletedAccountLog(
+                id = "dellog-" + UUID.randomUUID(),
+                user_id = userId,
+                username = user.display_name,
+                email = user.email,
+                reason = reason,
+                deleted_at = now,
+            )
+            LocalDataStore.updateTable<LocalDeletedAccountLog>(LocalDataStore.KEY_DELETED_ACCOUNT_LOGS) { rows ->
+                listOf(logEntry) + rows
+            }
+            // If the deleted user is currently signed in, set their session to AccountDeleted.
+            if (currentUserId == userId) {
+                _sessionStatus.value = SessionStatus.AccountDeleted(
+                    email = user.email,
+                    userId = userId,
+                    reason = reason,
+                )
+            }
+            Unit
+        }.onFailure {
+            Log.e("AuthRepository", "adminDeleteAccount failed", it)
+        }
+    }
+
+    /** Admin: restore a previously deleted user's account by [userId].
+     *  Clears the deletion flags and logs the restoration timestamp.
+     *  If the user is currently in AccountDeleted session state, they are
+     *  transitioned to Authenticated. */
+    suspend fun adminRestoreAccount(userId: String): Result<Unit> {
+        return runCatching {
+            val users = LocalDataStore.getTable<LocalUser>(LocalDataStore.KEY_USERS)
+            val user = users.firstOrNull { it.id == userId }
+                ?: error("User not found.")
+            val now = System.currentTimeMillis()
+            // Clear the deletion flags.
+            LocalDataStore.updateTable<LocalUser>(LocalDataStore.KEY_USERS) { rows ->
+                rows.map { if (it.id == userId) it.copy(account_deleted = false, deletion_reason = null, restored_at = now) else it }
+            }
+            // Update the deletion log entry with the restoration timestamp.
+            LocalDataStore.updateTable<LocalDeletedAccountLog>(LocalDataStore.KEY_DELETED_ACCOUNT_LOGS) { rows ->
+                rows.map { if (it.user_id == userId && it.restored_at == null) it.copy(restored_at = now) else it }
+            }
+            // If the user is currently in AccountDeleted session state, restore their session.
+            val deletedStatus = sessionStatus.value as? SessionStatus.AccountDeleted
+            if (deletedStatus != null && deletedStatus.userId == userId) {
+                saveSession(userId, user.email)
+            }
+            Unit
+        }.onFailure {
+            Log.e("AuthRepository", "adminRestoreAccount failed", it)
+        }
+    }
 
     /** Persist the session locally + update the flow. */
     private fun saveSession(userId: String, email: String) {

@@ -73,6 +73,7 @@ import com.rork.rockscout.ui.screens.RockScoutsMapScreen
 import com.rork.rockscout.data.AuthRepository
 import com.rork.rockscout.data.ReferralRepository
 import com.rork.rockscout.data.ReportRepository
+import com.rork.rockscout.ui.components.AccountDeletedPopup
 import com.rork.rockscout.ui.components.NightModeOverlay
 import com.rork.rockscout.ui.components.ReportWarningDialog
 import com.rork.rockscout.ui.screens.DeveloperConsoleScreen
@@ -314,6 +315,7 @@ fun AppNavigation(
     val auth = AuthRepository.instance
     val sessionStatus by auth.sessionStatus.collectAsState()
     val isSignedIn = sessionStatus is com.rork.rockscout.data.SessionStatus.Authenticated
+    val isAccountDeleted = sessionStatus is com.rork.rockscout.data.SessionStatus.AccountDeleted
     val pendingReferralCode by ReferralRepository.pendingReferralCode.collectAsState()
     val referralCodeApplied by ReferralRepository.referralCodeApplied.collectAsState()
 
@@ -322,6 +324,17 @@ fun AppNavigation(
     // user signs in. Once authenticated, the overlay disappears and the
     // NavHost (with all screens) is accessible.
     if (!isSignedIn) {
+        // Account-deleted users are NOT signed in (Authenticated), but they
+        // have a session status of AccountDeleted. Show the blocking popup
+        // instead of the sign-in gate.
+        if (isAccountDeleted) {
+            val deletedStatus = sessionStatus as com.rork.rockscout.data.SessionStatus.AccountDeleted
+            AccountDeletedPopup(
+                reason = deletedStatus.reason,
+                onAppeal = { /* the popup handles showing the AppealComposer internally */ },
+            )
+            return
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -500,6 +513,7 @@ fun AppNavigation(
             UserProfileScreen(
                 navController = navController,
                 userId = entry.arguments?.getString("userId").orEmpty(),
+                isAdminView = true,
             )
         }
         composable(Routes.CONTACT_US) { ContactUsScreen(navController) }

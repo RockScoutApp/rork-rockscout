@@ -40,8 +40,12 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Gavel
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.NoAccounts
 import androidx.compose.material.icons.filled.PersonSearch
 import androidx.compose.material.icons.filled.QueryStats
+import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.CheckBoxOutlineBlank
 import androidx.compose.material.icons.filled.CheckBox
@@ -99,6 +103,10 @@ import com.rork.rockscout.data.DigLocation
 import com.rork.rockscout.data.DigSiteDiscoveryStore
 import com.rork.rockscout.data.ImageReviewRepository
 import com.rork.rockscout.data.MockDataSeeder
+import com.rork.rockscout.data.MockDataSeeder.LocalAppeal
+import com.rork.rockscout.data.MockDataSeeder.LocalDeletedAccountLog
+import com.rork.rockscout.data.MockDataSeeder.LocalUserReport
+import com.rork.rockscout.data.AppealRepository
 import com.rork.rockscout.data.ReportRepository
 import com.rork.rockscout.data.SpecimenSubmissionStore
 import com.rork.rockscout.data.CustomSpecimenStore
@@ -106,6 +114,7 @@ import com.rork.rockscout.data.UserPinSubmissionStore
 import com.rork.rockscout.data.SubscriptionAdminManager
 import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.AuthRepository
+import com.rork.rockscout.data.LocalDataStore
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.SculptedButton
@@ -853,12 +862,20 @@ private fun ModerationTab() {
     val context = LocalContext.current
     var groups by remember { mutableStateOf<List<ReportRepository.ModerationGroup>>(emptyList()) }
     var imageReviews by remember { mutableStateOf<List<MockDataSeeder.LocalImageReview>>(emptyList()) }
+    var appeals by remember { mutableStateOf<List<LocalAppeal>>(emptyList()) }
+    var allReports by remember { mutableStateOf<List<LocalUserReport>>(emptyList()) }
+    var deletedLogs by remember { mutableStateOf<List<LocalDeletedAccountLog>>(emptyList()) }
     var loading by remember { mutableStateOf(true) }
     var reinstating by remember { mutableStateOf<ReportRepository.ModerationGroup?>(null) }
+    var screenshotViewerPath by remember { mutableStateOf<String?>(null) }
 
     suspend fun reloadAll() {
         groups = ReportRepository.instance.getAllModerationGroups()
         imageReviews = ImageReviewRepository.instance.getPendingReviews()
+        appeals = AppealRepository.instance.getAllAppeals()
+        allReports = ReportRepository.instance.getAllReports()
+        deletedLogs = LocalDataStore.getTable<LocalDeletedAccountLog>(LocalDataStore.KEY_DELETED_ACCOUNT_LOGS)
+            .sortedByDescending { it.deleted_at }
         loading = false
     }
 
@@ -878,7 +895,7 @@ private fun ModerationTab() {
         return
     }
 
-    if (groups.isEmpty() && imageReviews.isEmpty()) {
+    if (groups.isEmpty() && imageReviews.isEmpty() && appeals.isEmpty() && allReports.isEmpty() && deletedLogs.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
@@ -974,6 +991,49 @@ private fun ModerationTab() {
                 }
             }) }
         }
+
+        // ── Appeals section ──
+        if (appeals.isNotEmpty()) {
+            item { SectionHeader("Appeals", Citrine, appeals.size) }
+            items(appeals, key = { it.id }) { appeal ->
+                AppealCard(
+                    appeal = appeal,
+                    onApprove = {
+                        scope.launch {
+                            AppealRepository.instance.resolveAppeal(appeal.id, true)
+                            reloadAll()
+                        }
+                    },
+                    onDeny = {
+                        scope.launch {
+                            AppealRepository.instance.resolveAppeal(appeal.id, false)
+                            reloadAll()
+                        }
+                    },
+                )
+            }
+        }
+
+        // ── Deleted Accounts log (spreadsheet-style) ──
+        if (deletedLogs.isNotEmpty()) {
+            item { SectionHeader("Deleted Accounts Log", Danger, deletedLogs.size) }
+            item { DeletedAccountsLogHeader() }
+            items(deletedLogs, key = { it.id }) { log ->
+                DeletedAccountLogRow(log = log)
+            }
+        }
+
+        // ── Report log (spreadsheet-style, flat) ──
+        if (allReports.isNotEmpty()) {
+            item { SectionHeader("Report Log", Warning, allReports.size) }
+            item { ReportLogHeader() }
+            items(allReports, key = { it.id }) { report ->
+                ReportLogRow(
+                    report = report,
+                    onScreenshotClick = { path -> screenshotViewerPath = path },
+                )
+            }
+        }
     }
 
     reinstating?.let { group ->
@@ -1004,6 +1064,21 @@ private fun ModerationTab() {
             },
             containerColor = Color(0xFF1E1C16),
         )
+    }
+
+    // Screenshot viewer for report log images
+    screenshotViewerPath?.let { path ->
+        val file = File(path)
+        if (file.exists()) {
+            FullScreenImageViewer(
+                imageUrls = listOf(path),
+                initialPage = 0,
+                onDismiss = { screenshotViewerPath = null },
+            )
+        } else {
+            // File may have been cleaned up — just clear state
+            LaunchedEffect(Unit) { screenshotViewerPath = null }
+        }
     }
 }
 
@@ -2506,6 +2581,359 @@ private fun SpecimenSubmissionReviewCard(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text("Deny", style = MaterialTheme.typography.labelSmall, color = Danger, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+// ── Moderation: Appeals Card ───────────────────────────────────────────────
+
+@Composable
+private fun AppealCard(
+    appeal: LocalAppeal,
+    onApprove: () -> Unit,
+    onDeny: () -> Unit,
+) {
+    val isPending = appeal.status == "pending"
+    val accent = when (appeal.status) {
+        "approved" -> Success
+        "denied" -> Danger
+        else -> Citrine
+    }
+    val typeLabel = when (appeal.type) {
+        "account_deletion" -> "Account Deletion"
+        "image_rejected" -> "Image Rejection"
+        "report_ban" -> "Report/Ban"
+        else -> appeal.type
+    }
+    val time = SimpleDateFormat("MM/dd/yyyy HH:mm", Locale.US).format(Date(appeal.created_at))
+    var showImage by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .sculpted(shape = RoundedCornerShape(18.dp), accent = accent, shadowElevation = 5.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFF2A2820), Color(0xFF1E1C16), Color(0xFF16140F))
+                )
+            )
+            .glowingBorder(3.dp, accent.copy(alpha = 0.45f), RoundedCornerShape(18.dp))
+            .padding(16.dp),
+    ) {
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(accent.copy(alpha = 0.15f))
+                        .glowingBorder(2.dp, accent.copy(alpha = 0.4f), CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Filled.Gavel,
+                        contentDescription = null,
+                        tint = accent,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        typeLabel,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = DarkTextHigh,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        "User: ${appeal.user_id.take(20)}\u2026 · $time",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = DarkTextMid.copy(alpha = 0.7f),
+                    )
+                }
+                // Status badge
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(accent.copy(alpha = 0.15f))
+                        .glowingBorder(2.dp, accent.copy(alpha = 0.35f), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 8.dp, vertical = 3.dp),
+                ) {
+                    Text(
+                        appeal.status.uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = accent,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+            // Appeal text
+            Text(
+                appeal.reason,
+                style = MaterialTheme.typography.bodyMedium,
+                color = DarkTextMid,
+            )
+            // Attached image
+            appeal.image_uri?.let { uri ->
+                val file = File(uri)
+                if (file.exists()) {
+                    Spacer(Modifier.height(10.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFF1A1812))
+                            .glowingBorder(2.dp, accent.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                            .clickable { showImage = true },
+                    ) {
+                        AsyncImage(
+                            model = uri,
+                            contentDescription = "Evidence",
+                            modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(10.dp)),
+                            contentScale = ContentScale.Crop,
+                        )
+                    }
+                }
+            }
+            // Approve/Deny buttons (only for pending appeals)
+            if (isPending) {
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Success.copy(alpha = 0.15f))
+                            .glowingBorder(2.dp, Success.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
+                            .clickable { onApprove() }
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.Check, contentDescription = null, tint = Success, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Approve", style = MaterialTheme.typography.labelMedium, color = Success, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Danger.copy(alpha = 0.12f))
+                            .glowingBorder(2.dp, Danger.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                            .clickable { onDeny() }
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Filled.Close, contentDescription = null, tint = Danger, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Deny", style = MaterialTheme.typography.labelMedium, color = Danger, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showImage && appeal.image_uri != null) {
+        FullScreenImageViewer(
+            imageUrls = listOf(appeal.image_uri),
+            initialPage = 0,
+            onDismiss = { showImage = false },
+        )
+    }
+}
+
+// ── Moderation: Deleted Accounts Log (spreadsheet-style) ───────────────────
+
+@Composable
+private fun DeletedAccountsLogHeader() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp))
+            .background(Color(0xFF2A2820))
+            .glowingBorder(1.dp, Danger.copy(alpha = 0.3f), RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text("Username", style = MaterialTheme.typography.labelMedium, color = Danger, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1.2f))
+        Text("Email", style = MaterialTheme.typography.labelMedium, color = Danger, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1.3f))
+        Text("Reason", style = MaterialTheme.typography.labelMedium, color = Danger, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1.5f))
+        Text("Date", style = MaterialTheme.typography.labelMedium, color = Danger, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        Text("Status", style = MaterialTheme.typography.labelMedium, color = Danger, fontWeight = FontWeight.Bold, modifier = Modifier.weight(0.8f))
+    }
+}
+
+@Composable
+private fun DeletedAccountLogRow(log: LocalDeletedAccountLog) {
+    val isRestored = log.restored_at != null
+    val rowBg = if (isRestored) Color(0xFF1A2A1A) else Color(0xFF1E1C16)
+    val date = SimpleDateFormat("MM/dd/yyyy", Locale.US).format(Date(log.deleted_at))
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(0.dp))
+            .background(rowBg)
+            .glowingBorder(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(0.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            log.username,
+            style = MaterialTheme.typography.bodySmall,
+            color = DarkTextHigh,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1.2f),
+        )
+        Text(
+            log.email,
+            style = MaterialTheme.typography.bodySmall,
+            color = DarkTextMid,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1.3f),
+        )
+        Text(
+            log.reason,
+            style = MaterialTheme.typography.bodySmall,
+            color = DarkTextMid,
+            maxLines = 2,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1.5f),
+        )
+        Text(
+            date,
+            style = MaterialTheme.typography.bodySmall,
+            color = DarkTextMid.copy(alpha = 0.7f),
+            modifier = Modifier.weight(1f),
+        )
+        if (isRestored) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Restore, contentDescription = null, tint = Success, modifier = Modifier.size(14.dp))
+                Spacer(Modifier.width(4.dp))
+                Text(
+                    "Restored",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Success,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(0.8f),
+                )
+            }
+        } else {
+            Text(
+                "Deleted",
+                style = MaterialTheme.typography.labelSmall,
+                color = Danger,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(0.8f),
+            )
+        }
+    }
+}
+
+// ── Moderation: Report Log (spreadsheet-style, flat) ───────────────────────
+
+@Composable
+private fun ReportLogHeader() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp))
+            .background(Color(0xFF2A2820))
+            .glowingBorder(1.dp, Warning.copy(alpha = 0.3f), RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text("Reported User", style = MaterialTheme.typography.labelMedium, color = Warning, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1.2f))
+        Text("Reporter", style = MaterialTheme.typography.labelMedium, color = Warning, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        Text("Reason", style = MaterialTheme.typography.labelMedium, color = Warning, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1.5f))
+        Text("Date", style = MaterialTheme.typography.labelMedium, color = Warning, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        Text("Screenshot", style = MaterialTheme.typography.labelMedium, color = Warning, fontWeight = FontWeight.Bold, modifier = Modifier.weight(0.6f))
+    }
+}
+
+@Composable
+private fun ReportLogRow(
+    report: LocalUserReport,
+    onScreenshotClick: (String) -> Unit,
+) {
+    val date = SimpleDateFormat("MM/dd/yyyy", Locale.US).format(Date(report.created_at))
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xFF1E1C16))
+            .glowingBorder(1.dp, Color.White.copy(alpha = 0.06f), RoundedCornerShape(0.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            report.reported_name ?: "Unknown",
+            style = MaterialTheme.typography.bodySmall,
+            color = DarkTextHigh,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1.2f),
+        )
+        Text(
+            report.reporter_name ?: "Unknown",
+            style = MaterialTheme.typography.bodySmall,
+            color = DarkTextMid,
+            maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            report.reason ?: "(no reason)",
+            style = MaterialTheme.typography.bodySmall,
+            color = DarkTextMid,
+            maxLines = 2,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1.5f),
+        )
+        Text(
+            date,
+            style = MaterialTheme.typography.bodySmall,
+            color = DarkTextMid.copy(alpha = 0.7f),
+            modifier = Modifier.weight(1f),
+        )
+        // Screenshot icon
+        Box(
+            modifier = Modifier.weight(0.6f),
+            contentAlignment = Alignment.Center,
+        ) {
+            report.screenshotPath?.let { path ->
+                val file = File(path)
+                if (file.exists()) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Warning.copy(alpha = 0.12f))
+                            .glowingBorder(1.5.dp, Warning.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                            .clickable { onScreenshotClick(path) },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            Icons.Filled.Image,
+                            contentDescription = "View screenshot",
+                            tint = Warning,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
                 }
             }
         }

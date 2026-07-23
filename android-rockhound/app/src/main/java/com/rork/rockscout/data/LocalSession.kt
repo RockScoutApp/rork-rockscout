@@ -21,6 +21,9 @@ sealed class SessionStatus {
     /** Account created but email not yet verified. The user must enter the
      *  6-digit code sent to [email] before gaining access. */
     data class PendingVerification(val email: String, val userId: String) : SessionStatus()
+    /** Account has been admin-deleted. The user sees a blocking popup they
+     *  cannot get past. [reason] is shown to the user. */
+    data class AccountDeleted(val email: String, val userId: String, val reason: String) : SessionStatus()
 }
 
 /** Local session containing the signed-in user's info. */

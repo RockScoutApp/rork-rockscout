@@ -64,6 +64,18 @@ fun ReportWarningDialog(
         reportCount >= 2 -> WarningLevel.BLOCKED
         else -> WarningLevel.FIRST_WARNING
     }
+    var showAppealComposer by remember { mutableStateOf(false) }
+
+    if (showAppealComposer) {
+        AppealComposer(
+            appealType = "report_ban",
+            refId = null,
+            title = "Appeal a Report or Ban",
+            onDismiss = { showAppealComposer = false },
+        )
+        return
+    }
+
     AlertDialog(
         onDismissRequest = { /* must acknowledge — no dismiss on outside tap */ },
         title = null,
@@ -80,8 +92,8 @@ fun ReportWarningDialog(
         },
         dismissButton = {
             SculptedOutlinedButton(
-                text = "Appeal via email",
-                onClick = onAppeal,
+                text = "Appeal",
+                onClick = { showAppealComposer = true },
                 accent = Citrine,
                 textColor = Citrine,
             )

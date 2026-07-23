@@ -50,6 +50,12 @@ class AppealRepository private constructor() {
             .sortedByDescending { it.created_at }
     }
 
+    /** Get all appeals (including resolved), newest first. */
+    suspend fun getAllAppeals(): List<LocalAppeal> = withContext(Dispatchers.IO) {
+        LocalDataStore.getTable<LocalAppeal>(LocalDataStore.KEY_APPEALS)
+            .sortedByDescending { it.created_at }
+    }
+
     /** Resolve an appeal — mark it approved or denied. */
     suspend fun resolveAppeal(appealId: String, approved: Boolean) = withContext(Dispatchers.IO) {
         LocalDataStore.updateTable<LocalAppeal>(LocalDataStore.KEY_APPEALS) { rows ->
