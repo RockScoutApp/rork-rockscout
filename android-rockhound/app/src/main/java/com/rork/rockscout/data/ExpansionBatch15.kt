@@ -13,7 +13,7 @@ object ExpansionBatch15 {
             id = "hagstone",
             name = "Hagstone",
             rockClass = RockClass.SEDIMENTARY,
-            category = "Sedimentary — Concretion (naturally holed stone)",
+            category = "Sedimentary — Naturally Holed Stone (water-eroded)",
             tagline = "A naturally holed stone formed by water erosion — legendary for seeing fairies and spirits.",
             emoji = "\uD83D\uDD73\uFE0F",
             colorHex = 0xFF4A4A4A,
