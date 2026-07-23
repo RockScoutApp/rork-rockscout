@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.rork.rockscout.data.CustomGemShowStore
 import java.util.Calendar
 
 /**
@@ -34,9 +35,13 @@ class GemShowRefreshWorker(
         val calendar = Calendar.getInstance().apply { timeInMillis = now }
         val currentMonth1 = calendar.get(Calendar.MONTH) + 1
 
+        // Ensure user-submitted custom shows are loaded so they merge with the static list.
+        CustomGemShowStore.initialize()
+
         // Recompute the upcoming order for the current month.
         val upcoming = GemShowData.upcomingShows(currentMonth1)
-        Log.d(TAG, "Gem show refresh — ${upcoming.size} shows, current month=$currentMonth1")
+        val totalCount = GemShowData.totalShowCount()
+        Log.d(TAG, "Gem show refresh — $totalCount total shows, current month=$currentMonth1")
 
         // Persist refresh metadata so the UI can show "Updated <date>".
         val prefs = context.getSharedPreferences(GemShowData.PREFS_NAME, Context.MODE_PRIVATE)
@@ -52,7 +57,7 @@ class GemShowRefreshWorker(
             context = context,
             locationId = "gem-show-refresh",
             title = "Gem show list updated",
-            message = "Your gem & mineral show list has been refreshed for $monthName. " +
+            message = "Your gem & mineral show list has been refreshed for $monthName with $totalCount shows. " +
                 "Tap to browse upcoming shows near you.",
         )
 

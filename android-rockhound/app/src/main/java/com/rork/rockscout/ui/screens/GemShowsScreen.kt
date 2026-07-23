@@ -28,10 +28,12 @@ import androidx.compose.material.icons.filled.LocalActivity
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,9 +47,12 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.rork.rockscout.data.CustomGemShowStore
 import com.rork.rockscout.data.GemShow
 import com.rork.rockscout.data.GemShowData
 import com.rork.rockscout.data.SafeLinkOpener
+import com.rork.rockscout.ui.components.SculptedOutlinedButton
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.text.DateFormat
 import java.util.Calendar
 import java.util.Date
@@ -75,10 +80,16 @@ fun GemShowsScreen(navController: NavController) {
     val prefs = remember { context.getSharedPreferences(GemShowData.PREFS_NAME, android.content.Context.MODE_PRIVATE) }
     val lastRefreshMs = remember { prefs.getLong(GemShowData.KEY_LAST_REFRESH_MS, 0L) }
     val currentMonth1 = remember { Calendar.getInstance().get(Calendar.MONTH) + 1 }
+
+    // Initialize the custom show store so user-submitted shows load.
+    LaunchedEffect(Unit) { CustomGemShowStore.initialize() }
+
+    val customShows by CustomGemShowStore.shows.collectAsStateWithLifecycle()
     // Use the enriched, upcoming-sorted list (auto-refreshed monthly by the worker)
-    val enriched = remember { GemShowData.upcomingShows(currentMonth1) }
+    val enriched = remember(customShows, currentMonth1) { GemShowData.upcomingShows(currentMonth1) }
     val grouped = remember(enriched) { groupByMonthOrdered(enriched) }
     var query by remember { mutableStateOf("") }
+    var showSubmitDialog by remember { mutableStateOf(false) }
 
     val filtered = remember(query, grouped) {
         if (query.isBlank()) grouped
@@ -123,7 +134,7 @@ fun GemShowsScreen(navController: NavController) {
                 }
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    "${GemShowData.shows.size} recurring gem, mineral & fossil shows across the US. Dates reflect typical annual scheduling — confirm details on the show's website before traveling.",
+                    "${GemShowData.totalShowCount()} recurring gem, mineral & fossil shows across the US. Dates reflect typical annual scheduling — confirm details on the show's website before traveling.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextMid,
                 )
@@ -192,6 +203,15 @@ fun GemShowsScreen(navController: NavController) {
                         )
                     }
                 }
+                Spacer(Modifier.height(12.dp))
+                SculptedOutlinedButton(
+                    text = "Submit a Show",
+                    onClick = { showSubmitDialog = true },
+                    accent = Citrine,
+                    textColor = Citrine,
+                    icon = Icons.Filled.Add,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
 
             filtered.forEach { (month, shows) ->
@@ -231,6 +251,19 @@ fun GemShowsScreen(navController: NavController) {
                 }
             }
         }
+    }
+
+    if (showSubmitDialog) {
+        SubmitShowDialog(
+            onDismiss = { showSubmitDialog = false },
+            onSubmitted = { approved ->
+                showSubmitDialog = false
+                if (approved) {
+                    // Force a refresh of the custom show store so the new show appears.
+                    CustomGemShowStore.initialize()
+                }
+            },
+        )
     }
 }
 

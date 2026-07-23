@@ -102,7 +102,9 @@ import io.ktor.http.contentType
 import com.rork.rockscout.data.AdAnalyticsTracker
 import com.rork.rockscout.data.BugLogger
 import com.rork.rockscout.data.CustomDigLocationStore
+import com.rork.rockscout.data.CustomGemShowStore
 import com.rork.rockscout.data.LocationSubmissionStore
+import com.rork.rockscout.data.GemShowSubmissionStore
 import com.rork.rockscout.data.DigLocation
 import com.rork.rockscout.data.DigSiteDiscoveryStore
 import com.rork.rockscout.data.ImageReviewRepository
@@ -2045,6 +2047,7 @@ private fun SubmissionsTab() {
     val specimenSubmissions by SpecimenSubmissionStore.submissions.collectAsState()
     val discoveredSites by DigSiteDiscoveryStore.sites.collectAsState()
     val locationSubmissions by LocationSubmissionStore.submissions.collectAsState()
+    val showSubmissions by GemShowSubmissionStore.submissions.collectAsState()
     var selectedPinIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     var actionMessage by remember { mutableStateOf<String?>(null) }
     var specimenViewerUrls by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -2360,6 +2363,126 @@ private fun SubmissionsTab() {
                                     .glowingBorder(1.5.dp, Danger.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
                                     .clickable {
                                         LocationSubmissionStore.deny(sub.id)
+                                        actionMessage = "${sub.name} denied."
+                                    }
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                            ) {
+                                Text("Deny", style = MaterialTheme.typography.labelSmall, color = Danger, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── Show Submissions ──
+        item { SectionHeader("Show Submissions", Citrine, showSubmissions.filter { it.status == "pending" }.size) }
+
+        if (showSubmissions.none { it.status == "pending" }) {
+            item {
+                Text(
+                    "No pending show submissions. Users can submit gem, mineral, and fossil shows from the Gem Shows screen.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = textOnDarkMuted,
+                    modifier = Modifier.padding(vertical = 8.dp),
+                )
+            }
+        } else {
+            items(showSubmissions.filter { it.status == "pending" }, key = { it.id }) { sub ->
+                val subTime = SimpleDateFormat("MM/dd/yyyy", Locale.US).format(Date(sub.submittedAt))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(Color(0xFF2A2820), Color(0xFF1E1C16))
+                            )
+                        )
+                        .glowingBorder(2.dp, Citrine.copy(alpha = 0.4f), RoundedCornerShape(14.dp))
+                        .padding(14.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.Top) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                sub.name,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = DarkTextHigh,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 2,
+                            )
+                            Spacer(Modifier.height(3.dp))
+                            Text(
+                                "by ${sub.submitterName} · $subTime",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = DarkTextMid.copy(alpha = 0.7f),
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                "${sub.city}, ${sub.state} · ${sub.month}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Citrine,
+                            )
+                            if (sub.dateRange.isNotBlank()) {
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    sub.dateRange,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = DarkTextMid,
+                                )
+                            }
+                            if (sub.description.isNotBlank()) {
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    sub.description,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = DarkTextMid,
+                                    maxLines = 3,
+                                )
+                            }
+                            if (sub.webUrl.isNotBlank()) {
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    sub.webUrl,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Aqua,
+                                    maxLines = 1,
+                                )
+                            }
+                            if (sub.webVerified) {
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    "\u2713 Web-verified",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Success,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
+                        }
+                        // Per-submission actions
+                        Column {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Success.copy(alpha = 0.15f))
+                                    .glowingBorder(1.5.dp, Success.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        CustomGemShowStore.addApprovedShow(sub)
+                                        GemShowSubmissionStore.approve(sub.id)
+                                        actionMessage = "${sub.name} approved and added to Gem Shows."
+                                    }
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                            ) {
+                                Text("Approve", style = MaterialTheme.typography.labelSmall, color = Success, fontWeight = FontWeight.Bold)
+                            }
+                            Spacer(Modifier.height(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Danger.copy(alpha = 0.12f))
+                                    .glowingBorder(1.5.dp, Danger.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        GemShowSubmissionStore.deny(sub.id)
                                         actionMessage = "${sub.name} denied."
                                     }
                                     .padding(horizontal = 10.dp, vertical = 6.dp),
