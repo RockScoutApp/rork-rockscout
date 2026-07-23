@@ -43,6 +43,7 @@ object SpecimenImages {
     private const val IMG_ARKOSE = "$Q/1761d90a-e03a-43df-bc5b-643bc83d2d4c.png"
     private const val IMG_ARSENOPYRITE = "$Q/ef14eabb-4ca4-4bd3-8480-9721c6ea95ad.png"
     private const val IMG_AUGITE = "$Q/53724707-5561-41e5-9298-2aec3f37bd8b.png"
+    private const val IMG_PYROXENE_GROUP_ROUGH = "$Q/a69edaed-0390-4cfd-8e4f-334d1755d8d3.png"
     private const val IMG_AUTUNITE = "$Q/fd5967bd-b6b5-46df-99a5-ce9c5e39eef2.png"
     private const val IMG_AVENTURINE = "$Q/db0e24b6-df5a-4716-aba2-7b684ac18d1c.png"
     private const val IMG_AXINITE = "$Q/9eda2254-fc94-4211-a731-76402098ebe6.png"
@@ -234,6 +235,8 @@ object SpecimenImages {
     private const val IMG_GROSSULAR = "$Q/0bfbd593-de05-4d31-980a-716f093322f6.png"
     private const val IMG_GRYPHAEA = "$Q/5843d922-c1bb-4659-a329-f3b0ef0143c1.png"
     private const val IMG_GYPSUM = "$Q/55d597b2-0ca1-4f2a-8e70-d060602f29d8.png"
+    private const val IMG_GYPSUM_MINERAL_ROUGH = "$Q/b6dd13fa-5582-40ff-98b1-a81256f954a5.png"
+    private const val IMG_GYPSUM_MINERAL_WILD = "$Q/7d8f28bf-a579-430c-8bd7-89f6f402bb69.png"
     private const val IMG_GYROLITE = "$Q/b89a5a03-5eda-4efe-8301-5976eb7311f7.png"
     private const val IMG_HALLELUJAH_JCT = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
     private const val IMG_HALYSITES = "$Q/82fe4bcf-e7f6-4798-a24f-d9332daec945.png"
@@ -485,6 +488,8 @@ object SpecimenImages {
     private const val IMG_TUCSON_MINERAL_DEALERS = "$Q/08135330-34fa-49d2-9350-c57b42c7faa2.png"
     private const val IMG_TUFF = "$Q/41fb2961-26e1-48fe-899e-0784e8461545.png"
     private const val IMG_TURQUOISE = "$Q/000cf579-8174-4073-b4b8-fbe78fd7aa1d.png"
+    private const val IMG_TURQUOISE_NEVADA_ROUGH = "$Q/2196384c-3229-4a57-ac77-de91b825f771.png"
+    private const val IMG_TURQUOISE_NEVADA_WILD = "$Q/84f914d2-e930-420a-be3f-1cb90b3f928c.png"
     private const val IMG_TURQUOISE_GREEN_BLUE = "$Q/445d2fe7-f064-4b7a-911e-977aad8a15df.png"
     private const val IMG_TURQUOISE_APPLE_GREEN = "$Q/b0735c7a-269c-401e-8d52-02c5c4d0d4cb.png"
     private const val IMG_TURRITELLA = "$Q/caba45f8-57d6-4d88-8b0c-12c2c8e3c84e.png"
@@ -630,6 +635,7 @@ object SpecimenImages {
     // ── Meteorite photos ──
     private const val IMG_IRON_METEORITE_FIELD = "$Q/3dad8e52-c966-496c-abe9-ade8c6a3f59f.png"
     private const val IMG_IRON_METEORITE_CROSS = "$Q/3f5c5031-bea6-48b3-8b02-4179b201edde.png"
+    private const val IMG_HED_ACHONDRITE_ROUGH = "$Q/c7bd7324-0f26-40ea-b82e-bb20b672c215.png"
     private const val IMG_WILLAMETTE_METEORITE = "$Q/3dad8e52-c966-496c-abe9-ade8c6a3f59f.png"
     private const val IMG_CHONDRITE_FIELD = "$Q/62c91829-1ca3-4961-88b2-f747c72608b6.png"
     private const val IMG_CHONDRITE_CROSS = "$Q/b2f95efd-739a-4f4d-911d-72007c29b08c.png"
@@ -764,6 +770,9 @@ object SpecimenImages {
     private const val IMG_XENOTIME = "$Q/c140d22f-ad12-4b89-b946-307402d95143.png"
     private const val IMG_PARISITE = "$Q/dd2567ee-6c51-40a2-b5de-496731041689.png"
     private const val IMG_ASTROPHYLLITE = "$Q/d006d021-0b35-4127-aa31-b81e58b7d690.png"
+    private const val IMG_DELHAYELITE_ROUGH = "$Q/f8f8c8e6-e152-49b6-9aae-4928a9f69bcb.png"
+    private const val IMG_DELHAYELITE_WILD = "$Q/6f5d0c3f-538a-4fd2-9fe8-7c328483439b.png"
+    private const val IMG_TAGAMITE_ROUGH = "$Q/29eb0022-6900-4729-ba5b-3494b25c7f4e.png"
     private const val IMG_EUCRYPTITE = "$Q/057c79f7-6ce3-4d6d-8feb-3e4f1e18eb3f.png"
     private const val IMG_POLLUCITE = "$Q/3e5130b5-5ed5-4d7c-baa8-095d1b7802cf.png"
     private const val IMG_POLYHALITE = "$Q/c28e80fc-9c87-4ca9-a02d-ec5eb39b4237.png"
@@ -1675,6 +1684,7 @@ object SpecimenImages {
     private const val IMG_HALITE_GREEN_SPECIMEN = "$Q/d04786d8-9848-44be-83f7-afca54c75bc5.png"
     private const val IMG_HALITE_GREEN_MUSEUM = "$Q/0a372c70-7d57-4e0a-93d8-19babe118a2f.png"
     private const val IMG_EVAPORITE_HALITE_SPECIMEN = "$Q/22c35945-b5f3-471b-9a75-a13d6a2b0888.png"
+    private const val IMG_EVAPORITE_HALITE_DEDICATED = "$Q/ed823d83-01bf-443a-bae8-16026ae3eee2.png"
     private const val IMG_EVAPORITE_HALITE_MUSEUM = "$Q/ee6fac37-c9af-4959-8853-261b1b6f523b.png"
     private const val IMG_SEDIMENTARY_EVAPORITE_SPECIMEN = "$Q/a96bb9ee-d203-4744-9a98-c61acb13be4a.png"
     private const val IMG_HOWLITE_WILD = "$Q/19acb212-c80d-434b-8f74-4002a2684e26.png"
@@ -1831,6 +1841,7 @@ object SpecimenImages {
     private const val IMG_LARIMAR_MUSEUM = "$Q/903b0cd3-4dd6-4145-9325-502e21ffb846.png"
     private const val IMG_LARIMAR_CABOCHON = "$Q/67d6c6ce-711c-40c6-9326-18ff805d0489.png"
     private const val IMG_PECTOLITE = "$Q/a51757e8-93cc-47e1-b56c-77b4d3933c5f.png"
+    private const val IMG_PECTOLITE_FIBROUGH = "$Q/6b13d780-49ef-4369-9148-540de140bcde.png"
     private const val IMG_PECTOLITE_WILD = "$Q/ff7098c8-179b-4de1-8761-6561969143b1.png"
     private const val IMG_PECTOLITE_MUSEUM = "$Q/feda1cc5-0d1c-46d9-8691-8bc03aeb38eb.png"
     private const val IMG_PECTOLITE_CABOCHON = "$Q/457ccb2d-9738-4937-b543-2420d0b265a7.png"
@@ -2968,6 +2979,7 @@ object SpecimenImages {
     private const val IMG_TURGITE_IRIDESCENT = "$Q/e8751e83-d0ee-4f3f-915e-ece0d105a285.png"
     private const val IMG_PITCHSTONE_NEW = "$Q/45ad9336-8adc-4657-a9f6-f9aec316bfff.png"
     private const val IMG_URBANITE_NEW = "$Q/c590fa17-90a8-4469-929a-301af30138e5.png"
+    private const val IMG_URBANITE_WILD_DEDICATED = "$Q/8a7b6db5-9227-4f0e-b0bd-269f33f12dfc.png"
     private const val IMG_DIABASE_NEW = "$Q/ea44469a-51df-44e3-9d9f-1d5c1788ab53.png"
     private const val IMG_GRANODIORITE_NEW = "$Q/2e6ff4e9-bc7d-4997-8dd7-24540e5c031c.png"
     private const val IMG_PORCELLANITE_NEW = "$Q/5e4dc21e-e578-446f-97ec-ebb55206d7a8.png"
@@ -3303,7 +3315,6 @@ object SpecimenImages {
         "arsenopyrite" to listOf(IMG_ARSENOPYRITE, IMG_ARSENOPYRITE_WILD),
         "augite" to listOf(IMG_AUGITE, IMG_AUGITE_WILD, IMG_AUGITE_MUSEUM),
         "autunite" to listOf(IMG_AUTUNITE, IMG_AUTUNITE_WILD, IMG_AUTUNITE_MUSEUM),
-        "aventurine" to listOf(IMG_AVENTURINE, IMG_AVENTURINE_WILD, IMG_AVENTURINE_MUSEUM, IMG_AVENTURINE_CABOCHON),
         "axinite" to listOf(IMG_AXINITE, IMG_AXINITE_WILD, IMG_AXINITE_MUSEUM),
         "azurite" to listOf(IMG_AZURITE_ROUGH, IMG_AZURITE_WILD, IMG_AZURITE_MUSEUM, IMG_AZURITE_CABOCHON),
         "baculites" to listOf(IMG_BACULITES, IMG_BACULITES_WILD, IMG_BACULITES_MUSEUM),
@@ -3336,7 +3347,6 @@ object SpecimenImages {
         "carnelian" to listOf(IMG_CARNELIAN, IMG_CARNELIAN_WILD, IMG_CARNELIAN_MUSEUM, IMG_CARNELIAN_CABOCHON),
         "carnotite" to listOf(IMG_CARNOTITE, IMG_CARNOTITE_WILD, IMG_CARNOTITE_MUSEUM),
         "cassiterite" to listOf(IMG_CASSITERITE_BOLIVIA, IMG_CASSITERITE, IMG_CASSITERITE_MUSEUM),
-        "celestine" to listOf(IMG_CELESTINE, IMG_CELESTINE_COLORLESS, IMG_CELESTINE_WHITE, IMG_CELESTINE_PINK, IMG_CELESTINE_WILD, IMG_CELESTINE_MUSEUM),
         "cerussite" to listOf(IMG_CERUSSITE, IMG_CERUSSITE_WILD, IMG_CERUSSITE_MUSEUM),
         "chalcopyrite" to listOf(IMG_CHALCOPYRITE, IMG_CHALCOPYRITE_WILD, IMG_CHALCOPYRITE_MUSEUM),
         "chalk-rock" to listOf(IMG_CHALK_ROCK, IMG_CHALK_ROCK_VAR),
@@ -3386,7 +3396,6 @@ object SpecimenImages {
         "denio-thundereggs" to listOf(IMG_DENIO_THUNDEREGGS, IMG_DENIO_THUNDEREGG_WILD, IMG_DENIO_THUNDEREGG_MUSEUM, IMG_DENIO_THUNDEREGG_CAB),
         "denver-gem-show" to listOf(IMG_DENVER_GEM_SHOW),
         "descloizite" to listOf(IMG_DESCLOIZITE, IMG_DESCLOIZITE_WILD, IMG_DESCLOIZITE_MUSEUM),
-        "desert-rose" to listOf(IMG_DESERT_ROSE, IMG_DESERT_ROSE_WILD, IMG_DESERT_ROSE_MUSEUM),
         "diamond" to listOf(IMG_DIAMOND, IMG_DIAMOND_YELLOW, IMG_DIAMOND_PINK, IMG_DIAMOND_BLUE, IMG_DIAMOND_WILD, IMG_DIAMOND_MUSEUM),
         "diamond-hill" to listOf(IMG_DIAMOND_HILL),
         "diamond-peak" to listOf(IMG_DIAMOND_PEAK),
@@ -3461,7 +3470,7 @@ object SpecimenImages {
         "grossular" to listOf(IMG_GROSSULAR, IMG_GROSSULAR_WILD, IMG_GROSSULAR_MUSEUM),
         "gryphaea" to listOf(IMG_GRYPHAEA, IMG_GRYPHAEA_WILD, IMG_GRYPHAEA_MUSEUM),
         "gypsum" to listOf(IMG_GYPSUM, IMG_GYPSUM_WILD, IMG_GYPSUM_MUSEUM),
-        "gypsum-mineral" to listOf(IMG_GYPSUM, IMG_GYPSUM_WILD, IMG_GYPSUM_MUSEUM, IMG_GYPSUM_CABOCHON),
+        "gypsum-mineral" to listOf(IMG_GYPSUM_MINERAL_ROUGH, IMG_GYPSUM_MINERAL_WILD),
         "gyrolite" to listOf(IMG_GYROLITE, IMG_GYROLITE_WILD, IMG_GYROLITE_MUSEUM)
     ) }
 
@@ -3491,7 +3500,6 @@ object SpecimenImages {
         "hybodus" to listOf(IMG_HYBODUS, IMG_HYBODUS_VAR),
         "hypersthene" to listOf(IMG_HYPERSTHENE, IMG_HYPERSTHENE_WILD, IMG_HYPERSTHENE_MUSEUM),
         "ichthyosaur-vertebra" to listOf(IMG_ICHTHYOSAUR_VERTEBRA, IMG_ICHTHYOSAUR_VERTEBRA_VAR),
-        "indicolite" to listOf(IMG_INDICOLITE, IMG_INDICOLITE_WILD, IMG_INDICOLITE_MUSEUM),
         "inoceramus" to listOf(IMG_INOCERAMUS, IMG_INOCERAMUS_VAR),
         "iolite" to listOf(IMG_IOLITE, IMG_IOLITE_WILD, IMG_IOLITE_MUSEUM),
         "iroquois-coppermine" to listOf(IMG_IROQUOIS_COPPERMINE),
@@ -3499,7 +3507,6 @@ object SpecimenImages {
         "jackson-crossroads" to listOf(IMG_JACKSON_CROSSROADS, IMG_JACKSON_CROSSROADS_WILD, IMG_JACKSON_CROSSROADS_MUSEUM),
         "jade" to listOf(IMG_JADE, IMG_JADE_WHITE, IMG_JADE_LAVENDER, IMG_JADE_BLACK, IMG_JADE_WILD, IMG_JADE_MUSEUM, IMG_JADE_CABOCHON),
         "jade-cove" to listOf(IMG_JADE_COVE),
-        "jasper" to listOf(IMG_JASPER, IMG_JASPER_YELLOW, IMG_JASPER_OLIVE, IMG_JASPER_OCHRE, IMG_JASPER_DALMATIAN, IMG_JASPER_PICTURE, IMG_JASPER_BRECCIATED, IMG_JASPER_MOOKAITE, IMG_JASPER_OCEAN, IMG_JASPER_MORRISONITE, IMG_JASPER_LEOPARD_SKIN, IMG_JASPER_WILLOW_CREEK, IMG_JASPER_BRUNEAU, IMG_JASPER_BIGGS, IMG_JASPER_IMPERIAL, IMG_JASPER_KAMBABA, IMG_JASPER_POLYCHROME, IMG_JASPER_RED_CREEK, IMG_JASPER_NOREENA, IMG_JASPER_ORBICULAR, IMG_JASPER_PORCELAIN, IMG_JASPER_POPPY, IMG_JASPER_STONE_CANYON, IMG_JASPER_BLUE_MOUNTAIN, IMG_JASPER_WILD, IMG_JASPER_MUSEUM, IMG_JASPER_CABOCHON),
         "banded-chert" to listOf(IMG_BANDED_CHERT, IMG_BANDED_CHERT_VAR, IMG_BANDED_CHERT_SLAB),
         "jasper-picture" to listOf(IMG_JASPER_PICTURE, IMG_JASPER_PICTURE_WILD, IMG_JASPER_PICTURE_MUSEUM, IMG_JASPER_PICTURE_CAB),
         "jasper-brecciated" to listOf(IMG_JASPER_BRECCIATED, IMG_JASPER_BRECCIATED_WILD, IMG_JASPER_BRECCIATED_MUSEUM, IMG_JASPER_BRECCIATED_CAB),
@@ -3535,7 +3542,6 @@ object SpecimenImages {
         "lake-george" to listOf(IMG_LAKE_GEORGE, IMG_LAKE_GEORGE_WILD, IMG_LAKE_GEORGE_MUSEUM, IMG_LAKE_GEORGE_CAB),
         "lake-superior-agate" to listOf(IMG_LAKE_SUPERIOR_AGATE, IMG_LAKE_SUPERIOR_AGATE_WILD, IMG_LAKE_SUPERIOR_AGATE_MUSEUM, IMG_LAKE_SUPERIOR_AGATE_CABOCHON),
         "lapis-lazuli" to listOf(IMG_LAPIS_LAZULI, IMG_LAPIS_ROUGH, IMG_LAPIS_ROUGH_2, IMG_LAPIS_WILD, IMG_LAPIS_MUSEUM, IMG_LAPIS_CABOCHON, IMG_LAPIS_CABOCHON_2),
-        "larimar" to listOf(IMG_LARIMAR, IMG_LARIMAR_ROUGH_2, IMG_LARIMAR_WILD, IMG_LARIMAR_MUSEUM, IMG_LARIMAR_CABOCHON),
         "lazulite" to listOf(IMG_LAZULITE, IMG_LAZULITE_WILD, IMG_LAZULITE_MUSEUM),
         "lepidocrocite" to listOf(IMG_LEPIDOCROCITE, IMG_LEPIDOCROCITE_WILD, IMG_LEPIDOCROCITE_MUSEUM),
         "lepidodendron" to listOf(IMG_LEPIDODENDRON, IMG_LEPIDODENDRON_WILD, IMG_ALIVE_LEPIDODENDRON),
@@ -3599,7 +3605,7 @@ object SpecimenImages {
         "peridot" to listOf(IMG_PERIDOT, IMG_PERIDOT_ROUGH_2, IMG_PERIDOT_WILD, IMG_PERIDOT_MUSEUM, IMG_PERIDOT_CABOCHON),
         "peridot-beach" to listOf(IMG_PERIDOT_BEACH),
         "pectolite" to listOf(IMG_PECTOLITE, IMG_PECTOLITE_WILD, IMG_PECTOLITE_MUSEUM, IMG_PECTOLITE_CABOCHON),
-        "pectolite-fibrous" to listOf(IMG_PECTOLITE_MUSEUM, IMG_PECTOLITE_WILD),
+        "pectolite-fibrous" to listOf(IMG_PECTOLITE_FIBROUGH),
         "pectolite-schizolite" to listOf(IMG_PECTOLITE_SCHIZOLITE_MUSEUM, IMG_PECTOLITE_SCHIZOLITE),
         "pectolite-massive" to listOf(IMG_PECTOLITE_MASSIVE_MUSEUM, IMG_PECTOLITE_MASSIVE),
         "pectolite-green" to listOf(IMG_PECTOLITE_GREEN_MUSEUM, IMG_PECTOLITE_GREEN),
@@ -3610,7 +3616,6 @@ object SpecimenImages {
         "phlogopite" to listOf(IMG_PHLOGOPITE, IMG_PHLOGOPITE_WILD, IMG_PHLOGOPITE_MUSEUM),
         "phosphosiderite" to listOf(IMG_PHOSPHOSIDERITE, IMG_PHOSPHOSIDERITE_WILD, IMG_PHOSPHOSIDERITE_MUSEUM),
         "pietersite" to listOf(IMG_PIETERSITE, IMG_PIETERSITE_WILD, IMG_PIETERSITE_CABOCHON),
-        "pink-halite" to listOf(IMG_HALITE_PINK_SPECIMEN, IMG_HALITE_PINK_MUSEUM),
         "plesiosaur-tooth" to listOf(IMG_PLESIOSAUR_TOOTH, IMG_PLESIOSAUR_TOOTH_VAR),
         "pliosaur-tooth" to listOf(IMG_PLIOSAUR_TOOTH, IMG_PLIOSAUR_TOOTH_VAR),
         "plume-agate" to listOf(IMG_PLUME_AGATE, IMG_PLUME_AGATE_WILD, IMG_PLUME_AGATE_MUSEUM, IMG_PLUME_AGATE_CABOCHON),
@@ -3641,7 +3646,6 @@ object SpecimenImages {
         "rontonda" to listOf(IMG_RONTONDA),
         "rose-quartz" to listOf(IMG_ROSE_QUARTZ, IMG_ROSE_QUARTZ_WILD, IMG_ROSE_QUARTZ_MUSEUM, IMG_ROSE_QUARTZ_CABOCHON),
         "royal-peacock" to listOf(IMG_ROYAL_PEACOCK, IMG_ROYAL_PEACOCK_WILD, IMG_ROYAL_PEACOCK_MUSEUM, IMG_ROYAL_PEACOCK_CAB),
-        "rubellite" to listOf(IMG_RUBELLITE, IMG_RUBELLITE_WILD, IMG_RUBELLITE_MUSEUM),
         "rugose-coral" to listOf(IMG_RUGOSE_CORAL, IMG_RUGOSE_CORAL_WILD, IMG_RUGOSE_CORAL_MUSEUM),
         "rutilated-quartz" to listOf(IMG_RUTILATED_QUARTZ, IMG_RUTILATED_QUARTZ_WILD, IMG_RUTILATED_QUARTZ_MUSEUM),
         "rutile" to listOf(IMG_RUTILE, IMG_RUTILE_WILD, IMG_RUTILE_MUSEUM),
@@ -3675,9 +3679,7 @@ object SpecimenImages {
         "sodalite" to listOf(IMG_SODALITE, IMG_SODALITE_WILD, IMG_SODALITE_MUSEUM, IMG_SODALITE_CABOCHON),
         "spectrolite" to listOf(IMG_SPECTROLITE, IMG_SPECTROLITE_WILD, IMG_SPECTROLITE_CABOCHON),
         "spencer-opal" to listOf(IMG_SPENCER_OPAL, IMG_SPENCER_OPAL_WILD, IMG_SPENCER_OPAL_MUSEUM, IMG_SPENCER_OPAL_CAB),
-        "spessartine" to listOf(IMG_SPESSARTINE, IMG_SPESSARTINE_WILD, IMG_SPESSARTINE_MUSEUM),
         "sphalerite" to listOf(IMG_SPHALERITE, IMG_SPHALERITE_BROWN, IMG_SPHALERITE_HONEY, IMG_SPHALERITE_RUBY, IMG_SPHALERITE_GREEN, IMG_SPHALERITE_WILD, IMG_SPHALERITE_MUSEUM),
-        "sphene" to listOf(IMG_SPHENE, IMG_SPHENE_WILD, IMG_SPHENE_MUSEUM, IMG_SPHENE_FACETED),
         "spinel" to listOf(IMG_SPINEL, IMG_SPINEL_WILD, IMG_SPINEL_MUSEUM),
         "spirifer" to listOf(IMG_SPIRIFER, IMG_SPIRIFER_WILD),
         "starfish-fossil" to listOf(IMG_STARFISH_FOSSIL, IMG_STARFISH_WILD),
@@ -3713,13 +3715,10 @@ object SpecimenImages {
         "tucson-mineral-dealers" to listOf(IMG_TUCSON_MINERAL_DEALERS),
         "tuff" to listOf(IMG_TUFF, IMG_TUFF_WILD, IMG_TUFF_MUSEUM),
         "turquoise" to listOf(IMG_TURQUOISE, IMG_TURQUOISE_GREEN_BLUE, IMG_TURQUOISE_APPLE_GREEN, IMG_TURQUOISE_ROUGH_2, IMG_TURQUOISE_WILD, IMG_TURQUOISE_MUSEUM, IMG_TURQUOISE_CABOCHON),
-        "turritella" to listOf(IMG_TURRITELLA, IMG_TURRITELLA_WILD, IMG_TURRITELLA_MUSEUM),
         "ulexite" to listOf(IMG_ULEXITE, IMG_ULEXITE_WILD, IMG_ULEXITE_MUSEUM),
-        "uvarovite" to listOf(IMG_UVAROVITE, IMG_UVAROVITE_WILD, IMG_UVAROVITE_MUSEUM),
         "v-rock-shop" to listOf(IMG_V_ROCK_SHOP),
         "vanadinite-new" to listOf(IMG_VANADINITE_NEW, IMG_VANADINITE_WILD, IMG_VANADINITE_MUSEUM),
         "variscite" to listOf(IMG_VARISCITE, IMG_VARISCITE_WILD, IMG_VARISCITE_MUSEUM, IMG_VARISCITE_CABOCHON),
-        "verdelite" to listOf(IMG_VERDELITE, IMG_VERDELITE_WILD, IMG_VERDELITE_MUSEUM),
         "vesuvianite" to listOf(IMG_VESUVIANITE, IMG_VESUVIANITE_WILD, IMG_VESUVIANITE_MUSEUM),
         "vivianite" to listOf(IMG_VIVIANITE, IMG_VIVIANITE_WILD, IMG_VIVIANITE_MUSEUM),
         "wacke" to listOf(IMG_WACKE, IMG_WACKE_WILD, IMG_WACKE_MUSEUM),
@@ -3751,7 +3750,6 @@ object SpecimenImages {
         "electric-blue-obsidian" to listOf(IMG_ELECTRIC_BLUE_OBSIDIAN, IMG_ELECTRIC_BLUE_OBSIDIAN_VAR),
         "silver-sheen-obsidian" to listOf(IMG_SILVER_SHEEN_OBSIDIAN, IMG_SILVER_SHEEN_WILD, IMG_SILVER_SHEEN_MUSEUM, IMG_SILVER_SHEEN_CAB),
         "golden-sheen-obsidian" to listOf(IMG_GOLDEN_SHEEN_OBSIDIAN, IMG_GOLDEN_SHEEN_OBSIDIAN_VAR),
-        "midnight-lace-obsidian" to listOf(IMG_MIDNIGHT_LACE_OBSIDIAN, IMG_MIDNIGHT_LACE_OBSIDIAN_VAR),
         "opal" to listOf(IMG_OPAL, IMG_OPAL_BLACK, IMG_OPAL_FIRE, IMG_BLACK_OPAL, IMG_BOULDER_OPAL, IMG_MATRIX_OPAL, IMG_BLUE_OPAL, IMG_WHITE_OPAL, IMG_CRYSTAL_OPAL, IMG_ETHIOPIAN_OPAL, IMG_OPAL_WILD, IMG_OPAL_CABOCHON_NEW),
         "opalite" to listOf(IMG_OPALITE),
         "chalcedony" to listOf(IMG_AGATE, IMG_AGATE_BLUE, IMG_AGATE_GRAY, IMG_AGATE_BROWN, IMG_AGATE_MOSS, IMG_BOTSWANA_AGATE, IMG_LAGUNA_AGATE, IMG_CRAZY_LACE_AGATE, IMG_CONDOR_AGATE, IMG_FORTIFICATION_AGATE, IMG_AGATE_TURRITELLA, IMG_AGATE_BRAZILIAN, IMG_AGATE_THUNDER_EGG, IMG_AGATE_SNAKE_SKIN, IMG_AGATE_TUBE, IMG_AGATE_EYE, IMG_AGATE_ENHYDRO, IMG_AGATE_DRYHEAD, IMG_AGATE_WILD, IMG_AGATE_MUSEUM),
@@ -3768,66 +3766,33 @@ object SpecimenImages {
         "aegirine" to listOf(IMG_AEGIRINE, IMG_AEGIRINE_MUSEUM),
         "albite" to listOf(IMG_ALBITE, IMG_ALBITE_MUSEUM),
         "allanite" to listOf(IMG_ALLANITE, IMG_ALLANITE_WILD, IMG_ALLANITE_MUSEUM),
-        "amblygonite" to listOf(IMG_AMBLYGONITE, IMG_AMBLYGONITE_WILD, IMG_AMBLYGONITE_MUSEUM),
-        "analcime" to listOf(IMG_ANALCIME, IMG_ANALCIME_WILD, IMG_ANALCIME_MUSEUM),
-        "anatase" to listOf(IMG_ANATASE, IMG_ANATASE_WILD, IMG_ANATASE_MUSEUM),
-        "andesite" to listOf(IMG_ANDESITE, IMG_ANDESITE_WILD, IMG_ANDESITE_MUSEUM),
         "anomalocaris" to listOf(IMG_ANOMALOCARIS, IMG_ANOMALOCARIS_VAR),
         "archaeopteryx" to listOf(IMG_ARCHAEOPTERYX, IMG_ARCHAEOPTERYX_VAR),
-        "archelon" to listOf(IMG_ARCHELON, IMG_ARCHELON_WILD),
-        "argillite" to listOf(IMG_ARGILLITE, IMG_ARGILLITE_WILD, IMG_ARGILLITE_MUSEUM),
         "astrophyllite" to listOf(IMG_ASTROPHYLLITE, IMG_ASTROPHYLLITE_WILD, IMG_ASTROPHYLLITE_MUSEUM),
-        "aurichalcite" to listOf(IMG_AURICHALCITE, IMG_AURICHALCITE_WILD, IMG_AURICHALCITE_MUSEUM),
-        "banded-iron-formation" to listOf(IMG_BANDED_IRON_FORMATION, IMG_BANDED_IRON_WILD, IMG_BANDED_IRON_MUSEUM),
         "bastnasite" to listOf(IMG_BASTNASITE, IMG_BASTNASITE_WILD, IMG_BASTNASITE_MUSEUM),
-        "bauxite" to listOf(IMG_BAUXITE, IMG_BAUXITE_WILD),
-        "beryllonite" to listOf(IMG_BERYLLONITE, IMG_BERYLLONITE_WILD, IMG_BERYLLONITE_MUSEUM),
         "biotite" to listOf(IMG_BIOTITE, IMG_BIOTITE_WILD, IMG_BIOTITE_MUSEUM),
-        "bismuthinite" to listOf(IMG_BISMUTHINITE, IMG_BISMUTHINITE_WILD, IMG_BISMUTHINITE_MUSEUM),
-        "bituminous-coal" to listOf(IMG_BITUMINOUS_COAL, IMG_BITUMINOUS_COAL_WILD, IMG_BITUMINOUS_COAL_MUSEUM),
-        "blueschist" to listOf(IMG_BLUESCHIST, IMG_BLUESCHIST_WILD, IMG_BLUESCHIST_MUSEUM),
         "bournonite" to listOf(IMG_BOURNONITE, IMG_BOURNONITE_WILD, IMG_BOURNONITE_MUSEUM),
-        "brazilianite" to listOf(IMG_BRAZILIANITE, IMG_BRAZILIANITE_WILD, IMG_BRAZILIANITE_MUSEUM, IMG_BRAZILIANITE_FACETED),
-        "brookite" to listOf(IMG_BROOKITE, IMG_BROOKITE_WILD, IMG_BROOKITE_MUSEUM),
-        "brontotherium" to listOf(IMG_BRONTOTHERIUM, IMG_BRONTOTHERIUM_WILD, IMG_BRONTOTHERIUM_MUSEUM),
-        "calaverite" to listOf(IMG_CALAVERITE, IMG_CALAVERITE_WILD, IMG_CALAVERITE_MUSEUM),
         "cancrinite" to listOf(IMG_CANCRINITE, IMG_CANCRINITE_VAR),
-        "carbonatite" to listOf(IMG_CARBONATITE, IMG_CARBONATITE_WILD, IMG_CARBONATITE_MUSEUM),
         "carnallite" to listOf(IMG_CARNALLITE, IMG_CARNALLITE_WILD, IMG_CARNALLITE_MUSEUM),
         "chabazite" to listOf(IMG_CHABAZITE, IMG_CHABAZITE_VAR),
         "chalcocite" to listOf(IMG_CHALCOCITE, IMG_CHALCOCITE_VAR),
         "chalcanthite" to listOf(IMG_CHALCANTHITE, IMG_CHALCANTHITE_VAR),
-        "chalcophyllite" to listOf(IMG_CHALCOPHYLLITE, IMG_CHALCOPHYLLITE_WILD, IMG_CHALCOPHYLLITE_MUSEUM),
-        "charnockite" to listOf(IMG_CHARNOCKITE, IMG_CHARNOCKITE_WILD, IMG_CHARNOCKITE_MUSEUM),
-        "childrenite" to listOf(IMG_CHILDRENITE, IMG_CHILDRENITE_WILD, IMG_CHILDRENITE_MUSEUM),
         "chlorite" to listOf(IMG_CHLORITE, IMG_CHLORITE_WILD),
-        "clinoptilolite" to listOf(IMG_CLINOPTILOLITE, IMG_CLINOPTILOLITE_WILD, IMG_CLINOPTILOLITE_MUSEUM),
-        "columbite" to listOf(IMG_COLUMBITE, IMG_COLUMBITE_WILD, IMG_COLUMBITE_MUSEUM),
         "covellite" to listOf(IMG_COVELLITE_MUSEUM, IMG_COVELLITE),
-        "cryolite" to listOf(IMG_CRYOLITE, IMG_CRYOLITE_WILD),
         "cubanite" to listOf(IMG_CUBANITE, IMG_CUBANITE_WILD, IMG_CUBANITE_MUSEUM),
-        "dacite" to listOf(IMG_DACITE, IMG_DACITE_WILD, IMG_DACITE_MUSEUM),
-        "diamictite" to listOf(IMG_DIAMICTITE, IMG_DIAMICTITE_WILD, IMG_DIAMICTITE_MUSEUM),
-        "diaspore" to listOf(IMG_DIASPORE, IMG_DIASPORE_WILD),
         "dimetrodon" to listOf(IMG_DIMETRODON, IMG_DIMETRODON_VAR),
         "dunkleosteus" to listOf(IMG_DUNKLEOSTEUS, IMG_DUNKLEOSTEUS_VAR),
         "dunite" to listOf(IMG_DUNITE, IMG_DUNITE_WILD, IMG_DUNITE_MUSEUM),
-        "enargite" to listOf(IMG_ENARGITE, IMG_ENARGITE_WILD, IMG_ENARGITE_MUSEUM),
-        "eucryptite" to listOf(IMG_EUCRYPTITE, IMG_EUCRYPTITE_WILD, IMG_EUCRYPTITE_MUSEUM),
         "eudialyte" to listOf(IMG_EUDIALYTE, IMG_EUDIALYTE_WILD, IMG_EUDIALYTE_MUSEUM, IMG_EUDIALYTE_CAB),
-        "euxenite" to listOf(IMG_EUXENITE, IMG_EUXENITE_WILD, IMG_EUXENITE_MUSEUM),
         "fayalite" to listOf(IMG_FAYALITE, IMG_FAYALITE_VAR),
         "fergusonite" to listOf(IMG_FERGUSONITE, IMG_FERGUSONITE_WILD, IMG_FERGUSONITE_MUSEUM),
         "forsterite" to listOf(IMG_FORSTERITE, IMG_FORSTERITE_VAR),
         "franklinite" to listOf(IMG_FRANKLINITE, IMG_FRANKLINITE_VAR),
         "gadolinite" to listOf(IMG_GADOLINITE, IMG_GADOLINITE_VAR),
         "glauconite" to listOf(IMG_GLAUCONITE, IMG_GLAUCONITE_VAR),
-        "glyptodon" to listOf(IMG_GLYPTODON, IMG_GLYPTODON_WILD, IMG_GLYPTODON_MUSEUM),
-        "granulite" to listOf(IMG_GRANULITE, IMG_GRANULITE_WILD, IMG_GRANULITE_MUSEUM),
         "greenockite" to listOf(IMG_GREENOCKITE, IMG_GREENOCKITE_WILD),
         "halite" to listOf(IMG_HALITE, IMG_HALITE_WILD, IMG_HALITE_MUSEUM),
         "hanksite" to listOf(IMG_HANKSITE, IMG_HANKSITE_WILD, IMG_HANKSITE_MUSEUM),
-        "hausmannite" to listOf(IMG_HAUSMANNITE, IMG_HAUSMANNITE_WILD, IMG_HAUSMANNITE_MUSEUM),
         "hemimorphite" to listOf(IMG_HEMIMORPHITE, IMG_HEMIMORPHITE_VAR),
         "herderite" to listOf(IMG_HERDERITE, IMG_HERDERITE_WILD, IMG_HERDERITE_MUSEUM),
         "hornblende" to listOf(IMG_HORNBLENDE, IMG_HORNBLENDE_WILD, IMG_HORNBLENDE_MUSEUM),
@@ -3837,74 +3802,29 @@ object SpecimenImages {
     private val urlChunk4: Map<String, List<String>> by lazy { mapOf(
         "ichthyostega" to listOf(IMG_ICHTHYOSTEGA, IMG_ICHTHYOSTEGA_VAR),
         "ilmenite" to listOf(IMG_ILMENITE, IMG_ILMENITE_VAR),
-        "ilvaite" to listOf(IMG_ILVAITE, IMG_ILVAITE_WILD, IMG_ILVAITE_MUSEUM),
-        "itacolumite" to listOf(IMG_ITACOLUMITE, IMG_ITACOLUMITE_WILD, IMG_ITACOLUMITE_MUSEUM),
-        "jamesonite" to listOf(IMG_JAMESONITE, IMG_JAMESONITE_WILD, IMG_JAMESONITE_MUSEUM),
-        "jarosite" to listOf(IMG_JAROSITE, IMG_JAROSITE_WILD, IMG_JAROSITE_MUSEUM),
         "kainite" to listOf(IMG_KAINITE, IMG_KAINITE_WILD, IMG_KAINITE_MUSEUM),
         "kaolinite" to listOf(IMG_KAOLINITE, IMG_KAOLINITE_VAR),
         "kernite" to listOf(IMG_KERNITE, IMG_KERNITE_VAR),
         "kimberlite" to listOf(IMG_KIMBERLITE, IMG_KIMBERLITE_WILD, IMG_KIMBERLITE_MUSEUM),
-        "kornerupine" to listOf(IMG_KORNERUPINE, IMG_KORNERUPINE_WILD, IMG_KORNERUPINE_MUSEUM),
-        "lamproite" to listOf(IMG_LAMPROITE, IMG_LAMPROITE_WILD, IMG_LAMPROITE_MUSEUM),
-        "langbeinite" to listOf(IMG_LANGBEINITE, IMG_LANGBEINITE_WILD, IMG_LANGBEINITE_MUSEUM),
-        "laterite" to listOf(IMG_LATERITE, IMG_LATERITE_WILD, IMG_LATERITE_MUSEUM),
-        "laumontite" to listOf(IMG_LAUMONTITE, IMG_LAUMONTITE_WILD, IMG_LAUMONTITE_MUSEUM),
-        "lawsonite" to listOf(IMG_LAWSONITE, IMG_LAWSONITE_WILD, IMG_LAWSONITE_MUSEUM),
         "leadhillite" to listOf(IMG_LEADHILLITE, IMG_LEADHILLITE_WILD, IMG_LEADHILLITE_MUSEUM),
         "legrandite" to listOf(IMG_LEGRANDITE, IMG_LEGRANDITE_WILD, IMG_LEGRANDITE_MUSEUM),
         "leucite" to listOf(IMG_LEUCITE, IMG_LEUCITE_VAR),
-        "lignite" to listOf(IMG_LIGNITE, IMG_LIGNITE_WILD, IMG_LIGNITE_MUSEUM),
         "limonite" to listOf(IMG_LIMONITE, IMG_LIMONITE_WILD, IMG_LIMONITE_MUSEUM),
         "ludlamite" to listOf(IMG_LUDLAMITE, IMG_LUDLAMITE_WILD, IMG_LUDLAMITE_MUSEUM),
         "manganite" to listOf(IMG_MANGANITE, IMG_MANGANITE_WILD, IMG_MANGANITE_MUSEUM),
         "marcasite" to listOf(IMG_MARCASITE, IMG_MARCASITE_VAR),
-        "megatherium" to listOf(IMG_MEGATHERIUM, IMG_MEGATHERIUM_WILD, IMG_MEGATHERIUM_MUSEUM),
-        "melanterite" to listOf(IMG_MELANTERITE, IMG_MELANTERITE_WILD, IMG_MELANTERITE_MUSEUM),
-        "mellite" to listOf(IMG_MELLITE, IMG_MELLITE_WILD, IMG_MELLITE_MUSEUM),
         "millerite" to listOf(IMG_MILLERITE, IMG_MILLERITE_VAR),
-        "mirabilite" to listOf(IMG_MIRABILITE, IMG_MIRABILITE_WILD, IMG_MIRABILITE_MUSEUM),
         "monazite" to listOf(IMG_MONAZITE, IMG_MONAZITE_WILD),
-        "montmorillonite" to listOf(IMG_MONTMORILLONITE, IMG_MONTMORILLONITE_WILD, IMG_MONTMORILLONITE_MUSEUM),
-        "mordenite" to listOf(IMG_MORDENITE, IMG_MORDENITE_WILD, IMG_MORDENITE_MUSEUM),
-        "mosasaurus" to listOf(IMG_MOSASAURUS, IMG_MOSASAURUS_WILD, IMG_MOSASAURUS_MUSEUM),
-        "native-arsenic" to listOf(IMG_NATIVE_ARSENIC, IMG_NATIVE_ARSENIC_WILD, IMG_NATIVE_ARSENIC_MUSEUM),
         "nepheline" to listOf(IMG_NEPHELINE, IMG_NEPHELINE_VAR),
-        "oil-shale" to listOf(IMG_OIL_SHALE, IMG_OIL_SHALE_WILD, IMG_OIL_SHALE_MUSEUM),
         "olivine" to listOf(IMG_OLIVINE, IMG_OLIVINE_WILD, IMG_OLIVINE_MUSEUM),
-        "parasaurolophus" to listOf(IMG_PARASAUROLOPHUS, IMG_PARASAUROLOPHUS_WILD, IMG_PARASAUROLOPHUS_MUSEUM),
-        "parisite" to listOf(IMG_PARISITE, IMG_PARISITE_WILD, IMG_PARISITE_MUSEUM),
         "peridotite" to listOf(IMG_PERIDOTITE, IMG_PERIDOTITE_WILD, IMG_PERIDOTITE_MUSEUM),
-        "phonolite" to listOf(IMG_PHONOLITE, IMG_PHONOLITE_WILD, IMG_PHONOLITE_MUSEUM),
-        "phosphorite" to listOf(IMG_PHOSPHORITE, IMG_PHOSPHORITE_WILD, IMG_PHOSPHORITE_MUSEUM),
-        "phyllite" to listOf(IMG_PHYLLITE, IMG_PHYLLITE_WILD, IMG_PHYLLITE_MUSEUM),
-        "pollucite" to listOf(IMG_POLLUCITE, IMG_POLLUCITE_WILD, IMG_POLLUCITE_MUSEUM),
         "polyhalite" to listOf(IMG_POLYHALITE, IMG_POLYHALITE_VAR),
-        "pteranodon" to listOf(IMG_PTERANODON, IMG_PTERANODON_WILD),
-        "pyrophyllite" to listOf(IMG_PYROPHYLLITE, IMG_PYROPHYLLITE_WILD, IMG_PYROPHYLLITE_MUSEUM),
         "pyroxenite" to listOf(IMG_PYROXENITE, IMG_PYROXENITE_WILD, IMG_PYROXENITE_MUSEUM),
-        "red-beryl" to listOf(IMG_RED_BERYL, IMG_RED_BERYL_WILD, IMG_RED_BERYL_MUSEUM, IMG_RED_BERYL_FACETED),
-        "rosasite" to listOf(IMG_ROSASITE, IMG_ROSASITE_WILD, IMG_ROSASITE_MUSEUM),
-        "samarskite" to listOf(IMG_SAMARSKITE, IMG_SAMARSKITE_WILD, IMG_SAMARSKITE_MUSEUM),
         "scolecite" to listOf(IMG_SCOLECITE, IMG_SCOLECITE_WILD),
-        "serandite" to listOf(IMG_SERANDITE, IMG_SERANDITE_WILD, IMG_SERANDITE_MUSEUM),
-        "serendibite" to listOf(IMG_SERENDIBITE, IMG_SERENDIBITE_WILD, IMG_SERENDIBITE_MUSEUM),
-        "sinhalite" to listOf(IMG_SINHALITE, IMG_SINHALITE_WILD, IMG_SINHALITE_MUSEUM),
-        "smilodon-skull" to listOf(IMG_SMILODON_SKULL, IMG_SMILODON_SKULL_WILD, IMG_SMILODON_SKULL_MUSEUM),
-        "stegosaurus" to listOf(IMG_STEGOSAURUS, IMG_STEGOSAURUS_WILD, IMG_STEGOSAURUS_MUSEUM),
-        "syenite" to listOf(IMG_SYENITE, IMG_SYENITE_WILD, IMG_SYENITE_MUSEUM),
         "syenite-fluorescent" to listOf(IMG_FLUOR_SYENITE_NAT, IMG_FLUOR_SYENITE_LW, IMG_FLUOR_SYENITE_MW, IMG_FLUOR_SYENITE_SW),
-        "thenardite" to listOf(IMG_THENARDITE, IMG_THENARDITE_WILD, IMG_THENARDITE_MUSEUM),
         "tiktaalik" to listOf(IMG_TIKTAALIK, IMG_TIKTAALIK_WILD, IMG_TIKTAALIK_MUSEUM),
-        "trachyte" to listOf(IMG_TRACHYTE, IMG_TRACHYTE_WILD, IMG_TRACHYTE_MUSEUM),
-        "triceratops" to listOf(IMG_TRICERATOPS, IMG_TRICERATOPS_WILD, IMG_TRICERATOPS_MUSEUM),
-        "triphylite" to listOf(IMG_TRIPHYLITE, IMG_TRIPHYLITE_WILD, IMG_TRIPHYLITE_MUSEUM),
         "troctolite" to listOf(IMG_TROCTOLITE, IMG_TROCTOLITE_WILD, IMG_TROCTOLITE_MUSEUM),
-        "uintatherium" to listOf(IMG_UINTATHERIUM, IMG_UINTATHERIUM_WILD, IMG_UINTATHERIUM_MUSEUM),
-        "uraninite" to listOf(IMG_URANINITE, IMG_URANINITE_WILD, IMG_URANINITE_MUSEUM),
-        "velociraptor" to listOf(IMG_VELOCIRAPTOR_TEETH_GROUP, IMG_VELOCIRAPTOR_TOOTH_SIDE, IMG_VELOCIRAPTOR_TOOTH_DARK, IMG_VELOCIRAPTOR, IMG_VELOCIRAPTOR_WILD, IMG_VELOCIRAPTOR_MUSEUM),
         "wollastonite" to listOf(IMG_WOLLASTONITE, IMG_WOLLASTONITE_WILD, IMG_WOLLASTONITE_MUSEUM),
-        "xenotime" to listOf(IMG_XENOTIME, IMG_XENOTIME_WILD, IMG_XENOTIME_MUSEUM),
         "deinotherium" to listOf(IMG_DEINOTHERIUM, IMG_DEINOTHERIUM_VAR),
         "andrewsarchus" to listOf(IMG_ANDREWSARCHUS, IMG_ANDREWSARCHUS_VAR),
         "platybelodon" to listOf(IMG_PLATYBELODON, IMG_PLATYBELODON_VAR),
@@ -3925,16 +3845,12 @@ object SpecimenImages {
         "tourmaline-pegmatite" to listOf(IMG_TOURMALINE_QUARTZ_FELDSPAR, IMG_TOURMALINE_PEGMATITE_WILD, IMG_TOURMALINE_PEGMATITE_MUSEUM, IMG_TOURMALINE_PEGMATITE_CAB),
         "galena-sphalerite-pyrite" to listOf(IMG_GALENA_SPHALERITE_PYRITE, IMG_GALENA_SPHALERITE_PYRITE_VAR),
         "quartz" to listOf(IMG_QUARTZ, IMG_QUARTZ_WILD, IMG_QUARTZ_WILD_2, IMG_QUARTZ_MUSEUM, IMG_QUARTZ_CABOCHON, "$Q/9a6317dd-e330-4f91-9e51-0a8443ca95eb.png", "$Q/6beafea5-90b5-4dd8-832e-e5b9e14ff923.png"),
-        "geode" to listOf(IMG_GEODE, IMG_GEODE_WILD, IMG_GEODE_MUSEUM, IMG_GEODE_CAB),
-        "petoskey-stone" to listOf(IMG_PETOSKEY, IMG_PETOSKEY_WILD_2, IMG_PETOSKEY_MUSEUM, IMG_PETOSKEY_CAB),
         "fossil-soup" to listOf(IMG_FOSSIL_SOUP, IMG_FOSSIL_SOUP_VAR, IMG_FOSSIL_SOUP_BEACH),
-        "fossil-soup-assemblage" to listOf(IMG_FOSSIL_SOUP, IMG_FOSSIL_SOUP_WILD, IMG_FOSSIL_SOUP_MUSEUM),
         "natural-pearls" to listOf(IMG_NATURAL_PEARLS, IMG_NATURAL_PEARLS_WILD, IMG_NATURAL_PEARLS_MUSEUM),
         "grape-agate" to listOf(IMG_GRAPE_AGATE, IMG_GRAPE_AGATE_MUSEUM),
         "fordite" to listOf(IMG_FORDITE, IMG_FORDITE_VAR),
         "petrified-wood-blue-forest" to listOf(IMG_PETRIFIED_BLUE_FOREST, IMG_PETRIFIED_BLUE_FOREST_VAR),
         "petrified-wood-rainbow" to listOf(IMG_PETRIFIED_RAINBOW, IMG_PETRIFIED_RAINBOW_WILD),
-        "petrified-wood-arizona" to listOf(IMG_PETRIFIED_ARIZONA, IMG_PETRIFIED_ARIZONA_WILD, IMG_PETRIFIED_ARIZONA_MUSEUM, IMG_PETRIFIED_ARIZONA_CAB),
         "petrified-wood-oregon-green" to listOf(IMG_PETRIFIED_OREGON, IMG_PETRIFIED_OREGON_WILD, IMG_PETRIFIED_OREGON_MUSEUM),
         "petrified-wood-opalized" to listOf(IMG_PETRIFIED_OPALIZED, IMG_PETRIFIED_OPALIZED_VAR),
         "amazonite-smoky-quartz-assemblage" to listOf(IMG_AMAZONITE_SMOKY_QUARTZ, IMG_AMAZONITE_SMOKY_QUARTZ_ROUGH, IMG_AMAZONITE_SMOKY_QUARTZ_MUSEUM, IMG_AMAZONITE_SMOKY_QUARTZ_CAB),
@@ -3942,7 +3858,6 @@ object SpecimenImages {
         "quartz-chalcopyrite-assemblage" to listOf(IMG_QUARTZ_CHALCOPYRITE, IMG_QUARTZ_CHALCOPYRITE_WILD, IMG_QUARTZ_CHALCOPYRITE_MUSEUM),
         "amethyst-calcite-assemblage" to listOf(IMG_AMETHYST_CALCITE_GEODE, IMG_AMETHYST_CALCITE_CLOSEUP),
         "gold-quartz-assemblage" to listOf(IMG_GOLD_QUARTZ, IMG_GOLD_QUARTZ_VAR),
-        "native-silver-assemblage" to listOf(IMG_NATIVE_SILVER_SPEC, IMG_NATIVE_SILVER_ASSEMBLAGE_WILD, IMG_NATIVE_SILVER_ASSEMBLAGE_MUSEUM),
         "basalt-copper-calcite-assemblage" to listOf(IMG_BASALT_COPPER_CALCITE, IMG_BASALT_COPPER_CALCITE_VAR),
         "chlorastrolite-basalt-assemblage" to listOf(IMG_CHLORASTROLITE_BASALT, IMG_CHLORASTROLITE_BASALT_ASSEMBLAGE_VAR),
         "tyrannosaurus-rex" to listOf(IMG_TREX, IMG_ALIVE_TREX),
@@ -3990,7 +3905,7 @@ object SpecimenImages {
         "diplocaulus" to listOf(IMG_DIPLOCAULUS_WILD, IMG_DIPLOCAULUS_MUSEUM, IMG_ALIVE_DIPLOCAULUS),
         "sigillaria" to listOf(IMG_SIGILLARIA_WILD, IMG_SIGILLARIA_MUSEUM, IMG_ALIVE_SIGILLARIA),
         "cordaites" to listOf(IMG_CORDAITES_WILD, IMG_CORDAITES_MUSEUM, IMG_ALIVE_CORDAITES),
-        "ginkgo" to listOf(IMG_GINKGO_WILD, IMG_GINKGO_MUSEUM, IMG_ALIVE_GINKGO),
+        "ginkgo" to listOf(IMG_ALIVE_GINKGO),
         "foraminifera" to listOf(IMG_FORAMINIFERA_WILD, IMG_FORAMINIFERA_MUSEUM, IMG_ALIVE_FORAMINIFERA),
         "radiolaria" to listOf(IMG_RADIOLARIA_WILD, IMG_RADIOLARIA_MUSEUM, IMG_ALIVE_RADIOLARIA),
         "coccolithophore" to listOf(IMG_COCCOLITHOPHORE_WILD, IMG_ALIVE_COCCOLITHOPHORE),
@@ -4076,27 +3991,20 @@ object SpecimenImages {
         "igneous-monzonite" to listOf(IMG_MONZONITE, IMG_IGNEOUS_MONZONITE_VAR, IMG_IGNEOUS_MONZONITE_WILD, IMG_IGNEOUS_MONZONITE_MUSEUM),
         "igneous-trachyte" to listOf(IMG_TRACHYTE, IMG_IGNEOUS_TRACHYTE_VAR),
         "sedimentary-dolostone" to listOf(IMG_DOLOSTONE_NEW, IMG_DOLOSTONE_WILD, IMG_DOLOSTONE_MUSEUM),
-        "sedimentary-chalk" to listOf(IMG_CHALK_ROCK, IMG_CHALK_WILD, IMG_CHALK_MUSEUM),
         "sedimentary-radiolarite" to listOf("$Q/768156a9-7a52-4b1b-a83d-388e22006d7a.png"),
         "oxide-uraninite" to listOf(IMG_URANINITE, IMG_OXIDE_URANINITE_VAR),
         "sulfate-kieserite" to listOf("$Q/4614892e-293a-46ed-9579-3f079ab54876.png"),
         "fossil-pterosaur-bone" to listOf(IMG_PTEROSAUR_BONE_MUSEUM, IMG_PTEROSAUR_BONE_WILD),
-        "fossil-trex-tooth" to listOf(IMG_TREX_TOOTH),
         "igneous-aplite" to listOf(IMG_APLITE, IMG_IGNEOUS_APLITE_VAR),
         "igneous-diabase" to listOf(IMG_DIABASE_NEW, IMG_IGNEOUS_DIABASE_VAR),
-        "igneous-obsidian-midnight-lace" to listOf(IMG_MIDNIGHT_LACE_OBSIDIAN, IMG_IGNEOUS_OBSIDIAN_MIDNIGHT_LACE_VAR),
+        "igneous-obsidian-midnight-lace" to listOf(IMG_IGNEOUS_OBSIDIAN_MIDNIGHT_LACE_VAR),
         "sedimentary-oolitic-limestone" to listOf(IMG_LIMESTONE, IMG_OOLITIC_LIMESTONE_WILD, IMG_OOLITIC_LIMESTONE_MUSEUM),
-        "sedimentary-arkose" to listOf(IMG_ARKOSE, IMG_ARKOSE_SED_WILD, IMG_ARKOSE_SED_MUSEUM),
-        "sedimentary-coquina" to listOf(IMG_COQUINA, IMG_COQUINA_SED_WILD, IMG_COQUINA_SED_MUSEUM),
-        "metamorphic-eclogite" to listOf(IMG_ECLOGITE, IMG_METAMORPHIC_ECLOGITE_VAR),
         "oxide-brookite" to listOf(IMG_BROOKITE, IMG_OXIDE_BROOKITE_VAR),
         "carbonate-ankerite" to listOf(IMG_ANKERITE_MUSEUM, IMG_ANKERITE_WILD),
         "fossil-mosasaur-jaw" to listOf(IMG_MOSASAUR_TOOTH, IMG_FOSSIL_MOSASAUR_JAW_VAR),
         "igneous-porphyry" to listOf(IMG_PORPHYRY, IMG_IGNEOUS_PORPHYRY_VAR),
         "sedimentary-chert-nodule" to listOf(IMG_CHERT_NODULE, IMG_CHERT_NODULE_WILD_NEW, IMG_CHERT_NODULE_MUSEUM_NEW),
-        "metamorphic-soapstone" to listOf(IMG_SOAPSTONE, IMG_METAMORPHIC_SOAPSTONE_VAR),
         "sulfide-enargite" to listOf(IMG_ENARGITE, IMG_ENARGITE_SULF_WILD, IMG_ENARGITE_SULF_MUSEUM),
-        "silicate-zircon" to listOf(IMG_ZIRCON, IMG_ZIRCON_SIL_WILD, IMG_ZIRCON_SIL_MUSEUM),
         "fossil-cephalopod" to listOf(IMG_FOSSIL_CEPHALOPOD_SHELL_REPLICA, IMG_FOSSIL_CEPHALOPOD_VAR),
         "gem-sapphire-star" to listOf(IMG_STAR_SAPPHIRE_BLUE, IMG_STAR_SAPPHIRE_RED, IMG_GEM_SAPPHIRE_STAR_VAR, IMG_STAR_SAPPHIRE_CAB),
         // Felsite — dedicated primary image (was borrowing IMG_RHYOLITE)
@@ -4104,30 +4012,24 @@ object SpecimenImages {
         "igneous-pitchstone" to listOf(IMG_PITCHSTONE_NEW, IMG_PITCHSTONE_WILD, IMG_PITCHSTONE_MUSEUM),
         "sedimentary-marl" to listOf(IMG_MARL, IMG_MARL_WILD, IMG_MARL_MUSEUM),
         "sedimentary-oil-shale" to listOf(IMG_OIL_SHALE, IMG_OIL_SHALE_SED_WILD, IMG_OIL_SHALE_SED_MUSEUM),
-        "oxide-goethite" to listOf(IMG_GOETHITE, IMG_OXIDE_GOETHITE_VAR),
         "sulfate-thenardite" to listOf(IMG_THENARDITE, IMG_THENARDITE_WILD, IMG_THENARDITE_MUSEUM),
         "fossil-whale-vertebra" to listOf(IMG_FOSSIL_WHALE_VERTEBRA, IMG_FOSSIL_WHALE_VERTEBRA_VAR),
         "meteorite-lunar" to listOf(IMG_LUNAR_METEORITE_MUSEUM, IMG_LUNAR_METEORITE_WILD),
-        "igneous-norite" to listOf(IMG_NORITE, IMG_IGNEOUS_NORITE_VAR),
-        "igneous-anorthosite" to listOf(IMG_ANORTHOSITE, IMG_IGNEOUS_ANORTHOSITE_VAR),
         "sedimentary-lignite" to listOf(IMG_LIGNITE, IMG_LIGNITE_SED_WILD, IMG_LIGNITE_SED_MUSEUM),
-        "sedimentary-banded-iron" to listOf(IMG_BANDED_IRON_FORMATION, IMG_BANDED_IRON_SED_WILD, IMG_BANDED_IRON_SED_MUSEUM),
-        "metamorphic-greenschist" to listOf(IMG_GREENSCHIST, IMG_METAMORPHIC_GREENSCHIST_VAR),
-        "silicate-nepheline" to listOf(IMG_NEPHELINE, IMG_NEPHELINE_SIL_WILD, IMG_NEPHELINE_SIL_MUSEUM),
         "fossil-horn-coral" to listOf(IMG_RUGOSE_CORAL, IMG_FOSSIL_HORN_CORAL_VAR),
-        "fossil-trilobite-enrolled" to listOf(IMG_TRILOBITE, IMG_FOSSIL_TRILOBITE_ENROLLED_VAR),
+        "fossil-trilobite-enrolled" to listOf(IMG_FOSSIL_TRILOBITE_ENROLLED_VAR),
         "fossil-nautiloid" to listOf(IMG_NAUTILOID, IMG_FOSSIL_NAUTILOID_VAR),
         "igneous-komatiite" to listOf(IMG_KOMATIITE, IMG_IGNEOUS_KOMATIITE_VAR),
         "igneous-pegmatite" to listOf(IMG_PEGMATITE, IMG_IGNEOUS_PEGMATITE_VAR),
         "sedimentary-evaporite" to listOf(IMG_SEDIMENTARY_EVAPORITE_SPECIMEN, IMG_EVAPORITE_HALITE_SPECIMEN, IMG_EVAPORITE_HALITE_MUSEUM),
         "industrial-borax" to listOf(IMG_BORAX, IMG_BORAX_VAR, IMG_BORAX_CLUSTER, IMG_INDUSTRIAL_BORAX_VAR),
         "igneous-carbonatite" to listOf(IMG_CARBONATITE, IMG_IGNEOUS_CARBONATITE_VAR),
-        "igneous-peridotite-xenolith" to listOf(IMG_IGNEOUS_PERIDOTITE_XENOLITH_VAR, IMG_PERIDOTITE),
+        "igneous-peridotite-xenolith" to listOf(IMG_IGNEOUS_PERIDOTITE_XENOLITH_VAR),
         "metamorphic-phyllite" to listOf(IMG_PHYLLITE, IMG_METAMORPHIC_PHYLLITE_VAR),
         "fossil-blastoid" to listOf(IMG_BLASTOID, IMG_FOSSIL_BLASTOID_VAR),
         "chert-mozarkite" to listOf(IMG_MOZARKITE_ROUGH, IMG_MOZARKITE_WILD, IMG_MOZARKITE_MUSEUM, IMG_MOZARKITE_CABOCHON),
-        "chert-porcellanite" to listOf(IMG_PORCELLANITE_NEW, IMG_CHERT_PORCELLANITE, IMG_CHERT),
-        "chert-tripolitic" to listOf(IMG_CHERT_TRIPOLITIC, IMG_CHERT_WILD),
+        "chert-porcellanite" to listOf(IMG_PORCELLANITE_NEW, IMG_CHERT_PORCELLANITE),
+        "chert-tripolitic" to listOf(IMG_CHERT_TRIPOLITIC),
         "igneous-basanite" to listOf(IMG_BASANITE_MUSEUM, IMG_BASANITE_WILD),
         "sedimentary-geode" to listOf(IMG_GEODE_WILD, IMG_GEODE_MUSEUM),
         "metamorphic-blueschist" to listOf(IMG_BLUESCHIST, IMG_METAMORPHIC_BLUESCHIST_VAR),
@@ -4169,7 +4071,6 @@ object SpecimenImages {
         "amazing-labradorescence" to listOf(IMG_LABRADORITE_AMAZE, IMG_LABRADORITE_AMAZE_VAR),
         "amazing-fulgurite" to listOf(IMG_FULGURITE_AMAZE, IMG_FULGURITE_AMAZE_VAR),
         "amazing-vivianite-crystals" to listOf(IMG_VIVIANITE_AMAZE, IMG_VIVIANITE_AMAZE_VAR, IMG_VIVIANITE_MUSEUM),
-        "amazing-tenebrescent-sodalite" to listOf(IMG_HACKMANITE, IMG_HACKMANITE_TENEB_VAR),
         "amazing-pyrite-sun" to listOf(IMG_PYRITE_SUN, IMG_PYRITE_SUN_VAR),
         "amazing-desert-rose-new" to listOf(IMG_DESERT_ROSE_AMAZE, IMG_DESERT_ROSE_AMAZE_VAR),
         "amazing-thunderegg" to listOf(IMG_THUNDEREGG_AMAZE, IMG_THUNDEREGG_AMAZE_VAR),
@@ -4209,26 +4110,18 @@ object SpecimenImages {
         "amazing-copper-replacement-agate" to listOf(IMG_COPPER_REPLACEMENT_AGATE_CUT, IMG_COPPER_REPLACEMENT_AGATE_WHOLE),
         "amazing-copper-infused-agate" to listOf(IMG_COPPER_INFUSED_AGATE_CUT, IMG_COPPER_INFUSED_AGATE_ROUGH),
         "amazing-silver-copper-agate" to listOf(IMG_SILVER_COPPER_AGATE_CUT, IMG_SILVER_COPPER_AGATE_ROUGH),
-        "anglesite-x" to listOf(IMG_ANGLESITE, IMG_ANGLESITE_WILD, IMG_ANGLESITE_MUSEUM),
-        "aragonite-crystal" to listOf(IMG_ARAGONITE, IMG_ARAGONITE_WILD, IMG_ARAGONITE_MUSEUM)
     ) }
 
     private val urlChunk6: Map<String, List<String>> by lazy { mapOf(
-        "barite-rose" to listOf(IMG_BARITE_DESERT_ROSE_NEW, IMG_DESERT_ROSE_WILD, IMG_DESERT_ROSE_MUSEUM),
-        "beryl-heliodor-crystal" to listOf(IMG_BERYL_HELIODOR, IMG_BERYL_HELIODOR_WILD, IMG_BERYL_HELIODOR_MUSEUM),
-        "beryl-morganite-crystal" to listOf(IMG_BERYL_MORGANITE, IMG_BERYL_MORGANITE_WILD, IMG_BERYL_MORGANITE_MUSEUM),
-        "beryl-red-bixbite" to listOf(IMG_RED_BERYL, IMG_RED_BERYL_FACETED, IMG_RED_BERYL_MUSEUM, IMG_RED_BERYL_WILD),
+        "barite-rose" to listOf(IMG_BARITE_DESERT_ROSE_NEW),
         "bismuth-native" to listOf("$Q/beb4bf8f-32db-4248-ace2-c226c2f8f998.png", "$Q/1d50bd32-0dbf-48e2-a50c-dc20121efb5a.png", "$Q/b16c5435-7c99-4e91-bf18-a09bc291be93.png"),
-        "carbonate-magnesite" to listOf(IMG_MAGNESITE, IMG_MAGNESITE_WILD, IMG_MAGNESITE_MUSEUM),
         "celestine-blue" to listOf(IMG_CELESTINE_BLUE_ROUGH, IMG_CELESTINE_BLUE_WILD, IMG_CELESTINE_BLUE_MUSEUM),
         "chiastolite" to listOf(IMG_CHIASTOLITE, IMG_CHIASTOLITE_WILD, IMG_CHIASTOLITE_MUSEUM),
         "clinohumite" to listOf(IMG_CLINOHUMITE_MUSEUM, IMG_CLINOHUMITE),
-        "colemanite-druse" to listOf(IMG_COLEMANITE, IMG_COLEMANITE_WILD, IMG_COLEMANITE_MUSEUM),
-        "cordierite-iolite" to listOf(IMG_IOLITE, IMG_IOLITE_WILD, IMG_IOLITE_MUSEUM),
         "eosphorite" to listOf(IMG_EOSPHORITE_MUSEUM, IMG_EOSPHORITE),
-        "evaporite-halite" to listOf(IMG_EVAPORITE_HALITE_SPECIMEN, IMG_EVAPORITE_HALITE_MUSEUM),
-        "fossil-crinoid-stem" to listOf(IMG_FOSSIL_CRINOID_STEM_REPLICA, IMG_CRINOID_WILD, IMG_CRINOID_MUSEUM),
-        "fossil-ichthyosaur-bone" to listOf(IMG_ICHTHYOSAUR_VERTEBRA, IMG_ICHTHYOSAURUS_WILD, IMG_ICHTHYOSAURUS_MUSEUM),
+        "evaporite-halite" to listOf(IMG_EVAPORITE_HALITE_DEDICATED),
+        "fossil-crinoid-stem" to listOf(IMG_FOSSIL_CRINOID_STEM_REPLICA),
+        "fossil-ichthyosaur-bone" to listOf(IMG_ICHTHYOSAUR_VERTEBRA),
         "garnet-almandine" to listOf(IMG_GARNET_ALMANDINE_SCHIST, IMG_GARNET_ALMANDINE_ROUGH, IMG_GARNET_ALMANDINE_MUSEUM),
         "garnet-andradite" to listOf(IMG_ANDRADITE_NEW, IMG_ANDRADITE_ROUGH, IMG_ANDRADITE_WILD, IMG_ANDRADITE_MUSEUM),
         "garnet-pyrope" to listOf(IMG_PYROPE_ROUGH, IMG_PYROPE_WILD, IMG_PYROPE_MUSEUM),
@@ -4239,24 +4132,18 @@ object SpecimenImages {
         "gem-brazilianite" to listOf(IMG_BRAZILIANITE, IMG_BRAZILIANITE_FACETED, IMG_BRAZILIANITE_MUSEUM),
         // Greenstone-basalt — dedicated 3rd image (was borrowing IMG_BASALT_MUSEUM)
         "greenstone-basalt" to listOf("$Q/4948755b-6b2d-4abd-bc2a-9d5cf257c271.png", "$Q/5e5ceb23-be6b-40f8-9764-168a4ba59b2b.png", "$Q/db969595-857c-47d4-b29f-c7a46b0ba07e.png"),
-        "gypsum-desert-rose" to listOf(IMG_GYPSUM_DESERT_ROSE_NEW, IMG_DESERT_ROSE_WILD, IMG_DESERT_ROSE_MUSEUM),
+        "gypsum-desert-rose" to listOf(IMG_GYPSUM_DESERT_ROSE_NEW),
         "halide-cryolite" to listOf(IMG_CRYOLITE, IMG_CRYOLITE_WILD),
         "igneous-dacite" to listOf(IMG_DACITE, IMG_DACITE_WILD, IMG_DACITE_MUSEUM),
         "igneous-lamprophyre" to listOf(IMG_LAMPROPHYRE_MUSEUM, IMG_LAMPROPHYRE_WILD),
-        "industrial-kaolin" to listOf(IMG_KAOLINITE, IMG_KAOLINITE_VAR),
         "industrial-vermiculite" to listOf(IMG_VERMICULITE_MUSEUM, IMG_VERMICULITE),
-        "metamorphic-amphibolite" to listOf(IMG_AMPHIBOLITE, IMG_AMPHIBOLITE_WILD, IMG_AMPHIBOLITE_MUSEUM),
-        "metamorphic-skarn" to listOf(IMG_SKARN, IMG_SKARN_WILD, IMG_SKARN_MUSEUM),
-        "meteorite-hunting" to listOf(IMG_METEORITE_HUNTING),
-        "meteorite-hexlandrite" to listOf(IMG_IRON_METEORITE_CROSS, IMG_IRON_METEORITE_FIELD),
+        "meteorite-hexlandrite" to listOf(IMG_HED_ACHONDRITE_ROUGH),
         "mica-fuchsite" to listOf(IMG_FUCHSITE_MICA_ROUGH, IMG_FUCHSITE_MICA_WILD, IMG_FUCHSITE_MICA_MUSEUM, IMG_FUCHSITE_MICA_CABOCHON),
-        "mica-muscovite" to listOf(IMG_MUSCOVITE, IMG_MUSCOVITE_WILD, IMG_MUSCOVITE_MUSEUM),
         "native-platinum" to listOf(IMG_NATIVE_PLATINUM_MUSEUM, IMG_NATIVE_PLATINUM),
         "oxide-cassiterite" to listOf(IMG_CASSITERITE_CORNWALL, IMG_CASSITERITE_WILD, IMG_CASSITERITE_MUSEUM),
         "oxide-columbite" to listOf(IMG_COLUMBITE, IMG_COLUMBITE_WILD, IMG_COLUMBITE_MUSEUM),
         "pectolite-larimar" to listOf(IMG_LARIMAR, IMG_LARIMAR_ROUGH_2, IMG_LARIMAR_WILD, IMG_LARIMAR_MUSEUM, IMG_LARIMAR_CABOCHON),
         "pharmacosiderite" to listOf(IMG_PHARMACOSIDERITE_MUSEUM, IMG_PHARMACOSIDERITE),
-        "phosphate-autunite" to listOf(IMG_AUTUNITE, IMG_AUTUNITE_WILD, IMG_AUTUNITE_MUSEUM),
         "phosphophyllite" to listOf(IMG_PHOSPHOPHYLLITE_MUSEUM, IMG_PHOSPHOPHYLLITE),
         "quartz-aventurine" to listOf(IMG_AVENTURINE, IMG_AVENTURINE_WILD, IMG_AVENTURINE_MUSEUM, IMG_AVENTURINE_CABOCHON),
         "quartz-chalcedony-blue" to listOf(IMG_CHALCEDONY_BLUE, IMG_CHALCEDONY_PINK, IMG_CHALCEDONY_PURPLE, IMG_CHALCEDONY_YELLOW),
@@ -4273,18 +4160,16 @@ object SpecimenImages {
         "sedimentary-mudstone" to listOf(IMG_MUDSTONE_MUSEUM, IMG_MUDSTONE_WILD),
         "sedimentary-tillite" to listOf(IMG_TILLITE_NEW, IMG_DIAMICTITE_WILD, IMG_DIAMICTITE_MUSEUM),
         "serpentine-cobra-jasper" to listOf(IMG_COBRA_JASPER_MUSEUM, IMG_COBRA_JASPER),
-        "serpentine-lizardite" to listOf(IMG_SERPENTINE_LIZARDITE, IMG_SERPENTINE_WILD, IMG_SERPENTINE_MUSEUM),
-        "spodumene-kunzite" to listOf(IMG_KUNZITE, IMG_KUNZITE_WILD, IMG_KUNZITE_MUSEUM, IMG_KUNZITE_CABOCHON),
+        "serpentine-lizardite" to listOf(IMG_SERPENTINE_LIZARDITE),
         "spodumene-triphane" to listOf(IMG_TRIPHANE_MUSEUM, IMG_TRIPHANE),
-        "stibnite-crystal" to listOf(IMG_STIBNITE, IMG_STIBNITE_WILD, IMG_STIBNITE_MUSEUM, IMG_STIBNITE_CABOCHON),
         "thorite" to listOf(IMG_THORITE_MUSEUM, IMG_THORITE),
         "titanite-sphene" to listOf(IMG_SPHENE, IMG_SPHENE_WILD, IMG_SPHENE_MUSEUM, IMG_SPHENE_FACETED),
         "tourmaline-indicolite" to listOf(IMG_INDICOLITE, IMG_INDICOLITE_WILD, IMG_INDICOLITE_MUSEUM),
         "tourmaline-rubellite" to listOf(IMG_RUBELLITE, IMG_RUBELLITE_WILD, IMG_RUBELLITE_MUSEUM),
-        "tourmaline-schorl" to listOf(IMG_TOURMALINE_BLACK, IMG_TOURMALINE_WILD, IMG_TOURMALINE_MUSEUM),
+        "tourmaline-schorl" to listOf(IMG_TOURMALINE_BLACK),
         "tourmaline-verdelite" to listOf(IMG_VERDELITE, IMG_VERDELITE_WILD, IMG_VERDELITE_MUSEUM),
-        "tourmaline-watermelon" to listOf(IMG_TOURMALINE_WATERMELON, IMG_TOURMALINE_WILD, IMG_TOURMALINE_MUSEUM),
-        "turquoise-nevada" to listOf(IMG_TURQUOISE, IMG_TURQUOISE_WILD, IMG_TURQUOISE_MUSEUM, IMG_TURQUOISE_CABOCHON),
+        "tourmaline-watermelon" to listOf(IMG_TOURMALINE_WATERMELON),
+        "turquoise-nevada" to listOf(IMG_TURQUOISE_NEVADA_ROUGH, IMG_TURQUOISE_NEVADA_WILD),
         "xenotime-y" to listOf(IMG_XENOTIME, IMG_XENOTIME_WILD, IMG_XENOTIME_MUSEUM),
         "zeolite" to listOf(
             IMG_ZEOLITE_CLEAR_GLASSY_01,
@@ -4302,10 +4187,10 @@ object SpecimenImages {
             IMG_ZEOLITE_NEEDLE_CLUSTER_REPLICA,
             IMG_ZEOLITE
         ),
-        "zircon-brown" to listOf(IMG_ZIRCON_BROWN_MAIN, IMG_ZIRCON_BROWN_ROUGH, IMG_ZIRCON_MUSEUM, IMG_ZIRCON_CABOCHON),
+        "zircon-brown" to listOf(IMG_ZIRCON_BROWN_MAIN, IMG_ZIRCON_BROWN_ROUGH),
         "onyx-black" to listOf(IMG_BLACK_ONYX_SOLID_ROUGH, IMG_BLACK_ONYX_CABOCHON, IMG_BLACK_ONYX_IN_HAND, IMG_BLACK_ONYX_CAMEO),
-        "onyx-nicotino" to listOf(IMG_ONYX_NICOTINO_NEW, IMG_ONYX_MUSEUM),
-        "onyx-sard" to listOf(IMG_ONYX_SARD_NEW, IMG_ONYX_WILD),
+        "onyx-nicotino" to listOf(IMG_ONYX_NICOTINO_NEW),
+        "onyx-sard" to listOf(IMG_ONYX_SARD_NEW),
         // Gowanda tillite — dedicated 3rd/4th images (were borrowing IMG_WACKE_WILD/IMG_WACKE_MUSEUM)
         "gowanda-tillite" to listOf(IMG_GOWANDA_TILLITE_NEW2, IMG_GOWANDA_TILLITE_NEW, "$Q/6ccd1987-25f0-45e1-8cea-b3c9001f74ef.png", "$Q/fae0f186-ad91-4941-9963-8be2f3ced06e.png"),
         "zoisite-thulite" to listOf(IMG_THULITE, IMG_ZOISITE, IMG_ZOISITE_MUSEUM),
@@ -4313,8 +4198,8 @@ object SpecimenImages {
         "agate-dead-sea" to listOf(IMG_DEAD_SEA_AGATE, IMG_DEAD_SEA_AGATE_WILD),
         "calcite-hexagonal" to listOf(IMG_HEXAGONAL_CALCITE, IMG_HEXAGONAL_CALCITE_WILD, IMG_HEXAGONAL_CALCITE_MUSEUM, IMG_HEXAGONAL_CALCITE_CABOCHON),
         "calcite-squid-game" to listOf(IMG_SQUID_GAME_CALCITE_NAT, IMG_SQUID_GAME_CALCITE_ROUGH, IMG_SQUID_GAME_CALCITE_LW, IMG_SQUID_GAME_CALCITE_SW),
-        "urbanite" to listOf(IMG_CONGLOMERATE, IMG_URBANITE_NEW, IMG_SLAG_BLUE, IMG_OBSIDIAN_WILD),
-        "goethite-iridescent" to listOf(IMG_IRIDESCENT_TURGITE_GOETHITE_REPLICA, IMG_GOETHITE_IRIDESCENT_NEW, IMG_IRIDESCENT_GOETHITE_NEW, IMG_GOETHITE_WILD, IMG_GOETHITE_MUSEUM),
+        "urbanite" to listOf(IMG_URBANITE_NEW, IMG_URBANITE_WILD_DEDICATED),
+        "goethite-iridescent" to listOf(IMG_IRIDESCENT_TURGITE_GOETHITE_REPLICA, IMG_GOETHITE_IRIDESCENT_NEW, IMG_IRIDESCENT_GOETHITE_NEW),
         "turgite-iridescent" to listOf(IMG_IRIDESCENT_TURGITE_GOETHITE_REPLICA, IMG_TURGITE_IRIDESCENT_NEW, IMG_TURGITE_IRIDESCENT),
         "halite-blue" to listOf(IMG_HALITE_BLUE, IMG_HALITE_BLUE_MUSEUM),
         "halite-pink" to listOf(IMG_HALITE_PINK_SPECIMEN, IMG_HALITE_PINK_MUSEUM),
@@ -4397,16 +4282,16 @@ object SpecimenImages {
         "garnierite" to listOf(IMG_GARNIERITE),
         "ludwigite" to listOf(IMG_LUDWIGITE),
         "clinochlore" to listOf(IMG_CLINOCHLORE),
-        "delhayelite" to listOf(IMG_ASTROPHYLLITE),
+        "delhayelite" to listOf(IMG_DELHAYELITE_ROUGH, IMG_DELHAYELITE_WILD),
         // Lujaurite — dedicated image (was borrowing IMG_GABBRO)
         "lujaurite" to listOf("$Q/dbf3b98c-3a3e-4d1c-a33f-bda3dfcab0ca.png"),
         // Miserite — dedicated image (was borrowing IMG_CHONDRODITE)
         "miserite" to listOf("$Q/aa0d2171-687c-4746-85c8-833d326e3ffa.png"),
         // Pintadoite — dedicated image (was borrowing IMG_CLINOCHLORE)
         "pintadoite" to listOf("$Q/a699e0ca-343f-4265-bd06-bf385563fac1.png"),
-        "tagamite" to listOf(IMG_OBSIDIAN),
+        "tagamite" to listOf(IMG_TAGAMITE_ROUGH),
         "vishnevite" to listOf(IMG_VISHNEVITE_NEW),
-        "pyroxene-group" to listOf(IMG_AUGITE),
+        "pyroxene-group" to listOf(IMG_PYROXENE_GROUP_ROUGH),
         "amphibole-group" to listOf(IMG_AMPHIBOLE_GROUP),
         "amazing-pseudo-calcite-aragonite" to listOf(IMG_PSEUDO_CALCITE_ARAGONITE),
         "amazing-pseudo-chalcedony-coral" to listOf(IMG_PSEUDO_CHALCEDONY_CORAL),
@@ -4430,7 +4315,7 @@ object SpecimenImages {
         "rainbow-lattice" to listOf(IMG_RAINBOW_LATTICE_CABOCHON, IMG_RAINBOW_LATTICE_ROUGH, IMG_RAINBOW_LATTICE_CLOSEUP, IMG_RAINBOW_LATTICE_WILD),
         "enhydro-agate-multi-chamber" to listOf(IMG_ENHYDRO_MULTI, IMG_ENHYDRO_MULTI_VAR),
         "halite-hydrocarbon" to listOf(IMG_HYDROCARBON_HALITE, IMG_HYDROCARBON_HALITE_VAR),
-        "selenite-great-salt-plains" to listOf(IMG_SELENITE_GREAT_SALT_PLAINS, IMG_SELENITE_HOURGLASS_WILD, IMG_SELENITE_HOURGLASS_MUSEUM),
+        "selenite-great-salt-plains" to listOf(IMG_SELENITE_GREAT_SALT_PLAINS),
         // ── Master build batch: new specimens + regenerated images (2026-07-19) ──
         "tyrannosaurus-rex-tooth" to listOf(IMG_TREX_TOOTH_NEW),
         "spinosaurus-tooth" to listOf(IMG_SPINOSAURUS_TOOTH_NEW),
@@ -4487,7 +4372,9 @@ object SpecimenImages {
     private const val IMG_EB16_ZINCITE_WILD = "$Q/97e20f07-7227-4a59-9ced-d857216b063c.png"
     private const val IMG_EB16_ZINCITE_MUSEUM = "$Q/2342bc62-271d-4bb5-a34c-44d0a8964815.png"
     private const val IMG_EB16_GAHNITE_ROUGH = "$Q/f896f3e0-cc3c-4c0c-b586-46299fa0c377.png"
+    private const val IMG_HERCYNITE_ROUGH = "$Q/74c569a4-1bc5-4202-842a-f0068c8a82a6.png"
     private const val IMG_EB16_TANTALITE_ROUGH = "$Q/13475430-8773-4896-8fd0-2b6e95dd78cc.png"
+    private const val IMG_COLTAN_ROUGH = "$Q/8b06eb06-dffd-47cd-a05d-681463b072dc.png"
     private const val IMG_EB16_TANTALITE_WILD = "$Q/81d6fcf3-3003-47bb-9473-af280eced37a.png"
     private const val IMG_EB16_TANTALITE_MUSEUM = "$Q/f351ed73-5a7f-4b02-b775-f8bb389b00d7.png"
     private const val IMG_EB16_BIXBYITE_ROUGH = "$Q/d09c18dc-0f79-4ef3-af21-421a0ccf2820.png"
@@ -4497,6 +4384,7 @@ object SpecimenImages {
     private const val IMG_EB16_BADDELEYITE_WILD = "$Q/93af153a-e22e-4971-bc55-86b704ba4738.png"
     private const val IMG_EB16_BADDELEYITE_MUSEUM = "$Q/1acfe48b-8383-4506-84dd-d76d11d90c53.png"
     private const val IMG_EB16_MINIUM_ROUGH = "$Q/dc7b7e20-69a9-44ee-9b97-ef9b59068d88.png"
+    private const val IMG_STIBICONITE_ROUGH = "$Q/112ca35f-6fec-4c57-a675-d318af3ec0c8.png"
     private const val IMG_EB16_ATACAMITE_ROUGH = "$Q/a5430865-133d-489e-8d22-9314de2a183f.png"
     private const val IMG_EB16_ATACAMITE_WILD = "$Q/86bd26c6-8750-45bf-9f38-ad58fb02e87f.png"
     private const val IMG_EB16_ATACAMITE_MUSEUM = "$Q/fdfb6b19-e40e-4087-bdd8-46a32ebeb87b.png"
@@ -4956,9 +4844,9 @@ object SpecimenImages {
         "tiger-iron" to listOf(IMG_EB16_TIGER_IRON_ROUGH, IMG_EB16_TIGER_IRON_CAB),
         "wild-horse-magnesite" to listOf(IMG_EB16_WILD_HORSE_ROUGH, IMG_EB16_WILD_HORSE_CAB),
         "chrome-diopside" to listOf(IMG_EB16_CHROME_DIOPSIDE_ROUGH, IMG_EB16_CHROME_DIOPSIDE_CAB),
-        "hercynite" to listOf(IMG_EB16_GAHNITE_ROUGH),
-        "stibiconite" to listOf(IMG_EB16_MINIUM_ROUGH),
-        "coltan" to listOf(IMG_EB16_TANTALITE_ROUGH, IMG_EB16_TANTALITE_WILD),
+        "hercynite" to listOf(IMG_HERCYNITE_ROUGH),
+        "stibiconite" to listOf(IMG_STIBICONITE_ROUGH),
+        "coltan" to listOf(IMG_COLTAN_ROUGH),
         // Phase 2 — Expansion Batch 17
         "quartz-brandberg" to listOf(IMG_EB17_QUARTZ_BRANDBERG_ROUGH, IMG_EB17_QUARTZ_BRANDBERG_WILD, IMG_EB17_QUARTZ_BRANDBERG_MUSEUM),
         "quartz-elestial" to listOf(IMG_EB17_QUARTZ_ELESTIAL_ROUGH, IMG_EB17_QUARTZ_ELESTIAL_WILD, IMG_EB17_QUARTZ_ELESTIAL_MUSEUM),
