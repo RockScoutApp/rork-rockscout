@@ -4647,9 +4647,17 @@ object SpecimenImages {
 
     // ── Expansion Batch 16 remaining: crandallite, wardite, augelite, alunite ──
     private const val IMG_EB16_CRANDALLITE_ROUGH = "$Q/0f437a18-3aed-4682-99aa-2abe6d5c30e7.png"
+    private const val IMG_EB16_CRANDALLITE_WILD = "$Q/d3d75f11-aed1-4c72-8549-ff0057f987d0.png"
+    private const val IMG_EB16_CRANDALLITE_MUSEUM = "$Q/8381c074-d2d3-446d-9422-c4df90e17253.png"
     private const val IMG_EB16_WARDITE_ROUGH = "$Q/2d23df82-08da-4c90-9e58-9469dd80c807.png"
+    private const val IMG_EB16_WARDITE_WILD = "$Q/285b76cd-fc4d-48fa-b473-63a324067f8a.png"
+    private const val IMG_EB16_WARDITE_MUSEUM = "$Q/78c0d3df-f2e3-41ef-885b-2ccf14bebac9.png"
     private const val IMG_EB16_AUGELITE_ROUGH = "$Q/b73367e2-5429-4089-84b0-dc990610ae1c.png"
+    private const val IMG_EB16_AUGELITE_WILD = "$Q/e67eaa1e-6c0d-4a6b-a390-31519be6a204.png"
+    private const val IMG_EB16_AUGELITE_MUSEUM = "$Q/cd689005-8d01-47e2-aea8-62b08fb79f01.png"
     private const val IMG_EB16_ALUNITE_ROUGH = "$Q/6839b5ed-b2b6-4e43-9e37-c41b39d28bbf.png"
+    private const val IMG_EB16_ALUNITE_WILD = "$Q/c4ab866d-23ab-43f6-9c6f-c94eda4d71f6.png"
+    private const val IMG_EB16_ALUNITE_MUSEUM = "$Q/d5556301-2205-46f4-8f94-3a66b2af12d9.png"
 
     // ── Expansion Batch 18: Phase 3 rock type images ──
     private const val IMG_EB18_DOLERITE_ROUGH = "$Q/f3d0817f-b5a8-40aa-8552-63b82cce81bf.png"
@@ -4970,10 +4978,10 @@ object SpecimenImages {
         "striped-flint" to listOf(IMG_EB17_STRIPED_FLINT_ROUGH, IMG_EB17_STRIPED_FLINT_WILD, IMG_EB17_STRIPED_FLINT_MUSEUM),
         "chrysanthemum-stone" to listOf(IMG_EB17_CHRYSANTHEMUM_STONE_ROUGH, IMG_EB17_CHRYSANTHEMUM_STONE_WILD, IMG_EB17_CHRYSANTHEMUM_STONE_MUSEUM),
         // Batch 16 remaining
-        "crandallite" to listOf(IMG_EB16_CRANDALLITE_ROUGH),
-        "wardite" to listOf(IMG_EB16_WARDITE_ROUGH),
-        "augelite" to listOf(IMG_EB16_AUGELITE_ROUGH),
-        "alunite" to listOf(IMG_EB16_ALUNITE_ROUGH),
+        "crandallite" to listOf(IMG_EB16_CRANDALLITE_ROUGH, IMG_EB16_CRANDALLITE_WILD, IMG_EB16_CRANDALLITE_MUSEUM),
+        "wardite" to listOf(IMG_EB16_WARDITE_ROUGH, IMG_EB16_WARDITE_WILD, IMG_EB16_WARDITE_MUSEUM),
+        "augelite" to listOf(IMG_EB16_AUGELITE_ROUGH, IMG_EB16_AUGELITE_WILD, IMG_EB16_AUGELITE_MUSEUM),
+        "alunite" to listOf(IMG_EB16_ALUNITE_ROUGH, IMG_EB16_ALUNITE_WILD, IMG_EB16_ALUNITE_MUSEUM),
         // Phase 3 — Expansion Batch 18
         "dolerite" to listOf(IMG_EB18_DOLERITE_ROUGH, IMG_EB18_DOLERITE_WILD, IMG_EB18_DOLERITE_MUSEUM),
         "ignimbrite" to listOf(IMG_EB18_IGNIMBRITE_ROUGH, IMG_EB18_IGNIMBRITE_WILD, IMG_EB18_IGNIMBRITE_MUSEUM),
