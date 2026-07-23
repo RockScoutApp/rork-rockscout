@@ -35,7 +35,6 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -72,7 +71,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -1288,239 +1286,6 @@ private fun LocationChipRow(location: String) {
     }
 }
 
-/** Subtle, continuously animated sparkles tinted to the specimen's rock class
- *  color. Each sparkle has a randomized base position (seeded by specimen id so
- *  it stays stable across recompositions), randomized twinkle period / phase /
- *  duration, and a tiny drift, so they twinkle independently in different spots
- *  at different times and never synchronize. Peak alpha and radii are kept low so
- *  readability of text, the image, and the heart is never affected.
- *
- *  The overlay is a draw-only Canvas with no pointer input, so taps pass through
- *  to underlying buttons and the heart automatically. Safe zones (image, title
- *  band, location rows, rarity/tagline bands, heart corner) are excluded from
- *  sparkle placement.
- *
- *  @param rockClass drives the sparkle tint via [rockClassColor]
- *  @param seedId    specimen id used to seed stable per-card positions
- *  @param modifier  layout modifier (should match the card's inner content area) */
-@Composable
-fun SpecimenSparkleOverlay(
-    rockClass: RockClass,
-    seedId: String,
-    modifier: Modifier = Modifier,
-    imageSize: Dp = 48.dp,
-) {
-    val baseColor = rockClassColor(rockClass)
-    val density = LocalDensity.current
-
-    // Card width / height arrive via onSizeChanged so we can place sparkles in
-    // pixels and exclude the safe zones. Default to a sensible size until measured.
-    var canvasW by remember { mutableFloatStateOf(0f) }
-    var canvasH by remember { mutableFloatStateOf(0f) }
-
-    // One infinite transition drives every sparkle on this card.
-    val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = "sparkles")
-
-    // Seeded PRNG so each card's sparkle field is stable across recompositions.
-    fun seedLong(): Long {
-        var h = 1125899906842597L
-        for (c in seedId) {
-            h = 31L * h + c.code
-        }
-        return h and 0x7FFFFFFFFFFFFFFFL
-    }
-
-    val sparkleCount = 38
-
-    // Pre-compute per-sparkle static params (position, timing) once per card.
-    data class SparkleSpec(
-        val x: Float,
-        val y: Float,
-        val radius: Float,
-        val peakAlpha: Float,
-        val periodMs: Int,
-        val phaseFraction: Float,
-        val driftAmp: Float,
-        val driftPhase: Float,
-        val driftSpeed: Float,
-        val twinkleScaleAmp: Float,
-        val starAngle: Float,
-    )
-
-    val sparkles = remember(seedId, canvasW, canvasH) {
-        var seed = seedLong()
-        fun nextFloat(): Float {
-            seed = (seed * 1103515245 + 12345) and 0x7FFFFFFF
-            return seed.toFloat() / 0x7FFFFFFF.toFloat()
-        }
-        // Safe-zone geometry in px. Matches the SpecimenListItem layout:
-        //  - image: left 16dp, top 16dp, size matches the caller's imageSize
-        //  - title band: starts at left (16 + imageSize + 16)dp, top 16dp, ~2 lines of 20sp
-        //  - type pill, rarity, and locations live in the right text column
-        //  - tagline band: bottom ~28dp
-        //  - heart corner: top-right ~52dp wide
-        val imgSizePx = with(density) { imageSize.toPx() }
-        val padStartPx = with(density) { 16.dp.toPx() }
-        val padTopPx = with(density) { 16.dp.toPx() }
-        val gapPx = with(density) { 16.dp.toPx() }
-        val titleHeightPx = with(density) { 52.dp.toPx() } // ~2 lines of 20sp
-        val heartCornerPx = with(density) { 56.dp.toPx() }
-        val bottomBandPx = with(density) { 60.dp.toPx() } // tagline + heart area
-        val sideMarginPx = with(density) { 14.dp.toPx() }
-
-        // Safe landing band: keep sparkles out of the readable text/image areas
-        // but allow them across the rest of the card surface so they actually show.
-        val imgRightPx = padStartPx + imgSizePx
-        val textLeftPx = imgRightPx + gapPx
-        val titleBottomPx = padTopPx + titleHeightPx
-        val bottomSafePx = canvasH - bottomBandPx
-        val heartLeftPx = canvasW - heartCornerPx
-
-        // Candidate landing zones (in px):
-        //  1. Top strip above the title
-        //  2. Right margin strip of the title row, to the left of the heart corner,
-        //     below the title text and above the type/rarity/locations block.
-        //  3. Thin vertical gap between image and text columns
-        //  4. Left/right side margins below the image.
-        //  5. A narrow horizontal band just above the bottom block.
-        fun placeX(): Float = when ((nextFloat() * 5f).toInt()) {
-            0 -> imgRightPx + nextFloat() * (textLeftPx - imgRightPx)     // image/text gap
-            1 -> padStartPx + nextFloat() * (imgRightPx - padStartPx)     // over image area
-            2 -> textLeftPx + nextFloat() * ((heartLeftPx - textLeftPx) * 0.65f) // left-of-heart strip
-            3 -> nextFloat() * sideMarginPx                               // left margin
-            else -> canvasW - sideMarginPx + nextFloat() * sideMarginPx   // right margin
-        }
-        fun placeY(): Float {
-            // Avoid the title band on the text side and the bottom tagline/heart block.
-            val y = when ((nextFloat() * 4f).toInt()) {
-                0 -> nextFloat() * padTopPx                                   // very top strip
-                1 -> padTopPx + nextFloat() * (imgSizePx - padTopPx)            // over image area
-                2 -> titleBottomPx + nextFloat() * ((bottomSafePx - titleBottomPx).coerceAtLeast(1f))
-                else -> titleBottomPx + nextFloat() * ((bottomSafePx - titleBottomPx).coerceAtLeast(1f))
-            }
-            return y.coerceIn(2f, (canvasH - 2f).coerceAtLeast(2f))
-        }
-
-        // Guard against the zero-size canvas on first composition: canvasW/H
-        // start at 0f and are only set by onSizeChanged AFTER layout. Without
-        // this guard, coerceIn(2f, -2f) throws IllegalArgumentException and
-        // crashes the whole screen — every SpecimenListItem renders one of these
-        // overlays, so the very first card takes down the Specimen Database (and
-        // any other screen using SpecimenListItem). The Canvas draw block already
-        // early-returns when w<=0, so these placeholder positions are never drawn.
-        val maxX = (canvasW - 2f).coerceAtLeast(2f)
-        val maxY = (canvasH - 2f).coerceAtLeast(2f)
-        List(sparkleCount) {
-            SparkleSpec(
-                x = placeX().coerceIn(2f, maxX),
-                y = placeY().coerceIn(2f, maxY),
-                radius = (nextFloat() * 1.4f + 1.0f) * with(density) { 1.dp.toPx() },
-                peakAlpha = nextFloat() * 0.25f + 0.70f,
-                periodMs = (2200 + (nextFloat() * 2600f).toInt()),  // 2.2–4.8s
-                phaseFraction = nextFloat(),
-                driftAmp = nextFloat() * with(density) { 3.dp.toPx() },
-                driftPhase = nextFloat() * 6.2831855f,
-                driftSpeed = 0.4f + nextFloat() * 0.6f,
-                twinkleScaleAmp = 0.30f + nextFloat() * 0.40f,
-                starAngle = nextFloat() * 6.2831855f,
-            )
-        }
-    }
-
-    // Build one animated alpha + one animated drift per sparkle. Use a single
-    // infinite transition; each sparkle gets its own remembered animation spec
-    // with a randomized phase by offsetting the start delay via a 0..1 fraction
-    // mapped to its period.
-    val alphas = sparkles.mapIndexed { i, s ->
-        transition.animateFloat(
-            initialValue = 0f,
-            targetValue = 1f,
-            animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-                animation = androidx.compose.animation.core.tween(
-                    durationMillis = s.periodMs,
-                    delayMillis = (s.phaseFraction * s.periodMs).toInt(),
-                    easing = androidx.compose.animation.core.FastOutSlowInEasing,
-                ),
-                repeatMode = androidx.compose.animation.core.RepeatMode.Reverse,
-            ),
-            label = "sparkle-a-$i",
-        )
-    }
-    val drifts = sparkles.mapIndexed { i, s ->
-        transition.animateFloat(
-            initialValue = 0f,
-            targetValue = (2f * kotlin.math.PI).toFloat(),
-            animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-                animation = androidx.compose.animation.core.tween(
-                    durationMillis = (6000 / s.driftSpeed).toInt(),
-                    delayMillis = (s.phaseFraction * 6000).toInt(),
-                    easing = androidx.compose.animation.core.LinearEasing,
-                ),
-                repeatMode = androidx.compose.animation.core.RepeatMode.Restart,
-            ),
-            label = "sparkle-d-$i",
-        )
-    }
-
-    androidx.compose.foundation.Canvas(
-        modifier = modifier.onSizeChanged { canvasW = it.width.toFloat(); canvasH = it.height.toFloat() }
-    ) {
-        val w = size.width
-        val h = size.height
-        if (w <= 0f || h <= 0f) return@Canvas
-        sparkles.forEachIndexed { i, s ->
-            val a = alphas[i].value
-            if (a <= 0.01f) return@forEachIndexed
-            // Triangle-wave the reverse animation so alpha rises 0->peak then 0
-            // (RepeatMode.Reverse already gives 0->1->0; scale to peakAlpha).
-            val alpha = (a * s.peakAlpha).coerceAtMost(s.peakAlpha)
-            // Scale breathes with the twinkle.
-            val scale = 1f - s.twinkleScaleAmp + (a * s.twinkleScaleAmp * 2f)
-            val r = (s.radius * scale).coerceAtLeast(0.5f)
-            // Slow drift along a sine.
-            val dx = kotlin.math.cos(s.driftPhase + drifts[i].value) * s.driftAmp
-            val dy = kotlin.math.sin(s.driftPhase + drifts[i].value) * s.driftAmp
-            val cx = (s.x + dx).coerceIn(2f, w - 2f)
-            val cy = (s.y + dy).coerceIn(2f, h - 2f)
-            // Use a brightened tint so sparkles pop against the dark card gradient.
-            val tint = brightenForText(baseColor, threshold = 0.45f, amount = 0.45f)
-            // Soft additive halo tinted to the class color.
-            drawCircle(
-                color = tint.copy(alpha = alpha * 0.55f),
-                radius = r * 4.0f,
-                center = androidx.compose.ui.geometry.Offset(cx, cy),
-            )
-            // Bright colored core.
-            drawCircle(
-                color = tint.copy(alpha = alpha),
-                radius = r * 1.15f,
-                center = androidx.compose.ui.geometry.Offset(cx, cy),
-            )
-            // White-hot center so the sparkle reads as a real glint.
-            drawCircle(
-                color = Color.White.copy(alpha = alpha * 0.95f),
-                radius = r * 0.65f,
-                center = androidx.compose.ui.geometry.Offset(cx, cy),
-            )
-            // Four-point star cross for extra visibility.
-            val starR = r * 2.6f
-            for (j in 0..3) {
-                val angle = s.starAngle + j * (kotlin.math.PI / 2f).toFloat()
-                val x1 = cx + kotlin.math.cos(angle) * starR
-                val y1 = cy + kotlin.math.sin(angle) * starR
-                val x2 = cx - kotlin.math.cos(angle) * starR
-                val y2 = cy - kotlin.math.sin(angle) * starR
-                drawLine(
-                    color = Color.White.copy(alpha = alpha * 0.75f),
-                    start = androidx.compose.ui.geometry.Offset(x1.toFloat(), y1.toFloat()),
-                    end = androidx.compose.ui.geometry.Offset(x2.toFloat(), y2.toFloat()),
-                    strokeWidth = r * 0.30f,
-                )
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SpecimenListItem(
@@ -1583,16 +1348,6 @@ fun SpecimenListItem(
                             listOf(accent.copy(alpha = 0.15f), Color.Transparent)
                         )
                     ),
-            )
-
-            // Animated class-tinted sparkle overlay. Draw-only Canvas, no
-            // pointerInput, so taps pass through to the card, heart, and image.
-            // Sits above the gradient/glow but below the text/image column.
-            SpecimenSparkleOverlay(
-                rockClass = specimen.rockClass,
-                seedId = specimen.id,
-                imageSize = imageSize,
-                modifier = Modifier.fillMaxSize(),
             )
 
             Column(
