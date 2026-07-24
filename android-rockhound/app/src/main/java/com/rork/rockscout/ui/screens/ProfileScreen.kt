@@ -1430,8 +1430,8 @@ private fun RockScoutFriendsSection(
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     SocialSubTile(
                         icon = Icons.Filled.Group,
-                        label = "Friends &",
-                        subtitle = "messages",
+                        label = "Friends & Messages",
+                        subtitle = null,
                         accent = Color(0xFF4CF0E8),
                         iconTint = Color(0xFFEAFFFE),
                         modifier = Modifier.weight(1f),
@@ -1439,8 +1439,8 @@ private fun RockScoutFriendsSection(
                     )
                     SocialSubTile(
                         icon = Icons.Filled.PersonSearch,
-                        label = "Browse",
-                        subtitle = "users",
+                        label = "Browse Users",
+                        subtitle = null,
                         accent = Color(0xFF4CF0E8),
                         iconTint = Color(0xFFEAFFFE),
                         modifier = Modifier.weight(1f),
@@ -1448,8 +1448,8 @@ private fun RockScoutFriendsSection(
                     )
                     SocialSubTile(
                         icon = Icons.Filled.Map,
-                        label = "Ping",
-                        subtitle = "maps",
+                        label = "Ping Maps",
+                        subtitle = null,
                         accent = Color(0xFF4CF0E8),
                         iconTint = Color(0xFFEAFFFE),
                         modifier = Modifier.weight(1f),

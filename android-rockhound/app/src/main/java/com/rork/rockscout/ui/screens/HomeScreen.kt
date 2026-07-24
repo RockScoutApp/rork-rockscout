@@ -412,7 +412,7 @@ fun HomeScreen(navController: NavController) {
         HomeTile("BLM Public Lands", "State rules, dig sites, trailheads & campgrounds", Icons.Filled.Terrain, Color(0xFFC97B4A), Routes.BLM_GUIDE,
             BLM_HOME_TILE_NATURE),
         HomeTile("Finding Meteorites", "How to hunt and identify space rocks", Icons.Filled.Public, Color(0xFFC0C0C0), Routes.METEORITE_HUNTING,
-            SpecimenImages.urls["meteorite-hunting"]?.firstOrNull()),
+            SpecimenImages.urls["amazing-meteorite-hunting"]?.firstOrNull()),
         HomeTile("Rock & Gem Resources", "Trusted geology, gem & fossil websites", Icons.Filled.Public, Color(0xFF7CB5EC), Routes.RESOURCE_LINKS,
             GEM_MINERAL_HERO_URL),
         HomeTile("Exploring Geology", "Learn how rocks, minerals & gems form", Icons.Filled.MenuBook, Color(0xFFD9B26A), Routes.ROCK_INFO,
@@ -428,11 +428,11 @@ fun HomeScreen(navController: NavController) {
         HomeTile("Mineral Care & Cleaning", "Don't ruin your finds · Safe cleaning for every mineral type", Icons.Filled.CleaningServices, Color(0xFF5CC98C), Routes.MINERAL_CARE,
             SpecimenImages.urls["fluorite"]?.firstOrNull()),
         HomeTile("Fluorescence & UV", "Which minerals glow under UV light & what colors", Icons.Filled.Lightbulb, Color(0xFF9B7BD8), Routes.FLUORESCENCE_UV,
-            SpecimenImages.urls["fluorite"]?.firstOrNull()),
+            SpecimenImages.urls["uv-tile"]?.firstOrNull()),
         HomeTile("Crystal Systems", "The 7 crystal shapes with visual examples", Icons.Filled.Diamond, Color(0xFF6FA8C7), Routes.CRYSTAL_SYSTEMS,
             SpecimenImages.urls["quartz"]?.firstOrNull()),
         HomeTile("Lapidary Basics", "Cut, polish & cab your finds into jewelry", Icons.Filled.Construction, Color(0xFFE8A33D), Routes.LAPIDARY_BASICS,
-            SpecimenImages.urls["agate"]?.firstOrNull()),
+            SpecimenImages.urls["lapidary-tile"]?.firstOrNull()),
     )
 
     val featuredSpecimens = remember {

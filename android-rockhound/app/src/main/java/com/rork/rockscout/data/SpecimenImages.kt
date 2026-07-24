@@ -5177,7 +5177,10 @@ object SpecimenImages {
             "$Q/5e28185c-8dd1-45dc-a977-72e9f083f355.png",
             "$Q/a11216bf-f580-4cdc-aa60-45a0d57f8551.png"
         ),
-        "alabaster" to listOf(IMG_ALABASTER_ROUGH, IMG_ALABASTER_WILD, IMG_ALABASTER_MUSEUM)
+        "alabaster" to listOf(IMG_ALABASTER_ROUGH, IMG_ALABASTER_WILD, IMG_ALABASTER_MUSEUM),
+        // Tile hero images used on the Home screen Explore & Learn row.
+        "uv-tile" to listOf(IMG_FLUOR_FLUORITE_LW),
+        "lapidary-tile" to listOf(IMG_LABRADORITE_CABOCHON)
     ) }
 
     val urls: Map<String, List<String>> by lazy {

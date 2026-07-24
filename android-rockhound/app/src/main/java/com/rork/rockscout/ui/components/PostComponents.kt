@@ -141,10 +141,10 @@ fun EmptyPostBox(
             .glowingBorder(3.dp, Citrine.copy(alpha = 0.50f), shape),
         contentAlignment = Alignment.Center,
     ) {
-        // Rock-texture background fills the empty-post box.
-        Image(
-            painter = painterResource(id = R.drawable.level_tile_bg),
-            contentDescription = null,
+        // Countryside landscape background fills the empty-post box.
+        AsyncImage(
+            model = "https://r2-pub.rork.com/attachments/wmsimfq5yxa868o0uz90r.png",
+            contentDescription = "Countryside landscape",
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
         )
