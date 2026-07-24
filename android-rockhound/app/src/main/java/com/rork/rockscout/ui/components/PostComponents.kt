@@ -558,20 +558,19 @@ fun PostCard(
                 )
                 if (visibleReplies.isNotEmpty()) {
                     Spacer(Modifier.height(4.dp))
-                    Column(modifier = Modifier.padding(start = 36.dp)) {
-                        visibleReplies.forEach { reply ->
-                            CommentRow(
-                                comment = reply,
-                                isMine = reply.user_id == myUserId,
-                                likeCount = commentLikes[reply.id]?.size ?: 0,
-                                isLiked = likedCommentIds.contains(reply.id),
-                                onLike = { onCommentLike(reply.id) },
-                                onReply = { onReplyStart(reply.id) },
-                                isReplying = replyingToCommentId == reply.id,
-                                isReply = true,
-                            )
-                            if (reply != visibleReplies.last()) Spacer(Modifier.height(4.dp))
-                        }
+                    visibleReplies.forEach { reply ->
+                        CommentRow(
+                            comment = reply,
+                            isMine = reply.user_id == myUserId,
+                            likeCount = commentLikes[reply.id]?.size ?: 0,
+                            isLiked = likedCommentIds.contains(reply.id),
+                            onLike = { onCommentLike(reply.id) },
+                            onReply = { onReplyStart(reply.id) },
+                            isReplying = replyingToCommentId == reply.id,
+                            isReply = true,
+                            parentCommentBody = comment.body,
+                        )
+                        if (reply != visibleReplies.last()) Spacer(Modifier.height(4.dp))
                     }
                 }
                 if (replyingToCommentId == comment.id) {
@@ -584,7 +583,7 @@ fun PostCard(
                         imageError = replyImageError,
                         onImagePicked = onReplyImagePicked,
                         onImageRemove = onReplyImageRemove,
-                        modifier = Modifier.padding(start = 36.dp, top = 6.dp),
+                        modifier = Modifier.padding(top = 6.dp),
                     )
                 }
                 if (comment != visibleTopLevel.last()) Spacer(Modifier.height(6.dp))
@@ -627,6 +626,7 @@ private fun CommentRow(
     onReply: () -> Unit,
     isReplying: Boolean,
     isReply: Boolean = false,
+    parentCommentBody: String? = null,
 ) {
     val accent = if (isMine) Citrine else Aqua
     val commentShape = RoundedCornerShape(10.dp)
@@ -684,6 +684,15 @@ private fun CommentRow(
         }
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
+            if (isReply && parentCommentBody != null) {
+                Text(
+                    "\u21b3 replying to \"${parentCommentBody.take(40)}${if (parentCommentBody.length > 40) "\u2026" else ""}\"",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextLow,
+                    fontWeight = FontWeight.Normal,
+                )
+                Spacer(Modifier.height(4.dp))
+            }
             Text(
                 comment.body,
                 style = MaterialTheme.typography.bodyMedium,

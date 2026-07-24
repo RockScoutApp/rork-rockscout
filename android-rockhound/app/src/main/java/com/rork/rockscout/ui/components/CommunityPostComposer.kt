@@ -79,6 +79,7 @@ import kotlinx.coroutines.launch
 fun CommunityPostComposer(
     onDismiss: () -> Unit,
     onPosted: () -> Unit,
+    initialPhotoUri: String? = null,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
@@ -88,7 +89,7 @@ fun CommunityPostComposer(
     var tagline by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var locationText by remember { mutableStateOf("") }
-    var photoUri by remember { mutableStateOf<String?>(null) }
+    var photoUri by remember { mutableStateOf(initialPhotoUri) }
     var posting by remember { mutableStateOf(false) }
     var posted by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }

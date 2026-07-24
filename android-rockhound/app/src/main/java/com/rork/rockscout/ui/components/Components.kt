@@ -35,6 +35,7 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -68,6 +69,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -243,6 +245,170 @@ const val BLM_IMG_ROCK_HAMMER =
     "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/4bf5b02a-8b93-4cf6-8843-938cdfff99d5.png"
 const val BLM_IMG_DESERT_VARNISH =
     "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/48a62fbc-61ca-40ef-b783-de7516f46691.png"
+
+/** Generated tile background images for the BLM guide landing page tiles. */
+const val BLM_TILE_LAND =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/17521a06-df08-482c-982b-e4696066ea70.png"
+const val BLM_TILE_PARKS =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/9359a64f-062b-42c9-8054-118946d0ae6f.png"
+const val BLM_TILE_TRAILHEADS =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/10420553-ec06-4656-9e45-e48084261a8f.png"
+const val BLM_TILE_CAMPGROUNDS =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/b37f4a62-2469-43e3-9b50-5cc3d83b9ca4.png"
+
+/** Generated tile background images for the Exploring Geology landing page tiles. */
+const val GEO_TILE_ROCK_TYPES =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/5f8f6841-1281-4ee0-959e-d0d29ab713a8.png"
+const val GEO_TILE_MINERAL_ID =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/214f8ec5-38bc-4ee8-82c3-a17f4fdfb003.png"
+const val GEO_TILE_CRYSTALS =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/91f4b09f-d566-4ae7-b599-0b6ec5a155dc.png"
+const val GEO_TILE_ROCK_CYCLE =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/a8439572-8abe-4f34-b578-cda46c9d240b.png"
+
+/** Generated tile background images for the Exploring Paleontology landing page tiles. */
+const val PALEO_TILE_TIME_SCALE =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/87639397-231b-4581-a795-338f6cacb2d4.png"
+const val PALEO_TILE_EXTINCTIONS =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/c5fa8ea2-5b74-42f6-805b-a274b2affe66.png"
+const val PALEO_TILE_FOSSIL_TYPES =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/0e31db28-1dc2-4a0c-85c7-b220112ed2ce.png"
+const val PALEO_TILE_PERIODS =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/09db815d-4bc0-4100-aa63-fe437ca66304.png"
+
+/** Generated nature background for the BLM homepage tile. */
+const val BLM_HOME_TILE_NATURE =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/7f95720c-5737-487c-975f-fa5b1dbedf0a.png"
+
+/** Data for a navigation tile on a landing page (BLM guide, Geology, Paleontology).
+ *  Mirrors the home screen's HomeTile but is public so any screen can use it. */
+data class LandingTileData(
+    val label: String,
+    val subtitle: String,
+    val icon: ImageVector,
+    val accent: Color,
+    val route: String,
+    val imageUrl: String? = null,
+)
+
+/** A square navigation tile with a photo header, icon badge, label, and subtitle.
+ *  Matches the home screen's DashboardTile design language. Used on the BLM guide,
+ *  Geology, and Paleontology landing pages.
+ *
+ *  @param tile the tile data (label, subtitle, icon, accent, image)
+ *  @param onClick called when the tile is tapped */
+@Composable
+fun LandingTile(
+    tile: LandingTileData,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    val transition = rememberInfiniteTransition(label = "landingGlow")
+    val glow by transition.animateFloat(
+        initialValue = 0.10f,
+        targetValue = 0.28f,
+        animationSpec = infiniteRepeatable(
+            tween(2400 + (tile.label.hashCode() % 1000), delayMillis = 200),
+            RepeatMode.Reverse,
+        ),
+        label = "landingGlowAlpha",
+    )
+    Box(
+        modifier = modifier
+            .height(175.dp)
+            .sculpted(
+                shape = RoundedCornerShape(20.dp),
+                accent = tile.accent,
+                shadowElevation = 8.dp,
+                onClick = onClick,
+            )
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFF2A2820), Color(0xFF1E1C16), Color(0xFF16140F))
+                )
+            )
+            .glowingBorder(3.dp, tile.accent.copy(alpha = 0.55f), RoundedCornerShape(20.dp)),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.TopCenter)
+                .height(100.dp)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(tile.accent.copy(alpha = 0.18f + glow), tile.accent.copy(alpha = 0.04f), Color.Transparent)
+                    )
+                ),
+        )
+        if (tile.imageUrl != null) {
+            AsyncImage(
+                model = tile.imageUrl,
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(118.dp)
+                    .align(Alignment.TopCenter)
+                    .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
+                contentScale = ContentScale.Crop,
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(118.dp)
+                    .align(Alignment.TopCenter)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color.Black.copy(alpha = 0.05f), Color.Black.copy(alpha = 0.15f), Color(0xFF16140F).copy(alpha = 0.72f))
+                        )
+                    ),
+            )
+        }
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color.Transparent, Color(0xFF16140F).copy(alpha = 0.78f), Color(0xFF16140F).copy(alpha = 0.96f))
+                    )
+                )
+                .padding(14.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        Brush.radialGradient(
+                            listOf(tile.accent.copy(alpha = 0.35f), tile.accent.copy(alpha = 0.10f))
+                        )
+                    )
+                    .glowingBorder(2.dp, tile.accent.copy(alpha = 0.60f), RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(tile.icon, contentDescription = null, tint = tile.accent, modifier = Modifier.size(22.dp))
+            }
+            Spacer(Modifier.height(10.dp))
+            Text(
+                text = tile.label,
+                style = MaterialTheme.typography.titleSmall,
+                color = Aqua,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = tile.subtitle,
+                style = MaterialTheme.typography.labelSmall,
+                color = Color(0xFFE8E0D0),
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
 
 /** Book-style inline image — a small rounded image placed in a corner
  *  within a DarkCard's text content, like illustrations in a book.

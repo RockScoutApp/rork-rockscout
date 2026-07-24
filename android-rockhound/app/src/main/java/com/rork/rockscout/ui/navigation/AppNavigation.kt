@@ -96,6 +96,19 @@ import com.rork.rockscout.ui.screens.CrystalSystemReferenceScreen
 import com.rork.rockscout.ui.screens.LapidaryBasicsGuideScreen
 import com.rork.rockscout.ui.screens.AuroraScreen
 import com.rork.rockscout.ui.screens.SevereWeatherScreen
+import com.rork.rockscout.ui.screens.BlmLandScreen
+import com.rork.rockscout.ui.screens.StateParksScreen
+import com.rork.rockscout.ui.screens.BlmTrailheadsScreen
+import com.rork.rockscout.ui.screens.BlmCampgroundsScreen
+import com.rork.rockscout.ui.screens.StateParkDetailScreen
+import com.rork.rockscout.ui.screens.RockTypesScreen
+import com.rork.rockscout.ui.screens.MineralIdScreen
+import com.rork.rockscout.ui.screens.CrystalHardnessScreen
+import com.rork.rockscout.ui.screens.RockCycleToolsScreen
+import com.rork.rockscout.ui.screens.GeoTimeScaleScreen
+import com.rork.rockscout.ui.screens.MassExtinctionsScreen
+import com.rork.rockscout.ui.screens.FossilTypesScreen
+import com.rork.rockscout.ui.screens.GeologicPeriodsScreen
 import com.rork.rockscout.ui.screens.isDisclaimerAccepted
 
 object Routes {
@@ -172,6 +185,25 @@ object Routes {
     const val AURORA = "aurora"
     const val SEVERE_WEATHER = "severe_weather"
 
+    // BLM guide sub-screens
+    const val BLM_LAND = "blm_land"
+    const val STATE_PARKS = "state_parks"
+    const val BLM_TRAILHEADS = "blm_trailheads"
+    const val BLM_CAMPGROUNDS = "blm_campgrounds"
+    const val STATE_PARK_DETAIL = "state_park/{parkId}"
+
+    // Geology sub-screens
+    const val ROCK_TYPES = "rock_types"
+    const val MINERAL_ID = "mineral_id"
+    const val CRYSTAL_HARDNESS = "crystal_hardness"
+    const val ROCK_CYCLE_TOOLS = "rock_cycle_tools"
+
+    // Paleontology sub-screens
+    const val GEO_TIME_SCALE = "geo_time_scale"
+    const val MASS_EXTINCTIONS = "mass_extinctions"
+    const val FOSSIL_TYPES_SCREEN = "fossil_types"
+    const val GEOLOGIC_PERIODS = "geologic_periods"
+
     fun gemShowDetail(id: String) = "gem_show/$id"
     fun communityPostDetail(id: String) = "community_post/$id"
     fun location(id: String) = "location/$id"
@@ -192,6 +224,7 @@ object Routes {
     fun blmState(stateCode: String) = "blm_state/$stateCode"
     fun blmTrailhead(name: String) = "blm_trailhead/${Uri.encode(name)}"
     fun blmCampground(name: String) = "blm_campground/${Uri.encode(name)}"
+    fun stateParkDetail(parkId: String) = "state_park/$parkId"
     fun thankYou(tokens: Int, days: Int) = "thank_you/$tokens/$days"
     fun disclaimer(isGate: Boolean) = "disclaimer?isGate=$isGate"
 }
@@ -674,6 +707,30 @@ fun AppNavigation(
         composable(Routes.LAPIDARY_BASICS) { LapidaryBasicsGuideScreen(navController) }
         composable(Routes.AURORA) { AuroraScreen(navController) }
         composable(Routes.SEVERE_WEATHER) { SevereWeatherScreen(navController) }
+        // BLM guide sub-screens
+        composable(Routes.BLM_LAND) { BlmLandScreen(navController) }
+        composable(Routes.STATE_PARKS) { StateParksScreen(navController) }
+        composable(Routes.BLM_TRAILHEADS) { BlmTrailheadsScreen(navController) }
+        composable(Routes.BLM_CAMPGROUNDS) { BlmCampgroundsScreen(navController) }
+        composable(
+            Routes.STATE_PARK_DETAIL,
+            arguments = listOf(navArgument("parkId") { type = NavType.StringType }),
+        ) { entry ->
+            StateParkDetailScreen(
+                navController = navController,
+                parkId = entry.arguments?.getString("parkId").orEmpty(),
+            )
+        }
+        // Geology sub-screens
+        composable(Routes.ROCK_TYPES) { RockTypesScreen(navController) }
+        composable(Routes.MINERAL_ID) { MineralIdScreen(navController) }
+        composable(Routes.CRYSTAL_HARDNESS) { CrystalHardnessScreen(navController) }
+        composable(Routes.ROCK_CYCLE_TOOLS) { RockCycleToolsScreen(navController) }
+        // Paleontology sub-screens
+        composable(Routes.GEO_TIME_SCALE) { GeoTimeScaleScreen(navController) }
+        composable(Routes.MASS_EXTINCTIONS) { MassExtinctionsScreen(navController) }
+        composable(Routes.FOSSIL_TYPES_SCREEN) { FossilTypesScreen(navController) }
+        composable(Routes.GEOLOGIC_PERIODS) { GeologicPeriodsScreen(navController) }
     }
         // Night-mode red overlay sits on top of the entire NavHost so it
         // covers every screen, sheet, and dialog when the toggle is on.

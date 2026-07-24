@@ -64,6 +64,23 @@ import com.rork.rockscout.ui.components.glowingBorder
  * @param locationText Optional location label (redacted for non-friends).
  * @param onDismiss Called when the dialog is closed.
  */
+/** Lightweight overload for sharing a standalone image (e.g. from a long-press)
+ *  without any specimen or item context. */
+@Composable
+fun ShareToProfileComposer(
+    imageUri: String?,
+    onDismiss: () -> Unit,
+) {
+    ShareToProfileComposer(
+        sourceType = "photo",
+        title = "Shared Photo",
+        tagline = "",
+        imageUri = imageUri,
+        locationText = "",
+        onDismiss = onDismiss,
+    )
+}
+
 @Composable
 fun ShareToProfileComposer(
     sourceType: String,

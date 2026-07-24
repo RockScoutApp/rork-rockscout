@@ -151,6 +151,7 @@ import com.rork.rockscout.ui.components.CelebrationLevel
 import com.rork.rockscout.ui.components.PinPadOverlay
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.FullScreenImageViewer
+import com.rork.rockscout.ui.components.BLM_HOME_TILE_NATURE
 import com.rork.rockscout.ui.components.GEM_MINERAL_HERO_URL
 import com.rork.rockscout.ui.components.HunterStatusDropdown
 import com.rork.rockscout.ui.components.HunterStatusIcon
@@ -408,7 +409,7 @@ fun HomeScreen(navController: NavController) {
         HomeTile("Rocks Are Amazing", "${RocksAreAmazingSpecimens.allAmazing.size} wonders · Earth's most stunning formations", Icons.Filled.CollectionsBookmark, Color(0xFF44AACC), Routes.ROCKS_ARE_AMAZING,
             SpecimenImages.urls["bismuth-crystal"]?.firstOrNull()),
         HomeTile("BLM Public Lands", "State rules, dig sites, trailheads & campgrounds", Icons.Filled.Terrain, Color(0xFFC97B4A), Routes.BLM_GUIDE,
-            SpecimenImages.urls["fire-agate"]?.firstOrNull()),
+            BLM_HOME_TILE_NATURE),
         HomeTile("Finding Meteorites", "How to hunt and identify space rocks", Icons.Filled.Public, Color(0xFFC0C0C0), Routes.METEORITE_HUNTING,
             SpecimenImages.urls["meteorite-hunting"]?.firstOrNull()),
         HomeTile("Rock & Gem Resources", "Trusted geology, gem & fossil websites", Icons.Filled.Public, Color(0xFF7CB5EC), Routes.RESOURCE_LINKS,

@@ -25,7 +25,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Repeat
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -63,6 +66,9 @@ import com.rork.rockscout.ui.theme.Ink
 import com.rork.rockscout.ui.theme.TextMid
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
+
+/** Sort mode for detail screen comments. */
+private enum class DetailCommentSortMode { Popular, Newest, Oldest }
 
 /**
  * Full-screen community post detail page. Shows the complete post body,
@@ -120,19 +126,29 @@ fun CommunityPostDetailScreen(
     val replyBodies = remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var viewerImageUrl by remember { mutableStateOf<String?>(null) }
     var repostTarget by remember { mutableStateOf<CommunityRepository.PostRow?>(null) }
+    var commentSortMode by remember { mutableStateOf(DetailCommentSortMode.Popular) }
+    var filterMenuExpanded by remember { mutableStateOf(false) }
 
     // Pre-compute comment structure outside LazyListScope so remember{} is valid
     val topLevelComments = remember(comments) { comments.filter { it.parent_comment_id == null } }
-    val rankedTopLevel = remember(comments, commentLikes) {
-        topLevelComments.sortedByDescending { commentLikes[it.id]?.size ?: 0 }
+    val sortedTopLevel = remember(comments, commentLikes, commentSortMode) {
+        when (commentSortMode) {
+            DetailCommentSortMode.Popular -> topLevelComments.sortedByDescending { commentLikes[it.id]?.size ?: 0 }
+            DetailCommentSortMode.Newest -> topLevelComments.sortedByDescending { it.created_at }
+            DetailCommentSortMode.Oldest -> topLevelComments.sortedBy { it.created_at }
+        }
     }
     val repliesByComment = remember(comments) {
         comments.groupBy { it.parent_comment_id }
     }
-    val rankedRepliesByComment = remember(comments, commentLikes) {
+    val sortedRepliesByComment = remember(comments, commentLikes, commentSortMode) {
         topLevelComments.associateWith { parent ->
-            (repliesByComment[parent.id] ?: emptyList())
-                .sortedByDescending { commentLikes[it.id]?.size ?: 0 }
+            val replies = repliesByComment[parent.id] ?: emptyList()
+            when (commentSortMode) {
+                DetailCommentSortMode.Popular -> replies.sortedByDescending { commentLikes[it.id]?.size ?: 0 }
+                DetailCommentSortMode.Newest -> replies.sortedByDescending { it.created_at }
+                DetailCommentSortMode.Oldest -> replies.sortedBy { it.created_at }
+            }
         }
     }
 
@@ -303,22 +319,70 @@ fun CommunityPostDetailScreen(
             }
         }
 
-        // Comments section header
+        // Comments section header with filter button
         item {
             if (topLevelComments.isNotEmpty()) {
-                Text(
-                    "COMMENTS",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = TextMid,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 4.dp, bottom = 4.dp),
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "COMMENTS",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = TextMid,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f).padding(top = 4.dp, bottom = 4.dp),
+                    )
+                    if (topLevelComments.size > 1) {
+                        Box {
+                            Row(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(Color(0xFF2A2820))
+                                    .glowingBorder(1.dp, Citrine.copy(alpha = 0.45f), RoundedCornerShape(16.dp))
+                                    .clickable { filterMenuExpanded = true }
+                                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Icon(Icons.Filled.FilterList, contentDescription = "Sort comments", tint = Citrine, modifier = Modifier.size(14.dp))
+                                Text(
+                                    when (commentSortMode) {
+                                        DetailCommentSortMode.Popular -> "Most Popular"
+                                        DetailCommentSortMode.Newest -> "Most Recent"
+                                        DetailCommentSortMode.Oldest -> "Oldest"
+                                    },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Citrine,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = filterMenuExpanded,
+                                onDismissRequest = { filterMenuExpanded = false },
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text("Most Popular", color = if (commentSortMode == DetailCommentSortMode.Popular) Citrine else DarkTextHigh, fontWeight = if (commentSortMode == DetailCommentSortMode.Popular) FontWeight.Bold else FontWeight.Normal) },
+                                    onClick = { commentSortMode = DetailCommentSortMode.Popular; filterMenuExpanded = false },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Most Recent", color = if (commentSortMode == DetailCommentSortMode.Newest) Citrine else DarkTextHigh, fontWeight = if (commentSortMode == DetailCommentSortMode.Newest) FontWeight.Bold else FontWeight.Normal) },
+                                    onClick = { commentSortMode = DetailCommentSortMode.Newest; filterMenuExpanded = false },
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Oldest", color = if (commentSortMode == DetailCommentSortMode.Oldest) Citrine else DarkTextHigh, fontWeight = if (commentSortMode == DetailCommentSortMode.Oldest) FontWeight.Bold else FontWeight.Normal) },
+                                    onClick = { commentSortMode = DetailCommentSortMode.Oldest; filterMenuExpanded = false },
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
 
         // Individual top-level comments with per-comment reply expansion
-        rankedTopLevel.forEach { comment ->
-            val rankedReplies = rankedRepliesByComment[comment] ?: emptyList()
+        sortedTopLevel.forEach { comment ->
+            val sortedReplies = sortedRepliesByComment[comment] ?: emptyList()
             val isExpanded = expandedReplies.value.contains(comment.id)
 
             item(key = "comment_${comment.id}") {
@@ -334,32 +398,31 @@ fun CommunityPostDetailScreen(
                 )
             }
 
-            // Show first reply inline (always visible)
-            if (rankedReplies.isNotEmpty()) {
+            // Show first reply inline (always visible) — no nesting/indentation
+            if (sortedReplies.isNotEmpty()) {
                 item(key = "first_reply_${comment.id}") {
-                    Column(modifier = Modifier.padding(start = 36.dp)) {
-                        val firstReply = rankedReplies.first()
-                        DetailCommentRow(
-                            comment = firstReply,
-                            isMine = firstReply.user_id == myUserId,
-                            likeCount = commentLikes[firstReply.id]?.size ?: 0,
-                            isLiked = likedCommentIds.contains(firstReply.id),
-                            onLike = { scope.launch { repo.toggleCommentLike(firstReply.id) } },
-                            onReply = {},
-                            isReplying = false,
-                            isReply = true,
-                            onImageClick = { url -> viewerImageUrl = url },
-                        )
-                    }
+                    val firstReply = sortedReplies.first()
+                    DetailCommentRow(
+                        comment = firstReply,
+                        isMine = firstReply.user_id == myUserId,
+                        likeCount = commentLikes[firstReply.id]?.size ?: 0,
+                        isLiked = likedCommentIds.contains(firstReply.id),
+                        onLike = { scope.launch { repo.toggleCommentLike(firstReply.id) } },
+                        onReply = {},
+                        isReplying = false,
+                        isReply = true,
+                        parentCommentBody = comment.body,
+                        onImageClick = { url -> viewerImageUrl = url },
+                    )
                 }
 
                 // "View all N replies" / "Collapse" button when there are more than 1 reply
-                if (rankedReplies.size > 1) {
+                if (sortedReplies.size > 1) {
                     item(key = "expand_replies_${comment.id}") {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(start = 36.dp, top = 4.dp)
+                                .padding(top = 4.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .clickable {
                                     expandedReplies.value = if (isExpanded) {
@@ -379,7 +442,7 @@ fun CommunityPostDetailScreen(
                             )
                             Spacer(Modifier.width(4.dp))
                             Text(
-                                if (isExpanded) "Collapse" else "View all ${rankedReplies.size} replies",
+                                if (isExpanded) "Collapse" else "View all ${sortedReplies.size} replies",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Citrine,
                                 fontWeight = FontWeight.Bold,
@@ -387,11 +450,11 @@ fun CommunityPostDetailScreen(
                         }
                     }
 
-                    // Expanded replies (all except the first one already shown)
+                    // Expanded replies (all except the first one already shown) — no nesting
                     if (isExpanded) {
                         item(key = "expanded_replies_${comment.id}") {
-                            Column(modifier = Modifier.padding(start = 36.dp)) {
-                                rankedReplies.drop(1).forEach { reply ->
+                            Column {
+                                sortedReplies.drop(1).forEach { reply ->
                                     DetailCommentRow(
                                         comment = reply,
                                         isMine = reply.user_id == myUserId,
@@ -401,6 +464,7 @@ fun CommunityPostDetailScreen(
                                         onReply = {},
                                         isReplying = false,
                                         isReply = true,
+                                        parentCommentBody = comment.body,
                                         onImageClick = { url -> viewerImageUrl = url },
                                     )
                                     Spacer(Modifier.height(4.dp))
@@ -411,10 +475,10 @@ fun CommunityPostDetailScreen(
                 }
             }
 
-            // Reply composer for this comment
+            // Reply composer for this comment — no nesting
             if (replyingToCommentId == comment.id) {
                 item(key = "reply_composer_${comment.id}") {
-                    Column(modifier = Modifier.padding(start = 36.dp, top = 6.dp)) {
+                    Column(modifier = Modifier.padding(top = 6.dp)) {
                         DetailReplyComposer(
                             body = replyBodies.value[comment.id] ?: "",
                             onBodyChange = { body ->
@@ -475,6 +539,7 @@ private fun DetailCommentRow(
     onReply: () -> Unit,
     isReplying: Boolean,
     isReply: Boolean = false,
+    parentCommentBody: String? = null,
     onImageClick: ((String) -> Unit)? = null,
 ) {
     val accent = if (isMine) Citrine else Aqua
@@ -528,6 +593,15 @@ private fun DetailCommentRow(
         }
         Spacer(Modifier.width(8.dp))
         Column(modifier = Modifier.weight(1f)) {
+            if (isReply && parentCommentBody != null) {
+                Text(
+                    "\u21b3 replying to \"${parentCommentBody.take(40)}${if (parentCommentBody.length > 40) "\u2026" else ""}\"",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextMid,
+                    fontWeight = FontWeight.Normal,
+                )
+                Spacer(Modifier.height(4.dp))
+            }
             Text(comment.body, style = MaterialTheme.typography.bodyMedium, color = DarkTextHigh)
             if (comment.image_uri != null) {
                 Spacer(Modifier.height(6.dp))

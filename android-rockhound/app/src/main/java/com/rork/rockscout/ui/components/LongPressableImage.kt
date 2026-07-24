@@ -12,19 +12,27 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -96,6 +104,10 @@ fun LongPressableImage(
     var showSaveDialog by remember { mutableStateOf(false) }
     var saveMessage by remember { mutableStateOf<String?>(null) }
     var showToast by remember { mutableStateOf(false) }
+    var showShareDropdown by remember { mutableStateOf(false) }
+    var showProfileComposer by remember { mutableStateOf(false) }
+    var showCommunityComposer by remember { mutableStateOf(false) }
+    val imageUriString = model as? String
 
     // Retry counter — bumped automatically when the painter enters the Error
     // state, which forces Coil to re-fetch (up to 3 attempts). This handles
@@ -178,34 +190,84 @@ fun LongPressableImage(
             onDismissRequest = { showSaveDialog = false },
             title = {
                 Text(
-                    text = "Save photo?",
+                    text = "Save or share photo?",
                     color = Aqua,
                     fontWeight = FontWeight.Bold,
                 )
             },
             text = {
                 Text(
-                    text = "This will save the image to your gallery and add it to My Saved Images.",
+                    text = "Save the image to your gallery and My Saved Images, or share it to your profile feed, community board, or social media.",
                     color = TextHigh,
                 )
             },
             confirmButton = {
-                SculptedButton(
-                    text = "Save photo",
-                    onClick = {
-                        showSaveDialog = false
-                        scope.launch {
-                            val result = saveImageToGalleryAndCollection(context, model)
-                            saveMessage = result
-                            showToast = true
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box {
+                        SculptedButton(
+                            text = "Share To",
+                            onClick = { showShareDropdown = true },
+                            accent = Aqua,
+                            containerColor = Color(0xFF2A4A5A),
+                            textColor = Aqua,
+                            shape = RoundedCornerShape(12.dp),
+                            icon = Icons.Filled.Share,
+                        )
+                        DropdownMenu(
+                            expanded = showShareDropdown,
+                            onDismissRequest = { showShareDropdown = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Profile Feed", color = TextHigh) },
+                                leadingIcon = { Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = Aqua, modifier = Modifier.size(20.dp)) },
+                                onClick = {
+                                    showShareDropdown = false
+                                    showSaveDialog = false
+                                    showProfileComposer = true
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Community Board", color = TextHigh) },
+                                leadingIcon = { Icon(Icons.Filled.Forum, contentDescription = null, tint = Citrine, modifier = Modifier.size(20.dp)) },
+                                onClick = {
+                                    showShareDropdown = false
+                                    showSaveDialog = false
+                                    showCommunityComposer = true
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Social Media", color = TextHigh) },
+                                leadingIcon = { Icon(Icons.Filled.Share, contentDescription = null, tint = TextHigh, modifier = Modifier.size(20.dp)) },
+                                onClick = {
+                                    showShareDropdown = false
+                                    showSaveDialog = false
+                                    scope.launch {
+                                        shareImageToSocialMedia(context, imageUriString)
+                                    }
+                                },
+                            )
                         }
-                    },
-                    accent = Citrine,
-                    containerColor = Citrine,
-                    textColor = Ink,
-                    shape = RoundedCornerShape(12.dp),
-                    icon = Icons.Filled.Download,
-                )
+                    }
+                    SculptedButton(
+                        text = "Save",
+                        onClick = {
+                            showSaveDialog = false
+                            scope.launch {
+                                val result = saveImageToGalleryAndCollection(context, model)
+                                saveMessage = result
+                                showToast = true
+                            }
+                        },
+                        accent = Citrine,
+                        containerColor = Citrine,
+                        textColor = Ink,
+                        shape = RoundedCornerShape(12.dp),
+                        icon = Icons.Filled.Download,
+                    )
+                }
             },
             dismissButton = {
                 TextButton(onClick = { showSaveDialog = false }) {
@@ -213,6 +275,21 @@ fun LongPressableImage(
                 }
             },
             containerColor = Slate900,
+        )
+    }
+
+    if (showProfileComposer && imageUriString != null) {
+        ShareToProfileComposer(
+            imageUri = imageUriString,
+            onDismiss = { showProfileComposer = false },
+        )
+    }
+
+    if (showCommunityComposer && imageUriString != null) {
+        CommunityPostComposer(
+            onDismiss = { showCommunityComposer = false },
+            onPosted = { showCommunityComposer = false },
+            initialPhotoUri = imageUriString,
         )
     }
 
@@ -317,6 +394,43 @@ internal fun ShimmerPlaceholder(modifier: Modifier = Modifier) {
             )
         )
     )
+}
+
+/** Shares an image to the Android system share sheet via ShareCardImage. */
+private suspend fun shareImageToSocialMedia(context: android.content.Context, imageUri: String?) {
+    if (imageUri == null) return
+    val bitmap = loadBitmapForSharing(context, imageUri) ?: return
+    ShareCardImage.share(
+        context = context,
+        title = "Shared from RockScout",
+        subtitle = "RockScout Photo",
+        photoBitmap = bitmap,
+        caption = "Posted from RockScout",
+    )
+}
+
+/** Loads a bitmap from a URL or URI, using Coil cache first. */
+private suspend fun loadBitmapForSharing(context: android.content.Context, urlString: String): Bitmap? {
+    return withContext(Dispatchers.IO) {
+        if (urlString.startsWith("http://") || urlString.startsWith("https://")) {
+            val loader = coil3.SingletonImageLoader.get(context)
+            try {
+                val request = coil3.request.ImageRequest.Builder(context)
+                    .data(urlString)
+                    .build()
+                val result = loader.execute(request)
+                (result.image as? coil3.BitmapImage)?.bitmap
+            } catch (_: Exception) { null }
+                ?: downloadBitmap(urlString)
+        } else {
+            val uri = Uri.parse(urlString)
+            try {
+                context.contentResolver.openInputStream(uri)?.use {
+                    BitmapFactory.decodeStream(it)
+                }
+            } catch (_: Exception) { null }
+        }
+    }
 }
 
 private fun downloadBitmap(urlString: String): Bitmap? {

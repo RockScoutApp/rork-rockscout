@@ -27,11 +27,14 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Unarchive
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -74,6 +77,9 @@ import com.rork.rockscout.ui.theme.Ink
 import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.TextMid
 
+
+/** Sort mode for community post comments. */
+private enum class CommunityCommentSortMode { Popular, Newest, Oldest }
 
 /**
  * Compact card for the community feed. Shows author, title, tagline,
@@ -452,7 +458,7 @@ fun CommunityPostCard(
             }
         }
 
-        // ─── Comments (only the most popular comment shows on the main card) ───
+        // ─── Comments (most popular comment + reply when collapsed, all when expanded) ───
         AnimatedVisibility(visible = isExpanded && comments.isNotEmpty()) {
             Spacer(Modifier.height(10.dp))
             val topLevel = comments.filter { it.parent_comment_id == null }
@@ -460,20 +466,90 @@ fun CommunityPostCard(
                 topLevel.sortedByDescending { commentLikes[it.id]?.size ?: 0 }
             }
             val topComment = rankedTopLevel.firstOrNull()
-            val hasMore = topLevel.size > 1 || (topComment?.let { c -> comments.count { it.parent_comment_id == c.id } } ?: 0) > 0
+            val topReply = remember(comments, commentLikes, topComment) {
+                topComment?.let { tc ->
+                    comments.filter { it.parent_comment_id == tc.id }
+                        .sortedByDescending { commentLikes[it.id]?.size ?: 0 }
+                        .firstOrNull()
+                }
+            }
+            val hasMore = topLevel.size > 1 || (topComment?.let { c -> comments.count { it.parent_comment_id == c.id } } ?: 0) > 1
 
-            // Collapsed: show the single most popular top-level comment only.
-            // Expanded: show every top-level comment and each reply as a separate row.
+            // Comment sort filter dropdown
+            var commentSortMode by remember(post.id) { mutableStateOf(CommunityCommentSortMode.Popular) }
+            var filterMenuExpanded by remember(post.id) { mutableStateOf(false) }
+            val sortedTopLevel: List<CommunityRepository.CommentRow> = when (commentSortMode) {
+                CommunityCommentSortMode.Popular -> rankedTopLevel
+                CommunityCommentSortMode.Newest -> topLevel.sortedByDescending { it.created_at }
+                CommunityCommentSortMode.Oldest -> topLevel.sortedBy { it.created_at }
+            }
+
             val visibleTopLevel: List<CommunityRepository.CommentRow> =
-                if (commentsExpanded) rankedTopLevel else rankedTopLevel.take(1)
+                if (commentsExpanded) sortedTopLevel else rankedTopLevel.take(1)
+
+            // Filter button row
+            if (commentsExpanded && topLevel.size > 1) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                ) {
+                    Box {
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color(0xFF2A2820))
+                                .glowingBorder(1.dp, Citrine.copy(alpha = 0.45f), RoundedCornerShape(16.dp))
+                                .clickable { filterMenuExpanded = true }
+                                .padding(horizontal = 10.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Icon(Icons.Filled.FilterList, contentDescription = "Sort comments", tint = Citrine, modifier = Modifier.size(14.dp))
+                            Text(
+                                when (commentSortMode) {
+                                    CommunityCommentSortMode.Popular -> "Most Popular"
+                                    CommunityCommentSortMode.Newest -> "Most Recent"
+                                    CommunityCommentSortMode.Oldest -> "Oldest"
+                                },
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Citrine,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = filterMenuExpanded,
+                            onDismissRequest = { filterMenuExpanded = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Most Popular", color = if (commentSortMode == CommunityCommentSortMode.Popular) Citrine else DarkTextHigh, fontWeight = if (commentSortMode == CommunityCommentSortMode.Popular) FontWeight.Bold else FontWeight.Normal) },
+                                onClick = { commentSortMode = CommunityCommentSortMode.Popular; filterMenuExpanded = false },
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Most Recent", color = if (commentSortMode == CommunityCommentSortMode.Newest) Citrine else DarkTextHigh, fontWeight = if (commentSortMode == CommunityCommentSortMode.Newest) FontWeight.Bold else FontWeight.Normal) },
+                                onClick = { commentSortMode = CommunityCommentSortMode.Newest; filterMenuExpanded = false },
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Oldest", color = if (commentSortMode == CommunityCommentSortMode.Oldest) Citrine else DarkTextHigh, fontWeight = if (commentSortMode == CommunityCommentSortMode.Oldest) FontWeight.Bold else FontWeight.Normal) },
+                                onClick = { commentSortMode = CommunityCommentSortMode.Oldest; filterMenuExpanded = false },
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+            }
 
             visibleTopLevel.forEach { comment ->
                 val allReplies = comments.filter { it.parent_comment_id == comment.id }
-                val rankedReplies = remember(comments, commentLikes, comment.id) {
-                    allReplies.sortedByDescending { commentLikes[it.id]?.size ?: 0 }
+                val sortedReplies: List<CommunityRepository.CommentRow> = when (commentSortMode) {
+                    CommunityCommentSortMode.Popular -> allReplies.sortedByDescending { commentLikes[it.id]?.size ?: 0 }
+                    CommunityCommentSortMode.Newest -> allReplies.sortedByDescending { it.created_at }
+                    CommunityCommentSortMode.Oldest -> allReplies.sortedBy { it.created_at }
                 }
                 val visibleReplies: List<CommunityRepository.CommentRow> =
-                    if (commentsExpanded) rankedReplies else emptyList()
+                    if (commentsExpanded) sortedReplies else {
+                        // Collapsed: show top reply only if this is the top comment
+                        if (comment == topComment && topReply != null) listOf(topReply) else emptyList()
+                    }
 
                 CommunityCommentRow(
                     comment = comment,
@@ -487,21 +563,20 @@ fun CommunityPostCard(
                 )
                 if (visibleReplies.isNotEmpty()) {
                     Spacer(Modifier.height(4.dp))
-                    Column(modifier = Modifier.padding(start = 36.dp)) {
-                        visibleReplies.forEach { reply ->
-                            CommunityCommentRow(
-                                comment = reply,
-                                isMine = reply.user_id == myUserId,
-                                likeCount = commentLikes[reply.id]?.size ?: 0,
-                                isLiked = likedCommentIds.contains(reply.id),
-                                onLike = { onCommentLike(reply.id) },
-                                onReply = {},
-                                isReplying = replyingToCommentId == reply.id,
-                                isReply = true,
-                                onImageClick = { url -> viewerImageUrl = url },
-                            )
-                            if (reply != visibleReplies.last()) Spacer(Modifier.height(4.dp))
-                        }
+                    visibleReplies.forEach { reply ->
+                        CommunityCommentRow(
+                            comment = reply,
+                            isMine = reply.user_id == myUserId,
+                            likeCount = commentLikes[reply.id]?.size ?: 0,
+                            isLiked = likedCommentIds.contains(reply.id),
+                            onLike = { onCommentLike(reply.id) },
+                            onReply = {},
+                            isReplying = replyingToCommentId == reply.id,
+                            isReply = true,
+                            parentCommentBody = comment.body,
+                            onImageClick = { url -> viewerImageUrl = url },
+                        )
+                        if (reply != visibleReplies.last()) Spacer(Modifier.height(4.dp))
                     }
                 }
                 if (replyingToCommentId == comment.id) {
@@ -514,7 +589,7 @@ fun CommunityPostCard(
                         imageError = replyImageError,
                         onImagePicked = onReplyImagePicked,
                         onImageRemove = onReplyImageRemove,
-                        modifier = Modifier.padding(start = 36.dp, top = 6.dp),
+                        modifier = Modifier.padding(top = 6.dp),
                     )
                 }
                 if (comment != visibleTopLevel.last()) Spacer(Modifier.height(6.dp))
@@ -596,6 +671,7 @@ private fun CommunityCommentRow(
     onReply: () -> Unit,
     isReplying: Boolean,
     isReply: Boolean = false,
+    parentCommentBody: String? = null,
     onImageClick: ((String) -> Unit)? = null,
 ) {
     val accent = if (isMine) Citrine else Aqua
@@ -649,6 +725,15 @@ private fun CommunityCommentRow(
         }
         Spacer(Modifier.width(8.dp))
         Column(modifier = Modifier.weight(1f)) {
+            if (isReply && parentCommentBody != null) {
+                Text(
+                    "\u21b3 replying to \"${parentCommentBody.take(40)}${if (parentCommentBody.length > 40) "\u2026" else ""}\"",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextLow,
+                    fontWeight = FontWeight.Normal,
+                )
+                Spacer(Modifier.height(4.dp))
+            }
             Text(
                 comment.body,
                 style = MaterialTheme.typography.bodyMedium,
