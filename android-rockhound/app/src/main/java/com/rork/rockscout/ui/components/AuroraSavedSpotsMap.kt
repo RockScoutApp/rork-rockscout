@@ -132,8 +132,20 @@ fun AuroraSavedSpotsMap(
         }
 
         if (points.isNotEmpty()) {
-            val box = org.osmdroid.util.BoundingBox.fromGeoPoints(points)
-            mv.zoomToBoundingBox(box, false, 48)
+            runCatching {
+                if (points.size == 1) {
+                    // Single point — degenerate bounding box crashes osmdroid.
+                    // Just animate to the point at a reasonable zoom instead.
+                    mv.controller.animateTo(points.first())
+                    mv.controller.setZoom(8.0)
+                } else {
+                    val box = org.osmdroid.util.BoundingBox.fromGeoPoints(points)
+                    // Pad the box slightly so it's never zero-area even for
+                    // very close points.
+                    val padded = box.increaseByScale(1.2f)
+                    mv.zoomToBoundingBox(padded, false, 48)
+                }
+            }
         }
         mv.invalidate()
     }
@@ -214,10 +226,12 @@ fun AuroraSavedSpotsMap(
                 onRecenter = {
                     mapView?.let { mv ->
                         if (spots.isNotEmpty()) {
-                            val box = org.osmdroid.util.BoundingBox.fromGeoPoints(
-                                spots.map { GeoPoint(it.latitude, it.longitude) }
-                            )
-                            mv.controller.animateTo(GeoPoint(box.centerLatitude, box.centerLongitude))
+                            runCatching {
+                                val box = org.osmdroid.util.BoundingBox.fromGeoPoints(
+                                    spots.map { GeoPoint(it.latitude, it.longitude) }
+                                )
+                                mv.controller.animateTo(GeoPoint(box.centerLatitude, box.centerLongitude))
+                            }
                         }
                     }
                 },
