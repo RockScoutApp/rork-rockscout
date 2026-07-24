@@ -499,7 +499,7 @@ fun DevUserPopup(
                     Spacer(Modifier.height(12.dp))
                     OutlinedTextField(
                         value = deleteReason,
-                        onValueChange = { deleteReason = it },
+                        onValueChange = { deleteReason = com.rork.rockscout.data.ProfanityFilter.filter(it) },
                         label = { Text("Reason for deletion") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
