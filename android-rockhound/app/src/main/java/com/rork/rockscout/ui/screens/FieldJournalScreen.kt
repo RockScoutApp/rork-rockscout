@@ -498,6 +498,7 @@ private fun JournalEditorScreen(
     var showTripPicker by remember { mutableStateOf(false) }
     var showSavedImagePicker by remember { mutableStateOf(false) }
     var weatherSummary by remember { mutableStateOf(initial?.weatherSummary ?: "") }
+    var pendingPhotoDeleteIdx by remember { mutableStateOf<Int?>(null) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -647,7 +648,7 @@ private fun JournalEditorScreen(
                                         accent = Citrine,
                                         shadowElevation = 2.dp,
                                         circular = true,
-                                        onClick = { photoUris.removeAt(idx) },
+                                        onClick = { pendingPhotoDeleteIdx = idx },
                                     )
                                     .clip(CircleShape)
                                     .background(Color.Black),
@@ -968,6 +969,22 @@ private fun JournalEditorScreen(
             },
         )
     }
+    pendingPhotoDeleteIdx?.let { idx ->
+        if (idx in photoUris.indices) {
+            DeleteConfirmDialog(
+                title = "Remove photo?",
+                message = "Remove this photo from the journal entry? You'll need to re-add it if you change your mind.",
+                onConfirm = {
+                    photoUris.removeAt(idx)
+                    pendingPhotoDeleteIdx = null
+                },
+                onDismiss = { pendingPhotoDeleteIdx = null },
+            )
+        } else {
+            pendingPhotoDeleteIdx = null
+        }
+    }
+
     if (showSavedImagePicker) {
         SavedImagesPickerDialog(
             onDismiss = { showSavedImagePicker = false },
