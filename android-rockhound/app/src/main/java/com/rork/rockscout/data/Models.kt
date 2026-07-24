@@ -152,6 +152,8 @@ enum class TripStopType(val label: String) {
     TRAILHEAD("Trailhead"),
     CAMPGROUND("Campground"),
     CUSTOM_PIN("Custom Pin"),
+    STATE_PARK("State Park"),
+    BLM_DIG_SITE("BLM Dig Site"),
 }
 
 @Serializable

@@ -40,7 +40,9 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Directions
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.Landscape
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Park
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.PhotoCamera
@@ -161,6 +163,9 @@ import com.rork.rockscout.data.DigSiteDiscoveryStore
 import com.rork.rockscout.data.BlmData
 import com.rork.rockscout.data.BlmTrailhead
 import com.rork.rockscout.data.BlmCampground
+import com.rork.rockscout.data.BlmDigSite
+import com.rork.rockscout.data.StatePark
+import com.rork.rockscout.data.StateParkData
 import com.rork.rockscout.data.TripStopType
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -820,6 +825,8 @@ private fun TripEditorDialog(
     var showCustomPinPicker by remember { mutableStateOf(false) }
     var showTrailheadPicker by remember { mutableStateOf(false) }
     var showCampgroundPicker by remember { mutableStateOf(false) }
+    var showBlmDigSitePicker by remember { mutableStateOf(false) }
+    var showStateParkPicker by remember { mutableStateOf(false) }
     var showAddLocationDialog by remember { mutableStateOf(false) }
     var addLocationMode by remember { mutableStateOf("dig_site") }
     var addStopMenuExpanded by remember { mutableStateOf(false) }
@@ -1115,6 +1122,22 @@ Planned with RockScout""".trimIndent()
                                 Text("Campgrounds")
                             } },
                             onClick = { addStopMenuExpanded = false; showCampgroundPicker = true },
+                        )
+                        DropdownMenuItem(
+                            text = { Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Filled.Landscape, contentDescription = null, tint = Color(0xFFC97B4A), modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(10.dp))
+                                Text("BLM Dig Sites")
+                            } },
+                            onClick = { addStopMenuExpanded = false; showBlmDigSitePicker = true },
+                        )
+                        DropdownMenuItem(
+                            text = { Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Filled.Park, contentDescription = null, tint = Success, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(10.dp))
+                                Text("State Parks")
+                            } },
+                            onClick = { addStopMenuExpanded = false; showStateParkPicker = true },
                         )
                     }
                 }
@@ -1664,6 +1687,40 @@ Planned with RockScout""".trimIndent()
         )
     }
 
+    if (showBlmDigSitePicker) {
+        BlmDigSitePickerSheet(
+            onDismiss = { showBlmDigSitePicker = false },
+            onPick = { site ->
+                stops.add(TripStop(
+                    locationId = "blm-dig-${site.name.hashCode()}-${site.region.hashCode()}",
+                    locationName = site.name,
+                    order = stops.size,
+                    latitude = site.latitude,
+                    longitude = site.longitude,
+                    stopType = "blm_dig_site",
+                ))
+                showBlmDigSitePicker = false
+            },
+        )
+    }
+
+    if (showStateParkPicker) {
+        StateParkPickerSheet(
+            onDismiss = { showStateParkPicker = false },
+            onPick = { park ->
+                stops.add(TripStop(
+                    locationId = "state-park-${park.id}",
+                    locationName = park.name,
+                    order = stops.size,
+                    latitude = park.latitude,
+                    longitude = park.longitude,
+                    stopType = "state_park",
+                ))
+                showStateParkPicker = false
+            },
+        )
+    }
+
     if (showAddLocationDialog) {
         AddLocationDialog(
             onDismiss = { showAddLocationDialog = false },
@@ -2183,6 +2240,193 @@ private fun CampgroundPickerSheet(
                     textColor = Citrine,
                     modifier = Modifier.fillMaxWidth(),
                 )
+            }
+        },
+        confirmButton = {},
+        dismissButton = { SculptedTextButton(text = "Cancel", onClick = onDismiss, accent = Citrine, textColor = Citrine) },
+    )
+}
+
+/** Picker sheet for BLM dig sites — searchable, state-grouped list. Tapping a
+ *  site adds it as a trip stop with coordinates and the "blm_dig_site" stopType. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BlmDigSitePickerSheet(
+    onDismiss: () -> Unit,
+    onPick: (BlmDigSite) -> Unit,
+) {
+    val allSites = remember { BlmData.allBlmDigSites }
+    var query by remember { mutableStateOf("") }
+
+    val filtered = remember(query) {
+        if (query.isBlank()) allSites
+        else allSites.filter {
+            it.name.contains(query, ignoreCase = true) ||
+                it.region.contains(query, ignoreCase = true) ||
+                it.whatToFind.contains(query, ignoreCase = true)
+        }
+    }
+    val grouped = remember(filtered) {
+        filtered.groupBy { site ->
+            BlmData.allStates.firstOrNull { it.code == site.region.substringAfterLast(", ").take(2).uppercase() }?.name
+                ?: "BLM"
+        }.toList().sortedBy { it.first }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = { Text("Add a BLM dig site", style = MaterialTheme.typography.headlineSmall) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth().height(460.dp)) {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    label = { Text("Search by name, region, or mineral") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().noAutoFocus(),
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "${filtered.size} BLM dig site${if (filtered.size == 1) "" else "s"}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextLow,
+                )
+                Spacer(Modifier.height(6.dp))
+                LazyColumn(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    grouped.forEach { (regionLabel, sites) ->
+                        item {
+                            Text(
+                                regionLabel,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color(0xFFC97B4A),
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = 4.dp),
+                            )
+                        }
+                        items(sites, key = { "${it.name}-${it.region}" }) { site ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .sculpted(shape = RoundedCornerShape(10.dp), accent = Color(0xFFC97B4A), shadowElevation = 3.dp, onClick = { onPick(site) })
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                                    .glowingBorder(2.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
+                                    .padding(12.dp),
+                            ) {
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Filled.Landscape, contentDescription = null, tint = Color(0xFFC97B4A), modifier = Modifier.size(18.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(site.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                                    }
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(site.region, style = MaterialTheme.typography.labelSmall, color = TextLow)
+                                    if (site.whatToFind.isNotBlank()) {
+                                        Spacer(Modifier.height(4.dp))
+                                        Text(site.whatToFind, style = MaterialTheme.typography.labelSmall, color = DarkTextMid, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = { SculptedTextButton(text = "Cancel", onClick = onDismiss, accent = Citrine, textColor = Citrine) },
+    )
+}
+
+/** Picker sheet for State Parks — searchable, state-grouped list. Tapping a
+ *  park adds it as a trip stop with coordinates and the "state_park" stopType. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StateParkPickerSheet(
+    onDismiss: () -> Unit,
+    onPick: (StatePark) -> Unit,
+) {
+    val allParks = remember { StateParkData.allParks }
+    var query by remember { mutableStateOf("") }
+
+    val filtered = remember(query) {
+        if (query.isBlank()) allParks
+        else allParks.filter {
+            it.name.contains(query, ignoreCase = true) ||
+                it.region.contains(query, ignoreCase = true) ||
+                it.description.contains(query, ignoreCase = true)
+        }
+    }
+    val grouped = remember(filtered) {
+        filtered.groupBy { it.state }.toList().sortedBy { it.first }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = { Text("Add a state park", style = MaterialTheme.typography.headlineSmall) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth().height(460.dp)) {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    label = { Text("Search by name or region") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().noAutoFocus(),
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "${filtered.size} state park${if (filtered.size == 1) "" else "s"}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextLow,
+                )
+                Spacer(Modifier.height(6.dp))
+                LazyColumn(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    grouped.forEach { (stateCode, parks) ->
+                        item {
+                            Text(
+                                stateCode,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Success,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = 4.dp),
+                            )
+                        }
+                        items(parks, key = { it.id }) { park ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .sculpted(shape = RoundedCornerShape(10.dp), accent = Success, shadowElevation = 3.dp, onClick = { onPick(park) })
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                                    .glowingBorder(2.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
+                                    .padding(12.dp),
+                            ) {
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Filled.Park, contentDescription = null, tint = Success, modifier = Modifier.size(18.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(park.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                                    }
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(park.region, style = MaterialTheme.typography.labelSmall, color = TextLow)
+                                    if (park.description.isNotBlank()) {
+                                        Spacer(Modifier.height(4.dp))
+                                        Text(park.description, style = MaterialTheme.typography.labelSmall, color = DarkTextMid, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         confirmButton = {},
