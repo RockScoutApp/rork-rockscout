@@ -21,6 +21,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.OpenInNew
@@ -28,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,9 +39,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.BlmData
 import com.rork.rockscout.data.BlmDigSite
+import com.rork.rockscout.data.FavoriteSpotResolver
 import com.rork.rockscout.data.SafeLinkOpener
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.ScreenScaffold
@@ -72,6 +78,10 @@ fun BlmStateDetailScreen(
 
     val accent = Color(state.accentHex)
     val context = LocalContext.current
+    val repo = AppRepository.instance
+    val favorites by repo.favoriteSpots.collectAsStateWithLifecycle()
+    val stateFavId = FavoriteSpotResolver.blmStateId(state.code)
+    val isStateFav = favorites.contains(stateFavId)
 
     ScreenScaffold(
         title = state.name,
@@ -99,7 +109,7 @@ fun BlmStateDetailScreen(
                             Text(state.silhouetteEmoji, style = MaterialTheme.typography.headlineSmall)
                         }
                         Spacer(Modifier.width(14.dp))
-                        Column {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 state.name,
                                 style = MaterialTheme.typography.headlineSmall,
@@ -110,6 +120,23 @@ fun BlmStateDetailScreen(
                                 "BLM: ${state.blmAcreage}",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = accent,
+                            )
+                        }
+                        // Favorite button for the state guide
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Citrine.copy(alpha = if (isStateFav) 0.20f else 0.10f))
+                                .glowingBorder(1.dp, Citrine.copy(alpha = if (isStateFav) 0.6f else 0.35f), CircleShape)
+                                .clickable { repo.toggleFavoriteSpot(stateFavId) },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                if (isStateFav) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
+                                contentDescription = if (isStateFav) "Remove from favorites" else "Add to favorites",
+                                tint = if (isStateFav) Citrine else TextLow,
+                                modifier = Modifier.size(20.dp),
                             )
                         }
                     }
@@ -187,7 +214,7 @@ fun BlmStateDetailScreen(
                     )
                 }
                 items(state.blmDigSites, key = { "${state.code}_${it.name}" }) { site ->
-                    BlmDigSiteCard(site = site, accent = accent)
+                    BlmDigSiteCard(site = site, accent = accent, stateCode = state.code)
                 }
             } else {
                 item {
@@ -278,8 +305,12 @@ private fun SectionCard(
 }
 
 @Composable
-private fun BlmDigSiteCard(site: BlmDigSite, accent: Color) {
+private fun BlmDigSiteCard(site: BlmDigSite, accent: Color, stateCode: String) {
     val context = LocalContext.current
+    val repo = AppRepository.instance
+    val favorites by repo.favoriteSpots.collectAsStateWithLifecycle()
+    val favId = FavoriteSpotResolver.blmSiteId(stateCode, site.name)
+    val isFav = favorites.contains(favId)
     DarkCard(accent = accent, modifier = Modifier.fillMaxWidth()) {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -301,6 +332,23 @@ private fun BlmDigSiteCard(site: BlmDigSite, accent: Color) {
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f),
                 )
+                // Favorite button for this dig site
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Citrine.copy(alpha = if (isFav) 0.20f else 0.08f))
+                        .glowingBorder(1.dp, Citrine.copy(alpha = if (isFav) 0.6f else 0.30f), CircleShape)
+                        .clickable { repo.toggleFavoriteSpot(favId) },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        if (isFav) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
+                        contentDescription = if (isFav) "Remove from favorites" else "Add to favorites",
+                        tint = if (isFav) Citrine else TextLow,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
             }
             Spacer(Modifier.height(8.dp))
             Text(site.region, style = MaterialTheme.typography.bodySmall, color = accent)

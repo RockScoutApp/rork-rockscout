@@ -20,6 +20,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Park
@@ -27,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,11 +39,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.rork.rockscout.data.AppRepository
+import com.rork.rockscout.data.FavoriteSpotResolver
 import com.rork.rockscout.data.SafeLinkOpener
 import com.rork.rockscout.data.StatePark
 import com.rork.rockscout.data.StateParkData
 import com.rork.rockscout.ui.components.ScreenScaffold
+import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.TagChip
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.components.sculpted
@@ -49,6 +56,7 @@ import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Success
 import com.rork.rockscout.ui.theme.TextHigh
+import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.TextMid
 
 @Composable
@@ -71,6 +79,10 @@ fun StateParkDetailScreen(
 
     val accent = Success
     val context = LocalContext.current
+    val repo = AppRepository.instance
+    val favorites by repo.favoriteSpots.collectAsStateWithLifecycle()
+    val favId = FavoriteSpotResolver.parkId(park.id)
+    val isFav = favorites.contains(favId)
 
     ScreenScaffold(title = park.name, onBack = { navController.popBackStack() }) {
         LazyColumn(
@@ -137,6 +149,31 @@ fun StateParkDetailScreen(
                             Icon(Icons.Filled.LocationOn, contentDescription = null, tint = Citrine, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(10.dp))
                             Text("Get Directions", style = MaterialTheme.typography.titleSmall, color = Citrine, fontWeight = FontWeight.Bold)
+                        }
+                        // Favorite button
+                        Spacer(Modifier.height(12.dp))
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Citrine.copy(alpha = 0.15f))
+                                .glowingBorder(2.dp, Citrine.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                                .clickable { repo.toggleFavoriteSpot(favId) }
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                if (isFav) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
+                                contentDescription = if (isFav) "Remove from favorites" else "Add to favorites",
+                                tint = if (isFav) Citrine else TextLow,
+                                modifier = Modifier.size(20.dp),
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Text(
+                                if (isFav) "Saved to Favorite Spots" else "Add to Favorite Spots",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = if (isFav) Citrine else TextLow,
+                                fontWeight = FontWeight.Bold,
+                            )
                         }
                         // Website link
                         if (park.website != null) {

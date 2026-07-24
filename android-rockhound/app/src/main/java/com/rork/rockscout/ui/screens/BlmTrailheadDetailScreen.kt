@@ -20,6 +20,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
@@ -29,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,10 +40,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.BlmCampground
 import com.rork.rockscout.data.BlmData
 import com.rork.rockscout.data.BlmTrailhead
+import com.rork.rockscout.data.FavoriteSpotResolver
 import com.rork.rockscout.data.SafeLinkOpener
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.ScreenScaffold
@@ -52,6 +58,7 @@ import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Success
 import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.TextMid
+import com.rork.rockscout.ui.theme.Citrine
 
 // ── Trailhead Detail ──────────────────────────────────────────────────────
 
@@ -78,6 +85,10 @@ fun BlmTrailheadDetailScreen(
     }
     val accent = Success
     val context = LocalContext.current
+    val repo = AppRepository.instance
+    val favorites by repo.favoriteSpots.collectAsStateWithLifecycle()
+    val favId = FavoriteSpotResolver.trailheadId(trailhead.name)
+    val isFav = favorites.contains(favId)
 
     ScreenScaffold(
         title = trailhead.name,
@@ -200,6 +211,31 @@ fun BlmTrailheadDetailScreen(
                             fontWeight = FontWeight.Bold,
                         )
                     }
+                    // Favorite button
+                    Spacer(Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Citrine.copy(alpha = 0.15f))
+                            .glowingBorder(2.dp, Citrine.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
+                            .clickable { repo.toggleFavoriteSpot(favId) }
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            if (isFav) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
+                            contentDescription = if (isFav) "Remove from favorites" else "Add to favorites",
+                            tint = if (isFav) Citrine else TextLow,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            if (isFav) "Saved to Favorite Spots" else "Add to Favorite Spots",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = if (isFav) Citrine else TextLow,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                 }
             }
 
@@ -249,6 +285,10 @@ fun BlmCampgroundDetailScreen(
     }
     val accent = Citrine
     val context = LocalContext.current
+    val repo = AppRepository.instance
+    val favorites by repo.favoriteSpots.collectAsStateWithLifecycle()
+    val favId = FavoriteSpotResolver.campgroundId(campground.name)
+    val isFav = favorites.contains(favId)
 
     ScreenScaffold(
         title = campground.name,
@@ -370,6 +410,31 @@ fun BlmCampgroundDetailScreen(
                             "Open in Maps",
                             style = MaterialTheme.typography.labelLarge,
                             color = accent,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                    // Favorite button
+                    Spacer(Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Citrine.copy(alpha = 0.15f))
+                            .glowingBorder(2.dp, Citrine.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
+                            .clickable { repo.toggleFavoriteSpot(favId) }
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            if (isFav) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
+                            contentDescription = if (isFav) "Remove from favorites" else "Add to favorites",
+                            tint = if (isFav) Citrine else TextLow,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            if (isFav) "Saved to Favorite Spots" else "Add to Favorite Spots",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = if (isFav) Citrine else TextLow,
                             fontWeight = FontWeight.Bold,
                         )
                     }

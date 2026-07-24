@@ -88,6 +88,7 @@ import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.AuthRepository
 import com.rork.rockscout.data.CapturedPhoto
 import com.rork.rockscout.data.CollectionEntry
+import com.rork.rockscout.data.FavoriteSpotResolver
 import com.rork.rockscout.data.ImageModerator
 import com.rork.rockscout.data.ImageReviewRepository
 import com.rork.rockscout.data.ImageUtils
@@ -1892,17 +1893,17 @@ private fun rememberShareableItemsByCategory(): Map<String, List<ShareableItem>>
             )
         }
         favorites.forEach { id ->
-            val location = SeedData.locationById(id)
-            if (location != null) {
+            val entry = FavoriteSpotResolver.resolve(id)
+            if (entry != null) {
                 map.getOrPut("spot") { mutableListOf() }.add(
                     ShareableItem(
                         id = "spot-$id",
                         sourceType = "spot",
                         sourceRefId = id,
-                        title = location.name,
-                        subtitle = "Favorite spot",
+                        title = entry.name,
+                        subtitle = "Favorite spot · ${entry.typeLabel}",
                         imageUri = SpecimenImages.urls[id]?.firstOrNull(),
-                        locationText = location.region,
+                        locationText = entry.region,
                         icon = Icons.Filled.Place,
                         accent = Color(0xFFE2574C),
                     )
