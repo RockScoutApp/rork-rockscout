@@ -250,23 +250,32 @@ fun LongPressableImage(
  */
 suspend fun saveImageToGalleryAndCollection(context: android.content.Context, imageModel: Any?): String {
     val urlString = imageModel as? String ?: return "Could not save this image."
-    if (!urlString.startsWith("http://") && !urlString.startsWith("https://")) return "Could not save this image."
 
     return withContext(Dispatchers.IO) {
         try {
-            // Try Coil's disk cache first — the image is likely already there
-            // from being displayed on screen. This avoids a redundant network
-            // download on low-signal connections.
-            val loader = coil3.SingletonImageLoader.get(context)
-            val bitmap = try {
-                val request = coil3.request.ImageRequest.Builder(context)
-                    .data(urlString)
-                    .build()
-                val result = loader.execute(request)
-                (result.image as? coil3.BitmapImage)?.bitmap
-            } catch (_: Exception) { null }
-                ?: downloadBitmap(urlString)
-                ?: return@withContext "Could not download image."
+            val bitmap: Bitmap? = if (urlString.startsWith("http://") || urlString.startsWith("https://")) {
+                // Try Coil's disk cache first — the image is likely already there
+                // from being displayed on screen. This avoids a redundant network
+                // download on low-signal connections.
+                val loader = coil3.SingletonImageLoader.get(context)
+                try {
+                    val request = coil3.request.ImageRequest.Builder(context)
+                        .data(urlString)
+                        .build()
+                    val result = loader.execute(request)
+                    (result.image as? coil3.BitmapImage)?.bitmap
+                } catch (_: Exception) { null }
+                    ?: downloadBitmap(urlString)
+            } else {
+                // Local file:// or content:// URI — decode directly from disk
+                val uri = Uri.parse(urlString)
+                val resolver = context.contentResolver
+                try {
+                    val input = resolver.openInputStream(uri)
+                    input?.use { BitmapFactory.decodeStream(it) }
+                } catch (_: Exception) { null }
+            }
+            if (bitmap == null) return@withContext "Could not load this image."
             val title = "RockScout_${System.currentTimeMillis()}"
             val uri = GallerySaver.saveBitmap(context.contentResolver, bitmap, title)
                 ?: return@withContext "Could not save to gallery."

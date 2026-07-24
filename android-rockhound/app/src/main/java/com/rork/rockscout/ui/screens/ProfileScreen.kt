@@ -765,7 +765,7 @@ fun ProfileScreen(
                         }
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Share your code, earn rewards", style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("Share your code, earn rewards", style = MaterialTheme.typography.titleMedium, color = Color.White, fontWeight = FontWeight.Bold, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                             Text(
                                 if (isPremium)
                                     "Premium users: 500 XP per referred RockScout. No referral limit."
@@ -1549,7 +1549,7 @@ private fun HowThisWorksStep(
         )
         Column {
             Text(title, style = MaterialTheme.typography.labelMedium, color = DarkTextHigh, fontWeight = FontWeight.Bold)
-            Text(body, style = MaterialTheme.typography.bodySmall, color = DarkTextMid)
+            Text(body, style = MaterialTheme.typography.bodySmall, color = DarkTextMid, maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
             if (emphasis.isNotBlank()) {
                 Spacer(Modifier.height(4.dp))
                 Text(emphasis, style = MaterialTheme.typography.bodySmall, color = DarkTextHigh, fontWeight = FontWeight.SemiBold)

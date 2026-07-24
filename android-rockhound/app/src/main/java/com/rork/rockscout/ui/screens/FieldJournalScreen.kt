@@ -123,6 +123,22 @@ import com.rork.rockscout.ui.components.glowingBorder
 @Composable
 fun FieldJournalScreen(navController: NavController) {
     val repo = AppRepository.instance
+    // ─── Premium gating: Field Journal is a premium feature ───
+    val accessManager = com.rork.rockscout.data.IdentifyAccessManager.instance
+    val purchaseManager = com.rork.rockscout.data.PurchaseManager.instance
+    val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val clubLocked = remember(isPremium) { accessManager.isFeatureLocked(isPremium) }
+    if (clubLocked) {
+        com.rork.rockscout.ui.components.ClubLockedState(
+            emoji = "\uD83D\uDD12",
+            title = "Unlock Field Journal",
+            message = "Your 1-week free trial has ended. Subscribe or donate to keep a field journal of your rockhounding adventures.",
+            buttonLabel = "Subscribe or donate",
+            onButton = { navController.navigate(Routes.PAYWALL) },
+        )
+        return
+    }
+
     val entries by repo.journalEntries.collectAsStateWithLifecycle()
     val captures by repo.captures.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -1007,7 +1023,7 @@ private fun SimpleLocationPicker(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(loc.type.emoji, style = MaterialTheme.typography.titleMedium)
                                     Spacer(Modifier.width(8.dp))
-                                    Text(loc.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                                    Text(loc.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                                 }
                                 Spacer(Modifier.height(2.dp))
                                 Text(loc.region, style = MaterialTheme.typography.labelSmall, color = TextLow)

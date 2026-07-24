@@ -166,6 +166,22 @@ import com.rork.rockscout.data.TripStopType
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripPlannerScreen(navController: NavController) {
+    // ─── Premium gating: Trip Planner is a premium feature ───
+    val accessManager = com.rork.rockscout.data.IdentifyAccessManager.instance
+    val purchaseManager = com.rork.rockscout.data.PurchaseManager.instance
+    val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val clubLocked = remember(isPremium) { accessManager.isFeatureLocked(isPremium) }
+    if (clubLocked) {
+        com.rork.rockscout.ui.components.ClubLockedState(
+            emoji = "\uD83D\uDD12",
+            title = "Unlock Trip Planner",
+            message = "Your 1-week free trial has ended. Subscribe or donate to plan and save multi-stop rockhounding trips.",
+            buttonLabel = "Subscribe or donate",
+            onButton = { navController.navigate(Routes.PAYWALL) },
+        )
+        return
+    }
+
     val repo = AppRepository.instance
     val trips by repo.trips.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -1058,7 +1074,7 @@ Planned with RockScout""".trimIndent()
                             contentAlignment = Alignment.Center,
                         ) { Text("${idx + 1}", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Bold) }
                         Spacer(Modifier.width(10.dp))
-                        Text(stop.locationName, style = MaterialTheme.typography.bodyMedium, color = DarkTextHigh, modifier = Modifier.weight(1f))
+                        Text(stop.locationName, style = MaterialTheme.typography.bodyMedium, color = DarkTextHigh, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                         SculptedIconButton(icon = Icons.Filled.Delete, contentDescription = "Remove stop", onClick = { pendingRemoveStop = idx }, accent = Citrine, iconTint = TextLow, size = 32.dp, shadowElevation = 3.dp)
                     }
                 }
@@ -1914,7 +1930,7 @@ private fun LocationPickerSheet(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(loc.type.emoji, style = MaterialTheme.typography.titleMedium)
                                     Spacer(Modifier.width(8.dp))
-                                    Text(loc.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                                    Text(loc.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                                 }
                                 Spacer(Modifier.height(2.dp))
                                 Text(loc.region, style = MaterialTheme.typography.labelSmall, color = TextLow)
@@ -2039,7 +2055,7 @@ private fun TrailheadPickerSheet(
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(Icons.Filled.Hiking, contentDescription = null, tint = Success, modifier = Modifier.size(18.dp))
                                         Spacer(Modifier.width(8.dp))
-                                        Text(trailhead.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                                        Text(trailhead.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                                     }
                                     Spacer(Modifier.height(2.dp))
                                     Text(trailhead.region, style = MaterialTheme.typography.labelSmall, color = TextLow)
@@ -2142,7 +2158,7 @@ private fun CampgroundPickerSheet(
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(Icons.Filled.Terrain, contentDescription = null, tint = Citrine, modifier = Modifier.size(18.dp))
                                         Spacer(Modifier.width(8.dp))
-                                        Text(campground.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                                        Text(campground.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                                     }
                                     Spacer(Modifier.height(2.dp))
                                     Text(campground.region, style = MaterialTheme.typography.labelSmall, color = TextLow)

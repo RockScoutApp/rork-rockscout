@@ -119,6 +119,22 @@ fun UserProfileScreen(
     val rootView = androidx.compose.ui.platform.LocalView.current
     val myProfile by com.rork.rockscout.data.AppRepository.instance.profile.collectAsStateWithLifecycle()
 
+    // ─── Premium gating: User Profile is a social feature ───
+    val accessManager = com.rork.rockscout.data.IdentifyAccessManager.instance
+    val purchaseManager = com.rork.rockscout.data.PurchaseManager.instance
+    val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val clubLocked = remember(isPremium) { accessManager.isFeatureLocked(isPremium) }
+    if (clubLocked) {
+        com.rork.rockscout.ui.components.ClubLockedState(
+            emoji = "\uD83D\uDD12",
+            title = "Unlock Hunter Profiles",
+            message = "Your 1-week free trial has ended. Subscribe or donate to view and connect with other hunters.",
+            buttonLabel = "Subscribe or donate",
+            onButton = { navController.navigate(Routes.PAYWALL) },
+        )
+        return
+    }
+
     val connections by social.connections.collectAsStateWithLifecycle()
     val viewedPosts by postRepo.viewedPosts.collectAsStateWithLifecycle()
     val postLikes by postRepo.postLikes.collectAsStateWithLifecycle()

@@ -198,16 +198,18 @@ class NotificationRepository private constructor() {
         when (type) {
             TYPE_FRIEND_REQUEST -> {
                 if (!PersistenceManager.isNotifFriendRequestsEnabled()) return
-                val count = _notifications.value.count {
-                    it.type == TYPE_FRIEND_REQUEST && it.read_at == null
-                } + 1
+                // _notifications filters out SOCIAL_REQUEST_TYPES, so query
+                // LocalDataStore directly for the true unread count.
+                val count = LocalDataStore.getTable<LocalNotification>(LocalDataStore.KEY_NOTIFICATIONS)
+                    .count { it.user_id == userId && it.type == TYPE_FRIEND_REQUEST && it.read_at == null }
+                    .coerceAtLeast(1)
                 NotificationHelper.showFriendRequestNotification(context, count)
             }
             TYPE_MESSAGE -> {
                 if (!PersistenceManager.isNotifMessagesEnabled()) return
-                val count = _notifications.value.count {
-                    it.type == TYPE_MESSAGE && it.read_at == null
-                } + 1
+                val count = LocalDataStore.getTable<LocalNotification>(LocalDataStore.KEY_NOTIFICATIONS)
+                    .count { it.user_id == userId && it.type == TYPE_MESSAGE && it.read_at == null }
+                    .coerceAtLeast(1)
                 NotificationHelper.showPrivateMessageNotification(context, count)
             }
             TYPE_TRADE_INTEREST -> {

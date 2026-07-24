@@ -192,6 +192,17 @@ fun ReferralScreen(navController: NavController) {
                     SculptedButton(
                         text = "Share your code",
                         onClick = {
+                            // Register the code on the backend so it's verifiable
+                            // when a recipient enters it, even via share-sheet.
+                            val code = ReferralRepository.referralCode.value
+                            val senderEmail = AuthRepository.instance.currentUserEmail ?: ""
+                            val senderName = com.rork.rockscout.data.AppRepository.instance.profile.value.name
+                            if (senderEmail.isNotBlank()) {
+                                scope.launch {
+                                    ReferralApi.registerCode(code, senderEmail, senderName)
+                                    ReferralRepository.incrementPending()
+                                }
+                            }
                             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"
                                 putExtra(Intent.EXTRA_SUBJECT, "Join me on RockScout")

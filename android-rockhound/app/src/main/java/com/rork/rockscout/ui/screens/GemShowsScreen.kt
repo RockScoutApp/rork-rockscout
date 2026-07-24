@@ -66,6 +66,7 @@ import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.TextMid
 import com.rork.rockscout.ui.theme.Slate800
+import androidx.compose.ui.text.style.TextOverflow
 import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.TextHigh
 import com.rork.rockscout.ui.components.noAutoFocus
@@ -276,7 +277,7 @@ private fun GemShowCard(show: GemShow, onOpenDetail: (String) -> Unit) {
     ) {
         Row(verticalAlignment = Alignment.Top) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(show.name, style = MaterialTheme.typography.titleLarge, color = androidx.compose.ui.graphics.Color.White)
+                Text(show.name, style = MaterialTheme.typography.titleLarge, color = androidx.compose.ui.graphics.Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.LocationOn, contentDescription = null, tint = Aqua, modifier = Modifier.size(14.dp))
@@ -290,12 +291,12 @@ private fun GemShowCard(show: GemShow, onOpenDetail: (String) -> Unit) {
                     Text(show.dateRange, style = MaterialTheme.typography.labelLarge, color = Citrine)
                 }
                 Spacer(Modifier.height(8.dp))
-                Text(show.description, style = MaterialTheme.typography.bodySmall, color = DarkTextMid, maxLines = 2)
+                Text(show.description, style = MaterialTheme.typography.bodySmall, color = DarkTextMid, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Spacer(Modifier.height(10.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     TagChip("VENUE", color = Amethyst)
                     Spacer(Modifier.width(8.dp))
-                    Text(show.venue, style = MaterialTheme.typography.labelMedium, color = DarkTextMid, maxLines = 1)
+                    Text(show.venue, style = MaterialTheme.typography.labelMedium, color = DarkTextMid, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Spacer(Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {

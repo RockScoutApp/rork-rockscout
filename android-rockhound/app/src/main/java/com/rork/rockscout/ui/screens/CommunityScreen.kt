@@ -95,6 +95,22 @@ fun CommunityScreen(navController: NavController) {
     val context = LocalContext.current
     val rootView = LocalView.current
 
+    // ─── Premium gating: Community is a social feature ───
+    val accessManager = com.rork.rockscout.data.IdentifyAccessManager.instance
+    val purchaseManager = com.rork.rockscout.data.PurchaseManager.instance
+    val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val clubLocked = remember(isPremium) { accessManager.isFeatureLocked(isPremium) }
+    if (clubLocked) {
+        com.rork.rockscout.ui.components.ClubLockedState(
+            emoji = "\uD83D\uDD12",
+            title = "Unlock the Community Board",
+            message = "Your 1-week free trial has ended. Subscribe or donate to join the community discussion.",
+            buttonLabel = "Subscribe or donate",
+            onButton = { navController.navigate(Routes.PAYWALL) },
+        )
+        return
+    }
+
     val feedPosts by repo.feedPosts.collectAsStateWithLifecycle()
     val expiredPosts by repo.expiredPosts.collectAsStateWithLifecycle()
     val postLikes by repo.postLikes.collectAsStateWithLifecycle()

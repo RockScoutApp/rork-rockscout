@@ -128,7 +128,7 @@ fun ThankYouScreen(
             Text(
                 text = "Your support keeps RockScout growing. Made by a rockhounder, for rockhounders.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = Color.White.copy(alpha = 0.6f),
+                color = Color.White.copy(alpha = 0.85f),
                 textAlign = TextAlign.Center,
             )
 

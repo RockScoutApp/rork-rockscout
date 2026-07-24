@@ -36,8 +36,21 @@ object ReferralApi {
     private data class SendReferralRequest(
         val code: String,
         val senderEmail: String,
-        val recipientEmail: String,
+        val recipientEmail: String = "",
         val senderName: String = "",
+    )
+
+    @Serializable
+    private data class RegisterCodeRequest(
+        val code: String,
+        val senderEmail: String,
+        val senderName: String = "",
+    )
+
+    @Serializable
+    private data class RegisterCodeResponse(
+        val ok: Boolean = false,
+        val error: String? = null,
     )
 
     @Serializable
@@ -102,6 +115,43 @@ object ReferralApi {
     private data class AcknowledgeResponse(
         val ok: Boolean = false,
     )
+
+    /**
+     * Register the referral code -> sender email mapping on the backend without
+     * sending an email. This ensures the code is verifiable when a recipient
+     * enters it, even if the sender shared it via the system share sheet
+     * instead of the in-app email flow.
+     *
+     * Returns true on success, false on failure.
+     */
+    suspend fun registerCode(
+        code: String,
+        senderEmail: String,
+        senderName: String = "",
+    ): Boolean {
+        return try {
+            val response = client.post("$BASE_URL/referral/send") {
+                contentType(ContentType.Application.Json)
+                setBody(
+                    json.encodeToString(
+                        SendReferralRequest.serializer(),
+                        SendReferralRequest(
+                            code = code.uppercase(),
+                            senderEmail = senderEmail,
+                            recipientEmail = "",
+                            senderName = senderName,
+                        ),
+                    ),
+                )
+            }
+            val body = response.body<String>()
+            val parsed = json.decodeFromString(SendReferralResponse.serializer(), body)
+            parsed.ok
+        } catch (e: Exception) {
+            Log.w(TAG, "registerCode failed: ${e.message}")
+            false
+        }
+    }
 
     /**
      * Upload the referral code -> sender email mapping and send the invitation

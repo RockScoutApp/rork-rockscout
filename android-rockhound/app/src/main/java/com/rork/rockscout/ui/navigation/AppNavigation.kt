@@ -521,16 +521,6 @@ fun AppNavigation(
             )
         }
         composable(Routes.DEV_CONSOLE) { DeveloperConsoleScreen(navController) }
-        composable(
-            Routes.DEV_USER_PROFILE,
-            arguments = listOf(navArgument("userId") { type = NavType.StringType }),
-        ) { entry ->
-            UserProfileScreen(
-                navController = navController,
-                userId = entry.arguments?.getString("userId").orEmpty(),
-                isAdminView = true,
-            )
-        }
         composable(Routes.CONTACT_US) { ContactUsScreen(navController) }
         composable(Routes.PAYWALL) { PaywallScreen(navController) }
         composable(Routes.TOKEN_INFO) { TokenInfoScreen(navController) }
@@ -568,15 +558,6 @@ fun AppNavigation(
         composable(Routes.DISCOVER_HUNTERS) { DiscoverHuntersScreen(navController) }
         composable(Routes.SCAN) { ScanScreen(navController) }
         composable(Routes.ROCKSCOUTS_MAP) { RockScoutsMapScreen(navController) }
-        composable(Routes.MESSENGER) {
-            // Bare Messenger route redirects to the Messages page (page 1)
-            // of the unified Friends screen.
-            FriendsScreen(
-                navController = navController,
-                initialTabIndex = 1,
-                showFriendRequests = false,
-            )
-        }
         composable(
             Routes.FRIENDS,
             arguments = listOf(

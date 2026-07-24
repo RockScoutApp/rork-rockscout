@@ -86,6 +86,22 @@ private enum class MyTradesTab(val label: String) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyTradesScreen(navController: NavController) {
+    // ─── Premium gating: My Trades is a social feature ───
+    val accessManager = com.rork.rockscout.data.IdentifyAccessManager.instance
+    val purchaseManager = com.rork.rockscout.data.PurchaseManager.instance
+    val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val clubLocked = remember(isPremium) { accessManager.isFeatureLocked(isPremium) }
+    if (clubLocked) {
+        com.rork.rockscout.ui.components.ClubLockedState(
+            emoji = "\uD83D\uDD12",
+            title = "Unlock My Trades",
+            message = "Your 1-week free trial has ended. Subscribe or donate to manage your trade listings.",
+            buttonLabel = "Subscribe or donate",
+            onButton = { navController.navigate(Routes.PAYWALL) },
+        )
+        return
+    }
+
     val repo = AppRepository.instance
     val listings by repo.tradeListings.collectAsStateWithLifecycle()
     val interestRepo = TradeInterestRepository.instance

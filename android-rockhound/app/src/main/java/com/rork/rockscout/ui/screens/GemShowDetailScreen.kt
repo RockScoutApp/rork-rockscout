@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -228,7 +229,7 @@ fun GemShowDetailScreen(navController: NavController, showId: String) {
                             Spacer(Modifier.width(14.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text("Visit official website", style = MaterialTheme.typography.titleMedium, color = Color.White)
-                                Text(show.website.removePrefix("https://").removePrefix("http://"), style = MaterialTheme.typography.bodyMedium, color = Aqua, maxLines = 1)
+                                Text(show.website.removePrefix("https://").removePrefix("http://"), style = MaterialTheme.typography.bodyMedium, color = Aqua, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                         }
                     }
@@ -261,7 +262,7 @@ private fun GemShowInfoLine(icon: androidx.compose.ui.graphics.vector.ImageVecto
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(label, style = MaterialTheme.typography.labelMedium, color = DarkTextLow, fontWeight = FontWeight.Bold)
-            Text(value, style = MaterialTheme.typography.bodyLarge, color = DarkTextHigh)
+            Text(value, style = MaterialTheme.typography.bodyLarge, color = DarkTextHigh, maxLines = 3, overflow = TextOverflow.Ellipsis)
         }
     }
 }

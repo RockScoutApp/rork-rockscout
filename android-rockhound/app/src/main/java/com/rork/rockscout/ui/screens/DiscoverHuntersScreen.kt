@@ -90,6 +90,22 @@ fun DiscoverHuntersScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
     val keyboard = LocalSoftwareKeyboardController.current
 
+    // ─── Premium gating: Discover Hunters is a social feature ───
+    val accessManager = com.rork.rockscout.data.IdentifyAccessManager.instance
+    val purchaseManager = com.rork.rockscout.data.PurchaseManager.instance
+    val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val clubLocked = remember(isPremium) { accessManager.isFeatureLocked(isPremium) }
+    if (clubLocked) {
+        com.rork.rockscout.ui.components.ClubLockedState(
+            emoji = "\uD83D\uDD12",
+            title = "Unlock Discover Hunters",
+            message = "Your 1-week free trial has ended. Subscribe or donate to find and connect with other hunters.",
+            buttonLabel = "Subscribe or donate",
+            onButton = { navController.navigate(Routes.PAYWALL) },
+        )
+        return
+    }
+
     var query by remember { mutableStateOf("") }
     var hunters by remember { mutableStateOf<List<SocialRepository.HunterProfile>>(emptyList()) }
     var isSearching by remember { mutableStateOf(false) }
