@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Camera,
@@ -30,11 +31,18 @@ import {
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { SITE } from "@/content/legal";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type HowToSection = {
   icon: React.ComponentType<{ className?: string }>;
   accent: string;
   title: string;
+  shortLabel: string;
   steps: string[];
 };
 
@@ -44,6 +52,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Camera,
     accent: "hsl(48 86% 70%)",
     title: "AI Rock Identification",
+    shortLabel: "AI Rock ID",
     steps: [
       `Tap the big "Identify a Rock" hero banner on the home screen.`,
       `Choose a photo from your gallery or snap one with your camera.`,
@@ -61,6 +70,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: BookMarked,
     accent: "hsl(205 45% 61%)",
     title: "My Collection & Specimen Cards",
+    shortLabel: "Collection",
     steps: [
       `Tap "My Rocks" on the home screen to view your collected specimens.`,
       `Each specimen card shows a photo, name, tagline, rarity, and location.`,
@@ -74,6 +84,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Images,
     accent: "hsl(144 44% 58%)",
     title: "Field Captures & Field Camera (Free)",
+    shortLabel: "Field Camera",
     steps: [
       `Tap "Field Captures" on the home screen.`,
       `Log photos of rocks you find in the field — no identification needed, just a visual record.`,
@@ -90,6 +101,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Repeat,
     accent: "hsl(36 80% 58%)",
     title: "Trade Board",
+    shortLabel: "Trade Board",
     steps: [
       `Tap the "Trade Board" banner on the home screen.`,
       `Post a specimen you want to swap or sell — add photos, a description, and your trade preferences.`,
@@ -103,6 +115,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: MessageSquare,
     accent: "hsl(270 50% 70%)",
     title: "Community Q&A Board",
+    shortLabel: "Community",
     steps: [
       `Tap the "Community" banner on the home screen to open the app-wide Q&A feed.`,
       `Post a question, photo, or rock story for the whole RockScout community to see — posts auto-expire after 14 days to keep the feed fresh.`,
@@ -117,6 +130,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Users,
     accent: "hsl(270 50% 70%)",
     title: "RockScout Social — Pings, Friends & Messenger",
+    shortLabel: "Social",
     steps: [
       `Your RockScout account is required to use the app — it's free and your collections, captures, and friends carry over to any device.`,
       `Open the RockScouts Map to see live pings from other hunters. Drop your own ping to share your location.`,
@@ -139,6 +153,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: MapIcon,
     accent: "hsl(36 80% 58%)",
     title: "Trip Planner",
+    shortLabel: "Trip Planner",
     steps: [
       `Tap the "Trip Planner" banner on the home screen.`,
       `Create a multi-stop hunt route by adding dig sites, rock shops, or custom pins.`,
@@ -162,6 +177,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Calendar,
     accent: "hsl(205 45% 61%)",
     title: "Trip Calendar",
+    shortLabel: "Calendar",
     steps: [
       `Tap the "Calendar" tile on the home screen to open the standalone Trip Calendar.`,
       `View all planned trips in a month grid — each trip appears inside its scheduled date box with the trip name and first few stop names.`,
@@ -176,6 +192,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Archive,
     accent: "hsl(142 52% 54%)",
     title: "Archived Trips",
+    shortLabel: "Archived",
     steps: [
       `Mark any trip as complete with the checkmark button on its card in the Trip Planner.`,
       `Completed trips can be archived — tap the "Archived" pill button in the Trip Planner header to view them.`,
@@ -188,6 +205,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Zap,
     accent: "hsl(190 90% 55%)",
     title: "Aurora Forecaster & Space Weather",
+    shortLabel: "Aurora",
     steps: [
       `Tap the "Aurora Forecaster" tile on the home screen to check real-time space weather conditions.`,
       `The main card shows the current Kp index, Bz value, solar wind speed, and visibility status for your latitude — color-coded with bright aurora-green and purple theming.`,
@@ -204,6 +222,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Star,
     accent: "hsl(190 90% 55%)",
     title: "Stars & Constellations — Night Sky Guide",
+    shortLabel: "Night Sky",
     steps: [
       `From the Aurora Forecaster, tap the "Night Sky Guide" card to open the Stars & Constellations landing page.`,
       `Four clickable tiles lead to detailed astronomical info: Constellations, Important Stars, Planets, and Deep Sky Objects.`,
@@ -218,6 +237,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: NotebookPen,
     accent: "hsl(205 45% 61%)",
     title: "Field Journal",
+    shortLabel: "Field Journal",
     steps: [
       `Tap the "Field Journal" banner on the home screen.`,
       `Create a new entry for each day in the field — auto-weather, photos, and field notes.`,
@@ -229,6 +249,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: MapPin,
     accent: "hsl(142 52% 54%)",
     title: "Dig Sites, Rock Shops & Locations",
+    shortLabel: "Dig Sites",
     steps: [
       `Tap "Dig Sites & Rock Shops" on the home screen to browse the full map.`,
       `Filter by type: free dig sites, pay-to-dig mines, rock shops, metaphysical shops, and gem & mineral shows.`,
@@ -249,6 +270,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Search,
     accent: "hsl(190 90% 55%)",
     title: "Search & Discovery",
+    shortLabel: "Search",
     steps: [
       `Tap the search icon in the home header.`,
       `Search across the entire database — specimens, locations, and educational guides.`,
@@ -260,6 +282,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Bell,
     accent: "hsl(4 70% 62%)",
     title: "Notifications, Weather Alerts & Message Requests",
+    shortLabel: "Alerts",
     steps: [
       `The notification bell icon (home screen and profile header) shows your unread count for friend requests and other non-message notifications.`,
       `Tap the bell to open the Notification Center. If you have pending friend requests, a summary tile appears at the top — tap it to jump straight to the RockScout Friends screen.`,
@@ -275,6 +298,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: User,
     accent: "hsl(176 80% 60%)",
     title: "Profile, Achievements & Badges",
+    shortLabel: "Profile",
     steps: [
       `Tap your avatar on the home screen to open your Profile.`,
       `Your Player Card shows your level, XP progress, hunter status, and earned badges.`,
@@ -290,6 +314,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Heart,
     accent: "hsl(270 47% 72%)",
     title: "Wishlist, Favorite Spots & Aurora Saved Spots",
+    shortLabel: "Wishlist",
     steps: [
       `Tap the heart icon on any specimen card to add it to your Wishlist.`,
       `View your Wishlist from the home screen — it's your dream-specimen shopping list.`,
@@ -303,6 +328,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Download,
     accent: "hsl(195 60% 53%)",
     title: "Saved Images & Photo Interactions (Free)",
+    shortLabel: "Saved Images",
     steps: [
       `Tap any photo in the app to view it full-screen.`,
       `Long-press any photo to save it to your personal Saved Images folder.`,
@@ -315,6 +341,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Mountain,
     accent: "hsl(22 52% 61%)",
     title: "BLM Public Lands Guide",
+    shortLabel: "BLM Lands",
     steps: [
       `Tap "BLM Public Lands" in the Explore & Learn section.`,
       `Browse state-by-state rules for rockhounding on Bureau of Land Management land.`,
@@ -328,6 +355,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Globe2,
     accent: "hsl(0 0% 75%)",
     title: "Meteorite Hunting",
+    shortLabel: "Meteorites",
     steps: [
       `Tap "Finding Meteorites" in the Explore & Learn section.`,
       `Learn how to identify space rocks — fusion crust, magnetic properties, and key visual cues.`,
@@ -339,6 +367,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Atom,
     accent: "hsl(210 76% 71%)",
     title: "Periodic Table of Elements",
+    shortLabel: "Periodic Table",
     steps: [
       `Tap "Periodic Table" in the Explore & Learn section to explore all 118 elements.`,
       `Each element card shows where it appears in rocks and gems and its role in mineral formation.`,
@@ -349,6 +378,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: School,
     accent: "hsl(40 62% 64%)",
     title: "Educational Guides",
+    shortLabel: "Guides",
     steps: [
       `RockScout includes 10 built-in educational guides — all work fully offline once the bulk image download completes.`,
       `Exploring Geology: learn how rocks, minerals, and gems form across the rock cycle.`,
@@ -364,6 +394,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: BookMarked,
     accent: "hsl(195 60% 53%)",
     title: "Rocks Are Amazing",
+    shortLabel: "Rocks Are Amazing",
     steps: [
       `Tap "Rocks Are Amazing" in the Explore & Learn section to open a curated gallery of Earth's most stunning formations.`,
       `Swipe through categorized card collections: enhydros, pseudomorphs, petroleum inclusions, fluorescent minerals, optical phenomena, coprolites, copper-inclusion agates, mineral assemblages, and more.`,
@@ -375,6 +406,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Library,
     accent: "hsl(210 76% 71%)",
     title: "Rock & Gem Resources",
+    shortLabel: "Resources",
     steps: [
       `Tap "Rock & Gem Resources" in the Explore & Learn section to browse trusted external geology, gem, and fossil websites.`,
       `Links open in your device's browser so you can dig deeper into any topic.`,
@@ -386,6 +418,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Diamond,
     accent: "hsl(48 86% 70%)",
     title: "Gear Guide",
+    shortLabel: "Gear Guide",
     steps: [
       `Tap the "Gear Guide" banner on the home screen to browse 48+ curated tools with Amazon links.`,
       `Kits are organized from beginner to advanced — from a first loupe and rock hammer to lapidary equipment and UV lights.`,
@@ -397,6 +430,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Users,
     accent: "hsl(142 52% 54%)",
     title: "Referrals & Community",
+    shortLabel: "Referrals",
     steps: [
       `Open the Referral screen from your Profile to get your unique referral link.`,
       `Share the link with friends — when they sign up, you both earn tokens and XP.`,
@@ -410,6 +444,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Upload,
     accent: "hsl(195 60% 53%)",
     title: "Submit Specimens & Add Locations",
+    shortLabel: "Submit",
     steps: [
       `Found a specimen that isn't in the database? Use the Submit Specimen button (found on specimen detail pages and the database screen).`,
       `Submit up to 4 photos plus any info you have — after review, it gets added to the Specimen Database or Rocks Are Amazing collection.`,
@@ -422,6 +457,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: Database,
     accent: "hsl(210 76% 71%)",
     title: "Storage, Cache & Bulk Offline Download",
+    shortLabel: "Storage",
     steps: [
       `Open Social Settings and scroll to the Storage section to choose your cache size.`,
       `Standard (150MB) stores recently viewed specimen photos and map tiles — automatically manages itself by removing older items as new ones come in.`,
@@ -439,6 +475,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     icon: NotebookPen,
     accent: "hsl(40 62% 64%)",
     title: "Tokens, Premium & Donations — What's Free vs Paid",
+    shortLabel: "Premium",
     steps: [
       `Free for 7 days: full app access including AI identification (5 tokens to spend at your own pace), RockScout Friends, Trade Board, My Rocks, Wishlist, Field Captures, Trip Planner, and Field Journal.`,
       `After the trial, these stay FREE forever: browsing the full specimen database & geology guides, the Field Camera (saves to Saved Images), NWS severe weather alerts, and browsing dig sites & offline maps.`,
@@ -453,6 +490,8 @@ const HOW_TO_SECTIONS: HowToSection[] = [
 
 const HowToUse = () => {
   const navigate = useNavigate();
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const selected = selectedIdx !== null ? HOW_TO_SECTIONS[selectedIdx] : null;
 
   return (
     <Layout
@@ -491,49 +530,44 @@ const HowToUse = () => {
           {/* Intro card */}
           <div className="mt-8 rounded-2xl border border-border/60 bg-card/40 p-4 fade-rise sm:mt-10 sm:p-6">
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Welcome to {SITE.name}! This guide walks you through every feature of the app — from AI rock identification to trading, social features, trip planning, and more. Scroll through to learn how to get the most out of your rockhounding adventures.
+              Welcome to {SITE.name}! This guide walks you through every feature of the app — from AI rock identification to trading, social features, trip planning, and more. Tap any section below to read its step-by-step instructions.
             </p>
           </div>
 
-          {/* Sections */}
-          <ol className="mt-8 flex flex-col gap-4 sm:mt-10 sm:gap-5">
+          {/* Section pills grid */}
+          <div className="mt-8 grid grid-cols-2 gap-2.5 sm:mt-10 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
             {HOW_TO_SECTIONS.map((section, idx) => (
-              <li
+              <button
                 key={section.title}
-                className="group relative overflow-hidden rounded-2xl border border-border/60 bg-background/40 p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card/60 sm:p-6"
+                type="button"
+                onClick={() => setSelectedIdx(idx)}
+                className="group flex items-center gap-2.5 rounded-xl border px-3 py-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md sm:px-4"
+                style={{
+                  borderColor: `color-mix(in srgb, ${section.accent} 30%, transparent)`,
+                  backgroundColor: `color-mix(in srgb, ${section.accent} 8%, transparent)`,
+                }}
               >
-                <div className="flex items-center gap-3">
-                  <span
-                    className="grid h-9 w-9 shrink-0 place-items-center rounded-xl ring-1 transition-transform group-hover:scale-110 sm:h-10 sm:w-10"
-                    style={{
-                      backgroundColor: `color-mix(in srgb, ${section.accent} 15%, transparent)`,
-                      color: section.accent,
-                      boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${section.accent} 30%, transparent)`,
-                    }}
-                  >
-                    <section.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-lg ring-1 transition-transform group-hover:scale-110 sm:h-9 sm:w-9"
+                  style={{
+                    backgroundColor: `color-mix(in srgb, ${section.accent} 15%, transparent)`,
+                    color: section.accent,
+                    boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${section.accent} 30%, transparent)`,
+                  }}
+                >
+                  <section.icon className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+                </span>
+                <span className="flex flex-col gap-0.5 min-w-0">
+                  <span className="text-[10px] font-bold tabular-nums text-muted-foreground/60">
+                    {String(idx + 1).padStart(2, "0")}
                   </span>
-                  <h2 className="font-display text-base font-semibold text-foreground sm:text-lg">
-                    <span className="mr-2 text-muted-foreground/70">{String(idx + 1).padStart(2, "0")}</span>
-                    {section.title}
-                  </h2>
-                </div>
-                <ol className="mt-4 flex flex-col gap-2.5 pl-1">
-                  {section.steps.map((step, i) => (
-                    <li key={i} className="flex gap-3 text-sm leading-relaxed text-muted-foreground">
-                      <span
-                        className="mt-0.5 shrink-0 font-display text-xs font-bold tabular-nums"
-                        style={{ color: section.accent }}
-                      >
-                        {i + 1}.
-                      </span>
-                      <span>{step}</span>
-                    </li>
-                  ))}
-                </ol>
-              </li>
+                  <span className="truncate text-xs font-semibold text-foreground sm:text-sm">
+                    {section.shortLabel}
+                  </span>
+                </span>
+              </button>
             ))}
-          </ol>
+          </div>
 
           {/* Sign-off */}
           <div className="mt-10 text-center sm:mt-14">
@@ -544,6 +578,49 @@ const HowToUse = () => {
           </div>
         </div>
       </article>
+
+      {/* Section popup dialog */}
+      <Dialog open={selectedIdx !== null} onOpenChange={(open) => { if (!open) setSelectedIdx(null); }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden p-0 sm:rounded-2xl">
+          {selected && (
+            <div className="flex flex-col h-[85vh] sm:h-[85vh]">
+              {/* Header */}
+              <DialogHeader className="flex-row items-center gap-3 border-b border-border/60 px-5 py-4 sm:px-6">
+                <span
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl ring-1"
+                  style={{
+                    backgroundColor: `color-mix(in srgb, ${selected.accent} 15%, transparent)`,
+                    color: selected.accent,
+                    boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${selected.accent} 30%, transparent)`,
+                  }}
+                >
+                  <selected.icon className="h-5 w-5" />
+                </span>
+                <DialogTitle className="font-display text-base font-bold text-foreground sm:text-lg">
+                  {selected.title}
+                </DialogTitle>
+              </DialogHeader>
+
+              {/* Scrollable steps */}
+              <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+                <ol className="flex flex-col gap-3">
+                  {selected.steps.map((step, i) => (
+                    <li key={i} className="flex gap-3 text-sm leading-relaxed text-muted-foreground">
+                      <span
+                        className="mt-0.5 shrink-0 font-display text-xs font-bold tabular-nums"
+                        style={{ color: selected.accent }}
+                      >
+                        {i + 1}.
+                      </span>
+                      <span>{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };

@@ -3,6 +3,7 @@ package com.rork.rockscout.ui.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,17 +18,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.border as foundationBorder
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Forum
@@ -36,9 +36,8 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.NightsStay
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Public
@@ -49,22 +48,30 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Terrain
+import androidx.compose.material.icons.filled.Upload
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.SculptedIconButton
@@ -80,11 +87,12 @@ import com.rork.rockscout.ui.theme.TextHigh
 import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.TextMid
 
-/** A single how-to section with icon, title, and step-by-step instructions. */
+/** A single how-to section with icon, title, short label, and step-by-step instructions. */
 private data class HowToSection(
     val icon: ImageVector,
     val accent: Color,
     val title: String,
+    val shortLabel: String,
     val steps: List<String>,
 )
 
@@ -94,6 +102,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.CameraAlt,
         accent = Citrine,
         title = "AI Rock Identification",
+        shortLabel = "AI Rock ID",
         steps = listOf(
             "Tap the big \"Identify a Rock\" hero banner on the home screen.",
             "Choose a photo from your gallery or snap one with your camera.",
@@ -111,6 +120,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.CollectionsBookmark,
         accent = Color(0xFF6FA8C7),
         title = "My Collection & Specimen Cards",
+        shortLabel = "Collection",
         steps = listOf(
             "Tap \"My Rocks\" on the home screen to view your collected specimens.",
             "Each specimen card shows a photo, name, tagline, rarity, and location.",
@@ -124,6 +134,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.PhotoLibrary,
         accent = Color(0xFF5CC98C),
         title = "Field Captures & Field Camera (Free)",
+        shortLabel = "Field Camera",
         steps = listOf(
             "Tap \"Field Captures\" on the home screen.",
             "Log photos of rocks you find in the field — no identification needed, just a visual record.",
@@ -140,6 +151,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.SwapHoriz,
         accent = Color(0xFFE8A33D),
         title = "Trade Board",
+        shortLabel = "Trade Board",
         steps = listOf(
             "Tap the \"Trade Board\" banner on the home screen.",
             "Post a specimen you want to swap or sell — add photos, a description, and your trade preferences.",
@@ -153,6 +165,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.Forum,
         accent = Amethyst,
         title = "Community Q&A Board",
+        shortLabel = "Community",
         steps = listOf(
             "Tap the \"Community\" banner on the home screen to open the app-wide Q&A feed.",
             "Post a question, photo, or rock story for the whole RockScout community to see — posts auto-expire after 14 days to keep the feed fresh.",
@@ -167,6 +180,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.Group,
         accent = Amethyst,
         title = "RockScout Social — Pings, Friends & Messenger",
+        shortLabel = "Social",
         steps = listOf(
             "Your RockScout account is required to use the app — it's free and your collections, captures, and friends carry over to any device.",
             "Open the RockScouts Map to see live pings from other hunters. Drop your own ping to share your location.",
@@ -189,6 +203,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.Map,
         accent = Color(0xFFE8A33D),
         title = "Trip Planner",
+        shortLabel = "Trip Planner",
         steps = listOf(
             "Tap the \"Trip Planner\" banner on the home screen.",
             "Create a multi-stop hunt route by adding dig sites, rock shops, or custom pins.",
@@ -212,6 +227,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.CalendarMonth,
         accent = Color(0xFF6FA8C7),
         title = "Trip Calendar",
+        shortLabel = "Calendar",
         steps = listOf(
             "Tap the \"Calendar\" tile on the home screen to open the standalone Trip Calendar.",
             "View all planned trips in a month grid — each trip appears inside its scheduled date box with the trip name and first few stop names.",
@@ -223,9 +239,55 @@ private val howToSections: List<HowToSection> = listOf(
         ),
     ),
     HowToSection(
+        icon = Icons.Filled.Archive,
+        accent = Success,
+        title = "Archived Trips",
+        shortLabel = "Archived",
+        steps = listOf(
+            "Mark any trip as complete with the checkmark button on its card in the Trip Planner.",
+            "Completed trips can be archived — tap the \"Archived\" pill button in the Trip Planner header to view them.",
+            "Archived trips are kept safe without cluttering your active trip list.",
+            "Restore an archived trip back to active, or permanently delete it from the Archived screen.",
+            "Archived trip map tiles are automatically freed from the offline cache to save storage.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Bolt,
+        accent = Color(0xFF4FC3F7),
+        title = "Aurora Forecaster & Space Weather",
+        shortLabel = "Aurora",
+        steps = listOf(
+            "Tap the \"Aurora Forecaster\" tile on the home screen to check real-time space weather conditions.",
+            "The main card shows the current Kp index, Bz value, solar wind speed, and visibility status for your latitude — color-coded with bright aurora-green and purple theming.",
+            "A 24-hour Kp trend chart and a 7-day F10.7 radio flux chart show how conditions have been changing over time, with a dashed threshold line at your visibility level.",
+            "The 3-day forecast card predicts Kp levels for the next 72 hours so you can plan your aurora viewing nights.",
+            "The Active Sunspot Regions card lists current active regions with their magnetic class and flare probabilities — tap any region for a detail view showing its magnetic evolution history (tracked locally with daily snapshots) and educational content about magnetic classifications.",
+            "Customize your aurora notification threshold in Social Settings — set a minimum Kp level (0.0–9.0) and you'll get a push notification when that Kp is reached, alerting you that aurora may be within viewing radius.",
+            "When an aurora alert fires, tap the \"Share Kp Status\" button on the notification to send your current Kp reading and visibility status to social media.",
+            "Use the Saved Spots section to bookmark specific coordinates and track aurora visibility at those locations — drop a pin on the aurora map, enter coordinates manually, or tap \"Mark My Location\" to use your GPS.",
+            "Every page in the Aurora tab features colorful northern lights backgrounds, bright themed text, and an animated twinkling-stars background that doesn't overlap any text, images, or buttons.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Star,
+        accent = Color(0xFF4FC3F7),
+        title = "Stars & Constellations — Night Sky Guide",
+        shortLabel = "Night Sky",
+        steps = listOf(
+            "From the Aurora Forecaster, tap the \"Night Sky Guide\" card to open the Stars & Constellations landing page.",
+            "Four clickable tiles lead to detailed astronomical info: Constellations, Important Stars, Planets, and Deep Sky Objects.",
+            "Constellations: browse all 88 IAU constellations organized by hemisphere. Tap any constellation for a programmatic star chart drawn with Canvas, mythology/lore, best viewing season, and its major stars with magnitudes. The 12 most famous constellations include hero images.",
+            "Important Stars: explore ~30 notable stars — Sirius, Betelgeuse, Vega, Polaris, Rigel, and more. Tap any star for its spectral class, temperature, luminosity, distance, and visibility info. The 6 most iconic stars include hero images.",
+            "Planets: all 8 planets plus dwarf planets (Pluto, Ceres) with diameter, distance from Sun, orbital period, moons, and detail cards showing physical properties, visibility, and notable features. Each planet has a generated image.",
+            "Deep Sky Objects: ~40 galaxies, nebulae, and star clusters (Andromeda Galaxy, Orion Nebula, Pleiades, Crab Nebula, and more) with catalog numbers, distances, magnitudes, and observing info. The 8 most famous DSOs include hero images.",
+            "Every page in the Night Sky Guide features animated twinkling white stars in the background — purely decorative, they never overlap text, images, or clickable items.",
+        ),
+    ),
+    HowToSection(
         icon = Icons.Filled.MenuBook,
         accent = Color(0xFF6FA8C7),
         title = "Field Journal",
+        shortLabel = "Field Journal",
         steps = listOf(
             "Tap the \"Field Journal\" banner on the home screen.",
             "Create a new entry for each day in the field — auto-weather, photos, and field notes.",
@@ -237,6 +299,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.LocationOn,
         accent = Success,
         title = "Dig Sites, Rock Shops & Locations",
+        shortLabel = "Dig Sites",
         steps = listOf(
             "Tap \"Dig Sites & Rock Shops\" on the home screen to browse the full map.",
             "Filter by type: free dig sites, pay-to-dig mines, rock shops, metaphysical shops, and gem & mineral shows.",
@@ -257,6 +320,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.Search,
         accent = Cyan,
         title = "Search & Discovery",
+        shortLabel = "Search",
         steps = listOf(
             "Tap the search icon in the home header.",
             "Search across the entire database — specimens, locations, and educational guides.",
@@ -268,6 +332,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.Notifications,
         accent = Color(0xFFE2574C),
         title = "Notifications, Weather Alerts & Message Requests",
+        shortLabel = "Alerts",
         steps = listOf(
             "The notification bell icon (home screen and profile header) shows your unread count for friend requests and other non-message notifications.",
             "Tap the bell to open the Notification Center. If you have pending friend requests, a summary tile appears at the top — tap it to jump straight to the RockScout Friends screen.",
@@ -283,6 +348,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.Person,
         accent = Aqua,
         title = "Profile, Achievements & Badges",
+        shortLabel = "Profile",
         steps = listOf(
             "Tap your avatar on the home screen to open your Profile.",
             "Your Player Card shows your level, XP progress, hunter status, and earned badges.",
@@ -298,6 +364,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.FavoriteBorder,
         accent = Color(0xFF9B7BD8),
         title = "Wishlist, Favorite Spots & Aurora Saved Spots",
+        shortLabel = "Wishlist",
         steps = listOf(
             "Tap the heart icon on any specimen card to add it to your Wishlist.",
             "View your Wishlist from the home screen — it's your dream-specimen shopping list.",
@@ -311,6 +378,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.Download,
         accent = Color(0xFF44AACC),
         title = "Saved Images & Photo Interactions (Free)",
+        shortLabel = "Saved Images",
         steps = listOf(
             "Tap any photo in the app to view it full-screen.",
             "Long-press any photo to save it to your personal Saved Images folder.",
@@ -323,6 +391,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.Terrain,
         accent = Color(0xFFC97B4A),
         title = "BLM Public Lands Guide",
+        shortLabel = "BLM Lands",
         steps = listOf(
             "Tap \"BLM Public Lands\" in the Explore & Learn section.",
             "Browse state-by-state rules for rockhounding on Bureau of Land Management land.",
@@ -336,6 +405,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.Public,
         accent = Color(0xFFC0C0C0),
         title = "Meteorite Hunting",
+        shortLabel = "Meteorites",
         steps = listOf(
             "Tap \"Finding Meteorites\" in the Explore & Learn section.",
             "Learn how to identify space rocks — fusion crust, magnetic properties, and key visual cues.",
@@ -347,6 +417,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.Science,
         accent = Color(0xFF7CB5EC),
         title = "Periodic Table of Elements",
+        shortLabel = "Periodic Table",
         steps = listOf(
             "Tap \"Periodic Table\" in the Explore & Learn section to explore all 118 elements.",
             "Each element card shows where it appears in rocks and gems and its role in mineral formation.",
@@ -354,39 +425,10 @@ private val howToSections: List<HowToSection> = listOf(
         ),
     ),
     HowToSection(
-        icon = Icons.Filled.Bolt,
-        accent = Color(0xFF4FC3F7),
-        title = "Aurora Forecaster & Space Weather",
-        steps = listOf(
-            "Tap the \"Aurora Forecaster\" tile on the home screen to check real-time space weather conditions.",
-            "The main card shows the current Kp index, Bz value, solar wind speed, and visibility status for your latitude — color-coded with bright aurora-green and purple theming.",
-            "A 24-hour Kp trend chart and a 7-day F10.7 radio flux chart show how conditions have been changing over time, with a dashed threshold line at your visibility level.",
-            "The 3-day forecast card predicts Kp levels for the next 72 hours so you can plan your aurora viewing nights.",
-            "The Active Sunspot Regions card lists current active regions with their magnetic class and flare probabilities — tap any region for a detail view showing its magnetic evolution history (tracked locally with daily snapshots) and educational content about magnetic classifications.",
-            "Customize your aurora notification threshold in Social Settings — set a minimum Kp level (0.0–9.0) and you'll get a push notification when that Kp is reached, alerting you that aurora may be within viewing radius.",
-            "When an aurora alert fires, tap the \"Share Kp Status\" button on the notification to send your current Kp reading and visibility status to social media.",
-            "Use the Saved Spots section to bookmark specific coordinates and track aurora visibility at those locations — drop a pin on the aurora map, enter coordinates manually, or tap \"Mark My Location\" to use your GPS.",
-            "Every page in the Aurora tab features colorful northern lights backgrounds, bright themed text, and an animated twinkling-stars background that doesn't overlap any text, images, or buttons.",
-        ),
-    ),
-    HowToSection(
-        icon = Icons.Filled.Star,
-        accent = Color(0xFF4FC3F7),
-        title = "Stars & Constellations — Night Sky Guide",
-        steps = listOf(
-            "From the Aurora Forecaster, tap the \"Night Sky Guide\" card to open the Stars & Constellations landing page.",
-            "Four clickable tiles lead to detailed astronomical info: Constellations, Important Stars, Planets, and Deep Sky Objects.",
-            "Constellations: browse all 88 IAU constellations organized by hemisphere. Tap any constellation for a programmatic star chart drawn with Canvas, mythology/lore, best viewing season, and its major stars with magnitudes. The 12 most famous constellations (Orion, Ursa Major, Cassiopeia, and more) include hero images.",
-            "Important Stars: explore ~30 notable stars — Sirius, Betelgeuse, Vega, Polaris, Rigel, and more. Tap any star for its spectral class, temperature, luminosity, distance, and visibility info. The 6 most iconic stars include hero images.",
-            "Planets: all 8 planets plus dwarf planets (Pluto, Ceres) with diameter, distance from Sun, orbital period, moons, and detail cards showing physical properties, visibility, and notable features. Each planet has a generated image.",
-            "Deep Sky Objects: ~40 galaxies, nebulae, and star clusters (Andromeda Galaxy, Orion Nebula, Pleiades, Crab Nebula, and more) with catalog numbers, distances, magnitudes, and observing info. The 8 most famous DSOs include hero images.",
-            "Every page in the Night Sky Guide features animated twinkling white stars in the background — purely decorative, they never overlap text, images, or clickable items.",
-        ),
-    ),
-    HowToSection(
         icon = Icons.Filled.School,
         accent = Color(0xFFD9B26A),
         title = "Educational Guides",
+        shortLabel = "Guides",
         steps = listOf(
             "RockScout includes 10 built-in educational guides — all work fully offline once the bulk image download completes.",
             "Exploring Geology: learn how rocks, minerals, and gems form across the rock cycle.",
@@ -402,6 +444,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.CollectionsBookmark,
         accent = Color(0xFF44AACC),
         title = "Rocks Are Amazing",
+        shortLabel = "Rocks Are Amazing",
         steps = listOf(
             "Tap \"Rocks Are Amazing\" in the Explore & Learn section to open a curated gallery of Earth's most stunning formations.",
             "Swipe through categorized card collections: enhydros, pseudomorphs, petroleum inclusions, fluorescent minerals, optical phenomena, coprolites, copper-inclusion agates, mineral assemblages, and more.",
@@ -413,6 +456,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.Public,
         accent = Color(0xFF7CB5EC),
         title = "Rock & Gem Resources",
+        shortLabel = "Resources",
         steps = listOf(
             "Tap \"Rock & Gem Resources\" in the Explore & Learn section to browse trusted external geology, gem, and fossil websites.",
             "Links open in your device's browser so you can dig deeper into any topic.",
@@ -424,6 +468,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.Diamond,
         accent = Citrine,
         title = "Gear Guide",
+        shortLabel = "Gear Guide",
         steps = listOf(
             "Tap the \"Gear Guide\" banner on the home screen to browse 48+ curated tools with Amazon links.",
             "Kits are organized from beginner to advanced — from a first loupe and rock hammer to lapidary equipment and UV lights.",
@@ -432,21 +477,10 @@ private val howToSections: List<HowToSection> = listOf(
         ),
     ),
     HowToSection(
-        icon = Icons.Filled.Archive,
-        accent = Success,
-        title = "Archived Trips",
-        steps = listOf(
-            "Mark any trip as complete with the checkmark button on its card in the Trip Planner.",
-            "Completed trips can be archived — tap the \"Archived\" pill button in the Trip Planner header to view them.",
-            "Archived trips are kept safe without cluttering your active trip list.",
-            "Restore an archived trip back to active, or permanently delete it from the Archived screen.",
-            "Archived trip map tiles are automatically freed from the offline cache to save storage.",
-        ),
-    ),
-    HowToSection(
         icon = Icons.Filled.Group,
         accent = Success,
         title = "Referrals & Community",
+        shortLabel = "Referrals",
         steps = listOf(
             "Open the Referral screen from your Profile to get your unique referral link.",
             "Share the link with friends — when they sign up, you both earn tokens and XP.",
@@ -457,9 +491,10 @@ private val howToSections: List<HowToSection> = listOf(
         ),
     ),
     HowToSection(
-        icon = Icons.Filled.CollectionsBookmark,
+        icon = Icons.Filled.Upload,
         accent = Color(0xFF44AACC),
         title = "Submit Specimens & Add Locations",
+        shortLabel = "Submit",
         steps = listOf(
             "Found a specimen that isn't in the database? Use the Submit Specimen button (found on specimen detail pages and the database screen).",
             "Submit up to 4 photos plus any info you have — after review, it gets added to the Specimen Database or Rocks Are Amazing collection.",
@@ -469,9 +504,10 @@ private val howToSections: List<HowToSection> = listOf(
         ),
     ),
     HowToSection(
-        icon = Icons.Filled.Download,
+        icon = Icons.Filled.Storage,
         accent = Color(0xFF7CB5EC),
         title = "Storage, Cache & Bulk Offline Download",
+        shortLabel = "Storage",
         steps = listOf(
             "Open Social Settings and scroll to the Storage section to choose your cache size.",
             "Standard (150MB) stores recently viewed specimen photos and map tiles — automatically manages itself by removing older items as new ones come in.",
@@ -489,6 +525,7 @@ private val howToSections: List<HowToSection> = listOf(
         icon = Icons.Filled.MenuBook,
         accent = Color(0xFFD9B26A),
         title = "Tokens, Premium & Donations — What's Free vs Paid",
+        shortLabel = "Premium",
         steps = listOf(
             "Free for 7 days: full app access including AI identification (5 tokens to spend at your own pace), RockScout Friends, Trade Board, My Rocks, Wishlist, Field Captures, Trip Planner, and Field Journal.",
             "After the trial, these stay FREE forever: browsing the full specimen database & geology guides, the Field Camera (saves to Saved Images), NWS severe weather alerts, and browsing dig sites & offline maps.",
@@ -504,6 +541,8 @@ private val howToSections: List<HowToSection> = listOf(
 @Composable
 fun HowToUseScreen(navController: NavController) {
     BackHandler { navController.popBackStack() }
+
+    var selectedSectionIndex by remember { mutableIntStateOf(-1) }
 
     RockBackground {
         LazyColumn(
@@ -554,7 +593,7 @@ fun HowToUseScreen(navController: NavController) {
                         .padding(16.dp),
                 ) {
                     Text(
-                        text = "Welcome to RockScout! This guide walks you through every feature of the app — from AI rock identification to trading, social features, trip planning, and more. Scroll through to learn how to get the most out of your rockhounding adventures.",
+                        text = "Welcome to RockScout! This guide walks you through every feature of the app — from AI rock identification to trading, social features, trip planning, and more. Tap any section below to read its step-by-step instructions.",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = TextMid,
                             lineHeight = 22.sp,
@@ -562,8 +601,29 @@ fun HowToUseScreen(navController: NavController) {
                     )
                 }
             }
-            items(howToSections) { section ->
-                HowToSectionCard(section = section)
+            // Section pills grid — manual rows to avoid nesting lazy composables
+            val chunked = howToSections.chunked(2)
+            chunked.forEach { rowSections ->
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        rowSections.forEachIndexed { colIdx, section ->
+                            val globalIdx = howToSections.indexOf(section)
+                            HowToPillButton(
+                                section = section,
+                                index = globalIdx,
+                                onClick = { selectedSectionIndex = globalIdx },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        // Fill empty slot if odd number in last row
+                        if (rowSections.size == 1) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
             }
             item {
                 Spacer(modifier = Modifier.height(8.dp))
@@ -586,74 +646,171 @@ fun HowToUseScreen(navController: NavController) {
                 )
             }
         }
+
+        // Full-screen section popup dialog
+        if (selectedSectionIndex >= 0) {
+            HowToSectionDialog(
+                section = howToSections[selectedSectionIndex],
+                index = selectedSectionIndex,
+                onDismiss = { selectedSectionIndex = -1 },
+            )
+        }
     }
 }
 
 @Composable
-private fun HowToSectionCard(section: HowToSection) {
+private fun HowToPillButton(
+    section: HowToSection,
+    index: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(
-                Brush.verticalGradient(
-                    listOf(Slate800.copy(alpha = 0.85f), Slate900.copy(alpha = 0.95f)),
-                ),
-            )
-            .glowingBorder(2.dp, section.accent.copy(alpha = 0.25f), RoundedCornerShape(16.dp))
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(Slate800.copy(alpha = 0.85f))
+            .glowingBorder(1.5.dp, section.accent.copy(alpha = 0.3f), RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Title row with icon
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        Box(
+            modifier = Modifier
+                .size(30.dp)
+                .clip(CircleShape)
+                .background(section.accent.copy(alpha = 0.15f))
+                .glowingBorder(1.dp, section.accent.copy(alpha = 0.5f), CircleShape),
+            contentAlignment = Alignment.Center,
         ) {
-            Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(section.accent.copy(alpha = 0.15f))
-                    .glowingBorder(1.5.dp, section.accent.copy(alpha = 0.5f), CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = section.icon,
-                    contentDescription = null,
-                    tint = section.accent,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-            Text(
-                text = section.title,
-                style = MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = TextHigh,
-                ),
+            Icon(
+                imageVector = section.icon,
+                contentDescription = null,
+                tint = section.accent,
+                modifier = Modifier.size(18.dp),
             )
         }
-        // Steps
-        section.steps.forEachIndexed { index, step ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+        Text(
+            text = String.format("%02d", index + 1),
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontWeight = FontWeight.Bold,
+                color = TextLow.copy(alpha = 0.6f),
+            ),
+        )
+        Text(
+            text = section.shortLabel,
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = FontWeight.SemiBold,
+                color = TextHigh,
+            ),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
+
+@Composable
+private fun HowToSectionDialog(
+    section: HowToSection,
+    index: Int,
+    onDismiss: () -> Unit,
+) {
+    BackHandler { onDismiss() }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false,
+        ),
+    ) {
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .navigationBarsPadding(),
+            shape = RoundedCornerShape(28.dp),
+            color = Slate900,
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
             ) {
-                Text(
-                    text = "${index + 1}.",
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = section.accent,
-                    ),
-                    modifier = Modifier.width(20.dp),
-                )
-                Text(
-                    text = step,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = TextMid,
-                        lineHeight = 19.sp,
-                    ),
-                    modifier = Modifier.weight(1f),
-                )
+                // Header with icon, title, and close button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Slate800)
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(section.accent.copy(alpha = 0.15f))
+                            .glowingBorder(1.5.dp, section.accent.copy(alpha = 0.5f), CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            imageVector = section.icon,
+                            contentDescription = null,
+                            tint = section.accent,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                    Text(
+                        text = "${String.format("%02d", index + 1)} · ${section.title}",
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = TextHigh,
+                        ),
+                        modifier = Modifier.weight(1f),
+                    )
+                    SculptedIconButton(
+                        icon = Icons.Filled.Close,
+                        contentDescription = "Close",
+                        onClick = onDismiss,
+                        accent = section.accent,
+                        iconTint = section.accent,
+                        size = 40.dp,
+                        shadowElevation = 4.dp,
+                    )
+                }
+
+                // Scrollable steps
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    section.steps.forEachIndexed { stepIdx, step ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            Text(
+                                text = "${stepIdx + 1}.",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = section.accent,
+                                ),
+                                modifier = Modifier.width(24.dp),
+                            )
+                            Text(
+                                text = step,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = TextMid,
+                                    lineHeight = 22.sp,
+                                ),
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
             }
         }
     }
