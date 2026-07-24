@@ -47,6 +47,7 @@ object PersistenceManager {
     private const val KEY_NEARBY_FRIENDS = "nearby_friends_enabled"
     private const val KEY_NEARBY_FRIENDS_ALERTS = "nearby_friends_alerts_enabled"
     private const val KEY_WEATHER_ALERTS = "weather_alerts_enabled"
+    private const val KEY_AURORA_ALERTS = "aurora_alerts_enabled"
     private const val KEY_NOTIF_FRIEND_REQUESTS = "notif_friend_requests_enabled"
     private const val KEY_NOTIF_MESSAGES = "notif_messages_enabled"
     private const val KEY_NOTIF_NEW_POSTS = "notif_new_posts_enabled"
@@ -214,6 +215,16 @@ object PersistenceManager {
     fun isWeatherAlertsEnabled(): Boolean {
         ensureInitialized()
         return prefs.getBoolean(KEY_WEATHER_ALERTS, false)
+    }
+
+    fun saveAuroraAlertsEnabled(enabled: Boolean) {
+        ensureInitialized()
+        prefs.edit().putBoolean(KEY_AURORA_ALERTS, enabled).apply()
+    }
+
+    fun isAuroraAlertsEnabled(): Boolean {
+        ensureInitialized()
+        return prefs.getBoolean(KEY_AURORA_ALERTS, false)
     }
 
     fun saveNotifFriendRequestsEnabled(enabled: Boolean) {
@@ -689,6 +700,7 @@ object PersistenceManager {
             .putBoolean(KEY_NEARBY_FRIENDS, repo.profile.value.nearbyFriendsEnabled)
             .putBoolean(KEY_NEARBY_FRIENDS_ALERTS, repo.profile.value.nearbyFriendsAlertsEnabled)
             .putBoolean(KEY_WEATHER_ALERTS, repo.profile.value.weatherAlertsEnabled)
+            .putBoolean(KEY_AURORA_ALERTS, repo.profile.value.auroraAlertsEnabled)
             .putBoolean(KEY_NOTIF_FRIEND_REQUESTS, repo.profile.value.notifFriendRequestsEnabled)
             .putBoolean(KEY_NOTIF_MESSAGES, repo.profile.value.notifMessagesEnabled)
             .putBoolean(KEY_NOTIF_NEW_POSTS, repo.profile.value.notifNewPostsEnabled)

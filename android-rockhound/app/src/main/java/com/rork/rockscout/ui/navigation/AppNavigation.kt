@@ -94,6 +94,8 @@ import com.rork.rockscout.ui.screens.MineralCareGuideScreen
 import com.rork.rockscout.ui.screens.FluorescenceUvReferenceScreen
 import com.rork.rockscout.ui.screens.CrystalSystemReferenceScreen
 import com.rork.rockscout.ui.screens.LapidaryBasicsGuideScreen
+import com.rork.rockscout.ui.screens.AuroraScreen
+import com.rork.rockscout.ui.screens.SevereWeatherScreen
 import com.rork.rockscout.ui.screens.isDisclaimerAccepted
 
 object Routes {
@@ -167,6 +169,8 @@ object Routes {
     const val FLUORESCENCE_UV = "fluorescence_uv"
     const val CRYSTAL_SYSTEMS = "crystal_systems"
     const val LAPIDARY_BASICS = "lapidary_basics"
+    const val AURORA = "aurora"
+    const val SEVERE_WEATHER = "severe_weather"
 
     fun gemShowDetail(id: String) = "gem_show/$id"
     fun communityPostDetail(id: String) = "community_post/$id"
@@ -668,6 +672,8 @@ fun AppNavigation(
         composable(Routes.FLUORESCENCE_UV) { FluorescenceUvReferenceScreen(navController) }
         composable(Routes.CRYSTAL_SYSTEMS) { CrystalSystemReferenceScreen(navController) }
         composable(Routes.LAPIDARY_BASICS) { LapidaryBasicsGuideScreen(navController) }
+        composable(Routes.AURORA) { AuroraScreen(navController) }
+        composable(Routes.SEVERE_WEATHER) { SevereWeatherScreen(navController) }
     }
         // Night-mode red overlay sits on top of the entire NavHost so it
         // covers every screen, sheet, and dialog when the toggle is on.

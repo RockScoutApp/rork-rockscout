@@ -30,6 +30,7 @@ object NotificationHelper {
     const val CHANNEL_MODERATION = "rockscout_moderation"
     const val CHANNEL_LOCATIONS = "rockscout_locations"
     const val CHANNEL_DEVELOPER = "rockscout_developer"
+    const val CHANNEL_AURORA = "rockscout_aurora"
     const val CHANNEL_OFFLINE_SYNC = "rockscout_offline_sync"
 
     const val NOTIF_UPDATE_ID = 1001
@@ -45,6 +46,7 @@ object NotificationHelper {
     const val NOTIF_MODERATION_ID = 3008
     const val NOTIF_LOCATION_APPROVED_ID = 3009
     const val NOTIF_WEATHER_BASE = 4000
+    const val NOTIF_AURORA_ID = 4500
     const val NOTIF_OFFLINE_SYNC_ID = 5001
 
     /** Create the two notification channels. Call from Application.onCreate(). */
@@ -146,6 +148,19 @@ object NotificationHelper {
                 description = "Instant verification codes for the developer console."
                 enableVibration(true)
                 enableLights(true)
+            }
+        )
+
+        manager.createNotificationChannel(
+            NotificationChannel(
+                CHANNEL_AURORA,
+                "Aurora Alerts",
+                NotificationManager.IMPORTANCE_HIGH,
+            ).apply {
+                description = "Notifications when the northern lights are likely visible from your location."
+                enableVibration(true)
+                enableLights(true)
+                setShowBadge(true)
             }
         )
 
@@ -546,6 +561,43 @@ object NotificationHelper {
 
         NotificationManagerCompat.from(context)
             .notify(notifId, notification)
+    }
+
+    /**
+     * Post an aurora alert notification when Kp reaches the visibility threshold
+     * for the user's latitude. Tapping it opens the app to the home screen.
+     */
+    fun showAuroraAlertNotification(
+        context: Context,
+        title: String,
+        message: String,
+    ) {
+        if (!hasNotificationPermission(context)) return
+
+        val appIntent = Intent(context, MainActivity::class.java).apply {
+            action = Intent.ACTION_VIEW
+            data = Uri.parse("rockscout://home")
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            NOTIF_AURORA_ID,
+            appIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_AURORA)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(title)
+            .setContentText(message.take(100))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+
+        NotificationManagerCompat.from(context)
+            .notify(NOTIF_AURORA_ID, notification)
     }
 
     /**

@@ -313,32 +313,6 @@ fun SocialSettingsScreen(
                 },
             )
 
-            ToggleDivider()
-
-            ToggleRow(
-                icon = Icons.Filled.WaterDrop,
-                title = if (profile.weatherAlertsEnabled) "Severe weather alerts ON" else "Severe weather alerts OFF",
-                helper = if (profile.weatherAlertsEnabled) "" else "Turn on for instant severe weather alerts in your area. Monitors your location for weather only — no need to enable location monitoring.",
-                accent = if (profile.weatherAlertsEnabled) Color(0xFFFF6B3D) else TextLow,
-                checked = profile.weatherAlertsEnabled,
-                onCheckedChange = { enabled ->
-                    if (enabled) {
-                        val perms = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION)
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            perms.add(Manifest.permission.POST_NOTIFICATIONS)
-                        }
-                        pendingNotifToggle = "weather_alerts"
-                        permissionsLauncher.launch(perms.toTypedArray())
-                    } else {
-                        repo.setWeatherAlertsEnabled(false)
-                        WorkScheduler.cancelWeatherChain(
-                            navController.context.applicationContext
-                        )
-                    }
-                },
-                helperContent = if (profile.weatherAlertsEnabled) { { SevereWeatherAlertList() } } else null,
-            )
-
             // ── Section 2: Notifications ──
             Spacer(Modifier.height(8.dp))
             SectionHeader("Notifications")

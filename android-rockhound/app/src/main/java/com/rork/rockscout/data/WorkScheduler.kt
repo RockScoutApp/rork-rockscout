@@ -115,6 +115,12 @@ object WorkScheduler {
         // run schedules the next; it stops when the weather alerts toggle is off.
         scheduleWeatherChain(context)
 
+        // Aurora alert check — self-rescheduling chain that polls the NOAA SWPC
+        // Kp index every 15 minutes. Only fires at night when aurora is visible.
+        // Independent of NWS weather alerts. Starts here and each run schedules
+        // the next; it stops when the aurora alerts toggle is off.
+        scheduleAuroraChain(context)
+
         Log.d(TAG, "Scheduled update check (6h), proximity check (10min), notification summary (1h), gem show refresh (monthly, in ${daysUntilMonthEnd}d), weather alerts (${WeatherAlertWorker.CHECK_INTERVAL_MINUTES}min chain)")
     }
 
@@ -181,6 +187,47 @@ object WorkScheduler {
         WorkManager.getInstance(context).cancelUniqueWork(WeatherAlertWorker.WORK_NAME)
         WorkManager.getInstance(context).cancelUniqueWork(WeatherAlertWorker.WORK_NAME_NOW)
         Log.d(TAG, "Cancelled weather alert chain")
+    }
+
+    /**
+     * Starts the self-rescheduling aurora alert chain. Each worker run schedules
+     * the next one in 15 minutes. Called from [schedule] on app start and
+     * whenever the aurora toggle is enabled.
+     */
+    fun scheduleAuroraChain(context: Context) {
+        AuroraAlertWorker.scheduleNext(context, AuroraAlertWorker.CHECK_INTERVAL_MINUTES)
+        Log.d(TAG, "Started aurora alert chain (${AuroraAlertWorker.CHECK_INTERVAL_MINUTES}min cycle)")
+    }
+
+    /**
+     * Cancels the self-rescheduling aurora alert chain when the user turns off
+     * the aurora alerts toggle.
+     */
+    fun cancelAuroraChain(context: Context) {
+        WorkManager.getInstance(context).cancelUniqueWork(AuroraAlertWorker.WORK_NAME)
+        WorkManager.getInstance(context).cancelUniqueWork(AuroraAlertWorker.WORK_NAME_NOW)
+        Log.d(TAG, "Cancelled aurora alert chain")
+    }
+
+    /**
+     * Immediately runs a single aurora alert check so the user gets an
+     * immediate alert if aurora is visible right now.
+     */
+    fun runAuroraCheckNow(context: Context) {
+        val request = OneTimeWorkRequestBuilder<AuroraAlertWorker>()
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build(),
+            )
+            .setInitialDelay(2, TimeUnit.SECONDS)
+            .build()
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            AuroraAlertWorker.WORK_NAME_NOW,
+            ExistingWorkPolicy.REPLACE,
+            request,
+        )
+        Log.d(TAG, "Scheduled immediate aurora alert check")
     }
 
     /**

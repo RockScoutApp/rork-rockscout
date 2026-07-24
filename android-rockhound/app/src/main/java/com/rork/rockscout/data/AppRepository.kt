@@ -64,6 +64,10 @@ data class UserProfile(
      *  [locationMonitoring] — the worker fetches the device location on its own
      *  specifically for weather alerts. */
     val weatherAlertsEnabled: Boolean = false,
+    /** Aurora Alerts toggle — when on, a self-rescheduling worker checks Kp every
+     *  15 minutes and posts a notification when aurora is likely visible from
+     *  the user's latitude. Only fires at night. Independent of NWS weather alerts. */
+    val auroraAlertsEnabled: Boolean = false,
     /** Current hunter status shown in scans and on pings. Defaults to off-grid. */
     val hunterStatus: HunterStatus = HunterStatus.OFF_GRID,
     /** Saved scan radius in miles (5/25/50/100/250). Default 50. */
@@ -318,6 +322,12 @@ class AppRepository {
         _profile.value = _profile.value.copy(weatherAlertsEnabled = enabled)
         persistProfile()
         PersistenceManager.saveWeatherAlertsEnabled(enabled)
+    }
+
+    fun setAuroraAlertsEnabled(enabled: Boolean) {
+        _profile.value = _profile.value.copy(auroraAlertsEnabled = enabled)
+        persistProfile()
+        PersistenceManager.saveAuroraAlertsEnabled(enabled)
     }
 
     fun setClubEnabled(enabled: Boolean) {

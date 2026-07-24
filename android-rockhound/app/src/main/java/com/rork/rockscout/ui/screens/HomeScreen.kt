@@ -75,6 +75,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
@@ -212,6 +213,7 @@ import com.rork.rockscout.ui.theme.TextMid
 import com.rork.rockscout.ui.components.profileBorderColor
 import com.rork.rockscout.ui.components.statusAccent
 import com.rork.rockscout.ui.components.glowingBorder
+import com.rork.rockscout.ui.screens.AURORA_TILE_BG_URL
 
 /** Home screen Identify hero background URL. Public so the offline bulk-download registry can include it. */
 const val IDENTIFY_HERO_BACKGROUND_URL = "https://r2-pub.rork.com/attachments/t5vh4q8xpxmg46mq3j955.jpg"
@@ -396,6 +398,10 @@ fun HomeScreen(navController: NavController) {
             SpecimenImages.urls["pyrite"]?.firstOrNull()),
         HomeTile("My Saved Images", "${savedImages.size} saved · Photos you've saved from the app", Icons.Filled.Download, Color(0xFF44AACC), Routes.SAVED_IMAGES,
             SpecimenImages.urls["amazonite-smoky-quartz-assemblage"]?.firstOrNull()),
+        HomeTile("Aurora Forecaster", "Northern lights forecast for your location", Icons.Filled.NightsStay, Color(0xFF00E5C9), Routes.AURORA,
+            AURORA_TILE_BG_URL),
+        HomeTile("Severe Weather", "NWS alerts + live storm chaser streams", Icons.Filled.Warning, Color(0xFFFF6B3D), Routes.SEVERE_WEATHER,
+            "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/030eff91-2010-41f3-bea6-3188baec1a38.png"),
     )
 
     val infoTiles = listOf(
@@ -2724,80 +2730,6 @@ fun LocationAndSocialBox(
                 androidx.compose.material3.Switch(
                     checked = nearbyFriendsAlertsEnabled,
                     onCheckedChange = onToggleNearbyFriendsAlerts,
-                )
-            }
-
-            // Severe weather alerts toggle — polls NWS API for the user's area
-            Spacer(Modifier.height(14.dp))
-            HorizontalDivider(color = Color(0x22FFFFFF), thickness = 1.dp)
-            Spacer(Modifier.height(14.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(
-                            Brush.radialGradient(
-                                listOf(weatherAccent.copy(alpha = 0.35f), weatherAccent.copy(alpha = 0.10f))
-                            )
-                        )
-                        .glowingBorder(2.dp, weatherAccent.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        Icons.Filled.WaterDrop,
-                        contentDescription = null,
-                        tint = weatherAccent,
-                    )
-                }
-                Spacer(Modifier.width(12.dp))
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(
-                                    Color(0xFF0D0C08).copy(alpha = 0.72f),
-                                    Color(0xFF0D0C08).copy(alpha = 0.52f),
-                                    Color(0xFF0D0C08).copy(alpha = 0.28f),
-                                )
-                            )
-                        )
-                        .padding(horizontal = 10.dp, vertical = 8.dp),
-                ) {
-                    Text(
-                        text = if (weatherAlertsEnabled) "Severe weather alerts ON" else "Severe weather alerts OFF",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            shadow = Shadow(
-                                color = Color.Black.copy(alpha = 0.8f),
-                                offset = Offset(0f, 1f),
-                                blurRadius = 4f,
-                            ),
-                        ),
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text(
-                        text = if (weatherAlertsEnabled)
-                            "Instant NWS warnings: severe thunderstorm, tornado, flash flood, hurricane, tropical storm, tsunami, blizzard, winter storm, ice storm, extreme heat/cold, high wind, dust storm, fire weather, red flag, smoke & air quality. Monitors your location independently."
-                        else "Turn on for instant severe weather alerts in your area. Monitors your location for weather only — no need to enable location monitoring."
-                        ,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            shadow = Shadow(
-                                color = Color.Black.copy(alpha = 0.7f),
-                                offset = Offset(0f, 1f),
-                                blurRadius = 3f,
-                            ),
-                        ),
-                        color = Color(0xFFF5F0E6),
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-                Spacer(Modifier.width(8.dp))
-                androidx.compose.material3.Switch(
-                    checked = weatherAlertsEnabled,
-                    onCheckedChange = onToggleWeatherAlerts,
                 )
             }
 
