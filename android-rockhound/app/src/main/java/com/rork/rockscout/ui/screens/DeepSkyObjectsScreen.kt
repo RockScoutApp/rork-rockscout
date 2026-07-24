@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -127,13 +129,20 @@ private fun DsoRow(dso: DeepSkyObject, onTap: (DeepSkyObject) -> Unit) {
 
 @Composable
 private fun DsoDetailDialog(dso: DeepSkyObject, onDismiss: () -> Unit) {
-    BackHandler { onDismiss() }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(DsoBg)
-            .clickable { },
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false,
+        ),
     ) {
+        BackHandler { onDismiss() }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(DsoBg)
+                .clickable { },
+        ) {
         TwinklingStars(modifier = Modifier.fillMaxWidth().height(60.dp), starCount = 20)
         Column(
             modifier = Modifier
@@ -206,6 +215,7 @@ private fun DsoDetailDialog(dso: DeepSkyObject, onDismiss: () -> Unit) {
                 DsoProperty("Hemisphere", dso.hemisphere)
                 DsoProperty("Equipment Needed", dso.equipment)
         }
+    }
     }
 }
 

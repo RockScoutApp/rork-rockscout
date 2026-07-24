@@ -25,6 +25,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -134,13 +136,20 @@ private fun ConstellationRow(con: ConstellationEntry, onTap: (ConstellationEntry
 
 @Composable
 private fun ConstellationDetailDialog(con: ConstellationEntry, onDismiss: () -> Unit) {
-    BackHandler { onDismiss() }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(StarBg)
-            .clickable { /* swallow */ },
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false,
+        ),
     ) {
+        BackHandler { onDismiss() }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(StarBg)
+                .clickable { /* swallow */ },
+        ) {
         TwinklingStars(modifier = Modifier.fillMaxWidth().height(60.dp), starCount = 20)
         Column(
             modifier = Modifier
@@ -236,5 +245,6 @@ private fun ConstellationDetailDialog(con: ConstellationEntry, onDismiss: () -> 
                     )
                 }
         }
+    }
     }
 }

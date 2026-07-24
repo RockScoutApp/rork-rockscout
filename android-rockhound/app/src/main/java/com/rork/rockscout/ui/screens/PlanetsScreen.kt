@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -128,13 +130,20 @@ private fun PlanetRow(planet: PlanetEntry, onTap: (PlanetEntry) -> Unit) {
 
 @Composable
 private fun PlanetDetailDialog(planet: PlanetEntry, onDismiss: () -> Unit) {
-    BackHandler { onDismiss() }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PlanetBg)
-            .clickable { },
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false,
+        ),
     ) {
+        BackHandler { onDismiss() }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(PlanetBg)
+                .clickable { },
+        ) {
         TwinklingStars(modifier = Modifier.fillMaxWidth().height(60.dp), starCount = 20)
         Column(
             modifier = Modifier
@@ -219,6 +228,7 @@ private fun PlanetDetailDialog(planet: PlanetEntry, onDismiss: () -> Unit) {
                     color = TextMidW,
                 )
         }
+    }
     }
 }
 

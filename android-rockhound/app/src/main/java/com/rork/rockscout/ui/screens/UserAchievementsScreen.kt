@@ -423,7 +423,7 @@ private fun UserBadgeDetailOverlay(badge: Badge, earned: Boolean, onDismiss: () 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xE6000000))
+            .background(Color.Black)
             .clickable(onClick = onDismiss),
         contentAlignment = Alignment.Center,
     ) {

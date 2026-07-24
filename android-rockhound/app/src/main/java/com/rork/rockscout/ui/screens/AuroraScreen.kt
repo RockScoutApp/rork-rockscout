@@ -70,6 +70,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -1262,13 +1264,20 @@ private fun SunspotRegionDetailDialog(region: SolarRegion, onDismiss: () -> Unit
     val history = remember(region.number) {
         SunspotHistoryTracker.getRegionHistory(region.number)
     }
-    BackHandler { onDismiss() }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF0D0C08))
-            .clickable { },
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false,
+        ),
     ) {
+        BackHandler { onDismiss() }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFF0D0C08))
+                .clickable { },
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -1380,5 +1389,6 @@ private fun SunspotRegionDetailDialog(region: SolarRegion, onDismiss: () -> Unit
                     color = TextLow,
                 )
         }
+    }
     }
 }

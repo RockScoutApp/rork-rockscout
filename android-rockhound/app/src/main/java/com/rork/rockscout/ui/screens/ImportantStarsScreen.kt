@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -121,13 +123,20 @@ private fun StarRow(star: StarEntry, onTap: (StarEntry) -> Unit) {
 
 @Composable
 private fun StarDetailDialog(star: StarEntry, onDismiss: () -> Unit) {
-    BackHandler { onDismiss() }
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(StarBg)
-            .clickable { },
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false,
+        ),
     ) {
+        BackHandler { onDismiss() }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(StarBg)
+                .clickable { },
+        ) {
         TwinklingStars(modifier = Modifier.fillMaxWidth().height(60.dp), starCount = 20)
         Column(
             modifier = Modifier
@@ -199,6 +208,7 @@ private fun StarDetailDialog(star: StarEntry, onDismiss: () -> Unit) {
                 StarProperty("Luminosity", "${star.luminositySolar}× Sun")
                 StarProperty("Best Viewing", star.bestViewingMonth)
         }
+    }
     }
 }
 

@@ -580,7 +580,7 @@ private fun BadgeDetailOverlay(badge: Badge, earned: Boolean, onDismiss: () -> U
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xE6000000))
+                .background(Color.Black)
                 .clickable(onClick = onDismiss),
             contentAlignment = Alignment.Center,
         ) {
