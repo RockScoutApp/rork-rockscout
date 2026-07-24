@@ -1,5 +1,6 @@
 package com.rork.rockscout.ui.components
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -96,6 +97,10 @@ fun ThankYouCelebration(
 ) {
     var visible by remember { mutableStateOf(false) }
     var burst by remember { mutableStateOf(false) }
+
+    // Intercept back press so it dismisses the celebration instead of
+    // popping the underlying screen from the navigation stack.
+    BackHandler { onDismiss() }
 
     // Play burst once on entry — no auto-dismiss; stays until user closes
     LaunchedEffect(Unit) {

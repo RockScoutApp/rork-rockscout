@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,6 +41,8 @@ fun YouTubePlayer(
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    BackHandler { onClose() }
+
     Box(
         modifier = modifier
             .fillMaxSize()

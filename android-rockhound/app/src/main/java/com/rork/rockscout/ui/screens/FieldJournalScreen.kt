@@ -1,5 +1,6 @@
 package com.rork.rockscout.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -271,6 +272,10 @@ fun FieldJournalScreen(navController: NavController) {
             }
         }
     }
+
+    // Intercept system back when the editor is open so it dismisses the
+    // editor instead of popping the entire Field Journal screen.
+    BackHandler(enabled = showEditor) { showEditor = false; editingEntry = null }
 
     if (showEditor) {
         JournalEditorScreen(

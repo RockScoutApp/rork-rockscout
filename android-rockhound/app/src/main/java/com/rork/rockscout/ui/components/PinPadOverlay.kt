@@ -1,5 +1,6 @@
 package com.rork.rockscout.ui.components
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -59,6 +60,10 @@ fun PinPadOverlay(
 ) {
     var entered by remember { mutableStateOf("") }
     var error by remember { mutableStateOf(false) }
+
+    // Intercept back press so it dismisses the PIN pad instead of
+    // popping the underlying screen from the navigation stack.
+    BackHandler { onDismiss() }
 
     fun press(digit: String) {
         if (entered.length >= 6) return

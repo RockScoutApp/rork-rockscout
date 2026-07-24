@@ -4,6 +4,7 @@ package com.rork.rockscout.ui.screens
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -2045,6 +2046,10 @@ private fun RewardedVideoOverlay(
     onComplete: () -> Unit,
     onDismiss: () -> Unit,
 ) {
+    // Intercept back press so it dismisses the rewarded video overlay
+    // instead of popping the entire Identify screen from the nav stack.
+    BackHandler { onDismiss() }
+
     val adContents = remember {
         listOf(
             "Premium Rockhound Gear — shop handpicked field kits online.",
