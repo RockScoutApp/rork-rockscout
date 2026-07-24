@@ -38,6 +38,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -87,6 +88,17 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalHapticFeedback
 
 @Composable
 fun TripCalendarScreen(navController: NavController) {
@@ -107,9 +119,41 @@ fun TripCalendarScreen(navController: NavController) {
     var pendingDeleteTrip by remember { mutableStateOf<Trip?>(null) }
     var pendingArchiveTrip by remember { mutableStateOf<Trip?>(null) }
 
+    // Drag-and-drop reschedule state
+    var draggingTrip by remember { mutableStateOf<Trip?>(null) }
+    var dropTargetDate by remember { mutableStateOf<Long?>(null) }
+    val dayCellRects = remember { mutableStateMapOf<Long, Rect>() }
+    val haptic = LocalHapticFeedback.current
+    val listState = rememberLazyListState()
+
+    val onDragStart: (Trip) -> Unit = { t ->
+        draggingTrip = t
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        scope.launch { listState.scrollToItem(2) }
+    }
+    val onDragMove: (Offset) -> Unit = { finger ->
+        dropTargetDate = dayCellRects.entries
+            .firstOrNull { it.value.contains(finger) }
+            ?.key
+    }
+    val onDragEnd: () -> Unit = {
+        dropTargetDate?.let { newDate ->
+            draggingTrip?.let { t ->
+                repo.saveTrip(t.copy(date = newDate))
+                currentMonth = Calendar.getInstance().apply { timeInMillis = newDate }
+            }
+        }
+        draggingTrip = null
+        dropTargetDate = null
+    }
+    val onDragCancel: () -> Unit = {
+        draggingTrip = null
+        dropTargetDate = null
+    }
+
     BackHandler(
         enabled = showEditor || detailTrip != null || shareToProfileTrip != null ||
-            pendingDeleteTrip != null || pendingArchiveTrip != null,
+            pendingDeleteTrip != null || pendingArchiveTrip != null || draggingTrip != null,
     ) {
         when {
             showEditor -> { editingTrip = null; showEditor = false }
@@ -117,6 +161,7 @@ fun TripCalendarScreen(navController: NavController) {
             shareToProfileTrip != null -> shareToProfileTrip = null
             pendingDeleteTrip != null -> pendingDeleteTrip = null
             pendingArchiveTrip != null -> pendingArchiveTrip = null
+            draggingTrip != null -> { draggingTrip = null; dropTargetDate = null }
         }
     }
 
@@ -191,6 +236,7 @@ fun TripCalendarScreen(navController: NavController) {
         },
     ) {
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 40.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -331,16 +377,29 @@ fun TripCalendarScreen(navController: NavController) {
                             val dateMillis = dateCal.timeInMillis
                             val isToday = dateMillis == today
                             val dayTrips = tripsByDate[dateMillis] ?: emptyList()
+                            val isDropTarget = dropTargetDate == dateMillis
 
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
                                     .aspectRatio(1f)
+                                    .onGloballyPositioned { coords ->
+                                    val pos = coords.localToRoot(Offset.Zero)
+                                    val s = coords.size
+                                    dayCellRects[dateMillis] = Rect(pos.x, pos.y, pos.x + s.width, pos.y + s.height)
+                                }
                                     .clip(RoundedCornerShape(6.dp))
                                     .background(
-                                        if (isToday) Color(0xFF7CB5EC).copy(alpha = 0.22f)
-                                        else if (dayTrips.isNotEmpty()) Color(0xFF1A1812)
-                                        else Color.Transparent
+                                        when {
+                                            isDropTarget -> Citrine.copy(alpha = 0.35f)
+                                            isToday -> Color(0xFF7CB5EC).copy(alpha = 0.22f)
+                                            dayTrips.isNotEmpty() -> Color(0xFF1A1812)
+                                            else -> Color.Transparent
+                                        }
+                                    )
+                                    .then(
+                                        if (isDropTarget) Modifier.border(2.dp, Citrine, RoundedCornerShape(6.dp))
+                                        else Modifier
                                     )
                                     .clickable {
                                         selectedDate = if (selectedDate == dateMillis) null
@@ -382,6 +441,17 @@ fun TripCalendarScreen(navController: NavController) {
                         }
                     }
                 }
+            }
+
+            // Drag-and-drop hint
+            item {
+                Text(
+                    text = "Long-press a trip card and drag it onto a date to reschedule",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = TextLow.copy(alpha = 0.6f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                )
             }
 
             // Selected date or upcoming trips header
@@ -467,6 +537,11 @@ fun TripCalendarScreen(navController: NavController) {
                             }
                         },
                         onShareToProfile = { shareToProfileTrip = trip },
+                        isDragging = draggingTrip?.id == trip.id,
+                        onDragStart = onDragStart,
+                        onDragMove = onDragMove,
+                        onDragEnd = onDragEnd,
+                        onDragCancel = onDragCancel,
                     )
                 }
             }
@@ -507,6 +582,11 @@ fun TripCalendarScreen(navController: NavController) {
                             }
                         },
                         onShareToProfile = { shareToProfileTrip = trip },
+                        isDragging = draggingTrip?.id == trip.id,
+                        onDragStart = onDragStart,
+                        onDragMove = onDragMove,
+                        onDragEnd = onDragEnd,
+                        onDragCancel = onDragCancel,
                     )
                 }
             }
@@ -671,19 +751,52 @@ private fun CalendarTripCard(
     trip: Trip,
     navController: NavController,
     isPast: Boolean = false,
+    isDragging: Boolean = false,
     onOpen: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onArchive: () -> Unit,
     onShare: () -> Unit,
     onShareToProfile: () -> Unit,
+    onDragStart: (Trip) -> Unit = {},
+    onDragMove: (Offset) -> Unit = {},
+    onDragEnd: () -> Unit = {},
+    onDragCancel: () -> Unit = {},
 ) {
     val dateText = SimpleDateFormat("EEE, MMM d", Locale.getDefault()).format(Date(trip.date))
     val cardShape = RoundedCornerShape(16.dp)
+    var cardCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    var fingerStartGlobal by remember { mutableStateOf(Offset.Zero) }
+    var dragAccumulator by remember { mutableStateOf(Offset.Zero) }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .sculpted(shape = cardShape, accent = Citrine, shadowElevation = 4.dp, onClick = onOpen)
+            .sculpted(shape = cardShape, accent = Citrine, shadowElevation = 4.dp, onClick = onOpen, enabled = !isDragging)
+            .onGloballyPositioned { cardCoords = it }
+            .pointerInput(trip.id) {
+                detectDragGesturesAfterLongPress(
+                    onDragStart = { startOffset ->
+                        val global = cardCoords?.localToRoot(startOffset)
+                        if (global != null) {
+                            fingerStartGlobal = global
+                            dragAccumulator = Offset.Zero
+                            onDragStart(trip)
+                        }
+                    },
+                    onDrag = { _, delta ->
+                        dragAccumulator += delta
+                        onDragMove(
+                            Offset(
+                                fingerStartGlobal.x + dragAccumulator.x,
+                                fingerStartGlobal.y + dragAccumulator.y,
+                            )
+                        )
+                    },
+                    onDragEnd = { onDragEnd() },
+                    onDragCancel = { onDragCancel() },
+                )
+            }
             .clip(cardShape)
             .background(
                 Brush.verticalGradient(
@@ -693,7 +806,12 @@ private fun CalendarTripCard(
                     )
                 )
             )
-            .glowingBorder(2.dp, Citrine.copy(alpha = 0.35f), cardShape),
+            .glowingBorder(
+                2.dp,
+                if (isDragging) Citrine else Citrine.copy(alpha = 0.35f),
+                cardShape,
+            )
+            .then(if (isDragging) Modifier.graphicsLayer { alpha = 0.35f } else Modifier),
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(
@@ -726,7 +844,16 @@ private fun CalendarTripCard(
                         )
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        Icons.Filled.DragHandle,
+                        contentDescription = "Drag to reschedule",
+                        tint = DarkTextMid.copy(alpha = 0.4f),
+                        modifier = Modifier.size(16.dp),
+                    )
                     SculptedIconButton(icon = Icons.Filled.Edit, contentDescription = "Edit", onClick = onEdit, accent = Citrine, iconTint = DarkTextMid, size = 32.dp, shadowElevation = 2.dp)
                     SculptedIconButton(icon = Icons.Filled.Share, contentDescription = "Share", onClick = onShare, accent = Citrine, iconTint = DarkTextMid, size = 32.dp, shadowElevation = 2.dp)
                     SculptedIconButton(icon = Icons.Filled.PersonAdd, contentDescription = "Share to Profile", onClick = onShareToProfile, accent = Citrine, iconTint = Citrine, size = 32.dp, shadowElevation = 2.dp)
