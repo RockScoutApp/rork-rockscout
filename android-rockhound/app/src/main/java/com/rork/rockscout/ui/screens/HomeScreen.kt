@@ -51,6 +51,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.MailOutline
 import androidx.compose.material.icons.filled.Brightness3
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Nature
@@ -577,6 +578,16 @@ fun HomeScreen(navController: NavController) {
                     accent = bannerAccent,
                     imageUrl = "https://r2-pub.rork.com/attachments/abxrhqw66vap6ksxlr670.png",
                     onClick = { navController.navigate(Routes.FIELD_JOURNAL) },
+                )
+            }
+            item {
+                FullWidthBannerTile(
+                    label = "Calendar",
+                    subtitle = "${trips.size} planned trips · View, edit & plan all your trips on a calendar",
+                    icon = Icons.Filled.CalendarMonth,
+                    accent = Color(0xFF7CB5EC),
+                    imageUrl = "https://r2-pub.rork.com/attachments/78k8yy4tgahby3o9opb6j.png",
+                    onClick = { navController.navigate(Routes.TRIP_CALENDAR) },
                 )
             }
             item { SectionLabel("Your field kit") }

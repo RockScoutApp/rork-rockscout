@@ -829,7 +829,7 @@ private fun TripCard(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TripEditorDialog(
+internal fun TripEditorDialog(
     initial: Trip?,
     onDismiss: () -> Unit,
     onSave: (Trip) -> Unit,
