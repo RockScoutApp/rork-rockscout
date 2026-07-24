@@ -398,7 +398,7 @@ fun CommunityPostDetailScreen(
                 )
             }
 
-            // Show first reply inline (always visible) — no nesting/indentation
+            // Show first reply inline (always visible) — indented under its parent
             if (sortedReplies.isNotEmpty()) {
                 item(key = "first_reply_${comment.id}") {
                     val firstReply = sortedReplies.first()
@@ -450,7 +450,7 @@ fun CommunityPostDetailScreen(
                         }
                     }
 
-                    // Expanded replies (all except the first one already shown) — no nesting
+                    // Expanded replies (all except the first one already shown) — indented under their parent
                     if (isExpanded) {
                         item(key = "expanded_replies_${comment.id}") {
                             Column {
@@ -475,10 +475,10 @@ fun CommunityPostDetailScreen(
                 }
             }
 
-            // Reply composer for this comment — no nesting
+            // Reply composer for this comment — indented under the parent comment
             if (replyingToCommentId == comment.id) {
                 item(key = "reply_composer_${comment.id}") {
-                    Column(modifier = Modifier.padding(top = 6.dp)) {
+                    Column(modifier = Modifier.padding(start = 20.dp, top = 6.dp)) {
                         DetailReplyComposer(
                             body = replyBodies.value[comment.id] ?: "",
                             onBodyChange = { body ->
@@ -547,6 +547,7 @@ private fun DetailCommentRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(start = if (isReply) 20.dp else 0.dp)
             .clip(commentShape)
             .background(if (isReply) Color(0xFF2E2C26) else Color(0xFF3A3830))
             .glowingBorder(1.dp, accent.copy(alpha = 0.35f), commentShape)

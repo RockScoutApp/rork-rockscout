@@ -589,7 +589,7 @@ fun CommunityPostCard(
                         imageError = replyImageError,
                         onImagePicked = onReplyImagePicked,
                         onImageRemove = onReplyImageRemove,
-                        modifier = Modifier.padding(top = 6.dp),
+                        modifier = Modifier.padding(start = 20.dp, top = 6.dp),
                     )
                 }
                 if (comment != visibleTopLevel.last()) Spacer(Modifier.height(6.dp))
@@ -679,6 +679,7 @@ private fun CommunityCommentRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(start = if (isReply) 20.dp else 0.dp)
             .clip(commentShape)
             .background(if (isReply) Color(0xFF2E2C26) else Color(0xFF3A3830))
             .glowingBorder(1.dp, accent.copy(alpha = 0.35f), commentShape)
