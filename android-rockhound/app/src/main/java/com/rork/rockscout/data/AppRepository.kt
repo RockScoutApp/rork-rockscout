@@ -99,6 +99,10 @@ data class UserProfile(
     val backgroundImagePath: String? = null,
     /** Pending background image awaiting developer review (questionable content). */
     val pendingBackgroundPath: String? = null,
+    /** Custom aurora notification Kp threshold. Null = use latitude-based default.
+     *  When set, the AuroraAlertWorker fires notifications when Kp reaches this value
+     *  instead of the computed latitude threshold. Range 0.0–9.0 in 0.5 steps. */
+    val auroraKpThreshold: Float? = null,
 )
 
 /**
@@ -161,6 +165,10 @@ class AppRepository {
     private val _savedImages = MutableStateFlow<List<SavedImage>>(emptyList())
     val savedImages: StateFlow<List<SavedImage>> = _savedImages.asStateFlow()
 
+    /** Aurora Saved Spots — lat/lng bookmarks for tracking aurora visibility. */
+    private val _auroraSavedSpots = MutableStateFlow<List<AuroraSavedSpot>>(emptyList())
+    val auroraSavedSpots: StateFlow<List<AuroraSavedSpot>> = _auroraSavedSpots.asStateFlow()
+
     /** Simulated current GPS position (default: central Arkansas crystal country). */
     private val _currentLocation = MutableStateFlow(Pair(34.5037, -93.6321))
     val currentLocation: StateFlow<Pair<Double, Double>> = _currentLocation.asStateFlow()
@@ -207,6 +215,10 @@ class AppRepository {
         _savedImages.value = images.sortedByDescending { it.savedAt }
     }
 
+    fun loadAuroraSavedSpots(spots: List<AuroraSavedSpot>) {
+        _auroraSavedSpots.value = spots.sortedByDescending { it.createdAt }
+    }
+
     /** Marks persistence loaded; subsequent mutations will persist to disk. */
     fun markLoaded() { loaded = true }
 
@@ -245,6 +257,9 @@ class AppRepository {
     }
     private fun persistSavedImages() {
         if (loaded) PersistenceManager.saveSavedImages(_savedImages.value)
+    }
+    private fun persistAuroraSavedSpots() {
+        if (loaded) PersistenceManager.saveAuroraSavedSpots(_auroraSavedSpots.value)
     }
     private fun persistCurrentLocation() {
         if (loaded) {
@@ -898,6 +913,41 @@ class AppRepository {
             if (it.id == id) it.copy(liked = !it.liked) else it
         }
         persistSavedImages()
+    }
+
+    // Aurora Saved Spots -------------------------------------------------
+    fun addAuroraSavedSpot(name: String, latitude: Double, longitude: Double) {
+        val spot = AuroraSavedSpot(
+            id = UUID.randomUUID().toString(),
+            name = ProfanityFilter.filter(name),
+            latitude = latitude,
+            longitude = longitude,
+        )
+        _auroraSavedSpots.value = listOf(spot) + _auroraSavedSpots.value
+        persistAuroraSavedSpots()
+    }
+
+    fun removeAuroraSavedSpot(spotId: String) {
+        _auroraSavedSpots.value = _auroraSavedSpots.value.filterNot { it.id == spotId }
+        persistAuroraSavedSpots()
+    }
+
+    // Aurora Kp Threshold -------------------------------------------------
+    fun setAuroraKpThreshold(threshold: Float?) {
+        _profile.value = _profile.value.copy(auroraKpThreshold = threshold)
+        persistProfile()
+        if (threshold != null) {
+            PersistenceManager.saveAuroraKpThreshold(threshold)
+        } else {
+            PersistenceManager.saveAuroraKpThreshold(-1f)
+        }
+    }
+
+    fun getAuroraKpThreshold(): Float? {
+        val profileVal = _profile.value.auroraKpThreshold
+        if (profileVal != null) return profileVal
+        val stored = PersistenceManager.loadAuroraKpThreshold()
+        return if (stored >= 0f) stored else null
     }
 
     fun getTradeListing(listingId: String): TradeListing? =

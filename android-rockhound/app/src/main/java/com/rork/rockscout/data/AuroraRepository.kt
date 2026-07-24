@@ -327,6 +327,8 @@ object AuroraRepository {
             val regions = parseSolarRegions(raw)
             putCached("regions", regions)
             _auroraData.update { it.copy(solarRegions = regions) }
+            // Record daily snapshots for magnetic evolution tracking
+            SunspotHistoryTracker.recordSnapshots(regions)
         } catch (e: Exception) {
             Log.w(TAG, "Solar regions fetch failed: ${e.message}")
         }
@@ -366,8 +368,9 @@ object AuroraRepository {
         try {
             val raw = fetchText("$BASE/json/f107_cm_flux.json")
             val flux = parseSolarFlux(raw)
+            val history = parseSolarFluxHistory(raw)
             putCached("flux", flux)
-            _auroraData.update { it.copy(solarFlux = flux) }
+            _auroraData.update { it.copy(solarFlux = flux, f107History = history) }
         } catch (e: Exception) {
             Log.w(TAG, "Solar flux fetch failed: ${e.message}")
         }
@@ -382,6 +385,17 @@ object AuroraRepository {
             if (flux > 0) return SolarFlux(timeTag = time, f107 = flux)
         }
         return null
+    }
+
+    /** Parse the last 7 daily F10.7 values for the trend chart. */
+    private fun parseSolarFluxHistory(raw: String): List<SolarFlux> {
+        val arr: JsonArray = json.parseToJsonElement(raw) as? JsonArray ?: return emptyList()
+        return arr.mapNotNull { el ->
+            val obj = el.jsonObject
+            val flux = obj["f107"]?.jsonPrimitive?.doubleOrNull ?: return@mapNotNull null
+            val time = obj["time_tag"]?.jsonPrimitive?.contentOrNull ?: ""
+            if (flux > 0) SolarFlux(timeTag = time, f107 = flux) else null
+        }.takeLast(7)
     }
 
     // ─── Solar Probabilities ───
@@ -661,6 +675,7 @@ data class AuroraData(
     val imf: ImfReading? = null,
     val solarRegions: List<SolarRegion> = emptyList(),
     val solarFlux: SolarFlux? = null,
+    val f107History: List<SolarFlux> = emptyList(),
     val probabilities: SolarProbabilities? = null,
     val moonPhase: MoonPhase? = null,
     val visibilityThreshold: Double = 0.0,

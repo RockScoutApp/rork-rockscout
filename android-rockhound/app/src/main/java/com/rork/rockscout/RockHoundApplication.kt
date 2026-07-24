@@ -120,6 +120,10 @@ class RockScoutApplication : Application() {
             AppRepository.instance.markLoaded()
         }
 
+        safeInit("sunspot-history-tracker") {
+            com.rork.rockscout.data.SunspotHistoryTracker.initialize(this)
+        }
+
         safeInit("night-mode") {
             NightModeManager.initialize()
         }

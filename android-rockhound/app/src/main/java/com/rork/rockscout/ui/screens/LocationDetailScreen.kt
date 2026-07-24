@@ -68,6 +68,8 @@ import androidx.navigation.NavController
 import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.DigLocation
 import com.rork.rockscout.data.SeedData
+import com.rork.rockscout.data.WildlifeData
+import com.rork.rockscout.ui.components.WildlifeCard
 import com.rork.rockscout.data.SpecimenImages
 import com.rork.rockscout.data.WeatherRepository
 import com.rork.rockscout.data.WeatherSnapshot
@@ -286,6 +288,17 @@ fun LocationDetailScreen(navController: NavController, locationId: String) {
                     latitude = loc.latitude,
                     longitude = loc.longitude,
                 )
+            }
+
+            // Common Wildlife (beach/coastal locations only)
+            if (loc.type == com.rork.rockscout.data.LocationType.BEACH) {
+                item {
+                    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                        WildlifeCard(
+                            wildlife = WildlifeData.forCoastalLocation(loc.region, loc.latitude, loc.longitude),
+                        )
+                    }
+                }
             }
             item {
                 Column(modifier = Modifier.padding(horizontal = 20.dp)) {

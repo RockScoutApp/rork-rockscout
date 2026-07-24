@@ -101,6 +101,19 @@ sealed class SearchMatch(
         route = Routes.location(location.id),
     )
 
+    data class FavoriteSpotEntryMatch(
+        val entry: FavoriteSpotEntry,
+        override val score: Float,
+    ) : SearchMatch(
+        score = score,
+        title = entry.name,
+        subtitle = "Saved favorite · ${entry.typeLabel}",
+        emoji = entry.emoji,
+        typeLabel = "Favorite",
+        accent = entry.accent,
+        route = entry.route,
+    )
+
     data class TripMatch(
         val trip: Trip,
         override val score: Float,
@@ -315,13 +328,14 @@ fun performGlobalSearch(
         )?.let { matches.add(SearchMatch.WishlistMatch(spec, it)) }
     }
 
-    // User's favorite spots
+    // User's favorite spots — resolves all ID types via FavoriteSpotResolver
+    // (bare dig site IDs, park:, trailhead:, campground:, blmsite:, blmstate: prefixes)
     repo.favoriteSpots.value.forEach { id ->
-        val loc = SeedData.locationById(id) ?: return@forEach
+        val entry = FavoriteSpotResolver.resolve(id) ?: return@forEach
         scoreText(
             q,
-            listOf(loc.name, loc.region, loc.summary, loc.type.label) + loc.mineralTags,
-        )?.let { matches.add(SearchMatch.FavoriteSpotMatch(loc, it)) }
+            listOf(entry.name, entry.region, entry.typeLabel),
+        )?.let { matches.add(SearchMatch.FavoriteSpotEntryMatch(entry, it)) }
     }
 
     // Trips

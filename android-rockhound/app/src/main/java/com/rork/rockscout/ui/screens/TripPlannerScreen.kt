@@ -317,6 +317,38 @@ fun TripPlannerScreen(navController: NavController) {
                         )
                     }
                 }
+                // Calendar button — secondary outlined pill
+                Box(
+                    modifier = Modifier
+                        .sculpted(
+                            shape = pillShape,
+                            accent = Color(0xFF7CB5EC),
+                            shadowElevation = 4.dp,
+                            onClick = { navController.navigate(Routes.TRIP_CALENDAR) },
+                        )
+                        .clip(pillShape)
+                        .background(Slate800)
+                        .glowingBorder(2.dp, Color(0xFF7CB5EC).copy(alpha = 0.5f), pillShape)
+                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Filled.Map,
+                            contentDescription = null,
+                            tint = Color(0xFF7CB5EC),
+                            modifier = Modifier.size(14.dp),
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            "Calendar",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF7CB5EC),
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                        )
+                    }
+                }
                 // Plan My Next Adventure button — primary pill
                 Box(
                     modifier = Modifier
@@ -886,6 +918,28 @@ private fun TripEditorDialog(
         total
     }
 
+    // Calculate per-segment travel durations (45 mph average for mixed driving)
+    val segmentDurations = remember(stops) {
+        val points = stops.mapNotNull { stop ->
+            if (stop.isCustomPin && stop.latitude != null && stop.longitude != null) {
+                Pair(stop.latitude, stop.longitude)
+            } else {
+                SeedData.locationById(stop.locationId)?.let { Pair(it.latitude, it.longitude) }
+            }
+        }
+        val durations = mutableListOf<Int>() // minutes
+        for (i in 1 until points.size) {
+            val miles = AppRepository.distanceMiles(
+                points[i - 1].first, points[i - 1].second,
+                points[i].first, points[i].second,
+            )
+            durations.add((miles / 45.0 * 60).toInt().coerceAtLeast(1))
+        }
+        durations
+    }
+
+    val totalTravelMinutes = remember(segmentDurations) { segmentDurations.sum() }
+
     fun clearDraft() {
         runCatching {
             java.io.File(context.filesDir, "trip_draft_$draftKey.json").delete()
@@ -1032,7 +1086,7 @@ Planned with RockScout""".trimIndent()
                                 modifier = Modifier.size(14.dp),
                             )
                             Text(
-                                "Estimated route distance: ${"%.1f".format(totalDistance)} miles",
+                                "Estimated route distance: ${"%.1f".format(totalDistance)} miles · Est. ${if (totalTravelMinutes >= 60) "${totalTravelMinutes / 60}h ${totalTravelMinutes % 60}m" else "$totalTravelMinutes min"} travel",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = Citrine,
                                 fontWeight = FontWeight.SemiBold,
@@ -1067,9 +1121,33 @@ Planned with RockScout""".trimIndent()
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(Modifier.height(12.dp))
-                Text("Stops", style = MaterialTheme.typography.titleSmall, color = DarkTextHigh, fontWeight = FontWeight.Bold)
+                Text("Stops (long-press to drag & reorder)", style = MaterialTheme.typography.titleSmall, color = DarkTextHigh, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(6.dp))
                 stops.forEachIndexed { idx, stop ->
+                    // Travel duration badge between stops
+                    if (idx > 0 && idx - 1 < segmentDurations.size) {
+                        val mins = segmentDurations[idx - 1]
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Box(modifier = Modifier.width(1.dp).height(8.dp).background(Citrine.copy(alpha = 0.3f)))
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = if (mins >= 60) "${mins / 60}h ${mins % 60}m" else "$mins min",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Citrine,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(Citrine.copy(alpha = 0.12f))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Box(modifier = Modifier.width(1.dp).height(8.dp).background(Citrine.copy(alpha = 0.3f)))
+                        }
+                    }
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -1082,6 +1160,24 @@ Planned with RockScout""".trimIndent()
                         ) { Text("${idx + 1}", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Bold) }
                         Spacer(Modifier.width(10.dp))
                         Text(stop.locationName, style = MaterialTheme.typography.bodyMedium, color = DarkTextHigh, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                        // Move up/down buttons for reordering
+                        if (idx > 0) {
+                            SculptedIconButton(
+                                icon = Icons.Filled.Undo,
+                                contentDescription = "Move up",
+                                onClick = {
+                                    if (idx > 0) {
+                                        val item = stops.removeAt(idx)
+                                        stops.add(idx - 1, item)
+                                    }
+                                },
+                                accent = Citrine,
+                                iconTint = DarkTextMid,
+                                size = 28.dp,
+                                shadowElevation = 2.dp,
+                            )
+                            Spacer(Modifier.width(4.dp))
+                        }
                         SculptedIconButton(icon = Icons.Filled.Delete, contentDescription = "Remove stop", onClick = { pendingRemoveStop = idx }, accent = Citrine, iconTint = TextLow, size = 32.dp, shadowElevation = 3.dp)
                     }
                 }
@@ -2513,8 +2609,9 @@ internal fun TripDetailSheet(
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             Icon(Icons.Filled.Straighten, contentDescription = null, tint = Citrine, modifier = Modifier.size(14.dp))
+                            val totalTravelMins = remember(detailDistance) { (detailDistance / 45.0 * 60).toInt().coerceAtLeast(1) }
                             Text(
-                                "Estimated route distance: ${"%.1f".format(detailDistance)} miles",
+                                "Estimated route distance: ${"%.1f".format(detailDistance)} miles · Est. ${if (totalTravelMins >= 60) "${totalTravelMins / 60}h ${totalTravelMins % 60}m" else "$totalTravelMins min"} travel",
                                 style = MaterialTheme.typography.labelMedium,
                                 color = Citrine,
                                 fontWeight = FontWeight.SemiBold,

@@ -88,6 +88,8 @@ object PersistenceManager {
     // current without the user having to remember.
     private const val KEY_NIGHTLY_SYNC_ENABLED = "nightly_sync_enabled"
     private const val KEY_NIGHTLY_SYNC_LAST_RUN = "nightly_sync_last_run_ms"
+    private const val KEY_AURORA_SAVED_SPOTS = "aurora_saved_spots_json"
+    private const val KEY_AURORA_KP_THRESHOLD = "aurora_kp_threshold"
     private const val KEY_NIGHT_MODE_ENABLED = "night_mode_enabled"
 
     private val json = Json {
@@ -438,6 +440,31 @@ object PersistenceManager {
         return prefs.getLong(KEY_NIGHTLY_SYNC_LAST_RUN, 0L)
     }
 
+    // --------------------------------------------------- aurora saved spots
+    /** Persist aurora saved spots (lat/lng bookmarks for aurora visibility tracking). */
+    fun saveAuroraSavedSpots(spots: List<AuroraSavedSpot>) =
+        putJson(KEY_AURORA_SAVED_SPOTS, spots)
+
+    fun loadAuroraSavedSpots(): List<AuroraSavedSpot> {
+        ensureInitialized()
+        return runCatching {
+            prefs.getString(KEY_AURORA_SAVED_SPOTS, null)
+                ?.let { json.decodeFromString<List<AuroraSavedSpot>>(it) }
+        }.getOrNull() ?: emptyList()
+    }
+
+    // ----------------------------------------------------- aurora Kp threshold
+    /** Persist the custom aurora notification Kp threshold. -1f means "use latitude default". */
+    fun saveAuroraKpThreshold(threshold: Float) {
+        ensureInitialized()
+        prefs.edit().putFloat(KEY_AURORA_KP_THRESHOLD, threshold).apply()
+    }
+
+    fun loadAuroraKpThreshold(): Float {
+        ensureInitialized()
+        return prefs.getFloat(KEY_AURORA_KP_THRESHOLD, -1f)
+    }
+
     // ----------------------------------------------------------- night mode
     /** Red-light / night-vision mode for UV collecting. Persists across launches. */
     fun saveNightModeEnabled(enabled: Boolean) {
@@ -688,6 +715,11 @@ object PersistenceManager {
             prefs.getString(KEY_CURRENT_LOCATION, null)?.let {
                 val (lat, lng) = json.decodeFromString<Pair<Double, Double>>(it)
                 repo.setCurrentLocation(lat, lng)
+            }
+        }
+        runCatching {
+            prefs.getString(KEY_AURORA_SAVED_SPOTS, null)?.let {
+                repo.loadAuroraSavedSpots(json.decodeFromString(it))
             }
         }
         // Sync the standalone location-monitoring flag with the profile value

@@ -46,9 +46,11 @@ import com.rork.rockscout.data.BlmData
 import com.rork.rockscout.data.BlmDigSite
 import com.rork.rockscout.data.FavoriteSpotResolver
 import com.rork.rockscout.data.SafeLinkOpener
+import com.rork.rockscout.data.WildlifeData
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.TagChip
+import com.rork.rockscout.ui.components.WildlifeCard
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.DarkTextHigh
@@ -151,6 +153,11 @@ fun BlmStateDetailScreen(
                     accent = Success,
                     content = state.whatYouCanCollect,
                 )
+            }
+
+            // Common Wildlife
+            item {
+                WildlifeCard(wildlife = WildlifeData.forState(state.code))
             }
 
             // Quantity limits

@@ -96,6 +96,12 @@ import com.rork.rockscout.ui.screens.CrystalSystemReferenceScreen
 import com.rork.rockscout.ui.screens.LapidaryBasicsGuideScreen
 import com.rork.rockscout.ui.screens.AuroraScreen
 import com.rork.rockscout.ui.screens.SevereWeatherScreen
+import com.rork.rockscout.ui.screens.StarsLandingScreen
+import com.rork.rockscout.ui.screens.ConstellationsScreen
+import com.rork.rockscout.ui.screens.ImportantStarsScreen
+import com.rork.rockscout.ui.screens.PlanetsScreen
+import com.rork.rockscout.ui.screens.DeepSkyObjectsScreen
+import com.rork.rockscout.ui.screens.TripCalendarScreen
 import com.rork.rockscout.ui.screens.BlmLandScreen
 import com.rork.rockscout.ui.screens.StateParksScreen
 import com.rork.rockscout.ui.screens.BlmTrailheadsScreen
@@ -184,6 +190,16 @@ object Routes {
     const val LAPIDARY_BASICS = "lapidary_basics"
     const val AURORA = "aurora"
     const val SEVERE_WEATHER = "severe_weather"
+
+    // Stars & Constellations sub-screens
+    const val STARS_LANDING = "stars_landing"
+    const val CONSTELLATIONS = "constellations"
+    const val IMPORTANT_STARS = "important_stars"
+    const val PLANETS = "planets"
+    const val DEEP_SKY_OBJECTS = "deep_sky_objects"
+
+    // Trip Calendar
+    const val TRIP_CALENDAR = "trip_calendar"
 
     // BLM guide sub-screens
     const val BLM_LAND = "blm_land"
@@ -707,6 +723,12 @@ fun AppNavigation(
         composable(Routes.LAPIDARY_BASICS) { LapidaryBasicsGuideScreen(navController) }
         composable(Routes.AURORA) { AuroraScreen(navController) }
         composable(Routes.SEVERE_WEATHER) { SevereWeatherScreen(navController) }
+        composable(Routes.STARS_LANDING) { StarsLandingScreen(navController) }
+        composable(Routes.CONSTELLATIONS) { ConstellationsScreen(navController) }
+        composable(Routes.IMPORTANT_STARS) { ImportantStarsScreen(navController) }
+        composable(Routes.PLANETS) { PlanetsScreen(navController) }
+        composable(Routes.DEEP_SKY_OBJECTS) { DeepSkyObjectsScreen(navController) }
+        composable(Routes.TRIP_CALENDAR) { TripCalendarScreen(navController) }
         // BLM guide sub-screens
         composable(Routes.BLM_LAND) { BlmLandScreen(navController) }
         composable(Routes.STATE_PARKS) { StateParksScreen(navController) }

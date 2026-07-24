@@ -566,11 +566,13 @@ object NotificationHelper {
     /**
      * Post an aurora alert notification when Kp reaches the visibility threshold
      * for the user's latitude. Tapping it opens the app to the home screen.
+     * Includes a "Share Kp Status" action button that opens the system share sheet.
      */
     fun showAuroraAlertNotification(
         context: Context,
         title: String,
         message: String,
+        shareText: String? = null,
     ) {
         if (!hasNotificationPermission(context)) return
 
@@ -586,7 +588,7 @@ object NotificationHelper {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
 
-        val notification = NotificationCompat.Builder(context, CHANNEL_AURORA)
+        val builder = NotificationCompat.Builder(context, CHANNEL_AURORA)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(message.take(100))
@@ -594,10 +596,32 @@ object NotificationHelper {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
-            .build()
+
+        // Add share action if share text is provided
+        if (shareText != null) {
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, shareText)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            val shareChooser = Intent.createChooser(shareIntent, "Share Aurora Status").apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            val sharePendingIntent = PendingIntent.getActivity(
+                context,
+                NOTIF_AURORA_ID + 1,
+                shareChooser,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
+            builder.addAction(
+                R.drawable.ic_notification,
+                "Share Kp Status",
+                sharePendingIntent,
+            )
+        }
 
         NotificationManagerCompat.from(context)
-            .notify(NOTIF_AURORA_ID, notification)
+            .notify(NOTIF_AURORA_ID, builder.build())
     }
 
     /**

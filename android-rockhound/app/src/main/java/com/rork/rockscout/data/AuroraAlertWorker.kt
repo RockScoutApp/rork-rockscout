@@ -114,7 +114,13 @@ class AuroraAlertWorker(
             return Result.retry()
         }
 
-        val threshold = AuroraRepository.kpThresholdForLatitude(location.latitude)
+        // Use custom threshold if set, otherwise latitude-based default
+        val customThreshold = PersistenceManager.loadAuroraKpThreshold()
+        val threshold = if (customThreshold >= 0f) {
+            customThreshold.toDouble()
+        } else {
+            AuroraRepository.kpThresholdForLatitude(location.latitude)
+        }
         if (kp < threshold) {
             Log.d(TAG, "Kp $kp below threshold $threshold for lat ${location.latitude} — no alert")
             scheduleNext(context)
@@ -134,19 +140,27 @@ class AuroraAlertWorker(
             return Result.success()
         }
 
-        // Fire notification
+        // Fire notification with share button
         val stormScale = AuroraRepository.stormScaleLabel(kp)
+        val isVisible = kp >= threshold
         val title = "\uD83C\uDF0C Aurora alert: Kp $kp ($stormScale)"
         val message = buildString {
             append("Aurora may be visible from your location tonight. ")
-            append("Current Kp is $kp — threshold for your latitude is ${String.format("%.1f", threshold)}. ")
+            append("Current Kp is $kp — your alert threshold is ${String.format("%.1f", threshold)}. ")
             append("Look north toward the horizon!")
+        }
+        val shareText = buildString {
+            append("\uD83C\uDF0C Aurora Alert — Kp $kp ($stormScale)\n")
+            append("Aurora may be visible from my location tonight!\n")
+            append("Current Kp: $kp · Threshold: ${String.format("%.1f", threshold)} · Status: ${if (isVisible) "VISIBLE" else "UNLIKELY"}\n")
+            append("Tracked with RockScout")
         }
 
         NotificationHelper.showAuroraAlertNotification(
             context = context,
             title = title,
             message = message,
+            shareText = shareText,
         )
 
         prefs.edit()

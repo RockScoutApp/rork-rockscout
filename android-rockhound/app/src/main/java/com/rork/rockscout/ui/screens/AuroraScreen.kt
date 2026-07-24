@@ -78,16 +78,25 @@ import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.FlareClass
 import com.rork.rockscout.data.LocationFetcher
 import com.rork.rockscout.data.PersistenceManager
+import com.rork.rockscout.data.SunspotHistoryTracker
+import com.rork.rockscout.data.SolarRegion
+import androidx.compose.material.icons.filled.Close
 import com.rork.rockscout.data.WorkScheduler
+import com.rork.rockscout.ui.components.AuroraSavedSpotsMap
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.glowingBorder
+import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.Ink
 import com.rork.rockscout.ui.theme.TextHigh
 import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.TextMid
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Offset as CanvasOffset
+import androidx.compose.ui.graphics.Path as CanvasPath
+import androidx.compose.ui.graphics.drawscope.Stroke
 import kotlin.math.roundToInt
 
 /** Aurora tile background image URL. */
@@ -129,6 +138,8 @@ fun AuroraScreen(navController: NavController) {
     var selectedWavelength by remember { mutableStateOf("304") }
     var showEducation by remember { mutableStateOf(false) }
     var auroraAlertsEnabled by remember { mutableStateOf(PersistenceManager.isAuroraAlertsEnabled()) }
+    val auroraSavedSpots by repo.auroraSavedSpots.collectAsStateWithLifecycle()
+    var selectedSunspotRegion by remember { mutableStateOf<SolarRegion?>(null) }
 
     val permissionsLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -550,7 +561,7 @@ fun AuroraScreen(navController: NavController) {
                 AuroraCard(title = "Active Sunspot Regions", accent = Citrine) {
                     val regions = auroraData.solarRegions
                     Text(
-                        text = "${regions.size} active region${if (regions.size > 1) "s" else ""} on the Earth-facing side of the Sun.",
+                        text = "${regions.size} active region${if (regions.size > 1) "s" else ""} on the Earth-facing side of the Sun. Tap a region for details.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextMid,
                     )
@@ -561,6 +572,7 @@ fun AuroraScreen(navController: NavController) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .clickable { selectedSunspotRegion = region }
                                 .padding(vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
@@ -609,6 +621,111 @@ fun AuroraScreen(navController: NavController) {
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            // ─── 24-Hour Trends Card ───
+            if (auroraData.kpHistory.isNotEmpty() || auroraData.f107History.isNotEmpty()) {
+                AuroraCard(title = "24-Hour Trends", accent = AuroraGreen) {
+                    // Kp 24h line chart
+                    if (auroraData.kpHistory.isNotEmpty()) {
+                        Text(
+                            text = "Kp Index — Last 24 Hours",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = AuroraGreen,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        val kpData = auroraData.kpHistory.takeLast(60) // last ~60 readings
+                        val threshold = auroraData.visibilityThreshold
+                        Canvas(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(100.dp),
+                        ) {
+                            val w = size.width
+                            val h = size.height
+                            val padding = 8f
+                            if (kpData.size < 2) return@Canvas
+                            // Threshold line (dashed)
+                            val thresholdY = h - (threshold.toFloat() / 9f) * (h - 2 * padding) - padding
+                            val dashPath = CanvasPath()
+                            var x = padding
+                            while (x < w) {
+                                dashPath.moveTo(x, thresholdY)
+                                dashPath.lineTo(x + 6f, thresholdY)
+                                x += 12f
+                            }
+                            drawPath(dashPath, AuroraGreen.copy(alpha = 0.4f), style = Stroke(width = 1.5f))
+                            // Kp line
+                            val path = CanvasPath()
+                            kpData.forEachIndexed { i, entry ->
+                                val px = padding + (i.toFloat() / (kpData.size - 1)) * (w - 2 * padding)
+                                val py = h - (entry.kp.toFloat() / 9f) * (h - 2 * padding) - padding
+                                if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
+                            }
+                            drawPath(path, AuroraGreen, style = Stroke(width = 2f))
+                            // Dots above threshold
+                            kpData.forEachIndexed { i, entry ->
+                                if (entry.kp >= threshold) {
+                                    val px = padding + (i.toFloat() / (kpData.size - 1)) * (w - 2 * padding)
+                                    val py = h - (entry.kp.toFloat() / 9f) * (h - 2 * padding) - padding
+                                    drawCircle(AuroraGreen, 3f, CanvasOffset(px, py))
+                                }
+                            }
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text("Kp 0", style = MaterialTheme.typography.labelSmall, color = TextLow)
+                            Text("Threshold ${String.format("%.1f", threshold)}", style = MaterialTheme.typography.labelSmall, color = AuroraGreen.copy(alpha = 0.6f))
+                            Text("Kp 9", style = MaterialTheme.typography.labelSmall, color = TextLow)
+                        }
+                    }
+                    // F10.7 daily chart
+                    if (auroraData.f107History.isNotEmpty()) {
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            text = "F10.7 Radio Flux — 7-Day Daily Values",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = AuroraPurple,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        val fluxData = auroraData.f107History
+                        Canvas(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(80.dp),
+                        ) {
+                            val w = size.width
+                            val h = size.height
+                            val padding = 8f
+                            if (fluxData.size < 2) return@Canvas
+                            val maxFlux = (fluxData.maxOf { it.f107 } * 1.1).toFloat()
+                            val minFlux = (fluxData.minOf { it.f107 } * 0.9).toFloat().coerceAtLeast(0f)
+                            val range = (maxFlux - minFlux).coerceAtLeast(1f)
+                            val path = CanvasPath()
+                            fluxData.forEachIndexed { i, entry ->
+                                val px = padding + (i.toFloat() / (fluxData.size - 1)) * (w - 2 * padding)
+                                val py = h - ((entry.f107.toFloat() - minFlux) / range) * (h - 2 * padding) - padding
+                                if (i == 0) path.moveTo(px, py) else path.lineTo(px, py)
+                            }
+                            drawPath(path, AuroraPurple, style = Stroke(width = 2f))
+                            // Dots at each data point
+                            fluxData.forEachIndexed { i, entry ->
+                                val px = padding + (i.toFloat() / (fluxData.size - 1)) * (w - 2 * padding)
+                                val py = h - ((entry.f107.toFloat() - minFlux) / range) * (h - 2 * padding) - padding
+                                drawCircle(AuroraPurple, 3f, CanvasOffset(px, py))
+                            }
+                        }
+                        Text(
+                            text = "Range: ${fluxData.minOf { it.f107 }.roundToInt()}–${fluxData.maxOf { it.f107 }.roundToInt()} sfu",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextLow,
+                        )
                     }
                 }
             }
@@ -932,8 +1049,49 @@ fun AuroraScreen(navController: NavController) {
                 }
             }
 
+            // ─── Saved Spots Section ───
+            AuroraSavedSpotsMap(
+                spots = auroraSavedSpots,
+                onAddSpot = { name, lat, lng -> repo.addAuroraSavedSpot(name, lat, lng) },
+                onRemoveSpot = { id -> repo.removeAuroraSavedSpot(id) },
+                currentKp = auroraData.currentKp,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+            )
+
+            // ─── Night Sky Guide Card ───
+            AuroraCard(title = "Night Sky Guide", accent = AuroraGreen) {
+                Text(
+                    text = "Explore the wonders above — constellations, important stars, planets, and deep sky objects.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextMid,
+                )
+                Spacer(Modifier.height(12.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(AuroraGreen.copy(alpha = 0.15f))
+                        .border(1.dp, AuroraGreen.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+                        .clickable { navController.navigate(Routes.STARS_LANDING) }
+                        .padding(14.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "✨ Explore Stars & Constellations",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = AuroraGreen,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+
             Spacer(Modifier.height(40.dp))
         }
+    }
+
+    // ─── Sunspot Region Detail Dialog ───
+    selectedSunspotRegion?.let { region ->
+        SunspotRegionDetailDialog(region) { selectedSunspotRegion = null }
     }
 }
 
@@ -1036,4 +1194,132 @@ private fun flareClassExplanation(cls: FlareClass): String = when (cls) {
     FlareClass.C -> "C-class flares are small — common, rarely affect aurora."
     FlareClass.M -> "M-class flares are medium — can cause minor to moderate geomagnetic storms and enhance aurora in 1-3 days."
     FlareClass.X -> "X-class flares are extreme — major aurora storms likely within 1-3 days."
+}
+
+@Composable
+private fun SunspotRegionDetailDialog(region: SolarRegion, onDismiss: () -> Unit) {
+    val history = remember(region.number) {
+        SunspotHistoryTracker.getRegionHistory(region.number)
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.85f))
+            .clickable { onDismiss() },
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color(0xFF0D0C08))
+                .clickable { },
+        ) {
+            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        text = "Region ${region.number}",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Citrine,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color.White.copy(alpha = 0.1f))
+                            .clickable { onDismiss() }
+                            .padding(8.dp),
+                    ) {
+                        Icon(Icons.Filled.Close, contentDescription = "Close", tint = TextHigh, modifier = Modifier.size(20.dp))
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "${region.location} · Magnetic: ${region.magneticClass} · Spots: ${region.spotCount}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextMid,
+                )
+                Spacer(Modifier.height(12.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ProbBadge("C", region.cClassProb, KpGreen)
+                    ProbBadge("M", region.mClassProb, KpOrange)
+                    ProbBadge("X", region.xClassProb, KpRed)
+                }
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    text = "Magnetic Class: ${region.magneticClass}",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = Color(SunspotHistoryTracker.magneticClassColor(region.magneticClass)),
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = SunspotHistoryTracker.magneticClassDescription(region.magneticClass),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextMid,
+                )
+                if (history.isNotEmpty()) {
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        text = "Magnetic Evolution History",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = Citrine,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    history.forEach { snap ->
+                        val magColor = Color(SunspotHistoryTracker.magneticClassColor(snap.magneticClass))
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Box(
+                                modifier = Modifier.size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(magColor),
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = snap.date.take(10),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextLow,
+                                modifier = Modifier.weight(1f),
+                            )
+                            Text(
+                                text = snap.magneticClass,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = magColor,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = "${snap.spotCount} spots",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextMid,
+                            )
+                        }
+                    }
+                } else {
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        text = "No history yet — snapshots are recorded daily when this region appears on the Earth-facing side of the Sun.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextLow,
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                HorizontalDivider(color = Color(0x22FFFFFF))
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "Magnetic class evolution typically follows: Alpha → Beta → Beta-Gamma → Beta-Delta as a region grows and becomes more flare-productive.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextLow,
+                )
+            }
+        }
+    }
 }

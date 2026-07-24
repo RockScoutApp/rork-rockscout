@@ -48,9 +48,11 @@ import com.rork.rockscout.data.BlmData
 import com.rork.rockscout.data.BlmTrailhead
 import com.rork.rockscout.data.FavoriteSpotResolver
 import com.rork.rockscout.data.SafeLinkOpener
+import com.rork.rockscout.data.WildlifeData
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.TagChip
+import com.rork.rockscout.ui.components.WildlifeCard
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.DarkTextHigh
@@ -58,7 +60,6 @@ import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Success
 import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.TextMid
-import com.rork.rockscout.ui.theme.Citrine
 
 // ── Trailhead Detail ──────────────────────────────────────────────────────
 
@@ -140,6 +141,11 @@ fun BlmTrailheadDetailScreen(
                     accent = accent,
                     content = trailhead.description,
                 )
+            }
+
+            // Common Wildlife
+            item {
+                WildlifeCard(wildlife = WildlifeData.forState(trailhead.state))
             }
 
             // State info link
@@ -342,6 +348,11 @@ fun BlmCampgroundDetailScreen(
                     accent = accent,
                     content = campground.description,
                 )
+            }
+
+            // Common Wildlife
+            item {
+                WildlifeCard(wildlife = WildlifeData.forState(campground.state))
             }
 
             // State info link

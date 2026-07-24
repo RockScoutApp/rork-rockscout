@@ -182,6 +182,17 @@ data class SpecimenMarker(
     val category: String = "Other",
 )
 
+/** A bookmarked location for tracking aurora visibility at specific coordinates.
+ *  Stored locally via PersistenceManager in the aurora saved spots list. */
+@Serializable
+data class AuroraSavedSpot(
+    val id: String,
+    val name: String,
+    val latitude: Double,
+    val longitude: Double,
+    val createdAt: Long = System.currentTimeMillis(),
+)
+
 /** A planned multi-stop rockhounding trip.
  *  Stored locally via PersistenceManager; shareable via the system share sheet. */
 @Serializable
