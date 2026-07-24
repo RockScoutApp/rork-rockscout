@@ -63,6 +63,7 @@ import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Ink
+import com.rork.rockscout.ui.theme.Obsidian
 import com.rork.rockscout.ui.theme.TextMid
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
@@ -103,7 +104,10 @@ fun CommunityPostDetailScreen(
     }
 
     if (post == null) {
-        Box(Modifier.fillMaxSize().padding(40.dp), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier.fillMaxSize().background(Obsidian).padding(40.dp),
+            contentAlignment = Alignment.Center,
+        ) {
             Text("Post not found.", color = TextMid)
         }
         return
@@ -155,7 +159,11 @@ fun CommunityPostDetailScreen(
     BackHandler { navController.popBackStack() }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().navigationBarsPadding().imePadding(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Obsidian)
+            .navigationBarsPadding()
+            .imePadding(),
         contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 40.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
