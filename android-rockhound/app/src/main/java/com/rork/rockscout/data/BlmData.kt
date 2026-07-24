@@ -364,32 +364,6 @@ object BlmData {
             specialNotes = "Alaska has vast BLM holdings. Jade Mountain is famous for nephrite jade. Recreational gold panning is popular on many streams. Many areas are extremely remote — plan for wilderness conditions.",
             blmDigSites = emptyList(),
         ),
-        BlmState(
-            code = "CA2",
-            name = "Arkansas",
-            blmAcreage = "0.3 million acres",
-            accentHex = CLAY,
-            silhouetteEmoji = "💎",
-            whatYouCanCollect = "Rocks and mineral specimens for personal, non-commercial use. Limited BLM land in Arkansas.",
-            quantityLimits = "Reasonable amounts for personal use.",
-            toolRestrictions = "Hand tools only.",
-            permitNotes = "Check with the local BLM office. Most rockhounding in Arkansas is on state or private land (Crater of Diamonds State Park is the famous fee-dig site).",
-            specialNotes = "Arkansas has limited BLM land. The Crater of Diamonds State Park (state-managed, not BLM) is the only public diamond mine in the world. Quartz crystals are abundant in the Ouachita Mountains, mostly on private or state land.",
-            blmDigSites = emptyList(),
-        ),
-        BlmState(
-            code = "CA3",
-            name = "California Desert",
-            blmAcreage = "Included in CA acreage",
-            accentHex = AMBER,
-            silhouetteEmoji = "🌵",
-            whatYouCanCollect = "See California entry above for full rules. The California Desert District manages most BLM rockhounding in southern California.",
-            quantityLimits = "25 lbs/day plus one piece. 250 lbs/year max.",
-            toolRestrictions = "Hand tools only. No power equipment.",
-            permitNotes = "Contact Needles or Barstow Field Offices for area-specific rules.",
-            specialNotes = "The California Desert District encompasses the Mojave and Colorado Desert regions. Many collecting areas are remote with no water — carry plenty. Summer temperatures are dangerous.",
-            blmDigSites = emptyList(),
-        ),
     )
 
     // ── States without significant BLM rockhounding data ─────────────────
@@ -719,10 +693,8 @@ object BlmData {
         // Arkansas (AR)
         BlmTrailhead("Crater of Diamonds Trailhead", "AR", "Murfreesboro, Arkansas", "Access to the only public diamond mine in the world. State park fee-dig — keep what you find. Also find amethyst, garnet, jasper, and agate.", 34.6650, -93.7050),
         BlmTrailhead("Wegner Quartz Crystal Mines Trailhead", "AR", "Mount Ida, Arkansas", "Popular fee-dig quartz crystal collecting in the Ouachita Mountains. Private operation — access by appointment. World-class clear and smoky quartz.", 34.5530, -93.5940),
-        // Arkansas (CA2 duplicate entry)
-        BlmTrailhead("Crater of Diamonds Trailhead", "CA2", "Murfreesboro, Arkansas", "Access to the only public diamond mine in the world. State park fee-dig — keep what you find. Also find amethyst, garnet, jasper, and agate.", 34.6650, -93.7050),
-        // California Desert (CA3)
-        BlmTrailhead("Afton Canyon Trailhead", "CA3", "Barstow, California", "BLM-managed canyon along the Mojave River. Access to travertine, calcite, and various minerals. Known as the 'Grand Canyon of the Mojave.' Popular year-round.", 35.1400, -116.3950),
+        // California Desert (moved from CA3 to CA)
+        BlmTrailhead("Afton Canyon Trailhead", "CA", "Barstow, California", "BLM-managed canyon along the Mojave River. Access to travertine, calcite, and various minerals. Known as the 'Grand Canyon of the Mojave.' Popular year-round.", 35.1400, -116.3950),
         // Connecticut
         BlmTrailhead("Strickland Quarry Access", "CT", "Portland, Connecticut", "Historic mineral collecting site famous for tourmaline, beryl, and garnet. Private quarry — access by permission or organized mineral club field trips only.", 41.5650, -72.6390),
         // Delaware
@@ -829,10 +801,8 @@ object BlmData {
         // Arkansas (AR)
         BlmCampground("Crater of Diamonds State Park Campground", "AR", "Murfreesboro, Arkansas", "Full-service campground adjacent to the diamond search area. State park, not BLM. Good base for quartz crystal collecting in the Ouachita Mountains.", "$30/night", 34.6620, -93.7010),
         BlmCampground("Gus's Ozark Mountain Campground", "AR", "Mount Ida, Arkansas", "Private campground near Wegner Quartz Crystal Mines. Good base for quartz crystal fee-dig operations in the Mount Ida area.", "$25/night", 34.5530, -93.5940),
-        // Arkansas (CA2 duplicate)
-        BlmCampground("Crater of Diamonds State Park Campground", "CA2", "Murfreesboro, Arkansas", "Full-service campground adjacent to the diamond search area. State park, not BLM. Good base for quartz crystal collecting in the Ouachita Mountains.", "$30/night", 34.6620, -93.7010),
-        // California Desert (CA3)
-        BlmCampground("Afton Canyon Campground", "CA3", "Barstow, California", "BLM campground in Afton Canyon with pit toilets and fire rings. Mojave River runs seasonally. Good base for desert rockhounding. No water.", "$10/night", 35.1400, -116.3950),
+        // California Desert (moved from CA3 to CA)
+        BlmCampground("Afton Canyon Campground", "CA", "Barstow, California", "BLM campground in Afton Canyon with pit toilets and fire rings. Mojave River runs seasonally. Good base for desert rockhounding. No water.", "$10/night", 35.1400, -116.3950),
         // New Mexico
         BlmCampground("Rockhound State Park Campground", "NM", "Deming, New Mexico", "State park campground adjacent to BLM land. Water, electric, and restrooms. Collecting allowed in the park — thundereggs, geodes, and jasper.", "$14/night", 32.3180, -108.2520),
         // Connecticut

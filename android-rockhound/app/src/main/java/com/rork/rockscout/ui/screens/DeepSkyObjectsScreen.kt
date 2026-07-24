@@ -1,5 +1,6 @@
 package com.rork.rockscout.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,7 +14,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -123,52 +127,49 @@ private fun DsoRow(dso: DeepSkyObject, onTap: (DeepSkyObject) -> Unit) {
 
 @Composable
 private fun DsoDetailDialog(dso: DeepSkyObject, onDismiss: () -> Unit) {
+    BackHandler { onDismiss() }
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.8f))
-            .clickable { onDismiss() },
-        contentAlignment = Alignment.Center,
+            .background(DsoBg)
+            .clickable { },
     ) {
-        Box(
+        TwinklingStars(modifier = Modifier.fillMaxWidth().height(60.dp), starCount = 20)
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(DsoBg)
-                .clickable { },
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+                .statusBarsPadding(),
         ) {
-            TwinklingStars(modifier = Modifier.fillMaxWidth().height(60.dp), starCount = 20)
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = dso.commonName,
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = AuroraGreen,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Text(
-                            text = dso.catalog,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = AuroraPurple,
-                        )
-                    }
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color.White.copy(alpha = 0.1f))
-                            .clickable { onDismiss() }
-                            .padding(8.dp),
-                    ) {
-                        Icon(Icons.Filled.Close, contentDescription = "Close", tint = TextHighW, modifier = Modifier.size(20.dp))
-                    }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = dso.commonName,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = AuroraGreen,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = dso.catalog,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = AuroraPurple,
+                    )
                 }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White.copy(alpha = 0.1f))
+                        .clickable { onDismiss() }
+                        .padding(8.dp),
+                ) {
+                    Icon(Icons.Filled.Close, contentDescription = "Close", tint = TextHighW, modifier = Modifier.size(20.dp))
+                }
+            }
                 Spacer(Modifier.height(12.dp))
 
                 dso.heroImageUrl?.let { url ->
@@ -204,7 +205,6 @@ private fun DsoDetailDialog(dso: DeepSkyObject, onDismiss: () -> Unit) {
                 DsoProperty("Best Season", dso.bestSeason)
                 DsoProperty("Hemisphere", dso.hemisphere)
                 DsoProperty("Equipment Needed", dso.equipment)
-            }
         }
     }
 }

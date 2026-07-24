@@ -93,7 +93,10 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Image
 import com.rork.rockscout.data.RockClass
@@ -1129,6 +1132,74 @@ fun TagChip(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+    }
+}
+
+/** Pill-shaped "Search by State" button that opens a scrollable dropdown.
+ *  Tapping a state name calls [onStateSelected] with that state's code.
+ *  @param states List of state codes and display names to show in the dropdown.
+ *  @param onStateSelected Called with the selected state code when a state is tapped.
+ *  @param accentColor Border/accent color for the pill.
+ *  @param modifier Layout modifier. */
+@Composable
+fun StatePickerPill(
+    states: List<Pair<String, String>>,
+    onStateSelected: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    accentColor: Color = Aqua,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box(modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(50))
+                .background(accentColor.copy(alpha = 0.12f))
+                .glowingBorder(1.dp, accentColor.copy(alpha = 0.5f), RoundedCornerShape(50))
+                .clickable { expanded = true }
+                .padding(horizontal = 12.dp, vertical = 6.dp),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text(
+                    text = "Search by State",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = brightenForText(accentColor),
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                )
+                Icon(
+                    Icons.Filled.ArrowDropDown,
+                    contentDescription = null,
+                    tint = brightenForText(accentColor),
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+        }
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .background(Color(0xFF1A1812))
+                .width(200.dp),
+        ) {
+            states.forEach { (code, name) ->
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            text = name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextHigh,
+                        )
+                    },
+                    onClick = {
+                        onStateSelected(code)
+                        expanded = false
+                    },
+                )
+            }
+        }
     }
 }
 

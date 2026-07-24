@@ -1,5 +1,6 @@
 package com.rork.rockscout.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,7 +14,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -124,46 +128,43 @@ private fun PlanetRow(planet: PlanetEntry, onTap: (PlanetEntry) -> Unit) {
 
 @Composable
 private fun PlanetDetailDialog(planet: PlanetEntry, onDismiss: () -> Unit) {
+    BackHandler { onDismiss() }
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.8f))
-            .clickable { onDismiss() },
-        contentAlignment = Alignment.Center,
+            .background(PlanetBg)
+            .clickable { },
     ) {
-        Box(
+        TwinklingStars(modifier = Modifier.fillMaxWidth().height(60.dp), starCount = 20)
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(PlanetBg)
-                .clickable { },
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+                .statusBarsPadding(),
         ) {
-            TwinklingStars(modifier = Modifier.fillMaxWidth().height(60.dp), starCount = 20)
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                Text(
+                    text = planet.name,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = AuroraGreen,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f),
+                )
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White.copy(alpha = 0.1f))
+                        .clickable { onDismiss() }
+                        .padding(8.dp),
                 ) {
-                    Text(
-                        text = planet.name,
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = AuroraGreen,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color.White.copy(alpha = 0.1f))
-                            .clickable { onDismiss() }
-                            .padding(8.dp),
-                    ) {
-                        Icon(Icons.Filled.Close, contentDescription = "Close", tint = TextHighW, modifier = Modifier.size(20.dp))
-                    }
+                    Icon(Icons.Filled.Close, contentDescription = "Close", tint = TextHighW, modifier = Modifier.size(20.dp))
                 }
+            }
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = planet.type,
@@ -217,7 +218,6 @@ private fun PlanetDetailDialog(planet: PlanetEntry, onDismiss: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall,
                     color = TextMidW,
                 )
-            }
         }
     }
 }

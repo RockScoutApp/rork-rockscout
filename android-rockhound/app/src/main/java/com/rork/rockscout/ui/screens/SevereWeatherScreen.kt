@@ -142,117 +142,6 @@ fun SevereWeatherScreen(navController: NavController) {
                 )
             }
 
-            // ─── NWS Severe Weather Alerts Toggle ───
-            val weatherAccent = if (profile.weatherAlertsEnabled) StormOrange else TextLow
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 6.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(Color(0xFF1A1812).copy(alpha = 0.92f), Color(0xFF120F0A).copy(alpha = 0.88f))
-                        )
-                    )
-                    .glowingBorder(1.dp, weatherAccent.copy(alpha = 0.35f), RoundedCornerShape(20.dp)),
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                        .animateContentSize(),
-                ) {
-                    Text(
-                        text = "Severe Weather Alerts",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = StormOrange,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(
-                                    Brush.radialGradient(
-                                        listOf(weatherAccent.copy(alpha = 0.35f), weatherAccent.copy(alpha = 0.10f))
-                                    )
-                                )
-                                .glowingBorder(2.dp, weatherAccent.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(Icons.Filled.Warning, contentDescription = null, tint = weatherAccent)
-                        }
-                        Spacer(Modifier.width(12.dp))
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(
-                                    Brush.horizontalGradient(
-                                        listOf(
-                                            Color(0xFF0D0C08).copy(alpha = 0.72f),
-                                            Color(0xFF0D0C08).copy(alpha = 0.52f),
-                                            Color(0xFF0D0C08).copy(alpha = 0.28f),
-                                        )
-                                    )
-                                )
-                                .padding(horizontal = 10.dp, vertical = 8.dp),
-                        ) {
-                            Text(
-                                text = if (profile.weatherAlertsEnabled) "Severe weather alerts ON" else "Severe weather alerts OFF",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    shadow = Shadow(color = Color.Black.copy(alpha = 0.8f), offset = Offset(0f, 1f), blurRadius = 4f),
-                                ),
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Text(
-                                text = if (profile.weatherAlertsEnabled)
-                                    "Instant NWS warnings: severe thunderstorm, tornado, flash flood, hurricane, tropical storm, tsunami, blizzard, winter storm, ice storm, extreme heat/cold, high wind, dust storm, fire weather, red flag, smoke & air quality. Monitors your location independently."
-                                else "Turn on for instant severe weather alerts in your area. Monitors your location for weather only — no need to enable location monitoring.",
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    shadow = Shadow(color = Color.Black.copy(alpha = 0.7f), offset = Offset(0f, 1f), blurRadius = 3f),
-                                ),
-                                color = Color(0xFFF5F0E6),
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                        }
-                        Spacer(Modifier.width(8.dp))
-                        Switch(
-                            checked = profile.weatherAlertsEnabled,
-                            onCheckedChange = { enabled ->
-                                if (enabled) {
-                                    val perms = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION)
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                        perms.add(Manifest.permission.POST_NOTIFICATIONS)
-                                    }
-                                    pendingNotifToggle = true
-                                    permissionsLauncher.launch(perms.toTypedArray())
-                                } else {
-                                    repo.setWeatherAlertsEnabled(false)
-                                    WorkScheduler.cancelWeatherChain(context.applicationContext)
-                                }
-                            },
-                        )
-                    }
-
-                    // Severe weather alert type list (shown when enabled)
-                    if (profile.weatherAlertsEnabled) {
-                        Spacer(Modifier.height(12.dp))
-                        HorizontalDivider(color = Color(0x22FFFFFF))
-                        Spacer(Modifier.height(8.dp))
-                        SevereWeatherAlertTypes()
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
             // ─── Storm Chaser YouTube Channels ───
             Text(
                 text = "Storm Chaser Live Coverage",
@@ -336,6 +225,115 @@ fun SevereWeatherScreen(navController: NavController) {
                         style = MaterialTheme.typography.bodySmall,
                         color = TextMid,
                     )
+                }
+            }
+
+            // ─── NWS Severe Weather Alerts Toggle (moved to bottom) ───
+            val weatherAccent = if (profile.weatherAlertsEnabled) StormOrange else TextLow
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 6.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color(0xFF1A1812).copy(alpha = 0.92f), Color(0xFF120F0A).copy(alpha = 0.88f))
+                        )
+                    )
+                    .glowingBorder(1.dp, weatherAccent.copy(alpha = 0.35f), RoundedCornerShape(20.dp)),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .animateContentSize(),
+                ) {
+                    Text(
+                        text = "Severe Weather Alerts",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = StormOrange,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(
+                                    Brush.radialGradient(
+                                        listOf(weatherAccent.copy(alpha = 0.35f), weatherAccent.copy(alpha = 0.10f))
+                                    )
+                                )
+                                .glowingBorder(2.dp, weatherAccent.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(Icons.Filled.Warning, contentDescription = null, tint = weatherAccent)
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Column(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(
+                                            Color(0xFF0D0C08).copy(alpha = 0.72f),
+                                            Color(0xFF0D0C08).copy(alpha = 0.52f),
+                                            Color(0xFF0D0C08).copy(alpha = 0.28f),
+                                        )
+                                    )
+                                )
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                        ) {
+                            Text(
+                                text = if (profile.weatherAlertsEnabled) "Severe weather alerts ON" else "Severe weather alerts OFF",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    shadow = Shadow(color = Color.Black.copy(alpha = 0.8f), offset = Offset(0f, 1f), blurRadius = 4f),
+                                ),
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = if (profile.weatherAlertsEnabled)
+                                    "Instant NWS warnings for your area. Monitors your location independently."
+                                else "Turn on for instant severe weather alerts in your area.",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    shadow = Shadow(color = Color.Black.copy(alpha = 0.7f), offset = Offset(0f, 1f), blurRadius = 3f),
+                                ),
+                                color = Color(0xFFF5F0E6),
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        Switch(
+                            checked = profile.weatherAlertsEnabled,
+                            onCheckedChange = { enabled ->
+                                if (enabled) {
+                                    val perms = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION)
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                        perms.add(Manifest.permission.POST_NOTIFICATIONS)
+                                    }
+                                    pendingNotifToggle = true
+                                    permissionsLauncher.launch(perms.toTypedArray())
+                                } else {
+                                    repo.setWeatherAlertsEnabled(false)
+                                    WorkScheduler.cancelWeatherChain(context.applicationContext)
+                                }
+                            },
+                        )
+                    }
+
+                    // Severe weather alert type list (shown when enabled)
+                    if (profile.weatherAlertsEnabled) {
+                        Spacer(Modifier.height(12.dp))
+                        HorizontalDivider(color = Color(0x22FFFFFF))
+                        Spacer(Modifier.height(8.dp))
+                        SevereWeatherAlertTypes()
+                    }
                 }
             }
 
@@ -424,7 +422,7 @@ private fun StormChaserCard(
                 Text(
                     text = channel.stateOrRegion,
                     style = MaterialTheme.typography.labelSmall,
-                    color = accent,
+                    color = Color(0xFFFFD9B0),
                     fontWeight = FontWeight.SemiBold,
                 )
             }

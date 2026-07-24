@@ -393,7 +393,7 @@ fun HomeScreen(navController: NavController) {
             SpecimenImages.urls["citrine"]?.firstOrNull()),
         // Remaining tiles
         HomeTile("My Favorite Spots", "${favorites.size} saved · Dig sites you've saved for quick access", Icons.Filled.FavoriteBorder, Color(0xFFE2574C), Routes.FAVORITES,
-            SpecimenImages.urls["geode"]?.firstOrNull()),
+            SpecimenImages.urls["sedimentary-geode"]?.firstOrNull()),
         HomeTile("Dig Sites & Rock Shops", "Mines, shops, metaphysical & digs to visit", Icons.Filled.LocationOn, Success, Routes.LOCATIONS,
             SpecimenImages.urls["fluorite"]?.firstOrNull()),
         HomeTile("Specimen Database", "${SeedData.allSpecimens.size} entries · Browse every specimen in the app", Icons.Filled.CollectionsBookmark, Color(0xFF6FA8C7), Routes.SPECIMEN_LIST,
@@ -403,7 +403,7 @@ fun HomeScreen(navController: NavController) {
         HomeTile("Aurora Forecaster", "Northern lights forecast for your location", Icons.Filled.NightsStay, Color(0xFF00E5C9), Routes.AURORA,
             AURORA_TILE_BG_URL),
         HomeTile("Severe Weather", "NWS alerts + live storm chaser streams", Icons.Filled.Warning, Color(0xFFFF6B3D), Routes.SEVERE_WEATHER,
-            "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/030eff91-2010-41f3-bea6-3188baec1a38.png"),
+            "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/e2803cb6-56f0-4506-84cb-0a36be573f7e.png"),
     )
 
     val infoTiles = listOf(
@@ -1108,7 +1108,7 @@ private fun HomeHeader(
                                 listOf(Citrine.copy(alpha = glow), Aqua.copy(alpha = 0.2f), Color.Transparent)
                             )
                         )
-                        .glowingBorder(5.dp, profileBorderColor(hunterStatus), CircleShape),
+                        .glowingBorder(5.dp, Cyan, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     Box(
@@ -1118,7 +1118,7 @@ private fun HomeHeader(
                             .background(
                                 Brush.linearGradient(listOf(Citrine.copy(alpha = 0.55f), Aqua.copy(alpha = 0.4f)))
                             )
-                            .glowingBorder(4.dp, Color.White.copy(alpha = 0.3f), CircleShape),
+                            .glowingBorder(4.dp, Cyan.copy(alpha = 0.3f), CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
                         AnimatedAvatarIcon(
@@ -1224,7 +1224,7 @@ private fun RockScoutSocialButton(
                     )
                 )
             )
-            .glowingBorder(3.dp, CyanDeep.copy(alpha = 0.95f), RoundedCornerShape(12.dp))
+            .glowingBorder(3.dp, Cyan.copy(alpha = 0.95f), RoundedCornerShape(12.dp))
             .padding(horizontal = 16.dp, vertical = 6.dp),
     ) {
         Icon(
@@ -1270,7 +1270,7 @@ private fun MiniSearchBar(
                     )
                 )
             )
-            .glowingBorder(3.dp, Citrine.copy(alpha = 0.9f), RoundedCornerShape(23.dp))
+            .glowingBorder(3.dp, Cyan.copy(alpha = 0.9f), RoundedCornerShape(23.dp))
             .padding(horizontal = 12.dp, vertical = 4.dp),
     ) {
         Icon(
@@ -1367,7 +1367,7 @@ private fun HomeGreeting(name: String) {
                         )
                         .clip(RoundedCornerShape(8.dp))
                         .background(Success)
-                        .glowingBorder(2.dp, Success.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
+                        .glowingBorder(2.dp, Cyan.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
                         .padding(horizontal = 8.dp, vertical = 3.dp),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -1565,7 +1565,7 @@ private fun IdentifyHero(onClick: () -> Unit) {
                 onClick = onClick,
             )
             .clip(RoundedCornerShape(26.dp))
-            .glowingBorder(3.dp, Citrine.copy(alpha = 0.55f), RoundedCornerShape(26.dp)),
+            .glowingBorder(3.dp, Cyan.copy(alpha = 0.55f), RoundedCornerShape(26.dp)),
     ) {
         // Mineral specimen background image
         AsyncImage(
@@ -1657,7 +1657,7 @@ private fun IdentifyHero(onClick: () -> Unit) {
                                 listOf(Citrine.copy(alpha = 0.35f), Citrine.copy(alpha = 0.10f))
                             )
                         )
-                        .glowingBorder(2.dp, Citrine.copy(alpha = 0.60f), CircleShape),
+                        .glowingBorder(2.dp, Cyan.copy(alpha = 0.60f), CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
@@ -1674,7 +1674,7 @@ private fun IdentifyHero(onClick: () -> Unit) {
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
                     .background(Color(0xFF000000).copy(alpha = 0.5f))
-                    .glowingBorder(1.dp, Color(0xFF000000).copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                    .glowingBorder(1.dp, Cyan.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
                     .padding(horizontal = 12.dp, vertical = 8.dp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -1713,7 +1713,7 @@ private fun LocationMonitorBanner(
                     listOf(Color(0xFF2A2820), Color(0xFF1E1C16), Color(0xFF16140F))
                 )
             )
-            .glowingBorder(3.dp, locationAccent.copy(alpha = 0.50f), RoundedCornerShape(20.dp))
+            .glowingBorder(3.dp, Cyan.copy(alpha = 0.50f), RoundedCornerShape(20.dp))
             .padding(16.dp),
     ) {
         // Accent glow overlay
@@ -1739,7 +1739,7 @@ private fun LocationMonitorBanner(
                                 listOf(locationAccent.copy(alpha = 0.35f), locationAccent.copy(alpha = 0.10f))
                             )
                         )
-                        .glowingBorder(2.dp, locationAccent.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
+                        .glowingBorder(2.dp, Cyan.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
@@ -1773,7 +1773,7 @@ private fun LocationMonitorBanner(
                             .size(40.dp)
                             .clip(CircleShape)
                             .background(Citrine.copy(alpha = 0.18f))
-                            .glowingBorder(2.dp, Citrine.copy(alpha = 0.45f), CircleShape)
+                            .glowingBorder(2.dp, Cyan.copy(alpha = 0.45f), CircleShape)
                             .clickable { onToggle(true) },
                         contentAlignment = Alignment.Center,
                     ) {
@@ -1805,7 +1805,7 @@ private fun LocationMonitorBanner(
                                 listOf(nearbyAccent.copy(alpha = 0.35f), nearbyAccent.copy(alpha = 0.10f))
                             )
                         )
-                        .glowingBorder(2.dp, nearbyAccent.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
+                        .glowingBorder(2.dp, Cyan.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
@@ -1868,7 +1868,7 @@ private fun RockScoutSocialBanner(
                     listOf(Color(0xFF2A2820), Color(0xFF1E1C16), Color(0xFF16140F))
                 )
             )
-            .glowingBorder(3.dp, accent.copy(alpha = 0.50f), RoundedCornerShape(20.dp))
+            .glowingBorder(3.dp, Cyan.copy(alpha = 0.50f), RoundedCornerShape(20.dp))
             .padding(16.dp),
     ) {
         Box(
@@ -1893,7 +1893,7 @@ private fun RockScoutSocialBanner(
                                 listOf(accent.copy(alpha = 0.35f), accent.copy(alpha = 0.10f))
                             )
                         )
-                        .glowingBorder(2.dp, accent.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
+                        .glowingBorder(2.dp, Cyan.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(Icons.Filled.Group, contentDescription = null, tint = accent)
@@ -2037,7 +2037,7 @@ fun SocialSubTile(
                 onClick = onClick,
             )
             .clip(shape)
-            .glowingBorder(3.dp, accent.copy(alpha = 0.55f), shape),
+            .glowingBorder(3.dp, Cyan.copy(alpha = 0.55f), shape),
     ) {
         // Themed background image — each tab can use the same background as its home-page counterpart
         Image(
@@ -2098,7 +2098,7 @@ fun SocialSubTile(
                             )
                         )
                     )
-                    .glowingBorder(3.dp, iconTint.copy(alpha = 0.85f), RoundedCornerShape(12.dp)),
+                    .glowingBorder(3.dp, Cyan.copy(alpha = 0.85f), RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -2149,7 +2149,7 @@ fun SocialCard(
         modifier = modifier
             .sculpted(shape = shape, accent = accent, shadowElevation = 6.dp)
             .clip(shape)
-            .glowingBorder(3.dp, accent.copy(alpha = 0.50f), shape),
+            .glowingBorder(3.dp, Cyan.copy(alpha = 0.50f), shape),
     ) {
         Image(
             painter = painterResource(id = R.drawable.social_background),
@@ -2237,7 +2237,7 @@ fun LocationAndSocialBox(
                                 listOf(accent.copy(alpha = 0.35f), accent.copy(alpha = 0.10f))
                             )
                         )
-                        .glowingBorder(2.dp, accent.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
+                        .glowingBorder(2.dp, Cyan.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(Icons.Filled.Group, contentDescription = null, tint = accent)
@@ -2370,7 +2370,7 @@ fun LocationAndSocialBox(
                                 listOf(locationAccent.copy(alpha = 0.35f), locationAccent.copy(alpha = 0.10f))
                             )
                         )
-                        .glowingBorder(2.dp, locationAccent.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
+                        .glowingBorder(2.dp, Cyan.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
@@ -2432,7 +2432,7 @@ fun LocationAndSocialBox(
                             .size(40.dp)
                             .clip(CircleShape)
                             .background(Citrine.copy(alpha = 0.18f))
-                            .glowingBorder(2.dp, Citrine.copy(alpha = 0.45f), CircleShape)
+                            .glowingBorder(2.dp, Cyan.copy(alpha = 0.45f), CircleShape)
                             .clickable { onToggleLocation(true) },
                         contentAlignment = Alignment.Center,
                     ) {
@@ -2465,7 +2465,7 @@ fun LocationAndSocialBox(
                                 listOf(nearbyAccent.copy(alpha = 0.35f), nearbyAccent.copy(alpha = 0.10f))
                             )
                         )
-                        .glowingBorder(2.dp, nearbyAccent.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
+                        .glowingBorder(2.dp, Cyan.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
@@ -2538,7 +2538,7 @@ fun LocationAndSocialBox(
                                 listOf(alertsAccent.copy(alpha = 0.35f), alertsAccent.copy(alpha = 0.10f))
                             )
                         )
-                        .glowingBorder(2.dp, alertsAccent.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
+                        .glowingBorder(2.dp, Cyan.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
@@ -2611,7 +2611,7 @@ fun LocationAndSocialBox(
                                 listOf(friendsAccent.copy(alpha = 0.35f), friendsAccent.copy(alpha = 0.10f))
                             )
                         )
-                        .glowingBorder(2.dp, friendsAccent.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
+                        .glowingBorder(2.dp, Cyan.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
@@ -2684,7 +2684,7 @@ fun LocationAndSocialBox(
                                 listOf(friendsAlertsAccent.copy(alpha = 0.35f), friendsAlertsAccent.copy(alpha = 0.10f))
                             )
                         )
-                        .glowingBorder(2.dp, friendsAlertsAccent.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
+                        .glowingBorder(2.dp, Cyan.copy(alpha = 0.60f), RoundedCornerShape(14.dp)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
@@ -2790,7 +2790,7 @@ private fun FullWidthBannerTile(
                     listOf(Color(0xFF2A2820), Color(0xFF1E1C16), Color(0xFF16140F))
                 )
             )
-            .glowingBorder(3.dp, accent.copy(alpha = 0.50f), RoundedCornerShape(20.dp)),
+            .glowingBorder(3.dp, Cyan.copy(alpha = 0.50f), RoundedCornerShape(20.dp)),
     ) {
         // Background image
         if (imageRes != 0) {
@@ -2875,7 +2875,7 @@ private fun FullWidthBannerTile(
                             listOf(accent.copy(alpha = 0.45f), accent.copy(alpha = 0.15f))
                         )
                     )
-                    .glowingBorder(3.dp, accent.copy(alpha = 0.75f), RoundedCornerShape(14.dp)),
+                    .glowingBorder(3.dp, Cyan.copy(alpha = 0.75f), RoundedCornerShape(14.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(26.dp))
@@ -2948,7 +2948,7 @@ private fun StreakLevelStrip(
                 shadowElevation = 8.dp,
             )
             .clip(RoundedCornerShape(20.dp))
-            .glowingBorder(3.dp, Citrine.copy(alpha = 0.55f), RoundedCornerShape(20.dp))
+            .glowingBorder(3.dp, Cyan.copy(alpha = 0.55f), RoundedCornerShape(20.dp))
             .clickable(onClick = onTileClick),
     ) {
         // Same colorful agate-slice background as the Profile level tile.
@@ -2980,7 +2980,7 @@ private fun StreakLevelStrip(
                         .size(44.dp)
                         .clip(CircleShape)
                         .background(Brush.linearGradient(listOf(Citrine.copy(alpha = 0.9f), Aqua.copy(alpha = 0.7f))))
-                        .glowingBorder(4.dp, Color.White.copy(alpha = 0.85f), CircleShape),
+                        .glowingBorder(4.dp, Cyan.copy(alpha = 0.85f), CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
@@ -2995,7 +2995,7 @@ private fun StreakLevelStrip(
                         .weight(1f)
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color(0xCC1E1C16))
-                        .glowingBorder(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(12.dp))
+                        .glowingBorder(1.dp, Cyan.copy(alpha = 0.20f), RoundedCornerShape(12.dp))
                         .padding(horizontal = 10.dp, vertical = 6.dp),
                 ) {
                     Text("LEVEL $level", style = MaterialTheme.typography.labelMedium, color = Citrine, fontWeight = FontWeight.Bold)
@@ -3005,7 +3005,7 @@ private fun StreakLevelStrip(
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
                             .background(Color(0xE61E1C16))
-                            .glowingBorder(1.5.dp, Aqua.copy(alpha = 0.85f), RoundedCornerShape(6.dp))
+                            .glowingBorder(1.5.dp, Cyan.copy(alpha = 0.85f), RoundedCornerShape(6.dp))
                             .padding(horizontal = 7.dp, vertical = 2.dp),
                     ) {
                         Text(
@@ -3022,7 +3022,7 @@ private fun StreakLevelStrip(
                         modifier = Modifier
                             .clip(RoundedCornerShape(10.dp))
                             .background(Color(0xCC1E1C16))
-                            .glowingBorder(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(10.dp))
+                            .glowingBorder(1.dp, Cyan.copy(alpha = 0.20f), RoundedCornerShape(10.dp))
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                     ) {
                         Icon(Icons.Filled.LocalFireDepartment, contentDescription = null, tint = Aqua, modifier = Modifier.size(20.dp))
@@ -3036,13 +3036,13 @@ private fun StreakLevelStrip(
                 modifier = Modifier.fillMaxWidth().height(8.dp)
                     .clip(RoundedCornerShape(4.dp))
                     .background(Color(0x55FFFFFF))
-                    .glowingBorder(2.dp, Color.White.copy(alpha = 0.45f), RoundedCornerShape(4.dp)),
+                    .glowingBorder(2.dp, Cyan.copy(alpha = 0.45f), RoundedCornerShape(4.dp)),
             ) {
                 Box(
                     modifier = Modifier.fillMaxWidth(progress.coerceIn(0f, 1f)).height(8.dp)
                         .clip(RoundedCornerShape(4.dp))
                         .background(Color(0xFFFFD54F))
-                        .glowingBorder(1.dp, Color.White.copy(alpha = 0.55f), RoundedCornerShape(4.dp)),
+                        .glowingBorder(1.dp, Cyan.copy(alpha = 0.55f), RoundedCornerShape(4.dp)),
                 )
             }
             Spacer(Modifier.height(10.dp))
@@ -3052,7 +3052,7 @@ private fun StreakLevelStrip(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .background(Color(0xE61E1C16))
-                    .glowingBorder(2.dp, Citrine.copy(alpha = 0.85f), RoundedCornerShape(8.dp))
+                    .glowingBorder(2.dp, Cyan.copy(alpha = 0.85f), RoundedCornerShape(8.dp))
                     .clickable(onClick = onOpenAchievements)
                     .padding(horizontal = 10.dp, vertical = 5.dp),
             ) {
@@ -3091,7 +3091,7 @@ private fun DashboardTile(tile: HomeTile, modifier: Modifier = Modifier, onClick
                     listOf(Color(0xFF2A2820), Color(0xFF1E1C16), Color(0xFF16140F))
                 )
             )
-            .glowingBorder(3.dp, Color(0xFF6FA8C7).copy(alpha = 0.55f), RoundedCornerShape(20.dp)),
+            .glowingBorder(3.dp, Cyan.copy(alpha = 0.55f), RoundedCornerShape(20.dp)),
     ) {
         // Accent glow overlay — uses uniform aqua for the border glow
         Box(
@@ -3150,7 +3150,7 @@ private fun DashboardTile(tile: HomeTile, modifier: Modifier = Modifier, onClick
                             listOf(tile.accent.copy(alpha = 0.35f), tile.accent.copy(alpha = 0.10f))
                         )
                     )
-                    .glowingBorder(2.dp, tile.accent.copy(alpha = 0.60f), RoundedCornerShape(12.dp)),
+                    .glowingBorder(2.dp, Cyan.copy(alpha = 0.60f), RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(tile.icon, contentDescription = null, tint = tile.accent, modifier = Modifier.size(22.dp))
@@ -3207,7 +3207,7 @@ private fun NearbyRow(
                     listOf(Color(0xFF2A2820), Color(0xFF1E1C16), Color(0xFF16140F))
                 )
             )
-            .glowingBorder(3.dp, locAccent.copy(alpha = 0.75f), RoundedCornerShape(20.dp))
+            .glowingBorder(3.dp, Cyan.copy(alpha = 0.75f), RoundedCornerShape(20.dp))
             .padding(14.dp),
     ) {
         // Accent glow overlay
@@ -3290,7 +3290,7 @@ private fun MohsHardnessCard(onPhotoClick: (List<String>, Int) -> Unit = { _, _ 
                     listOf(Color(0xFF2A2820), Color(0xFF1E1C16), Color(0xFF16140F))
                 )
             )
-            .glowingBorder(3.dp, mohsAccent.copy(alpha = 0.45f), RoundedCornerShape(20.dp)),
+            .glowingBorder(3.dp, Cyan.copy(alpha = 0.45f), RoundedCornerShape(20.dp)),
     ) {
         // Accent glow overlay
         Box(
@@ -3392,7 +3392,7 @@ private fun MohsHardnessCard(onPhotoClick: (List<String>, Int) -> Unit = { _, _ 
                             .size(36.dp)
                             .clip(CircleShape)
                             .background(Color.Black.copy(alpha = 0.6f))
-                            .glowingBorder(1.dp, Color.White.copy(alpha = 0.15f), CircleShape)
+                            .glowingBorder(1.dp, Cyan.copy(alpha = 0.15f), CircleShape)
                             .clickable {
                                 scope.launch {
                                     pagerState.animateScrollToPage(pagerState.currentPage - 1)
@@ -3418,7 +3418,7 @@ private fun MohsHardnessCard(onPhotoClick: (List<String>, Int) -> Unit = { _, _ 
                             .size(36.dp)
                             .clip(CircleShape)
                             .background(Color.Black.copy(alpha = 0.6f))
-                            .glowingBorder(1.dp, Color.White.copy(alpha = 0.15f), CircleShape)
+                            .glowingBorder(1.dp, Cyan.copy(alpha = 0.15f), CircleShape)
                             .clickable {
                                 scope.launch {
                                     pagerState.animateScrollToPage(pagerState.currentPage + 1)
@@ -3453,7 +3453,7 @@ private fun MohsHardnessCard(onPhotoClick: (List<String>, Int) -> Unit = { _, _ 
                             .background(
                                 if (isSelected) Citrine else Citrine.copy(alpha = 0.3f)
                             )
-                            .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), CircleShape),
+                            .glowingBorder(1.dp, Cyan.copy(alpha = 0.35f), CircleShape),
                     )
                 }
             }
@@ -3491,7 +3491,7 @@ private fun MohsMineralCard(
                 .aspectRatio(1f)
                 .clip(RoundedCornerShape(14.dp))
                 .background(Color(0xFF1E1C16))
-                .glowingBorder(1.dp, Color(0xFF1E1C16).copy(alpha = 0.35f), RoundedCornerShape(14.dp)),
+                .glowingBorder(1.dp, Cyan.copy(alpha = 0.35f), RoundedCornerShape(14.dp)),
             contentAlignment = Alignment.Center,
         ) {
             AsyncImage(
@@ -3547,7 +3547,7 @@ private fun MohsInfographicCard(
                 .height(140.dp)
                 .clip(RoundedCornerShape(14.dp))
                 .background(Color(0xFF1E1C16))
-                .glowingBorder(1.dp, Color(0xFF1E1C16).copy(alpha = 0.35f), RoundedCornerShape(14.dp)),
+                .glowingBorder(1.dp, Cyan.copy(alpha = 0.35f), RoundedCornerShape(14.dp)),
             contentAlignment = Alignment.Center,
         ) {
             AsyncImage(
@@ -3613,7 +3613,7 @@ private fun InfoTileCard(
             .background(
                 Brush.verticalGradient(listOf(Color(0xFF2A2820), Color(0xFF1E1C16), Color(0xFF16140F)))
             )
-            .glowingBorder(3.dp, tile.accent.copy(alpha = 0.75f), RoundedCornerShape(20.dp))
+            .glowingBorder(3.dp, Cyan.copy(alpha = 0.75f), RoundedCornerShape(20.dp))
             .padding(12.dp),
     ) {
         Box(
@@ -3622,7 +3622,7 @@ private fun InfoTileCard(
                 .height(110.dp)
                 .clip(RoundedCornerShape(14.dp))
                 .background(Color(0xFF1A1812))
-                .glowingBorder(1.dp, Color(0xFF1A1812).copy(alpha = 0.35f), RoundedCornerShape(14.dp)),
+                .glowingBorder(1.dp, Cyan.copy(alpha = 0.35f), RoundedCornerShape(14.dp)),
             contentAlignment = Alignment.Center,
         ) {
             if (tile.imageUrl != null) {
@@ -3658,7 +3658,7 @@ private fun InfoTileCard(
                             listOf(tile.accent.copy(alpha = 0.40f), tile.accent.copy(alpha = 0.12f))
                         )
                     )
-                    .glowingBorder(2.dp, tile.accent.copy(alpha = 0.60f), RoundedCornerShape(10.dp)),
+                    .glowingBorder(2.dp, Cyan.copy(alpha = 0.60f), RoundedCornerShape(10.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(tile.icon, contentDescription = null, tint = tile.accent, modifier = Modifier.size(20.dp))
@@ -3706,7 +3706,7 @@ private fun FeaturedSpecimenCard(
             .background(
                 Brush.verticalGradient(listOf(Color(0xFF2A2820), Color(0xFF16140F)))
             )
-            .glowingBorder(3.dp, accent.copy(alpha = 0.75f), RoundedCornerShape(20.dp))
+            .glowingBorder(3.dp, Cyan.copy(alpha = 0.75f), RoundedCornerShape(20.dp))
             .padding(12.dp),
     ) {
         Box(
@@ -3736,7 +3736,7 @@ private fun FeaturedSpecimenCard(
                                 .padding(4.dp)
                                 .clip(RoundedCornerShape(6.dp))
                                 .background(Color.Black.copy(alpha = 0.45f))
-                                .glowingBorder(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
+                                .glowingBorder(1.dp, Cyan.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
                                 .padding(horizontal = 5.dp, vertical = 2.dp),
                         ) {
                             Text("🔍", style = MaterialTheme.typography.labelSmall)
@@ -3748,7 +3748,7 @@ private fun FeaturedSpecimenCard(
                                     .padding(4.dp)
                                     .clip(RoundedCornerShape(6.dp))
                                     .background(Color.Black.copy(alpha = 0.55f))
-                                    .glowingBorder(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
+                                    .glowingBorder(1.dp, Cyan.copy(alpha = 0.15f), RoundedCornerShape(6.dp))
                                     .padding(horizontal = 6.dp, vertical = 2.dp),
                             ) {
                                 Text(
@@ -3799,7 +3799,7 @@ private fun NoteToFellowRockScoutsButton(
             )
             .clip(RoundedCornerShape(16.dp))
             .background(Slate900.copy(alpha = 0.75f))
-            .glowingBorder(2.dp, Aqua, RoundedCornerShape(16.dp))
+            .glowingBorder(2.dp, Cyan, RoundedCornerShape(16.dp))
             .padding(horizontal = 14.dp, vertical = 8.dp),
     ) {
         Icon(
@@ -3837,7 +3837,7 @@ private fun HowToUsePillButton(
             )
             .clip(RoundedCornerShape(16.dp))
             .background(Slate900.copy(alpha = 0.75f))
-            .glowingBorder(2.dp, Citrine, RoundedCornerShape(16.dp))
+            .glowingBorder(2.dp, Cyan, RoundedCornerShape(16.dp))
             .padding(horizontal = 12.dp, vertical = 8.dp),
     ) {
         Icon(
@@ -3875,7 +3875,7 @@ private fun ContactUsPillButton(
             )
             .clip(RoundedCornerShape(16.dp))
             .background(Slate900.copy(alpha = 0.75f))
-            .glowingBorder(2.dp, Color(0xFF7CB5EC), RoundedCornerShape(16.dp))
+            .glowingBorder(2.dp, Cyan, RoundedCornerShape(16.dp))
             .padding(horizontal = 12.dp, vertical = 8.dp),
     ) {
         Icon(
@@ -3915,7 +3915,7 @@ private fun NightVisionPillButton(
             )
             .clip(RoundedCornerShape(16.dp))
             .background(Slate900.copy(alpha = 0.75f))
-            .glowingBorder(2.dp, accent, RoundedCornerShape(16.dp))
+            .glowingBorder(2.dp, Cyan, RoundedCornerShape(16.dp))
             .padding(horizontal = 12.dp, vertical = 8.dp),
     ) {
         Icon(
@@ -4286,7 +4286,7 @@ private fun DevSmsVerifyOverlay(
                             listOf(Aqua.copy(alpha = 0.30f), Aqua.copy(alpha = 0.08f))
                         )
                     )
-                    .glowingBorder(2.dp, Aqua.copy(alpha = 0.55f), RoundedCornerShape(16.dp)),
+                    .glowingBorder(2.dp, Cyan.copy(alpha = 0.55f), RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(Icons.Filled.Lock, contentDescription = null, tint = Aqua, modifier = Modifier.size(28.dp))
@@ -4365,7 +4365,7 @@ private fun DevSmsVerifyOverlay(
                                     )
                                     .clip(CircleShape)
                                     .background(Color.White.copy(alpha = 0.08f))
-                                    .glowingBorder(2.dp, Color.White.copy(alpha = 0.18f), CircleShape),
+                                    .glowingBorder(2.dp, Cyan.copy(alpha = 0.18f), CircleShape),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Icon(Icons.Filled.Backspace, contentDescription = "Backspace", tint = DarkTextMid, modifier = Modifier.size(26.dp))
@@ -4390,7 +4390,7 @@ private fun DevSmsVerifyOverlay(
                                     )
                                     .clip(CircleShape)
                                     .background(Color.White.copy(alpha = 0.10f))
-                                    .glowingBorder(2.dp, Color.White.copy(alpha = 0.22f), CircleShape),
+                                    .glowingBorder(2.dp, Cyan.copy(alpha = 0.22f), CircleShape),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Text(text = key, style = MaterialTheme.typography.headlineSmall, color = DarkTextHigh, fontWeight = FontWeight.Medium)
@@ -4511,7 +4511,7 @@ private fun TrialInfoPopup(
                         .size(72.dp)
                         .clip(CircleShape)
                         .background(Citrine.copy(alpha = 0.18f))
-                        .glowingBorder(3.dp, Citrine.copy(alpha = 0.45f), CircleShape),
+                        .glowingBorder(3.dp, Cyan.copy(alpha = 0.45f), CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(

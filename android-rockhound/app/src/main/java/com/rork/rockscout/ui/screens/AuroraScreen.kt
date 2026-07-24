@@ -2,6 +2,7 @@ package com.rork.rockscout.ui.screens
 
 import android.Manifest
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateContentSize
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -72,6 +74,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import coil3.compose.AsyncImagePainter
 import kotlinx.coroutines.launch
 import com.rork.rockscout.data.AuroraRepository
 import com.rork.rockscout.data.AppRepository
@@ -267,6 +270,7 @@ fun AuroraScreen(navController: NavController) {
                 val stormColor = Color(AuroraRepository.stormScaleColor(kp))
                 val threshold = auroraData.visibilityThreshold
                 val isVisible = auroraData.isAuroraVisible
+                val isKpLoading = isLoading && kp <= 0.0
 
                 // Kp gauge bar
                 Column(modifier = Modifier.fillMaxWidth()) {
@@ -276,30 +280,51 @@ fun AuroraScreen(navController: NavController) {
                         verticalAlignment = Alignment.Bottom,
                     ) {
                         Column {
-                            Text(
-                                text = "Kp ${String.format("%.1f", kp)}",
-                                style = MaterialTheme.typography.headlineMedium,
-                                color = stormColor,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Text(
-                                text = stormScale,
-                                style = MaterialTheme.typography.titleSmall,
-                                color = stormColor.copy(alpha = 0.8f),
-                            )
+                            if (isKpLoading) {
+                                Text(
+                                    text = "Loading...",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = TextMid,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    text = "Fetching Kp data",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = TextLow,
+                                )
+                            } else {
+                                Text(
+                                    text = "Kp ${String.format("%.1f", kp)}",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = stormColor,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    text = stormScale,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = stormColor.copy(alpha = 0.8f),
+                                )
+                            }
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                text = if (isVisible) "Aurora visible tonight" else "Aurora unlikely",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = if (isVisible) AuroraGreen else TextMid,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Text(
-                                text = "Threshold: Kp ${String.format("%.1f", threshold)}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextLow,
-                            )
+                            if (isKpLoading) {
+                                CircularProgressIndicator(
+                                    color = AuroraGreen,
+                                    modifier = Modifier.size(20.dp),
+                                )
+                            } else {
+                                Text(
+                                    text = if (isVisible) "Aurora visible tonight" else "Aurora unlikely",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = if (isVisible) AuroraGreen else TextMid,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    text = "Threshold: Kp ${String.format("%.1f", threshold)}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextLow,
+                                )
+                            }
                         }
                     }
                     Spacer(Modifier.height(12.dp))
@@ -857,8 +882,9 @@ fun AuroraScreen(navController: NavController) {
                     color = TextLow,
                 )
                 Spacer(Modifier.height(12.dp))
-                // SDO image
+                // SDO image with loading/error states
                 val refreshKey = AuroraRepository.sdoRefreshKey()
+                var sdoLoadState by remember(selectedWavelength, refreshKey) { mutableStateOf<AsyncImagePainter.State>(AsyncImagePainter.State.Empty) }
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -871,7 +897,42 @@ fun AuroraScreen(navController: NavController) {
                         contentDescription = "SDO AIA $selectedWavelength Å",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Fit,
+                        onState = { state -> sdoLoadState = state },
                     )
+                    when (sdoLoadState) {
+                        is AsyncImagePainter.State.Loading -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                CircularProgressIndicator(color = AuroraGreen, modifier = Modifier.size(32.dp))
+                            }
+                        }
+                        is AsyncImagePainter.State.Error -> {
+                            Column(
+                                modifier = Modifier.fillMaxSize().padding(16.dp),
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Icon(Icons.Filled.WbSunny, contentDescription = null, tint = TextLow, modifier = Modifier.size(32.dp))
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    text = "Could not load NASA SDO image",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextMid,
+                                    textAlign = TextAlign.Center,
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = "The solar telescope feed may be offline. Try again later.",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = TextLow,
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
+                        }
+                        else -> {}
+                    }
                     Box(
                         modifier = Modifier
                             .align(Alignment.BottomStart)
@@ -1201,43 +1262,42 @@ private fun SunspotRegionDetailDialog(region: SolarRegion, onDismiss: () -> Unit
     val history = remember(region.number) {
         SunspotHistoryTracker.getRegionHistory(region.number)
     }
+    BackHandler { onDismiss() }
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.85f))
-            .clickable { onDismiss() },
-        contentAlignment = Alignment.Center,
+            .background(Color(0xFF0D0C08))
+            .clickable { },
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(Color(0xFF0D0C08))
-                .clickable { },
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .statusBarsPadding()
+                .padding(20.dp),
         ) {
-            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Region ${region.number}",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Citrine,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f),
+                )
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White.copy(alpha = 0.1f))
+                        .clickable { onDismiss() }
+                        .padding(8.dp),
                 ) {
-                    Text(
-                        text = "Region ${region.number}",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = Citrine,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(Color.White.copy(alpha = 0.1f))
-                            .clickable { onDismiss() }
-                            .padding(8.dp),
-                    ) {
-                        Icon(Icons.Filled.Close, contentDescription = "Close", tint = TextHigh, modifier = Modifier.size(20.dp))
-                    }
+                    Icon(Icons.Filled.Close, contentDescription = "Close", tint = TextHigh, modifier = Modifier.size(20.dp))
                 }
+            }
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = "${region.location} · Magnetic: ${region.magneticClass} · Spots: ${region.spotCount}",
@@ -1319,7 +1379,6 @@ private fun SunspotRegionDetailDialog(region: SolarRegion, onDismiss: () -> Unit
                     style = MaterialTheme.typography.bodySmall,
                     color = TextLow,
                 )
-            }
         }
     }
 }

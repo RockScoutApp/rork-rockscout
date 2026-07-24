@@ -209,11 +209,23 @@ fun AuroraSavedSpotsMap(
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
                 factory = { ctx ->
-                    createRockScoutMapView(ctx, readOnly = true).apply {
+                    createRockScoutMapView(ctx, readOnly = false).apply {
                         controller.setZoom(3.0)
                         controller.setCenter(GeoPoint(60.0, -100.0))
                         overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
                         overlays.add(CompassOverlay(ctx, this).apply { enableCompass() })
+                        // Tap-to-drop-pin: tapping the map pre-fills lat/lng form fields
+                        overlays.add(object : org.osmdroid.views.overlay.Overlay() {
+                            override fun onSingleTapConfirmed(e: android.view.MotionEvent, mv: MapView): Boolean {
+                                val proj = mv.projection
+                                val point = proj.fromPixels(e.x.toInt(), e.y.toInt())
+                                spotLat = String.format("%.4f", point.latitude)
+                                spotLng = String.format("%.4f", point.longitude)
+                                if (spotName.isBlank()) spotName = "Dropped Pin"
+                                isAddingSpot = true
+                                return true
+                            }
+                        })
                         mapView = this
                     }
                 },
@@ -241,21 +253,18 @@ fun AuroraSavedSpotsMap(
                 modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp),
             )
 
-            if (spots.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(20.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "No saved spots yet — drop a pin or enter coordinates below to track aurora visibility",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.6f),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    )
-                }
-            }
+        }
+
+        // Empty-state hint (below the map, not overlapping it)
+        if (spots.isEmpty()) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "No saved spots yet — tap the map to drop a pin or enter coordinates below to track aurora visibility",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White.copy(alpha = 0.6f),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            )
         }
 
         Spacer(Modifier.height(12.dp))

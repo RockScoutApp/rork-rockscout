@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -29,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +46,7 @@ import com.rork.rockscout.data.SafeLinkOpener
 import com.rork.rockscout.data.StatePark
 import com.rork.rockscout.data.StateParkData
 import com.rork.rockscout.ui.components.ScreenScaffold
+import com.rork.rockscout.ui.components.StatePickerPill
 import com.rork.rockscout.ui.components.TagChip
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.components.sculpted
@@ -54,34 +57,67 @@ import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Success
 import com.rork.rockscout.ui.theme.TextHigh
 import com.rork.rockscout.ui.theme.TextLow
+import kotlinx.coroutines.launch
 
 @Composable
 fun StateParksScreen(navController: NavController) {
-    ScreenScaffold(title = "State Parks", onBack = { navController.popBackStack() }) {
-        val parks = remember { StateParkData.allParks }
-        val grouped = remember(parks) { parks.groupBy { it.state } }
-        val allStates = remember { BlmData.allStates }
+    val parks = remember { StateParkData.allParks }
+    val grouped = remember(parks) { parks.groupBy { it.state } }
+    val allStates = remember { BlmData.allStates }
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+
+    // Build list of states that actually have parks, in the order they appear
+    val statesWithParks = remember(allStates, grouped) {
+        allStates.filter { state -> grouped[state.code]?.isNotEmpty() == true }
+    }
+
+    // Map state code to item index in the LazyColumn for scrolling
+    val stateToItemIndex = remember(statesWithParks, grouped) {
+        var index = 0
+        val map = mutableMapOf<String, Int>()
+        statesWithParks.forEach { state ->
+            val stateParks = grouped[state.code].orEmpty()
+            map[state.code] = index
+            index += 1 + stateParks.size
+        }
+        map
+    }
+
+    ScreenScaffold(
+        title = "State Parks",
+        onBack = { navController.popBackStack() },
+        actions = {
+            StatePickerPill(
+                states = statesWithParks.map { it.code to it.name },
+                onStateSelected = { code ->
+                    stateToItemIndex[code]?.let { targetIndex ->
+                        scope.launch { listState.animateScrollToItem(targetIndex) }
+                    }
+                },
+            )
+        },
+    ) {
         LazyColumn(
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            state = listState,
+            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.fillMaxSize(),
         ) {
-            allStates.forEach { state ->
+            statesWithParks.forEach { state ->
                 val stateParks = grouped[state.code].orEmpty()
-                if (stateParks.isNotEmpty()) {
-                    item(key = "park_header_${state.code}") {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.Park, contentDescription = null, tint = Success, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text(state.name, style = MaterialTheme.typography.titleMedium, color = TextHigh, fontWeight = FontWeight.Bold)
-                            Spacer(Modifier.width(8.dp))
-                            Text("(${stateParks.size})", style = MaterialTheme.typography.labelSmall, color = TextLow)
-                        }
+                item(key = "park_header_${state.code}") {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.Park, contentDescription = null, tint = Success, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(state.name, style = MaterialTheme.typography.titleMedium, color = TextHigh, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.width(8.dp))
+                        Text("(${stateParks.size})", style = MaterialTheme.typography.labelSmall, color = TextLow)
                     }
-                    items(stateParks, key = { it.id }) { park ->
-                        StateParkCard(park = park) {
-                            navController.navigate(Routes.stateParkDetail(park.id))
-                        }
+                }
+                items(stateParks, key = { it.id }) { park ->
+                    StateParkCard(park = park) {
+                        navController.navigate(Routes.stateParkDetail(park.id))
                     }
                 }
             }

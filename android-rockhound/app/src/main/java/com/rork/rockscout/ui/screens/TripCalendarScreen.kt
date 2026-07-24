@@ -352,8 +352,12 @@ fun TripCalendarScreen(navController: NavController) {
                 }
             }
 
-            // Calendar grid
+            // Calendar grid — proper 7-day week rows
             item {
+                // Build the full grid: leading blanks + all days, then chunk into weeks of 7
+                val totalCells = firstDayOfWeek + daysInMonth
+                val weeks = (0 until totalCells).chunked(7)
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -362,77 +366,80 @@ fun TripCalendarScreen(navController: NavController) {
                         .border(1.dp, Color(0xFF7CB5EC).copy(alpha = 0.20f), RoundedCornerShape(14.dp))
                         .padding(6.dp),
                 ) {
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        for (i in 0 until firstDayOfWeek) {
-                            Box(modifier = Modifier.weight(1f).aspectRatio(1f))
-                        }
-                        for (day in 1..daysInMonth) {
-                            val dateCal = (currentMonth.clone() as Calendar).apply {
-                                set(Calendar.DAY_OF_MONTH, day)
-                                set(Calendar.HOUR_OF_DAY, 0)
-                                set(Calendar.MINUTE, 0)
-                                set(Calendar.SECOND, 0)
-                                set(Calendar.MILLISECOND, 0)
-                            }
-                            val dateMillis = dateCal.timeInMillis
-                            val isToday = dateMillis == today
-                            val dayTrips = tripsByDate[dateMillis] ?: emptyList()
-                            val isDropTarget = dropTargetDate == dateMillis
-
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .aspectRatio(1f)
-                                    .onGloballyPositioned { coords ->
-                                    val pos = coords.localToRoot(Offset.Zero)
-                                    val s = coords.size
-                                    dayCellRects[dateMillis] = Rect(pos.x, pos.y, pos.x + s.width, pos.y + s.height)
-                                }
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(
-                                        when {
-                                            isDropTarget -> Citrine.copy(alpha = 0.35f)
-                                            isToday -> Color(0xFF7CB5EC).copy(alpha = 0.22f)
-                                            dayTrips.isNotEmpty() -> Color(0xFF1A1812)
-                                            else -> Color.Transparent
-                                        }
-                                    )
-                                    .then(
-                                        if (isDropTarget) Modifier.border(2.dp, Citrine, RoundedCornerShape(6.dp))
-                                        else Modifier
-                                    )
-                                    .clickable {
-                                        selectedDate = if (selectedDate == dateMillis) null
-                                        else if (dayTrips.isNotEmpty() || true) dateMillis
-                                        else null
+                    weeks.forEach { weekCells ->
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            weekCells.forEach { cellIndex ->
+                                val day = cellIndex - firstDayOfWeek + 1
+                                if (day < 1 || day > daysInMonth) {
+                                    // Empty cell for days before the 1st or after the last day
+                                    Box(modifier = Modifier.weight(1f).aspectRatio(1f))
+                                } else {
+                                    val dateCal = (currentMonth.clone() as Calendar).apply {
+                                        set(Calendar.DAY_OF_MONTH, day)
+                                        set(Calendar.HOUR_OF_DAY, 0)
+                                        set(Calendar.MINUTE, 0)
+                                        set(Calendar.SECOND, 0)
+                                        set(Calendar.MILLISECOND, 0)
                                     }
-                                    .padding(2.dp),
-                            ) {
-                                Column {
-                                    Text(
-                                        text = day.toString(),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = if (isToday) Color(0xFF7CB5EC) else TextMid,
-                                        fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
-                                    )
-                                    if (dayTrips.isNotEmpty()) {
-                                        dayTrips.take(2).forEach { trip ->
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .size(4.dp)
-                                                        .clip(CircleShape)
-                                                        .background(if (trip.isArchived) TextLow else Citrine),
-                                                )
-                                                Spacer(Modifier.width(2.dp))
-                                                Text(
-                                                    text = trip.name.take(8),
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = if (trip.isArchived) TextLow else TextHigh,
-                                                    maxLines = 1,
-                                                    overflow = TextOverflow.Ellipsis,
-                                                    fontSize = 8.sp,
-                                                )
+                                    val dateMillis = dateCal.timeInMillis
+                                    val isToday = dateMillis == today
+                                    val dayTrips = tripsByDate[dateMillis] ?: emptyList()
+                                    val isDropTarget = dropTargetDate == dateMillis
+
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .aspectRatio(1f)
+                                            .onGloballyPositioned { coords ->
+                                                val pos = coords.localToRoot(Offset.Zero)
+                                                val s = coords.size
+                                                dayCellRects[dateMillis] = Rect(pos.x, pos.y, pos.x + s.width, pos.y + s.height)
+                                            }
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(
+                                                when {
+                                                    isDropTarget -> Citrine.copy(alpha = 0.35f)
+                                                    isToday -> Color(0xFF7CB5EC).copy(alpha = 0.22f)
+                                                    dayTrips.isNotEmpty() -> Color(0xFF1A1812)
+                                                    else -> Color.Transparent
+                                                }
+                                            )
+                                            .then(
+                                                if (isDropTarget) Modifier.border(2.dp, Citrine, RoundedCornerShape(6.dp))
+                                                else Modifier
+                                            )
+                                            .clickable {
+                                                selectedDate = if (selectedDate == dateMillis) null else dateMillis
+                                            }
+                                            .padding(2.dp),
+                                    ) {
+                                        Column {
+                                            Text(
+                                                text = day.toString(),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = if (isToday) Color(0xFF7CB5EC) else TextMid,
+                                                fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
+                                            )
+                                            if (dayTrips.isNotEmpty()) {
+                                                dayTrips.take(2).forEach { trip ->
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(4.dp)
+                                                                .clip(CircleShape)
+                                                                .background(if (trip.isArchived) TextLow else Citrine),
+                                                        )
+                                                        Spacer(Modifier.width(2.dp))
+                                                        Text(
+                                                            text = trip.name.take(8),
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            color = if (trip.isArchived) TextLow else TextHigh,
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis,
+                                                            fontSize = 8.sp,
+                                                        )
+                                                    }
+                                                }
                                             }
                                         }
                                     }
