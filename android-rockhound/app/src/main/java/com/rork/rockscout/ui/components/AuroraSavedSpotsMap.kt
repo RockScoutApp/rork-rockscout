@@ -53,10 +53,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.activity.compose.BackHandler
 import coil3.compose.AsyncImage
 import com.rork.rockscout.data.AuroraRepository
 import com.rork.rockscout.data.AuroraSavedSpot
 import com.rork.rockscout.data.LocationFetcher
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -100,54 +102,80 @@ fun AuroraSavedSpotsMap(
     var isAddingSpot by remember { mutableStateOf(false) }
     var selectedSpot by remember { mutableStateOf<AuroraSavedSpot?>(null) }
 
-    // Update markers when spots change
+    // Back button dismisses the add-spot form or selected-spot popup instead
+    // of exiting the entire screen.
+    BackHandler(enabled = isAddingSpot || selectedSpot != null) {
+        if (isAddingSpot) {
+            isAddingSpot = false
+            spotName = ""
+            spotLat = ""
+            spotLng = ""
+        } else {
+            selectedSpot = null
+        }
+    }
+
+    // Update markers when spots change.
+    // Marker creation + zoomToBoundingBox are deferred to after the map has
+    // been laid out and run on a background dispatcher to avoid blocking the
+    // main thread (which caused ANRs/freezes when adding a spot).
     LaunchedEffect(mapView, spots) {
         val mv = mapView ?: return@LaunchedEffect
-        mv.overlays.removeAll { it is Marker && it.id?.startsWith("aurora_pin_") == true }
 
-        if (spots.isEmpty()) return@LaunchedEffect
+        // Wait for the map view to complete its current layout pass before
+        // manipulating it — especially important when the spot count changes
+        // and the map height animates from 200dp to 300dp.
+        val layoutReady = CompletableDeferred<Unit>()
+        mv.post { layoutReady.complete(Unit) }
+        layoutReady.await()
 
-        val points = mutableListOf<GeoPoint>()
-        spots.forEach { spot ->
-            val point = GeoPoint(spot.latitude, spot.longitude)
-            points.add(point)
-            val threshold = AuroraRepository.kpThresholdForLatitude(spot.latitude)
-            val isVisible = currentKp >= threshold
+        withContext(Dispatchers.IO) {
+            runCatching {
+                mv.overlays.removeAll { it is Marker && it.id?.startsWith("aurora_pin_") == true }
 
-            val marker = object : Marker(mv) {
-                init {
-                    position = point
-                    title = spot.name
-                    snippet = if (isVisible) "Aurora VISIBLE (Kp $currentKp ≥ $threshold)" else "Aurora unlikely (Kp $currentKp < $threshold)"
-                    id = "aurora_pin_${spot.id}"
-                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                    icon = createAuroraPinDrawable(mv.context, isVisible)
-                    setOnMarkerClickListener { _, _ ->
-                        selectedSpot = spot
-                        true
+                if (spots.isEmpty()) return@runCatching
+
+                val points = mutableListOf<GeoPoint>()
+                spots.forEach { spot ->
+                    val point = GeoPoint(spot.latitude, spot.longitude)
+                    points.add(point)
+                    val threshold = AuroraRepository.kpThresholdForLatitude(spot.latitude)
+                    val isVisible = currentKp >= threshold
+
+                    val marker = object : Marker(mv) {
+                        init {
+                            position = point
+                            title = spot.name
+                            snippet = if (isVisible) "Aurora VISIBLE (Kp $currentKp ≥ $threshold)" else "Aurora unlikely (Kp $currentKp < $threshold)"
+                            id = "aurora_pin_${spot.id}"
+                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                            icon = createAuroraPinDrawable(mv.context, isVisible)
+                            setOnMarkerClickListener { _, _ ->
+                                selectedSpot = spot
+                                true
+                            }
+                        }
+                    }
+                    mv.overlays.add(marker)
+                }
+
+                if (points.isNotEmpty()) {
+                    if (points.size == 1) {
+                        // Single point — degenerate bounding box crashes osmdroid.
+                        // Just animate to the point at a reasonable zoom instead.
+                        mv.controller.animateTo(points.first())
+                        mv.controller.setZoom(8.0)
+                    } else {
+                        val box = org.osmdroid.util.BoundingBox.fromGeoPoints(points)
+                        // Pad the box slightly so it's never zero-area even for
+                        // very close points.
+                        val padded = box.increaseByScale(1.2f)
+                        mv.zoomToBoundingBox(padded, false, 48)
                     }
                 }
-            }
-            mv.overlays.add(marker)
-        }
-
-        if (points.isNotEmpty()) {
-            runCatching {
-                if (points.size == 1) {
-                    // Single point — degenerate bounding box crashes osmdroid.
-                    // Just animate to the point at a reasonable zoom instead.
-                    mv.controller.animateTo(points.first())
-                    mv.controller.setZoom(8.0)
-                } else {
-                    val box = org.osmdroid.util.BoundingBox.fromGeoPoints(points)
-                    // Pad the box slightly so it's never zero-area even for
-                    // very close points.
-                    val padded = box.increaseByScale(1.2f)
-                    mv.zoomToBoundingBox(padded, false, 48)
-                }
+                mv.invalidate()
             }
         }
-        mv.invalidate()
     }
 
     Column(
@@ -468,6 +496,11 @@ fun AuroraSavedSpotsMap(
             Spacer(Modifier.height(6.dp))
         }
     }
+
+    // Manage the MapView lifecycle — without this, onResume/onPause/onDetach
+    // are never called, which causes freezes and crashes when interacting with
+    // the map (especially when adding spots triggers marker updates).
+    MapViewLifecycleEffect(mapView)
 }
 
 /** Create an aurora-themed teardrop pin drawable. */
