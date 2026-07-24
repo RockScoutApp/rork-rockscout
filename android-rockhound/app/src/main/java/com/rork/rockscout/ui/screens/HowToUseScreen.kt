@@ -23,6 +23,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.border as foundationBorder
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Download
@@ -32,7 +36,9 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Public
@@ -40,6 +46,7 @@ import androidx.compose.material.icons.filled.Diamond
 import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material3.Icon
@@ -187,13 +194,32 @@ private val howToSections: List<HowToSection> = listOf(
             "Create a multi-stop hunt route by adding dig sites, rock shops, or custom pins.",
             "Drop custom pins for gas, food, or any point of interest along the way.",
             "Flag interesting pins as potential rock locations for the developer to review and add to the database.",
+            "Reorder stops by long-pressing a stop card and dragging it to a new position — the route polyline and order update in real-time as you drag.",
+            "A dashed polyline connects all stops on the route map, with directional arrows at each segment midpoint, so you can visualize the full journey at a glance.",
+            "Estimated travel time appears between consecutive stops based on straight-line distance and an assumed 45 mph average driving speed — shown as a badge between stop rows and as a total in the trip header.",
             "Use \"Download Maps for All Stops\" to cache offline satellite tiles and high-res images for every stop on your trip at once — perfect for backcountry trips with no signal.",
             "Use \"Cache Trip Area\" on any trip to save satellite tiles for a 3-mile radius around each stop (zoom 10–19) plus a 1-mile radius around every pinned specimen marker (zoom 14–19), so your route AND your find spots work with zero signal. The cache status persists across app restarts, and tiles are freed automatically when you archive or delete a trip.",
             "A sync-status pill on every trip map shows whether your offline tiles are up to date: green \"Up to date\" (cached in the last 24h), aqua \"Cached\" (within 7 days), or warning \"Stale • tap to refresh\" (older than 7 days). Tap the pill to re-cache the trip area. When you're offline, the pill reports whether the cached tiles are fresh or may be stale.",
             "Add a gear checklist so you never forget your hammer, loupe, or UV light.",
             "When editing a trip, drop specimen marker pins on the specimen marker map to mark exactly where you found each rock — pins persist with the trip, appear on the route map, and are included when you cache the trip area for offline use. Use Set Pin / Remove Pin with confirmation popups.",
             "Expand the trip route map to fullscreen and tap anywhere to drop a pin. Two pill buttons appear: \"Add to Route\" adds the pin as a stop (auto-approving rock-related locations via web scan), and \"Submit a New Location\" opens the full location submission form pre-filled with the pinned coordinates.",
+            "Export your planned trip to the in-app Calendar by tapping the \"View in Calendar\" button in the trip editor — the trip appears on its scheduled date in the month grid.",
+            "Mark a trip as complete with the checkmark button — completed trips can be archived to the \"Archived\" tab for safekeeping without cluttering your active trip list.",
             "Share your trip plan with friends via the share button.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.CalendarMonth,
+        accent = Color(0xFF6FA8C7),
+        title = "Trip Calendar",
+        steps = listOf(
+            "Tap the \"Calendar\" tile on the home screen to open the standalone Trip Calendar.",
+            "View all planned trips in a month grid — each trip appears inside its scheduled date box with the trip name and first few stop names.",
+            "Navigate between months with the prev/next arrows. Today's date is highlighted with a Citrine circle.",
+            "An agenda list below the grid shows upcoming trips sorted by date, with trip name, stop count, first 3 stops, and estimated distance.",
+            "Create new trips directly from the calendar, edit existing ones, share trips, or view trip details — full editing access without going through the Trip Planner.",
+            "Drag and drop trip cards to different dates on the calendar grid to quickly reschedule them — long-press a trip card and drag it to the target date.",
+            "The Trip Planner's \"View in Calendar\" button links here too, but the calendar is always accessible from the home screen on its own.",
         ),
     ),
     HowToSection(
@@ -271,12 +297,14 @@ private val howToSections: List<HowToSection> = listOf(
     HowToSection(
         icon = Icons.Filled.FavoriteBorder,
         accent = Color(0xFF9B7BD8),
-        title = "Wishlist & Favorite Spots",
+        title = "Wishlist, Favorite Spots & Aurora Saved Spots",
         steps = listOf(
             "Tap the heart icon on any specimen card to add it to your Wishlist.",
             "View your Wishlist from the home screen — it's your dream-specimen shopping list.",
-            "Tap the bookmark icon on any dig site or location to save it to Favorite Spots for quick access.",
-            "Favorite Spots appear on the home screen with a count of saved locations.",
+            "Tap the bookmark icon on any dig site, state park, BLM location, campground, trailhead, or dig site detail screen to save it to Favorite Spots for quick access.",
+            "Favorite Spots appear on the home screen with a count of saved locations and are fully searchable from the global search.",
+            "In the Aurora Forecaster, use the Saved Spots section to bookmark specific coordinates and track aurora visibility at those locations — drop a pin on the map, enter lat/lng manually, or tap \"Mark My Location\" to use your GPS.",
+            "Each aurora saved spot shows the name, coordinates, and current visibility status (Aurora visible / unlikely) based on the spot's latitude and current Kp index.",
         ),
     ),
     HowToSection(
@@ -300,6 +328,8 @@ private val howToSections: List<HowToSection> = listOf(
             "Browse state-by-state rules for rockhounding on Bureau of Land Management land.",
             "Each state page shows trailheads, campgrounds, and dig sites with tappable detail pages.",
             "Check regulations before you hunt — rules vary by state and land type.",
+            "Each BLM state guide, trailhead, campground, dig site, and state park detail screen includes a \"Common Wildlife\" tile showing the animals you might encounter in that area — mammals, birds, reptiles, and more, tailored to the region's biome.",
+            "Beach and coastal dig site detail screens show marine and shorebird wildlife specific to that coast.",
         ),
     ),
     HowToSection(
@@ -324,6 +354,36 @@ private val howToSections: List<HowToSection> = listOf(
         ),
     ),
     HowToSection(
+        icon = Icons.Filled.Bolt,
+        accent = Color(0xFF4FC3F7),
+        title = "Aurora Forecaster & Space Weather",
+        steps = listOf(
+            "Tap the \"Aurora Forecaster\" tile on the home screen to check real-time space weather conditions.",
+            "The main card shows the current Kp index, Bz value, solar wind speed, and visibility status for your latitude — color-coded with bright aurora-green and purple theming.",
+            "A 24-hour Kp trend chart and a 7-day F10.7 radio flux chart show how conditions have been changing over time, with a dashed threshold line at your visibility level.",
+            "The 3-day forecast card predicts Kp levels for the next 72 hours so you can plan your aurora viewing nights.",
+            "The Active Sunspot Regions card lists current active regions with their magnetic class and flare probabilities — tap any region for a detail view showing its magnetic evolution history (tracked locally with daily snapshots) and educational content about magnetic classifications.",
+            "Customize your aurora notification threshold in Social Settings — set a minimum Kp level (0.0–9.0) and you'll get a push notification when that Kp is reached, alerting you that aurora may be within viewing radius.",
+            "When an aurora alert fires, tap the \"Share Kp Status\" button on the notification to send your current Kp reading and visibility status to social media.",
+            "Use the Saved Spots section to bookmark specific coordinates and track aurora visibility at those locations — drop a pin on the aurora map, enter coordinates manually, or tap \"Mark My Location\" to use your GPS.",
+            "Every page in the Aurora tab features colorful northern lights backgrounds, bright themed text, and an animated twinkling-stars background that doesn't overlap any text, images, or buttons.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Star,
+        accent = Color(0xFF4FC3F7),
+        title = "Stars & Constellations — Night Sky Guide",
+        steps = listOf(
+            "From the Aurora Forecaster, tap the \"Night Sky Guide\" card to open the Stars & Constellations landing page.",
+            "Four clickable tiles lead to detailed astronomical info: Constellations, Important Stars, Planets, and Deep Sky Objects.",
+            "Constellations: browse all 88 IAU constellations organized by hemisphere. Tap any constellation for a programmatic star chart drawn with Canvas, mythology/lore, best viewing season, and its major stars with magnitudes. The 12 most famous constellations (Orion, Ursa Major, Cassiopeia, and more) include hero images.",
+            "Important Stars: explore ~30 notable stars — Sirius, Betelgeuse, Vega, Polaris, Rigel, and more. Tap any star for its spectral class, temperature, luminosity, distance, and visibility info. The 6 most iconic stars include hero images.",
+            "Planets: all 8 planets plus dwarf planets (Pluto, Ceres) with diameter, distance from Sun, orbital period, moons, and detail cards showing physical properties, visibility, and notable features. Each planet has a generated image.",
+            "Deep Sky Objects: ~40 galaxies, nebulae, and star clusters (Andromeda Galaxy, Orion Nebula, Pleiades, Crab Nebula, and more) with catalog numbers, distances, magnitudes, and observing info. The 8 most famous DSOs include hero images.",
+            "Every page in the Night Sky Guide features animated twinkling white stars in the background — purely decorative, they never overlap text, images, or clickable items.",
+        ),
+    ),
+    HowToSection(
         icon = Icons.Filled.School,
         accent = Color(0xFFD9B26A),
         title = "Educational Guides",
@@ -334,6 +394,7 @@ private val howToSections: List<HowToSection> = listOf(
             "Exploring Prehistoric Organisms: dinosaurs, ancient birds, prehistoric flora, and more.",
             "Tectonics & Volcanoes: plate movement, magma, and where rocks are born.",
             "The Mohs Hardness Scale card on the home screen walks you through scratch testing with infographics, the 10 reference minerals, and field-test steps.",
+            "The Aurora Forecaster and Stars & Constellations guide add space weather and astronomy to your educational toolkit — see the dedicated sections above for details.",
             "Each guide features stunning photos and easy-to-understand explanations — no geology degree required.",
         ),
     ),
@@ -368,6 +429,18 @@ private val howToSections: List<HowToSection> = listOf(
             "Kits are organized from beginner to advanced — from a first loupe and rock hammer to lapidary equipment and UV lights.",
             "Each item shows a price range and a quick link so you can stock up before your next dig.",
             "As an Amazon Associate, RockScout earns from qualifying purchases — at no extra cost to you.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Archive,
+        accent = Success,
+        title = "Archived Trips",
+        steps = listOf(
+            "Mark any trip as complete with the checkmark button on its card in the Trip Planner.",
+            "Completed trips can be archived — tap the \"Archived\" pill button in the Trip Planner header to view them.",
+            "Archived trips are kept safe without cluttering your active trip list.",
+            "Restore an archived trip back to active, or permanently delete it from the Archived screen.",
+            "Archived trip map tiles are automatically freed from the offline cache to save storage.",
         ),
     ),
     HowToSection(

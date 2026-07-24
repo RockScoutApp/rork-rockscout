@@ -3944,7 +3944,7 @@ private val fellowRockScoutsFeatures: List<FeatureEntry> = listOf(
     FeatureEntry(
         2,
         "My Collection",
-        "build your ultimate personal museum! Catalog every specimen in My Rocks, log epic field captures with the dedicated Field Camera tile (snap a photo without running the ID tool, then save it anywhere — Field Captures, Saved Images, My Rocks, Wishlist, a Field Journal entry, your Profile feed, your Profile background, or even Submit a Specimen — all from one dropdown), curate a wishlist of dream specimens you're chasing, and bookmark your favorite dig spots for instant access. Field Captures even has a second swipeable page — a full-page Specimen Map showing a pin for every capture with coordinates, so you can see every find spot on one map. Every specimen card features a glowing Yooperlite heart to like or wishlist at a glance, plus a quick-action dropdown to add to your collection, add to your wishlist, share to your profile feed, or share straight to social media",
+        "build your ultimate personal museum! Catalog every specimen in My Rocks, log epic field captures with the dedicated Field Camera tile (snap a photo without running the ID tool, then save it anywhere — Field Captures, Saved Images, My Rocks, Wishlist, a Field Journal entry, your Profile feed, your Profile background, or even Submit a Specimen — all from one dropdown), curate a wishlist of dream specimens you're chasing, and bookmark your favorite dig spots for instant access — now with a favorite button on every State Park, BLM location, campground, trailhead, and dig site detail screen. Field Captures even has a second swipeable page — a full-page Specimen Map showing a pin for every capture with coordinates, so you can see every find spot on one map. Every specimen card features a glowing Yooperlite heart to like or wishlist at a glance, plus a quick-action dropdown to add to your collection, add to your wishlist, share to your profile feed, or share straight to social media",
     ),
     FeatureEntry(
         3,
@@ -3968,8 +3968,8 @@ private val fellowRockScoutsFeatures: List<FeatureEntry> = listOf(
     ),
     FeatureEntry(
         7,
-        "Trip Planner & Field Journal",
-        "plan epic multi-stop hunt routes with gear checklists and custom map pins for any stop along the way — drop a pin for gas, food, or that unnamed creek crossing, and flag interesting pins as potential rock locations for the developer to review and add to the database. When editing a trip, drop specimen marker pins on the specimen marker map to mark exactly where you found each rock — they persist with the trip and show on the route map. Expand the route map to fullscreen and tap anywhere to drop a pin with Add to Route or Submit a New Location pill buttons. Then log your daily adventures with auto-weather, photos, and field notes — your personal hunting chronicle",
+        "Trip Planner, Calendar & Field Journal",
+        "plan epic multi-stop hunt routes with gear checklists and custom map pins for any stop along the way — drop a pin for gas, food, or that unnamed creek crossing, and flag interesting pins as potential rock locations for the developer to review and add to the database. When editing a trip, drop specimen marker pins on the specimen marker map to mark exactly where you found each rock — they persist with the trip and show on the route map. Expand the route map to fullscreen and tap anywhere to drop a pin with Add to Route or Submit a New Location pill buttons. Long-press and drag stop cards to reorder them in real-time, with a dashed polyline connecting all stops and estimated travel time between each one. A standalone Calendar screen on the home screen shows all planned trips in a month grid — drag and drop trip cards to reschedule them, create new trips, edit existing ones, and export from the trip planner. Completed trips can be archived to a dedicated Archived tab for safekeeping. Then log your daily adventures with auto-weather, photos, and field notes — your personal hunting chronicle",
     ),
     FeatureEntry(
         8,
@@ -3983,13 +3983,13 @@ private val fellowRockScoutsFeatures: List<FeatureEntry> = listOf(
     ),
     FeatureEntry(
         10,
-        "Educational Guides",
-        "become a rock genius with 10 built-in guides: BLM Public Lands Guide, Periodic Table of Elements, Tectonics & Volcanoes, Rocks Are Amazing, Exploring Geology, Exploring Paleontology, Prehistoric Organisms, Meteorite Hunting, Rock & Gem Resources, and the Mohs Hardness Scale",
+        "Aurora Forecaster & Stars & Constellations",
+        "your personal space weather station and night sky guide! The Aurora Forecaster shows real-time Kp index, Bz value, solar wind speed, and visibility status with colorful northern lights theming. View 24-hour Kp and 7-day F10.7 trend charts, a 3-day forecast, and active sunspot regions with tappable detail views showing magnetic evolution history and educational content. Save custom coordinates as aurora watching spots and track visibility at each one on a pin-drop map. Set a custom Kp notification threshold and get push alerts when aurora may be visible — then share your Kp status straight to social media. Plus a Stars & Constellations guide with clickable tiles for all 88 constellations (with programmatic star charts), 30+ important stars, all 8 planets plus dwarf planets, and 40+ deep sky objects — each with hero images, detailed data, and animated twinkling white stars in every page background",
     ),
     FeatureEntry(
         11,
-        "Search, Location & Weather Alerts",
-        "find anything fast with global search across specimens, locations, and guides; discover nearby hot spots within 100 miles (or up to 250 miles with Premium); get proximity pings when you're close to a dig site; receive instant NWS severe weather alerts for your area (severe thunderstorm, tornado, flash flood, hurricane, tropical storm, tsunami, blizzard, winter storm, ice storm, extreme heat/cold, high wind, dust storm, dense fog, fire weather, red flag, smoke/air quality, dense smoke advisory); and tap deep links from notifications to jump straight to a specimen or location",
+        "Search, Location, Wildlife & Weather Alerts",
+        "find anything fast with global search across specimens, locations, guides, and now favorite spots (state parks, BLM locations, campgrounds, trailheads, and dig sites); discover nearby hot spots within 100 miles (or up to 250 miles with Premium); get proximity pings when you're close to a dig site; see Common Wildlife tiles on every BLM state guide, dig site, trailhead, campground, state park, and beach detail screen showing the animals you might encounter in that area; receive instant NWS severe weather alerts for your area (severe thunderstorm, tornado, flash flood, hurricane, tropical storm, tsunami, blizzard, winter storm, ice storm, extreme heat/cold, high wind, dust storm, dense fog, fire weather, red flag, smoke/air quality, dense smoke advisory); and tap deep links from notifications to jump straight to a specimen or location",
     ),
     FeatureEntry(
         12,
@@ -4025,6 +4025,16 @@ private val fellowRockScoutsFeatures: List<FeatureEntry> = listOf(
         18,
         "Community & Support",
         "a family-friendly community with a profanity filter and screenshot reporting to keep things clean, rate & review to help fellow rockhounders discover RockScout, and a direct line to contact us for help or feedback anytime",
+    ),
+    FeatureEntry(
+        19,
+        "Trip Calendar",
+        "a standalone calendar screen accessible right from the home screen — view all planned trips in a month grid, navigate between months, create and edit trips, share trips, drag and drop trip cards to reschedule them to different dates, and see an agenda of upcoming trips. The trip planner links to it via the View in Calendar button, but the calendar is always accessible on its own for full editing and planning",
+    ),
+    FeatureEntry(
+        20,
+        "Archived Trips",
+        "mark completed trips with a checkmark and archive them to a dedicated Archived tab in the Trip Planner — they stay safe without cluttering your active list, and can be restored or permanently deleted anytime",
     ),
 )
 

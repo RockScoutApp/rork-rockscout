@@ -40,6 +40,22 @@ const FAQ = [
     q: "Someone is harassing me in direct messages. What do I do?",
     a: "Block them from their profile or from the message thread, then report the conversation. Our team reviews reports and takes action under the Community Guidelines.",
   },
+  {
+    q: "What is the Aurora Forecaster?",
+    a: "The Aurora Forecaster is a real-time space weather tool inside the app. It shows the current Kp index, Bz value, solar wind speed, and aurora visibility status for your latitude, plus 24-hour Kp and 7-day F10.7 trend charts, a 3-day forecast, and active sunspot regions with tappable detail views showing magnetic evolution history. You can save custom coordinates as aurora watching spots, set a custom Kp notification threshold for push alerts, and share your Kp status to social media.",
+  },
+  {
+    q: "What is the Stars & Constellations guide?",
+    a: "Accessible from the Aurora Forecaster's Night Sky Guide card, this is a complete astronomy reference with all 88 IAU constellations (including programmatic star charts), 30+ important stars with spectral data, all 8 planets plus dwarf planets, and 40+ deep sky objects (galaxies, nebulae, star clusters). Every page features animated twinkling white stars in the background.",
+  },
+  {
+    q: "Can I plan trips with the Trip Planner and Calendar?",
+    a: "Yes — the Trip Planner lets you build multi-stop routes with drag-and-drop stop reordering, a connecting polyline on the map, estimated travel times between stops, and gear checklists. A standalone Calendar screen on the home screen shows all planned trips in a month grid where you can drag and drop trip cards to reschedule them, create and edit trips, and archive completed trips.",
+  },
+  {
+    q: "What are the Common Wildlife tiles?",
+    a: "Every BLM state guide, trailhead, campground, dig site, state park, and beach detail screen includes a Common Wildlife tile showing the animals you might encounter in that area — mammals, birds, reptiles, and more, tailored to the region's biome.",
+  },
 ];
 
 const legalLinks = [

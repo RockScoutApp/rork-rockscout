@@ -26,6 +26,7 @@ import {
   MapPin,
   Mail,
   Image as ImageIcon,
+  Zap,
   GraduationCap,
   Boxes,
   Layers,
@@ -432,9 +433,9 @@ const FEATURES_LIST = [
   },
   {
     icon: Gem,
-    title: "Collection & wishlist",
-    desc: "Catalog every specimen you bring home with photos, notes, and rarity. Keep a separate wishlist of dream specimens you're hunting next. Heart any specimen to mark it as a personal favorite — liking is independent from your wishlist.",
-    items: ["My Rocks", "Wishlist", "Heart favorites", "Specimen map", "Saved images", "Favorite dig spots"],
+    title: "Collection, wishlist & favorite spots",
+    desc: "Catalog every specimen you bring home with photos, notes, and rarity. Keep a separate wishlist of dream specimens you're hunting next. Heart any specimen to mark it as a personal favorite — liking is independent from your wishlist. Bookmark state parks, BLM locations, campgrounds, trailheads, and dig sites to your Favorite Spots list — all searchable from global search.",
+    items: ["My Rocks", "Wishlist", "Heart favorites", "Specimen map", "Saved images", "Favorite spots (parks, BLM, trailheads, campgrounds, dig sites)", "Aurora saved spots"],
   },
   {
     icon: BookOpen,
@@ -444,15 +445,15 @@ const FEATURES_LIST = [
   },
   {
     icon: MapIcon,
-    title: "Dig sites & offline maps",
-    desc: "Free, public, and pay-to-dig sites, plus rock, gem & metaphysical shops and gem shows by month. Tap-to-drop-pin tile downloads on every map, with 3-state satellite zoom (16 → 19) for the detail you need.",
-    items: ["Nationwide sites", "Shops & shows", "Offline tiles", "Park Here breadcrumb", "3-state zoom"],
+    title: "Dig sites, wildlife & offline maps",
+    desc: "Free, public, and pay-to-dig sites, plus rock, gem & metaphysical shops and gem shows by month. Every BLM state guide, trailhead, campground, dig site, state park, and beach detail screen includes a Common Wildlife tile showing the animals you might encounter. Tap-to-drop-pin tile downloads on every map, with 3-state satellite zoom (16 → 19) for the detail you need.",
+    items: ["Nationwide sites", "Shops & shows", "Common wildlife tiles", "Offline tiles", "Park Here breadcrumb", "3-state zoom"],
   },
   {
     icon: Route,
-    title: "Trip Planner",
-    desc: "Build multi-stop routes with gear checklists and custom map pins, so the whole crew knows where to meet and what to bring.",
-    items: ["Multi-stop routes", "Gear checklists", "Custom pins"],
+    title: "Trip Planner & Calendar",
+    desc: "Build multi-stop routes with gear checklists and custom map pins, so the whole crew knows where to meet and what to bring. Long-press and drag stops to reorder them, view a dashed polyline connecting all stops on the map, and see estimated travel time between each stop. Export planned trips to a standalone month-grid Calendar screen — drag and drop trip cards to reschedule, create and edit trips, and archive completed trips.",
+    items: ["Multi-stop routes", "Drag-and-drop reorder", "Route polyline", "Est. travel time", "Gear checklists", "Custom pins", "Trip Calendar", "Archived trips"],
   },
   {
     icon: Users,
@@ -479,10 +480,22 @@ const FEATURES_LIST = [
     items: ["101 achievements", "31 badges", "XP & leveling"],
   },
   {
+    icon: Zap,
+    title: "Aurora Forecaster & Space Weather",
+    desc: "Real-time space weather with Kp index, Bz, solar wind speed, and visibility status. View 24-hour Kp and 7-day F10.7 trend charts, a 3-day forecast, and active sunspot regions with tappable detail views showing magnetic evolution history. Save custom coordinates to track aurora visibility, set a custom Kp notification threshold for push alerts, and share your Kp status to social media.",
+    items: ["Real-time Kp index", "24h Kp trend chart", "7-day F10.7 chart", "3-day forecast", "Sunspot evolution", "Saved spots map", "Custom Kp alerts", "Share to social"],
+  },
+  {
+    icon: Star,
+    title: "Stars & Constellations",
+    desc: "A complete night sky guide inside the Aurora tab — all 88 IAU constellations with programmatic star charts, 30+ important stars with spectral data, all 8 planets plus dwarf planets, and 40+ deep sky objects (galaxies, nebulae, star clusters). Every page features animated twinkling white stars in the background and generated hero images for the most famous objects.",
+    items: ["88 constellations", "Star charts", "30+ stars", "10 planets", "40+ deep sky objects", "Twinkling stars bg"],
+  },
+  {
     icon: GraduationCap,
     title: "Educational guides",
-    desc: "10 built-in guides: BLM lands, the periodic table, paleontology, and more — no internet required.",
-    items: ["10 guides", "Offline-ready"],
+    desc: "10 built-in guides: BLM lands, the periodic table, paleontology, and more — no internet required. Plus the Aurora Forecaster and Stars & Constellations guide for space weather and astronomy.",
+    items: ["10 guides", "Aurora forecaster", "Night sky guide", "Offline-ready"],
   },
   {
     icon: Bell,
