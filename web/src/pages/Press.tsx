@@ -46,11 +46,18 @@ const Press = () => (
       <div className="mt-12 grid gap-8 md:grid-cols-[1fr_1.4fr]">
         {/* App icon */}
         <div className="flex flex-col items-center justify-start rounded-2xl border border-border bg-card/40 p-6">
-          <img
-            src="/icon.png"
-            alt={`${SITE.name} app icon`}
-            className="h-32 w-32 rounded-3xl ring-1 ring-primary/25"
-          />
+          <a
+            href="/icon.png"
+            download="rockscout-icon.png"
+            className="transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-3xl"
+            title="Download app icon"
+          >
+            <img
+              src="/icon.png"
+              alt={`${SITE.name} app icon — click to download`}
+              className="h-32 w-32 rounded-3xl ring-1 ring-primary/25 cursor-pointer"
+            />
+          </a>
           <a
             href="/icon.png"
             download="rockscout-icon.png"
