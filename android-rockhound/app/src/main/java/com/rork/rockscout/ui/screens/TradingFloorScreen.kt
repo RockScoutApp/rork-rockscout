@@ -315,36 +315,51 @@ fun TradingFloorScreen(navController: NavController) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 4.dp),
-                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Filled.Warning,
-                            contentDescription = null,
-                            tint = Aqua,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Spacer(Modifier.width(8.dp))
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Warning,
+                                contentDescription = null,
+                                tint = Aqua,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "Trade Safely",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = Aqua,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Spacer(Modifier.weight(1f))
+                            IconButton(
+                                onClick = { safetyCardVisible = false },
+                                modifier = Modifier.size(28.dp),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Clear,
+                                    contentDescription = "Close",
+                                    tint = TextLow,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
                         Text(
-                            "Trade safely: meet in a public, well-lit place, bring a friend when possible, and never ship first or send money before inspecting the specimen. Insist on a neutral location like a rock shop or library parking lot, and take clear photos of the trade as a record. Trust your gut — if a deal feels off, walk away. Scammers are out there; no legitimate trader will pressure you to pay before you can see what you're getting. All listings expire after 14 days to keep the board fresh.",
+                            "Meet in a public, well-lit place, bring a friend when possible, and never ship first or send money before inspecting the specimen. Insist on a neutral location like a rock shop or library parking lot, and take clear photos of the trade as a record. Trust your gut — if a deal feels off, walk away. Scammers are out there; no legitimate trader will pressure you to pay before you can see what you're getting. All listings expire after 14 days to keep the board fresh.",
                             style = MaterialTheme.typography.labelSmall,
                             color = Aqua,
                             fontWeight = FontWeight.Medium,
                             fontSize = 11.sp,
                             lineHeight = MaterialTheme.typography.labelSmall.lineHeight,
-                            modifier = Modifier.weight(1f),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
                         )
-                        IconButton(
-                            onClick = { safetyCardVisible = false },
-                            modifier = Modifier.size(28.dp),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Clear,
-                                contentDescription = "Close",
-                                tint = TextLow,
-                                modifier = Modifier.size(18.dp),
-                            )
-                        }
                     }
                 }
             }
@@ -356,16 +371,41 @@ fun TradingFloorScreen(navController: NavController) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 4.dp),
-                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 12.dp),
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Filled.GppBad,
-                            contentDescription = null,
-                            tint = Danger,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Spacer(Modifier.width(8.dp))
+                    Column {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.GppBad,
+                                contentDescription = null,
+                                tint = Danger,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "Zero Tolerance",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = Danger,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Spacer(Modifier.weight(1f))
+                            IconButton(
+                                onClick = { warningCardVisible = false },
+                                modifier = Modifier.size(28.dp),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Clear,
+                                    contentDescription = "Close",
+                                    tint = TextLow,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
                         Text(
                             "Theft or scamming is not tolerated AT ALL. If confirmed, your account will be immediately deleted. Appeals can be made, but don't get your hopes up. I review these personally.",
                             style = MaterialTheme.typography.labelSmall,
@@ -373,19 +413,9 @@ fun TradingFloorScreen(navController: NavController) {
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.sp,
                             lineHeight = MaterialTheme.typography.labelSmall.lineHeight,
-                            modifier = Modifier.weight(1f),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
                         )
-                        IconButton(
-                            onClick = { warningCardVisible = false },
-                            modifier = Modifier.size(28.dp),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Clear,
-                                contentDescription = "Close",
-                                tint = TextLow,
-                                modifier = Modifier.size(18.dp),
-                            )
-                        }
                     }
                 }
             }

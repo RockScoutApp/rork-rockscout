@@ -26,7 +26,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.LocalActivity
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
@@ -51,6 +51,7 @@ import com.rork.rockscout.data.CustomGemShowStore
 import com.rork.rockscout.data.GemShow
 import com.rork.rockscout.data.GemShowData
 import com.rork.rockscout.data.SafeLinkOpener
+import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.components.SculptedOutlinedButton
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.text.DateFormat
@@ -234,8 +235,8 @@ fun GemShowsScreen(navController: NavController) {
                     }
                 }
                 items(shows) { show ->
-                    GemShowCard(show = show, onOpenWebsite = { url ->
-                        SafeLinkOpener.openUrl(context, url)
+                    GemShowCard(show = show, onOpenDetail = { showId ->
+                        navController.navigate(Routes.gemShowDetail(showId))
                     })
                 }
             }
@@ -268,10 +269,10 @@ fun GemShowsScreen(navController: NavController) {
 }
 
 @Composable
-private fun GemShowCard(show: GemShow, onOpenWebsite: (String) -> Unit) {
+private fun GemShowCard(show: GemShow, onOpenDetail: (String) -> Unit) {
     DarkCard(
         accent = Amethyst,
-        modifier = Modifier.fillMaxWidth().clickable { onOpenWebsite(show.website) },
+        modifier = Modifier.fillMaxWidth().clickable { onOpenDetail(show.id) },
     ) {
         Row(verticalAlignment = Alignment.Top) {
             Column(modifier = Modifier.weight(1f)) {
@@ -289,12 +290,12 @@ private fun GemShowCard(show: GemShow, onOpenWebsite: (String) -> Unit) {
                     Text(show.dateRange, style = MaterialTheme.typography.labelLarge, color = Citrine)
                 }
                 Spacer(Modifier.height(8.dp))
-                Text(show.description, style = MaterialTheme.typography.bodySmall, color = DarkTextMid)
+                Text(show.description, style = MaterialTheme.typography.bodySmall, color = DarkTextMid, maxLines = 2)
                 Spacer(Modifier.height(10.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     TagChip("VENUE", color = Amethyst)
                     Spacer(Modifier.width(8.dp))
-                    Text(show.venue, style = MaterialTheme.typography.labelMedium, color = DarkTextMid)
+                    Text(show.venue, style = MaterialTheme.typography.labelMedium, color = DarkTextMid, maxLines = 1)
                 }
                 Spacer(Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -304,10 +305,10 @@ private fun GemShowCard(show: GemShow, onOpenWebsite: (String) -> Unit) {
                 }
             }
             Icon(
-                Icons.Filled.OpenInNew,
-                contentDescription = "Open website",
+                Icons.Filled.ChevronRight,
+                contentDescription = "View details",
                 tint = DarkTextMid,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(24.dp),
             )
         }
     }

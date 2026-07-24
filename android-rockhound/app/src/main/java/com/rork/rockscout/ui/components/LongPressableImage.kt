@@ -30,7 +30,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -95,7 +97,11 @@ fun LongPressableImage(
     var saveMessage by remember { mutableStateOf<String?>(null) }
     var showToast by remember { mutableStateOf(false) }
 
-    val request = remember(model) {
+    // Retry counter — bumped automatically when the painter enters the Error
+    // state, which forces Coil to re-fetch (up to 3 attempts). This handles
+    // transient network failures where the thumbnail otherwise stays blank.
+    var retryCount by remember(model) { mutableIntStateOf(0) }
+    val request = remember(model, retryCount) {
         ImageRequest.Builder(context)
             .data(model)
             .crossfade(true)
@@ -104,6 +110,14 @@ fun LongPressableImage(
     }
     val painter = rememberAsyncImagePainter(request)
     val state = painter.state
+
+    // Auto-retry on error (up to 3 times with a short delay)
+    LaunchedEffect(state) {
+        if (state is AsyncImagePainter.State.Error && retryCount < 3) {
+            kotlinx.coroutines.delay(500L * (retryCount + 1))
+            retryCount++
+        }
+    }
 
     Box(
         modifier = modifier

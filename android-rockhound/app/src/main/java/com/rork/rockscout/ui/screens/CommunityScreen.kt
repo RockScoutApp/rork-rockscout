@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -55,7 +56,13 @@ import com.rork.rockscout.data.CommunityRepository
 import com.rork.rockscout.data.ReportRepository
 import com.rork.rockscout.data.ReportScreenshotHelper
 import com.rork.rockscout.data.SocialRepository
-import com.rork.rockscout.ui.components.CommunityPostCard
+import coil3.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
+import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.YooperliteHeart
+import com.rork.rockscout.ui.navigation.Routes
+import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.components.CommunityPostComposer
 import com.rork.rockscout.ui.components.ExpiredCommunityPostsPopup
 import com.rork.rockscout.ui.components.ReportSubmittedDialog
@@ -266,121 +273,27 @@ fun CommunityScreen(navController: NavController) {
                 }
             }
 
-            // Post cards
+            // Compact post cards — tap opens the full post detail page
             items(sortedFeed, key = { it.id }) { post ->
                 val author = authors[post.user_id]
-                val isFriend = connections.contains(post.user_id)
                 val hoursLeft = repo.hoursUntilExpiry(post)
-                CommunityPostCard(
+                CompactCommunityCard(
                     post = post,
                     authorName = author?.displayName ?: "Unknown",
                     authorAvatar = author?.avatarEmoji ?: "⛏️",
                     isMe = post.user_id == myUserId,
                     isLiked = likedPostIds.contains(post.id),
                     likeCount = postLikes[post.id]?.size ?: 0,
-                    comments = postComments[post.id] ?: emptyList(),
-                    commentLikes = commentLikes,
-                    likedCommentIds = likedCommentIds,
-                    myUserId = myUserId,
+                    commentCount = (postComments[post.id] ?: emptyList()).size,
                     hoursUntilExpiry = hoursLeft,
-                    commentBody = commentBodies.value[post.id] ?: "",
-                    replyingToCommentId = replyingTo,
-                    replyBody = if (replyingTo != null) replyBodies.value[replyingTo] ?: "" else "",
-                    commentImageUri = commentImageUris.value[post.id],
-                    replyImageUri = replyingTo?.let { replyImageUris.value[it] },
-                    commentImageModerating = commentImageUris.value[post.id] == "__loading__",
-                    replyImageModerating = replyingTo != null && replyImageUris.value[replyingTo] == "__loading__",
-                    commentImageError = commentImageErrors.value[post.id],
-                    replyImageError = replyingTo?.let { replyImageErrors.value[it] },
+                    onTap = { navController.navigate(Routes.communityPostDetail(post.id)) },
                     onLike = { scope.launch { repo.toggleLike(post.id) } },
-                    onCommentChange = { body ->
-                        commentBodies.value = commentBodies.value + (post.id to body)
-                    },
-                    onComment = {
-                        val body = commentBodies.value[post.id] ?: ""
-                        val imgUri = commentImageUris.value[post.id]
-                        val cleanImg = if (imgUri != null && !imgUri.startsWith("__") && imgUri != "__loading__") imgUri else null
-                        if (body.isNotBlank() || cleanImg != null) {
-                            scope.launch {
-                                repo.addComment(post.id, body, null, cleanImg)
-                                commentBodies.value = commentBodies.value - post.id
-                                commentImageUris.value = commentImageUris.value - post.id
-                                commentImageErrors.value = commentImageErrors.value - post.id
-                            }
-                        }
-                    },
-                    onReplyStart = { commentId -> replyingTo = commentId },
-                    onReplyBodyChange = { body ->
-                        val key = replyingTo
-                        if (key != null) {
-                            replyBodies.value = replyBodies.value + (key to body)
-                        }
-                    },
-                    onReplySubmit = {
-                        val parentId = replyingTo
-                        val body = if (parentId != null) replyBodies.value[parentId] ?: "" else ""
-                        val imgUri = parentId?.let { replyImageUris.value[it] }
-                        val cleanImg = if (imgUri != null && !imgUri.startsWith("__") && imgUri != "__loading__") imgUri else null
-                        if (parentId != null && (body.isNotBlank() || cleanImg != null)) {
-                            scope.launch {
-                                repo.addComment(post.id, body, parentId, cleanImg)
-                                replyBodies.value = replyBodies.value - parentId
-                                replyImageUris.value = replyImageUris.value - parentId
-                                replyImageErrors.value = replyImageErrors.value - parentId
-                                replyingTo = null
-                            }
-                        }
-                    },
-                    onCommentLike = { commentId ->
-                        scope.launch { repo.toggleCommentLike(commentId) }
-                    },
-                    onCommentImagePicked = { uri ->
-                        if (uri == null) {
-                            commentImageUris.value = commentImageUris.value - post.id
-                            commentImageErrors.value = commentImageErrors.value - post.id
-                        } else if (uri.startsWith("__error:")) {
-                            commentImageErrors.value = commentImageErrors.value + (post.id to uri.substring(7))
-                            commentImageUris.value = commentImageUris.value - post.id
-                        } else {
-                            commentImageUris.value = commentImageUris.value + (post.id to uri)
-                            commentImageErrors.value = commentImageErrors.value - post.id
-                        }
-                    },
-                    onReplyImagePicked = { uri ->
-                        val key = replyingTo ?: return@CommunityPostCard
-                        if (uri == null) {
-                            replyImageUris.value = replyImageUris.value - key
-                            replyImageErrors.value = replyImageErrors.value - key
-                        } else if (uri.startsWith("__error:")) {
-                            replyImageErrors.value = replyImageErrors.value + (key to uri.substring(7))
-                            replyImageUris.value = replyImageUris.value - key
-                        } else {
-                            replyImageUris.value = replyImageUris.value + (key to uri)
-                            replyImageErrors.value = replyImageErrors.value - key
-                        }
-                    },
-                    onCommentImageRemove = {
-                        commentImageUris.value = commentImageUris.value - post.id
-                        commentImageErrors.value = commentImageErrors.value - post.id
-                    },
-                    onReplyImageRemove = {
-                        replyingTo?.let {
-                            replyImageUris.value = replyImageUris.value - it
-                            replyImageErrors.value = replyImageErrors.value - it
-                        }
-                    },
-                    onRepost = if (!isFriend && post.user_id != myUserId) {
-                        null
-                    } else if (post.user_id != myUserId) {
-                        { repostTarget = post }
-                    } else null,
                     onDelete = if (post.user_id == myUserId) {
                         {
                             pendingDeletePostId = post.id
                             showDeleteConfirm = true
                         }
                     } else null,
-                    onImageClick = null,
                 )
             }
             // Bottom spacing
@@ -737,5 +650,205 @@ private fun CategoryChip(
             color = accent,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
         )
+    }
+}
+
+/**
+ * Compact card for the community feed. Shows a small photo, short tagline,
+ * username, post type badge, love + comment counts, and an optional delete.
+ * Tapping the card opens the full post detail page. No comments or reply
+ * boxes inline — everything is in the detail screen.
+ */
+@Composable
+private fun CompactCommunityCard(
+    post: CommunityRepository.PostRow,
+    authorName: String,
+    authorAvatar: String,
+    isMe: Boolean,
+    isLiked: Boolean,
+    likeCount: Int,
+    commentCount: Int,
+    hoursUntilExpiry: Long,
+    onTap: () -> Unit,
+    onLike: () -> Unit,
+    onDelete: (() -> Unit)? = null,
+) {
+    val category = CommunityRepository.resolveCategory(post.category)
+    val categoryAccent = when (category) {
+        CommunityRepository.Category.IDENTIFICATION -> Citrine
+        CommunityRepository.Category.LOCATION_TIPS -> Aqua
+        CommunityRepository.Category.GENERAL -> Color(0xFFB8A0FF)
+    }
+    DarkCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onTap),
+        accent = Citrine,
+    ) {
+        Row(verticalAlignment = Alignment.Top) {
+            // Thumbnail (if image present)
+            if (post.image_uri != null) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFF1A1812))
+                        .glowingBorder(1.dp, Color(0xFF1A1812).copy(alpha = 0.35f), RoundedCornerShape(10.dp)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    AsyncImage(
+                        model = post.image_uri,
+                        contentDescription = post.title,
+                        modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(10.dp)),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+                Spacer(Modifier.width(10.dp))
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                // Author row
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .background(Citrine.copy(alpha = 0.18f))
+                            .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(authorAvatar, style = MaterialTheme.typography.labelSmall)
+                    }
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        authorName,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (isMe) Citrine else DarkTextHigh,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (onDelete != null) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF2A2820))
+                                .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), CircleShape)
+                                .clickable(onClick = onDelete),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                Icons.Filled.Close,
+                                contentDescription = "Delete post",
+                                tint = TextLow,
+                                modifier = Modifier.size(12.dp),
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+                // Title
+                Text(
+                    post.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = DarkTextHigh,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                // Tagline
+                if (post.tagline.isNotBlank()) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        post.tagline,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = DarkTextMid,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
+                // Category badge + location + expiry
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(categoryAccent.copy(alpha = 0.18f))
+                            .glowingBorder(1.dp, categoryAccent.copy(alpha = 0.45f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                    ) {
+                        Text(
+                            category.label,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = categoryAccent,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                    if (post.location_text.isNotBlank()) {
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            "📍 ${post.location_text}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Aqua,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f),
+                        )
+                    } else {
+                        Spacer(Modifier.weight(1f))
+                    }
+                    if (hoursUntilExpiry in 0..48) {
+                        val hoursLeft = (hoursUntilExpiry % 24).toInt()
+                        val daysLeft = (hoursUntilExpiry / 24).toInt()
+                        val expiryText = if (daysLeft > 0) "${daysLeft}d ${hoursLeft}h" else "${hoursLeft}h"
+                        Text(
+                            "⏳ $expiryText",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFFE8A33D),
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+                // Love + comment count row
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isLiked) Color(0xFF3A2818).copy(alpha = 0.85f) else Color.Transparent)
+                            .clickable(onClick = onLike)
+                            .padding(horizontal = 6.dp, vertical = 3.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            YooperliteHeart(active = isLiked, contentDescription = if (isLiked) "Loved" else "Love", size = 14.dp)
+                            if (likeCount > 0) {
+                                Spacer(Modifier.width(3.dp))
+                                Text(
+                                    likeCount.toString(),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (isLiked) Color(0xFFFF8C2A) else DarkTextMid,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "$commentCount 💬",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = DarkTextMid,
+                    )
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        "Tap to view ›",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Citrine,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+        }
     }
 }

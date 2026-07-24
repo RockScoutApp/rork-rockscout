@@ -90,6 +90,8 @@ object CustomGemShowStore {
             isAnnual = false,
             website = sub.website.ifBlank { sub.webUrl },
             monthIndex = monthIndexMap[sub.month] ?: 0,
+            phone = null,
+            email = null,
         )
     }
 

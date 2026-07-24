@@ -52,6 +52,8 @@ import com.rork.rockscout.ui.screens.PaywallScreen
 import com.rork.rockscout.ui.screens.ResourceLinksScreen
 import com.rork.rockscout.ui.screens.TectonicVolcanicScreen
 import com.rork.rockscout.ui.screens.GemShowsScreen
+import com.rork.rockscout.ui.screens.GemShowDetailScreen
+import com.rork.rockscout.ui.screens.CommunityPostDetailScreen
 import com.rork.rockscout.ui.screens.GearGuideScreen
 import com.rork.rockscout.ui.screens.TokenInfoScreen
 import com.rork.rockscout.ui.screens.WishlistScreen
@@ -99,6 +101,7 @@ object Routes {
     const val IDENTIFY = "identify"
     const val LOCATIONS = "locations"
     const val GEM_SHOWS = "gem_shows"
+    const val GEM_SHOW_DETAIL = "gem_show/{showId}"
     const val LOCATION_DETAIL = "location/{locationId}"
     const val PROFILE = "profile"
     const val PROFILE_FRIENDS = "profile_friends"
@@ -123,6 +126,7 @@ object Routes {
     const val FIELD_JOURNAL = "field_journal"
     const val TRADE_BOARD = "trade_board"
     const val COMMUNITY = "community"
+    const val COMMUNITY_POST_DETAIL = "community_post/{postId}"
     const val REFERRAL = "referral"
     const val SIGN_IN = "sign_in"
     const val SCAN = "scan"
@@ -164,6 +168,8 @@ object Routes {
     const val CRYSTAL_SYSTEMS = "crystal_systems"
     const val LAPIDARY_BASICS = "lapidary_basics"
 
+    fun gemShowDetail(id: String) = "gem_show/$id"
+    fun communityPostDetail(id: String) = "community_post/$id"
     fun location(id: String) = "location/$id"
     fun element(atomicNumber: Int) = "element/$atomicNumber"
     fun guide(id: String) = "guide/$id"
@@ -423,6 +429,15 @@ fun AppNavigation(
         composable(Routes.IDENTIFY) { IdentifyScreen(navController) }
         composable(Routes.LOCATIONS) { LocationsScreen(navController) }
         composable(Routes.GEM_SHOWS) { GemShowsScreen(navController) }
+        composable(
+            Routes.GEM_SHOW_DETAIL,
+            arguments = listOf(navArgument("showId") { type = NavType.StringType }),
+        ) { entry ->
+            GemShowDetailScreen(
+                navController = navController,
+                showId = entry.arguments?.getString("showId").orEmpty(),
+            )
+        }
         composable(Routes.PROFILE) { ProfileScreen(navController) }
         composable(Routes.PROFILE_FRIENDS) { ProfileScreen(navController, openToFriends = true) }
         composable(Routes.COLLECTION) { CollectionScreen(navController) }
@@ -534,6 +549,15 @@ fun AppNavigation(
         composable(Routes.FIELD_JOURNAL) { FieldJournalScreen(navController) }
         composable(Routes.TRADE_BOARD) { TradeBoardScreen(navController) }
         composable(Routes.COMMUNITY) { com.rork.rockscout.ui.screens.CommunityScreen(navController) }
+        composable(
+            Routes.COMMUNITY_POST_DETAIL,
+            arguments = listOf(navArgument("postId") { type = NavType.StringType }),
+        ) { entry ->
+            CommunityPostDetailScreen(
+                navController = navController,
+                postId = entry.arguments?.getString("postId").orEmpty(),
+            )
+        }
         composable(Routes.REFERRAL) { ReferralScreen(navController) }
         composable(Routes.SIGN_IN) {
             SignInScreen(

@@ -1179,33 +1179,6 @@ fun TripRouteMap(
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 12.dp),
         )
 
-        MapCacheStatusIndicator(
-            cachedAtMillis = tripCacheTimestamp,
-            onRefresh = {
-                val mv = mapView ?: return@MapCacheStatusIndicator
-                val center = mv.mapCenter
-                scope.launch {
-                    withContext(Dispatchers.IO) {
-                        runCatching {
-                            MapTileCacheManager.prefetchTripArea(
-                                context = context,
-                                trip = trip,
-                                radiusMiles = 3.0,
-                            )
-                        }
-                    }
-                    tripCacheTimestamp = PersistenceManager.loadCachedTripTimestamps()[trip.id]
-                    android.widget.Toast.makeText(
-                        context,
-                        "Offline tiles refreshed.",
-                        android.widget.Toast.LENGTH_SHORT,
-                    ).show()
-                }
-            },
-            label = "Trip tiles",
-            modifier = Modifier.align(Alignment.TopEnd).padding(12.dp),
-        )
-
         MapExpandButton(
             onClick = {
                 mapView?.let {
