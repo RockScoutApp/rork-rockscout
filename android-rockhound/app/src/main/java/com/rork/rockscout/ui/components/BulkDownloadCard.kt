@@ -68,12 +68,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** Estimated download size shown to the user in all copy. */
-private const val ESTIMATED_SIZE_GB = 4
+private const val ESTIMATED_SIZE_GB = 3.5
 
 /**
  * Reusable bulk-download control card for the "Download all specimen images
  * for offline" action. Shows:
- *  - The estimated size (4 GB) and current cache-mode gate.
+ *  - The estimated size (3.5 GB) and current cache-mode gate.
  *  - A determinate progress bar with "X / Y images" + percentage while running.
  *  - A cellular warning confirmation dialog before starting on mobile data.
  *  - A resume/continue state after a cancel or app restart.

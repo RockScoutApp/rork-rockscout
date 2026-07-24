@@ -47,8 +47,8 @@ object ImagePrefetcher {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /** Hard cap on concurrent prefetch jobs across the app. Prevents pileup. */
-    private val wifiPermit = Semaphore(3)
-    private val cellularPermit = Semaphore(1)
+    private val wifiPermit = Semaphore(4)
+    private val cellularPermit = Semaphore(2)
 
     /**
      * Prefetch [urls] into the Coil cache. Automatically adjusts parallelism
@@ -70,8 +70,9 @@ object ImagePrefetcher {
         val loader = SingletonImageLoader.get(context)
 
         if (isWifi) {
-            // WiFi: prefetch up to 6, max 3 concurrent
-            distinct.take(6).forEach { url ->
+            // WiFi: prefetch up to 10, max 4 concurrent — keeps thumbnails
+            // ready ahead of fast scrolling on high-bandwidth connections.
+            distinct.take(10).forEach { url ->
                 scope.launch {
                     wifiPermit.withPermit {
                         runCatching {
@@ -85,16 +86,19 @@ object ImagePrefetcher {
                 }
             }
         } else {
-            // Cellular: prefetch up to 3, sequential (1 at a time)
-            scope.launch {
-                cellularPermit.withPermit {
-                    distinct.take(3).forEach { url ->
-                        runCatching {
-                            val request = ImageRequest.Builder(context)
-                                .data(url)
-                                .size(Size(512, 512))
-                                .build()
-                            loader.enqueue(request)
+            // Cellular: prefetch up to 5, max 2 concurrent — balances keeping
+            // ahead of the scroll position without saturating a thin pipe.
+            distinct.take(5).chunked(2).forEach { batch ->
+                scope.launch {
+                    cellularPermit.withPermit {
+                        batch.forEach { url ->
+                            runCatching {
+                                val request = ImageRequest.Builder(context)
+                                    .data(url)
+                                    .size(Size(512, 512))
+                                    .build()
+                                loader.enqueue(request)
+                            }
                         }
                     }
                 }

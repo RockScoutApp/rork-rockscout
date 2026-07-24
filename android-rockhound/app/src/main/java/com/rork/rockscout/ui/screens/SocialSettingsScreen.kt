@@ -657,7 +657,7 @@ fun SocialSettingsScreen(
                     fontWeight = FontWeight.SemiBold,
                 )
                 Text(
-                    "Caches up to 2GB of specimen photos, satellite maps, trip route areas, and location downloads. Older items are cleared automatically when the cap is reached, so it does not keep every image permanently. Good for heavier off-grid use without downloading the full 4GB library.",
+                    "Caches up to 2GB of specimen photos, satellite maps, trip route areas, and location downloads. Older items are cleared automatically when the cap is reached, so it does not keep every image permanently. Good for heavier off-grid use without downloading the full 3.5GB library.",
                     style = MaterialTheme.typography.bodySmall,
                     color = TextMid,
                 )
@@ -914,7 +914,7 @@ fun SocialSettingsScreen(
                     title = { Text("Enable Maximum cache?", style = MaterialTheme.typography.headlineSmall) },
                     text = {
                         Text(
-                            "This will allow RockScout to use up to 2GB of storage on your device for offline specimen photos, satellite map tiles, cached trip routes, and location downloads. That's enough for all 3,450+ specimen images, every dig site map, and trip area caches with room to spare. Tap OK to enable.",
+                            "This will allow RockScout to use up to 2GB of storage on your device for offline specimen photos, satellite map tiles, cached trip routes, and location downloads. That's enough for all 3,500+ specimen images, every dig site map, and trip area caches with room to spare. Tap OK to enable.",
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     },

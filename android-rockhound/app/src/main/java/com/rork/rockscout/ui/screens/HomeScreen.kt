@@ -436,7 +436,9 @@ fun HomeScreen(navController: NavController) {
     androidx.compose.runtime.LaunchedEffect(featuredSpecimens) {
         val prefetchUrls = buildList {
             featuredSpecimens.forEach { spec ->
-                SpecimenImages.urls[spec.id]?.firstOrNull()?.let { add(it) }
+                // Prefetch the first 2 images per featured specimen so the
+                // detail screen hero + gallery start instantly too.
+                SpecimenImages.urls[spec.id]?.take(2)?.forEach { add(it) }
             }
             tiles.mapNotNull { it.imageUrl }.take(4).forEach { add(it) }
         }
@@ -4008,7 +4010,7 @@ private val fellowRockScoutsFeatures: List<FeatureEntry> = listOf(
     FeatureEntry(
         4,
         "Specimen Database",
-        "a massive 918+ entry encyclopedia with stunning photos, detailed properties, and where-to-find locations — your pocket field guide to the mineral kingdom. The AI identification pipeline actually sees these reference images alongside your photo for visual comparison. And it keeps growing: users can submit their own specimens for review and addition to the database!",
+        "a massive 900+ entry encyclopedia with stunning photos, detailed properties, and where-to-find locations — your pocket field guide to the mineral kingdom. The AI identification pipeline actually sees these reference images alongside your photo for visual comparison. And it keeps growing: users can submit their own specimens for review and addition to the database!",
     ),
     FeatureEntry(
         5,
@@ -4063,7 +4065,7 @@ private val fellowRockScoutsFeatures: List<FeatureEntry> = listOf(
     FeatureEntry(
         15,
         "Tokens & Subscriptions",
-        "power your hunts with a token bank for identifications, try everything free for 7 days, unlock unlimited IDs and every feature with $9.99/mo Premium, and support the app with one-time donations that grant tokens and bonus access. Plus a Storage setting in Social Settings lets you choose Standard (150MB) or Maximum (2GB) cache size — Maximum stores all 3,450+ specimen images and every dig site map for offline use",
+        "power your hunts with a token bank for identifications, try everything free for 7 days, unlock unlimited IDs and every feature with $9.99/mo Premium, and support the app with one-time donations that grant tokens and bonus access. Plus a Storage setting in Social Settings lets you choose Standard (150MB) or Maximum (2GB) cache size — Maximum stores all 3,500+ specimen images and every dig site map for offline use",
     ),
     FeatureEntry(
         16,

@@ -45,6 +45,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -118,7 +119,15 @@ fun SpecimenDetailScreen(navController: NavController, specimenId: String) {
     val isLiked = likedSpecimens.contains(spec.id)
     val imageUrls = SpecimenImages.urls[spec.id] ?: emptyList()
     var viewerOpen by remember { mutableStateOf(false) }
-    var viewerPage by remember { mutableStateOf(0) }
+    var viewerPage by remember { mutableIntStateOf(0) }
+
+    // Prefetch all gallery images for this specimen so the full-screen viewer
+    // and remaining thumbnails load instantly when tapped.
+    androidx.compose.runtime.LaunchedEffect(spec.id, imageUrls) {
+        if (imageUrls.size > 1) {
+            com.rork.rockscout.data.ImagePrefetcher.prefetch(context, imageUrls)
+        }
+    }
 
     if (viewerOpen && imageUrls.isNotEmpty()) {
         StandaloneZoomableImageViewer(imageUrl = imageUrls[viewerPage.coerceIn(0, imageUrls.lastIndex)], onDismiss = { viewerOpen = false })

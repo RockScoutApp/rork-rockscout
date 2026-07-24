@@ -141,22 +141,22 @@ class RockScoutApplication : Application() {
             val imageCacheDir = filesDir.resolve("image_cache").apply { mkdirs() }
             val networkCacheDir = filesDir.resolve("network_cache").apply { mkdirs() }
             val okHttpClient = OkHttpClient.Builder()
-                .cache(Cache(networkCacheDir, 50L * 1024 * 1024))
-                .connectTimeout(15, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
+                .cache(Cache(networkCacheDir, 100L * 1024 * 1024))
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(25, TimeUnit.SECONDS)
                 .retryOnConnectionFailure(true)
                 .build()
 
             SingletonImageLoader.setSafe { context ->
                 ImageLoader.Builder(context)
-                    .crossfade(true)
+                    .crossfade(150)
                     .components {
                         add(OkHttpNetworkFetcherFactory(callFactory = { okHttpClient }))
                     }
                     .memoryCache {
                         MemoryCache.Builder()
-                            .maxSizePercent(context, 0.25)
-                            .maxSizeBytes(128L * 1024 * 1024)
+                            .maxSizePercent(context, 0.30)
+                            .maxSizeBytes(192L * 1024 * 1024)
                             .build()
                     }
                     .diskCache {
@@ -483,22 +483,22 @@ class RockScoutApplication : Application() {
             val imageCacheDir = context.filesDir.resolve("image_cache")
             val networkCacheDir = context.filesDir.resolve("network_cache").apply { mkdirs() }
             val okHttpClient = OkHttpClient.Builder()
-                .cache(Cache(networkCacheDir, 50L * 1024 * 1024))
-                .connectTimeout(15, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
+                .cache(Cache(networkCacheDir, 100L * 1024 * 1024))
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(25, TimeUnit.SECONDS)
                 .retryOnConnectionFailure(true)
                 .build()
 
             SingletonImageLoader.setSafe { ctx ->
                 ImageLoader.Builder(ctx)
-                    .crossfade(true)
+                    .crossfade(150)
                     .components {
                         add(OkHttpNetworkFetcherFactory(callFactory = { okHttpClient }))
                     }
                     .memoryCache {
                         MemoryCache.Builder()
-                            .maxSizePercent(ctx, 0.25)
-                            .maxSizeBytes(128L * 1024 * 1024)
+                            .maxSizePercent(ctx, 0.30)
+                            .maxSizeBytes(192L * 1024 * 1024)
                             .build()
                     }
                     .diskCache {

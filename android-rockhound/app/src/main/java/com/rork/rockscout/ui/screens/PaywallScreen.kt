@@ -567,7 +567,7 @@ private fun FreeTierCard() {
             Spacer(Modifier.height(8.dp))
             FeatureRow(Icons.Filled.Spa, "Browse the full specimen database & geology guides", Success)
             Spacer(Modifier.height(8.dp))
-            FeatureRow(Icons.Filled.CloudDownload, "Bulk-download all specimen photos for offline use (~4 GB)", Success)
+            FeatureRow(Icons.Filled.CloudDownload, "Bulk-download all specimen photos for offline use (~3.5 GB)", Success)
             Spacer(Modifier.height(8.dp))
             FeatureRow(Icons.Filled.PhotoCamera, "Field camera — snap photos and save to Saved Images", Success)
             Spacer(Modifier.height(8.dp))

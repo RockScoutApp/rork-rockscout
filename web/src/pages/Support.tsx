@@ -14,7 +14,7 @@ const FAQ = [
   },
   {
     q: "Can I use RockScout offline?",
-    a: "Yes. All specimen text, geology guides, and educational content is bundled in the app and always available offline. For images, enable the Maximum (2 GB) cache mode in Social Settings, then tap \"Download all images (~4 GB)\" to bulk-cache every specimen photo, guide illustration, and hero image on-device. Once that completes, every read-only screen loads instantly with zero signal. Map tiles can also be cached per-trip or per-area from any map screen.",
+    a: "Yes. All specimen text, geology guides, and educational content is bundled in the app and always available offline. For images, enable the Maximum (2 GB) cache mode in Social Settings, then tap \"Download all images (~3.5 GB)\" to bulk-cache every specimen photo, guide illustration, and hero image on-device. Once that completes, every read-only screen loads instantly with zero signal. Map tiles can also be cached per-trip or per-area from any map screen.",
   },
   {
     q: "Do I need an account?",

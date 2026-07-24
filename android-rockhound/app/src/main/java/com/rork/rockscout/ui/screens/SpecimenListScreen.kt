@@ -173,7 +173,7 @@ fun SpecimenListScreen(navController: NavController) {
     LaunchedEffect(filtered, listState) {
         snapshotFlow { listState.firstVisibleItemIndex to listState.layoutInfo.visibleItemsInfo.size }
             .collect { (firstVisible, visibleCount) ->
-                val window = filtered.drop(firstVisible).take((visibleCount + 12).coerceAtLeast(1))
+                val window = filtered.drop(firstVisible).take((visibleCount + 20).coerceAtLeast(1))
                 val urls = window.mapNotNull { specimen ->
                     (SpecimenImages.urls[specimen.id] ?: specimen.imageUrls).firstOrNull()
                 }

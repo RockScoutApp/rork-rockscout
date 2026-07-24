@@ -72,7 +72,7 @@ const FEATURES = [
   {
     icon: Camera,
     title: "AI rock & mineral ID",
-    body: "Snap a photo and get a best-effort ID in seconds. RockScout cross-checks five sources — visual AI, 918+ specimen profiles, locality data, physical properties, and community consensus — so you get a confident match.",
+    body: "Snap a photo and get a best-effort ID in seconds. RockScout cross-checks five sources — visual AI, 900+ specimen profiles, locality data, physical properties, and community consensus — so you get a confident match.",
     tag: "5 ways to identify",
     image: "/images/rock-id-collection.webp",
     imageAlt: "A collection of colorful rocks and minerals with a magnifying glass",
@@ -114,7 +114,7 @@ const STEPS = [
     n: "02",
     icon: Atom,
     title: "Get a 5-source ID",
-    body: "Visual AI, 918+ specimen profiles, locality data, physical properties, and community consensus all weigh in to give you a best-effort match in seconds."
+    body: "Visual AI, 900+ specimen profiles, locality data, physical properties, and community consensus all weigh in to give you a best-effort match in seconds."
   },
   {
     n: "03",
@@ -131,7 +131,7 @@ const STEPS = [
 ];
 
 const STATS = [
-  { value: "918+", label: "Specimens in the database" },
+  { value: "900+", label: "Specimens in the database" },
   { value: "50", label: "US states & territories mapped" },
   { value: "4.9★", label: "Early tester rating" },
   { value: "Free", label: "To browse + field camera · Pro unlocks IDs & social" },
@@ -419,14 +419,14 @@ const FEATURES_LIST = [
   {
     icon: Camera,
     title: "AI rock & mineral ID",
-    desc: "Snap a photo and three models (Claude Haiku, Sonnet, Gemini Pro) cross-check five sources — visual AI, 918+ specimen profiles, locality data, physical properties, and community consensus — to give you a confident match in seconds. Free 7-day trial with 5 tokens; after that, Premium or a donation keeps it going.",
+    desc: "Snap a photo and three models (Claude Haiku, Sonnet, Gemini Pro) cross-check five sources — visual AI, 900+ specimen profiles, locality data, physical properties, and community consensus — to give you a confident match in seconds. Free 7-day trial with 5 tokens; after that, Premium or a donation keeps it going.",
     items: ["Visual reference compare", "Assemblage detection", "Clarifying questions", "Auto web cross-check"],
   },
   {
     icon: FlaskConical,
     title: "Specimen database",
-    desc: "918+ entries with photos, properties, and where-to-find locations. Spot a missing one? Submit photos of your find and approved entries go into the shared database for everyone.",
-    items: ["918+ profiles", "Community submissions"],
+    desc: "900+ entries with photos, properties, and where-to-find locations. Spot a missing one? Submit photos of your find and approved entries go into the shared database for everyone.",
+    items: ["900+ profiles", "Community submissions"],
   },
   {
     icon: Gem,
@@ -491,8 +491,8 @@ const FEATURES_LIST = [
   {
     icon: Backpack,
     title: "Gear, tokens & design",
-    desc: "Beginner-to-advanced Gear Guide with 48+ tools and Amazon links. 7-day free trial, $9.99/mo Premium, or one-time donations for tokens. Immersive 3D design with an optional 2GB offline cache mode plus a one-tap bulk download that caches every specimen photo, guide illustration, and hero image (~4 GB) so the whole app works fully offline.",
-    items: ["Gear Guide", "Tokens & Premium", "3D design", "2GB cache mode", "Bulk offline download (~4 GB)"],
+    desc: "Beginner-to-advanced Gear Guide with 48+ tools and Amazon links. 7-day free trial, $9.99/mo Premium, or one-time donations for tokens. Immersive 3D design with an optional 2GB offline cache mode plus a one-tap bulk download that caches every specimen photo, guide illustration, and hero image (~3.5 GB) so the whole app works fully offline.",
+    items: ["Gear Guide", "Tokens & Premium", "3D design", "2GB cache mode", "Bulk offline download (~3.5 GB)"],
   },
   {
     icon: HelpCircle,
@@ -515,8 +515,8 @@ const FEATURES_LIST = [
   {
     icon: Database,
     title: "Storage, cache & bulk offline download",
-    desc: "Choose Standard (150MB) or Maximum (2GB) cache mode in Storage settings — available to all users, it's your own device storage. The cache covers both specimen photos and map tiles. Want the whole catalog offline? Tap \"Download all images (~4 GB)\" to cache every specimen photo plus all educational/guide illustrations and hero art, so every read-only screen (specimen details, geology guides, BLM guide, periodic table) loads instantly with zero signal. A live progress bar with resume and an offline-ready badge keep you informed.",
-    items: ["Standard 150MB", "Maximum 2GB", "~4 GB bulk download", "Resume on restart", "Offline-ready badge", "Map tile caching"],
+    desc: "Choose Standard (150MB) or Maximum (2GB) cache mode in Storage settings — available to all users, it's your own device storage. The cache covers both specimen photos and map tiles. Want the whole catalog offline? Tap \"Download all images (~3.5 GB)\" to cache every specimen photo plus all educational/guide illustrations and hero art, so every read-only screen (specimen details, geology guides, BLM guide, periodic table) loads instantly with zero signal. A live progress bar with resume and an offline-ready badge keep you informed.",
+    items: ["Standard 150MB", "Maximum 2GB", "~3.5 GB bulk download", "Resume on restart", "Offline-ready badge", "Map tile caching"],
   },
   {
     icon: Diamond,
