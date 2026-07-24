@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 import { SITE } from "@/content/legal";
 import { InstallAppButton } from "@/components/InstallAppButton";
 
@@ -24,7 +26,7 @@ const footerLinks: NavLink[] = [
 
 export const Logo = ({ className = "" }: { className?: string }) => (
   <Link to="/" className={`group flex items-center gap-2 ${className}`} aria-label={`${SITE.name} home`}>
-    <span className="relative h-9 w-9 overflow-hidden rounded-xl ring-1 ring-primary/30 transition-transform group-hover:scale-105">
+    <span className="relative h-8 w-8 overflow-hidden rounded-xl ring-1 ring-primary/30 transition-transform group-hover:scale-105 sm:h-9 sm:w-9">
       <img
         src="/images/app-icon.webp"
         alt=""
@@ -32,53 +34,98 @@ export const Logo = ({ className = "" }: { className?: string }) => (
         loading="eager"
       />
     </span>
-    <span className="text-lg font-semibold tracking-tight">
+    <span className="text-base font-semibold tracking-tight sm:text-lg">
       Rock<span className="text-primary">Scout</span>
     </span>
   </Link>
 );
 
-export const Navbar = () => (
-  <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-    <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-      <Logo />
-      <div className="hidden items-center gap-1 md:flex">
-        {navLinks.map((l) => (
-          <Link
-            key={l.to}
-            to={l.to}
-            className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+export const Navbar = () => {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+      <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:h-16 sm:px-6">
+        <Logo />
+        <div className="hidden items-center gap-1 md:flex">
+          {navLinks.map((l) => (
+            <Link
+              key={l.to}
+              to={l.to}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <a
+            href={SITE.playStoreUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary/80 transition-colors hover:bg-primary/20 hover:text-primary sm:inline-flex sm:px-4 sm:py-2 sm:text-sm"
           >
-            {l.label}
-          </Link>
-        ))}
-      </div>
-      <a
-        href={SITE.playStoreUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary/80 transition-colors hover:bg-primary/20 hover:text-primary"
-      >
-        Coming soon to Google Play
-      </a>
-    </nav>
-  </header>
-);
+            Coming soon to Google Play
+          </a>
+          {/* Mobile hamburger */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            className="grid h-10 w-10 place-items-center rounded-lg border border-border bg-card/60 text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary md:hidden"
+          >
+            {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile slide-down menu */}
+      {menuOpen && (
+        <div className="border-t border-border/60 bg-background/95 backdrop-blur-xl md:hidden">
+          <div className="mx-auto max-w-6xl px-4 py-4">
+            <div className="flex flex-col gap-1">
+              {navLinks.map((l) => (
+                <Link
+                  key={l.to}
+                  to={l.to}
+                  onClick={() => setMenuOpen(false)}
+                  className="rounded-lg px-4 py-3 text-base font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                >
+                  {l.label}
+                </Link>
+              ))}
+              <a
+                href={SITE.playStoreUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMenuOpen(false)}
+                className="mt-2 inline-flex items-center justify-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary/80 transition-colors hover:bg-primary/20 hover:text-primary"
+              >
+                Coming soon to Google Play
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+    </header>
+  );
+};
 
 export const Footer = () => (
-  <footer className="mt-24 border-t border-border/60 bg-card/30">
-    <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-      <div className="grid gap-10 md:grid-cols-[1.5fr_2fr]">
+  <footer className="mt-12 border-t border-border/60 bg-card/30 sm:mt-24">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+      <div className="grid gap-8 sm:gap-10 md:grid-cols-[1.5fr_2fr]">
         <div>
           <Logo />
-          <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
+          <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground sm:mt-4">
             {SITE.tagline}. The field companion for rockhounds, collectors, and curious explorers.
           </p>
-          <p className="mt-4 text-xs text-muted-foreground">
+          <p className="mt-3 text-xs text-muted-foreground sm:mt-4">
             © {new Date().getFullYear()} {SITE.name}. All rights reserved.
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 sm:gap-x-6 sm:gap-y-3 sm:grid-cols-4">
           {footerLinks.map((l) => (
             <Link
               key={l.to}
@@ -90,7 +137,7 @@ export const Footer = () => (
           ))}
         </div>
       </div>
-      <div className="mt-10 flex flex-col items-start justify-between gap-3 border-t border-border/40 pt-6 text-xs text-muted-foreground sm:flex-row sm:items-center">
+      <div className="mt-8 flex flex-col items-start justify-between gap-3 border-t border-border/40 pt-6 text-xs text-muted-foreground sm:mt-10 sm:flex-row sm:items-center">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
           <InstallAppButton />
           <span>Effective {SITE.effectiveDate}. Jurisdiction: {SITE.jurisdiction}.</span>

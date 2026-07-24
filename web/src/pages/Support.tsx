@@ -72,16 +72,16 @@ const Support = () => (
     title="Support"
     description={`Frequently asked questions about ${SITE.name}, plus links to every legal page and how to reach our team.`}
   >
-    <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-20">
-      <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25">
-        <LifeBuoy className="h-6 w-6" />
+    <section className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16 md:py-20">
+      <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25 sm:h-12 sm:w-12">
+        <LifeBuoy className="h-5 w-5 sm:h-6 sm:w-6" />
       </div>
-      <h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">Support</h1>
-      <p className="mt-3 max-w-xl text-muted-foreground">
+      <h1 className="mt-4 text-2xl font-bold tracking-tight sm:mt-5 sm:text-3xl md:text-4xl">Support</h1>
+      <p className="mt-3 max-w-xl text-sm text-muted-foreground sm:text-base">
         Quick answers, legal links, and how to reach us.
       </p>
 
-      <div className="mt-12 grid gap-4 sm:grid-cols-2">
+      <div className="mt-10 grid gap-4 sm:mt-12 sm:grid-cols-2">
         <a
           href={`mailto:${SITE.supportEmail}`}
           className="group flex items-center justify-between rounded-2xl border border-border bg-card/50 p-5 transition-colors hover:border-primary/40 hover:bg-card"
@@ -108,10 +108,10 @@ const Support = () => (
         </a>
       </div>
 
-      <h2 className="mt-16 text-2xl font-semibold tracking-tight">Frequently asked questions</h2>
-      <div className="mt-6 divide-y divide-border/60 rounded-2xl border border-border bg-card/40">
+      <h2 className="mt-12 text-xl font-semibold tracking-tight sm:mt-16 sm:text-2xl">Frequently asked questions</h2>
+      <div className="mt-5 divide-y divide-border/60 rounded-2xl border border-border bg-card/40 sm:mt-6">
         {FAQ.map((item, i) => (
-          <details key={i} className="group p-5 [&_summary::-webkit-details-marker]:hidden">
+          <details key={i} className="group p-4 sm:p-5 [&_summary::-webkit-details-marker]:hidden">
             <summary className="flex cursor-pointer items-center justify-between gap-4 text-sm font-medium">
               {item.q}
               <ChevronDown className="h-4 w-4 flex-none text-muted-foreground transition-transform group-open:rotate-180" />
@@ -121,13 +121,13 @@ const Support = () => (
         ))}
       </div>
 
-      <h2 className="mt-16 text-2xl font-semibold tracking-tight">Legal & policies</h2>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+      <h2 className="mt-12 text-xl font-semibold tracking-tight sm:mt-16 sm:text-2xl">Legal & policies</h2>
+      <div className="mt-5 grid gap-4 sm:mt-6 sm:grid-cols-2">
         {legalLinks.map((l) => (
           <Link
             key={l.to}
             to={l.to}
-            className="group flex items-start justify-between gap-4 rounded-2xl border border-border bg-card/50 p-5 transition-colors hover:border-primary/40 hover:bg-card"
+            className="group flex items-start justify-between gap-4 rounded-2xl border border-border bg-card/50 p-4 transition-colors hover:border-primary/40 hover:bg-card sm:p-5"
           >
             <div className="flex items-start gap-3">
               <span className="mt-0.5 inline-flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-primary/15 text-primary">

@@ -464,17 +464,17 @@ const HowToUse = () => {
         {/* Geode backdrop */}
         <div className="geode-gradient absolute inset-x-0 top-0 -z-10 h-72" aria-hidden />
 
-        <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
+        <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12 md:py-16">
           {/* Header row with close button */}
           <div className="flex items-start justify-between gap-4">
             <div className="fade-rise">
               <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
                 <span className="h-px w-8 bg-primary/50" /> Guide
               </span>
-              <h1 className="mt-3 font-display text-4xl font-bold tracking-tight sm:text-5xl">
+              <h1 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
                 How to use {SITE.name}
               </h1>
-              <p className="mt-3 max-w-xl text-balance text-muted-foreground">
+              <p className="mt-3 max-w-xl text-balance text-sm text-muted-foreground sm:text-base">
                 Every feature, step by step — the same walkthrough that lives inside the app.
               </p>
             </div>
@@ -489,31 +489,31 @@ const HowToUse = () => {
           </div>
 
           {/* Intro card */}
-          <div className="mt-10 rounded-2xl border border-border/60 bg-card/40 p-6 fade-rise">
+          <div className="mt-8 rounded-2xl border border-border/60 bg-card/40 p-4 fade-rise sm:mt-10 sm:p-6">
             <p className="text-sm leading-relaxed text-muted-foreground">
               Welcome to {SITE.name}! This guide walks you through every feature of the app — from AI rock identification to trading, social features, trip planning, and more. Scroll through to learn how to get the most out of your rockhounding adventures.
             </p>
           </div>
 
           {/* Sections */}
-          <ol className="mt-10 flex flex-col gap-5">
+          <ol className="mt-8 flex flex-col gap-4 sm:mt-10 sm:gap-5">
             {HOW_TO_SECTIONS.map((section, idx) => (
               <li
                 key={section.title}
-                className="group relative overflow-hidden rounded-2xl border border-border/60 bg-background/40 p-6 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card/60"
+                className="group relative overflow-hidden rounded-2xl border border-border/60 bg-background/40 p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card/60 sm:p-6"
               >
                 <div className="flex items-center gap-3">
                   <span
-                    className="grid h-10 w-10 shrink-0 place-items-center rounded-xl ring-1 transition-transform group-hover:scale-110"
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-xl ring-1 transition-transform group-hover:scale-110 sm:h-10 sm:w-10"
                     style={{
                       backgroundColor: `color-mix(in srgb, ${section.accent} 15%, transparent)`,
                       color: section.accent,
                       boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${section.accent} 30%, transparent)`,
                     }}
                   >
-                    <section.icon className="h-5 w-5" />
+                    <section.icon className="h-4 w-4 sm:h-5 sm:w-5" />
                   </span>
-                  <h2 className="font-display text-lg font-semibold text-foreground">
+                  <h2 className="font-display text-base font-semibold text-foreground sm:text-lg">
                     <span className="mr-2 text-muted-foreground/70">{String(idx + 1).padStart(2, "0")}</span>
                     {section.title}
                   </h2>
@@ -536,7 +536,7 @@ const HowToUse = () => {
           </ol>
 
           {/* Sign-off */}
-          <div className="mt-14 text-center">
+          <div className="mt-10 text-center sm:mt-14">
             <p className="font-display text-xl font-bold text-primary">Happy Hunting!</p>
             <p className="mt-1 text-xs text-muted-foreground/70">
               {SITE.name} · {SITE.tagline}

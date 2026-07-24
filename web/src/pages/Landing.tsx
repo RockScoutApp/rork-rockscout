@@ -242,7 +242,7 @@ const Hero = () => (
       </div>
     </div>
 
-    <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 pt-10 pb-20 sm:px-6 md:grid-cols-[1.05fr_1fr] md:py-28">
+    <div className="mx-auto grid max-w-6xl items-center gap-8 px-4 pt-6 pb-12 sm:gap-12 sm:px-6 sm:pt-10 sm:pb-20 md:grid-cols-[1.05fr_1fr] md:py-28">
       <div className="fade-rise">
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
@@ -270,16 +270,16 @@ const Hero = () => (
         <img
           src="/images/rockscout-hero-logo.webp"
           alt="RockScout — Identify, Explore, Connect: the most comprehensive rockhounding app ever created"
-          className="mt-8 w-full max-w-xl rounded-2xl shadow-[0_20px_60px_-20px_rgba(0,0,0,0.5)] ring-1 ring-primary/20"
+          className="mt-6 w-full max-w-xl rounded-2xl shadow-[0_20px_60px_-20px_rgba(0,0,0,0.5)] ring-1 ring-primary/20 sm:mt-8"
           loading="eager"
         />
         <h1 className="sr-only">RockScout — Identify, Explore, Connect</h1>
-        <p className="mt-6 max-w-md text-balance text-base leading-relaxed text-muted-foreground sm:text-lg">
+        <p className="mt-4 max-w-md text-balance text-sm leading-relaxed text-muted-foreground sm:mt-6 sm:text-base md:text-lg">
           RockScout puts a pocket geologist in your phone — AI rock &amp; mineral ID, dig-site maps, a
           specimen database, a collection tracker, and a community of hunters and traders — built for the field, ready for any dig.
         </p>
 
-        <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="mt-6 flex flex-col gap-3 sm:mt-9 sm:flex-row sm:items-center">
           <a
             href={SITE.playStoreUrl}
             target="_blank"
@@ -294,10 +294,10 @@ const Hero = () => (
           </span>
         </div>
 
-        <dl className="mt-12 grid max-w-md grid-cols-2 gap-x-6 gap-y-5">
+        <dl className="mt-8 grid max-w-md grid-cols-2 gap-x-4 gap-y-4 sm:mt-12 sm:gap-x-6 sm:gap-y-5">
           {STATS.map((s) => (
             <div key={s.label} className="border-l-2 border-primary/30 pl-3">
-              <dt className="font-display text-3xl font-bold text-foreground">{s.value}</dt>
+              <dt className="font-display text-2xl font-bold text-foreground sm:text-3xl">{s.value}</dt>
               <dd className="text-xs leading-snug text-muted-foreground">{s.label}</dd>
             </div>
           ))}
@@ -305,11 +305,11 @@ const Hero = () => (
       </div>
 
       {/* Phone mockup with floating specimen chips arranged around it (not on it) */}
-      <div className="relative fade-rise flex justify-center px-4 sm:px-10" style={{ animationDelay: "120ms" }}>
-        <div className="relative w-full max-w-[480px] py-8 sm:py-12">
+      <div className="relative fade-rise flex justify-center px-2 sm:px-4 md:px-10" style={{ animationDelay: "120ms" }}>
+        <div className="relative w-full max-w-[380px] py-4 sm:max-w-[480px] sm:py-8 md:py-12">
           {/* Amber glow behind phone */}
           <div className="absolute inset-x-[20%] inset-y-[10%] -z-10 animate-glow-pulse rounded-[3rem] bg-primary/15 blur-3xl" aria-hidden />
-          <div className="relative mx-auto max-w-[240px] float-slow rounded-[2.5rem] border border-border/70 bg-card p-3 shadow-2xl ring-1 ring-primary/20">
+          <div className="relative mx-auto max-w-[200px] float-slow rounded-[2.5rem] border border-border/70 bg-card p-2.5 shadow-2xl ring-1 ring-primary/20 sm:max-w-[240px] sm:p-3">
             <div className="overflow-hidden rounded-[2rem] bg-background">
               <img
                 src={SHOTS[0].src}
@@ -394,17 +394,17 @@ const Features = () => (
           ) : (
             <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-primary/5 blur-2xl transition-opacity duration-500 group-hover:bg-primary/15" aria-hidden />
           )}
-          <div className={`relative p-7 ${f.image ? "-mt-16" : ""}`}>
+          <div className={`relative p-5 sm:p-7 ${f.image ? "-mt-12 sm:-mt-16" : ""}`}>
             <div className="flex items-center justify-between">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-primary/30 transition-transform group-hover:scale-110">
-                <f.icon className="h-6 w-6" />
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15 text-primary ring-1 ring-primary/30 transition-transform group-hover:scale-110 sm:h-12 sm:w-12">
+                <f.icon className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
               <span className="rounded-full border border-border bg-background/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 {f.tag}
               </span>
             </div>
-            <h3 className="mt-5 font-display text-2xl font-semibold">{f.title}</h3>
-            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{f.body}</p>
+            <h3 className="mt-4 font-display text-xl font-semibold sm:mt-5 sm:text-2xl">{f.title}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground sm:mt-3">{f.body}</p>
           </div>
           {!f.image && (
             <span className="pointer-events-none absolute -bottom-6 -right-2 font-display text-[7rem] font-black leading-none text-border/40 transition-colors group-hover:text-primary/10" aria-hidden>
@@ -548,28 +548,28 @@ const FEATURES_LIST = [
 ];
 
 const HowItWorks = () => (
-  <section className="relative border-y border-border/40 bg-card/20 py-24">
+  <section className="relative border-y border-border/40 bg-card/20 py-16 sm:py-24">
     <div className="mx-auto max-w-6xl px-4 sm:px-6">
       <div className="max-w-2xl">
         <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
           <span className="h-px w-8 bg-primary/50" /> How it works
         </span>
-        <h2 className="mt-4 font-display text-4xl font-bold tracking-tight sm:text-5xl">
+        <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
           From pocket to collection in 4 taps
         </h2>
       </div>
 
-      <ol className="mt-14 grid gap-6 md:grid-cols-4">
+      <ol className="mt-10 grid gap-4 sm:mt-14 sm:gap-6 md:grid-cols-4">
         {STEPS.map((s) => (
           <li key={s.n} className="relative">
-            <div className="field-border rounded-3xl bg-background/40 p-6 transition-colors hover:border-primary/40">
+            <div className="field-border rounded-3xl bg-background/40 p-5 transition-colors hover:border-primary/40 sm:p-6">
               <div className="flex items-center gap-3">
-                <span className="step-numeral font-display text-5xl font-black leading-none">{s.n}</span>
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25">
-                  <s.icon className="h-5 w-5" />
+                <span className="step-numeral font-display text-4xl font-black leading-none sm:text-5xl">{s.n}</span>
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25 sm:h-10 sm:w-10">
+                  <s.icon className="h-4 w-4 sm:h-5 sm:w-5" />
                 </span>
               </div>
-              <h3 className="mt-4 font-display text-xl font-semibold">{s.title}</h3>
+              <h3 className="mt-4 font-display text-lg font-semibold sm:text-xl">{s.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
             </div>
           </li>
@@ -580,25 +580,25 @@ const HowItWorks = () => (
 );
 
 const ScreenshotStrip = () => (
-  <section className="py-24">
+  <section className="py-16 sm:py-24">
     <div className="mx-auto max-w-6xl px-4 sm:px-6">
       <div className="flex items-end justify-between gap-6">
         <div>
           <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
             <span className="h-px w-8 bg-primary/50" /> In the field
           </span>
-          <h2 className="mt-4 font-display text-4xl font-bold tracking-tight sm:text-5xl">See it for real</h2>
-          <p className="mt-3 text-muted-foreground">No mockups here — these are actual screens from the Android app.</p>
+          <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">See it for real</h2>
+          <p className="mt-3 text-sm text-muted-foreground sm:text-base">No mockups here — these are actual screens from the Android app.</p>
         </div>
         <span className="hidden shrink-0 items-center gap-1.5 rounded-full border border-border bg-card/50 px-3 py-1.5 text-xs text-muted-foreground sm:inline-flex">
           <Star className="h-3.5 w-3.5 fill-primary text-primary" /> Swipe to explore
         </span>
       </div>
-      <div className="mt-10 flex snap-x gap-4 overflow-x-auto pb-6 [scrollbar-width:thin]">
+      <div className="mt-8 flex snap-x gap-4 overflow-x-auto pb-6 [scrollbar-width:thin] sm:mt-10">
         {SHOTS.map((s, i) => (
           <figure
             key={s.src}
-            className="group relative w-[230px] flex-none snap-center overflow-hidden rounded-3xl border border-border/70 bg-card p-2.5 shadow-lg transition-all hover:-translate-y-1.5 hover:border-primary/40 hover:shadow-[0_20px_50px_-20px_hsl(var(--primary))]"
+            className="group relative w-[200px] flex-none snap-center overflow-hidden rounded-3xl border border-border/70 bg-card p-2.5 shadow-lg transition-all hover:-translate-y-1.5 hover:border-primary/40 hover:shadow-[0_20px_50px_-20px_hsl(var(--primary))] sm:w-[230px]"
           >
             <img
               src={s.src}
@@ -716,17 +716,17 @@ const GEAR_ITEMS: GearItem[] = [
 ];
 
 const FieldStories = () => (
-  <section className="relative py-24 scroll-mt-20" id="supplies">
+  <section className="relative py-16 scroll-mt-20 sm:py-24" id="supplies">
     <div className="mx-auto max-w-6xl px-4 sm:px-6">
-      <div className="mb-14 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div className="mb-10 flex flex-col gap-4 sm:mb-14 md:flex-row md:items-end md:justify-between">
         <div className="max-w-2xl">
           <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
             <span className="h-px w-8 bg-primary/50" /> In the wild
           </span>
-          <h2 className="mt-4 font-display text-4xl font-bold tracking-tight sm:text-5xl">
+          <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
             Built for real rockhounds
           </h2>
-          <p className="mt-4 text-balance text-lg text-muted-foreground">
+          <p className="mt-4 text-balance text-base text-muted-foreground sm:text-lg">
             Campfire IDs, midnight UV hunts, group trips, and field journals — RockScout is made for the moments that happen off-trail.
           </p>
         </div>
@@ -735,7 +735,7 @@ const FieldStories = () => (
         </span>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 auto-rows-[260px] sm:grid-cols-2 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 auto-rows-[200px] sm:auto-rows-[260px] sm:grid-cols-2 sm:gap-4 md:grid-cols-4">
         {FIELD_STORIES.map((story) => (
           <figure
             key={story.type === "gear" ? "gear" : story.src}
@@ -743,15 +743,15 @@ const FieldStories = () => (
           >
             {story.type === "gear" ? (
               <>
-                <div className="relative flex h-full flex-col p-5">
+                <div className="relative flex h-full flex-col p-4 sm:p-5">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="font-display text-lg font-semibold text-foreground">Gear up for the field</p>
+                    <p className="font-display text-base font-semibold text-foreground sm:text-lg">Gear up for the field</p>
                     <span className="hidden rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary sm:inline-block">
                       Amazon
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">The same gear guide linked inside the app — curated for every kind of rockhound.</p>
-                  <ul className="mt-3 flex-1 space-y-1 overflow-y-auto pr-1 [scrollbar-width:thin]">
+                  <ul className="mt-2 flex-1 space-y-1 overflow-y-auto pr-1 [scrollbar-width:thin] sm:mt-3">
                     {GEAR_ITEMS.map((item) => (
                       <li key={item.name}>
                         <a
@@ -784,7 +784,7 @@ const FieldStories = () => (
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
                 </div>
-                <figcaption className="absolute bottom-0 left-0 w-full p-4">
+                <figcaption className="absolute bottom-0 left-0 w-full p-3 sm:p-4">
                   <p className="font-display text-sm font-semibold leading-snug text-primary drop-shadow">{story.caption}</p>
                 </figcaption>
               </>
@@ -797,8 +797,8 @@ const FieldStories = () => (
 );
 
 const CTA = () => (
-  <section className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
-    <div className="relative overflow-hidden rounded-[2rem] border border-primary/30 bg-gradient-to-br from-card via-card to-primary/10 p-10 text-center sm:p-20">
+  <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+    <div className="relative overflow-hidden rounded-[1.5rem] border border-primary/30 bg-gradient-to-br from-card via-card to-primary/10 p-6 text-center sm:rounded-[2rem] sm:p-10 md:p-20">
       <div className="pointer-events-none absolute inset-0 geode-gradient opacity-70" aria-hidden />
       {/* Floating sparkles in CTA */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
@@ -807,13 +807,13 @@ const CTA = () => (
         <Sparkle top="30%" left="78%" delay="2s" duration="3.5s" color="hsl(172 30% 55%)" />
       </div>
       <div className="relative">
-        <h2 className="text-balance font-display text-4xl font-bold tracking-tight sm:text-5xl">
+        <h2 className="text-balance font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
           Ready to find your next specimen?
         </h2>
-        <p className="mx-auto mt-5 max-w-md text-balance text-lg text-muted-foreground">
+        <p className="mx-auto mt-4 max-w-md text-balance text-base text-muted-foreground sm:mt-5 sm:text-lg">
           RockScout is coming soon to Google Play. Be the first to know when it launches.
         </p>
-        <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:mt-9 sm:flex-row">
           <a
             href={SITE.playStoreUrl}
             target="_blank"
@@ -876,28 +876,28 @@ const Landing = () => {
       <SpecimenMarquee reverse />
       <FieldStories />
       <SpecimenMarquee />
-      <section id="features" className="relative scroll-mt-24 py-24">
+      <section id="features" className="relative scroll-mt-24 py-16 sm:py-24">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="max-w-2xl">
             <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
               <span className="h-px w-8 bg-primary/50" /> Full feature list
             </span>
-            <h2 className="mt-4 font-display text-4xl font-bold tracking-tight sm:text-5xl">
+            <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
               Everything packed into one app
             </h2>
-            <p className="mt-4 text-balance text-lg text-muted-foreground">
+            <p className="mt-4 text-balance text-base text-muted-foreground sm:text-lg">
               Related tools grouped together — so you can see the full picture without scrolling through a wall of boxes.
             </p>
           </div>
-          <ul className="mt-14 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-10 grid gap-4 sm:mt-14 sm:gap-5 md:grid-cols-2 lg:grid-cols-3">
             {FEATURES_LIST.map((f) => (
               <li
                 key={f.title}
-                className="group flex flex-col gap-3 rounded-2xl border border-border/60 bg-background/40 p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card/60"
+                className="group flex flex-col gap-3 rounded-2xl border border-border/60 bg-background/40 p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card/60 sm:p-5"
               >
                 <div className="flex items-center gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25 transition-transform group-hover:scale-110">
-                    <f.icon className="h-5 w-5" />
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25 transition-transform group-hover:scale-110 sm:h-10 sm:w-10">
+                    <f.icon className="h-4 w-4 sm:h-5 sm:w-5" />
                   </span>
                   <p className="font-display font-semibold text-foreground">{f.title}</p>
                 </div>
