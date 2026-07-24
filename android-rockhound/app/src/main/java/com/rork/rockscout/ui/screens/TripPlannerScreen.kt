@@ -128,7 +128,7 @@ import com.rork.rockscout.ui.components.ShareCardImage
 import com.rork.rockscout.ui.components.ShareToProfileComposer
 import com.rork.rockscout.ui.components.TagChip
 import com.rork.rockscout.ui.components.TripRouteMap
-import com.rork.rockscout.ui.components.PinDropMap
+import com.rork.rockscout.ui.components.MultiPinDropMap
 import com.rork.rockscout.ui.components.sculpted
 import com.rork.rockscout.ui.screens.AddLocationDialog
 import com.rork.rockscout.ui.navigation.Routes
@@ -1407,7 +1407,8 @@ Planned with RockScout""".trimIndent()
                     Spacer(Modifier.height(8.dp))
 
                     // Pin-drop map for specimen markers (with layer toggle)
-                    PinDropMap(
+                    MultiPinDropMap(
+                        pins = specimenMarkers,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(220.dp),
@@ -1419,9 +1420,9 @@ Planned with RockScout""".trimIndent()
                             pendingPinLat = lat
                             pendingPinLng = lng
                         },
-                        onPinRemoved = {
-                            pendingPinLat = null
-                            pendingPinLng = null
+                        onPinRemoved = { id ->
+                            specimenMarkers.removeAll { it.id == id }
+                            if (pendingRemoveMarker?.id == id) pendingRemoveMarker = null
                         },
                     )
 

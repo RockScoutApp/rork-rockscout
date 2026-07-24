@@ -96,7 +96,7 @@ import com.rork.rockscout.ui.components.SavedImagesPickerDialog
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.SculptedButton
 import com.rork.rockscout.ui.components.processSavedImage
-import com.rork.rockscout.ui.components.PinDropMap
+import com.rork.rockscout.ui.components.MultiPinDropMap
 import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.SculptedOutlinedButton
 import com.rork.rockscout.ui.components.SculptedTextButton
@@ -767,7 +767,8 @@ private fun JournalEditorScreen(
                     color = TextLow,
                 )
                 Spacer(Modifier.height(8.dp))
-                PinDropMap(
+                MultiPinDropMap(
+                    pins = specimenMarkers,
                     modifier = Modifier.fillMaxWidth().height(220.dp),
                     initialZoom = 10.0,
                     accent = Aqua,
@@ -777,9 +778,8 @@ private fun JournalEditorScreen(
                         pendingPinLat = lat
                         pendingPinLng = lng
                     },
-                    onPinRemoved = {
-                        pendingPinLat = null
-                        pendingPinLng = null
+                    onPinRemoved = { id ->
+                        specimenMarkers.removeAll { it.id == id }
                     },
                 )
                 if (pendingPinLat != null && pendingPinLng != null) {
