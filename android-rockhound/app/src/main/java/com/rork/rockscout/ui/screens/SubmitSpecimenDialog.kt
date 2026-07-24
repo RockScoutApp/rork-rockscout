@@ -69,6 +69,7 @@ import com.rork.rockscout.data.SpecimenSubmissionStore
 import com.rork.rockscout.ui.components.SavedImagesPickerDialog
 import com.rork.rockscout.ui.components.SculptedButton
 import com.rork.rockscout.ui.components.SculptedIconButton
+import com.rork.rockscout.ui.components.SculptedTextButton
 import com.rork.rockscout.ui.components.noAutoFocus
 import com.rork.rockscout.ui.components.processSavedImage
 import com.rork.rockscout.ui.components.glowingBorder
@@ -76,8 +77,10 @@ import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
+import com.rork.rockscout.ui.theme.Danger
 import com.rork.rockscout.ui.theme.Ink
 import com.rork.rockscout.ui.theme.Slate900
+import com.rork.rockscout.ui.theme.TextLow
 import java.util.UUID
 
 /**
@@ -102,6 +105,7 @@ fun SubmitSpecimenDialog(
     var useCustomLocation by remember { mutableStateOf(false) }
     var isModerating by remember { mutableStateOf(false) }
     var showSavedImagePicker by remember { mutableStateOf(false) }
+    var pendingRemovePhotoIdx by remember { mutableStateOf<Int?>(null) }
     val scope = rememberCoroutineScope()
 
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -234,7 +238,7 @@ fun SubmitSpecimenDialog(
                                     .size(22.dp)
                                     .clip(CircleShape)
                                     .background(Color.Black)
-                                    .clickable { imageUris.removeAt(idx) },
+                                    .clickable { pendingRemovePhotoIdx = idx },
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Icon(Icons.Filled.Close, "Remove", tint = Color.White, modifier = Modifier.size(14.dp))
@@ -428,6 +432,37 @@ fun SubmitSpecimenDialog(
                     }
                 }
             },
+        )
+    }
+
+    pendingRemovePhotoIdx?.let { idx ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { pendingRemovePhotoIdx = null },
+            title = { Text("Remove photo?", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = { Text("Remove this photo from the submission?", color = DarkTextMid) },
+            confirmButton = {
+                SculptedTextButton(
+                    text = "Remove",
+                    onClick = {
+                        if (idx in imageUris.indices) imageUris.removeAt(idx)
+                        pendingRemovePhotoIdx = null
+                    },
+                    accent = Danger,
+                    textColor = Danger,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            dismissButton = {
+                SculptedTextButton(
+                    text = "Cancel",
+                    onClick = { pendingRemovePhotoIdx = null },
+                    accent = Citrine,
+                    textColor = TextLow,
+                )
+            },
+            containerColor = Color(0xFF1E1C16),
+            titleContentColor = DarkTextHigh,
+            textContentColor = DarkTextMid,
         )
     }
 }

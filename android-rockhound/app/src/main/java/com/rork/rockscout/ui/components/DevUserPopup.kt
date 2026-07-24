@@ -99,6 +99,8 @@ fun DevUserPopup(
     var deleteReason by remember { mutableStateOf("") }
     var showRestoreDialog by remember { mutableStateOf(false) }
     var actionMessage by remember { mutableStateOf<String?>(null) }
+    var pendingRemoveReportId by remember { mutableStateOf<String?>(null) }
+    var showClearReportsConfirm by remember { mutableStateOf(false) }
 
     suspend fun reload() {
         user = SubscriptionAdminManager.fetchAdminUser(userId)
@@ -380,11 +382,7 @@ fun DevUserPopup(
                                         .background(Danger.copy(alpha = 0.12f))
                                         .glowingBorder(1.5.dp, Danger.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
                                         .clickable {
-                                            scope.launch {
-                                                ReportRepository.instance.removeReport(report.id)
-                                                actionMessage = "Report removed."
-                                                reload()
-                                            }
+                                            pendingRemoveReportId = report.id
                                         }
                                         .padding(horizontal = 10.dp, vertical = 6.dp),
                                 ) {
@@ -572,6 +570,81 @@ fun DevUserPopup(
             },
             dismissButton = {
                 SculptedTextButton(text = "Cancel", onClick = { showRestoreDialog = false }, accent = DarkTextMid, textColor = DarkTextMid)
+            },
+            containerColor = Color(0xFF1E1C16),
+            titleContentColor = DarkTextHigh,
+            textContentColor = DarkTextMid,
+        )
+    }
+
+    // ── Per-report remove confirmation ──
+    pendingRemoveReportId?.let { reportId ->
+        AlertDialog(
+            onDismissRequest = { pendingRemoveReportId = null },
+            title = { Text("Remove this report?", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    "This will dismiss the selected report. The user's other reports will remain.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = DarkTextMid,
+                )
+            },
+            confirmButton = {
+                SculptedButton(
+                    text = "Remove",
+                    onClick = {
+                        val id = reportId
+                        pendingRemoveReportId = null
+                        scope.launch {
+                            ReportRepository.instance.removeReport(id)
+                            actionMessage = "Report removed."
+                            reload()
+                        }
+                    },
+                    accent = Danger,
+                    containerColor = Danger,
+                    textColor = Color.White,
+                )
+            },
+            dismissButton = {
+                SculptedTextButton(text = "Cancel", onClick = { pendingRemoveReportId = null }, accent = DarkTextMid, textColor = DarkTextMid)
+            },
+            containerColor = Color(0xFF1E1C16),
+            titleContentColor = DarkTextHigh,
+            textContentColor = DarkTextMid,
+        )
+    }
+
+    // ── Clear all reports confirmation ──
+    if (showClearReportsConfirm) {
+        AlertDialog(
+            onDismissRequest = { showClearReportsConfirm = false },
+            title = { Text("Clear all reports?", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    "This will clear all ${reports.size} report${if (reports.size == 1) "" else "s"} for ${user?.display_name ?: "this user"}. The user will be reinstated.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = DarkTextMid,
+                )
+            },
+            confirmButton = {
+                SculptedButton(
+                    text = "Clear All",
+                    onClick = {
+                        showClearReportsConfirm = false
+                        scope.launch {
+                            ReportRepository.instance.reinstateUser(userId)
+                            actionMessage = "All reports cleared for ${user?.display_name ?: "user"}."
+                            reload()
+                        }
+                    },
+                    accent = Warning,
+                    containerColor = Warning,
+                    textColor = Color.Black,
+                )
+            },
+            dismissButton = {
+                SculptedTextButton(text = "Cancel", onClick = { showClearReportsConfirm = false }, accent = DarkTextMid, textColor = DarkTextMid)
             },
             containerColor = Color(0xFF1E1C16),
             titleContentColor = DarkTextHigh,

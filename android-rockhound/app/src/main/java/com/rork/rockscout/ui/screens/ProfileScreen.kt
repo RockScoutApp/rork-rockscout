@@ -219,6 +219,8 @@ fun ProfileScreen(
     var commentImageErrors by remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
     var replyImageErrors by remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
     var pendingDeletePostId by remember { mutableStateOf<String?>(null) }
+    var showRemoveBgConfirm by remember { mutableStateOf(false) }
+    var pendingRemoveMemberId by remember { mutableStateOf<String?>(null) }
     var showArchivedPosts by remember { mutableStateOf(false) }
     val archivedPosts by postRepo.archivedPosts.collectAsStateWithLifecycle()
 
@@ -571,10 +573,7 @@ fun ProfileScreen(
                     onPaywall = { navController.navigate(Routes.PAYWALL) },
                     onMemberTap = { memberId -> navController.navigate(Routes.userProfile(memberId)) },
                     onMemberRemove = { memberId ->
-                        coroutineScope.launch {
-                            social.removeConnection(memberId)
-                            social.loadConnections()
-                        }
+                        pendingRemoveMemberId = memberId
                     },
                     onMemberCollection = { memberId -> navController.navigate(Routes.userCollection(memberId)) },
                     onMemberWishlist = { memberId -> navController.navigate(Routes.userWishlist(memberId)) },
@@ -1013,8 +1012,37 @@ fun ProfileScreen(
                 }
             },
             onRemoveBackground = {
-                repo.setBackgroundImagePath(null)
+                showRemoveBgConfirm = true
             },
+        )
+    }
+
+    // Remove background image confirmation
+    if (showRemoveBgConfirm) {
+        DeleteConfirmDialog(
+            title = "Remove background?",
+            message = "Remove your profile background image? You can set a new one anytime.",
+            onConfirm = {
+                repo.setBackgroundImagePath(null)
+                showRemoveBgConfirm = false
+            },
+            onDismiss = { showRemoveBgConfirm = false },
+        )
+    }
+
+    // Club member removal confirmation
+    pendingRemoveMemberId?.let { memberId ->
+        DeleteConfirmDialog(
+            title = "Remove connection?",
+            message = "Remove this RockScout from your club? You can re-add them later.",
+            onConfirm = {
+                coroutineScope.launch {
+                    social.removeConnection(memberId)
+                    social.loadConnections()
+                }
+                pendingRemoveMemberId = null
+            },
+            onDismiss = { pendingRemoveMemberId = null },
         )
     }
 }

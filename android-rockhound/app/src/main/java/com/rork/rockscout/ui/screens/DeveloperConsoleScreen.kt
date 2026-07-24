@@ -843,6 +843,8 @@ private fun ModerationTab() {
     var screenshotViewerPath by remember { mutableStateOf<String?>(null) }
     var modSearchQuery by remember { mutableStateOf("") }
     var popupUserId by remember { mutableStateOf<String?>(null) }
+    var pendingDeleteReviewId by remember { mutableStateOf<String?>(null) }
+    var pendingRemoveReportId by remember { mutableStateOf<String?>(null) }
 
     suspend fun reloadAll() {
         groups = ReportRepository.instance.getAllModerationGroups()
@@ -992,23 +994,7 @@ private fun ModerationTab() {
                         }
                     },
                     onDelete = {
-                        scope.launch {
-                            val deleted = ImageReviewRepository.instance.deleteReview(review.id)
-                            if (deleted != null) {
-                                // Clear pending state on the model
-                                if (deleted.type == "profile_background") {
-                                    AppRepository.instance.setPendingBackgroundPath(null)
-                                } else if (deleted.type == "field_capture" && deleted.capture_id != null) {
-                                    AppRepository.instance.setCapturePendingImage(deleted.capture_id, null)
-                                }
-                                // Trigger rejection email via the Cloudflare function
-                                val userEmail = AuthRepository.instance.currentUserEmail
-                                if (!userEmail.isNullOrBlank()) {
-                                    sendImageRejectionEmail(userEmail, deleted.type, deleted.user_name)
-                                }
-                            }
-                            reloadAll()
-                        }
+                        pendingDeleteReviewId = review.id
                     },
                 )
             }
@@ -1084,6 +1070,79 @@ private fun ModerationTab() {
             dismissButton = {
                 SculptedTextButton(text = "Cancel", onClick = { reinstating = null }, accent = Citrine, textColor = DarkTextMid)
             },
+            containerColor = Color(0xFF1E1C16),
+        )
+    }
+
+    // ── Image review delete confirmation ──
+    pendingDeleteReviewId?.let { reviewId ->
+        AlertDialog(
+            onDismissRequest = { pendingDeleteReviewId = null },
+            title = { Text("Delete this image review?", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    "The image will be rejected and a rejection email will be sent to the user. This cannot be undone.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = DarkTextMid,
+                )
+            },
+            confirmButton = {
+                SculptedDialogButton(
+                    text = "Delete",
+                    onClick = {
+                        val id = reviewId
+                        pendingDeleteReviewId = null
+                        scope.launch {
+                            val deleted = ImageReviewRepository.instance.deleteReview(id)
+                            if (deleted != null) {
+                                if (deleted.type == "profile_background") {
+                                    AppRepository.instance.setPendingBackgroundPath(null)
+                                } else if (deleted.type == "field_capture" && deleted.capture_id != null) {
+                                    AppRepository.instance.setCapturePendingImage(deleted.capture_id, null)
+                                }
+                                val userEmail = AuthRepository.instance.currentUserEmail
+                                if (!userEmail.isNullOrBlank()) {
+                                    sendImageRejectionEmail(userEmail, deleted.type, deleted.user_name)
+                                }
+                            }
+                            reloadAll()
+                        }
+                    },
+                    accent = Danger,
+                )
+            },
+            dismissButton = { SculptedTextButton(text = "Cancel", onClick = { pendingDeleteReviewId = null }, accent = Danger, textColor = DarkTextMid) },
+            containerColor = Color(0xFF1E1C16),
+        )
+    }
+
+    // ── Per-report remove confirmation ──
+    pendingRemoveReportId?.let { reportId ->
+        AlertDialog(
+            onDismissRequest = { pendingRemoveReportId = null },
+            title = { Text("Remove this report?", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    "This will dismiss the selected report. Other reports for this user will remain.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = DarkTextMid,
+                )
+            },
+            confirmButton = {
+                SculptedDialogButton(
+                    text = "Remove",
+                    onClick = {
+                        val id = reportId
+                        pendingRemoveReportId = null
+                        scope.launch {
+                            ReportRepository.instance.removeReport(id)
+                            reloadAll()
+                        }
+                    },
+                    accent = Danger,
+                )
+            },
+            dismissButton = { SculptedTextButton(text = "Cancel", onClick = { pendingRemoveReportId = null }, accent = Danger, textColor = DarkTextMid) },
             containerColor = Color(0xFF1E1C16),
         )
     }
@@ -1500,6 +1559,7 @@ private fun BugLogTab() {
     var confirmClearDiscovered by remember { mutableStateOf(false) }
     var selectedIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     var acceptMessage by remember { mutableStateOf<String?>(null) }
+    var pendingDenySites by remember { mutableStateOf<List<com.rork.rockscout.data.DigSiteDiscoveryStore.DiscoveredSite>?>(null) }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().navigationBarsPadding(),
@@ -1832,9 +1892,7 @@ private fun BugLogTab() {
                             )
                             .clickable(enabled = selectedIds.isNotEmpty()) {
                                 val toDeny = discoveredSites.filter { it.id in selectedIds }
-                                toDeny.forEach { DigSiteDiscoveryStore.remove(it.id) }
-                                acceptMessage = "${toDeny.size} site${if (toDeny.size == 1) "" else "s"} dismissed."
-                                selectedIds = emptySet()
+                                pendingDenySites = toDeny
                             }
                             .padding(horizontal = 12.dp, vertical = 10.dp),
                         contentAlignment = Alignment.Center,
@@ -2013,6 +2071,36 @@ private fun BugLogTab() {
             containerColor = Color(0xFF1E1C16),
         )
     }
+
+    // ── Deny selected discovered sites confirmation ──
+    pendingDenySites?.let { sites ->
+        AlertDialog(
+            onDismissRequest = { pendingDenySites = null },
+            title = { Text("Dismiss ${sites.size} site${if (sites.size == 1) "" else "s"}?", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    "This will permanently dismiss the selected discovered location${if (sites.size == 1) "" else "s"}. This cannot be undone.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = DarkTextMid,
+                )
+            },
+            confirmButton = {
+                SculptedDialogButton(
+                    text = "Dismiss",
+                    onClick = {
+                        sites.forEach { DigSiteDiscoveryStore.remove(it.id) }
+                        acceptMessage = "${sites.size} site${if (sites.size == 1) "" else "s"} dismissed."
+                        selectedIds = emptySet()
+                        pendingDenySites = null
+                    },
+                    accent = Danger,
+                )
+            },
+            dismissButton = { SculptedTextButton(text = "Cancel", onClick = { pendingDenySites = null }, accent = Danger, textColor = DarkTextMid) },
+            containerColor = Color(0xFF1E1C16),
+        )
+    }
+
 }
 
 @Composable
@@ -2052,6 +2140,7 @@ private fun SubmissionsTab() {
     var actionMessage by remember { mutableStateOf<String?>(null) }
     var specimenViewerUrls by remember { mutableStateOf<List<String>>(emptyList()) }
     var specimenViewerPage by remember { mutableIntStateOf(0) }
+    var pendingDenySite by remember { mutableStateOf<com.rork.rockscout.data.DigSiteDiscoveryStore.DiscoveredSite?>(null) }
 
     Box(modifier = Modifier.fillMaxSize().navigationBarsPadding().imePadding()) {
     LazyColumn(
@@ -2563,8 +2652,7 @@ private fun SubmissionsTab() {
                                     .background(Danger.copy(alpha = 0.12f))
                                     .glowingBorder(1.5.dp, Danger.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
                                     .clickable {
-                                        DigSiteDiscoveryStore.remove(site.id)
-                                        actionMessage = "${site.name} dismissed."
+                                        pendingDenySite = site
                                     }
                                     .padding(horizontal = 12.dp, vertical = 7.dp),
                             ) { Text("Deny", style = MaterialTheme.typography.labelSmall, color = Danger, fontWeight = FontWeight.Bold) }
@@ -2600,6 +2688,34 @@ private fun SubmissionsTab() {
             imageUrls = specimenViewerUrls,
             initialPage = specimenViewerPage,
             onDismiss = { specimenViewerUrls = emptyList() },
+        )
+    }
+
+    // ── Deny individual discovered site confirmation ──
+    pendingDenySite?.let { site ->
+        AlertDialog(
+            onDismissRequest = { pendingDenySite = null },
+            title = { Text("Dismiss \"${site.name}\"?", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    "This will permanently dismiss this discovered location. This cannot be undone.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = DarkTextMid,
+                )
+            },
+            confirmButton = {
+                SculptedDialogButton(
+                    text = "Dismiss",
+                    onClick = {
+                        DigSiteDiscoveryStore.remove(site.id)
+                        actionMessage = "${site.name} dismissed."
+                        pendingDenySite = null
+                    },
+                    accent = Danger,
+                )
+            },
+            dismissButton = { SculptedTextButton(text = "Cancel", onClick = { pendingDenySite = null }, accent = Danger, textColor = DarkTextMid) },
+            containerColor = Color(0xFF1E1C16),
         )
     }
     }

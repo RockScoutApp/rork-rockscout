@@ -437,10 +437,9 @@ fun CommunityScreen(navController: NavController) {
                 }
             },
             onDelete = { postId ->
-                scope.launch {
-                    repo.deletePost(postId)
-                    repo.loadExpiredPosts()
-                }
+                showExpiredPopup = false
+                pendingDeletePostId = postId
+                showDeleteConfirm = true
             },
             onDismiss = { showExpiredPopup = false },
         )
@@ -472,7 +471,10 @@ fun CommunityScreen(navController: NavController) {
                         showDeleteConfirm = false
                         pendingDeletePostId = null
                         if (postId != null) {
-                            scope.launch { repo.deletePost(postId) }
+                            scope.launch {
+                                repo.deletePost(postId)
+                                repo.loadExpiredPosts()
+                            }
                         }
                     },
                     accent = Danger,

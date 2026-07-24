@@ -84,6 +84,7 @@ import com.rork.rockscout.ui.components.noAutoFocus
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
+import com.rork.rockscout.ui.theme.Danger
 import com.rork.rockscout.ui.theme.Slate800
 import com.rork.rockscout.ui.theme.TextLow
 import kotlinx.coroutines.Dispatchers
@@ -177,6 +178,7 @@ fun AddLocationDialog(
     var submitStatus by remember { mutableStateOf<String?>(null) }
     var moderationError by remember { mutableStateOf<String?>(null) }
     var showSavedImagePicker by remember { mutableStateOf(false) }
+    var pendingRemovePhoto by remember { mutableStateOf<Uri?>(null) }
 
     // Camera launcher
     val cameraLauncher = rememberLauncherForActivityResult(
@@ -371,7 +373,7 @@ fun AddLocationDialog(
                                     .clip(RoundedCornerShape(11.dp))
                                     .background(Color.Black.copy(alpha = 0.6f))
                                     .glowingBorder(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(11.dp))
-                                    .clickable { photoUris.remove(uri) },
+                                    .clickable { pendingRemovePhoto = uri },
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Icon(Icons.Filled.Close, contentDescription = "Remove photo", tint = Color.White, modifier = Modifier.size(14.dp))
@@ -612,6 +614,34 @@ fun AddLocationDialog(
                     val path = processSavedImage(context, image, "location_submissions", "location_submission")
                     if (path != null) photoUris.add(Uri.parse(path))
                 }
+            },
+        )
+    }
+
+    pendingRemovePhoto?.let { uri ->
+        AlertDialog(
+            onDismissRequest = { pendingRemovePhoto = null },
+            title = { Text("Remove photo?", color = MaterialTheme.colorScheme.onSurface) },
+            text = { Text("Remove this photo from the submission?", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+            confirmButton = {
+                SculptedTextButton(
+                    text = "Remove",
+                    onClick = {
+                        photoUris.remove(uri)
+                        pendingRemovePhoto = null
+                    },
+                    accent = Danger,
+                    textColor = Danger,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            dismissButton = {
+                SculptedTextButton(
+                    text = "Cancel",
+                    onClick = { pendingRemovePhoto = null },
+                    accent = Citrine,
+                    textColor = TextLow,
+                )
             },
         )
     }
