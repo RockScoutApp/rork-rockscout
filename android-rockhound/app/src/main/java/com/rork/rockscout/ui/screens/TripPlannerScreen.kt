@@ -349,7 +349,7 @@ fun TripPlannerScreen(navController: NavController) {
                         )
                     }
                 }
-                // Plan My Next Adventure button — primary pill
+                // Plan My Adventure button — primary pill
                 Box(
                     modifier = Modifier
                         .sculpted(
@@ -373,7 +373,7 @@ fun TripPlannerScreen(navController: NavController) {
                         )
                         Spacer(Modifier.width(4.dp))
                         Text(
-                            "Plan My Next Adventure",
+                            "Plan My Adventure",
                             style = MaterialTheme.typography.labelSmall,
                             color = Citrine,
                             fontWeight = FontWeight.Bold,
