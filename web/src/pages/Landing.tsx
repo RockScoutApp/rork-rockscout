@@ -279,13 +279,15 @@ const Hero = () => (
         </p>
 
         <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <span
-            aria-disabled="true"
-            className="inline-flex items-center justify-center gap-2.5 rounded-2xl border border-primary/40 bg-primary/10 px-6 py-3.5 font-semibold text-primary/80"
+          <a
+            href={SITE.playStoreUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2.5 rounded-2xl border border-primary/40 bg-primary/10 px-6 py-3.5 font-semibold text-primary/80 transition-colors hover:bg-primary/20 hover:text-primary"
           >
             <Download className="h-5 w-5" />
             Coming soon to Google Play
-          </span>
+          </a>
           <span className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-card/50 px-5 py-3.5 text-sm font-medium text-muted-foreground">
             <Apple className="h-4 w-4" /> iOS coming soon
           </span>
@@ -799,13 +801,15 @@ const CTA = () => (
           RockScout is coming soon to Google Play. Be the first to know when it launches.
         </p>
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <span
-            aria-disabled="true"
-            className="inline-flex items-center justify-center gap-2.5 rounded-2xl border border-primary/40 bg-primary/10 px-8 py-4 font-semibold text-primary/80"
+          <a
+            href={SITE.playStoreUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2.5 rounded-2xl border border-primary/40 bg-primary/10 px-8 py-4 font-semibold text-primary/80 transition-colors hover:bg-primary/20 hover:text-primary"
           >
             <Download className="h-5 w-5" />
             Coming soon to Google Play
-          </span>
+          </a>
           <Link
             to="/support"
             className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-card/60 px-6 py-4 text-sm font-medium text-foreground transition-colors hover:bg-card"

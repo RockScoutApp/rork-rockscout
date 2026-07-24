@@ -77,14 +77,19 @@ const Support = () => (
           </div>
           <Mail className="h-5 w-5 text-primary transition-transform group-hover:-translate-y-0.5" />
         </a>
-        <div className="group flex items-center justify-between rounded-2xl border border-border bg-card/50 p-5">
+        <a
+          href={SITE.playStoreUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-center justify-between rounded-2xl border border-border bg-card/50 p-5 transition-colors hover:border-primary/40 hover:bg-card"
+        >
           <div>
             <p className="text-sm font-semibold">Coming soon to Google Play</p>
             <p className="mt-1 text-sm text-muted-foreground">Android app in review</p>
             <p className="mt-2 text-xs text-muted-foreground">{SITE.appStoreNote}.</p>
           </div>
-          <Download className="h-5 w-5 text-primary/70" />
-        </div>
+          <Download className="h-5 w-5 text-primary/70 transition-transform group-hover:-translate-y-0.5" />
+        </a>
       </div>
 
       <h2 className="mt-16 text-2xl font-semibold tracking-tight">Frequently asked questions</h2>
