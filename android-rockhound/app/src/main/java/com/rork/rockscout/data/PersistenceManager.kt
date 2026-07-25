@@ -349,7 +349,7 @@ object PersistenceManager {
     // ---------------------------------------------------------- cache size
     /**
      * Persist the user's cache size preference: "standard" (150MB) or "max" (2GB).
-     * Read at app startup by RockHoundApplication to size Coil + osmdroid caches.
+     * Read at app startup by RockScoutApplication to size Coil + osmdroid caches.
      */
     fun saveCacheSizeMode(mode: String) {
         ensureInitialized()
