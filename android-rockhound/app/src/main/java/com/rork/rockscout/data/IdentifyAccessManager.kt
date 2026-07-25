@@ -334,6 +334,32 @@ class IdentifyAccessManager private constructor() {
     }
 
     /**
+     * Gate for social/communal features (Friends, Messenger, Trade Board,
+     * Trading Floor, Community, RockScouts Map, Discover Hunters, Trip
+     * Planner, My Trades, Scan/Profile sharing).
+     *
+     * Social features are open during the 1-week trial and during donated
+     * unlocks, then lock for non-premium users. Premium is never locked.
+     */
+    fun isSocialLocked(isPremium: Boolean): Boolean {
+        if (isPremium) return false
+        if (_hasLocationUnlock.value) return false
+        return _trialExpired.value
+    }
+
+    /**
+     * Gate for personal collection tools (My Rocks, Wishlist, Field
+     * Captures, Favorite Spots, Field Journal, Saved Images).
+     *
+     * Personal tools are always free — never locked regardless of trial
+     * status or premium. This keeps the app useful for free users and
+     * keeps it rated G by limiting social access for non-subscribers.
+     */
+    fun isPersonalLocked(isPremium: Boolean): Boolean {
+        return false
+    }
+
+    /**
      * Grant a temporary location-monitoring unlock for the given number of days.
      * Stacks/extends from the later of now or the current expiry.
      */

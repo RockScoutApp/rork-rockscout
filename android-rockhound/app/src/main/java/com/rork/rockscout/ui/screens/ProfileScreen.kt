@@ -43,6 +43,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Notifications
@@ -245,6 +246,7 @@ fun ProfileScreen(
     val locationLocked = remember(isPremium, trialExpired) {
         accessManager.isLocationLocked(isPremium)
     }
+    val socialLocked = remember(isPremium) { accessManager.isSocialLocked(isPremium) }
 
     val nearby = remember(current, profile.locationMonitoring, locationRefresh) {
         SeedData.allLocations
@@ -313,13 +315,15 @@ fun ProfileScreen(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    CreatePostButton(
-                        onClick = {
-                            if (isSignedIn) showCreatePost = true
-                            else navController.navigate(Routes.SIGN_IN)
-                        },
-                        modifier = Modifier.padding(bottom = 8.dp),
-                    )
+                    if (!socialLocked) {
+                        CreatePostButton(
+                            onClick = {
+                                if (isSignedIn) showCreatePost = true
+                                else navController.navigate(Routes.SIGN_IN)
+                            },
+                            modifier = Modifier.padding(bottom = 8.dp),
+                        )
+                    }
                 }
                 Box(modifier = Modifier.fillMaxWidth()) {
                     // Two-zone profile card: background image on top, solid gradient below.
@@ -464,7 +468,7 @@ fun ProfileScreen(
                                             }
                                         }
                                         // Compact status dropdown — same height as the Social Settings pill
-                                        if (isSignedIn) {
+                                        if (isSignedIn && !socialLocked) {
                                             HunterStatusDropdown(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
@@ -560,6 +564,7 @@ fun ProfileScreen(
                     clubMembers = clubMembers,
                     scanRadiusMiles = profile.scanRadiusMiles,
                     isPremium = isPremium,
+                    socialLocked = socialLocked,
                     howThisWorksExpanded = howThisWorksExpanded,
                     onHowThisWorksToggle = { howThisWorksExpanded = !howThisWorksExpanded },
                     onSignIn = { navController.navigate(Routes.SIGN_IN) },
@@ -586,13 +591,45 @@ fun ProfileScreen(
             item { SectionLabel("Profile Posts") }
             if (myPosts.isEmpty()) {
                 item {
-                    EmptyPostBox(
-                        isMe = true,
-                        onCreatePost = {
-                            if (isSignedIn) showCreatePost = true
-                            else navController.navigate(Routes.SIGN_IN)
-                        },
-                    )
+                    if (!socialLocked) {
+                        EmptyPostBox(
+                            isMe = true,
+                            onCreatePost = {
+                                if (isSignedIn) showCreatePost = true
+                                else navController.navigate(Routes.SIGN_IN)
+                            },
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color(0xFF1E1C16))
+                                .glowingBorder(1.dp, Color(0xFF3A3830), RoundedCornerShape(16.dp))
+                                .clickable { navController.navigate(Routes.PAYWALL) }
+                                .padding(24.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("\uD83D\uDD12", style = MaterialTheme.typography.headlineMedium)
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    "Social features are locked",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = DarkTextHigh,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    "Subscribe or donate to create posts and share with the community.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextMid,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                )
+                            }
+                        }
+                    }
                 }
             } else {
                 items(myPosts, key = { it.id }) { post ->
@@ -1336,6 +1373,7 @@ private fun RockScoutFriendsSection(
     clubMembers: List<SocialRepository.HunterProfile>,
     scanRadiusMiles: Int,
     isPremium: Boolean,
+    socialLocked: Boolean,
     howThisWorksExpanded: Boolean,
     onHowThisWorksToggle: () -> Unit,
     onSignIn: () -> Unit,
@@ -1411,15 +1449,27 @@ private fun RockScoutFriendsSection(
 
             // Single wider Scan tile
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                SocialSubTile(
-                    icon = Icons.Filled.LocationOn,
-                    label = "Scan",
-                    subtitle = "Find nearby",
-                    accent = Aqua,
-                    iconTint = Aqua,
-                    modifier = Modifier.fillMaxWidth(0.66f),
-                    onClick = onScan,
-                )
+                if (socialLocked) {
+                    SocialSubTile(
+                        icon = Icons.Filled.Lock,
+                        label = "Scan (locked)",
+                        subtitle = "Subscribe to scan",
+                        accent = TextLow,
+                        iconTint = TextLow,
+                        modifier = Modifier.fillMaxWidth(0.66f),
+                        onClick = onPaywall,
+                    )
+                } else {
+                    SocialSubTile(
+                        icon = Icons.Filled.LocationOn,
+                        label = "Scan",
+                        subtitle = "Find nearby",
+                        accent = Aqua,
+                        iconTint = Aqua,
+                        modifier = Modifier.fillMaxWidth(0.66f),
+                        onClick = onScan,
+                    )
+                }
             }
 
             // When social is ON, show sub-tiles + scan radius + status + friends list
@@ -1429,31 +1479,31 @@ private fun RockScoutFriendsSection(
                 Spacer(Modifier.height(14.dp))
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     SocialSubTile(
-                        icon = Icons.Filled.Group,
-                        label = "Friends & Messages",
+                        icon = if (socialLocked) Icons.Filled.Lock else Icons.Filled.Group,
+                        label = if (socialLocked) "Locked" else "Friends & Messages",
                         subtitle = null,
-                        accent = Color(0xFF4CF0E8),
-                        iconTint = Color(0xFFEAFFFE),
+                        accent = if (socialLocked) TextLow else Color(0xFF4CF0E8),
+                        iconTint = if (socialLocked) TextLow else Color(0xFFEAFFFE),
                         modifier = Modifier.weight(1f),
-                        onClick = onFriends,
+                        onClick = if (socialLocked) onPaywall else onFriends,
                     )
                     SocialSubTile(
-                        icon = Icons.Filled.PersonSearch,
-                        label = "Browse Users",
+                        icon = if (socialLocked) Icons.Filled.Lock else Icons.Filled.PersonSearch,
+                        label = if (socialLocked) "Locked" else "Browse Users",
                         subtitle = null,
-                        accent = Color(0xFF4CF0E8),
-                        iconTint = Color(0xFFEAFFFE),
+                        accent = if (socialLocked) TextLow else Color(0xFF4CF0E8),
+                        iconTint = if (socialLocked) TextLow else Color(0xFFEAFFFE),
                         modifier = Modifier.weight(1f),
-                        onClick = onBrowse,
+                        onClick = if (socialLocked) onPaywall else onBrowse,
                     )
                     SocialSubTile(
-                        icon = Icons.Filled.Map,
-                        label = "Ping Maps",
+                        icon = if (socialLocked) Icons.Filled.Lock else Icons.Filled.Map,
+                        label = if (socialLocked) "Locked" else "Ping Maps",
                         subtitle = null,
-                        accent = Color(0xFF4CF0E8),
-                        iconTint = Color(0xFFEAFFFE),
+                        accent = if (socialLocked) TextLow else Color(0xFF4CF0E8),
+                        iconTint = if (socialLocked) TextLow else Color(0xFFEAFFFE),
                         modifier = Modifier.weight(1f),
-                        onClick = onPingMap,
+                        onClick = if (socialLocked) onPaywall else onPingMap,
                     )
                 }
 

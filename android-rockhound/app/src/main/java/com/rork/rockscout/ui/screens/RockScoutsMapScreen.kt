@@ -126,7 +126,7 @@ fun RockScoutsMapScreen(navController: NavController) {
     val purchaseManager = com.rork.rockscout.data.PurchaseManager.instance
     val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
     val clubLocked = remember(isPremium) {
-        accessManager.isFeatureLocked(isPremium)
+        accessManager.isSocialLocked(isPremium)
     }
 
     val connections by social.connections.collectAsStateWithLifecycle()

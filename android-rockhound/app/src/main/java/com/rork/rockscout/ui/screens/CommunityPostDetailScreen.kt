@@ -67,6 +67,10 @@ import com.rork.rockscout.ui.theme.Obsidian
 import com.rork.rockscout.ui.theme.TextMid
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.rork.rockscout.data.PurchaseManager
+import com.rork.rockscout.data.IdentifyAccessManager
+import com.rork.rockscout.ui.navigation.Routes
 
 /** Sort mode for detail screen comments. */
 private enum class DetailCommentSortMode { Popular, Newest, Oldest }
@@ -87,6 +91,20 @@ fun CommunityPostDetailScreen(
 ) {
     val repo = CommunityRepository.instance
     val social = SocialRepository.instance
+    val accessManager = IdentifyAccessManager.instance
+    val purchaseManager = PurchaseManager.instance
+    val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val socialLocked = remember(isPremium) { accessManager.isSocialLocked(isPremium) }
+    if (socialLocked) {
+        com.rork.rockscout.ui.components.ClubLockedState(
+            emoji = "\uD83D\uDD12",
+            title = "Unlock Community",
+            message = "Your 1-week free trial has ended. Subscribe or donate to join the community discussion.",
+            buttonLabel = "Subscribe or donate",
+            onButton = { navController.navigate(Routes.PAYWALL) },
+        )
+        return
+    }
     val feedPosts by repo.feedPosts.collectAsStateWithLifecycle()
     val expiredPosts by repo.expiredPosts.collectAsStateWithLifecycle()
     val postLikes by repo.postLikes.collectAsStateWithLifecycle()

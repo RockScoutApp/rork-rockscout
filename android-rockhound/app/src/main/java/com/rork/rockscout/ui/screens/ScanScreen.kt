@@ -123,7 +123,7 @@ fun ScanScreen(navController: NavController) {
     val trialExpired by accessManager.trialExpired.collectAsStateWithLifecycle()
     val hasLocationUnlock by accessManager.hasLocationUnlock.collectAsStateWithLifecycle()
     val clubLocked = remember(isPremium, trialExpired, hasLocationUnlock) {
-        accessManager.isFeatureLocked(isPremium)
+        accessManager.isSocialLocked(isPremium)
     }
 
     val scanResults by social.scanResults.collectAsStateWithLifecycle()

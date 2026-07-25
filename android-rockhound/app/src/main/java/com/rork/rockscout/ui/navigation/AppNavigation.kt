@@ -56,6 +56,7 @@ import com.rork.rockscout.ui.screens.GemShowDetailScreen
 import com.rork.rockscout.ui.screens.CommunityPostDetailScreen
 import com.rork.rockscout.ui.screens.GearGuideScreen
 import com.rork.rockscout.ui.screens.GlossaryScreen
+import com.rork.rockscout.ui.screens.NaturalWondersScreen
 import com.rork.rockscout.ui.screens.TokenInfoScreen
 import com.rork.rockscout.ui.screens.WishlistScreen
 import com.rork.rockscout.ui.screens.TripPlannerScreen
@@ -190,6 +191,7 @@ object Routes {
     const val AURORA = "aurora"
     const val SEVERE_WEATHER = "severe_weather"
     const val GLOSSARY = "glossary"
+    const val NATURAL_WONDERS = "natural_wonders"
 
     // Stars & Constellations sub-screens
     const val STARS_LANDING = "stars_landing"
@@ -723,6 +725,7 @@ fun AppNavigation(
         composable(Routes.AURORA) { AuroraScreen(navController) }
         composable(Routes.SEVERE_WEATHER) { SevereWeatherScreen(navController) }
         composable(Routes.GLOSSARY) { GlossaryScreen(navController) }
+        composable(Routes.NATURAL_WONDERS) { NaturalWondersScreen(navController) }
         composable(Routes.STARS_LANDING) { StarsLandingScreen(navController) }
         composable(Routes.CONSTELLATIONS) { ConstellationsScreen(navController) }
         composable(Routes.IMPORTANT_STARS) { ImportantStarsScreen(navController) }

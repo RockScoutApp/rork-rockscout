@@ -291,6 +291,7 @@ fun HomeScreen(navController: NavController) {
     val locationLocked = remember(isPremium, trialExpired) {
         accessManager.isLocationLocked(isPremium)
     }
+    val socialLocked = remember(isPremium) { accessManager.isSocialLocked(isPremium) }
 
     // Referral reward popups — shown when a new user's code is confirmed or
     // when the sender has pending referral completions credited.
@@ -406,8 +407,6 @@ fun HomeScreen(navController: NavController) {
             AURORA_TILE_BG_URL),
         HomeTile("Severe Weather", "NWS alerts + live storm chaser streams", Icons.Filled.Warning, Color(0xFFFF6B3D), Routes.SEVERE_WEATHER,
             "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/e2803cb6-56f0-4506-84cb-0a36be573f7e.png"),
-        HomeTile("Glossary", "Every rock, mineral & space term explained", Icons.Filled.MenuBook, Color(0xFF6FA8C7), Routes.GLOSSARY,
-            SpecimenImages.urls["fluorite"]?.firstOrNull()),
     )
 
     val infoTiles = listOf(
@@ -431,6 +430,8 @@ fun HomeScreen(navController: NavController) {
             SpecimenImages.urls["quartz"]?.firstOrNull()),
         HomeTile("Lapidary Basics", "Cut, polish & cab your finds into jewelry", Icons.Filled.Construction, Color(0xFFE8A33D), Routes.LAPIDARY_BASICS,
             SpecimenImages.urls["lapidary-tile"]?.firstOrNull()),
+        HomeTile("Natural Wonders", "World-famous geological sites & what to find there", Icons.Filled.Public, Color(0xFF1B3A4B), Routes.NATURAL_WONDERS,
+            "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/natural-wonders-tile.png"),
     )
 
     // Field-guide tiles live in the field kit grid (same square format as the
@@ -442,6 +443,8 @@ fun HomeScreen(navController: NavController) {
             SpecimenImages.urls["amazing-meteorite-hunting"]?.firstOrNull()),
         HomeTile("Rock & Gem Resources", "Trusted geology, gem & fossil websites", Icons.Filled.Public, Color(0xFF7CB5EC), Routes.RESOURCE_LINKS,
             GEM_MINERAL_HERO_URL),
+        HomeTile("Glossary", "Every rock, mineral & space term explained", Icons.Filled.MenuBook, Color(0xFF6FA8C7), Routes.GLOSSARY,
+            SpecimenImages.urls["fluorite"]?.firstOrNull()),
     )
 
     val featuredSpecimens = remember {
@@ -552,31 +555,34 @@ fun HomeScreen(navController: NavController) {
             item {
                 FullWidthBannerTile(
                     label = "Trade Board",
-                    subtitle = "$listingsCount listings · Post a specimen to swap, sell, or browse nearby",
+                    subtitle = if (socialLocked) "Subscribe or donate to post and browse trades" else "$listingsCount listings · Post a specimen to swap, sell, or browse nearby",
                     icon = Icons.Filled.SwapHoriz,
                     accent = bannerAccent,
                     imageRes = R.drawable.trade_board_floor,
-                    onClick = { navController.navigate(Routes.TRADE_BOARD) },
+                    locked = socialLocked,
+                    onClick = { if (socialLocked) navController.navigate(Routes.PAYWALL) else navController.navigate(Routes.TRADE_BOARD) },
                 )
             }
             item {
                 FullWidthBannerTile(
                     label = "Community",
-                    subtitle = "Ask questions, share finds & discuss with fellow RockScouts",
+                    subtitle = if (socialLocked) "Subscribe or donate to join the community" else "Ask questions, share finds & discuss with fellow RockScouts",
                     icon = Icons.Filled.Forum,
                     accent = bannerAccent,
                     imageUrl = "https://r2-pub.rork.com/attachments/r6r3hon86cegy20yrqaxy.jpg",
-                    onClick = { navController.navigate(Routes.COMMUNITY) },
+                    locked = socialLocked,
+                    onClick = { if (socialLocked) navController.navigate(Routes.PAYWALL) else navController.navigate(Routes.COMMUNITY) },
                 )
             }
             item {
                 FullWidthBannerTile(
                     label = "Trip Planner",
-                    subtitle = "${trips.size} planned trips · Build a multi-stop hunt and share it",
+                    subtitle = if (socialLocked) "Subscribe or donate to plan and share trips" else "${trips.size} planned trips · Build a multi-stop hunt and share it",
                     icon = Icons.Filled.Map,
                     accent = bannerAccent,
                     imageUrl = "https://r2-pub.rork.com/attachments/78k8yy4tgahby3o9opb6j.png",
-                    onClick = { navController.navigate(Routes.TRIP_PLANNER) },
+                    locked = socialLocked,
+                    onClick = { if (socialLocked) navController.navigate(Routes.PAYWALL) else navController.navigate(Routes.TRIP_PLANNER) },
                 )
             }
             item {
@@ -2818,6 +2824,7 @@ private fun FullWidthBannerTile(
     accent: Color,
     imageUrl: String? = null,
     imageRes: Int = 0,
+    locked: Boolean = false,
     onClick: () -> Unit,
 ) {
     Box(
@@ -2838,6 +2845,13 @@ private fun FullWidthBannerTile(
             )
             .glowingBorder(3.dp, Cyan.copy(alpha = 0.50f), RoundedCornerShape(20.dp)),
     ) {
+        if (locked) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.45f)),
+            )
+        }
         // Background image
         if (imageRes != 0) {
             Image(
@@ -2955,6 +2969,19 @@ private fun FullWidthBannerTile(
                 )
             }
             Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = accent.copy(alpha = 0.85f), modifier = Modifier.size(28.dp))
+        }
+        if (locked) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(10.dp)
+                    .size(28.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.Black.copy(alpha = 0.7f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Filled.Lock, contentDescription = "Locked", tint = Color(0xFFE8A33D), modifier = Modifier.size(16.dp))
+            }
         }
     }
 }

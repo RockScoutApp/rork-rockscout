@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -109,6 +110,7 @@ fun AuroraSavedSpotsMap(
     var isFullscreen by remember { mutableStateOf(false) }
     var fullscreenCenter by remember { mutableStateOf(GeoPoint(60.0, -100.0)) }
     var fullscreenZoom by remember { mutableStateOf(3.0) }
+    var pendingRemoveSpotId by remember { mutableStateOf<String?>(null) }
 
     // Back button dismisses the add-spot form or selected-spot popup instead
     // of exiting the entire screen.
@@ -496,7 +498,7 @@ fun AuroraSavedSpotsMap(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .clickable { onRemoveSpot(spot.id) },
+                        .clickable { pendingRemoveSpotId = spot.id },
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = Color(0xFFFF3B30), modifier = Modifier.size(18.dp))
@@ -510,6 +512,33 @@ fun AuroraSavedSpotsMap(
     // are never called, which causes freezes and crashes when interacting with
     // the map (especially when adding spots triggers marker updates).
     MapViewLifecycleEffect(mapView)
+
+    pendingRemoveSpotId?.let { spotId ->
+        val spotName = spots.firstOrNull { it.id == spotId }?.name ?: "this spot"
+        AlertDialog(
+            onDismissRequest = { pendingRemoveSpotId = null },
+            title = { Text("Delete saved spot?", color = AuroraGreen, fontWeight = FontWeight.Bold) },
+            text = { Text("Remove \"$spotName\" from your saved aurora spots? This action cannot be undone.", color = Color.White.copy(alpha = 0.8f)) },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onRemoveSpot(spotId)
+                        pendingRemoveSpotId = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF3B30), contentColor = Color.White),
+                ) { Text("Delete") }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { pendingRemoveSpotId = null },
+                    colors = ButtonDefaults.buttonColors(containerColor = AuroraDarkBg, contentColor = AuroraGreen),
+                ) { Text("Cancel") }
+            },
+            containerColor = AuroraDarkBg,
+            titleContentColor = AuroraGreen,
+            textContentColor = Color.White.copy(alpha = 0.8f),
+        )
+    }
 
     if (isFullscreen) {
         FullscreenAuroraSpotsOverlay(

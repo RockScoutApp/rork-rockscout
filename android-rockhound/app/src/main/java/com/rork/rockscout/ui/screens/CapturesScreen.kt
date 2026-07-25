@@ -183,14 +183,7 @@ fun CapturesScreen(navController: NavController) {
             }
         },
     ) {
-        if (featureLocked) {
-            LockedFeatureBanner(
-                onSubscribe = { navController.navigate(Routes.PAYWALL) },
-                message = "Your 1-week trial has ended. Subscribe or donate to log and edit field captures.",
-                modifier = Modifier.padding(20.dp),
-            )
-        } else {
-            Column(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()) {
                 // Pill switcher — Captures / Specimen Map
                 CapturesPagePillSwitcher(
                     currentPage = pagerState.currentPage,
@@ -264,12 +257,11 @@ fun CapturesScreen(navController: NavController) {
                         )
                     }
                 }
-            }
         }
     }
 
     // Bottom mass-action bar when in selection mode and items are selected
-    if (selectionMode && selectedCount > 0 && !featureLocked) {
+    if (selectionMode && selectedCount > 0) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.BottomCenter,

@@ -125,22 +125,7 @@ import com.rork.rockscout.ui.components.glowingBorder
 @Composable
 fun FieldJournalScreen(navController: NavController) {
     val repo = AppRepository.instance
-    // ─── Premium gating: Field Journal is a premium feature ───
-    val accessManager = com.rork.rockscout.data.IdentifyAccessManager.instance
-    val purchaseManager = com.rork.rockscout.data.PurchaseManager.instance
-    val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
-    val clubLocked = remember(isPremium) { accessManager.isFeatureLocked(isPremium) }
-    if (clubLocked) {
-        com.rork.rockscout.ui.components.ClubLockedState(
-            emoji = "\uD83D\uDD12",
-            title = "Unlock Field Journal",
-            message = "Your 1-week free trial has ended. Subscribe or donate to keep a field journal of your rockhounding adventures.",
-            buttonLabel = "Subscribe or donate",
-            onButton = { navController.navigate(Routes.PAYWALL) },
-        )
-        return
-    }
-
+    // Field Journal is a personal tool — always free, never locked.
     val entries by repo.journalEntries.collectAsStateWithLifecycle()
     val captures by repo.captures.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -511,6 +496,7 @@ private fun JournalEditorScreen(
     var showSavedImagePicker by remember { mutableStateOf(false) }
     var weatherSummary by remember { mutableStateOf(initial?.weatherSummary ?: "") }
     var pendingPhotoDeleteIdx by remember { mutableStateOf<Int?>(null) }
+    var pendingDetachCaptureIdx by remember { mutableStateOf<Int?>(null) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -744,7 +730,7 @@ private fun JournalEditorScreen(
                                     style = MaterialTheme.typography.bodyMedium,
                                     modifier = Modifier.weight(1f),
                                 )
-                                SculptedIconButton(icon = Icons.Filled.Delete, contentDescription = "Detach", onClick = { attachedCaptureIds.removeAt(idx) }, accent = Aqua, iconTint = TextLow, size = 32.dp, shadowElevation = 3.dp)
+                                SculptedIconButton(icon = Icons.Filled.Delete, contentDescription = "Detach", onClick = { pendingDetachCaptureIdx = idx }, accent = Aqua, iconTint = TextLow, size = 32.dp, shadowElevation = 3.dp)
                             }
                         }
                     }
@@ -1031,6 +1017,21 @@ private fun JournalEditorScreen(
             )
         } else {
             pendingPhotoDeleteIdx = null
+        }
+    }
+    pendingDetachCaptureIdx?.let { idx ->
+        if (idx in attachedCaptureIds.indices) {
+            DeleteConfirmDialog(
+                title = "Detach capture?",
+                message = "Detach this field capture from the journal entry? The capture itself won't be deleted — you can reattach it later.",
+                onConfirm = {
+                    attachedCaptureIds.removeAt(idx)
+                    pendingDetachCaptureIdx = null
+                },
+                onDismiss = { pendingDetachCaptureIdx = null },
+            )
+        } else {
+            pendingDetachCaptureIdx = null
         }
     }
 

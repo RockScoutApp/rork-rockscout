@@ -202,9 +202,23 @@ fun FieldCaptureCard(
 
     var showMergePicker by remember { mutableStateOf(false) }
     val mergeSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var pendingRemoveImageIdx by remember { mutableStateOf<Int?>(null) }
 
     val displayName = capture.displayName(specimenName)
     val displayLocation = capture.customLocation.ifBlank { "" }
+
+    // Photo-removal confirmation dialog
+    pendingRemoveImageIdx?.let { idx ->
+        DeleteConfirmDialog(
+            title = "Remove photo?",
+            message = "Remove this photo from the capture? This action cannot be undone.",
+            onConfirm = {
+                onRemoveImage(idx)
+                pendingRemoveImageIdx = null
+            },
+            onDismiss = { pendingRemoveImageIdx = null },
+        )
+    }
 
     // Delete confirmation dialog
     if (showDeleteDialog) {
@@ -490,7 +504,7 @@ fun FieldCaptureCard(
                                         accent = Citrine,
                                         shadowElevation = 2.dp,
                                         circular = true,
-                                        onClick = { onRemoveImage(index) },
+                                        onClick = { pendingRemoveImageIdx = index },
                                     )
                                     .clip(CircleShape)
                                     .background(Color.Black),

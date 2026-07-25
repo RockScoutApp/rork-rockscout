@@ -100,9 +100,6 @@ fun WishlistScreen(navController: NavController) {
     val accessManager = IdentifyAccessManager.instance
     val purchaseManager = PurchaseManager.instance
     val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
-    val featureLocked = remember(isPremium) {
-        accessManager.isFeatureLocked(isPremium)
-    }
     var shareToProfileCapture by remember { mutableStateOf<com.rork.rockscout.data.CapturedPhoto?>(null) }
     var shareToProfileSpec by remember { mutableStateOf<com.rork.rockscout.data.Specimen?>(null) }
     var searchQuery by remember { mutableStateOf("") }
@@ -117,13 +114,7 @@ fun WishlistScreen(navController: NavController) {
     }
 
     ScreenScaffold(title = "Wishlist", onBack = { navController.popBackStack() }) {
-        if (featureLocked) {
-            LockedFeatureBanner(
-                onSubscribe = { navController.navigate(Routes.PAYWALL) },
-                message = "Your 1-week trial has ended. Subscribe or donate to add and track your wishlist.",
-                modifier = Modifier.padding(20.dp),
-            )
-        } else if (wishlist.isEmpty() && captureInWishlist.isEmpty()) {
+        if (wishlist.isEmpty() && captureInWishlist.isEmpty()) {
             EmptyState(
                 emoji = "\uD83D\uDD16",
                 title = "Your wishlist is empty",

@@ -72,9 +72,6 @@ fun FavoriteSpotsScreen(navController: NavController) {
     val accessManager = IdentifyAccessManager.instance
     val purchaseManager = PurchaseManager.instance
     val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
-    val featureLocked = remember(isPremium) {
-        accessManager.isFeatureLocked(isPremium)
-    }
     val isPayingUser = isPremium
     val wishlistIds by repo.wishlist.collectAsStateWithLifecycle()
     var shareToProfileLocId by remember { mutableStateOf<String?>(null) }
@@ -82,13 +79,7 @@ fun FavoriteSpotsScreen(navController: NavController) {
     var searchQuery by remember { mutableStateOf("") }
 
     ScreenScaffold(title = "My Favorite Spots", onBack = { navController.popBackStack() }) {
-        if (featureLocked) {
-            LockedFeatureBanner(
-                onSubscribe = { navController.navigate(Routes.PAYWALL) },
-                message = "Your 1-week trial has ended. Subscribe or donate to save and visit your favorite spots.",
-                modifier = Modifier.padding(20.dp),
-            )
-        } else if (favorites.isEmpty()) {
+        if (favorites.isEmpty()) {
             EmptyState(
                 emoji = "\uD83D\uDCCD",
                 title = "No saved spots yet",

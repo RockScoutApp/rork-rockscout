@@ -124,9 +124,6 @@ fun CollectionScreen(navController: NavController) {
     val accessManager = IdentifyAccessManager.instance
     val purchaseManager = PurchaseManager.instance
     val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
-    val featureLocked = remember(isPremium) {
-        accessManager.isFeatureLocked(isPremium)
-    }
     var shareToProfileCapture by remember { mutableStateOf<com.rork.rockscout.data.CapturedPhoto?>(null) }
     var shareToProfileSpec by remember { mutableStateOf<com.rork.rockscout.data.Specimen?>(null) }
     var searchQuery by remember { mutableStateOf("") }
@@ -180,13 +177,7 @@ fun CollectionScreen(navController: NavController) {
         onBack = { navController.popBackStack() },
         titleStyle = MaterialTheme.typography.titleLarge,
     ) {
-        if (featureLocked) {
-            LockedFeatureBanner(
-                onSubscribe = { navController.navigate(Routes.PAYWALL) },
-                message = "Your 1-week trial has ended. Subscribe or donate to add and edit your collection.",
-                modifier = Modifier.padding(20.dp),
-            )
-        } else if (collection.isEmpty() && captureInCollection.isEmpty()) {
+        if (collection.isEmpty() && captureInCollection.isEmpty()) {
             EmptyState(
                 emoji = "\uD83E\uDEA8",
                 title = "No specimens yet",
