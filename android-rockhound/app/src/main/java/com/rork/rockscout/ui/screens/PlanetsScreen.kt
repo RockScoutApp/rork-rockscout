@@ -182,17 +182,17 @@ private fun PlanetDetailDialog(planet: PlanetEntry, onDismiss: () -> Unit) {
                 )
                 Spacer(Modifier.height(12.dp))
 
-                // Planet hero image
+                // Planet hero image — full image, not cropped.
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
-                        .clip(RoundedCornerShape(12.dp)),
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.Black),
                 ) {
                     AsyncImage(
                         model = planet.heroImageUrl,
                         contentDescription = planet.name,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxWidth(),
                         contentScale = ContentScale.Fit,
                     )
                 }

@@ -210,18 +210,18 @@ private fun ConstellationDetailDialog(con: ConstellationEntry, onDismiss: () -> 
                 )
                 Spacer(Modifier.height(12.dp))
 
-                // Hero image for famous constellations
+                // Hero image — full image, not cropped.
                 con.heroImageUrl?.let { url ->
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(160.dp)
-                            .clip(RoundedCornerShape(12.dp)),
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.Black),
                     ) {
                         AsyncImage(
                             model = url,
                             contentDescription = con.name,
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier.fillMaxWidth(),
                             contentScale = ContentScale.Fit,
                         )
                     }

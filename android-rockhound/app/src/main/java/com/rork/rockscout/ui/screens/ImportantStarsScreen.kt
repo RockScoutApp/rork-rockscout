@@ -13,8 +13,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -87,16 +89,26 @@ private fun StarRow(star: StarEntry, onTap: (StarEntry) -> Unit) {
             .clip(RoundedCornerShape(12.dp))
             .background(StarBg.copy(alpha = 0.9f))
             .clickable { onTap(star) }
-            .padding(12.dp),
+            .padding(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Spectral color dot
-            Box(
-                modifier = Modifier
-                    .padding(end = 12.dp)
-                    .background(Color(star.spectralColor))
-                    .padding(10.dp),
-            )
+            // Thumbnail image — all stars have heroImageUrl.
+            star.heroImageUrl?.let { url ->
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.Black),
+                ) {
+                    AsyncImage(
+                        model = url,
+                        contentDescription = star.name,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+                Spacer(Modifier.width(10.dp))
+            }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = star.name,
@@ -179,14 +191,14 @@ private fun StarDetailDialog(star: StarEntry, onDismiss: () -> Unit) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(160.dp)
-                            .clip(RoundedCornerShape(12.dp)),
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.Black),
                     ) {
                         AsyncImage(
                             model = url,
                             contentDescription = star.name,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxWidth(),
+                            contentScale = ContentScale.Fit,
                         )
                     }
                     Spacer(Modifier.height(12.dp))

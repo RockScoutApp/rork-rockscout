@@ -50,6 +50,7 @@ object DeepSkyObjectData {
     const val NGC3372_URL = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/66c2973f-621c-4780-8b7b-0437f9dc33b3.png"
     const val NGC6960_URL = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/15ed2357-299a-44de-a4d1-ed2ded111d65.png"
     const val NGC6543_URL = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/7b2b39f8-4783-422c-a07b-fed2d13217bb.png"
+    const val M27_URL = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/858499c1-fd05-4c2a-9cc6-87443fbc19cb.png"
 
     // Globular clusters
     const val M5_URL = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/260490e5-3443-4a6e-b63c-025be2eeee0a.png"
@@ -124,7 +125,7 @@ object DeepSkyObjectData {
             "1.4' × 1.0'", "1779", "Darquier", "Summer", "Both", "Telescope", RING_NEBULA_URL),
         DeepSkyObject("M27", "Dumbbell Nebula", "Planetary Nebula", "Vulpecula", "1,360 ly", "+7.5",
             "The brightest planetary nebula — resembles a dumbbell or apple core shape.",
-            "8' × 6'", "1764", "Messier", "Summer", "Both", "Binoculars"),
+            "8' × 6'", "1764", "Messier", "Summer", "Both", "Binoculars", M27_URL),
         DeepSkyObject("NGC 7000", "North America Nebula", "Nebula", "Cygnus", "2,590 ly", "+4.0",
             "A large nebula shaped like the continent of North America. Near Deneb.",
             "2° × 1.5'", "1786", "Herschel", "Summer", "Northern", "Binoculars", NGC7000_URL),
