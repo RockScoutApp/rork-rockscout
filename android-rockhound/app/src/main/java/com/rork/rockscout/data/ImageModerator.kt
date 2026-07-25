@@ -80,9 +80,8 @@ object ImageModerator {
      */
     suspend fun scan(imageBase64: String, mimeType: String = "image/jpeg"): ModerationResult =
         withContext(Dispatchers.IO) {
-            val allVals = runCatching { com.rork.rockscout.Config.allValues }.getOrDefault(emptyMap())
-            val toolkitUrl = allVals["EXPO_PUBLIC_TOOLKIT_URL"] ?: ""
-            val secret = allVals["EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY"] ?: ""
+            val toolkitUrl = BuildSecrets.resolve("EXPO_PUBLIC_TOOLKIT_URL", BuildSecrets.TOOLKIT_URL)
+            val secret = BuildSecrets.resolve("EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY", BuildSecrets.RORK_TOOLKIT_SECRET_KEY)
             if (toolkitUrl.isBlank() || secret.isBlank()) {
                 // No toolkit configured — fail open.
                 return@withContext ModerationResult(allowed = true)

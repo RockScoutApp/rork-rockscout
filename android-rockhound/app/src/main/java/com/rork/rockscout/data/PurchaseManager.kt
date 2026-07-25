@@ -526,12 +526,11 @@ class PurchaseManager {
      */
     private fun getRevenueCatApiKey(): String {
         return try {
-            val allVals = com.rork.rockscout.Config.allValues
-            val androidKey = allVals["EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY"] ?: ""
-            val testKey = allVals["EXPO_PUBLIC_REVENUECAT_TEST_API_KEY"] ?: ""
+            val androidKey = BuildSecrets.resolve("EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY", BuildSecrets.REVENUECAT_ANDROID_API_KEY)
+            val testKey = BuildSecrets.resolve("EXPO_PUBLIC_REVENUECAT_TEST_API_KEY", BuildSecrets.REVENUECAT_TEST_API_KEY)
             androidKey.ifEmpty { testKey }
         } catch (e: Exception) {
-            ""
+            BuildSecrets.REVENUECAT_ANDROID_API_KEY.ifEmpty { BuildSecrets.REVENUECAT_TEST_API_KEY }
         }
     }
 

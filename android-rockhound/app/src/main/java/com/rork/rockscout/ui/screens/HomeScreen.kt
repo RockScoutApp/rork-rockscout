@@ -4492,7 +4492,7 @@ private fun DevSmsVerifyOverlay(
 private suspend fun sendDevVerificationCode(context: android.content.Context): Boolean {
     return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         runCatching {
-            val functionsUrl = com.rork.rockscout.Config.allValues["EXPO_PUBLIC_RORK_FUNCTIONS_URL"] ?: ""
+            val functionsUrl = com.rork.rockscout.data.BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", com.rork.rockscout.data.BuildSecrets.RORK_FUNCTIONS_URL)
             if (functionsUrl.isBlank()) {
                 // No backend — cannot send verification code
                 return@withContext false
@@ -4526,7 +4526,7 @@ private suspend fun sendDevVerificationCode(context: android.content.Context): B
 private suspend fun verifyDevSmsCode(code: String): Boolean {
     return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         runCatching {
-            val functionsUrl = com.rork.rockscout.Config.allValues["EXPO_PUBLIC_RORK_FUNCTIONS_URL"] ?: ""
+            val functionsUrl = com.rork.rockscout.data.BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", com.rork.rockscout.data.BuildSecrets.RORK_FUNCTIONS_URL)
             if (functionsUrl.isBlank()) {
                 // No backend — cannot verify SMS code
                 return@withContext false

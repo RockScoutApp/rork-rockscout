@@ -55,7 +55,8 @@ object EmailVerificationApi {
     }
 
     private fun baseUrl(): String? =
-        com.rork.rockscout.Config.allValues["EXPO_PUBLIC_RORK_FUNCTIONS_URL"]
+        BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", BuildSecrets.RORK_FUNCTIONS_URL)
+            .ifBlank { null }
 
     /**
      * Sends a 6-digit verification code to [email] via the backend.

@@ -42,8 +42,8 @@ object WelcomeEmailApi {
      */
     suspend fun sendWelcomeEmail(email: String, displayName: String? = null) {
         try {
-            val baseUrl = com.rork.rockscout.Config.allValues["EXPO_PUBLIC_RORK_FUNCTIONS_URL"]
-                ?: return
+            val baseUrl = BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", BuildSecrets.RORK_FUNCTIONS_URL)
+                .ifBlank { null } ?: return
             val response = client.post("$baseUrl/welcome-email") {
                 contentType(ContentType.Application.Json)
                 setBody(

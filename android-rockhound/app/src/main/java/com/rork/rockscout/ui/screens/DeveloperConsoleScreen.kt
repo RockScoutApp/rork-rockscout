@@ -1175,8 +1175,8 @@ private fun ModerationTab() {
 private suspend fun sendImageRejectionEmail(email: String, type: String, userName: String?) {
     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         runCatching {
-            val allVals = com.rork.rockscout.Config.allValues
-            val functionsUrl = allVals["EXPO_PUBLIC_RORK_FUNCTIONS_URL"] ?: return@withContext
+            val functionsUrl = com.rork.rockscout.data.BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", com.rork.rockscout.data.BuildSecrets.RORK_FUNCTIONS_URL)
+                .ifBlank { null } ?: return@withContext
             val payload = kotlinx.serialization.json.buildJsonObject {
                 put("email", email)
                 put("type", type)

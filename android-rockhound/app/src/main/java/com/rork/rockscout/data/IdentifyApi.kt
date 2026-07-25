@@ -95,14 +95,13 @@ data class ClarifyRequest(
  * and web search references for cross-referencing.
  */
 object IdentifyApi {
-    // The backend URL — read from Config so it works across environments.
+    // The backend URL — resolve from Config (auto-generated) with a baked fallback.
     private val BASE_URL: String =
-        com.rork.rockscout.Config.allValues["EXPO_PUBLIC_RORK_FUNCTIONS_URL"]
-            ?.removeSuffix("/")
-            ?: "https://rockscout-finder-backend.rork.app"
+        BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", BuildSecrets.RORK_FUNCTIONS_URL)
+            .removeSuffix("/")
     // App key for backend auth — sent as X-App-Key header.
     private val APP_KEY: String =
-        com.rork.rockscout.Config.allValues["EXPO_PUBLIC_RORK_APP_KEY"] ?: ""
+        BuildSecrets.resolve("EXPO_PUBLIC_RORK_APP_KEY", BuildSecrets.RORK_APP_KEY)
 
     private val json = Json {
         ignoreUnknownKeys = true

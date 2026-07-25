@@ -57,9 +57,8 @@ object DigSiteSearchService {
      */
     suspend fun searchRockLocations(searchArea: String): List<DigSiteDiscoveryStore.DiscoveredSite> =
         withContext(Dispatchers.IO) {
-            val allVals = runCatching { com.rork.rockscout.Config.allValues }.getOrDefault(emptyMap())
-            val toolkitUrl = allVals["EXPO_PUBLIC_TOOLKIT_URL"] ?: ""
-            val secret = allVals["EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY"] ?: ""
+            val toolkitUrl = BuildSecrets.resolve("EXPO_PUBLIC_TOOLKIT_URL", BuildSecrets.TOOLKIT_URL)
+            val secret = BuildSecrets.resolve("EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY", BuildSecrets.RORK_TOOLKIT_SECRET_KEY)
             if (toolkitUrl.isBlank() || secret.isBlank()) {
                 return@withContext emptyList()
             }
@@ -123,9 +122,8 @@ object DigSiteSearchService {
         lng: Double,
         onResult: ((snippet: String, url: String) -> Unit)? = null,
     ): Boolean = withContext(Dispatchers.IO) {
-        val allVals = runCatching { com.rork.rockscout.Config.allValues }.getOrDefault(emptyMap())
-        val toolkitUrl = allVals["EXPO_PUBLIC_TOOLKIT_URL"] ?: ""
-        val secret = allVals["EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY"] ?: ""
+        val toolkitUrl = BuildSecrets.resolve("EXPO_PUBLIC_TOOLKIT_URL", BuildSecrets.TOOLKIT_URL)
+        val secret = BuildSecrets.resolve("EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY", BuildSecrets.RORK_TOOLKIT_SECRET_KEY)
         if (toolkitUrl.isBlank() || secret.isBlank()) return@withContext false
 
         val query = "$name rock hunting dig site mineral collecting near ${"%.2f, %.2f".format(lat, lng)}"
@@ -179,9 +177,8 @@ object DigSiteSearchService {
         lng: Double,
         onResult: ((snippet: String, url: String) -> Unit)? = null,
     ): Boolean = withContext(Dispatchers.IO) {
-        val allVals = runCatching { com.rork.rockscout.Config.allValues }.getOrDefault(emptyMap())
-        val toolkitUrl = allVals["EXPO_PUBLIC_TOOLKIT_URL"] ?: ""
-        val secret = allVals["EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY"] ?: ""
+        val toolkitUrl = BuildSecrets.resolve("EXPO_PUBLIC_TOOLKIT_URL", BuildSecrets.TOOLKIT_URL)
+        val secret = BuildSecrets.resolve("EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY", BuildSecrets.RORK_TOOLKIT_SECRET_KEY)
         if (toolkitUrl.isBlank() || secret.isBlank()) return@withContext false
 
         val query = "$name campground camping RV near ${"%.2f, %.2f".format(lat, lng)}"
@@ -235,9 +232,8 @@ object DigSiteSearchService {
         lng: Double,
         onResult: ((snippet: String, url: String) -> Unit)? = null,
     ): Boolean = withContext(Dispatchers.IO) {
-        val allVals = runCatching { com.rork.rockscout.Config.allValues }.getOrDefault(emptyMap())
-        val toolkitUrl = allVals["EXPO_PUBLIC_TOOLKIT_URL"] ?: ""
-        val secret = allVals["EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY"] ?: ""
+        val toolkitUrl = BuildSecrets.resolve("EXPO_PUBLIC_TOOLKIT_URL", BuildSecrets.TOOLKIT_URL)
+        val secret = BuildSecrets.resolve("EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY", BuildSecrets.RORK_TOOLKIT_SECRET_KEY)
         if (toolkitUrl.isBlank() || secret.isBlank()) return@withContext false
 
         val query = "$name trailhead hiking trail access near ${"%.2f, %.2f".format(lat, lng)}"

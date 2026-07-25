@@ -60,9 +60,8 @@ object GemShowSearchService {
         website: String,
         onResult: ((snippet: String, url: String) -> Unit)? = null,
     ): Boolean = withContext(Dispatchers.IO) {
-        val allVals = runCatching { com.rork.rockscout.Config.allValues }.getOrDefault(emptyMap())
-        val toolkitUrl = allVals["EXPO_PUBLIC_TOOLKIT_URL"] ?: ""
-        val secret = allVals["EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY"] ?: ""
+        val toolkitUrl = BuildSecrets.resolve("EXPO_PUBLIC_TOOLKIT_URL", BuildSecrets.TOOLKIT_URL)
+        val secret = BuildSecrets.resolve("EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY", BuildSecrets.RORK_TOOLKIT_SECRET_KEY)
         if (toolkitUrl.isBlank() || secret.isBlank()) return@withContext false
 
         val query = "$name gem mineral rock show $city $state"
@@ -114,9 +113,8 @@ object GemShowSearchService {
      */
     suspend fun searchForShows(state: String): List<Pair<String, String>> =
         withContext(Dispatchers.IO) {
-            val allVals = runCatching { com.rork.rockscout.Config.allValues }.getOrDefault(emptyMap())
-            val toolkitUrl = allVals["EXPO_PUBLIC_TOOLKIT_URL"] ?: ""
-            val secret = allVals["EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY"] ?: ""
+            val toolkitUrl = BuildSecrets.resolve("EXPO_PUBLIC_TOOLKIT_URL", BuildSecrets.TOOLKIT_URL)
+            val secret = BuildSecrets.resolve("EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY", BuildSecrets.RORK_TOOLKIT_SECRET_KEY)
             if (toolkitUrl.isBlank() || secret.isBlank()) return@withContext emptyList()
 
             val query = "gem mineral rock fossil show $state 2025 2026"

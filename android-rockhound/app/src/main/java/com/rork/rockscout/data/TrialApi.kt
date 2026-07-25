@@ -48,8 +48,8 @@ object TrialApi {
      */
     suspend fun checkTrial(deviceId: String): Boolean {
         return try {
-            val baseUrl = com.rork.rockscout.Config.allValues["EXPO_PUBLIC_RORK_FUNCTIONS_URL"]
-                ?: return false
+            val baseUrl = BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", BuildSecrets.RORK_FUNCTIONS_URL)
+                .ifBlank { null } ?: return false
             val response = client.post("$baseUrl/trial/check") {
                 contentType(ContentType.Application.Json)
                 setBody(json.encodeToString(CheckTrialRequest.serializer(), CheckTrialRequest(deviceId)))
@@ -69,8 +69,8 @@ object TrialApi {
      */
     suspend fun claimTrial(deviceId: String): Boolean {
         return try {
-            val baseUrl = com.rork.rockscout.Config.allValues["EXPO_PUBLIC_RORK_FUNCTIONS_URL"]
-                ?: return false
+            val baseUrl = BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", BuildSecrets.RORK_FUNCTIONS_URL)
+                .ifBlank { null } ?: return false
             val response = client.post("$baseUrl/trial/claim") {
                 contentType(ContentType.Application.Json)
                 setBody(json.encodeToString(ClaimTrialRequest.serializer(), ClaimTrialRequest(deviceId)))
