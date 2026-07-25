@@ -563,6 +563,10 @@ fun badgePalette(badgeId: String): BadgePalette = when (badgeId) {
  * distinct trophies. The same palette is reused in the badge detail popup and the
  * badge-earned celebration. A strong dark scrim and text backing keep the emoji
  * and badge name readable for both earned and locked states.
+ *
+ * Earned badges blaze with a bright, pulsing colored border and an outer halo
+ * so they are unmistakably "lit up" in the catalog. Locked badges stay muted and
+ * stone-gray so the earned ones stand out clearly.
  */
 @Composable
 fun GamerBadgeTile(
@@ -579,124 +583,167 @@ fun GamerBadgeTile(
         animationSpec = infiniteRepeatable(tween(2200), RepeatMode.Reverse),
         label = "badgeGlowAlpha",
     )
+    val borderPulse by transition.animateFloat(
+        initialValue = 0.70f,
+        targetValue = 1.00f,
+        animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse),
+        label = "badgeBorderPulse",
+    )
+    val haloPulse by transition.animateFloat(
+        initialValue = 0.25f,
+        targetValue = 0.55f,
+        animationSpec = infiniteRepeatable(tween(1500), RepeatMode.Reverse),
+        label = "badgeHaloPulse",
+    )
 
     val palette = badgePalette(badge.id)
 
     Box(
         modifier = modifier
-            .aspectRatio(1f)
-            .sculpted(shape = shape, accent = if (earned) palette.ring else StoneLine, shadowElevation = 5.dp, onClick = onClick)
-            .clip(shape)
-            .background(
-                Brush.verticalGradient(palette.gradient)
-            )
-            .glowingBorder(
-                2.dp,
-                if (earned) palette.ring.copy(alpha = 0.85f) else StoneLine.copy(alpha = 0.45f),
-                shape,
-            ),
+            .aspectRatio(1f),
         contentAlignment = Alignment.Center,
     ) {
-        // Badge-specific radial glow — large and vivid so the palette is unmistakable.
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.radialGradient(
-                        listOf(
-                            palette.accent.copy(alpha = if (earned) 0.62f + glow else 0.28f),
-                            palette.secondary.copy(alpha = if (earned) 0.38f else 0.16f),
-                            palette.gradient.last().copy(alpha = 0.95f),
-                        )
-                    )
-                ),
-        )
-        // Mineral texture tinted by the badge palette so the tile feels like
-        // a real stone slab rather than a flat color swatch.
-        GamerRockTexture(
-            modifier = Modifier.fillMaxSize(),
-            speckleTint = palette.accent.copy(alpha = 0.55f),
-            veinColors = listOf(
-                palette.accent.copy(alpha = 0.32f),
-                palette.secondary.copy(alpha = 0.26f),
-                palette.ring.copy(alpha = 0.20f),
-            ),
-        )
-        // Locked badges are slightly muted so earned ones still pop.
-        if (!earned) {
+        // Outer halo for earned badges — a soft, pulsing colored glow that extends
+        // beyond the tile edge so the badge clearly looks "lit up".
+        if (earned) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFF2A2820).copy(alpha = 0.35f)),
-            )
-        }
-        // Light scrim only at the bottom so the text pill stays legible without
-        // washing out the badge color across the whole tile.
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            Color.Black.copy(alpha = 0.00f),
-                            Color.Black.copy(alpha = 0.12f),
-                            Color.Black.copy(alpha = 0.30f),
-                        )
-                    )
-                ),
-        )
-        Column(
-            modifier = Modifier.padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            // Glowing mineral core behind the emoji — stronger glow and border so the
-        // badge icon stands out clearly even on vivid palette backgrounds.
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(CircleShape)
+                    .padding(4.dp)
+                    .clip(shape)
                     .background(
                         Brush.radialGradient(
                             listOf(
-                                palette.accent.copy(alpha = if (earned) 0.80f else 0.45f),
-                                palette.secondary.copy(alpha = if (earned) 0.40f else 0.18f),
+                                palette.ring.copy(alpha = haloPulse * 0.55f),
+                                palette.accent.copy(alpha = haloPulse * 0.30f),
                                 Color.Transparent,
                             )
                         )
-                    )
-                    .glowingBorder(
-                        2.5.dp,
-                        palette.ring.copy(alpha = if (earned) 0.95f else 0.60f),
-                        CircleShape,
                     ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    badge.emoji,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = if (earned) Color.White else Color.White.copy(alpha = 0.85f),
+            )
+        }
+
+        // Main tile.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .sculpted(shape = shape, accent = if (earned) palette.ring else StoneLine, shadowElevation = 5.dp, onClick = onClick)
+                .clip(shape)
+                .background(
+                    Brush.verticalGradient(palette.gradient)
                 )
-            }
-            Spacer(Modifier.height(6.dp))
-            // Text sits on a dark, opaque pill with a bright accent border so the badge
-            // name is always readable regardless of the tile background behind it.
+                .glowingBorder(
+                    if (earned) 3.5.dp else 2.dp,
+                    if (earned) palette.ring.copy(alpha = borderPulse) else StoneLine.copy(alpha = 0.45f),
+                    shape,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            // Badge-specific radial glow — large and vivid so the palette is unmistakable.
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color(0xE6000000))
-                    .glowingBorder(1.5.dp, palette.ring.copy(alpha = if (earned) 0.85f else 0.50f), RoundedCornerShape(10.dp))
-                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    badge.name,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.ExtraBold,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
+                    .fillMaxSize()
+                    .background(
+                        Brush.radialGradient(
+                            listOf(
+                                palette.accent.copy(alpha = if (earned) 0.62f + glow else 0.28f),
+                                palette.secondary.copy(alpha = if (earned) 0.38f else 0.16f),
+                                palette.gradient.last().copy(alpha = 0.95f),
+                            )
+                        )
+                    ),
+            )
+            // Mineral texture tinted by the badge palette so the tile feels like
+            // a real stone slab rather than a flat color swatch.
+            GamerRockTexture(
+                modifier = Modifier.fillMaxSize(),
+                speckleTint = palette.accent.copy(alpha = if (earned) 0.65f else 0.40f),
+                veinColors = listOf(
+                    palette.accent.copy(alpha = if (earned) 0.38f else 0.20f),
+                    palette.secondary.copy(alpha = if (earned) 0.30f else 0.14f),
+                    palette.ring.copy(alpha = if (earned) 0.24f else 0.10f),
+                ),
+            )
+            // Locked badges are slightly muted so earned ones still pop.
+            if (!earned) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF2A2820).copy(alpha = 0.35f)),
                 )
+            }
+            // Light scrim only at the bottom so the text pill stays legible without
+            // washing out the badge color across the whole tile.
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                Color.Black.copy(alpha = 0.00f),
+                                Color.Black.copy(alpha = 0.12f),
+                                Color.Black.copy(alpha = 0.30f),
+                            )
+                        )
+                    ),
+            )
+            Column(
+                modifier = Modifier.padding(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                // Glowing mineral core behind the emoji — stronger glow and border so the
+                // badge icon stands out clearly even on vivid palette backgrounds.
+                Box(
+                    modifier = Modifier
+                        .size(50.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.radialGradient(
+                                listOf(
+                                    palette.accent.copy(alpha = if (earned) 0.85f else 0.45f),
+                                    palette.secondary.copy(alpha = if (earned) 0.50f else 0.18f),
+                                    Color.Transparent,
+                                )
+                            )
+                        )
+                        .glowingBorder(
+                            if (earned) 3.dp else 2.5.dp,
+                            palette.ring.copy(alpha = if (earned) 1.00f else 0.60f),
+                            CircleShape,
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        badge.emoji,
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = if (earned) Color.White else Color.White.copy(alpha = 0.85f),
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
+                // Text sits on a dark, opaque pill with a bright accent border so the badge
+                // name is always readable regardless of the tile background behind it.
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xE6000000))
+                        .glowingBorder(
+                            if (earned) 2.dp else 1.5.dp,
+                            palette.ring.copy(alpha = if (earned) 1.00f else 0.50f),
+                            RoundedCornerShape(10.dp),
+                        )
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        badge.name,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White,
+                        fontWeight = FontWeight.ExtraBold,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                    )
+                }
             }
         }
     }

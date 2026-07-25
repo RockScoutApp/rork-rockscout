@@ -197,6 +197,12 @@ private fun AllAchievementsItem(
         animationSpec = infiniteRepeatable(tween(1800), RepeatMode.Reverse),
         label = "achievementGlowAlpha",
     )
+    val borderPulse by transition.animateFloat(
+        initialValue = 0.65f,
+        targetValue = 1.00f,
+        animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse),
+        label = "achievementBorderPulse",
+    )
     // Bright, saturated tile gradient: earned tiles blaze golden-brown, locked tiles stay cool stone.
     val tileGradient = if (earned) {
         Brush.horizontalGradient(
@@ -209,18 +215,41 @@ private fun AllAchievementsItem(
     }
     val bgUrl = AchievementBackgrounds.urlFor(achievement)
 
-    DarkCard(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp),
-        accent = accent,
-        contentPadding = PaddingValues(0.dp),
     ) {
-        Box(
+        // Outer animated glow halo for earned achievements so they clearly look "lit up".
+        if (earned) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(3.dp)
+                    .clip(RoundedCornerShape(23.dp))
+                    .background(
+                        Brush.radialGradient(
+                            listOf(
+                                Citrine.copy(alpha = 0.45f * borderPulse),
+                                Color(0xFFFFD54F).copy(alpha = 0.22f * borderPulse),
+                                Color.Transparent,
+                            )
+                        )
+                    ),
+            )
+        }
+
+        DarkCard(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp)
-                .background(tileGradient),
+                .fillMaxSize(),
+            accent = if (earned) Citrine.copy(alpha = borderPulse) else StoneLine,
+            contentPadding = PaddingValues(0.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+                    .background(tileGradient),
         ) {
             // Generated blue-outline mineral background image when available.
             if (!bgUrl.isNullOrBlank()) {
@@ -348,7 +377,7 @@ private fun AllAchievementsItem(
                         Text(
                             if (earned) "+${achievement.rewardXp} XP" else "${achievement.rewardXp} XP",
                             style = MaterialTheme.typography.labelSmall,
-                            color = accent,
+                            color = if (earned) Color(0xFFFFD54F) else accent,
                             fontWeight = FontWeight.Bold,
                         )
                     }
@@ -398,4 +427,5 @@ private fun AllAchievementsItem(
             }
         }
     }
+}
 }
