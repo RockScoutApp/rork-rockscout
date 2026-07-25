@@ -153,8 +153,8 @@ fun AuroraSavedSpotsMap(
                     val threshold = AuroraRepository.kpThresholdForLatitude(spot.latitude)
                     val isVisible = currentKp >= threshold
 
-                    val marker = object : Marker(mv) {
-                        init {
+                    val marker = runCatching {
+                        Marker(mv).apply {
                             position = point
                             title = spot.name
                             snippet = if (isVisible) "Aurora VISIBLE (Kp $currentKp ≥ $threshold)" else "Aurora unlikely (Kp $currentKp < $threshold)"
@@ -166,8 +166,8 @@ fun AuroraSavedSpotsMap(
                                 true
                             }
                         }
-                    }
-                    mv.overlays.add(marker)
+                    }.getOrNull()
+                    marker?.let { mv.overlays.add(it) }
                 }
 
                 if (points.isNotEmpty()) {
@@ -186,7 +186,7 @@ fun AuroraSavedSpotsMap(
                         }
                     }
                 }
-                mv.invalidate()
+                runCatching { mv.invalidate() }
             }
         }
     }
@@ -257,18 +257,9 @@ fun AuroraSavedSpotsMap(
                         controller.setCenter(GeoPoint(60.0, -100.0))
                         overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
                         overlays.add(CompassOverlay(ctx, this).apply { enableCompass() })
-                        // Tap-to-drop-pin: tapping the map pre-fills lat/lng form fields
-                        overlays.add(object : org.osmdroid.views.overlay.Overlay() {
-                            override fun onSingleTapConfirmed(e: android.view.MotionEvent, mv: MapView): Boolean {
-                                val proj = mv.projection
-                                val point = proj.fromPixels(e.x.toInt(), e.y.toInt())
-                                spotLat = String.format("%.4f", point.latitude)
-                                spotLng = String.format("%.4f", point.longitude)
-                                if (spotName.isBlank()) spotName = "Dropped Pin"
-                                isAddingSpot = true
-                                return true
-                            }
-                        })
+                        // NOTE: tap-to-drop overlay removed — it caused crashes on some devices
+                        // when the map was inside a scrollable Compose parent. Users add spots
+                        // through the "Add New Spot" button below, which is safer.
                         mapView = this
                     }
                 },
@@ -666,18 +657,8 @@ private fun FullscreenAuroraSpotsOverlay(
                             val d = ctx.resources.displayMetrics.density
                             fsCompass.setCompassCenter(width - 56f * d, 40f * d)
                         }
-                        // Tap-to-drop-pin: tapping the map pre-fills lat/lng form fields.
-                        overlays.add(object : org.osmdroid.views.overlay.Overlay() {
-                            override fun onSingleTapConfirmed(e: android.view.MotionEvent, mv: MapView): Boolean {
-                                val proj = mv.projection
-                                val point = proj.fromPixels(e.x.toInt(), e.y.toInt())
-                                spotLat = String.format("%.4f", point.latitude)
-                                spotLng = String.format("%.4f", point.longitude)
-                                if (spotName.isBlank()) spotName = "Dropped Pin"
-                                isAddingSpot = true
-                                return true
-                            }
-                        })
+                        // NOTE: tap-to-drop overlay removed in fullscreen too — same
+                        // crash risk as the embedded map. Users add spots via the form.
                         fsMapView = this
                     }
                 },

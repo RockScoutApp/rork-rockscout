@@ -248,6 +248,7 @@ fun HomeScreen(navController: NavController) {
     val tradeListings by repo.tradeListings.collectAsStateWithLifecycle()
     val listingsCount = tradeListings.count { it.status == "active" }
     val savedImages by repo.savedImages.collectAsStateWithLifecycle()
+    val auroraSavedSpots by repo.auroraSavedSpots.collectAsStateWithLifecycle()
 
     var viewerUrls by remember { mutableStateOf<List<String>>(emptyList()) }
     var viewerInitialPage by remember { mutableIntStateOf(0) }
@@ -404,6 +405,8 @@ fun HomeScreen(navController: NavController) {
         HomeTile("My Saved Images", "${savedImages.size} saved · Photos you've saved from the app", Icons.Filled.Download, Color(0xFF44AACC), Routes.SAVED_IMAGES,
             SpecimenImages.urls["amazonite-smoky-quartz-assemblage"]?.firstOrNull()),
         HomeTile("Aurora Forecaster", "Northern lights forecast for your location", Icons.Filled.NightsStay, Color(0xFF00E5C9), Routes.AURORA,
+            AURORA_TILE_BG_URL),
+        HomeTile("Saved Spots", "${auroraSavedSpots.size} saved · Aurora visibility at your favorite locations", Icons.Filled.LocationOn, Color(0xFF00E5C9), Routes.AURORA,
             AURORA_TILE_BG_URL),
         HomeTile("Severe Weather", "NWS alerts + live storm chaser streams", Icons.Filled.Warning, Color(0xFFFF6B3D), Routes.SEVERE_WEATHER,
             "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/e2803cb6-56f0-4506-84cb-0a36be573f7e.png"),

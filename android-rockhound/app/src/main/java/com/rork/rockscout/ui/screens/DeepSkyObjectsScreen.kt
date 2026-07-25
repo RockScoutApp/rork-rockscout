@@ -112,15 +112,16 @@ private fun DsoRow(dso: DeepSkyObject, onTap: (DeepSkyObject) -> Unit) {
             dso.heroImageUrl?.let { url ->
                 Box(
                     modifier = Modifier
-                        .size(52.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .size(56.dp)
+                        .clip(RoundedCornerShape(10.dp))
                         .background(Color.Black),
+                    contentAlignment = Alignment.Center,
                 ) {
                     AsyncImage(
                         model = url,
                         contentDescription = dso.commonName,
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
+                        contentScale = ContentScale.Fit,
                     )
                 }
                 Spacer(Modifier.width(10.dp))
@@ -207,14 +208,14 @@ private fun DsoDetailDialog(dso: DeepSkyObject, onDismiss: () -> Unit) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(180.dp)
-                            .clip(RoundedCornerShape(12.dp)),
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.Black),
                     ) {
                         AsyncImage(
                             model = url,
                             contentDescription = dso.commonName,
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxWidth(),
+                            contentScale = ContentScale.Fit,
                         )
                     }
                     Spacer(Modifier.height(12.dp))

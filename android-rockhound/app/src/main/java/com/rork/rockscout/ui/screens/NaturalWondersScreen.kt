@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -305,11 +306,12 @@ private fun WonderCard(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(16.dp),
     ) {
-        // Hero image
+        // Hero image — uses 16:9 aspect ratio + Crop so the photo fills the frame
+        // without letterboxing, while still showing the full scenic composition.
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(180.dp)
+                .aspectRatio(16f / 9f)
                 .clip(RoundedCornerShape(14.dp))
                 .background(Color(0xFF1A1812))
                 .clickable { onPhotoClick(listOf(wonder.imageUrl), 0) },

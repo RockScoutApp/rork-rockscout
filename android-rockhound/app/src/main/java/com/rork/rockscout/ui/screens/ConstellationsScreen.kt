@@ -222,7 +222,7 @@ private fun ConstellationDetailDialog(con: ConstellationEntry, onDismiss: () -> 
                             model = url,
                             contentDescription = con.name,
                             modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop,
+                            contentScale = ContentScale.Fit,
                         )
                     }
                     Spacer(Modifier.height(12.dp))

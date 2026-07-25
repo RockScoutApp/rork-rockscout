@@ -1124,7 +1124,7 @@ fun AuroraScreen(navController: NavController) {
                 onRemoveSpot = { id -> repo.removeAuroraSavedSpot(id) },
                 currentKp = auroraData.currentKp,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
-                onHeaderClick = { navController.navigate(Routes.AURORA) },
+                onHeaderClick = { /* Header is decorative; the saved-spots list is already shown below. */ },
             )
 
             // ─── Night Sky Guide Card ───
