@@ -552,9 +552,19 @@ fun HomeScreen(navController: NavController) {
                 )
             }
             // Full-width banner tiles (same width/height as Location Monitoring)
-            // Shared accent for the four banner tiles (Trade Board, Community,
-            // Trip Planner, Field Journal) so their borders match.
+            // Shared accent for the four banner tiles (Gear Guide, Trade Board,
+            // Community, Trip Planner, Field Journal) so their borders match.
             val bannerAccent = Color(0xFFE8A33D)
+            item {
+                FullWidthBannerTile(
+                    label = "Gear Guide",
+                    subtitle = "Curated kits for every level — from first hunt to advanced field collecting",
+                    icon = Icons.Filled.Diamond,
+                    accent = Aqua,
+                    imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/10ba26f0-a7d8-4ea7-964b-864eb46744d6.png",
+                    onClick = { navController.navigate(Routes.GEAR_GUIDE) },
+                )
+            }
             item {
                 FullWidthBannerTile(
                     label = "Trade Board",
@@ -606,16 +616,6 @@ fun HomeScreen(navController: NavController) {
                     accent = Color(0xFF7CB5EC),
                     imageUrl = "https://r2-pub.rork.com/attachments/78k8yy4tgahby3o9opb6j.png",
                     onClick = { navController.navigate(Routes.TRIP_CALENDAR) },
-                )
-            }
-            item {
-                FullWidthBannerTile(
-                    label = "Gear Guide",
-                    subtitle = "Curated kits for every level — from first hunt to advanced field collecting",
-                    icon = Icons.Filled.Diamond,
-                    accent = Aqua,
-                    imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/10ba26f0-a7d8-4ea7-964b-864eb46744d6.png",
-                    onClick = { navController.navigate(Routes.GEAR_GUIDE) },
                 )
             }
             item { SectionLabel("Your field kit") }
