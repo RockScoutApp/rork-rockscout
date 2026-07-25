@@ -1951,7 +1951,15 @@ private fun LevelXpCard(
                     .glowingBorder(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(14.dp))
                     .padding(horizontal = 12.dp, vertical = 8.dp),
             ) {
-                Text("LEVEL $level", style = MaterialTheme.typography.labelMedium, color = Citrine, fontWeight = FontWeight.Bold)
+                Text(
+                    "LEVEL $level",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Citrine,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .glowingBorder(2.dp, Citrine.copy(alpha = 0.85f), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 8.dp, vertical = 2.dp),
+                )
                 Text(tier.displayName, style = MaterialTheme.typography.titleLarge, color = Color.White, fontWeight = FontWeight.Bold)
                 // Streak mini-card with rock texture, glow, and highlight — same treatment as the badge tiles.
                 if (streak > 0) {

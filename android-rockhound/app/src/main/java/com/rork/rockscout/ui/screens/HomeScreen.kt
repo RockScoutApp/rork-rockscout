@@ -427,7 +427,7 @@ fun HomeScreen(navController: NavController) {
         HomeTile("Fluorescence & UV", "Which minerals glow under UV light & what colors", Icons.Filled.Lightbulb, Color(0xFF9B7BD8), Routes.FLUORESCENCE_UV,
             SpecimenImages.urls["uv-tile"]?.firstOrNull()),
         HomeTile("Crystal Systems", "The 7 crystal shapes with visual examples", Icons.Filled.Diamond, Color(0xFF6FA8C7), Routes.CRYSTAL_SYSTEMS,
-            SpecimenImages.urls["quartz"]?.firstOrNull()),
+            SpecimenImages.urls["herkimer"]?.firstOrNull()),
         HomeTile("Lapidary Basics", "Cut, polish & cab your finds into jewelry", Icons.Filled.Construction, Color(0xFFE8A33D), Routes.LAPIDARY_BASICS,
             SpecimenImages.urls["lapidary-tile"]?.firstOrNull()),
         HomeTile("Natural Wonders", "World-famous geological sites & what to find there", Icons.Filled.Public, Color(0xFF1B3A4B), Routes.NATURAL_WONDERS,
@@ -444,7 +444,7 @@ fun HomeScreen(navController: NavController) {
         HomeTile("Rock & Gem Resources", "Trusted geology, gem & fossil websites", Icons.Filled.Public, Color(0xFF7CB5EC), Routes.RESOURCE_LINKS,
             GEM_MINERAL_HERO_URL),
         HomeTile("Glossary", "Every rock, mineral & space term explained", Icons.Filled.MenuBook, Color(0xFF6FA8C7), Routes.GLOSSARY,
-            SpecimenImages.urls["fluorite"]?.firstOrNull()),
+            SpecimenImages.urls["lapis-lazuli"]?.firstOrNull()),
     )
 
     val featuredSpecimens = remember {
