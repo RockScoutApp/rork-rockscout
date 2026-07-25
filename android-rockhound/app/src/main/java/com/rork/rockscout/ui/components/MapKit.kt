@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocalParking
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -1704,7 +1705,7 @@ fun MapZoomControls(
     ) {
         if (showRemovePin) {
             SculptedIconButton(
-                icon = Icons.Filled.Remove,
+                icon = Icons.Filled.LocationOff,
                 contentDescription = "Remove dropped pin",
                 onClick = { onRemovePin?.invoke() },
                 accent = Danger,

@@ -193,10 +193,16 @@ fun DigSitesMapView(
     // users can manually download offline tiles from each location's detail
     // screen via the "Download offline maps" button.
 
-    Box(modifier = modifier.clip(RoundedCornerShape(20.dp))) {
-        AndroidView(
-            modifier = Modifier.fillMaxSize(),
-            factory = { ctx ->
+    Column(modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .clip(RoundedCornerShape(20.dp)),
+        ) {
+            AndroidView(
+                modifier = Modifier.fillMaxSize(),
+                factory = { ctx ->
                 createRockScoutMapView(ctx).apply {
                     // Start somewhere reasonable until the LaunchedEffect centers us.
                     controller.setZoom(3.0)
@@ -291,7 +297,7 @@ fun DigSitesMapView(
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 12.dp),
         )
 
-        // Bottom-left row: offline download button + pin-drop hint (same row, aligned padding)
+        // Bottom-left: offline download button only; the pin-drop hint lives below the map.
         Row(
             modifier = Modifier
                 .align(Alignment.BottomStart)
@@ -315,31 +321,36 @@ fun DigSitesMapView(
                 size = 44.dp,
                 shadowElevation = 5.dp,
             )
-            if (pinLocation == null) {
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color(0xE6000000))
-                        .glowingBorder(2.dp, Warning.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        Icons.Filled.LocationOn,
-                        contentDescription = null,
-                        tint = Warning,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        "Tap the map to drop a pin, then download offline maps for that area.",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White,
-                    )
-                }
-            }
         }
     }
+
+    // Pin-drop hint placed below the map so it never overlays the tile area.
+    if (pinLocation == null) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp, start = 20.dp, end = 20.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color(0xE6000000))
+                .glowingBorder(2.dp, Warning.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Filled.LocationOn,
+                contentDescription = null,
+                tint = Warning,
+                modifier = Modifier.size(16.dp),
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                "Tap the map to drop a pin, then download offline maps for that area.",
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.White,
+            )
+        }
+    }
+}
 
     pinLocation?.let { loc ->
         if (showDownloadSheet) {
