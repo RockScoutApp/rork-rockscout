@@ -1214,7 +1214,7 @@ fun TripRouteMap(
  * Includes:
  * - The existing route markers and polyline so the user sees their current route.
  * - Tap-to-drop-pin overlay.
- * - Two pill buttons at the bottom: "Add to Route" (citrine) and "Submit a New Location" (aqua).
+ * - Two pill buttons at the bottom: "Add to Route" (citrine) and "Upload New Location" (aqua).
  * - Location scan logic using [DigSiteSearchService.verifyLocation] when Add to Route
  *   is tapped on an unlisted location.
  * - Auto-approve to [CustomDigLocationStore] if the scan finds rock-related results.
@@ -1478,7 +1478,7 @@ fun FullscreenRouteMapOverlay(
                 }
             }
 
-            // Bottom pill buttons — Add to Route + Submit a New Location
+            // Bottom pill buttons — Add to Route + Upload New Location
             if (pinLocation != null && !isScanning && !showNameInput) {
                 Row(
                     modifier = Modifier
@@ -1548,7 +1548,7 @@ fun FullscreenRouteMapOverlay(
                         Text("Add to Route", style = MaterialTheme.typography.labelLarge, color = Citrine, fontWeight = FontWeight.Bold)
                     }
 
-                    // Submit a New Location
+                    // Upload New Location
                     Row(
                         modifier = Modifier
                             .weight(1f)
@@ -1571,7 +1571,7 @@ fun FullscreenRouteMapOverlay(
                     ) {
                         Icon(Icons.Filled.AddLocationAlt, contentDescription = null, tint = Aqua, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Submit Location", style = MaterialTheme.typography.labelLarge, color = Aqua, fontWeight = FontWeight.Bold, maxLines = 1)
+                        Text("Upload New Location", style = MaterialTheme.typography.labelLarge, color = Aqua, fontWeight = FontWeight.Bold, maxLines = 1)
                     }
                 }
             }

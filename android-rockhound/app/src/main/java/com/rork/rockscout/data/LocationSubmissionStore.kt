@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 /**
  * Persistently stores full location submissions from users — dig sites, mines,
  * quarries, rock shops, and other collecting locations submitted via the
- * "Add a Location" form with photos, type, address, and comments.
+ * "Upload New Location" form with photos, type, address, and comments.
  *
  * Submissions are either auto-approved (when web verification confirms the
  * location is a known dig site) or sent to the Developer Console for manual

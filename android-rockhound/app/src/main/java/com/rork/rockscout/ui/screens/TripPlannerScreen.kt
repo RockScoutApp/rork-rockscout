@@ -621,7 +621,7 @@ fun TripPlannerScreen(navController: NavController) {
         )
     }
 
-    // Location submission dialog — launched from the fullscreen route map's "Submit a New Location" button.
+    // Location upload dialog — launched from the fullscreen route map's "Upload New Location" button.
     if (showAddLocationDialog) {
         AddLocationDialog(
             onDismiss = { showAddLocationDialog = false; pendingLocationCoords = null },
@@ -2228,7 +2228,7 @@ private fun TrailheadPickerSheet(
                 }
                 Spacer(Modifier.height(8.dp))
                 SculptedOutlinedButton(
-                    text = "+ Add a new trailhead",
+                    text = "+ Upload New Location",
                     onClick = onAddNew,
                     accent = Success,
                     textColor = Success,
@@ -2335,7 +2335,7 @@ private fun CampgroundPickerSheet(
                 }
                 Spacer(Modifier.height(8.dp))
                 SculptedOutlinedButton(
-                    text = "+ Add a new campground",
+                    text = "+ Upload New Location",
                     onClick = onAddNew,
                     accent = Citrine,
                     textColor = Citrine,

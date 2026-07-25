@@ -2340,7 +2340,7 @@ private fun SubmissionsTab() {
         if (locationSubmissions.none { it.status == "pending" }) {
             item {
                 Text(
-                    "No pending location submissions. Users can submit full dig site locations via the Add a Location form.",
+                    "No pending location submissions. Users can upload full dig site locations via the Upload New Location form.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = textOnDarkMuted,
                     modifier = Modifier.padding(vertical = 8.dp),

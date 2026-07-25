@@ -198,7 +198,7 @@ fun LocationsScreen(navController: NavController) {
         actions = {
             SculptedIconButton(
                 icon = Icons.Filled.AddLocation,
-                contentDescription = "Add a location",
+                contentDescription = "Upload New Location",
                 onClick = { showAddLocation = true },
                 accent = Citrine,
                 iconTint = Citrine,

@@ -217,7 +217,7 @@ private val howToSections: List<HowToSection> = listOf(
             "A sync-status pill on every trip map shows whether your offline tiles are up to date: green \"Up to date\" (cached in the last 24h), aqua \"Cached\" (within 7 days), or warning \"Stale • tap to refresh\" (older than 7 days). Tap the pill to re-cache the trip area. When you're offline, the pill reports whether the cached tiles are fresh or may be stale.",
             "Add a gear checklist so you never forget your hammer, loupe, or UV light.",
             "When editing a trip, drop specimen marker pins on the specimen marker map to mark exactly where you found each rock — pins persist with the trip, appear on the route map, and are included when you cache the trip area for offline use. Use Set Pin / Remove Pin with confirmation popups.",
-            "Expand the trip route map to fullscreen and tap anywhere to drop a pin. Two pill buttons appear: \"Add to Route\" adds the pin as a stop (auto-approving rock-related locations via web scan), and \"Submit a New Location\" opens the full location submission form pre-filled with the pinned coordinates.",
+            "Expand the trip route map to fullscreen and tap anywhere to drop a pin. Two pill buttons appear: \"Add to Route\" adds the pin as a stop (auto-approving rock-related locations via web scan), and \"Upload New Location\" opens the full location upload form pre-filled with the pinned coordinates.",
             "Export your planned trip to the in-app Calendar by tapping the \"View in Calendar\" button in the trip editor — the trip appears on its scheduled date in the month grid.",
             "Mark a trip as complete with the checkmark button — completed trips can be archived to the \"Archived\" tab for safekeeping without cluttering your active trip list.",
             "Share your trip plan with friends via the share button.",
@@ -313,7 +313,7 @@ private val howToSections: List<HowToSection> = listOf(
             "Tap Navigate to Vehicle to get Google Maps directions back (online) or center the map on your parking spot with cached satellite tiles (offline).",
             "The satellite button cycles through 3 zoom levels: first tap zooms to 16 (satellite appears), second tap zooms to 19 (deepest detail), third tap restores your original view.",
             "Every map shows a sync-status pill (top-left) that reports whether the offline tiles for the visible area are up to date, cached, or stale. Tap the pill to refresh the cache for the current area. When offline, it tells you whether the cached tiles are fresh or may be stale so you know if you can trust the map.",
-            "Found a great dig site not on the map? Use the Submit Location form to add it after review.",
+            "Found a great dig site not on the map? Use the Upload New Location form to add it after review.",
         ),
     ),
     HowToSection(
@@ -498,7 +498,7 @@ private val howToSections: List<HowToSection> = listOf(
         steps = listOf(
             "Found a specimen that isn't in the database? Use the Submit Specimen button (found on specimen detail pages and the database screen).",
             "Submit up to 4 photos plus any info you have — after review, it gets added to the Specimen Database or Rocks Are Amazing collection.",
-            "Found a great dig site, rock shop, or gem show that isn't on the map? Use the Submit Location / Add Location form on the Dig Sites map or any map screen.",
+            "Found a great dig site, rock shop, or gem show that isn't on the map? Use the Upload New Location form on the Dig Sites map or any map screen.",
             "After review, submitted locations appear on the Dig Sites map for every RockScout user to discover.",
             "Help build the most thorough rock database and the most complete hunting map on the app market!",
         ),

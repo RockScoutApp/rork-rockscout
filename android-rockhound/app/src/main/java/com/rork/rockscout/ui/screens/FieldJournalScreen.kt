@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddLocationAlt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
@@ -503,6 +504,8 @@ private fun JournalEditorScreen(
     var newMarkerCategory by remember { mutableStateOf("Other") }
     var categoryMenuExpanded by remember { mutableStateOf(false) }
     var showLocationPicker by remember { mutableStateOf(false) }
+    var showUploadLocationDialog by remember { mutableStateOf(false) }
+    var uploadLocationMessage by remember { mutableStateOf<String?>(null) }
     var showCapturePicker by remember { mutableStateOf(false) }
     var showTripPicker by remember { mutableStateOf(false) }
     var showSavedImagePicker by remember { mutableStateOf(false) }
@@ -590,6 +593,15 @@ private fun JournalEditorScreen(
                         Text("Linked dig site: ${site.name}", style = MaterialTheme.typography.labelMedium, color = Citrine)
                     }
                 }
+                Spacer(Modifier.height(8.dp))
+                SculptedOutlinedButton(
+                    text = "Upload New Location",
+                    icon = Icons.Filled.AddLocationAlt,
+                    onClick = { showUploadLocationDialog = true },
+                    accent = Aqua,
+                    textColor = Aqua,
+                    modifier = Modifier.fillMaxWidth(),
+                )
                 Spacer(Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                     Text("Trip: ", style = MaterialTheme.typography.bodyMedium)
@@ -952,6 +964,31 @@ private fun JournalEditorScreen(
                 selectedDigSiteId = loc.id
                 location = loc.name
                 showLocationPicker = false
+            },
+        )
+    }
+
+    if (showUploadLocationDialog) {
+        AddLocationDialog(
+            onDismiss = { showUploadLocationDialog = false },
+            onSubmitted = { approved ->
+                uploadLocationMessage = if (approved) {
+                    "Location web-verified and added to the map!"
+                } else {
+                    "Location submitted for review!"
+                }
+                showUploadLocationDialog = false
+            },
+        )
+    }
+
+    uploadLocationMessage?.let { msg ->
+        androidx.compose.material3.SnackbarHost(
+            hostState = remember { androidx.compose.material3.SnackbarHostState() }.also {
+                androidx.compose.runtime.LaunchedEffect(msg) {
+                    it.showSnackbar(msg)
+                    uploadLocationMessage = null
+                }
             },
         )
     }

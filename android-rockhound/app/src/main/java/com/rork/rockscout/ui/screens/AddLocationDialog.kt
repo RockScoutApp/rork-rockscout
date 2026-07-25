@@ -125,7 +125,7 @@ private val trailheadTypes = listOf(
  * Full-screen location submission form with photo capture, type dropdown,
  * address, comments, map pin-drop, web verification, and auto-approval.
  *
- * Replaces the simple pin-drop [AddLocationSheet] for the "Add a Location"
+ * Replaces the simple pin-drop [AddLocationSheet] for the "Upload New Location"
  * action on the Dig Sites screen. The pin-drop map is still used to set
  * coordinates — it's embedded as a step within this form.
  *
@@ -154,14 +154,14 @@ fun AddLocationDialog(
         else -> locationTypes
     }
     val dialogTitle = when (submissionMode) {
-        "campground" -> "Add a Campground"
-        "trailhead" -> "Add a Trailhead"
-        else -> "Add a Location"
+        "campground" -> "Upload New Campground"
+        "trailhead" -> "Upload New Trailhead"
+        else -> "Upload New Location"
     }
     val dialogSubtitle = when (submissionMode) {
-        "campground" -> "Submit a campground for the community trip planner."
-        "trailhead" -> "Submit a trailhead or access point for the community trip planner."
-        else -> "Submit a dig site, mine, quarry, or rock shop for the community."
+        "campground" -> "Upload a campground for the community trip planner."
+        "trailhead" -> "Upload a trailhead or access point for the community trip planner."
+        else -> "Upload a dig site, mine, quarry, or rock shop for the community."
     }
 
     var name by remember { mutableStateOf("") }
@@ -452,7 +452,7 @@ fun AddLocationDialog(
         },
         confirmButton = {
             SculptedButton(
-                text = if (isSubmitting) "Submitting…" else "Submit Location",
+                text = if (isSubmitting) "Uploading…" else "Upload New Location",
                 onClick = {
                     if (isSubmitting) return@SculptedButton
                     if (name.isBlank()) return@SculptedButton
