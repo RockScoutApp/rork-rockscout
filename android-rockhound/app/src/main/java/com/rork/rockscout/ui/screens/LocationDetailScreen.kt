@@ -19,7 +19,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -161,329 +162,307 @@ fun LocationDetailScreen(navController: NavController, locationId: String) {
             },
             modifier = Modifier.fillMaxSize(),
         ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().navigationBarsPadding(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 40.dp),
+        val scrollState = rememberScrollState()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .navigationBarsPadding()
+                .verticalScroll(scrollState)
+                .padding(bottom = 40.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // Back button at the top — separated from the map so the map
             // can be positioned further down without losing navigation.
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .sculpted(
+                            shape = CircleShape,
+                            accent = Citrine,
+                            shadowElevation = 5.dp,
+                            circular = true,
+                            onClick = { navController.popBackStack() },
+                        )
+                        .clip(CircleShape)
+                        .background(Color(0xCC0C0F14))
+                        .glowingBorder(1.dp, Color.White.copy(alpha = 0.20f), CircleShape),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .sculpted(
-                                shape = CircleShape,
-                                accent = Citrine,
-                                shadowElevation = 5.dp,
-                                circular = true,
-                                onClick = { navController.popBackStack() },
-                            )
-                            .clip(CircleShape)
-                            .background(Color(0xCC0C0F14))
-                            .glowingBorder(1.dp, Color.White.copy(alpha = 0.20f), CircleShape),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                }
+            }
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TagChip(loc.type.label.uppercase(), color = Aqua, filled = true)
+                    Spacer(Modifier.width(8.dp))
+                    TagChip(loc.difficulty.uppercase(), color = difficultyColor(loc.difficulty))
+                }
+                Spacer(Modifier.height(10.dp))
+                Text(loc.name, style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onBackground)
+                Text(loc.region, style = MaterialTheme.typography.bodyLarge, color = TextMid)
+                if (loc.submitterName != null) {
+                    Spacer(Modifier.height(6.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Filled.PanTool,
+                            contentDescription = null,
+                            tint = Citrine,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            "Submitted by ${loc.submitterName}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Citrine,
+                            fontWeight = FontWeight.SemiBold,
+                        )
                     }
                 }
             }
-            item {
-                Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        TagChip(loc.type.label.uppercase(), color = Aqua, filled = true)
-                        Spacer(Modifier.width(8.dp))
-                        TagChip(loc.difficulty.uppercase(), color = difficultyColor(loc.difficulty))
-                    }
-                    Spacer(Modifier.height(10.dp))
-                    Text(loc.name, style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onBackground)
-                    Text(loc.region, style = MaterialTheme.typography.bodyLarge, color = TextMid)
-                    if (loc.submitterName != null) {
-                        Spacer(Modifier.height(6.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Filled.PanTool,
-                                contentDescription = null,
-                                tint = Citrine,
-                                modifier = Modifier.size(16.dp),
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                "Submitted by ${loc.submitterName}",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = Citrine,
-                                fontWeight = FontWeight.SemiBold,
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                SculptedButton(
+                    text = "Directions",
+                    onClick = {
+                        val googleMapsUri = "google.navigation:q=${loc.latitude},${loc.longitude}"
+                        val fallbackGeoUri = "geo:${loc.latitude},${loc.longitude}?q=${loc.latitude},${loc.longitude}(${Uri.encode(loc.name)})"
+                        SafeLinkOpener.openMaps(context, googleMapsUri, fallbackGeoUri)
+                    },
+                    modifier = Modifier.weight(1f).height(50.dp),
+                    accent = Citrine,
+                    containerColor = Citrine,
+                    textColor = Ink,
+                    icon = Icons.Filled.Directions,
+                )
+                SculptedIconButton(
+                    icon = if (isFav) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
+                    contentDescription = "Favorite",
+                    onClick = { repo.toggleFavoriteSpot(loc.id) },
+                    accent = Citrine,
+                    iconTint = if (isFav) Citrine else TextMid,
+                    size = 50.dp,
+                )
+                SculptedIconButton(
+                    icon = Icons.Filled.Share,
+                    contentDescription = "Share spot",
+                    onClick = {
+                        scope.launch {
+                            ShareCardImage.share(
+                                context = context,
+                                title = loc.name,
+                                subtitle = loc.region + "  •  " + loc.type.label,
+                                body = loc.summary,
+                                accentHex = 0xFF2C6F9B,
+                                fileName = "rockscout_site_${loc.id}",
                             )
                         }
-                    }
-                }
-            }
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    SculptedButton(
-                        text = "Directions",
-                        onClick = {
-                            val googleMapsUri = "google.navigation:q=${loc.latitude},${loc.longitude}"
-                            val fallbackGeoUri = "geo:${loc.latitude},${loc.longitude}?q=${loc.latitude},${loc.longitude}(${Uri.encode(loc.name)})"
-                            SafeLinkOpener.openMaps(context, googleMapsUri, fallbackGeoUri)
-                        },
-                        modifier = Modifier.weight(1f).height(50.dp),
-                        accent = Citrine,
-                        containerColor = Citrine,
-                        textColor = Ink,
-                        icon = Icons.Filled.Directions,
-                    )
-                    SculptedIconButton(
-                        icon = if (isFav) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
-                        contentDescription = "Favorite",
-                        onClick = { repo.toggleFavoriteSpot(loc.id) },
-                        accent = Citrine,
-                        iconTint = if (isFav) Citrine else TextMid,
-                        size = 50.dp,
-                    )
-                    SculptedIconButton(
-                        icon = Icons.Filled.Share,
-                        contentDescription = "Share spot",
-                        onClick = {
-                            scope.launch {
-                                ShareCardImage.share(
-                                    context = context,
-                                    title = loc.name,
-                                    subtitle = loc.region + "  •  " + loc.type.label,
-                                    body = loc.summary,
-                                    accentHex = 0xFF2C6F9B,
-                                    fileName = "rockscout_site_${loc.id}",
-                                )
-                            }
-                        },
-                        accent = Citrine,
-                        iconTint = TextMid,
-                        size = 50.dp,
-                    )
-                    SculptedIconButton(
-                        icon = Icons.Filled.PersonAdd,
-                        contentDescription = "Share to profile",
-                        onClick = { shareToProfileLocation = loc },
-                        accent = Citrine,
-                        iconTint = Citrine,
-                        size = 50.dp,
-                    )
-                }
-            }
-            // Map moved here — between the directions buttons and the field conditions card.
-            item {
-                RouteMap(loc, miles, showBackButton = false) { navController.popBackStack() }
-            }
-            item {
-                WeatherCard(
-                    snapshot = weather,
-                    loading = weatherLoading,
-                    latitude = loc.latitude,
-                    longitude = loc.longitude,
+                    },
+                    accent = Citrine,
+                    iconTint = TextMid,
+                    size = 50.dp,
+                )
+                SculptedIconButton(
+                    icon = Icons.Filled.PersonAdd,
+                    contentDescription = "Share to profile",
+                    onClick = { shareToProfileLocation = loc },
+                    accent = Citrine,
+                    iconTint = Citrine,
+                    size = 50.dp,
                 )
             }
+            // Map moved here — between the directions buttons and the field conditions card.
+            RouteMap(loc, miles, showBackButton = false) { navController.popBackStack() }
+            WeatherCard(
+                snapshot = weather,
+                loading = weatherLoading,
+                latitude = loc.latitude,
+                longitude = loc.longitude,
+            )
 
             // Common Wildlife (beach/coastal locations only)
             if (loc.type == com.rork.rockscout.data.LocationType.BEACH) {
-                item {
-                    Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                        WildlifeCard(
-                            wildlife = WildlifeData.forCoastalLocation(loc.region, loc.latitude, loc.longitude),
-                        )
-                    }
-                }
-            }
-            item {
                 Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    // Pre-arrival tip
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Citrine.copy(alpha = 0.08f))
-                            .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
-                    ) {
-                        Icon(Icons.Filled.Lightbulb, contentDescription = null, tint = Citrine, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            "Download before you lose signal! Cache this area ahead of time so your map and satellite imagery are ready when you arrive on-site with no cell service.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = DarkTextMid,
-                        )
-                    }
-                    Spacer(Modifier.height(12.dp))
-                    var isDownloadingMaps by remember { mutableStateOf(false) }
-                    var mapsDownloaded by remember { mutableStateOf(false) }
-                    // Two-row button: action on row 1, "at pin location" on row 2
-                    SculptedOutlinedButton(
-                        text = if (isDownloadingMaps) "Downloading maps…" else if (mapsDownloaded) "Offline maps ready ✓" else "Download offline map tiles",
-                        onClick = {
-                            if (isDownloadingMaps) return@SculptedOutlinedButton
-                            isDownloadingMaps = true
-                            scope.launch {
-                                withContext(Dispatchers.IO) {
-                                    runCatching {
-                                        MapTileCacheManager.prefetchLocation(context, loc)
-                                    }
-                                }
-                                isDownloadingMaps = false
-                                mapsDownloaded = true
-                            }
-                        },
-                        accent = Aqua,
-                        textColor = Aqua,
-                        icon = Icons.Filled.Download,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !isDownloadingMaps,
+                    WildlifeCard(
+                        wildlife = WildlifeData.forCoastalLocation(loc.region, loc.latitude, loc.longitude),
                     )
+                }
+            }
+            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+                // Pre-arrival tip
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Citrine.copy(alpha = 0.08f))
+                        .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                ) {
+                    Icon(Icons.Filled.Lightbulb, contentDescription = null, tint = Citrine, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text(
-                        "at this location",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Aqua,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(start = 4.dp, top = 2.dp),
-                    )
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        "Caches satellite, street, and label tiles at zoom 10–19 so the map works with zero signal. Tap to zoom to full detail on-site.",
+                        "Download before you lose signal! Cache this area ahead of time so your map and satellite imagery are ready when you arrive on-site with no cell service.",
                         style = MaterialTheme.typography.bodySmall,
                         color = DarkTextMid,
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    var isGeneratingMapImage by remember { mutableStateOf(false) }
-                    SculptedOutlinedButton(
-                        text = if (isGeneratingMapImage) "Generating map image…" else "Save ultra high-res map image",
-                        onClick = {
-                            if (isGeneratingMapImage) return@SculptedOutlinedButton
-                            isGeneratingMapImage = true
-                            scope.launch {
-                                OfflineMapExporter.saveOfflineMapImage(context, loc.latitude, loc.longitude)
-                                isGeneratingMapImage = false
-                            }
-                        },
-                        accent = Citrine,
-                        textColor = Citrine,
-                        icon = Icons.Filled.PhotoCamera,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = !isGeneratingMapImage,
-                    )
-                    Text(
-                        "at this location",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Citrine,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(start = 4.dp, top = 2.dp),
-                    )
-                    Spacer(Modifier.height(6.dp))
-                    Text(
-                        "Stitches a single ultra high-resolution satellite image (3-mile radius, zoom 15) and saves it to your gallery's Offline Maps folder. Pinch to zoom in deep — trails, terrain, and landmarks stay crisp even with no signal. Perfect for finding your way back to your vehicle when you're off-grid.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = DarkTextMid,
-                        modifier = Modifier.padding(horizontal = 4.dp),
                     )
                 }
-            }
-            item {
-                Section("About this spot") {
-                    Text(loc.summary, style = MaterialTheme.typography.bodyLarge, color = DarkTextMid)
-                }
-            }
-            item {
-                Section("Visitor info") {
-                    InfoLine(Icons.Filled.ConfirmationNumber, "Prices & fees", loc.feeInfo)
-                    Spacer(Modifier.height(12.dp))
-                    InfoLine(Icons.Filled.AccessTime, "Operating hours", loc.hours)
-                    loc.phone?.let {
-                        Spacer(Modifier.height(12.dp))
-                        InfoLine(Icons.Filled.Phone, "Phone", it)
-                    }
-                    Spacer(Modifier.height(12.dp))
-                    InfoLine(Icons.Filled.Terrain, "Difficulty", loc.difficulty)
-                }
-            }
-            loc.website?.let { site ->
-                item {
-                    Box(modifier = Modifier.padding(horizontal = 20.dp)) {
-                        DarkCard(
-                            accent = Aqua,
-                            modifier = Modifier.fillMaxWidth().clickable {
-                                SafeLinkOpener.openUrl(context, site)
-                            },
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier.size(42.dp).clip(CircleShape).background(Aqua.copy(alpha = 0.18f)),
-                                    contentAlignment = Alignment.Center,
-                                ) { Icon(Icons.Filled.Language, contentDescription = null, tint = Aqua) }
-                                Spacer(Modifier.width(14.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text("Visit official website", style = MaterialTheme.typography.titleMedium, color = Color.White)
-                                    Text(site.removePrefix("https://").removePrefix("http://"), style = MaterialTheme.typography.bodyMedium, color = Aqua, maxLines = 1)
+                Spacer(Modifier.height(12.dp))
+                var isDownloadingMaps by remember { mutableStateOf(false) }
+                var mapsDownloaded by remember { mutableStateOf(false) }
+                // Two-row button: action on row 1, "at pin location" on row 2
+                SculptedOutlinedButton(
+                    text = if (isDownloadingMaps) "Downloading maps…" else if (mapsDownloaded) "Offline maps ready ✓" else "Download offline map tiles",
+                    onClick = {
+                        if (isDownloadingMaps) return@SculptedOutlinedButton
+                        isDownloadingMaps = true
+                        scope.launch {
+                            withContext(Dispatchers.IO) {
+                                runCatching {
+                                    MapTileCacheManager.prefetchLocation(context, loc)
                                 }
                             }
+                            isDownloadingMaps = false
+                            mapsDownloaded = true
                         }
-                    }
-                }
-            }
-            item {
-                Section("What you can find") {
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        loc.mineralTags.forEach { TagChip(it, color = Citrine) }
-                    }
-                    val linked = loc.knownFor.mapNotNull { SeedData.specimenById(it) }
-                    if (linked.isNotEmpty()) {
-                        Spacer(Modifier.height(14.dp))
-                        Text("In your field guide", style = MaterialTheme.typography.labelMedium, color = DarkTextLow, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.height(8.dp))
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            linked.forEach { spec ->
-                                val accent = rockClassColor(spec.rockClass)
-                                SpecimenListItem(
-                                    specimen = spec,
-                                    accent = accent,
-                                    onClick = { navController.navigate(Routes.specimen(spec.id)) },
-                                    showCategory = true,
-                                    imageSize = 92.dp,
-                                    trailing = {
-                                        Text("View ›", color = accent, style = MaterialTheme.typography.labelLarge)
-                                    },
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-            item {
-                Box(modifier = Modifier.padding(horizontal = 20.dp)) {
-                    DarkCard(modifier = Modifier.fillMaxWidth(), accent = Citrine) {
-                        Row {
-                            Icon(Icons.Filled.Lightbulb, contentDescription = null, tint = Citrine, modifier = Modifier.size(20.dp))
-                            Spacer(Modifier.width(12.dp))
-                            Column {
-                                Text("Field tip", style = MaterialTheme.typography.titleMedium, color = Citrine)
-                                Spacer(Modifier.height(4.dp))
-                                Text(loc.tips, style = MaterialTheme.typography.bodyMedium, color = DarkTextMid)
-                            }
-                        }
-                    }
-                }
-            }
-            item {
-                GearLinksCard(
-                    sectionTitle = "Recommended gear for this trip",
-                    items = GearGuide.gearForLocationType(loc.type),
+                    },
                     accent = Aqua,
+                    textColor = Aqua,
+                    icon = Icons.Filled.Download,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isDownloadingMaps,
+                )
+                Text(
+                    "at this location",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Aqua,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(start = 4.dp, top = 2.dp),
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Caches satellite, street, and label tiles at zoom 10–19 so the map works with zero signal. Tap to zoom to full detail on-site.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = DarkTextMid,
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                )
+                Spacer(Modifier.height(10.dp))
+                var isGeneratingMapImage by remember { mutableStateOf(false) }
+                SculptedOutlinedButton(
+                    text = if (isGeneratingMapImage) "Generating map image…" else "Save ultra high-res map image",
+                    onClick = {
+                        if (isGeneratingMapImage) return@SculptedOutlinedButton
+                        isGeneratingMapImage = true
+                        scope.launch {
+                            OfflineMapExporter.saveOfflineMapImage(context, loc.latitude, loc.longitude)
+                            isGeneratingMapImage = false
+                        }
+                    },
+                    accent = Citrine,
+                    textColor = Citrine,
+                    icon = Icons.Filled.PhotoCamera,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isGeneratingMapImage,
+                )
+                Text(
+                    "at this location",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Citrine,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(start = 4.dp, top = 2.dp),
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Stitches a single ultra high-resolution satellite image (3-mile radius, zoom 15) and saves it to your gallery's Offline Maps folder. Pinch to zoom in deep — trails, terrain, and landmarks stay crisp even with no signal. Perfect for finding your way back to your vehicle when you're off-grid.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = DarkTextMid,
+                    modifier = Modifier.padding(horizontal = 4.dp),
                 )
             }
+            Section("About this spot") {
+                Text(loc.summary, style = MaterialTheme.typography.bodyLarge, color = DarkTextMid)
+            }
+            Section("Visitor info") {
+                InfoLine(Icons.Filled.ConfirmationNumber, "Prices & fees", loc.feeInfo)
+                Spacer(Modifier.height(12.dp))
+                InfoLine(Icons.Filled.AccessTime, "Operating hours", loc.hours)
+                loc.phone?.let {
+                    Spacer(Modifier.height(12.dp))
+                    InfoLine(Icons.Filled.Phone, "Phone", it)
+                }
+                Spacer(Modifier.height(12.dp))
+                InfoLine(Icons.Filled.Terrain, "Difficulty", loc.difficulty)
+            }
+            loc.website?.let { site ->
+                Box(modifier = Modifier.padding(horizontal = 20.dp)) {
+                    DarkCard(
+                        accent = Aqua,
+                        modifier = Modifier.fillMaxWidth().clickable {
+                            SafeLinkOpener.openUrl(context, site)
+                        },
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier.size(42.dp).clip(CircleShape).background(Aqua.copy(alpha = 0.18f)),
+                                contentAlignment = Alignment.Center,
+                            ) { Icon(Icons.Filled.Language, contentDescription = null, tint = Aqua) }
+                            Spacer(Modifier.width(14.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Visit official website", style = MaterialTheme.typography.titleMedium, color = Color.White)
+                                Text(site.removePrefix("https://").removePrefix("http://"), style = MaterialTheme.typography.bodyMedium, color = Aqua, maxLines = 1)
+                            }
+                        }
+                    }
+                }
+            }
+            Section("What you can find") {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    loc.mineralTags.forEach { TagChip(it, color = Citrine) }
+                }
+                val linked = loc.knownFor.mapNotNull { SeedData.specimenById(it) }
+                if (linked.isNotEmpty()) {
+                    Spacer(Modifier.height(14.dp))
+                    Text("In your field guide", style = MaterialTheme.typography.labelMedium, color = DarkTextLow, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(8.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        linked.forEach { spec ->
+                            val accent = rockClassColor(spec.rockClass)
+                            SpecimenListItem(
+                                specimen = spec,
+                                accent = accent,
+                                onClick = { navController.navigate(Routes.specimen(spec.id)) },
+                                showCategory = true,
+                                imageSize = 92.dp,
+                                trailing = {
+                                    Text("View ›", color = accent, style = MaterialTheme.typography.labelLarge)
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+            Box(modifier = Modifier.padding(horizontal = 20.dp)) {
+                DarkCard(modifier = Modifier.fillMaxWidth(), accent = Citrine) {
+                    Row {
+                        Icon(Icons.Filled.Lightbulb, contentDescription = null, tint = Citrine, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(12.dp))
+                        Column {
+                            Text("Field tip", style = MaterialTheme.typography.titleMedium, color = Citrine)
+                            Spacer(Modifier.height(4.dp))
+                            Text(loc.tips, style = MaterialTheme.typography.bodyMedium, color = DarkTextMid)
+                        }
+                    }
+                }
+            }
+            GearLinksCard(
+                sectionTitle = "Recommended gear for this trip",
+                items = GearGuide.gearForLocationType(loc.type),
+                accent = Aqua,
+            )
         }
         }
     }
@@ -569,7 +548,7 @@ private fun RouteMap(loc: DigLocation, miles: Double, showBackButton: Boolean = 
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { ctx ->
-                createRockScoutMapView(ctx).apply {
+                createRockScoutMapView(ctx, isEmbedded = true).apply {
                     controller.setZoom(12.0)
                     controller.setCenter(org.osmdroid.util.GeoPoint(loc.latitude, loc.longitude))
                     overlays.add(org.osmdroid.views.overlay.gestures.RotationGestureOverlay(this).apply { isEnabled = true })

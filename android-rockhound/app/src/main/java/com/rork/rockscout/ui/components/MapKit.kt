@@ -496,7 +496,11 @@ private fun setManualLayer(mapView: MapView, style: MapLayerStyle?) {
 
 private fun getManualLayer(mapView: MapView): MapLayerStyle? = manualLayerOverrides[mapView]
 
-fun createRockScoutMapView(context: Context, readOnly: Boolean = false): MapView {
+fun createRockScoutMapView(
+    context: Context,
+    readOnly: Boolean = false,
+    isEmbedded: Boolean = false,
+): MapView {
     // The global osmdroid user agent is already configured in RockScoutApplication.
     // Make sure the tile cache directory exists on disk before the provider tries
     // to open its SqlTileWriter database.
@@ -527,20 +531,23 @@ fun createRockScoutMapView(context: Context, readOnly: Boolean = false): MapView
     }
     val view = object : MapView(context, tileProvider) {
         override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
-            // Prevent scrollable Compose parents (LazyColumn, verticalScroll Column)
-            // from stealing the drag events while the user is panning or pinching
-            // the map. Without this, the map feels jittery because the parent
-            // scrollable intercepts part of the gesture and competes for frames.
-            val parentView = parent
-            if (parentView != null && ev != null) {
-                when (ev.actionMasked) {
-                    MotionEvent.ACTION_DOWN,
-                    MotionEvent.ACTION_MOVE,
-                    MotionEvent.ACTION_POINTER_DOWN,
-                    -> parentView.requestDisallowInterceptTouchEvent(true)
-                    MotionEvent.ACTION_UP,
-                    MotionEvent.ACTION_CANCEL,
-                    -> parentView.requestDisallowInterceptTouchEvent(false)
+            // For embedded preview maps or read-only map previews inside a scrollable
+            // parent, do not steal every touch from the parent. This lets the page
+            // scroll vertically when the user drags on the map preview while still
+            // allowing taps, horizontal pans, and pinch-zoom on interactive maps.
+            // Full-screen interactive maps still request disallow intercept so pan/zoom works.
+            if (!isEmbedded && !readOnly) {
+                val parentView = parent
+                if (parentView != null && ev != null) {
+                    when (ev.actionMasked) {
+                        MotionEvent.ACTION_DOWN,
+                        MotionEvent.ACTION_MOVE,
+                        MotionEvent.ACTION_POINTER_DOWN,
+                        -> parentView.requestDisallowInterceptTouchEvent(true)
+                        MotionEvent.ACTION_UP,
+                        MotionEvent.ACTION_CANCEL,
+                        -> parentView.requestDisallowInterceptTouchEvent(false)
+                    }
                 }
             }
             return super.dispatchTouchEvent(ev)
