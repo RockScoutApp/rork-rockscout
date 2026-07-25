@@ -139,6 +139,190 @@ object StateParkData {
         StatePark("sun-lakes-wa", "Sun Lakes-Dry Falls State Park", "WA", "Coulee City, Washington", "Features Dry Falls — a 3.5-mile-wide ancient waterfall from Ice Age floods, now dry. Exposes massive basalt cliffs carved by the greatest known floods in Earth's history.", 47.6320, -119.3790, true, "$10/vehicle", "https://parks.wa.gov/sun-lakes-dry-falls"),
         StatePark("olive-stone-wa", "Olive Stone / Beacon Rock State Park", "WA", "North Bonneville, Washington", "Beacon Rock is an 848-foot core of an ancient volcano — a massive basalt plug exposed by Ice Age floods. Spectacular geological formation along the Columbia River.", 45.6560, -122.0090, false, "$10/vehicle", "https://parks.wa.gov/beacon-rock"),
         StatePark("walla-walla-wa", "Lewis & Clark Trail State Park", "WA", "Dayton, Washington", "Exposes basalt formations of the Blue Mountains foothills. Visible sedimentary interbeds between Columbia River Basalt flows contain fossil plant material.", 46.2260, -118.0390, true, "$10/vehicle", "https://parks.wa.gov/lewis-and-clark-trail"),
+
+        // Alaska
+        StatePark("chugach-ak", "Chugach State Park", "AK", "Anchorage, Alaska", "Half-million acres of dramatic glacial carved terrain with exposed metamorphic schist, slate, and greywacke of the Chugach terrane. Visible glacial geology and fault structures.", 61.0700, -149.4300, true, "$5/parking", "https://alaskastateparks.org/chugach"),
+        StatePark("kachemak-ak", "Kachemak Bay State Park", "AK", "Homer, Alaska", "Glaciers, fjords, and exposed sedimentary rock of the McNeil Formation with fossil-bearing strata. Tide pools reveal ancient marine sediments.", 59.6000, -151.4000, true, "Free", "https://alaskastateparks.org/kachemak-bay"),
+        StatePark("denali-state-ak", "Denali State Park", "AK", "Trapper Creek, Alaska", "Spectacular views of Denali with exposed Yukon-Tanana terrane metamorphic rocks including schist and quartzite. Glacial moraines and volcanic features.", 62.7500, -149.9000, true, "Free", "https://alaskastateparks.org/denali-state"),
+
+        // Arkansas
+        StatePark("crater-diamonds-ar", "Crater of Diamonds State Park", "AR", "Murfreesboro, Arkansas", "The only diamond-bearing site in the world open to public collecting. Diamonds formed in a 95-million-year-old volcanic pipe of lamproite. Keep what you find.", 34.0320, -93.6760, true, "$10/adult", "https://www.arkansasstateparks.com/crater-of-diamonds"),
+        StatePark("petit-jean-ar", "Petit Jean State Park", "AR", "Morrilton, Arkansas", "Dramatic sandstone bluffs and Cedar Falls carving through Atoka Formation sandstone. Visible rock shelters with ancient pictographs.", 35.1180, -93.0450, true, "$10/vehicle", "https://www.arkansasstateparks.com/petit-jean"),
+        StatePark("magazine-ar", "Mount Magazine State Park", "AR", "Paris, Arkansas", "Arkansas's highest point at 2,753 feet. Exposed Pennsylvanian-age sandstone and shale of the Boston Mountain plateau.", 35.5860, -93.3800, true, "$10/vehicle", "https://www.arkansasstateparks.com/mount-magazine"),
+
+        // Connecticut
+        StatePark("sleeping-giant-ct", "Sleeping Giant State Park", "CT", "Hamden, Connecticut", "Ridge of traprock (basalt) formed by Jurassic lava flows. The 'giant' profile is a classic example of columnar jointing in the Holyoke Basalt.", 41.4280, -72.8950, false, "$9/vehicle", "https://portal.ct.gov/sleeping-giant"),
+        StatePark("west-rock-ct", "West Rock Ridge State Park", "CT", "New Haven, Connecticut", "Dramatic traprock ridge of West Rock basalt with columnar jointing. Overlooking New Haven with exposures of Jurassic lava flows.", 41.3720, -72.9600, false, "Free", "https://portal.ct.gov/west-rock"),
+
+        // Delaware
+        StatePark("trap-pond-de", "Trap Pond State Park", "DE", "Laurel, Delaware", "Features wetlands over Columbia Formation gravel deposits. The surface geology reveals Pleistocene-age sediments from ancient coastal processes.", 38.5330, -75.3250, true, "$8/vehicle", "https://destateparks.com/trap-pond"),
+        StatePark("cape-henlopen-de", "Cape Henlopen State Park", "DE", "Lewes, Delaware", "Atlantic barrier beach with dynamic dune geology. Exposes recent coastal sedimentary processes and the Peggy Island shell bed.", 38.7700, -75.0800, true, "$8/vehicle", "https://destateparks.com/cape-henlopen"),
+
+        // Florida
+        StatePark("falling-waters-fl", "Falling Waters State Park", "FL", "Chipley, Florida", "Florida's highest waterfall drops 73 feet into a cylindrical sinkhole. Exposes the Floridan aquifer limestone and karst dissolution features.", 30.7280, -85.5370, true, "$5/vehicle", "https://floridastateparks.org/falling-waters"),
+        StatePark("devils-millhopper-fl", "Devil's Millhopper Geological State Park", "FL", "Gainesville, Florida", "A 120-foot deep sinkhole exposing layers of limestone, sand, and clay from different geological eras. Fossil shark teeth and marine life found here.", 29.6870, -82.3960, false, "$4/vehicle", "https://floridastateparks.org/devils-millhopper"),
+        StatePark("rainbow-springs-fl", "Rainbow Springs State Park", "FL", "Dunnellon, Florida", "First-magnitude spring discharging from the Floridan aquifer through limestone. Crystal clear water reveals the karst geology beneath.", 29.0970, -82.6930, true, "$2/person", "https://floridastateparks.org/rainbow-springs"),
+
+        // Georgia
+        StatePark("providence-canyon-ga", "Providence Canyon State Park", "GA", "Lumpkin, Georgia", "Georgia's 'Little Grand Canyon' — massive gullies carved by erosion in soft Coastal Plain sediments. A dramatic example of human-accelerated erosion.", 32.0500, -84.9000, true, "$5/vehicle", "https://gastateparks.org/providence-canyon"),
+        StatePark("amicalola-falls-ga", "Amicalola Falls State Park", "GA", "Dawsonville, Georgia", "729-foot waterfall cascading over Blue Ridge metamorphic rocks. Exposes quartzite and schist of the Cartersville Dam area.", 34.5620, -84.2530, true, "$5/vehicle", "https://gastateparks.org/amicalola-falls"),
+        StatePark("cloudland-canyon-ga", "Cloudland Canyon State Park", "GA", "Rising Fawn, Georgia", "Deep canyon carved into Sand Mountain exposing Pennsylvanian sandstone, shale, and coal seams. Dramatic overlooks of the Tennessee Valley.", 34.8400, -85.4900, true, "$5/vehicle", "https://gastateparks.org/cloudland-canyon"),
+
+        // Hawaii
+        StatePark("akaka-falls-hi", "Akaka Falls State Park", "HI", "Honomu, Hawaii", "442-foot waterfall plunging over basalt cliffs carved into ancient Mauna Kea lavas. Exposes layered Hawaiian volcanic flows.", 19.8530, -155.1600, false, "$5/non-resident", "https://dlnr.hawaii.gov/dsp/akaka"),
+        StatePark("waimea-canyon-hi", "Waimea Canyon State Park", "HI", "Waimea, Hawaii", "The 'Grand Canyon of the Pacific' — 14 miles long and 3,600 feet deep, carved into the ancient volcanic rock of Kauai's Na Pali formation.", 22.0700, -159.6700, true, "$5/non-resident", "https://dlnr.hawaii.gov/dsp/waimea"),
+        StatePark("hawaii-volcanoes-hi", "Hāpuna Beach State Recreation Area", "HI", "Waimea, Hawaii", "White sand beach formed from coral and shell fragments over basalt. Reveals coastal volcanic geology of the Kohala coast.", 19.9930, -155.8300, true, "$5/non-resident", "https://dlnr.hawaii.gov/dsp/hapuna"),
+
+        // Iowa
+        StatePark("maquoketa-caves-ia", "Maquoketa Caves State Park", "IA", "Maquoketa, Iowa", "Limestone caves and karst features in Silurian-age dolomite. Contains stalactites, stalagmites, and solution caves typical of Iowa's driftless region.", 42.1200, -90.7800, true, "$5/vehicle", "https://iowadnr.gov/maquoketa-caves"),
+        StatePark("ledges-ia", "Ledges State Park", "IA", "Boone, Iowa", "Dramatic sandstone cliffs carved by Pea's Creek into Pennsylvanian-age sandstone. Glacial erratics and loess deposits visible.", 42.0100, -93.8800, true, "$5/vehicle", "https://iowadnr.gov/ledges"),
+
+        // Illinois
+        StatePark("starved-rock-il", "Starved Rock State Park", "IL", "Utica, Illinois", "Dramatic canyons carved into St. Peter Sandstone by glacial meltwater. 18 canyons expose Ordovician-age pure quartz sandstone.", 41.3200, -88.9700, true, "$5/vehicle", "https://www2.illinois.gov/starved-rock"),
+        StatePark("giant-city-il", "Giant City State Park", "IL", "Makanda, Illinois", "Massive Pennsylvanian-age sandstone bluffs with giant 'city streets' — vertical jointing in the Caseyville Sandstone forms maze-like passages.", 37.6600, -89.1500, true, "$5/vehicle", "https://www2.illinois.gov/giant-city"),
+        StatePark("mississippi-palisades-il", "Mississippi Palisades State Park", "IL", "Savanna, Illinois", "Dramatic limestone bluffs along the Mississippi River exposing Ordovician and Silurian dolomite. Fossil-bearing strata visible in cliff faces.", 42.0800, -90.1400, true, "$5/vehicle", "https://www2.illinois.gov/mississippi-palisades"),
+
+        // Indiana
+        StatePark("turkey-run-in", "Turkey Run State Park", "IN", "Marshall, Indiana", "Dramatic sandstone ravines carved into Pennsylvanian-age Mansfield Sandstone. Contains fossil plants and ancient coal measure geology.", 39.8900, -87.2000, true, "$7/vehicle", "https://www.in.gov/turkey-run"),
+        StatePark("brown-county-in", "Brown County State Park", "IN", "Nashville, Indiana", "Rugged terrain exposing Mississippian-age siltstone and shale of the Borden Group. Scenic ravines and weathered sandstone formations.", 39.2000, -86.2500, true, "$7/vehicle", "https://www.in.gov/brown-county"),
+        StatePark(" McCormicks creek-in", "McCormick's Creek State Park", "IN", "Spencer, Indiana", "Indiana's oldest state park features limestone canyon carved by McCormick's Creek. Exposes Salem Limestone with abundant marine fossils.", 39.3000, -86.7100, true, "$7/vehicle", "https://www.in.gov/mccormicks-creek"),
+
+        // Kansas
+        StatePark("mushroom-rock-ks", "Mushroom Rock State Park", "KS", "Brookville, Kansas", "Oddly shaped sandstone concretions resembling mushrooms. These Dakota Formation rocks are 100-million-year-old beach deposits with distinctive erosion forms.", 38.7000, -97.8700, false, "Free", "https://ksoutdoors.com/mushroom-rock"),
+        StatePark("monument-rocks-ks", "Monument Rocks (Chalk Pyramids)", "KS", "Oakley, Kansas", "70-foot chalk pinnacles and arches — remnants of the Niobrara Chalk Formation from the Western Interior Seaway. Rich in fossil marine reptiles and giant clams.", 38.7950, -100.7400, false, "Free", "https://ksoutdoors.com/monument-rocks"),
+        StatePark("el-capitan-ks", "El Capitan State Park / Mount Sunflower", "KS", "Wallace, Kansas", "Kansas's highest point with exposures of Ogallala Formation calcareous sandstone and siltstone. Preserves High Plains geology.", 38.9900, -101.5000, false, "Free", "https://ksoutdoors.com"),
+
+        // Kentucky
+        StatePark("natural-bridge-ky", "Natural Bridge State Resort Park", "KY", "Slade, Kentucky", "78-foot natural sandstone arch in the Red River Gorge Geological Area. Exposes Pennsylvanian-age Corbin Sandstone with dramatic cliff formations.", 37.7800, -83.6800, true, "$10/vehicle", "https://parks.ky.gov/natural-bridge"),
+        StatePark("cumberland-falls-ky", "Cumberland Falls State Resort Park", "KY", "Corbin, Kentucky", "'Niagara of the South' — 125-foot wide waterfall over Pennsylvanian sandstone. Famous for moonbows. Exposes Coal Measures geology.", 36.8400, -84.3300, true, "$10/vehicle", "https://parks.ky.gov/cumberland-falls"),
+        StatePark("breaks-interstate-ky", "Breaks Interstate Park", "KY", "Elkhorn City, Kentucky", "'Grand Canyon of the South' — 1,600-foot deep gorge carved by the Russell Fork through Pennsylvanian sandstone and shale. Dramatic cliff exposures.", 37.3000, -82.3200, true, "$5/vehicle", "https://parks.ky.gov/breaks"),
+
+        // Louisiana
+        StatePark("chicot-la", "Lake Chicot State Park", "LA", "Ville Platte, Louisiana", "Ox-bow lake formed by the meandering Mississippi River. Exposes alluvial deposits and the Catahoula Formation with volcanic ash layers.", 30.1300, -92.4100, true, "$3/vehicle", "https://www.louisianastateparks.com/lake-chicot"),
+        StatePark("poverty-point-la", "Poverty Point State Historic Site", "LA", "Pioneer, Louisiana", "UNESCO World Heritage earthworks built on loess deposits of the Mississippi River valley. The geology supported one of North America's oldest mound complexes.", 32.6300, -91.4400, false, "$4/adult", "https://www.louisianastateparks.com/poverty-point"),
+
+        // Massachusetts
+        StatePark("mount-holyoke-ma", "Mount Holyoke Range State Park", "MA", "Amherst, Massachusetts", "Unique east-west traprock ridge of Jurassic basalt. Exposes the Holyoke Basalt with columnar jointing — part of the Connecticut Valley lava flows.", 42.3100, -72.5400, false, "Free", "https://www.mass.gov/mount-holyoke-range"),
+        StatePark("middlesex-fells-ma", "Middlesex Fells Reservation", "MA", "Malden, Massachusetts", "Exposed Lynn Volcanics — rhyolite and tuff from the Precambrian Avalon terrane. Dramatic cliff formations and glacial erratics.", 42.4500, -71.0700, false, "Free", "https://www.mass.gov/middlesex-fells"),
+
+        // Maryland
+        StatePark("rocks-state-md", "Rocks State Park", "MD", "Pylesville, Maryland", "Features the King and Queen Seat — a 190-foot rock outcrop of Port Deposit gneiss. Exposes ancient Piedmont metamorphic rocks.", 39.6100, -76.4100, true, "$3/vehicle", "https://dnr.maryland.gov/rocks"),
+        StatePark("calvert-cliffs-md", "Calvert Cliffs State Park", "MD", "Lusby, Maryland", "Dramatic cliffs along the Chesapeake Bay exposing Miocene marine sediments. World-famous for fossil shark teeth, whale bones, and shells.", 38.3900, -76.4200, true, "$5/vehicle", "https://dnr.maryland.gov/calvert-cliffs"),
+        StatePark("assateague-md", "Assateague State Park", "MD", "Berlin, Maryland", "Barrier island geology with dynamic dune systems. Exposes Pleistocene and Holocene coastal deposits and ancient beach processes.", 38.1700, -75.1700, true, "$5/vehicle", "https://dnr.maryland.gov/assateague"),
+
+        // Maine
+        StatePark("baxter-state-me", "Baxter State Park", "ME", "Millinocket, Maine", "Home to Mount Katahdin — a massive granite massif of Devonian age. Exposes Katahdin Granite and dramatic glacial cirques.", 46.1000, -68.9000, true, "$15/vehicle", "https://baxterstatepark.org"),
+        StatePark("acamadia-me", "Acadia National Park (Adjacent State Lands)", "ME", "Bar Harbor, Maine", "Granite dome geology of the Cadillac Mountain Granite. Dramatic glacial carved coastline exposing pink Devonian granite.", 44.3380, -68.2750, true, "$5/vehicle", "https://www.maine.gov/acadia"),
+
+        // Michigan
+        StatePark("porcupine-mi", "Porcupine Mountains Wilderness State Park", "MI", "Ontonagon, Michigan", "Ancient Precambrian basalt flows and conglomerate of the Keweenaw Peninsula. Exposes 1.1-billion-year-old Midcontinent Rift volcanic rocks.", 46.6500, -89.4000, true, "$9/vehicle", "https://www.michigan.org/porcupine-mountains"),
+        StatePark("tahquamenon-mi", "Tahquamenon Falls State Park", "MI", "Paradise, Michigan", "Upper and lower falls carved into Cambrian Jacobsville Sandstone. The red rock is ancient stream-deposited sandstone.", 46.5600, -85.0200, true, "$9/vehicle", "https://www.michigan.org/tahquamenon"),
+        StatePark("keweenaw-mi", "F.J. McLain State Park", "MI", "Hancock, Michigan", "Keweenaw Peninsula basalt and conglomerate exposure. Native copper deposits occur in the Portage Lake Volcanics — historic copper mining geology.", 47.1200, -88.5800, true, "$9/vehicle", "https://www.michigan.org/mclain"),
+
+        // Minnesota
+        StatePark("gooseberry-mn", "Gooseberry Falls State Park", "MN", "Two Harbors, Minnesota", "Waterfalls cascading over 1.1-billion-year-old basalt of the Midcontinent Rift. Exposes layered lava flows with columnar jointing.", 47.1300, -91.4300, true, "$7/vehicle", "https://www.dnr.state.mn.us/gooseberry-falls"),
+        StatePark("plithead-mn", "Tettegouche State Park", "MN", "Silver Bay, Minnesota", "Dramatic Lake Superior shoreline exposing rhyolite and basalt of the North Shore Volcanic Group. High cliffs and waterfalls over volcanic rock.", 47.3300, -91.2300, true, "$7/vehicle", "https://www.dnr.state.mn.us/tettegouche"),
+        StatePark("interparks-mn", "Interstate State Park", "MN", "Taylors Falls, Minnesota", "Classic exposure of the Midcontinent Rift — basalt lava flows with glacial potholes carved into 1.1-billion-year-old rock.", 45.9500, -92.8100, true, "$7/vehicle", "https://www.dnr.state.mn.us/interstate"),
+
+        // Missouri
+        StatePark("elephant-rocks-mo", "Elephant Rocks State Park", "MO", "Belleview, Missouri", "Giant red granite boulders — Precambrian-age elephant-shaped rocks. Exposes 1.4-billion-year-old Butler Hill Granite with spectacular spheroidal weathering.", 37.8300, -90.5400, false, "Free", "https://mostateparks.com/elephant-rocks"),
+        StatePark("johnson-shut-ins-mo", "Johnson's Shut-Ins State Park", "MO", "Middle Brook, Missouri", "River cascading over ancient rhyolite creating natural water slides. Exposes 1.4-billion-year-old Taum Sauk rhyolite of the St. Francois Mountains.", 37.5300, -90.7000, true, "$5/vehicle", "https://mostateparks.com/johnson-shut-ins"),
+        StatePark("grand-gulf-mo", "Grand Gulf State Park", "MO", "Thayer, Missouri", "'Grand Canyon of the Ozarks' — collapsed cave system forming a mile-long gorge in Ordovician dolomite. Outstanding karst geology.", 36.5400, -91.2500, false, "Free", "https://mostateparks.com/grand-gulf"),
+
+        // Mississippi
+        StatePark("tupelo-ms", "Tupelo National Battlefield", "MS", "Tupelo, Mississippi", "Exposes Selma Chalk Formation from the Late Cretaceous. Fossiliferous chalk deposits from the ancient Mississippi embayment.", 34.2600, -88.7100, false, "Free", "https://www.mdwfp.com/tupelo"),
+        StatePark("red-bluff-ms", "Red Bluff State Park / Clark Creek Natural Area", "MS", "Woodville, Mississippi", "Massive red clay and gravel exposure of the Citronelle Formation. Dramatic erosion gullies reveal Pliocene coastal plain geology.", 30.9500, -91.3000, false, "Free", "https://www.mdwfp.com/clark-creek"),
+
+        // North Carolina
+        StatePark("mount-mitchell-nc", "Mount Mitchell State Park", "NC", "Burnsville, North Carolina", "Highest point east of the Mississippi at 6,684 feet. Exposes Precambrian gneiss and schist of the Blue Ridge Province.", 35.7600, -82.2600, true, "$5/vehicle", "https://www.ncparks.gov/mount-mitchell"),
+        StatePark("hanging-rock-nc", "Hanging Rock State Park", "NC", "Danbury, North Carolina", "Dramatic quartzite cliffs and waterfalls in the Sauratown Mountains. Exposes Precambrian quartzite of the Lynchburg Formation.", 36.3900, -80.2700, true, "$5/vehicle", "https://www.ncparks.gov/hanging-rock"),
+        StatePark("chimney-rock-nc", "Chimney Rock State Park", "NC", "Chimney Rock, North Carolina", "315-foot granite monolith overlooking Hickory Nut Gorge. Exposes Henderson Gneiss with dramatic glacial-era weathering features.", 35.4300, -82.2600, true, "$15/adult", "https://www.ncparks.gov/chimney-rock"),
+
+        // North Dakota
+        StatePark("maah-dah-hey-nd", "Maah Daah Hey Trail / Theodore Roosevelt State Park", "ND", "Medora, North Dakota", "Badlands topography exposing the Bullion Gap and Sentinel Butte Formations. Fossil-bearing Cretaceous and Paleocene strata with petrified wood.", 46.9100, -103.5200, true, "$7/vehicle", "https://www.parkrec.nd.gov/theodore-roosevelt"),
+        StatePark("fort-ransom-nd", "Fort Ransom State Park", "ND", "Fort Ransom, North Dakota", "Exposes Pierre Shale and Niobrara Formation chalks. Fossil ammonites and baculites found in the Cretaceous marine deposits.", 46.4500, -97.3900, true, "$7/vehicle", "https://www.parkrec.nd.gov/fort-ransom"),
+        StatePark("white-horse-hill-nd", "White Horse Hill State Park", "ND", "Tuttle, North Dakota", "Glacial moraine geology along the shores of Devils Lake. Exposes Pleistocene till deposits and ancient glacial lake Agassiz sediments.", 48.0700, -98.9000, true, "$7/vehicle", "https://www.parkrec.nd.gov/white-horse-hill"),
+
+        // Nebraska
+        StatePark("toad-stool-ne", "Toadstool Geologic Park", "NE", "Crawford, Nebraska", "Badlands topography with bizarre 'toadstool' rock formations. Exposes Oligocene Brule and Chadron Formations with abundant mammal fossils.", 42.7500, -103.7000, true, "$5/vehicle", "https://outdoornebraska.gov/toadstool"),
+        StatePark("ashfall-ne", "Ashfall Fossil Beds State Historical Park", "NE", "Royal, Nebraska", "UNESCO site preserving rhinos and horses killed by a volcanic ash fall 12 million years ago. Exposes the Ash Hollow Formation with exceptional fossils.", 42.7300, -98.1600, false, "$5/person", "https://outdoornebraska.gov/ashfall"),
+        StatePark("smith-falls-ne", "Smith Falls State Park", "NE", "Sparks, Nebraska", "Nebraska's highest waterfall over Tertiary-age Ogallala Formation sandstone. Exposes Pliocene river deposits.", 42.5300, -100.2300, true, "$5/vehicle", "https://outdoornebraska.gov/smith-falls"),
+
+        // New Jersey
+        StatePark("high-point-nj", "High Point State Park", "NJ", "Sussex, New Jersey", "Highest point in New Jersey at 1,803 feet. Exposes Shawangunk Conglomerate — Silurian quartz pebble conglomerate with dramatic cliffs.", 41.3200, -74.6900, true, "$5/vehicle", "https://www.njparksandforests.org/high-point"),
+        StatePark("delaware-water-gap-nj", "Delaware Water Gap State Park Area", "NJ", "Columbia, New Jersey", "Dramatic water gap cut through Kittatinny Ridge by the Delaware River. Exposes Silurian Shawangunk Formation quartzite.", 41.0900, -74.9600, true, "$5/vehicle", "https://www.njparksandforests.org/delaware-water-gap"),
+
+        // New York
+        StatePark("letchworth-ny", "Letchworth State Park", "NY", "Castile, New York", "'Grand Canyon of the East' — deep gorge carved by the Genesee River through Devonian shale and sandstone. Three major waterfalls expose Catskill Formation.", 42.5700, -78.0500, true, "$10/vehicle", "https://parks.ny.gov/letchworth"),
+        StatePark("taughannock-ny", "Taughannock Falls State Park", "NY", "Trumansburg, New York", "215-foot waterfall — taller than Niagara — plunging over Devonian Tully Limestone into a hanging valley carved by glaciers.", 42.5500, -76.6000, true, "$8/vehicle", "https://parks.ny.gov/taughannock-falls"),
+        StatePark("minnewaska-ny", "Minnewaska State Park Preserve", "NY", "Kerhonkson, New York", "Dramatic Shawangunk Conglomerate ridgeline with quartz pebble conglomerate cliffs. Exposes Silurian-age pure quartz sandstone.", 41.7300, -74.2400, true, "$10/vehicle", "https://parks.ny.gov/minnewaska"),
+
+        // Ohio
+        StatePark("hocking-hills-oh", "Hocking Hills State Park", "OH", "Logan, Ohio", "Dramatic gorge and cave formations in Black Hand Sandstone. Exposes Mississippian-age sandstone with waterfalls carved into the resistant rock.", 39.4400, -82.4600, true, "$8/vehicle", "https://ohiodnr.gov/hocking-hills"),
+        StatePark("john-bryan-oh", "John Bryan State Park", "OH", "Yellow Springs, Ohio", "Gorge cut by the Little Miami River through Silurian limestone and dolomite. Contains solution caves and spring-fed waterfalls.", 39.7900, -83.8900, true, "$8/vehicle", "https://ohiodnr.gov/john-bryan"),
+        StatePark("caesar-creek-oh", "Caesar Creek State Park", "OH", "Waynesville, Ohio", "Emergency spillway exposes world-class Ordovician fossils — trilobites, brachiopods, and bryozoans in the rich fossil beds.", 39.4800, -84.0800, true, "$8/vehicle", "https://ohiodnr.gov/caesar-creek"),
+
+        // Oklahoma
+        StatePark("roman-nose-ok", "Roman Nose State Park", "OK", "Watonga, Oklahoma", "Canyon carved into red Permian sandstone and gypsum. Exposes the Dog Creek Shale and Blaine Formation with dramatic red rock cliffs.", 35.7300, -98.4400, true, "$10/vehicle", "https://www.okstateparks.com/roman-nose"),
+        StatePark("robbers-cave-ok", "Robbers Cave State Park", "OK", "Wilburton, Oklahoma", "Sandstone cliffs and caves in the Savanna Formation. Exposes Pennsylvanian-age sandstone with dramatic rock shelters.", 34.7200, -95.3300, true, "$10/vehicle", "https://www.okstateparks.com/robbers-cave"),
+        StatePark("alabaster-caverns-ok", "Alabaster Caverns State Park", "OK", "Freedom, Oklahoma", "Rare gypsum cave — the largest publicly accessible gypsum cave in the world. Exposes Permian-age Blaine Formation with selenite crystals.", 36.2700, -99.0000, true, "$8/adult", "https://www.okstateparks.com/alabaster-caverns"),
+
+        // Pennsylvania
+        StatePark("ricketts-glen-pa", "Ricketts Glen State Park", "PA", "Benton, Pennsylvania", "22 named waterfalls cascading over Pocono Formation sandstone and shale. Exposes Devonian and Mississippian age sedimentary rocks.", 41.3200, -76.3100, true, "$5/vehicle", "https://www.dcnr.pa.gov/ricketts-glen"),
+        StatePark("cook-forest-pa", "Cook Forest State Park", "PA", "Cooksburg, Pennsylvania", "Ancient old-growth forest on Pottsville Sandstone ridges. Exposes Pennsylvanian-age sandstone with scenic rock formations.", 41.3300, -79.2100, true, "$5/vehicle", "https://www.dcnr.pa.gov/cook-forest"),
+        StatePark("leonard-harrison-pa", "Leonard Harrison State Park", "PA", "Wellsboro, Pennsylvania", "'Pennsylvania's Grand Canyon' overlook — 800-foot deep gorge carved by Pine Creek through Devonian sandstone and shale.", 41.7000, -77.2500, true, "$5/vehicle", "https://www.dcnr.pa.gov/leonard-harrison"),
+
+        // Rhode Island
+        StatePark("lincoln-woods-ri", "Lincoln Woods State Park", "RI", "Lincoln, Rhode Island", "Exposed Rhode Island Formation metamorphic rocks — schist and quartzite of the Avalon terrane. Glacial erratics and polish visible.", 41.9300, -71.4500, false, "Free", "https://www.riparks.com/lincoln-woods"),
+        StatePark("colt-state-ri", "Colt State Park", "RI", "Bristol, Rhode Island", "Coastal exposures of Rhode Island Formation sandstone and conglomerate. Scenic Narragansett Bay geology with glacial till deposits.", 41.6900, -71.3000, false, "Free", "https://www.riparks.com/colt"),
+
+        // South Carolina
+        StatePark("caesars-head-sc", "Caesars Head State Park", "SC", "Cleveland, South Carolina", "Granite escarpment overlooking the Blue Ridge Escarpment. Exposes Henderson Gneiss with dramatic 2,000-foot elevation change to the Piedmont.", 35.1100, -82.6200, false, "Free", "https://southcarolinaparks.com/caesars-head"),
+        StatePark("table-rock-sc", "Table Rock State Park", "SC", "Pickens, South Carolina", "Iconic Table Rock granite dome of the Blue Ridge Province. Exposes Precambrian-age Henderson Gneiss with dramatic glacial-era weathering.", 35.0300, -82.7000, true, "$5/adult", "https://southcarolinaparks.com/table-rock"),
+        StatePark("hunting-island-sc", "Hunting Island State Park", "SC", "Hunting Island, South Carolina", "Barrier island with dynamic beach erosion exposing Pleistocene and Holocene coastal deposits. Fossil shark teeth occasionally found.", 32.3700, -80.4400, true, "$5/adult", "https://southcarolinaparks.com/hunting-island"),
+
+        // South Dakota
+        StatePark("custer-state-sd", "Custer State Park", "SD", "Custer, South Dakota", "Granite peaks of the Black Hills including Harney Peak granite. Exposes 1.7-billion-year-old Precambrian metamorphic and igneous rocks.", 43.7000, -103.5000, true, "$20/vehicle", "https://gfp.sd.gov/custer-state-park"),
+        StatePark("bear-butte-sd", "Bear Butte State Park", "SD", "Sturgis, South Dakota", "Geological laccolith — magma intrusion that pushed up sedimentary layers. Exposes phonolite porphyry similar to Devils Tower.", 44.4400, -103.4600, false, "$6/vehicle", "https://gfp.sd.gov/bear-butte"),
+        StatePark("palisades-sd", "Palisades State Park", "SD", "Garretson, South Dakota", "Dramatic Sioux Quartzite cliffs along the Split Rock River. Exposes 1.6-billion-year-old pink quartzite — some of the oldest rock in South Dakota.", 43.7100, -96.5000, true, "$6/vehicle", "https://gfp.sd.gov/palisades"),
+
+        // Tennessee
+        StatePark("fall-creek-tn", "Fall Creek Falls State Park", "TN", "Pikeville, Tennessee", "256-foot waterfall — one of the highest in the eastern US. Carved into Mississippian-age Monteagle Limestone with spectacular gorge geology.", 35.6800, -85.3500, true, "$5/vehicle", "https://www.tnstateparks.com/fall-creek-falls"),
+        StatePark("cummins-tn", "Cummins Falls State Park", "TN", "Cookeville, Tennessee", "75-foot waterfall into a deep gorge carved through Mississippian limestone. Rock pools and scenic waterfall geology.", 36.2800, -85.6100, false, "$5/vehicle", "https://www.tnstateparks.com/cummins-falls"),
+        StatePark("pickett-tn", "Pickett State Park", "TN", "Jamestown, Tennessee", "Cumberland Plateau geology with natural arches and rock shelters in Pennsylvanian sandstone. Contains delicate sandstone formations.", 36.5600, -84.7800, true, "$5/vehicle", "https://www.tnstateparks.com/pickett"),
+
+        // Virginia
+        StatePark("natural-bridge-va", "Natural Bridge State Park", "VA", "Natural Bridge, Virginia", "215-foot natural limestone arch carved by Cedar Creek. A National Historic Landmark exposing Ordovician-age Beekmantown dolomite.", 37.6300, -79.5400, false, "$9/adult", "https://www.dcr.virginia.gov/natural-bridge"),
+        StatePark("breaks-interstate-va", "Breaks Interstate Park", "VA", "Breaks, Virginia", "'Grand Canyon of the South' — 1,600-foot deep gorge through Pennsylvanian sandstone. Dramatic cliff exposures of the Russell Fork.", 37.3000, -82.3200, true, "$5/vehicle", "https://www.breakspark.com"),
+        StatePark("grayson-highlands-va", "Grayson Highlands State Park", "VA", "Mouth of Wilson, Virginia", "Highest point in Virginia with exposures of Mount Rogers rhyolite — some of the oldest volcanic rock in Virginia. Granitic intrusions visible.", 36.6200, -81.4600, true, "$7/vehicle", "https://www.dcr.virginia.gov/grayson-highlands"),
+
+        // Vermont
+        StatePark("smugglers-notch-vt", "Smugglers' Notch State Park", "VT", "Cambridge, Vermont", "Dramatic narrow pass between Mount Mansfield and Spruce Peak. Exposes Precambrian schist and quartzite of the Green Mountains.", 44.5400, -72.7900, true, "$5/vehicle", "https://vtstateparks.com/smugglers-notch"),
+        StatePark("quechee-vt", "Quechee State Park", "VT", "Quechee, Vermont", "Home to Vermont's deepest gorge — 165 feet deep — carved by the Ottauquechee River through Devonian quartzite and schist.", 43.6400, -72.4200, true, "$5/vehicle", "https://vtstateparks.com/quechee"),
+
+        // Wisconsin
+        StatePark("devil-s-lake-wi", "Devil's Lake State Park", "WI", "Baraboo, Wisconsin", "Dramatic 500-foot quartzite bluffs rising above a glacial lake. Exposes 1.7-billion-year-old Baraboo Quartzite — a classic Precambrian metamorphic rock.", 43.4200, -89.7300, true, "$11/vehicle", "https://www.devilslakewisconsin.com"),
+        StatePark("parfrey-s-glen-wi", "Parfrey's Glen State Natural Area", "WI", "Merrick, Wisconsin", "Deep sandstone gorge carved through Cambrian-age sandstone. Wisconsin's first State Natural Area with delicate geological features.", 43.3700, -89.6400, false, "$11/vehicle", "https://www.devilslakewisconsin.com/parfreys-glen"),
+        StatePark("wissota-wi", "Lake Wissota State Park", "WI", "Chippewa Falls, Wisconsin", "Glacial geology — the lake itself is a glacially carved basin. Exposes Cambrian sandstone and glacial drift deposits.", 44.9300, -91.3800, true, "$11/vehicle", "https://www.wiparks.com/lake-wissota"),
+
+        // West Virginia
+        StatePark("new-river-gorge-wv", "New River Gorge State Park", "WV", "Fayetteville, West Virginia", "Deep gorge carved by one of the world's oldest rivers through Pennsylvanian sandstone and coal measures. Exposes Nuttall Sandstone cliffs.", 38.0700, -81.0700, true, "$5/vehicle", "https://www.wvstateparks.com/new-river-gorge"),
+        StatePark("hawks-nest-wv", "Hawks Nest State Park", "WV", "Ansted, West Virginia", "Overlooks the New River Gorge with exposures of Pennsylvanian-age sandstone and shale. Dramatic cliff geology of the Appalachian Plateau.", 38.1300, -81.0900, true, "$5/vehicle", "https://www.wvstateparks.com/hawks-nest"),
+        StatePark("blackwater-falls-wv", "Blackwater Falls State Park", "WV", "Davis, West Virginia", "62-foot waterfall over Pennsylvanian sandstone. Blackwater Canyon exposes Coal Measures and Pottsville Sandstone geology.", 39.1300, -79.4800, true, "$5/vehicle", "https://www.wvstateparks.com/blackwater-falls"),
+
+        // Wyoming (additional)
+        StatePark("glendo-wy", "Glendo State Park", "WY", "Glendo, Wyoming", "Exposes Ogallala Formation conglomerates and Tertiary river deposits. Fossil wood found in the nearby White River Formation.", 42.5000, -104.9000, true, "$6/vehicle", "https://wyoparks.wyo.gov/glendo"),
+        StatePark("keyhole-wy", "Keyhole State Park", "WY", "Moorcroft, Wyoming", "Exposes Spearfish Formation red shale and gypsum. Fossil-bearing Permian and Triassic sedimentary rocks visible in shoreline exposures.", 44.2500, -104.8700, true, "$6/vehicle", "https://wyoparks.wyo.gov/keyhole"),
+
+        // Alabama
+        StatePark("little-river-al", "Little River Canyon National Preserve (State Park Access)", "AL", "Fort Payne, Alabama", "'Grand Canyon of the East' — 600-foot deep gorge carved into Pennsylvanian-age sandstone and shale of the Pottsville Formation. Exposes Coal Measures with visible seam geology.", 34.3700, -85.6700, true, "$5/vehicle", "https://www.alapark.com/little-river-canyon"),
+        StatePark("monte-sano-al", "Monte Sano State Park", "AL", "Huntsville, Alabama", "Mountain top exposing Mississippian-age Monteagle Limestone with fossil crinoids and brachiopods. Karst features and caves visible in the plateau geology.", 34.7300, -86.5300, true, "$5/vehicle", "https://www.alapark.com/monte-sano"),
+        StatePark("gulf-state-al", "Gulf State Park", "AL", "Gulf Shores, Alabama", "Coastal barrier island geology exposing Pleistocene and Holocene beach deposits. Fossil shark teeth and shell beds occasionally exposed.", 30.2700, -87.7000, true, "$5/vehicle", "https://www.alapark.com/gulf-state"),
+
+        // New Hampshire
+        StatePark("mount-mondnock-nh", "Monadnock State Park", "NH", "Jaffrey, New Hampshire", "Mount Monadnock — one of the world's most climbed mountains. Exposes Littleton Formation schist and quartzite, glacially polished metamorphic rock.", 42.8600, -72.0600, true, "$5/vehicle", "https://www.nhstateparks.org/monadnock"),
+        StatePark("francoconia-notch-nh", "Franconia Notch State Park", "NH", "Franconia, New Hampshire", "Dramatic glacial notch exposing Littleton Formation schist and the famous Old Man of the Mountain granite cliff geology. Profile glacial cirque and Boise Rock exposures.", 44.1700, -71.6800, true, "$5/vehicle", "https://www.nhstateparks.org/franconia-notch"),
+        StatePark("pawtuckaway-nh", "Pawtuckaway State Park", "NH", "Nottingham, New Hampshire", "Exposes Pawtuckaway Complex igneous and metamorphic rocks. Dramatic glacial erratics and polished bedrock surfaces from the last ice age.", 43.1300, -71.1100, true, "$5/vehicle", "https://www.nhstateparks.org/pawtuckaway"),
     )
 
     /** Parks grouped by state code, for the state-parks listing screen. */

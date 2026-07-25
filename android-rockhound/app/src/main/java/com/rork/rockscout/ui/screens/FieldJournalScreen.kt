@@ -998,6 +998,7 @@ private fun JournalEditorScreen(
             onPick = { trip ->
                 selectedTripId = trip.id
                 if (location.isBlank()) {
+                    // Guard against empty stops — some legacy trips may have none.
                     location = trip.stops.firstOrNull()?.locationName ?: trip.name
                 }
                 showTripPicker = false

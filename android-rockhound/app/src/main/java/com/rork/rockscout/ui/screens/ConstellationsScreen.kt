@@ -112,9 +112,26 @@ private fun ConstellationRow(con: ConstellationEntry, onTap: (ConstellationEntry
             .clip(RoundedCornerShape(12.dp))
             .background(StarBg.copy(alpha = 0.9f))
             .clickable { onTap(con) }
-            .padding(12.dp),
+            .padding(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            // Thumbnail image — all 88 constellations have heroImageUrl.
+            con.heroImageUrl?.let { url ->
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.Black),
+                ) {
+                    AsyncImage(
+                        model = url,
+                        contentDescription = con.name,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+                Spacer(Modifier.width(10.dp))
+            }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = con.name,

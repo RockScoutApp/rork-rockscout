@@ -92,15 +92,17 @@ fun BlmLandScreen(navController: NavController) {
                     modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 8.dp),
                 )
             }
-            // State grid — uses non-scrolling grid inside the LazyColumn item
+            // State grid — uses non-scrolling grid inside the LazyColumn item.
+            // Tight vertical spacing eliminates the large dead space that used to
+            // sit between the state grid and the Important Info section.
             item {
                 val states = remember { BlmData.allStates }
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.height(((states.size + 1) / 2 * 130).dp),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.height(((states.size + 1) / 2 * 118).dp),
                 ) {
                     items(states, key = { it.code }) { state ->
                         StateCard(state = state) {
@@ -109,14 +111,14 @@ fun BlmLandScreen(navController: NavController) {
                     }
                 }
             }
-            // Info sections
+            // Info sections — reduced top padding closes the dead-space gap.
             item {
                 Text(
                     "Important Info",
                     style = MaterialTheme.typography.titleMedium,
                     color = TextHigh,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 8.dp),
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 8.dp),
                 )
             }
             items(BlmData.infoSections, key = { it.title }) { section ->

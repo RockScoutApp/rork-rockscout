@@ -1171,6 +1171,11 @@ Planned with RockScout""".trimIndent()
                         }
                     }
                     val isDragging = draggingStopIndex == idx
+                    // Stable pointerInput key (locationId + order) so the gesture
+                    // survives list reordering during an active drag. Re-keying on
+                    // `idx` alone cancels the in-flight gesture the moment stops
+                    // move, which is why reordering felt broken.
+                    val dragKey = "${stop.locationId}-${stop.order}"
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
@@ -1186,7 +1191,7 @@ Planned with RockScout""".trimIndent()
                                 )
                             }
                             .then(if (isDragging) Modifier.graphicsLayer { alpha = 0.3f } else Modifier)
-                            .pointerInput(idx) {
+                            .pointerInput(dragKey) {
                                 detectDragGesturesAfterLongPress(
                                     onDragStart = {
                                         draggingStopIndex = idx
@@ -1199,10 +1204,11 @@ Planned with RockScout""".trimIndent()
                                             dragFingerPos.y + delta.y,
                                         )
                                         // Find which stop row the finger is over
+                                        val currentDragIdx = draggingStopIndex ?: return@detectDragGesturesAfterLongPress
                                         val targetIdx = stopRowRects.entries
                                             .firstOrNull { it.value.contains(dragFingerPos) }?.key
-                                        if (targetIdx != null && targetIdx != draggingStopIndex) {
-                                            val item = stops.removeAt(draggingStopIndex!!)
+                                        if (targetIdx != null && targetIdx != currentDragIdx) {
+                                            val item = stops.removeAt(currentDragIdx)
                                             stops.add(targetIdx, item)
                                             draggingStopIndex = targetIdx
                                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -1228,24 +1234,6 @@ Planned with RockScout""".trimIndent()
                             modifier = Modifier.size(18.dp),
                         )
                         Spacer(Modifier.width(4.dp))
-                        // Move up/down buttons for reordering
-                        if (idx > 0) {
-                            SculptedIconButton(
-                                icon = Icons.Filled.Undo,
-                                contentDescription = "Move up",
-                                onClick = {
-                                    if (idx > 0) {
-                                        val item = stops.removeAt(idx)
-                                        stops.add(idx - 1, item)
-                                    }
-                                },
-                                accent = Citrine,
-                                iconTint = DarkTextMid,
-                                size = 28.dp,
-                                shadowElevation = 2.dp,
-                            )
-                            Spacer(Modifier.width(4.dp))
-                        }
                         SculptedIconButton(icon = Icons.Filled.Delete, contentDescription = "Remove stop", onClick = { pendingRemoveStop = idx }, accent = Citrine, iconTint = TextLow, size = 32.dp, shadowElevation = 3.dp)
                     }
                 }

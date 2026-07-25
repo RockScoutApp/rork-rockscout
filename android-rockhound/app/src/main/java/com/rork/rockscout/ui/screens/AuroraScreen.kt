@@ -1115,10 +1115,16 @@ fun AuroraScreen(navController: NavController) {
             // ─── Saved Spots Section ───
             AuroraSavedSpotsMap(
                 spots = auroraSavedSpots,
-                onAddSpot = { name, lat, lng -> repo.addAuroraSavedSpot(name, lat, lng) },
+                onAddSpot = { name, lat, lng ->
+                    // Guard against malformed coordinates before persisting.
+                    if (lat in -90.0..90.0 && lng in -180.0..180.0) {
+                        repo.addAuroraSavedSpot(name, lat, lng)
+                    }
+                },
                 onRemoveSpot = { id -> repo.removeAuroraSavedSpot(id) },
                 currentKp = auroraData.currentKp,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+                onHeaderClick = { navController.navigate(Routes.AURORA) },
             )
 
             // ─── Night Sky Guide Card ───

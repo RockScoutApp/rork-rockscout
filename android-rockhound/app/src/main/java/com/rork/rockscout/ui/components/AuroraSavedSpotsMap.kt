@@ -98,6 +98,7 @@ fun AuroraSavedSpotsMap(
     onRemoveSpot: (String) -> Unit,
     currentKp: Double,
     modifier: Modifier = Modifier,
+    onHeaderClick: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -173,14 +174,16 @@ fun AuroraSavedSpotsMap(
                     if (points.size == 1) {
                         // Single point — degenerate bounding box crashes osmdroid.
                         // Just animate to the point at a reasonable zoom instead.
-                        mv.controller.animateTo(points.first())
-                        mv.controller.setZoom(8.0)
+                        runCatching { mv.controller.animateTo(points.first()) }
+                        runCatching { mv.controller.setZoom(8.0) }
                     } else {
-                        val box = org.osmdroid.util.BoundingBox.fromGeoPoints(points)
-                        // Pad the box slightly so it's never zero-area even for
-                        // very close points.
-                        val padded = box.increaseByScale(1.2f)
-                        mv.zoomToBoundingBox(padded, false, 48)
+                        runCatching {
+                            val box = org.osmdroid.util.BoundingBox.fromGeoPoints(points)
+                            // Pad the box slightly so it's never zero-area even for
+                            // very close points.
+                            val padded = box.increaseByScale(1.2f)
+                            mv.zoomToBoundingBox(padded, false, 48)
+                        }
                     }
                 }
                 mv.invalidate()
@@ -193,12 +196,14 @@ fun AuroraSavedSpotsMap(
             .fillMaxWidth()
             .imePadding(),
     ) {
-        // Section header with aurora background image
+        // Section header with aurora background image — tappable so users can
+        // jump straight into the Aurora Forecaster from the Saved Spots banner.
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp)
-                .clip(RoundedCornerShape(16.dp)),
+                .clip(RoundedCornerShape(16.dp))
+                .clickable { onHeaderClick() },
         ) {
             AsyncImage(
                 model = AURORA_SAVED_SPOTS_BG_URL,
@@ -623,12 +628,14 @@ private fun FullscreenAuroraSpotsOverlay(
                 }
                 if (points.isNotEmpty()) {
                     if (points.size == 1) {
-                        mv.controller.animateTo(points.first())
-                        mv.controller.setZoom(8.0)
+                        runCatching { mv.controller.animateTo(points.first()) }
+                        runCatching { mv.controller.setZoom(8.0) }
                     } else {
-                        val box = org.osmdroid.util.BoundingBox.fromGeoPoints(points)
-                        val padded = box.increaseByScale(1.2f)
-                        mv.zoomToBoundingBox(padded, false, 48)
+                        runCatching {
+                            val box = org.osmdroid.util.BoundingBox.fromGeoPoints(points)
+                            val padded = box.increaseByScale(1.2f)
+                            mv.zoomToBoundingBox(padded, false, 48)
+                        }
                     }
                 }
                 mv.invalidate()

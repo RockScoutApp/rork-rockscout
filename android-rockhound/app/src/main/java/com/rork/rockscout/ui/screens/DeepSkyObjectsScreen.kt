@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -104,9 +105,26 @@ private fun DsoRow(dso: DeepSkyObject, onTap: (DeepSkyObject) -> Unit) {
             .clip(RoundedCornerShape(12.dp))
             .background(DsoBg.copy(alpha = 0.9f))
             .clickable { onTap(dso) }
-            .padding(12.dp),
+            .padding(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            // Thumbnail image for DSOs that have a hero URL.
+            dso.heroImageUrl?.let { url ->
+                Box(
+                    modifier = Modifier
+                        .size(52.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.Black),
+                ) {
+                    AsyncImage(
+                        model = url,
+                        contentDescription = dso.commonName,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+                Spacer(Modifier.width(10.dp))
+            }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "${dso.catalog} — ${dso.commonName}",

@@ -156,20 +156,22 @@ fun GlossaryScreen(navController: NavController) {
                     .padding(horizontal = 20.dp, vertical = 8.dp),
             )
 
-            // Category filter chips — horizontally scrollable.
-            Row(
+            // Category filter chips — horizontally scrollable so all chips fit on any screen.
+            androidx.compose.foundation.lazy.LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                CategoryChip(
-                    label = "All",
-                    accent = GlossaryAccent,
-                    selected = selectedCategory == null,
-                    onClick = { selectedCategory = null },
-                )
-                GlossaryCategory.entries.forEach { cat ->
+                item {
+                    CategoryChip(
+                        label = "All",
+                        accent = GlossaryAccent,
+                        selected = selectedCategory == null,
+                        onClick = { selectedCategory = null },
+                    )
+                }
+                items(GlossaryCategory.entries.toList()) { cat ->
                     CategoryChip(
                         label = cat.label,
                         accent = cat.accent,
@@ -181,14 +183,14 @@ fun GlossaryScreen(navController: NavController) {
                 }
             }
 
-            // A–Z letter jump index.
-            Row(
+            // A–Z letter jump index — horizontally scrollable so all 26 letters fit on any screen.
+            androidx.compose.foundation.lazy.LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                GLOSSARY_LETTERS.forEach { letter ->
+                items(GLOSSARY_LETTERS) { letter ->
                     val hasSection = grouped.containsKey(letter)
                     Box(
                         modifier = Modifier

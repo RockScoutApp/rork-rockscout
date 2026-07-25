@@ -92,6 +92,7 @@ import com.rork.rockscout.data.ImageUtils
 import com.rork.rockscout.data.ModerationTriState
 import com.rork.rockscout.data.ImageReviewRepository
 import com.rork.rockscout.data.SeedData
+import com.rork.rockscout.data.SpecimenImages
 import com.rork.rockscout.data.TradeListing
 import com.rork.rockscout.data.AuthRepository
 import com.rork.rockscout.data.SocialRepository
@@ -798,6 +799,7 @@ internal fun ListingEditorDialog(
     var showCollectionPicker by remember { mutableStateOf(false) }
     var showWishlistPicker by remember { mutableStateOf(false) }
     var showSavedImagePicker by remember { mutableStateOf(false) }
+    var showDatabasePicker by remember { mutableStateOf(false) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -961,6 +963,12 @@ internal fun ListingEditorDialog(
                             label = "Saved",
                             icon = Icons.Filled.Download,
                             onClick = { showSavedImagePicker = true },
+                            modifier = Modifier.weight(1f),
+                        )
+                        SourceButton(
+                            label = "Database",
+                            icon = Icons.Filled.Collections,
+                            onClick = { showDatabasePicker = true },
                             modifier = Modifier.weight(1f),
                         )
                         SourceButton(
@@ -1249,6 +1257,63 @@ internal fun ListingEditorDialog(
             },
         )
     }
+    if (showDatabasePicker) {
+        DatabasePickerSheet(
+            onDismiss = { showDatabasePicker = false },
+            onPick = { specId ->
+                sourceCollectionSpecimenId = null
+                sourceCaptureId = null
+                sourceWishlistSpecimenId = null
+                val spec = SeedData.specimenById(specId)
+                if (spec != null) {
+                    if (specimenName.isBlank()) specimenName = spec.name
+                    if (description.isBlank()) description = spec.tagline
+                    val firstImg = SpecimenImages.urls[spec.id]?.firstOrNull()
+                    if (firstImg != null && photoUri == null) photoUri = firstImg
+                    if (tags.isEmpty()) tags.addAll(listOf(spec.id, spec.rockClass.label.lowercase()))
+                }
+                showDatabasePicker = false
+            },
+        )
+    }
+}
+
+@Composable
+private fun DatabasePickerSheet(
+    onDismiss: () -> Unit,
+    onPick: (String) -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        containerColor = MaterialTheme.colorScheme.surface,
+        title = { Text("Pick from Specimen Database", style = MaterialTheme.typography.headlineSmall) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth().height(420.dp)) {
+                LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    items(SeedData.allSpecimens, key = { it.id }) { spec ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth().sculpted(shape = RoundedCornerShape(10.dp), accent = Citrine, shadowElevation = 3.dp, onClick = { onPick(spec.id) })
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainer)
+                                .glowingBorder(2.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
+                                .padding(10.dp),
+                        ) {
+                            Text(spec.emoji, style = MaterialTheme.typography.titleMedium)
+                            Spacer(Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(spec.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                                Text(spec.tagline, style = MaterialTheme.typography.labelSmall, color = TextLow, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
 }
 
 @Composable

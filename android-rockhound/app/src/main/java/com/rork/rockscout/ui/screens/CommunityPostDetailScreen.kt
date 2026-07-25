@@ -420,6 +420,7 @@ fun CommunityPostDetailScreen(
                     onLike = { scope.launch { repo.toggleCommentLike(comment.id) } },
                     onReply = { replyingToCommentId = comment.id },
                     isReplying = replyingToCommentId == comment.id,
+                    authorName = authors[comment.user_id]?.displayName ?: "Unknown",
                     onImageClick = { url -> viewerImageUrl = url },
                 )
             }
@@ -438,6 +439,7 @@ fun CommunityPostDetailScreen(
                         isReplying = false,
                         isReply = true,
                         parentCommentBody = comment.body,
+                        authorName = authors[firstReply.user_id]?.displayName ?: "Unknown",
                         onImageClick = { url -> viewerImageUrl = url },
                     )
                 }
@@ -491,6 +493,7 @@ fun CommunityPostDetailScreen(
                                         isReplying = false,
                                         isReply = true,
                                         parentCommentBody = comment.body,
+                                        authorName = authors[reply.user_id]?.displayName ?: "Unknown",
                                         onImageClick = { url -> viewerImageUrl = url },
                                     )
                                     Spacer(Modifier.height(4.dp))
@@ -566,6 +569,7 @@ private fun DetailCommentRow(
     isReplying: Boolean,
     isReply: Boolean = false,
     parentCommentBody: String? = null,
+    authorName: String = "Unknown",
     onImageClick: ((String) -> Unit)? = null,
 ) {
     val accent = if (isMine) Citrine else Aqua
@@ -629,6 +633,15 @@ private fun DetailCommentRow(
                 )
                 Spacer(Modifier.height(4.dp))
             }
+            // Author username — prepended before the comment body so every
+            // comment and reply shows who wrote it.
+            Text(
+                authorName,
+                style = MaterialTheme.typography.labelMedium,
+                color = accent,
+                fontWeight = FontWeight.Bold,
+            )
+            Spacer(Modifier.height(2.dp))
             Text(comment.body, style = MaterialTheme.typography.bodyMedium, color = DarkTextHigh)
             if (comment.image_uri != null) {
                 Spacer(Modifier.height(6.dp))

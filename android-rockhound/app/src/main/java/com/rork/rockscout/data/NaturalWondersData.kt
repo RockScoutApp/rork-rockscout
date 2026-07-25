@@ -52,7 +52,7 @@ object NaturalWondersData {
                 "The canyon averages 4,000 feet deep and up to 18 miles wide.",
                 "Great Unconformity: a gap of up to 1.2 billion years between rock layers is visible here.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/grand-canyon-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/a5c84f59-8e0d-4371-9947-86154e635d94.png",
         ),
         NaturalWonder(
             id = "giants_causeway",
@@ -69,7 +69,7 @@ object NaturalWondersData {
                 "The columns are mostly hexagonal, but some have 4, 5, 7, or 8 sides.",
                 "The tallest columns reach 39 feet high.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/giants-causeway-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/8bf3c174-d02b-4f76-a7e6-ed76d020bf1e.png",
         ),
         NaturalWonder(
             id = "devils_tower",
@@ -86,7 +86,7 @@ object NaturalWondersData {
                 "It was the first U.S. National Monument, proclaimed by Theodore Roosevelt in 1906.",
                 "Sacred to many Native American tribes, who call it Bear Lodge.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/devils-tower-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/619fc9a8-d180-41ff-8eac-df6af4d2f157.png",
         ),
         NaturalWonder(
             id = "uluru",
@@ -103,7 +103,7 @@ object NaturalWondersData {
                 "It extends 3.6 miles long and 1.9 miles wide at the surface.",
                 "The red-brown color comes from iron oxidation (rusting) on the surface.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/uluru-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/2db72e33-726a-4d06-a354-7455732fb9de.png",
         ),
         NaturalWonder(
             id = "vesuvius",
@@ -120,7 +120,7 @@ object NaturalWondersData {
                 "Pliny the Younger's eyewitness account gave us the term 'Plinian eruption.'",
                 "The mineral vesuvianite (idocrase) was named after Mount Vesuvius.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/vesuvius-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/acf7ef58-45e6-48f1-acf3-03b48a578016.png",
         ),
         NaturalWonder(
             id = "iceland_basalt",
@@ -137,7 +137,7 @@ object NaturalWondersData {
                 "The black sand is pulverized basalt glass, not regular beach sand.",
                 "Legend says the sea stacks were trolls turned to stone by sunlight.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/iceland-basalt-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/08579a98-2432-4bff-9e87-655f86d687a3.png",
         ),
         NaturalWonder(
             id = "salar_de_uyuni",
@@ -154,7 +154,7 @@ object NaturalWondersData {
                 "It contains 50–70% of the world's lithium reserves — crucial for batteries.",
                 "It's so flat that it's used to calibrate satellite altimeters.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/salar-uyuni-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/704e43d7-aa01-4e76-8906-fb1cbe2cdb43.png",
         ),
         NaturalWonder(
             id = "antelope_canyon",
@@ -171,7 +171,7 @@ object NaturalWondersData {
                 "Light beams shine directly into Upper Canyon at midday — a photographer's dream.",
                 "The canyon is only accessible with a Navajo Nation permit and guide.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/antelope-canyon-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/9185caa8-ad35-495f-b786-66892c4cf237.png",
         ),
         NaturalWonder(
             id = "the_wave",
@@ -188,7 +188,7 @@ object NaturalWondersData {
                 "The rock is 190 million years old, from the Jurassic period.",
                 "There's no marked trail — hikers navigate by GPS and photos.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/the-wave-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/5eafcf10-07b7-47ec-acd2-bd068858b712.png",
         ),
         NaturalWonder(
             id = "zhangjiajie",
@@ -205,7 +205,7 @@ object NaturalWondersData {
                 "One pillar was renamed 'Hallelujah Mountain' after the movie Avatar.",
                 "The park is a UNESCO Global Geopark.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/zhangjiajie-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/89e610f9-cf46-413c-ae18-e1c037966875.png",
         ),
         NaturalWonder(
             id = "pamukkale",
@@ -222,7 +222,7 @@ object NaturalWondersData {
                 "The water is rich in calcium, bicarbonate, and sulfate.",
                 "Some terraces are closed to protect them — walking on them damages the fragile surface.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/pamukkale-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/b1338449-d396-4850-b424-80290bf3b3c5.png",
         ),
         NaturalWonder(
             id = "crater_lake",
@@ -239,7 +239,7 @@ object NaturalWondersData {
                 "No rivers flow in or out — it's replenished entirely by rain and snow.",
                 "The water is some of the clearest on Earth — visibility exceeds 140 feet.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/crater-lake-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/8ad0fff0-a135-4bb6-9d7e-3a1b711788a7.png",
         ),
         NaturalWonder(
             id = "meteor_crater",
@@ -256,7 +256,7 @@ object NaturalWondersData {
                 "It was the first crater on Earth proven to be of impact origin (1960s).",
                 "Astronauts trained here before going to the Moon.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/meteor-crater-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/d8304fd7-aaee-4b90-9bd4-e8b299a8bce7.png",
         ),
         NaturalWonder(
             id = "monument_valley",
@@ -273,7 +273,7 @@ object NaturalWondersData {
                 "It's located within the Navajo Nation and managed by the tribe.",
                 "Countless Western movies were filmed here, starting with Stagecoach (1939).",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/monument-valley-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/949524bf-b26a-4ed7-b5b1-37103651134e.png",
         ),
         NaturalWonder(
             id = "arches_np",
@@ -290,7 +290,7 @@ object NaturalWondersData {
                 "Landscape Arch is one of the longest natural arches in the world at 290 feet.",
                 "New arches form and old ones collapse regularly — in 1991, a slab fell from Landscape Arch.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/arches-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/562a16c0-f8ed-43a2-93dd-1cbf19bc8e48.png",
         ),
         NaturalWonder(
             id = "bryce_canyon",
@@ -307,7 +307,7 @@ object NaturalWondersData {
                 "Bryce has some of the darkest night skies in North America.",
                 "The Paiute name for the area means 'red rocks standing like men in a bowl-shaped canyon.'",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/bryce-canyon-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/6e15ef09-b255-4945-846b-35578b5bc011.png",
         ),
         NaturalWonder(
             id = "carlsbad_caverns",
@@ -324,7 +324,7 @@ object NaturalWondersData {
                 "About 400,000 Brazilian free-tailed bats roost here in summer.",
                 "The cave has formations called 'cave pearls' — spherical calcite nodules.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/carlsbad-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/a3fbd154-58b3-402d-9980-713da3c515c4.png",
         ),
         NaturalWonder(
             id = "white_cliffs_dover",
@@ -341,7 +341,7 @@ object NaturalWondersData {
                 "Flint nodules in the chalk were used by early humans for tools and fire-starting.",
                 "The cliffs are eroding at about 0.4 inches per year — sometimes large chunks collapse.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/white-cliffs-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/ed275cdf-6644-40e2-be16-be47a78d8c44.png",
         ),
         NaturalWonder(
             id = "matterhorn",
@@ -358,7 +358,7 @@ object NaturalWondersData {
                 "The first ascent in 1865 ended in tragedy — 4 of 7 climbers died on the descent.",
                 "Its four faces align roughly with the compass directions.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/matterhorn-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/d2eb7e43-050e-4bb8-a078-56b98748ad2a.png",
         ),
         NaturalWonder(
             id = "mt_rushmore",
@@ -375,7 +375,7 @@ object NaturalWondersData {
                 "The surrounding pegmatites are famous for minerals like spodumene, beryl, and tourmaline.",
                 "Gutzon Borglum chose this specific mountain for the quality of the granite.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/mt-rushmore-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/ae391cf7-6994-476f-a8ee-1aae3f69f579.png",
         ),
         NaturalWonder(
             id = "jeju_lava_tubes",
@@ -392,7 +392,7 @@ object NaturalWondersData {
                 "The tubes have lava stalactites — formed by lava dripping from the ceiling, not water.",
                 "Jeju Island is a UNESCO World Heritage site for its volcanic features.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/jeju-tubes-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/735e6af3-198e-4fe2-acec-1d4aac359f81.png",
         ),
         NaturalWonder(
             id = "great_barrier_reef",
@@ -409,7 +409,7 @@ object NaturalWondersData {
                 "Visible from space — it stretches 1,429 miles along the Australian coast.",
                 "Coral sand from the reef will eventually lithify into limestone rock.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/great-barrier-reef-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/36d1c578-e331-4589-a97d-90c635d71a5d.png",
         ),
         NaturalWonder(
             id = "pamukkale_travertine",
@@ -426,7 +426,7 @@ object NaturalWondersData {
                 "Many islands contain caves with spectacular stalactites and stalagmites.",
                 "The limestone is up to 500 meters thick in places.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/halong-bay-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/e690464a-a4a6-4c45-9837-2fa980591433.png",
         ),
         NaturalWonder(
             id = "sahara_desert",
@@ -443,7 +443,7 @@ object NaturalWondersData {
                 "Erg Chebbi dunes can reach 500 feet tall.",
                 "Sand grains in the Sahara are rounded from constant tumbling.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/sahara-dunes-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/07418564-4d4c-404f-9505-9da7b137d0d1.png",
         ),
         NaturalWonder(
             id = "petrified_forest",
@@ -460,7 +460,7 @@ object NaturalWondersData {
                 "Each cell of the original tree was replaced with quartz, preserving the wood grain perfectly.",
                 "The wood is so hard it can scratch steel — it's solid quartz.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/petrified-forest-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/bc0109c5-2a3c-44bc-9e97-1bb67c01a86c.png",
         ),
         NaturalWonder(
             id = "blue_hole",
@@ -477,7 +477,7 @@ object NaturalWondersData {
                 "Submerged stalactites prove the cave was above water during the ice age.",
                 "At 300 feet deep, there's an anoxic layer with no oxygen or life.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/blue-hole-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/eca4d464-8ebc-483a-ac14-198301b85ca4.png",
         ),
         NaturalWonder(
             id = "etna",
@@ -494,7 +494,7 @@ object NaturalWondersData {
                 "Roman poets called it the 'forge of Vulcan,' god of fire and metalworking.",
                 "Etna basalt is rich in olivine — beautiful green crystals can be found in the lava.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/etna-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/310ec0f9-8d0f-4947-8142-d830e59486c1.png",
         ),
         NaturalWonder(
             id = "chocolate_hills",
@@ -511,7 +511,7 @@ object NaturalWondersData {
                 "Legend says they are the tears of a giant mourning his lost love.",
                 "They're only 'chocolate' in the dry season — green the rest of the year.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/chocolate-hills-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/4bced9eb-044d-4688-be44-3c2eba2b06d6.png",
         ),
         NaturalWonder(
             id = "verdon_gorge",
@@ -528,7 +528,7 @@ object NaturalWondersData {
                 "It's often called the 'Grand Canyon of Europe.'",
                 "The limestone cliffs contain abundant fossils from when it was a shallow sea.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/verdon-gorge-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/fa7620d9-1a30-41b7-aa5c-b7a44062acf3.png",
         ),
         NaturalWonder(
             id = "isle_of_staffa",
@@ -545,7 +545,7 @@ object NaturalWondersData {
                 "Mendelssohn wrote his Hebrides Overture after visiting in 1829.",
                 "The columns are the same formation as Giant's Causeway in Ireland.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/fingals-cave-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/66c6b922-cffb-4339-85d6-09bb3422fc1c.png",
         ),
         NaturalWonder(
             id = "kilauea",
@@ -562,7 +562,7 @@ object NaturalWondersData {
                 "Olivine grains weather out of the basalt, creating green sand beaches nearby.",
                 "Kīlauea means 'spewing' or 'much spreading' in Hawaiian.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/kilauea-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/9e0fb050-9041-4669-9d63-24a48b86cb3a.png",
         ),
         NaturalWonder(
             id = "yosemite_half_dome",
@@ -579,7 +579,7 @@ object NaturalWondersData {
                 "Exfoliation (sheet jointing) causes chunks of granite to peel off like onion layers.",
                 "The sheer face is 2,000 feet of continuous granite — a legendary rock climb.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/half-dome-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/e3a48378-21fe-458a-adb7-373d12ddf4ee.png",
         ),
         NaturalWonder(
             id = "thingvellir",
@@ -596,7 +596,7 @@ object NaturalWondersData {
                 "The Icelandic parliament (Alþingi) was founded here in 930 AD — the world's oldest.",
                 "Silfra fissure offers some of the clearest freshwater diving on Earth.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/thingvellir-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/989522ee-f9e4-4552-a4b5-1dd12cf35c5e.png",
         ),
         NaturalWonder(
             id = "sundarans_delta",
@@ -613,7 +613,7 @@ object NaturalWondersData {
                 "They may contain the oldest fossil evidence of life on Earth.",
                 "The Canadian Shield is a vast expanse of exposed Precambrian rock covering half of Canada.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/baffin-ancient-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/258e4edd-43e1-45fe-b9bd-bfc11f1bfd6b.png",
         ),
         NaturalWonder(
             id = "sossusvlei",
@@ -630,7 +630,7 @@ object NaturalWondersData {
                 "The dunes can reach 1,000 feet tall — among the highest in the world.",
                 "The sand gets redder with age as the iron coating thickens.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/sossusvlei-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/2bfdc317-d7b6-4505-bead-21877ac40505.png",
         ),
         NaturalWonder(
             id = "vesuvius_somma",
@@ -647,7 +647,7 @@ object NaturalWondersData {
                 "The Emerald Lakes get their color from dissolved copper and sulfur minerals.",
                 "The Tongariro Alpine Crossing is one of the world's best day hikes.",
             ),
-            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/tongariro-wonder.png",
+            imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/19b592ed-ae38-4829-b049-e7400ebcc7f5.png",
         ),
     )
 

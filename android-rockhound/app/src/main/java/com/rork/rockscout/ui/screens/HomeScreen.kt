@@ -423,7 +423,7 @@ fun HomeScreen(navController: NavController) {
         HomeTile("Periodic Table", "118 elements · Where each element appears in rocks & gems", Icons.Filled.Science, Color(0xFF7CB5EC), Routes.PERIODIC_TABLE,
             "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/040be3bf-71ab-46d0-b6be-4598df22a18b.png"),
         HomeTile("Mineral Care & Cleaning", "Don't ruin your finds · Safe cleaning for every mineral type", Icons.Filled.CleaningServices, Color(0xFF5CC98C), Routes.MINERAL_CARE,
-            SpecimenImages.urls["fluorite"]?.firstOrNull()),
+            "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/263c5833-c668-4d2a-a4b5-e45cb5148679.png"),
         HomeTile("Fluorescence & UV", "Which minerals glow under UV light & what colors", Icons.Filled.Lightbulb, Color(0xFF9B7BD8), Routes.FLUORESCENCE_UV,
             SpecimenImages.urls["uv-tile"]?.firstOrNull()),
         HomeTile("Crystal Systems", "The 7 crystal shapes with visual examples", Icons.Filled.Diamond, Color(0xFF6FA8C7), Routes.CRYSTAL_SYSTEMS,
@@ -431,7 +431,7 @@ fun HomeScreen(navController: NavController) {
         HomeTile("Lapidary Basics", "Cut, polish & cab your finds into jewelry", Icons.Filled.Construction, Color(0xFFE8A33D), Routes.LAPIDARY_BASICS,
             SpecimenImages.urls["lapidary-tile"]?.firstOrNull()),
         HomeTile("Natural Wonders", "World-famous geological sites & what to find there", Icons.Filled.Public, Color(0xFF1B3A4B), Routes.NATURAL_WONDERS,
-            "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/natural-wonders-tile.png"),
+            "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/057bdf45-4a43-426e-bc68-7b48842d4acf.png"),
     )
 
     // Field-guide tiles live in the field kit grid (same square format as the
@@ -611,7 +611,7 @@ fun HomeScreen(navController: NavController) {
                     subtitle = "Curated kits for every level — from first hunt to advanced field collecting",
                     icon = Icons.Filled.Diamond,
                     accent = Aqua,
-                    imageUrl = "https://r2-pub.rork.com/attachments/78k8yy4tgahby3o9opb6j.png",
+                    imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/10ba26f0-a7d8-4ea7-964b-864eb46744d6.png",
                     onClick = { navController.navigate(Routes.GEAR_GUIDE) },
                 )
             }
