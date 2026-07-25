@@ -4,6 +4,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -94,8 +95,14 @@ data class ClarifyRequest(
  * and web search references for cross-referencing.
  */
 object IdentifyApi {
-    // The backend URL — deployed Cloudflare Worker
-    private const val BASE_URL = "https://rockscout-finder-backend.rork.app"
+    // The backend URL — read from Config so it works across environments.
+    private val BASE_URL: String =
+        com.rork.rockscout.Config.allValues["EXPO_PUBLIC_RORK_FUNCTIONS_URL"]
+            ?.removeSuffix("/")
+            ?: "https://rockscout-finder-backend.rork.app"
+    // App key for backend auth — sent as X-App-Key header.
+    private val APP_KEY: String =
+        com.rork.rockscout.Config.allValues["EXPO_PUBLIC_RORK_APP_KEY"] ?: ""
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -138,6 +145,7 @@ object IdentifyApi {
     ): IdentifyResponse {
         val response = identifyClient.post("$BASE_URL/identify") {
             contentType(ContentType.Application.Json)
+            if (APP_KEY.isNotBlank()) header("X-App-Key", APP_KEY)
             setBody(
                 json.encodeToString(
                     IdentifyRequest.serializer(),
@@ -171,6 +179,7 @@ object IdentifyApi {
     ): IdentifyResponse {
         val response = identifyClient.post("$BASE_URL/identify/clarify") {
             contentType(ContentType.Application.Json)
+            if (APP_KEY.isNotBlank()) header("X-App-Key", APP_KEY)
             setBody(
                 json.encodeToString(
                     ClarifyRequest.serializer(),

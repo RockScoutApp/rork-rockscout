@@ -382,7 +382,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     title: "Educational Guides",
     shortLabel: "Guides",
     steps: [
-      `RockScout includes 10 built-in educational guides — all work fully offline once the bulk image download completes.`,
+      `RockScout includes 11 built-in educational guides — all work fully offline once the bulk image download completes.`,
       `Exploring Geology: learn how rocks, minerals, and gems form across the rock cycle.`,
       `Exploring Paleontology: fossils, geologic eras, and deep-time history.`,
       `Exploring Prehistoric Organisms: dinosaurs, ancient birds, prehistoric flora, and more.`,
@@ -557,7 +557,7 @@ const HowToUse = () => {
                     boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${section.accent} 30%, transparent)`,
                   }}
                 >
-                  <section.icon className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+                  <section.icon className="h-4 w-4 sm:h-5 sm:w-5" />
                 </span>
                 <span className="flex flex-col gap-0.5 min-w-0">
                   <span className="text-[10px] font-bold tabular-nums text-muted-foreground/60">

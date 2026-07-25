@@ -131,8 +131,13 @@ fun SpecimenMarkerMap(
         overlay.setItems(markers)
 
         if (points.isNotEmpty()) {
-            val box = BoundingBox.fromGeoPoints(points)
-            mv.zoomToBoundingBox(box, false, 48)
+            if (points.size == 1) {
+                mv.controller.animateTo(points.first())
+                mv.controller.setZoom(8.0)
+            } else {
+                val box = BoundingBox.fromGeoPoints(points)
+                mv.zoomToBoundingBox(box, false, 48)
+            }
         }
         mv.invalidate()
     }
@@ -293,8 +298,13 @@ private fun FullscreenSpecimenMapOverlay(
         }
         overlay.setItems(markers)
         if (points.isNotEmpty()) {
-            val box = BoundingBox.fromGeoPoints(points)
-            mv.zoomToBoundingBox(box, false, 48)
+            if (points.size == 1) {
+                mv.controller.animateTo(points.first())
+                mv.controller.setZoom(8.0)
+            } else {
+                val box = BoundingBox.fromGeoPoints(points)
+                mv.zoomToBoundingBox(box, false, 48)
+            }
         }
         mv.invalidate()
     }

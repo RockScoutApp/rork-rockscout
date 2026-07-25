@@ -349,7 +349,7 @@ suspend fun saveImageToGalleryAndCollection(context: android.content.Context, im
                 val resolver = context.contentResolver
                 try {
                     val input = resolver.openInputStream(uri)
-                    input?.use { BitmapFactory.decodeStream(it) }
+                    input?.use { com.rork.rockscout.data.ImageUtils.decodeSampledBitmap(it) }
                 } catch (_: Exception) { null }
             }
             if (bitmap == null) return@withContext "Could not load this image."
@@ -426,7 +426,7 @@ private suspend fun loadBitmapForSharing(context: android.content.Context, urlSt
             val uri = Uri.parse(urlString)
             try {
                 context.contentResolver.openInputStream(uri)?.use {
-                    BitmapFactory.decodeStream(it)
+                    com.rork.rockscout.data.ImageUtils.decodeSampledBitmap(it)
                 }
             } catch (_: Exception) { null }
         }

@@ -439,7 +439,7 @@ fun BookStyleImage(
         ImageRequest.Builder(context)
             .data(imageUrl)
             .crossfade(true)
-            .size(Size.ORIGINAL)
+            .size(184, 184)
             .build()
     }
     Box(
@@ -1185,6 +1185,7 @@ fun StatePickerPill(
                     color = brightenForText(accentColor),
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Icon(
                     Icons.Filled.ArrowDropDown,

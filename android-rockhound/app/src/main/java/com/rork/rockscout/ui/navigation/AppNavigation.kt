@@ -152,8 +152,7 @@ object Routes {
     const val REFERRAL = "referral"
     const val SIGN_IN = "sign_in"
     const val SCAN = "scan"
-    const val MESSENGER = "messenger"
-    // MESSAGE_REQUESTS route removed — unified into FriendsScreen
+    // MESSENGER route removed — unified into FriendsScreen
     const val FRIENDS = "friends?initialTab={initialTab}&showFR={showFR}"
     const val USER_PROFILE = "user_profile/{userId}"
     const val USER_ACHIEVEMENTS = "user_achievements/{userId}"
@@ -171,7 +170,6 @@ object Routes {
     const val ELEMENT_DETAIL = "element/{atomicNumber}"
     const val DISCOVER_HUNTERS = "discover_hunters"
     const val DEV_CONSOLE = "dev_console"
-    const val DEV_USER_PROFILE = "dev_user_profile/{userId}"
     const val BLM_GUIDE = "blm_guide"
     const val BLM_STATE_DETAIL = "blm_state/{stateCode}"
     const val BLM_TRAILHEAD_DETAIL = "blm_trailhead/{name}"
@@ -238,7 +236,6 @@ object Routes {
     fun userAchievements(userId: String) = "user_achievements/$userId"
     fun userCollection(userId: String) = "user_collection/$userId"
     fun userWishlist(userId: String) = "user_wishlist/$userId"
-    fun devUserProfile(userId: String) = "dev_user_profile/$userId"
     fun blmState(stateCode: String) = "blm_state/$stateCode"
     fun blmTrailhead(name: String) = "blm_trailhead/${Uri.encode(name)}"
     fun blmCampground(name: String) = "blm_campground/${Uri.encode(name)}"

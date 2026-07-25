@@ -750,7 +750,7 @@ private fun TripCard(
                         contentAlignment = Alignment.Center,
                     ) { Text("${idx + 1}", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Bold) }
                     Spacer(Modifier.width(10.dp))
-                    Text(stop.locationName, style = MaterialTheme.typography.bodyMedium, color = DarkTextHigh, maxLines = 1)
+                    Text(stop.locationName, style = MaterialTheme.typography.bodyMedium, color = DarkTextHigh, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
             if (trip.stops.size > 4) {
@@ -1550,11 +1550,14 @@ Planned with RockScout""".trimIndent()
                         SculptedButton(
                             text = "Add Specimen Marker",
                             onClick = {
+                                val lat = pendingPinLat
+                                val lng = pendingPinLng
+                                if (lat == null || lng == null) return@SculptedButton
                                 val marker = SpecimenMarker(
                                     id = UUID.randomUUID().toString(),
                                     name = newMarkerName.ifBlank { "Specimen #${specimenMarkers.size + 1}" },
-                                    latitude = pendingPinLat!!,
-                                    longitude = pendingPinLng!!,
+                                    latitude = lat,
+                                    longitude = lng,
                                     description = newMarkerDesc,
                                     timestamp = System.currentTimeMillis(),
                                     category = newMarkerCategory,

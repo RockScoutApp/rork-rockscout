@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { SITE } from "@/content/legal";
@@ -169,7 +169,10 @@ export const Layout = ({
 }: LayoutProps) => {
   const fullTitle = title.includes(SITE.name) ? title : `${title} · ${SITE.name}`;
   const desc = description ?? SITE.description;
-  if (typeof document !== "undefined") {
+  // DOM mutations must happen in useEffect, not during render, to avoid
+  // side effects during the render phase and React strict-mode double-render.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
     document.title = fullTitle;
     const setMeta = (name: string, content: string, attr: "name" | "property" = "name") => {
       let el = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement | null;
@@ -196,7 +199,6 @@ export const Layout = ({
       const robots = document.querySelector('meta[name="robots"]');
       if (robots) robots.remove();
     }
-    // Canonical link — prevents duplicate-content ambiguity for indexable pages.
     const canonicalHref = canonical ?? window.location.href.split("#")[0].split("?")[0];
     let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
     if (!link) {
@@ -205,7 +207,7 @@ export const Layout = ({
       document.head.appendChild(link);
     }
     link.setAttribute("href", canonicalHref);
-  }
+  }, [fullTitle, desc, ogImage, noIndex, canonical]);
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />

@@ -149,6 +149,12 @@ fun SocialSettingsScreen(
             results[Manifest.permission.POST_NOTIFICATIONS] == true
         when (pendingNotifToggle) {
             "nearby_alerts" -> if (notifGranted) repo.setNearbyAlertsEnabled(true)
+            "nearby_friends" -> {
+                if (notifGranted) {
+                    repo.setLocationMonitoring(true)
+                    repo.setNearbyFriendsEnabled(true)
+                }
+            }
             "nearby_friends_alerts" -> if (notifGranted) repo.setNearbyFriendsAlertsEnabled(true)
             "weather_alerts" -> {
                 if (notifGranted) {
@@ -262,9 +268,11 @@ fun SocialSettingsScreen(
                 checked = profile.nearbyAlertsEnabled,
                 onCheckedChange = { enabled ->
                     if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        pendingNotifToggle = "nearby_alerts"
                         permissionsLauncher.launch(arrayOf(Manifest.permission.POST_NOTIFICATIONS))
+                    } else {
+                        repo.setNearbyAlertsEnabled(enabled)
                     }
-                    repo.setNearbyAlertsEnabled(enabled)
                 },
             )
 
@@ -286,9 +294,8 @@ fun SocialSettingsScreen(
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                             perms.add(Manifest.permission.POST_NOTIFICATIONS)
                         }
+                        pendingNotifToggle = "nearby_friends"
                         permissionsLauncher.launch(perms.toTypedArray())
-                        repo.setLocationMonitoring(true)
-                        repo.setNearbyFriendsEnabled(true)
                     } else {
                         repo.setNearbyFriendsEnabled(enabled)
                     }
@@ -311,8 +318,8 @@ fun SocialSettingsScreen(
                     if (enabled && !isSignedIn) {
                         navController.navigate(Routes.SIGN_IN)
                     } else if (enabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        pendingNotifToggle = "nearby_friends_alerts"
                         permissionsLauncher.launch(arrayOf(Manifest.permission.POST_NOTIFICATIONS))
-                        repo.setNearbyFriendsAlertsEnabled(true)
                     } else {
                         repo.setNearbyFriendsAlertsEnabled(enabled)
                     }

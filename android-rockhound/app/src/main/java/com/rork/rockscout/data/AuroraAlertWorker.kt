@@ -136,7 +136,7 @@ class AuroraAlertWorker(
         val kp = fetchCurrentKp() ?: run {
             Log.d(TAG, "Failed to fetch Kp — will retry next cycle")
             scheduleNext(context)
-            return Result.retry()
+            return Result.success()
         }
 
         // Use custom threshold if set, otherwise latitude-based default

@@ -974,13 +974,13 @@ private fun FloorListingCard(
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                         if (isMine) {
-                            SculptedIconButton(icon = Icons.Filled.Edit, contentDescription = "Edit", onClick = onEdit, accent = Aqua, iconTint = Aqua, size = 24.dp, shadowElevation = 3.dp)
-                            SculptedIconButton(icon = Icons.Filled.Share, contentDescription = "Share", onClick = onShare, accent = Aqua, iconTint = Aqua, size = 24.dp, shadowElevation = 3.dp)
-                            SculptedIconButton(icon = Icons.Filled.PersonAdd, contentDescription = "Share to Profile", onClick = onShareToProfile, accent = Citrine, iconTint = Citrine, size = 24.dp, shadowElevation = 3.dp)
-                            SculptedIconButton(icon = Icons.Filled.Delete, contentDescription = "Delete", onClick = onDelete, accent = Aqua, iconTint = Aqua, size = 24.dp, shadowElevation = 3.dp)
+                            SculptedIconButton(icon = Icons.Filled.Edit, contentDescription = "Edit", onClick = onEdit, accent = Aqua, iconTint = Aqua, size = 36.dp, shadowElevation = 3.dp)
+                            SculptedIconButton(icon = Icons.Filled.Share, contentDescription = "Share", onClick = onShare, accent = Aqua, iconTint = Aqua, size = 36.dp, shadowElevation = 3.dp)
+                            SculptedIconButton(icon = Icons.Filled.PersonAdd, contentDescription = "Share to Profile", onClick = onShareToProfile, accent = Citrine, iconTint = Citrine, size = 36.dp, shadowElevation = 3.dp)
+                            SculptedIconButton(icon = Icons.Filled.Delete, contentDescription = "Delete", onClick = onDelete, accent = Aqua, iconTint = Aqua, size = 36.dp, shadowElevation = 3.dp)
                         }
                         if (!isMine && ownerId != null) {
-                            SculptedIconButton(icon = Icons.Filled.Flag, contentDescription = "Report", onClick = onReport, accent = Danger, iconTint = Danger, size = 24.dp, shadowElevation = 3.dp)
+                            SculptedIconButton(icon = Icons.Filled.Flag, contentDescription = "Report", onClick = onReport, accent = Danger, iconTint = Danger, size = 36.dp, shadowElevation = 3.dp)
                         }
                     }
                 }

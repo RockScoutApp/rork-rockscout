@@ -185,8 +185,9 @@ fun AddLocationDialog(
         contract = ActivityResultContracts.TakePicture(),
     ) { success ->
         if (success && cameraUri != null) {
-            if (photoUris.size < 4) {
-                photoUris.add(cameraUri!!)
+            val uri = cameraUri
+            if (uri != null && photoUris.size < 4) {
+                photoUris.add(uri)
             }
         }
         cameraUri = null
@@ -316,11 +317,12 @@ fun AddLocationDialog(
                 Text("Pin Location on Map", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(6.dp))
                 if (pinLocation != null) {
+                    val loc = pinLocation!!
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Filled.LocationOn, contentDescription = null, tint = Aqua, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            "%.4f, %.4f".format(pinLocation!!.first, pinLocation!!.second),
+                            "%.4f, %.4f".format(loc.first, loc.second),
                             style = MaterialTheme.typography.bodyMedium,
                             color = Aqua,
                             fontWeight = FontWeight.Medium,
@@ -559,15 +561,19 @@ fun AddLocationDialog(
                             locationCategory = submissionMode,
                         )
 
-                        if (webVerified) {
-                            // Auto-approve: add to CustomDigLocationStore immediately
-                            LocationSubmissionStore.add(submission.copy(status = "approved"))
-                            CustomDigLocationStore.addApprovedLocation(submission)
-                            submitStatus = "Web-verified and auto-approved! It's now on the map."
-                        } else {
-                            // Send to Developer Console for manual review
-                            LocationSubmissionStore.add(submission)
-                            submitStatus = "Submitted for review. A developer will verify it shortly."
+                        runCatching {
+                            if (webVerified) {
+                                // Auto-approve: add to CustomDigLocationStore immediately
+                                LocationSubmissionStore.add(submission.copy(status = "approved"))
+                                CustomDigLocationStore.addApprovedLocation(submission)
+                                submitStatus = "Web-verified and auto-approved! It's now on the map."
+                            } else {
+                                // Send to Developer Console for manual review
+                                LocationSubmissionStore.add(submission)
+                                submitStatus = "Submitted for review. A developer will verify it shortly."
+                            }
+                        }.onFailure {
+                            submitStatus = "Something went wrong saving your submission. Please try again."
                         }
 
                         isSubmitting = false

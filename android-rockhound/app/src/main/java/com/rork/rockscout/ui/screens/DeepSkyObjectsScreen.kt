@@ -58,6 +58,10 @@ private val TextLowW = Color.White.copy(alpha = 0.45f)
 @Composable
 fun DeepSkyObjectsScreen(navController: NavController) {
     var selectedDso by remember { mutableStateOf<DeepSkyObject?>(null) }
+    // Pre-compute the grouped DSOs once, outside the LazyColumn lambda.
+    val grouped = remember {
+        DeepSkyObjectData.allObjects.groupBy { it.type }
+    }
 
     ScreenScaffold(title = "Deep Sky Objects", onBack = { navController.popBackStack() }) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -68,7 +72,7 @@ fun DeepSkyObjectsScreen(navController: NavController) {
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 40.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                val grouped = DeepSkyObjectData.allObjects.groupBy { it.type }
+                // grouped is pre-computed outside the LazyColumn lambda.
                 grouped.forEach { (type, objects) ->
                     item {
                         Text(
@@ -79,7 +83,7 @@ fun DeepSkyObjectsScreen(navController: NavController) {
                             modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
                         )
                     }
-                    items(objects) { dso ->
+                    items(objects, key = { it.catalog }) { dso ->
                         DsoRow(dso) { selectedDso = it }
                     }
                 }

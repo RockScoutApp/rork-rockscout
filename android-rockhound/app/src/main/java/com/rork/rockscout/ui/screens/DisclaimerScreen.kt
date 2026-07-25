@@ -62,7 +62,7 @@ import kotlinx.coroutines.launch
  * change materially — users with an older (or null) accepted version will be
  * re-prompted with the flow on next launch / sign-in.
  */
-const val DISCLAIMER_CURRENT_VERSION = "2026-07-20-v1"
+const val DISCLAIMER_CURRENT_VERSION = "2026-07-25-v1"
 
 /**
  * Returns true if the current user has accepted the latest version of the
@@ -105,6 +105,7 @@ private val DISCLAIMER_PAGES: List<DisclaimerPage> = listOf(
             ),
             "Subscriptions and billing" to listOf(
                 "RockScout offers subscriptions managed by RevenueCat. Payment is processed by Google Play Billing. We receive anonymous purchase state and entitlement information. Your full payment card details never reach RockScout — they stay with Google Play.",
+                "In-app purchases include auto-renewing subscriptions (monthly and annual) and one-time donations. All purchases are optional — the free tier provides ad-supported identification, the full specimen database, dig site maps, field captures, and all educational guides.",
             ),
             "Advertising" to listOf(
                 "The free tier of RockScout may be supported by advertising served by Google AdMob. AdMob may collect a device advertising identifier and coarse diagnostic data to serve and measure ads. You can reset the advertising identifier in your device settings at any time.",
@@ -122,6 +123,9 @@ private val DISCLAIMER_PAGES: List<DisclaimerPage> = listOf(
             "Your choices and rights" to listOf(
                 "You can review or delete your account, collection, captures, posts, and messages from within the app. You can revoke camera, location, and notification permissions from your device settings at any time.",
                 "Depending on where you live, you may have rights to access, correct, export, or delete your personal data. To exercise any of these rights, email support@rockscout.net.",
+            ),
+            "Data retention" to listOf(
+                "We retain your account data, collection, captures, posts, and messages for as long as your account is active. When you delete your account, we remove your profile, posts, comments, messages, and connections within 30 days. Anonymized aggregate data (e.g., specimen search trends) may be retained indefinitely for analytics.",
             ),
         ),
     ),
@@ -165,8 +169,20 @@ private val DISCLAIMER_PAGES: List<DisclaimerPage> = listOf(
                 "To the maximum extent permitted by law, RockScout and its operators are not liable for any indirect, incidental, special, consequential, or punitive damages, or any loss of data, specimens, money, or goodwill, arising out of or related to your use of the app — including any trade, meetup, identification, or collection decision you make based on the app.",
                 "Our total liability for any claim arising out of these Terms is limited to the amount you paid us in the 12 months preceding the claim, or \$50, whichever is greater.",
             ),
+            "Indemnity" to listOf(
+                "You agree to indemnify and hold harmless RockScout and its operators from any claims, damages, losses, or expenses (including legal fees) arising out of your content, your use of the app, your violation of these Terms, or your violation of any law or third-party rights.",
+            ),
+            "Suspension and termination" to listOf(
+                "We may suspend or terminate your access to RockScout at any time, with or without cause, including for violations of these Terms or our Community Guidelines. We may also remove or disable access to any content you have posted.",
+            ),
             "Governing law" to listOf(
                 "These Terms are governed by the laws of the United States, without regard to conflict-of-law principles. Disputes will be resolved in the courts located in the United States.",
+            ),
+            "Changes to these terms" to listOf(
+                "We may update these Terms from time to time. When we do, we will post the revised Terms in the app and update the effective date. Continued use of RockScout after changes take effect constitutes acceptance of the updated Terms.",
+            ),
+            "Contact" to listOf(
+                "Questions about these Terms? Email support@rockscout.net.",
             ),
         ),
     ),
@@ -197,6 +213,9 @@ private val DISCLAIMER_PAGES: List<DisclaimerPage> = listOf(
             ),
             "Appeals" to listOf(
                 "If you believe a moderation action against you was wrong, use the Contact Us screen in the app (or email support@rockscout.net) to appeal. Include what happened and why you think the action was incorrect. We review appeals and respond within 5 business days.",
+            ),
+            "Safety first" to listOf(
+                "If you ever feel unsafe or are threatened by another user, stop communicating with them, block them in the app, report them, and contact local authorities if needed. Your safety is always more important than any trade, identification, or community interaction.",
             ),
         ),
     ),

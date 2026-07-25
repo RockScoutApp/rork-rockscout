@@ -62,6 +62,12 @@ private val TextLowW = Color.White.copy(alpha = 0.45f)
 @Composable
 fun ConstellationsScreen(navController: NavController) {
     var selectedConstellation by remember { mutableStateOf<ConstellationEntry?>(null) }
+    // Pre-compute the grouped constellations once, outside the LazyColumn lambda,
+    // so distinctBy + groupBy don't recompute on every recomposition.
+    val grouped = remember {
+        ConstellationData.allConstellations.distinctBy { it.name }
+            .groupBy { it.hemisphere }
+    }
 
     ScreenScaffold(title = "Constellations", onBack = { navController.popBackStack() }) {
         Box(modifier = Modifier.fillMaxSize()) {
@@ -72,9 +78,8 @@ fun ConstellationsScreen(navController: NavController) {
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 40.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                // Group by hemisphere
-                val grouped = ConstellationData.allConstellations.distinctBy { it.name }
-                    .groupBy { it.hemisphere }
+                // Group by hemisphere — grouped is pre-computed outside
+                // the LazyColumn lambda to avoid recomputing on every frame.
                 grouped.forEach { (hemisphere, constellations) ->
                     item {
                         Text(
@@ -85,7 +90,7 @@ fun ConstellationsScreen(navController: NavController) {
                             modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
                         )
                     }
-                    items(constellations) { con ->
+                    items(constellations, key = { it.name }) { con ->
                         ConstellationRow(con) { selectedConstellation = it }
                     }
                 }

@@ -81,7 +81,7 @@ private val categoryColors = mapOf(
 @Composable
 fun PrehistoricOrganismsScreen(navController: NavController) {
     val organisms = PrehistoricOrganisms.specimens
-    val groupedByCategory = organisms.groupBy { it.category }
+    val groupedByCategory = remember(organisms) { organisms.groupBy { it.category } }
     val categoryOrder = listOf(
         "Single-Celled Organism", "Prehistoric Flora", "Prehistoric Arthropod", "Prehistoric Insect",
         "Prehistoric Amphibian", "Prehistoric Fish", "Prehistoric Bird",
@@ -144,7 +144,7 @@ fun PrehistoricOrganismsScreen(navController: NavController) {
                 }
                 item {
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        items(items) { organism ->
+                        items(items, key = { it.id }) { organism ->
                             OrganismCard(
                                 organism = organism,
                                 accent = categoryColors[category] ?: Fossil,

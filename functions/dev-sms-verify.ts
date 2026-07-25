@@ -4,9 +4,8 @@
  *
  * POST /dev-sms-verify { action: "send" }
  *   Generates a 6-digit code, sends it via Twilio, stores it in-memory with a
- *   5-minute expiry. Also returns the code in the response so the app can show
- *   an instant push notification with the same PIN. Returns:
- *     { ok: true, sent: true, devCode: "123456" }
+ *   5-minute expiry. Returns { ok: true, sent: true } — the code is NOT
+ *   returned in the response (security: only delivered via SMS).
  *
  * POST /dev-sms-verify { action: "verify", code: "123456" }
  *   Checks the code against the stored code. Returns { ok: true, verified: true }
@@ -19,18 +18,16 @@
  *
  * The destination phone number is hardcoded to +13134256511.
  * Verification codes are always randomly generated 6-digit numbers.
- * The devCode is returned on every send request regardless of Twilio config
- * so the app can post an instant local notification as a reliable fallback.
  */
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-App-Key",
   "Content-Type": "application/json",
 };
 
-// In-memory code store with expiry. Keyed by a simple session counter.
+// In-memory code store with expiry.
 let storedCode: string | null = null;
 let codeExpiry = 0;
 const CODE_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -106,10 +103,10 @@ export async function handleDevSmsVerify(
         );
       }
 
-      // Always return the code so the app can post an instant local push
-      // notification as a reliable fallback if SMS is delayed or fails.
+      // Security: do NOT return the code in the response.
+      // The code is only delivered via SMS.
       return Response.json(
-        { ok: true, sent: true, smsSent, devCode: code },
+        { ok: true, sent: true, smsSent },
         { headers },
       );
     }
@@ -122,7 +119,7 @@ export async function handleDevSmsVerify(
           { headers },
         );
       }
-      if (code === storedCode) {
+      if (code && code === storedCode) {
         storedCode = null;
         codeExpiry = 0;
         return Response.json({ ok: true, verified: true }, { headers });

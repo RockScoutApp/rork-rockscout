@@ -4,32 +4,76 @@
  * it in the app.
  *
  * POST /email-verification { action: "send", email: "user@example.com" }
- *   Generates a 6-digit code, stores it in-memory keyed by email with a
- *   5-minute TTL, and sends it via Resend. Returns { ok: true }.
+ *   Generates a 6-digit code, stores it in KV (or in-memory fallback) keyed by
+ *   email with a 5-minute TTL, and sends it via Resend. Returns { ok: true }.
  *
  * POST /email-verification { action: "verify", email: "user@example.com", code: "123456" }
  *   Checks the code against the stored code for that email. Returns
  *   { ok: true, verified: true } or { ok: false, error: "..." }.
  *
  * Requires a RESEND_API_KEY env var on the Worker.
+ * Uses VERIFICATION_KV (KV namespace) for cross-isolate code storage.
  */
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, X-App-Key",
   "Content-Type": "application/json",
 };
 
 const FROM = "RockScout <welcome@rockscout.app>";
 const TAGLINE = "Made by a rockhounder, for rockhounders";
 const CODE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const KV_TTL_SECONDS = 300; // 5 minutes
 
-// In-memory code store keyed by email. Each entry has the code and expiry.
+// In-memory fallback when KV is not available (per-isolate, best-effort).
 const codeStore = new Map<string, { code: string; expiresAt: number }>();
 
 function generateCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+function kvKey(email: string): string {
+  return `email_verify:${email}`;
+}
+
+async function storeCode(
+  email: string,
+  code: string,
+  kv?: KVNamespace,
+): Promise<void> {
+  const entry = JSON.stringify({ code, expiresAt: Date.now() + CODE_TTL_MS });
+  if (kv) {
+    await kv.put(kvKey(email), entry, { expirationTtl: KV_TTL_SECONDS });
+  }
+  // Always store in-memory too as a fallback for same-isolate verification.
+  codeStore.set(email, { code, expiresAt: Date.now() + CODE_TTL_MS });
+}
+
+async function retrieveCode(
+  email: string,
+  kv?: KVNamespace,
+): Promise<{ code: string; expiresAt: number } | null> {
+  // Try KV first (cross-isolate), then fall back to in-memory.
+  if (kv) {
+    const raw = await kv.get(kvKey(email));
+    if (raw) {
+      try {
+        return JSON.parse(raw);
+      } catch {
+        // Fall through to in-memory.
+      }
+    }
+  }
+  return codeStore.get(email) ?? null;
+}
+
+async function deleteCode(email: string, kv?: KVNamespace): Promise<void> {
+  if (kv) {
+    await kv.delete(kvKey(email));
+  }
+  codeStore.delete(email);
 }
 
 function cleanupExpired() {
@@ -43,7 +87,7 @@ function cleanupExpired() {
 
 export async function handleEmailVerification(
   request: Request,
-  env: { RESEND_API_KEY?: string },
+  env: { RESEND_API_KEY?: string; VERIFICATION_KV?: KVNamespace },
   corsHeaders: Record<string, string>,
 ): Promise<Response> {
   if (request.method === "OPTIONS") {
@@ -84,7 +128,7 @@ export async function handleEmailVerification(
 
   if (action === "send") {
     const code = generateCode();
-    codeStore.set(email, { code, expiresAt: Date.now() + CODE_TTL_MS });
+    await storeCode(email, code, env.VERIFICATION_KV);
 
     const html = `<!DOCTYPE html>
 <html><body style="margin:0;padding:0;background:#F3EFE7;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">
@@ -160,10 +204,10 @@ ${TAGLINE}`;
 
   if (action === "verify") {
     const submittedCode = body.code?.trim();
-    const entry = codeStore.get(email);
+    const entry = await retrieveCode(email, env.VERIFICATION_KV);
 
     if (!entry || Date.now() > entry.expiresAt) {
-      codeStore.delete(email);
+      await deleteCode(email, env.VERIFICATION_KV);
       return Response.json(
         { ok: false, error: "Code expired. Please request a new one." },
         { status: 200, headers },
@@ -171,7 +215,7 @@ ${TAGLINE}`;
     }
 
     if (submittedCode === entry.code) {
-      codeStore.delete(email);
+      await deleteCode(email, env.VERIFICATION_KV);
       return Response.json({ ok: true, verified: true }, { status: 200, headers });
     }
 

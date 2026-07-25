@@ -93,7 +93,10 @@ fun ReportWarningDialog(
         dismissButton = {
             SculptedOutlinedButton(
                 text = "Appeal",
-                onClick = { showAppealComposer = true },
+                onClick = {
+                    onAppeal()
+                    showAppealComposer = true
+                },
                 accent = Citrine,
                 textColor = Citrine,
             )

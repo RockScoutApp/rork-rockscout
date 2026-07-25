@@ -215,7 +215,14 @@ fun DigSitesMapView(
                     controller.setCenter(GeoPoint(39.5, -98.0))
 
                     overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
-                    overlays.add(CompassOverlay(ctx, this).apply { enableCompass() })
+                    // Compass repositioned to top-right so it doesn't overlap
+                    // the legend and cache indicator at top-left.
+                    val embedCompass = CompassOverlay(ctx, this).apply { enableCompass() }
+                    overlays.add(embedCompass)
+                    post {
+                        val d = ctx.resources.displayMetrics.density
+                        embedCompass.setCompassCenter(width - 56f * d, 40f * d)
+                    }
 
                     // Tap-to-drop-pin overlay — tapping the map drops a pin
                     // that the user can then download offline maps for.
@@ -373,12 +380,14 @@ fun DigSitesMapView(
         }
     }
 
-    if (showDownloadSheet && pinLocation != null) {
-        MapDownloadSheet(
-            lat = pinLocation!!.first,
-            lng = pinLocation!!.second,
-            onDismiss = { showDownloadSheet = false },
-        )
+    pinLocation?.let { loc ->
+        if (showDownloadSheet) {
+            MapDownloadSheet(
+                lat = loc.first,
+                lng = loc.second,
+                onDismiss = { showDownloadSheet = false },
+            )
+        }
     }
 
     if (isFullscreen) {

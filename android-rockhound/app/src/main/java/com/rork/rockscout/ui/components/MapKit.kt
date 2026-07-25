@@ -1734,6 +1734,7 @@ fun MapZoomControls(
             shadowElevation = if (compact) 2.dp else 3.dp,
         )
         Spacer(Modifier.height(spacerHeight).width(buttonSize).background(Color.White.copy(alpha = 0.15f)))
+        val context = LocalContext.current
         SculptedIconButton(
             icon = if (showUser) Icons.Filled.MyLocation else Icons.Filled.LocationDisabled,
             contentDescription = "Recenter on my location",
@@ -1743,6 +1744,11 @@ fun MapZoomControls(
                 if (mv != null && (lat != 0.0 || lng != 0.0)) {
                     mv.controller.animateTo(GeoPoint(lat, lng))
                 } else {
+                    android.widget.Toast.makeText(
+                        context,
+                        "Locating… enable location monitoring to recenter.",
+                        android.widget.Toast.LENGTH_SHORT,
+                    ).show()
                     onRecenter()
                 }
             },
@@ -2070,12 +2076,14 @@ fun FullscreenMapOverlay(
             )
         }
 
-        if (showDownloadSheet && downloadCoords != null) {
-            MapDownloadSheet(
-                lat = downloadCoords!!.first,
-                lng = downloadCoords!!.second,
-                onDismiss = { showDownloadSheet = false },
-            )
+        downloadCoords?.let { coords ->
+            if (showDownloadSheet) {
+                MapDownloadSheet(
+                    lat = coords.first,
+                    lng = coords.second,
+                    onDismiss = { showDownloadSheet = false },
+                )
+            }
         }
 
         MapViewLifecycleEffect(fsMapView)
@@ -2996,7 +3004,7 @@ fun AddLocationSheet(
                         Icon(Icons.Filled.LocationOn, contentDescription = null, tint = Aqua, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            "%.4f, %.4f".format(pinLocation!!.first, pinLocation!!.second),
+                            pinLocation?.let { "%.4f, %.4f".format(it.first, it.second) } ?: "",
                             style = MaterialTheme.typography.labelSmall,
                             color = TextLow,
                         )
@@ -3103,12 +3111,14 @@ fun AddLocationSheet(
         )
     }
 
-    if (showDownloadSheet && pinLocation != null) {
-        MapDownloadSheet(
-            lat = pinLocation!!.first,
-            lng = pinLocation!!.second,
-            onDismiss = { showDownloadSheet = false },
-        )
+    pinLocation?.let { loc ->
+        if (showDownloadSheet) {
+            MapDownloadSheet(
+                lat = loc.first,
+                lng = loc.second,
+                onDismiss = { showDownloadSheet = false },
+            )
+        }
     }
 
     MapViewLifecycleEffect(mapView)

@@ -852,11 +852,14 @@ private fun JournalEditorScreen(
                     SculptedButton(
                         text = "Add Found Specimen",
                         onClick = {
+                            val lat = pendingPinLat
+                            val lng = pendingPinLng
+                            if (lat == null || lng == null) return@SculptedButton
                             val marker = SpecimenMarker(
                                 id = UUID.randomUUID().toString(),
                                 name = newMarkerName.ifBlank { "Specimen #${specimenMarkers.size + 1}" },
-                                latitude = pendingPinLat!!,
-                                longitude = pendingPinLng!!,
+                                latitude = lat,
+                                longitude = lng,
                                 description = newMarkerDesc,
                                 timestamp = System.currentTimeMillis(),
                                 category = newMarkerCategory,

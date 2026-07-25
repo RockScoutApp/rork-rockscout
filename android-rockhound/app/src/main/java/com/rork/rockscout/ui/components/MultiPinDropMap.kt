@@ -160,8 +160,13 @@ fun MultiPinDropMap(
         val allPoints = pins.map { GeoPoint(it.latitude, it.longitude) } +
             tentativePin?.let { GeoPoint(it.first, it.second) }
         if (allPoints.isNotEmpty()) {
-            val box = BoundingBox.fromGeoPoints(allPoints)
-            mv.zoomToBoundingBox(box, false, 48)
+            if (allPoints.size == 1) {
+                mv.controller.animateTo(allPoints.first())
+                mv.controller.setZoom(10.0)
+            } else {
+                val box = BoundingBox.fromGeoPoints(allPoints)
+                mv.zoomToBoundingBox(box, false, 48)
+            }
         }
 
         mv.invalidate()
@@ -182,7 +187,14 @@ fun MultiPinDropMap(
                     controller.setCenter(center)
                     controller.setZoom(if (pins.size > 1) 10.0 else initialZoom)
                     overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
-                    overlays.add(CompassOverlay(ctx, this).apply { enableCompass() })
+                    // Compass repositioned to top-right so it doesn't overlap
+                    // the pin controls at top-left.
+                    val embedCompass = CompassOverlay(ctx, this).apply { enableCompass() }
+                    overlays.add(embedCompass)
+                    post {
+                        val d = ctx.resources.displayMetrics.density
+                        embedCompass.setCompassCenter(width - 56f * d, 40f * d)
+                    }
 
                     // Tap-to-drop-pin overlay. Tapping the map always creates a new tentative pin;
                     // existing-pin taps are handled by each marker's own click listener above.
@@ -487,8 +499,13 @@ private fun FullscreenMultiPinDropOverlay(
         val allPoints = pins.map { GeoPoint(it.latitude, it.longitude) } +
             tentativePin?.let { GeoPoint(it.first, it.second) }
         if (allPoints.isNotEmpty()) {
-            val box = BoundingBox.fromGeoPoints(allPoints)
-            mv.zoomToBoundingBox(box, false, 48)
+            if (allPoints.size == 1) {
+                mv.controller.animateTo(allPoints.first())
+                mv.controller.setZoom(10.0)
+            } else {
+                val box = BoundingBox.fromGeoPoints(allPoints)
+                mv.zoomToBoundingBox(box, false, 48)
+            }
         }
         mv.invalidate()
     }

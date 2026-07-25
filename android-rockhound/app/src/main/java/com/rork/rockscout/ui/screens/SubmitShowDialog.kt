@@ -315,13 +315,17 @@ fun SubmitShowDialog(
                             webUrl = webUrl,
                         )
 
-                        if (webVerified) {
-                            GemShowSubmissionStore.add(submission)
-                            CustomGemShowStore.addApprovedShow(submission)
-                            submitStatus = "Verified and added! The show is now in the list."
-                        } else {
-                            GemShowSubmissionStore.add(submission)
-                            submitStatus = "Submitted for review. A developer will verify it shortly."
+                        runCatching {
+                            if (webVerified) {
+                                GemShowSubmissionStore.add(submission)
+                                CustomGemShowStore.addApprovedShow(submission)
+                                submitStatus = "Verified and added! The show is now in the list."
+                            } else {
+                                GemShowSubmissionStore.add(submission)
+                                submitStatus = "Submitted for review. A developer will verify it shortly."
+                            }
+                        }.onFailure {
+                            submitStatus = "Something went wrong saving your submission. Please try again."
                         }
 
                         isSubmitting = false

@@ -258,7 +258,7 @@ fun MessengerScreen(
     if (openThreadWith == null && openRequestId == null && activeThreadId == null && activeRequestId == null) {
         LaunchedEffect(Unit) {
             navController.navigate(Routes.friends()) {
-                popUpTo(Routes.MESSENGER) { inclusive = true }
+                popUpTo(Routes.FRIENDS) { inclusive = true }
             }
         }
         return

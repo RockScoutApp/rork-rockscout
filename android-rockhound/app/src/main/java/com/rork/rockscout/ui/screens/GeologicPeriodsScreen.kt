@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +46,9 @@ import com.rork.rockscout.ui.theme.TextMid
 @Composable
 fun GeologicPeriodsScreen(navController: NavController) {
     val periods = SeedData.fossilPeriods
+    val paleozoic = remember(periods) { periods.filter { it.era == "Paleozoic" } }
+    val mesozoic = remember(periods) { periods.filter { it.era == "Mesozoic" } }
+    val cenozoic = remember(periods) { periods.filter { it.era == "Cenozoic" } }
     ScreenScaffold(title = "Geologic Periods", onBack = { navController.popBackStack() }) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -59,18 +64,15 @@ fun GeologicPeriodsScreen(navController: NavController) {
                 )
             }
             item { EraHeader("PALEOZOIC ERA", "541 – 252 mya · ~289 million years") }
-            items(periods.filter { it.era == "Paleozoic" }.size) { idx ->
-                val period = periods.filter { it.era == "Paleozoic" }[idx]
+            items(paleozoic, key = { it.id }) { period ->
                 PeriodCard(period) { navController.navigate(Routes.period(period.id)) }
             }
             item { EraHeader("MESOZOIC ERA", "252 – 66 mya · ~186 million years") }
-            items(periods.filter { it.era == "Mesozoic" }.size) { idx ->
-                val period = periods.filter { it.era == "Mesozoic" }[idx]
+            items(mesozoic, key = { it.id }) { period ->
                 PeriodCard(period) { navController.navigate(Routes.period(period.id)) }
             }
             item { EraHeader("CENOZOIC ERA", "66 mya – Present · ~66 million years") }
-            items(periods.filter { it.era == "Cenozoic" }.size) { idx ->
-                val period = periods.filter { it.era == "Cenozoic" }[idx]
+            items(cenozoic, key = { it.id }) { period ->
                 PeriodCard(period) { navController.navigate(Routes.period(period.id)) }
             }
         }

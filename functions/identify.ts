@@ -118,8 +118,12 @@ export async function handleIdentify(
         const merged = mergeRankings(finalMatches, sonnetResult.matches);
         finalMatches = merged.matches;
         finalSummary = merged.summary;
+        // Compare Sonnet's top against the ORIGINAL Haiku top (before merge),
+        // not the merged result — otherwise we'd always see "agreement" after
+        // the merge overwrites the ranking.
+        const haikuTopId = visualResult?.matches?.[0]?.id ?? finalMatches[0]?.id;
         sonnetDisagreed = sonnetResult.matches.length > 0 &&
-          sonnetResult.matches[0].id !== finalMatches[0]?.id;
+          sonnetResult.matches[0].id !== haikuTopId;
 
         // Pro: Gemini third opinion when both Haiku and Sonnet land < 85% or disagree
         const sonnetTopConf = sonnetResult.matches.length > 0 ? sonnetResult.matches[0].confidence : 0;
@@ -856,7 +860,7 @@ function mergeRankings(a: MatchResult[], b: MatchResult[]): { matches: MatchResu
     .slice(0, 5)
     .map(entry => ({
       ...entry.match,
-      confidence: Math.min(98, Math.round((entry.score / 2) + (scores.size > 1 ? 0 : 0))),
+      confidence: Math.min(98, Math.round(entry.score / 2)),
     }));
   return { matches, summary: b[0]?.reasoning ? `Consensus of two models. ${b[0].reasoning}` : "" };
 }
@@ -1408,7 +1412,10 @@ function parseIdentificationResponse(content: string): IdentificationResult {
       }));
 
     if (parsed.matches.length === 0) {
-      throw new Error("No valid matches found");
+      return {
+        matches: [],
+        summary: parsed.summary ?? "The AI couldn't identify this as a rock or mineral. Try a clearer photo with good lighting.",
+      };
     }
 
     return {
@@ -1417,7 +1424,10 @@ function parseIdentificationResponse(content: string): IdentificationResult {
     };
   } catch {
     console.error("Failed to parse AI JSON response:", jsonStr.slice(0, 500));
-    throw new Error("Failed to parse identification results");
+    return {
+      matches: [],
+      summary: "The AI response couldn't be parsed. Please try again with a clearer photo.",
+    };
   }
 }
 

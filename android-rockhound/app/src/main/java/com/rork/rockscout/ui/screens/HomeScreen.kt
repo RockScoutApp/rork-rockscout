@@ -308,6 +308,7 @@ fun HomeScreen(navController: NavController) {
     var shareToProfileCelebration by remember { mutableStateOf<Pair<String, String>?>(null) }
     var shareToProfileAchievement by remember { mutableStateOf<AchievementCelebrationData?>(null) }
     var shareToProfileBadge by remember { mutableStateOf<BadgeCelebrationData?>(null) }
+    var shareToProfileFieldCapture by remember { mutableStateOf<Triple<String, String, String>?>(null) }
 
     // Consolidated back handler — dismisses the topmost overlay in priority
     // order before falling through to NavController pop. Replaces ~14 separate
@@ -336,6 +337,7 @@ fun HomeScreen(navController: NavController) {
             shareToProfileCelebration != null -> shareToProfileCelebration = null
             shareToProfileAchievement != null -> shareToProfileAchievement = null
             shareToProfileBadge != null -> shareToProfileBadge = null
+            shareToProfileFieldCapture != null -> shareToProfileFieldCapture = null
             pendingNewUserReward != null -> ReferralRepository.clearPendingNewUserReward()
             pendingSenderReward != null -> ReferralRepository.clearPendingSenderReward()
             else -> navController.popBackStack()
@@ -816,9 +818,7 @@ fun HomeScreen(navController: NavController) {
                 onDismiss = { showFieldCamera = false },
                 onShareToProfile = { imageUri, name, location ->
                     showFieldCamera = false
-                    // Navigate to profile for sharing — the ShareToProfileComposer is
-                    // launched from the profile screen context elsewhere; here we
-                    // just dismiss and let the capture card handle it.
+                    shareToProfileFieldCapture = Triple(imageUri, name, location)
                 },
                 onSubmitSpecimen = { _ ->
                     showFieldCamera = false
@@ -1030,6 +1030,16 @@ fun HomeScreen(navController: NavController) {
                 imageUri = null,
                 locationText = "",
                 onDismiss = { shareToProfileBadge = null },
+            )
+        }
+        shareToProfileFieldCapture?.let { (imageUri, name, location) ->
+            ShareToProfileComposer(
+                sourceType = "field_capture",
+                title = name.ifBlank { "Field Find" },
+                tagline = location.ifBlank { "Posted from the field" },
+                imageUri = imageUri,
+                locationText = location,
+                onDismiss = { shareToProfileFieldCapture = null },
             )
         }
 }
@@ -1274,6 +1284,7 @@ private fun RockScoutSocialButton(
                 lineHeight = androidx.compose.ui.unit.TextUnit(18f, androidx.compose.ui.unit.TextUnitType.Sp),
             ),
             maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center,
         )
     }
@@ -1410,6 +1421,7 @@ private fun HomeGreeting(name: String) {
                         fontWeight = FontWeight.Bold,
                         color = Ink,
                         maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
@@ -2151,6 +2163,7 @@ fun SocialSubTile(
                 ),
                 maxLines = 2,
                 minLines = 2,
+                overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center,
             )
             if (!subtitle.isNullOrBlank()) {
@@ -3557,6 +3570,7 @@ private fun MohsMineralCard(
             style = MaterialTheme.typography.labelMedium,
             color = DarkTextMid,
             maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
@@ -3613,6 +3627,7 @@ private fun MohsInfographicCard(
             style = MaterialTheme.typography.labelSmall,
             color = TextLow,
             maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }

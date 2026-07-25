@@ -156,7 +156,14 @@ fun PinDropMap(
                     controller.setCenter(center)
                     controller.setZoom(initialZoom)
                     overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
-                    overlays.add(CompassOverlay(ctx, this).apply { enableCompass() })
+                    // Compass repositioned to top-right so it doesn't overlap
+                    // the pin controls at top-left.
+                    val embedCompass = CompassOverlay(ctx, this).apply { enableCompass() }
+                    overlays.add(embedCompass)
+                    post {
+                        val d = ctx.resources.displayMetrics.density
+                        embedCompass.setCompassCenter(width - 56f * d, 40f * d)
+                    }
 
                     // Tap-to-drop-pin overlay
                     overlays.add(object : Overlay() {

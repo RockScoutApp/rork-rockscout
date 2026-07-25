@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://rockscout.net/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://rockscout.net/how-to-use</loc><lastmod>2026-07-21</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://rockscout.net/support</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://rockscout.net/privacy</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://rockscout.net/terms</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://rockscout.net/community-guidelines</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://rockscout.net/trade-disclaimer</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://rockscout.net/safety</loc><changefreq>yearly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://rockscout.net/cookies</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://rockscout.net/press</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://rockscout.app/</loc><lastmod>2026-07-25</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://rockscout.app/how-to-use</loc><lastmod>2026-07-25</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://rockscout.app/support</loc><lastmod>2026-07-25</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://rockscout.app/privacy</loc><lastmod>2026-07-25</lastmod><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://rockscout.app/terms</loc><lastmod>2026-07-25</lastmod><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://rockscout.app/community-guidelines</loc><lastmod>2026-07-25</lastmod><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://rockscout.app/trade-disclaimer</loc><lastmod>2026-07-25</lastmod><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://rockscout.app/safety</loc><lastmod>2026-07-25</lastmod><changefreq>yearly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://rockscout.app/cookies</loc><lastmod>2026-07-25</lastmod><changefreq>yearly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://rockscout.app/press</loc><lastmod>2026-07-25</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
 </urlset>

@@ -673,6 +673,122 @@ private fun FullscreenAuroraSpotsOverlay(
             MapOfflineNotice(
                 modifier = Modifier.align(Alignment.TopCenter).padding(top = 64.dp),
             )
+
+            // Add-spot form — slides in from the bottom when the user taps the map.
+            if (isAddingSpot) {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+                        .background(AuroraDarkBg.copy(alpha = 0.95f))
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Text(
+                        text = "Add Aurora Spot",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = AuroraGreen,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    OutlinedTextField(
+                        value = spotName,
+                        onValueChange = { spotName = it },
+                        label = { Text("Spot name", color = AuroraGreen.copy(alpha = 0.7f)) },
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = AuroraGreen,
+                            unfocusedTextColor = AuroraGreen,
+                            cursorColor = AuroraGreen,
+                            focusedBorderColor = AuroraGreen,
+                            unfocusedBorderColor = AuroraGreen.copy(alpha = 0.4f),
+                            focusedLabelColor = AuroraGreen,
+                            unfocusedLabelColor = AuroraGreen.copy(alpha = 0.5f),
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        OutlinedTextField(
+                            value = spotLat,
+                            onValueChange = { spotLat = it },
+                            label = { Text("Latitude", color = AuroraGreen.copy(alpha = 0.7f)) },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = AuroraGreen,
+                                unfocusedTextColor = AuroraGreen,
+                                cursorColor = AuroraGreen,
+                                focusedBorderColor = AuroraGreen,
+                                unfocusedBorderColor = AuroraGreen.copy(alpha = 0.4f),
+                                focusedLabelColor = AuroraGreen,
+                                unfocusedLabelColor = AuroraGreen.copy(alpha = 0.5f),
+                            ),
+                            modifier = Modifier.weight(1f),
+                        )
+                        OutlinedTextField(
+                            value = spotLng,
+                            onValueChange = { spotLng = it },
+                            label = { Text("Longitude", color = AuroraGreen.copy(alpha = 0.7f)) },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = AuroraGreen,
+                                unfocusedTextColor = AuroraGreen,
+                                cursorColor = AuroraGreen,
+                                focusedBorderColor = AuroraGreen,
+                                unfocusedBorderColor = AuroraGreen.copy(alpha = 0.4f),
+                                focusedLabelColor = AuroraGreen,
+                                unfocusedLabelColor = AuroraGreen.copy(alpha = 0.5f),
+                            ),
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Button(
+                            onClick = {
+                                val lat = spotLat.toDoubleOrNull()
+                                val lng = spotLng.toDoubleOrNull()
+                                val name = spotName.ifBlank { "Spot ${spots.size + 1}" }
+                                if (lat != null && lng != null && lat in -90.0..90.0 && lng in -180.0..180.0) {
+                                    onAddSpot(name, lat, lng)
+                                    spotName = ""
+                                    spotLat = ""
+                                    spotLng = ""
+                                    isAddingSpot = false
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = AuroraGreen, contentColor = AuroraDarkBg),
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Icon(Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Save Spot")
+                        }
+                        Button(
+                            onClick = {
+                                isAddingSpot = false
+                                spotName = ""
+                                spotLat = ""
+                                spotLng = ""
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = AuroraDarkBg,
+                                contentColor = AuroraGreen,
+                            ),
+                        ) {
+                            Text("Cancel")
+                        }
+                    }
+                }
+            }
         }
 
         MapViewLifecycleEffect(fsMapView)

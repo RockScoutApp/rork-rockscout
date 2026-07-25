@@ -87,7 +87,7 @@ const Press = () => (
             key={s.src}
             className="overflow-hidden rounded-xl border border-border/70 bg-card p-1.5"
           >
-            <img src={s.src} alt={s.alt} className="w-full rounded-lg object-cover" loading="lazy" />
+            <img src={s.src} alt={s.alt} className="aspect-[9/19.5] w-full rounded-lg object-cover" loading="lazy" />
           </figure>
         ))}
       </div>

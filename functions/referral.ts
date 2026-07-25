@@ -153,6 +153,12 @@ export async function handleReferral(
     return handleSend(body, env, corsHeaders);
   }
 
+  // Register-only mode: stores the code→sender mapping without sending an email.
+  // Android sends an empty recipientEmail to register — this route accepts that.
+  if (url.pathname === "/referral/register" && request.method === "POST") {
+    return handleRegister(body, env, corsHeaders);
+  }
+
   if (url.pathname === "/referral/verify" && request.method === "POST") {
     return handleVerify(body, env, corsHeaders);
   }
@@ -280,6 +286,37 @@ ${TAGLINE}`;
     console.error("Resend referral email exception:", err);
     return Response.json({ ok: false, error: "resend_exception" }, { status: 502, headers: CORS });
   }
+}
+
+/**
+ * Register-only mode: stores the code→sender mapping without sending an email.
+ * Used by the Android app when a user generates a referral code — it registers
+ * the code immediately so it can be verified later, even before the user sends
+ * it to a friend.
+ */
+async function handleRegister(
+  body: Record<string, string>,
+  env: { REFERRAL_KV?: KVNamespace },
+  corsHeaders: Record<string, string>,
+): Promise<Response> {
+  const code = body.code?.trim().toUpperCase();
+  const senderEmail = body.senderEmail?.trim().toLowerCase();
+
+  if (!code || !code.startsWith("ROCK-")) {
+    return Response.json({ ok: false, error: "invalid_code" }, { status: 400, headers: CORS });
+  }
+  if (!senderEmail || !senderEmail.includes("@")) {
+    return Response.json({ ok: false, error: "invalid_sender_email" }, { status: 400, headers: CORS });
+  }
+
+  // Collision guard: same as handleSend.
+  const existingSender = await getSenderEmail(env, code);
+  if (existingSender && existingSender !== senderEmail) {
+    return Response.json({ ok: false, error: "code_taken" }, { status: 409, headers: CORS });
+  }
+
+  await setSenderEmail(env, code, senderEmail);
+  return Response.json({ ok: true }, { status: 200, headers: CORS });
 }
 
 async function handleVerify(

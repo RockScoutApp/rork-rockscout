@@ -247,6 +247,7 @@ class WeatherAlertWorker(
         // Require location permission (needed to fetch the user's area for alerts)
         if (!hasLocationPermission(context)) {
             Log.d(TAG, "Location permission not granted — skipping")
+            scheduleNext(context)
             return Result.success()
         }
 
@@ -255,6 +256,7 @@ class WeatherAlertWorker(
         // The worker fetches the device's location on its own for weather alerts.
         if (!PersistenceManager.isWeatherAlertsEnabled()) {
             Log.d(TAG, "Weather alerts are off — stopping chain")
+            scheduleNext(context)
             return Result.success()
         }
 
@@ -272,7 +274,7 @@ class WeatherAlertWorker(
         ) ?: run {
             Log.d(TAG, "Failed to fetch NWS alerts — will retry next cycle")
             scheduleNext(context)
-            return Result.retry()
+            return Result.success()
         }
 
         if (alerts.isEmpty()) {

@@ -18,7 +18,7 @@ const FAQ = [
   },
   {
     q: "Do I need an account?",
-    a: "You can try identification without an account, but saving to your collection, joining the community, messaging, and using the trade board require a free account so other users know who they're talking to.",
+    a: "A free RockScout account is required to use the app — it's free and your collections, captures, and friends carry over to any device. The free tier includes ad-supported rock identification, the full specimen database, dig site maps, field captures, and all educational guides.",
   },
   {
     q: "Can I trade specimens with other users?",

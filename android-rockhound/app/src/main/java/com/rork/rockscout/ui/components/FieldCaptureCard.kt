@@ -384,10 +384,10 @@ fun FieldCaptureCard(
                         icon = Icons.Filled.Inventory2,
                         contentDescription = "Add to My Rocks",
                         onClick = onToggleCollection,
-                        modifier = Modifier.size(32.dp),
+                        modifier = Modifier.size(36.dp),
                         accent = Citrine,
                         iconTint = if (inCollection) Success else DarkTextLow,
-                        size = 32.dp,
+                        size = 36.dp,
                         shadowElevation = 3.dp,
                     )
                 }
@@ -396,10 +396,10 @@ fun FieldCaptureCard(
                         icon = if (inWishlist) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
                         contentDescription = "Add to Wishlist",
                         onClick = onToggleWishlist,
-                        modifier = Modifier.size(32.dp),
+                        modifier = Modifier.size(36.dp),
                         accent = Aqua,
                         iconTint = if (inWishlist) Citrine else DarkTextLow,
-                        size = 32.dp,
+                        size = 36.dp,
                         shadowElevation = 3.dp,
                     )
                 }
@@ -407,10 +407,10 @@ fun FieldCaptureCard(
                     icon = Icons.Filled.Edit,
                     contentDescription = "Edit capture",
                     onClick = { isEditing = !isEditing },
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(36.dp),
                     accent = Citrine,
                     iconTint = if (isEditing) accent else DarkTextLow,
-                    size = 32.dp,
+                    size = 36.dp,
                     shadowElevation = 3.dp,
                 )
                 if (onShare != null) {
@@ -418,10 +418,10 @@ fun FieldCaptureCard(
                         icon = Icons.Filled.Share,
                         contentDescription = "Share capture",
                         onClick = onShare,
-                        modifier = Modifier.size(32.dp),
+                        modifier = Modifier.size(36.dp),
                         accent = Citrine,
                         iconTint = DarkTextLow,
-                        size = 32.dp,
+                        size = 36.dp,
                         shadowElevation = 3.dp,
                     )
                 }
@@ -430,10 +430,10 @@ fun FieldCaptureCard(
                         icon = Icons.Filled.PersonAdd,
                         contentDescription = "Share to Profile",
                         onClick = onShareToProfile,
-                        modifier = Modifier.size(32.dp),
+                        modifier = Modifier.size(36.dp),
                         accent = Citrine,
                         iconTint = Citrine,
-                        size = 32.dp,
+                        size = 36.dp,
                         shadowElevation = 3.dp,
                     )
                 }
