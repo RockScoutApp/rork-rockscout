@@ -263,21 +263,11 @@ fun AuroraSavedSpotsMap(
             MapZoomControls(
                 onZoomIn = { mapView?.controller?.zoomIn() },
                 onZoomOut = { mapView?.controller?.zoomOut() },
-                onRecenter = {
-                    mapView?.let { mv ->
-                        if (spots.isNotEmpty()) {
-                            runCatching {
-                                val box = org.osmdroid.util.BoundingBox.fromGeoPoints(
-                                    spots.map { GeoPoint(it.latitude, it.longitude) }
-                                )
-                                mv.controller.animateTo(GeoPoint(box.centerLatitude, box.centerLongitude))
-                            }
-                        }
-                    }
-                },
+                onRecenter = {},
                 showUser = false,
                 onSatellite = { toggleSatelliteView(mapView) },
                 compact = true,
+                mapView = mapView,
                 modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp),
             )
 

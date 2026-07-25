@@ -74,6 +74,7 @@ import com.rork.rockscout.data.CustomDigLocationStore
 import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
+import com.rork.rockscout.ui.theme.Danger
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Slate800
 import com.rork.rockscout.ui.theme.Success
@@ -988,15 +989,11 @@ fun RockScoutMap(
         MapZoomControls(
             onZoomIn = { mapView?.controller?.zoomIn() },
             onZoomOut = { mapView?.controller?.zoomOut() },
-            onRecenter = {
-                mapView?.let { mv ->
-                    val center = initialCenter?.let { GeoPoint(it.first, it.second) } ?: GeoPoint(39.5, -98.0)
-                    mv.controller.animateTo(center)
-                }
-            },
+            onRecenter = {},
             showUser = showUserLocation,
             onSatellite = { toggleSatelliteView(mapView) },
             compact = true,
+            mapView = mapView,
             modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp),
         )
 
@@ -1161,17 +1158,11 @@ fun TripRouteMap(
         MapZoomControls(
             onZoomIn = { mapView?.let { it.controller.zoomIn() } },
             onZoomOut = { mapView?.let { it.controller.zoomOut() } },
-            onRecenter = {
-                val mv = mapView ?: return@MapZoomControls
-                val points = stopsWithLocations.map { (_, loc) -> GeoPoint(loc.latitude, loc.longitude) }
-                if (points.isNotEmpty()) {
-                    val box = BoundingBox.fromGeoPoints(points)
-                    mv.controller.animateTo(GeoPoint(box.centerLatitude, box.centerLongitude))
-                }
-            },
+            onRecenter = {},
             showUser = false,
             onSatellite = { toggleSatelliteView(mapView) },
             compact = true,
+            mapView = mapView,
             modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp),
         )
 
@@ -1374,19 +1365,16 @@ fun FullscreenRouteMapOverlay(
             MapZoomControls(
                 onZoomIn = { fsMapView?.controller?.zoomIn() },
                 onZoomOut = { fsMapView?.controller?.zoomOut() },
-                onRecenter = {
-                    fsMapView?.let { mv ->
-                        val pts = stopsWithLocations.map { (_, loc) -> GeoPoint(loc.latitude, loc.longitude) }
-                        if (pts.isNotEmpty()) {
-                            val box = BoundingBox.fromGeoPoints(pts)
-                            mv.controller.animateTo(GeoPoint(box.centerLatitude, box.centerLongitude))
-                        } else {
-                            mv.controller.animateTo(initialCenter)
-                        }
-                    }
-                },
+                onRecenter = {},
                 showUser = false,
                 onSatellite = { toggleSatelliteView(fsMapView) },
+                mapView = fsMapView,
+                showRemovePin = pinLocation != null,
+                onRemovePin = {
+                    pinLocation = null
+                    fsMapView?.overlays?.removeAll { it is Marker && it.id == "route_pin_preview" }
+                    fsMapView?.invalidate()
+                },
                 modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
             )
 
@@ -1694,15 +1682,31 @@ fun MapZoomControls(
     showLayerToggle: Boolean = false,
     currentLayer: MapLayerStyle = MapLayerStyle.STREET,
     onLayerToggle: () -> Unit = {},
+    mapView: MapView? = null,
+    showRemovePin: Boolean = false,
+    onRemovePin: (() -> Unit)? = null,
 ) {
     val buttonSize = if (compact) 32.dp else 40.dp
     val spacerHeight = if (compact) 0.5.dp else 1.dp
+    val currentLocation by AppRepository.instance.currentLocation.collectAsStateWithLifecycle()
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .background(Slate800.copy(alpha = 0.92f))
             .navigationBarsPadding(),
     ) {
+        if (showRemovePin) {
+            SculptedIconButton(
+                icon = Icons.Filled.Remove,
+                contentDescription = "Remove dropped pin",
+                onClick = { onRemovePin?.invoke() },
+                accent = Danger,
+                iconTint = Color.White,
+                size = buttonSize,
+                shadowElevation = if (compact) 2.dp else 3.dp,
+            )
+            Spacer(Modifier.height(spacerHeight).width(buttonSize).background(Color.White.copy(alpha = 0.15f)))
+        }
         SculptedIconButton(
             icon = Icons.Filled.Add,
             contentDescription = "Zoom in",
@@ -1725,8 +1729,16 @@ fun MapZoomControls(
         Spacer(Modifier.height(spacerHeight).width(buttonSize).background(Color.White.copy(alpha = 0.15f)))
         SculptedIconButton(
             icon = if (showUser) Icons.Filled.MyLocation else Icons.Filled.LocationDisabled,
-            contentDescription = "Recenter",
-            onClick = onRecenter,
+            contentDescription = "Recenter on my location",
+            onClick = {
+                val mv = mapView
+                val (lat, lng) = currentLocation
+                if (mv != null && (lat != 0.0 || lng != 0.0)) {
+                    mv.controller.animateTo(GeoPoint(lat, lng))
+                } else {
+                    onRecenter()
+                }
+            },
             accent = Citrine,
             iconTint = if (showUser) Citrine else Color.White,
             size = buttonSize,
@@ -1953,9 +1965,16 @@ fun FullscreenMapOverlay(
             MapZoomControls(
                 onZoomIn = { fsMapView?.controller?.zoomIn() },
                 onZoomOut = { fsMapView?.controller?.zoomOut() },
-                onRecenter = { fsMapView?.controller?.animateTo(initialCenter) },
+                onRecenter = {},
                 showUser = showUserLocation,
                 onSatellite = { toggleSatelliteView(fsMapView) },
+                mapView = fsMapView,
+                showRemovePin = pinLocation != null,
+                onRemovePin = {
+                    pinLocation = null
+                    fsMapView?.overlays?.removeAll { it is Marker && it.id == "fs_pin_preview" }
+                    fsMapView?.invalidate()
+                },
                 modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
             )
 
@@ -2387,17 +2406,11 @@ fun SpecimenMarkerMap(
         MapZoomControls(
             onZoomIn = { mapView?.let { it.controller.zoomIn() } },
             onZoomOut = { mapView?.let { it.controller.zoomOut() } },
-            onRecenter = {
-                val mv = mapView ?: return@MapZoomControls
-                val pts = markers.map { GeoPoint(it.latitude, it.longitude) }
-                if (pts.isNotEmpty()) {
-                    val box = BoundingBox.fromGeoPoints(pts)
-                    mv.controller.animateTo(GeoPoint(box.centerLatitude, box.centerLongitude))
-                }
-            },
+            onRecenter = {},
             showUser = false,
             onSatellite = { toggleSatelliteView(mapView) },
             compact = true,
+            mapView = mapView,
             modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp),
         )
 
@@ -2916,13 +2929,16 @@ fun AddLocationSheet(
                     MapZoomControls(
                         onZoomIn = { mapView?.let { it.controller.zoomIn() } },
                         onZoomOut = { mapView?.let { it.controller.zoomOut() } },
-                        onRecenter = {
-                            val mv = mapView ?: return@MapZoomControls
-                            pinLocation?.let { mv.controller.animateTo(GeoPoint(it.first, it.second)) }
-                                ?: mv.controller.animateTo(GeoPoint(current.first, current.second))
-                        },
+                        onRecenter = {},
                         showUser = false,
                         onSatellite = { toggleSatelliteView(mapView) },
+                        mapView = mapView,
+                        showRemovePin = pinLocation != null,
+                        onRemovePin = {
+                            pinLocation = null
+                            mapView?.overlays?.removeAll { it is Marker && it.id == "custom_pin_preview" }
+                            mapView?.invalidate()
+                        },
                         modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
                     )
                     MapExpandButton(

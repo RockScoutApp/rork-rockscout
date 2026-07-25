@@ -247,16 +247,16 @@ fun DigSitesMapView(
         MapZoomControls(
             onZoomIn = { mapView?.let { it.controller.zoomIn() } },
             onZoomOut = { mapView?.let { it.controller.zoomOut() } },
-            onRecenter = {
-                val mv = mapView ?: return@MapZoomControls
-                if (showUser && (userLat != 0.0 || userLng != 0.0)) {
-                    mv.controller.animateTo(GeoPoint(userLat, userLng))
-                } else {
-                    mv.controller.animateTo(GeoPoint(39.5, -98.0))
-                }
-            },
+            onRecenter = {},
             showUser = showUser,
             onSatellite = { toggleSatelliteView(mapView) },
+            mapView = mapView,
+            showRemovePin = pinLocation != null,
+            onRemovePin = {
+                pinLocation = null
+                mapView?.overlays?.removeAll { it is Marker && it.id == "dig_pin_preview" }
+                mapView?.invalidate()
+            },
             parkingState = if (parkingSpot != null) ParkingButtonState.HasSpot else ParkingButtonState.NoSpot,
             onParkHere = {
                 if (userLat == 0.0 && userLng == 0.0) {

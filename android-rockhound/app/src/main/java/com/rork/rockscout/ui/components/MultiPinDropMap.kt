@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
@@ -197,17 +198,7 @@ fun MultiPinDropMap(
         MapZoomControls(
             onZoomIn = { mapView?.controller?.zoomIn() },
             onZoomOut = { mapView?.controller?.zoomOut() },
-            onRecenter = {
-                val points = pins.map { GeoPoint(it.latitude, it.longitude) } +
-                    tentativePin?.let { GeoPoint(it.first, it.second) }
-                val target = if (points.isNotEmpty()) {
-                    val box = BoundingBox.fromGeoPoints(points)
-                    GeoPoint(box.centerLatitude, box.centerLongitude)
-                } else {
-                    initialCenter?.let { GeoPoint(it.first, it.second) } ?: GeoPoint(39.5, -98.0)
-                }
-                mapView?.controller?.animateTo(target)
-            },
+            onRecenter = {},
             showUser = false,
             onSatellite = { toggleSatelliteView(mapView) },
             compact = true,
@@ -215,6 +206,13 @@ fun MultiPinDropMap(
             currentLayer = currentLayer,
             onLayerToggle = {
                 currentLayer = toggleMapLayer(mapView, currentLayer)
+            },
+            mapView = mapView,
+            showRemovePin = tentativePin != null,
+            onRemovePin = {
+                tentativePin = null
+                selectedPinId = null
+                mapView?.invalidate()
             },
             modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp),
         )
@@ -242,6 +240,15 @@ fun MultiPinDropMap(
                             tentativePin = null
                             selectedPinId = null
                         }
+                    },
+                )
+                PinControlPill(
+                    label = "Cancel",
+                    icon = Icons.Filled.Close,
+                    accent = Danger,
+                    onClick = {
+                        tentativePin = null
+                        selectedPinId = null
                     },
                 )
             }

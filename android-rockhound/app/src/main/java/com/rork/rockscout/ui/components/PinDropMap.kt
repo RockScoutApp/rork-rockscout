@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.AlertDialog
@@ -170,12 +171,7 @@ fun PinDropMap(
         MapZoomControls(
             onZoomIn = { mapView?.controller?.zoomIn() },
             onZoomOut = { mapView?.controller?.zoomOut() },
-            onRecenter = {
-                val center = confirmedPin ?: tentativePin ?: initialCenter
-                mapView?.controller?.animateTo(
-                    GeoPoint(center?.first ?: 39.5, center?.second ?: -98.0)
-                )
-            },
+            onRecenter = {},
             showUser = false,
             onSatellite = { toggleSatelliteView(mapView) },
             compact = true,
@@ -183,6 +179,13 @@ fun PinDropMap(
             currentLayer = currentLayer,
             onLayerToggle = {
                 currentLayer = com.rork.rockscout.ui.components.toggleMapLayer(mapView, currentLayer)
+            },
+            mapView = mapView,
+            showRemovePin = tentativePin != null,
+            onRemovePin = {
+                tentativePin = null
+                isHighlighted = false
+                mapView?.invalidate()
             },
             modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp),
         )
@@ -211,6 +214,15 @@ fun PinDropMap(
                             isHighlighted = false
                             onPinSet(lat, lng)
                         }
+                    },
+                )
+                PinControlPill(
+                    label = "Cancel",
+                    icon = Icons.Filled.Close,
+                    accent = Danger,
+                    onClick = {
+                        tentativePin = null
+                        isHighlighted = false
                     },
                 )
             }

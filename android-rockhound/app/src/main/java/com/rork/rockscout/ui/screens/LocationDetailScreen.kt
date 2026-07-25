@@ -625,9 +625,10 @@ private fun RouteMap(loc: DigLocation, miles: Double, showBackButton: Boolean = 
         MapZoomControls(
             onZoomIn = { mapView?.controller?.zoomIn() },
             onZoomOut = { mapView?.controller?.zoomOut() },
-            onRecenter = { mapView?.controller?.animateTo(org.osmdroid.util.GeoPoint(loc.latitude, loc.longitude)) },
+            onRecenter = {},
             showUser = false,
             onSatellite = { com.rork.rockscout.ui.components.toggleSatelliteView(mapView) },
+            mapView = mapView,
             modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
         )
 

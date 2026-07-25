@@ -396,10 +396,11 @@ fun RockScoutsMapScreen(navController: NavController) {
         MapZoomControls(
             onZoomIn = { mapView?.let { it.controller.zoomIn() } },
             onZoomOut = { mapView?.let { it.controller.zoomOut() } },
-            onRecenter = { mapView?.controller?.animateTo(GeoPoint(current.first, current.second)) },
+            onRecenter = {},
             showUser = true,
             onSatellite = { toggleSatelliteView(mapView) },
             compact = true,
+            mapView = mapView,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(end = 16.dp, bottom = 192.dp)

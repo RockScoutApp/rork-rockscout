@@ -2962,13 +2962,16 @@ private fun CustomPinPickerSheet(
                     MapZoomControls(
                         onZoomIn = { mapView?.let { it.controller.zoomIn() } },
                         onZoomOut = { mapView?.let { it.controller.zoomOut() } },
-                        onRecenter = {
-                            val mv = mapView ?: return@MapZoomControls
-                            pinLocation?.let { mv.controller.animateTo(GeoPoint(it.first, it.second)) }
-                                ?: mv.controller.animateTo(GeoPoint(current.first, current.second))
-                        },
+                        onRecenter = {},
                         showUser = false,
                         onSatellite = { toggleSatelliteView(mapView) },
+                        mapView = mapView,
+                        showRemovePin = pinLocation != null,
+                        onRemovePin = {
+                            pinLocation = null
+                            mapView?.overlays?.removeAll { it is Marker && it.id == "custom_pin_preview" }
+                            mapView?.invalidate()
+                        },
                         modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
                     )
                     MapExpandButton(
