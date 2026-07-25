@@ -1288,32 +1288,40 @@ fun DarkCard(
     modifier: Modifier = Modifier,
     accent: Color = Citrine,
     contentPadding: PaddingValues = PaddingValues(16.dp),
+    solidBackground: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val shape = RoundedCornerShape(20.dp)
+    val backgroundModifier = if (solidBackground) {
+        Modifier.background(Color(0xFF16140F))
+    } else {
+        Modifier.background(
+            Brush.verticalGradient(
+                listOf(Color(0xFF2A2820), Color(0xFF1E1C16), Color(0xFF16140F))
+            )
+        )
+    }
     Box(
         modifier = modifier
             .sculpted(shape = shape, accent = accent, shadowElevation = 6.dp)
             .clip(shape)
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFF2A2820), Color(0xFF1E1C16), Color(0xFF16140F))
-                )
-            )
+            .then(backgroundModifier)
             .glowingBorder(BorderStroke(3.dp, accent.copy(alpha = 0.50f)), shape)
     ) {
-        // Accent glow overlay at top
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.TopCenter)
-                .height(100.dp)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(accent.copy(alpha = 0.15f), Color.Transparent)
+        // Accent glow overlay at top (only when using the gradient background)
+        if (!solidBackground) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter)
+                    .height(100.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(accent.copy(alpha = 0.15f), Color.Transparent)
+                        )
                     )
-                )
-        )
+            )
+        }
         Column(
             modifier = Modifier
                 .padding(contentPadding)

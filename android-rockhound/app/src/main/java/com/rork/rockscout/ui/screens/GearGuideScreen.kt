@@ -113,7 +113,11 @@ fun GearGuideScreen(navController: NavController) {
                 item { Spacer(Modifier.height(8.dp)) }
                 item { GearGuideSectionLabel("All gear") }
                 item {
-                    DarkCard(modifier = Modifier.fillMaxWidth(), accent = Aqua) {
+                    DarkCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        accent = Aqua,
+                        solidBackground = true,
+                    ) {
                         GearGuide.allItems.forEachIndexed { index, item ->
                             GearItemRow(item = item, accent = Aqua, onClick = {
                                 SafeLinkOpener.openUrl(context, item.url)
@@ -207,6 +211,7 @@ private fun GearKitCard(kit: GearKit) {
         accent = Citrine,
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(14.dp),
+        solidBackground = true,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
