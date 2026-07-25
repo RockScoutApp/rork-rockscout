@@ -429,8 +429,8 @@ fun HomeScreen(navController: NavController) {
             SpecimenImages.urls["lapidary-tile"]?.firstOrNull()),
     )
 
-    // Field-guide tiles live under the Gear Guide banner in the field kit
-    // section instead of the Explore & learn carousel.
+    // Field-guide tiles live in the field kit grid (same square format as the
+    // kit tiles) instead of the Explore & learn carousel.
     val fieldGuideTiles = listOf(
         HomeTile("BLM Public Lands", "State rules, dig sites, trailheads & campgrounds", Icons.Filled.Terrain, Color(0xFFC97B4A), Routes.BLM_GUIDE,
             BLM_HOME_TILE_NATURE),
@@ -630,15 +630,23 @@ fun HomeScreen(navController: NavController) {
                     }
                 }
             }
-            // Field-guide tiles live with the rest of the field kit,
-            // separate from Explore & learn.
+            // Field-guide tiles render in the same square grid as the kit
+            // tiles so they match the rest of the field kit section.
             item {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(fieldGuideTiles) { tile ->
-                        InfoTileCard(
-                            tile = tile,
-                            onClick = { navController.navigate(tile.route) },
-                        )
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    fieldGuideTiles.chunked(2).forEach { rowTiles ->
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            rowTiles.forEach { tile ->
+                                DashboardTile(
+                                    tile = tile,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { navController.navigate(tile.route) },
+                                )
+                            }
+                            if (rowTiles.size == 1) Spacer(Modifier.weight(1f))
+                        }
                     }
                 }
             }
