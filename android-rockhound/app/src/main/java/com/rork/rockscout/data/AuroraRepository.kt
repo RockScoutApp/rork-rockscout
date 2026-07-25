@@ -585,7 +585,9 @@ object AuroraRepository {
      * SDO publishes new images every ~15 minutes.
      */
     fun sdoImageUrl(wavelength: String): String {
-        return "https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_${wavelength}.jpg"
+        // SDO expects a zero-padded 4-digit wavelength (e.g. "0304", "0171").
+        val padded = wavelength.padStart(4, '0')
+        return "https://sdo.gsfc.nasa.gov/assets/img/latest/latest_1024_${padded}.jpg"
     }
 
     /**
