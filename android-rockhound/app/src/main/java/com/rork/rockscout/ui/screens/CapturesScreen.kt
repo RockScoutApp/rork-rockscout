@@ -255,6 +255,9 @@ fun CapturesScreen(navController: NavController) {
                         1 -> SpecimenMarkerMap(
                             captures = captures,
                             modifier = Modifier.fillMaxSize(),
+                            onPinTapped = { capture ->
+                                navController.navigate(Routes.specimen(capture.specimenId))
+                            },
                         )
                     }
                 }
