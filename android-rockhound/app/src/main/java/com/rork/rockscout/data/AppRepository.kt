@@ -472,6 +472,7 @@ class AppRepository {
             current + CollectionEntry(specimenId, addedAt = System.currentTimeMillis())
         }
         persistCollection()
+        AchievementsRepository.checkAchievements()
     }
 
     /** Batch-removes collection entries by specimen id. Used by the mass-delete
@@ -503,6 +504,7 @@ class AppRepository {
             current + specimenId
         }
         persistWishlist()
+        AchievementsRepository.checkAchievements()
     }
 
     // Liked specimens ------------------------------------------------------
@@ -568,6 +570,7 @@ class AppRepository {
             current + locationId
         }
         persistFavoriteSpots()
+        AchievementsRepository.checkAchievements()
     }
 
     // Captured photos -------------------------------------------------------
@@ -579,6 +582,7 @@ class AppRepository {
             note = ProfanityFilter.filter(photo.note),
         )) + _captures.value
         persistCaptures()
+        AchievementsRepository.checkAchievements()
     }
 
     fun updateCaptureNote(captureId: String, note: String) {
@@ -732,6 +736,9 @@ class AppRepository {
         })
         refreshTripFlows()
         persistTrips()
+        if (existing == null) {
+            AchievementsRepository.checkAchievements()
+        }
     }
 
     fun deleteTrip(tripId: String) {
@@ -775,6 +782,7 @@ class AppRepository {
         }
         refreshTripFlows()
         persistTrips()
+        AchievementsRepository.checkAchievements()
     }
 
     /** Restores an archived trip back to active. */
@@ -784,6 +792,7 @@ class AppRepository {
         }
         refreshTripFlows()
         persistTrips()
+        AchievementsRepository.checkAchievements()
     }
 
     /** Permanently deletes an archived trip. */

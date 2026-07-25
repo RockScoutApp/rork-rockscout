@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -66,6 +67,7 @@ fun SculptedButton(
     shape: Shape = RoundedCornerShape(16.dp),
     shadowElevation: Dp = 8.dp,
     contentPadding: PaddingValues = PaddingValues(horizontal = 20.dp, vertical = 14.dp),
+    textStyle: TextStyle = MaterialTheme.typography.labelLarge,
 ) {
     Box(
         modifier = modifier
@@ -103,7 +105,7 @@ fun SculptedButton(
             if (text != null) {
                 Text(
                     text = text,
-                    style = MaterialTheme.typography.labelLarge,
+                    style = textStyle,
                     fontWeight = FontWeight.Bold,
                     color = if (enabled) textColor else textColor.copy(alpha = 0.4f),
                     maxLines = 1,

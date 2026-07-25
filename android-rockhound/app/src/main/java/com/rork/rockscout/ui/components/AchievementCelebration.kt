@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -334,12 +335,14 @@ fun AchievementCelebration(
                             visible = false
                             onShare()
                         },
-                        modifier = Modifier.height(48.dp),
+                        modifier = Modifier.height(44.dp),
                         accent = accent,
                         containerColor = accent,
                         textColor = Color.White,
                         icon = Icons.Filled.Share,
                         shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+                        textStyle = MaterialTheme.typography.labelMedium,
                     )
                     SculptedButton(
                         text = "Add to Profile",
@@ -347,12 +350,14 @@ fun AchievementCelebration(
                             visible = false
                             onShareToProfile()
                         },
-                        modifier = Modifier.height(48.dp),
+                        modifier = Modifier.height(44.dp),
                         accent = Citrine,
                         containerColor = Citrine,
                         textColor = Ink,
                         icon = Icons.Filled.PersonAdd,
                         shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+                        textStyle = MaterialTheme.typography.labelMedium,
                     )
                     SculptedButton(
                         text = "Close",
@@ -360,12 +365,14 @@ fun AchievementCelebration(
                             visible = false
                             onDismiss()
                         },
-                        modifier = Modifier.height(48.dp),
+                        modifier = Modifier.height(44.dp),
                         accent = accent,
                         containerColor = Color.Black,
                         textColor = Color.White,
                         icon = Icons.Filled.Close,
                         shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+                        textStyle = MaterialTheme.typography.labelMedium,
                     )
                 }
             }

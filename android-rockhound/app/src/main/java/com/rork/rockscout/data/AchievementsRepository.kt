@@ -474,6 +474,17 @@ object AchievementsRepository {
     }
 
     /**
+     * Re-evaluate the achievement and badge catalog against the current state without
+     * incrementing any action counters or awarding per-action XP. Call this after
+     * list-based state changes (wishlist, collection, favorite spots, trips) that
+     * should complete achievements even when no XP action is triggered.
+     */
+    fun checkAchievements(): AwardResult {
+        val prev = _state.value
+        return commitAndEvaluate(prev, prev, XpSource.IDENTIFY, "", 0)
+    }
+
+    /**
      * Add raw XP without incrementing any action counters or streaks. Used for
      * one-off XP bonuses that should not affect the daily streak or other counters.
      */
