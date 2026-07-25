@@ -32,7 +32,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,9 +51,11 @@ import com.rork.rockscout.data.BlmTrailhead
 import com.rork.rockscout.data.FavoriteSpotResolver
 import com.rork.rockscout.data.SafeLinkOpener
 import com.rork.rockscout.data.WildlifeData
+import com.rork.rockscout.ui.components.CampingHikingTipsSheet
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.TagChip
+import com.rork.rockscout.ui.components.TipsPillButton
 import com.rork.rockscout.ui.components.WildlifeCard
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.theme.Citrine
@@ -90,6 +94,7 @@ fun BlmTrailheadDetailScreen(
     val favorites by repo.favoriteSpots.collectAsStateWithLifecycle()
     val favId = FavoriteSpotResolver.trailheadId(trailhead.name)
     val isFav = favorites.contains(favId)
+    var showHikingTips by remember { mutableStateOf(false) }
 
     ScreenScaffold(
         title = trailhead.name,
@@ -102,6 +107,16 @@ fun BlmTrailheadDetailScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            // Tips pill button row
+            item {
+                TipsPillButton(
+                    label = "Hiking Tips",
+                    accent = accent,
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { showHikingTips = true },
+                )
+            }
+
             // Header card
             item {
                 DarkCard(accent = accent, modifier = Modifier.fillMaxWidth()) {
@@ -264,6 +279,13 @@ fun BlmTrailheadDetailScreen(
             }
         }
     }
+
+    if (showHikingTips) {
+        CampingHikingTipsSheet(
+            mode = "Hiking Tips",
+            onDismiss = { showHikingTips = false },
+        )
+    }
 }
 
 // ── Campground Detail ─────────────────────────────────────────────────────
@@ -295,6 +317,7 @@ fun BlmCampgroundDetailScreen(
     val favorites by repo.favoriteSpots.collectAsStateWithLifecycle()
     val favId = FavoriteSpotResolver.campgroundId(campground.name)
     val isFav = favorites.contains(favId)
+    var showCampingTips by remember { mutableStateOf(false) }
 
     ScreenScaffold(
         title = campground.name,
@@ -307,6 +330,16 @@ fun BlmCampgroundDetailScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            // Tips pill button row
+            item {
+                TipsPillButton(
+                    label = "Camping Tips",
+                    accent = accent,
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = { showCampingTips = true },
+                )
+            }
+
             // Header card
             item {
                 DarkCard(accent = accent, modifier = Modifier.fillMaxWidth()) {
@@ -470,6 +503,13 @@ fun BlmCampgroundDetailScreen(
                 }
             }
         }
+    }
+
+    if (showCampingTips) {
+        CampingHikingTipsSheet(
+            mode = "Camping Tips",
+            onDismiss = { showCampingTips = false },
+        )
     }
 }
 
