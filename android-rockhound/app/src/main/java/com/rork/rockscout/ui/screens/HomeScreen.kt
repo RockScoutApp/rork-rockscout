@@ -595,6 +595,16 @@ fun HomeScreen(navController: NavController) {
                     onClick = { navController.navigate(Routes.TRIP_CALENDAR) },
                 )
             }
+            item {
+                FullWidthBannerTile(
+                    label = "Gear Guide",
+                    subtitle = "Curated kits for every level — from first hunt to advanced field collecting",
+                    icon = Icons.Filled.Diamond,
+                    accent = Aqua,
+                    imageUrl = "https://r2-pub.rork.com/attachments/78k8yy4tgahby3o9opb6j.png",
+                    onClick = { navController.navigate(Routes.GEAR_GUIDE) },
+                )
+            }
             item { SectionLabel("Your field kit") }
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -620,18 +630,8 @@ fun HomeScreen(navController: NavController) {
                     }
                 }
             }
-            item {
-                FullWidthBannerTile(
-                    label = "Gear Guide",
-                    subtitle = "Curated kits for every level — from first hunt to advanced field collecting",
-                    icon = Icons.Filled.Diamond,
-                    accent = Aqua,
-                    imageUrl = "https://r2-pub.rork.com/attachments/78k8yy4tgahby3o9opb6j.png",
-                    onClick = { navController.navigate(Routes.GEAR_GUIDE) },
-                )
-            }
-            // Field-guide tiles moved under the Gear Guide so they live
-            // with the rest of the field kit, separate from Explore & learn.
+            // Field-guide tiles live with the rest of the field kit,
+            // separate from Explore & learn.
             item {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(fieldGuideTiles) { tile ->
