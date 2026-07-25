@@ -71,6 +71,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -207,6 +208,7 @@ fun IdentifyScreen(navController: NavController) {
     var preliminaryMatches by remember { mutableStateOf<List<IdentifyMatch>>(emptyList()) }
     var preliminarySummary by remember { mutableStateOf("") }
     val answers = remember { mutableStateMapOf<String, String>() }
+    val customAnswers = remember { mutableStateMapOf<String, String>() }
 
     // Full-screen viewer state
     var viewerUrls by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -256,6 +258,7 @@ fun IdentifyScreen(navController: NavController) {
         preliminaryMatches = emptyList()
         preliminarySummary = ""
         answers.clear()
+        customAnswers.clear()
     }
 
     fun startIdentification() {
@@ -426,10 +429,17 @@ fun IdentifyScreen(navController: NavController) {
 
         scope.launch {
             try {
+                val finalAnswers = answers.mapValues { (id, value) ->
+                    if (value == "Other") {
+                        customAnswers[id]?.takeIf { it.isNotBlank() } ?: "Other"
+                    } else {
+                        value
+                    }
+                }
                 val response = IdentifyApi.clarify(
                     imageBase64 = capturedBase64,
                     mimeType = "image/jpeg",
-                    answers = answers.toMap(),
+                    answers = finalAnswers,
                     preliminaryMatches = preliminaryMatches,
                     summary = preliminarySummary,
                 )
@@ -786,7 +796,9 @@ fun IdentifyScreen(navController: NavController) {
                             icon = Icons.Filled.Search,
                             modifier = Modifier.weight(1f).height(54.dp),
                             shape = RoundedCornerShape(14.dp),
-                            enabled = answers.isNotEmpty(),
+                            enabled = answers.isNotEmpty() && answers.entries.none { (id, ans) ->
+                                ans == "Other" && customAnswers[id].isNullOrBlank()
+                            },
                         )
                     }
                     ScanState.RESULTS -> SculptedButton(
@@ -952,7 +964,9 @@ fun IdentifyScreen(navController: NavController) {
                         question = question,
                         questionNumber = index + 1,
                         selectedAnswer = answers[question.id],
+                        customAnswer = customAnswers[question.id],
                         onSelect = { answer -> answers[question.id] = answer },
+                        onCustomAnswerChange = { text -> customAnswers[question.id] = text },
                     )
                 }
             }
@@ -1402,8 +1416,12 @@ private fun ClarificationQuestionCard(
     question: ClarificationQuestion,
     questionNumber: Int,
     selectedAnswer: String?,
+    customAnswer: String?,
     onSelect: (String) -> Unit,
+    onCustomAnswerChange: (String) -> Unit,
 ) {
+    val options = remember(question.options) { question.options + "Other" }
+    val isOtherSelected = selectedAnswer == "Other"
     DarkCard(modifier = Modifier.fillMaxWidth(), accent = Citrine) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -1435,7 +1453,7 @@ private fun ClarificationQuestionCard(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            question.options.forEach { option ->
+            options.forEach { option ->
                 val isSelected = selectedAnswer == option
                 Box(
                     modifier = Modifier
@@ -1460,6 +1478,30 @@ private fun ClarificationQuestionCard(
                     )
                 }
             }
+        }
+        if (isOtherSelected) {
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(
+                value = customAnswer ?: "",
+                onValueChange = onCustomAnswerChange,
+                label = { Text("Your answer") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                singleLine = false,
+                minLines = 2,
+                maxLines = 4,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = TextHigh,
+                    unfocusedTextColor = TextHigh,
+                    focusedContainerColor = Slate800,
+                    unfocusedContainerColor = Slate800,
+                    focusedBorderColor = Citrine,
+                    unfocusedBorderColor = Slate700,
+                    focusedLabelColor = Citrine,
+                    unfocusedLabelColor = TextMid,
+                    cursorColor = Citrine,
+                ),
+            )
         }
     }
 }
