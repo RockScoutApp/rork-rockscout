@@ -76,6 +76,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import coil3.compose.AsyncImagePainter
 import coil3.compose.rememberAsyncImagePainter
 import coil3.request.ImageRequest
@@ -822,6 +823,7 @@ fun ScreenScaffold(
     modifier: Modifier = Modifier,
     actions: @Composable RowScope.() -> Unit = {},
     background: @Composable (@Composable () -> Unit) -> Unit = { RockBackground(it) },
+    titleStyle: TextStyle = MaterialTheme.typography.headlineMedium,
     content: @Composable () -> Unit,
 ) {
     var isRefreshing by remember { mutableStateOf(false) }
@@ -858,7 +860,7 @@ fun ScreenScaffold(
                 Spacer(Modifier.width(4.dp))
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = titleStyle,
                     color = Aqua,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,

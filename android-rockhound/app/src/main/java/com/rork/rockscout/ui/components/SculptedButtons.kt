@@ -133,6 +133,7 @@ fun SculptedOutlinedButton(
     shape: Shape = RoundedCornerShape(16.dp),
     shadowElevation: Dp = 6.dp,
     contentPadding: PaddingValues = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
+    textStyle: TextStyle = MaterialTheme.typography.labelLarge,
 ) {
     Box(
         modifier = modifier
@@ -169,7 +170,7 @@ fun SculptedOutlinedButton(
             }
             Text(
                 text = text,
-                style = MaterialTheme.typography.labelLarge,
+                style = textStyle,
                 fontWeight = FontWeight.SemiBold,
                 color = if (enabled) textColor else textColor.copy(alpha = 0.4f),
                 maxLines = 1,

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -174,7 +175,11 @@ fun CollectionScreen(navController: NavController) {
     val labelSelectedIds = remember { mutableStateOf<Set<String>>(emptySet()) }
     var isGeneratingLabels by remember { mutableStateOf(false) }
 
-    ScreenScaffold(title = "My Rocks", onBack = { navController.popBackStack() }) {
+    ScreenScaffold(
+        title = "My Rocks",
+        onBack = { navController.popBackStack() },
+        titleStyle = MaterialTheme.typography.titleLarge,
+    ) {
         if (featureLocked) {
             LockedFeatureBanner(
                 onSubscribe = { navController.navigate(Routes.PAYWALL) },
@@ -205,8 +210,8 @@ fun CollectionScreen(navController: NavController) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, bottom = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 TabButton("Collection", selectedTab == 0, Citrine) { selectedTab = 0 }
                 TabButton("Stats", selectedTab == 1, Aqua) { selectedTab = 1 }
@@ -524,6 +529,8 @@ fun CollectionScreen(navController: NavController) {
                             icon = Icons.Filled.FolderZip,
                             enabled = !isExportingZip,
                             modifier = Modifier.weight(1f),
+                            textStyle = MaterialTheme.typography.labelMedium,
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp),
                         )
                         SculptedOutlinedButton(
                             text = if (isExportingPdf) "Generating…" else "Export PDF",
@@ -555,6 +562,8 @@ fun CollectionScreen(navController: NavController) {
                             icon = Icons.Filled.PictureAsPdf,
                             enabled = !isExportingPdf && total > 0,
                             modifier = Modifier.weight(1f),
+                            textStyle = MaterialTheme.typography.labelMedium,
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp),
                         )
                     }
                     // Count text and description now live on their own lines below the
@@ -567,7 +576,7 @@ fun CollectionScreen(navController: NavController) {
                         modifier = Modifier.padding(bottom = 2.dp),
                     )
                     Text(
-                        "Specimens you've identified or bought and kept. Tap one to add notes, mark where you found it, or share it.",
+                        "Only specimens you upload can be edited. Tap one to add notes, mark where you found it, or share it.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextMid,
                         modifier = Modifier.padding(bottom = 4.dp),
@@ -1047,12 +1056,12 @@ private fun TabButton(
                 RoundedCornerShape(12.dp),
             )
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             label,
-            style = MaterialTheme.typography.labelLarge,
+            style = MaterialTheme.typography.labelMedium,
             color = if (isSelected) accent else TextLow,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
         )
