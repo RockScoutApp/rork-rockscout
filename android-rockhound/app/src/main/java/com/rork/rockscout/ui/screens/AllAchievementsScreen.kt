@@ -102,6 +102,11 @@ fun AllAchievementsScreen(
             speckleTint = Citrine.copy(alpha = 0.18f),
             veinColors = listOf(Aqua.copy(alpha = 0.08f), Citrine.copy(alpha = 0.06f)),
         )
+        // Subtle starburst sparkles over the celebratory background.
+        com.rork.rockscout.ui.components.TwinklingStars(
+            starCount = 20,
+            maxAlpha = 0.4f,
+        )
         Column(
             modifier = Modifier
                 .fillMaxSize()

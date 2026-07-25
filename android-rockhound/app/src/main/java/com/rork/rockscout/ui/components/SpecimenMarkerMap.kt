@@ -314,7 +314,14 @@ private fun FullscreenSpecimenMapOverlay(
                         controller.setCenter(initialCenter)
                         controller.setZoom(initialZoom)
                         overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
-                        overlays.add(CompassOverlay(ctx, this).apply { enableCompass() })
+                        // Compass moved to the top-right so it never overlaps the
+                        // close button in the top-left.
+                        val fsCompass = CompassOverlay(ctx, this).apply { enableCompass() }
+                        overlays.add(fsCompass)
+                        post {
+                            val d = ctx.resources.displayMetrics.density
+                            fsCompass.setCompassCenter(width - 56f * d, 40f * d)
+                        }
                         val clusterer = SpecimenClusterOverlay(this)
                         overlays.add(clusterer)
                         fsClusterOverlay = clusterer

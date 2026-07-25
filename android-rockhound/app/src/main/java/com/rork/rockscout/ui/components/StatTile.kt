@@ -76,6 +76,12 @@ fun StatTile(
             speckleTint = accent.copy(alpha = 0.55f),
             veinColors = listOf(accent.copy(alpha = 0.32f), Color.White.copy(alpha = 0.10f)),
         )
+        // Subtle starburst sparkles over the gamer texture — low density so
+        // they read as mineral flecks catching the light, not a dominant field.
+        TwinklingStars(
+            starCount = 16,
+            maxAlpha = 0.45f,
+        )
         // Subtle dark wash so the texture doesn't overwhelm the text.
         Box(
             modifier = Modifier

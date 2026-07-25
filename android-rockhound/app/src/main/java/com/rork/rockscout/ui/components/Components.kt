@@ -568,6 +568,13 @@ fun BlackRockBackground(content: @Composable () -> Unit) {
                     )
                 )
         )
+        // Subtle ambient starburst sparkles over the volcanic texture —
+        // low density and low alpha so they read as mineral flecks twinkling,
+        // not a dominant star field. Sits behind all content.
+        TwinklingStars(
+            starCount = 30,
+            maxAlpha = 0.45f,
+        )
         content()
     }
 }
@@ -575,7 +582,8 @@ fun BlackRockBackground(content: @Composable () -> Unit) {
 /** Full-screen ambient background using the polished agate slice image.
  *  The image is cropped to fill the screen at high resolution and covered
  *  with a subtle dark scrim so the darker dashboard tiles and light text
- *  stay legible while the stone colors and tones remain visible. */
+ *  stay legible while the stone colors and tones remain visible. A low-density
+ *  TwinklingStars layer adds ambient starburst sparkles over the agate. */
 @Composable
 fun RockBackground(content: @Composable () -> Unit) {
     Box(
@@ -603,6 +611,13 @@ fun RockBackground(content: @Composable () -> Unit) {
                         )
                     )
                 )
+        )
+        // Subtle ambient starburst sparkles over the agate — low density and
+        // low alpha so they read as mineral flecks catching the light, not a
+        // dominant star field. Sits behind all content.
+        TwinklingStars(
+            starCount = 30,
+            maxAlpha = 0.5f,
         )
         content()
     }

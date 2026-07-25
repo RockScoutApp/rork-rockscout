@@ -404,6 +404,8 @@ fun HomeScreen(navController: NavController) {
             AURORA_TILE_BG_URL),
         HomeTile("Severe Weather", "NWS alerts + live storm chaser streams", Icons.Filled.Warning, Color(0xFFFF6B3D), Routes.SEVERE_WEATHER,
             "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/e2803cb6-56f0-4506-84cb-0a36be573f7e.png"),
+        HomeTile("Glossary", "Every rock, mineral & space term explained", Icons.Filled.MenuBook, Color(0xFF6FA8C7), Routes.GLOSSARY,
+            SpecimenImages.urls["fluorite"]?.firstOrNull()),
     )
 
     val infoTiles = listOf(

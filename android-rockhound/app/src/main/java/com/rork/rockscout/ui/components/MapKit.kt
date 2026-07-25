@@ -1319,7 +1319,14 @@ fun FullscreenRouteMapOverlay(
                         controller.setCenter(initialCenter)
                         controller.setZoom(initialZoom)
                         overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
-                        overlays.add(CompassOverlay(ctx, this).apply { enableCompass() })
+                        // Compass moved to the top-right so the close button
+                        // (top-left) doesn't overlap it.
+                        val fsCompass = CompassOverlay(ctx, this).apply { enableCompass() }
+                        overlays.add(fsCompass)
+                        post {
+                            val d = ctx.resources.displayMetrics.density
+                            fsCompass.setCompassCenter(width - 56f * d, 40f * d)
+                        }
 
                         // Tap-to-drop-pin overlay
                         overlays.add(object : Overlay() {
@@ -1917,7 +1924,14 @@ fun FullscreenMapOverlay(
                         controller.setCenter(initialCenter)
                         controller.setZoom(initialZoom)
                         overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
-                        overlays.add(CompassOverlay(ctx, this).apply { enableCompass() })
+                        // Compass is moved to the top-right corner so it never
+                        // overlaps the close button in the top-left.
+                        val fsCompass = CompassOverlay(ctx, this).apply { enableCompass() }
+                        overlays.add(fsCompass)
+                        post {
+                            val d = ctx.resources.displayMetrics.density
+                            fsCompass.setCompassCenter(width - 56f * d, 40f * d)
+                        }
                         if (showUserLocation) {
                             val locOverlay = MyLocationNewOverlay(GpsMyLocationProvider(ctx), this)
                             locOverlay.enableMyLocation()

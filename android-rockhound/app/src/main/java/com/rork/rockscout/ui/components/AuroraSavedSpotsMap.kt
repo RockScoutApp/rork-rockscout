@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -25,6 +26,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MyLocation
@@ -53,11 +55,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.activity.compose.BackHandler
 import coil3.compose.AsyncImage
 import com.rork.rockscout.data.AuroraRepository
 import com.rork.rockscout.data.AuroraSavedSpot
 import com.rork.rockscout.data.LocationFetcher
+import com.rork.rockscout.ui.components.MapExpandButton
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -101,6 +106,9 @@ fun AuroraSavedSpotsMap(
     var spotLng by remember { mutableStateOf("") }
     var isAddingSpot by remember { mutableStateOf(false) }
     var selectedSpot by remember { mutableStateOf<AuroraSavedSpot?>(null) }
+    var isFullscreen by remember { mutableStateOf(false) }
+    var fullscreenCenter by remember { mutableStateOf(GeoPoint(60.0, -100.0)) }
+    var fullscreenZoom by remember { mutableStateOf(3.0) }
 
     // Back button dismisses the add-spot form or selected-spot popup instead
     // of exiting the entire screen.
@@ -271,6 +279,17 @@ fun AuroraSavedSpotsMap(
                 modifier = Modifier.align(Alignment.BottomEnd).padding(12.dp),
             )
 
+            // Expand-to-fullscreen button — top-right corner.
+            MapExpandButton(
+                onClick = {
+                    mapView?.let {
+                        fullscreenCenter = GeoPoint(it.mapCenter.latitude, it.mapCenter.longitude)
+                        fullscreenZoom = it.zoomLevelDouble
+                    }
+                    isFullscreen = true
+                },
+                modifier = Modifier.align(Alignment.TopEnd).padding(12.dp),
+            )
         }
 
         // Empty-state hint (below the map, not overlapping it)
@@ -491,6 +510,173 @@ fun AuroraSavedSpotsMap(
     // are never called, which causes freezes and crashes when interacting with
     // the map (especially when adding spots triggers marker updates).
     MapViewLifecycleEffect(mapView)
+
+    if (isFullscreen) {
+        FullscreenAuroraSpotsOverlay(
+            spots = spots,
+            onDismiss = { isFullscreen = false },
+            initialCenter = fullscreenCenter,
+            initialZoom = fullscreenZoom,
+            currentKp = currentKp,
+            onAddSpot = onAddSpot,
+            onRemoveSpot = onRemoveSpot,
+        )
+    }
+}
+
+/**
+ * Full-screen overlay for the Aurora Saved Spots map. Renders all saved spot
+ * pins with the same tap-to-add-spot flow, a close button in the top-left, and
+ * the compass repositioned to the top-right so it never overlaps the close
+ * button. Tapping the map pre-fills the add-spot form fields.
+ */
+@Composable
+private fun FullscreenAuroraSpotsOverlay(
+    spots: List<AuroraSavedSpot>,
+    onDismiss: () -> Unit,
+    initialCenter: GeoPoint,
+    initialZoom: Double,
+    currentKp: Double,
+    onAddSpot: (String, Double, Double) -> Unit,
+    onRemoveSpot: (String) -> Unit,
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var fsMapView by remember { mutableStateOf<MapView?>(null) }
+    var spotName by remember { mutableStateOf("") }
+    var spotLat by remember { mutableStateOf("") }
+    var spotLng by remember { mutableStateOf("") }
+    var isAddingSpot by remember { mutableStateOf(false) }
+    var selectedSpot by remember { mutableStateOf<AuroraSavedSpot?>(null) }
+
+    BackHandler(enabled = isAddingSpot || selectedSpot != null) {
+        if (isAddingSpot) {
+            isAddingSpot = false
+            spotName = ""
+            spotLat = ""
+            spotLng = ""
+        } else {
+            selectedSpot = null
+        }
+    }
+
+    // Update markers when spots change.
+    LaunchedEffect(fsMapView, spots) {
+        val mv = fsMapView ?: return@LaunchedEffect
+        val layoutReady = CompletableDeferred<Unit>()
+        mv.post { layoutReady.complete(Unit) }
+        layoutReady.await()
+        withContext(Dispatchers.IO) {
+            runCatching {
+                mv.overlays.removeAll { it is Marker && it.id?.startsWith("aurora_pin_fs_") == true }
+                if (spots.isEmpty()) return@runCatching
+                val points = mutableListOf<GeoPoint>()
+                spots.forEach { spot ->
+                    val point = GeoPoint(spot.latitude, spot.longitude)
+                    points.add(point)
+                    val threshold = AuroraRepository.kpThresholdForLatitude(spot.latitude)
+                    val isVisible = currentKp >= threshold
+                    val marker = object : Marker(mv) {
+                        init {
+                            position = point
+                            title = spot.name
+                            snippet = if (isVisible) "Aurora VISIBLE (Kp $currentKp ≥ $threshold)" else "Aurora unlikely (Kp $currentKp < $threshold)"
+                            id = "aurora_pin_fs_${spot.id}"
+                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                            icon = createAuroraPinDrawable(mv.context, isVisible)
+                            setOnMarkerClickListener { _, _ ->
+                                selectedSpot = spot
+                                true
+                            }
+                        }
+                    }
+                    mv.overlays.add(marker)
+                }
+                if (points.isNotEmpty()) {
+                    if (points.size == 1) {
+                        mv.controller.animateTo(points.first())
+                        mv.controller.setZoom(8.0)
+                    } else {
+                        val box = org.osmdroid.util.BoundingBox.fromGeoPoints(points)
+                        val padded = box.increaseByScale(1.2f)
+                        mv.zoomToBoundingBox(padded, false, 48)
+                    }
+                }
+                mv.invalidate()
+            }
+        }
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false,
+        ),
+    ) {
+        Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+            AndroidView(
+                modifier = Modifier.fillMaxSize(),
+                factory = { ctx ->
+                    createRockScoutMapView(ctx, readOnly = false).apply {
+                        controller.setCenter(initialCenter)
+                        controller.setZoom(initialZoom)
+                        overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
+                        // Compass moved to the top-right so the close button
+                        // (top-left) doesn't overlap it.
+                        val fsCompass = CompassOverlay(ctx, this).apply { enableCompass() }
+                        overlays.add(fsCompass)
+                        post {
+                            val d = ctx.resources.displayMetrics.density
+                            fsCompass.setCompassCenter(width - 56f * d, 40f * d)
+                        }
+                        // Tap-to-drop-pin: tapping the map pre-fills lat/lng form fields.
+                        overlays.add(object : org.osmdroid.views.overlay.Overlay() {
+                            override fun onSingleTapConfirmed(e: android.view.MotionEvent, mv: MapView): Boolean {
+                                val proj = mv.projection
+                                val point = proj.fromPixels(e.x.toInt(), e.y.toInt())
+                                spotLat = String.format("%.4f", point.latitude)
+                                spotLng = String.format("%.4f", point.longitude)
+                                if (spotName.isBlank()) spotName = "Dropped Pin"
+                                isAddingSpot = true
+                                return true
+                            }
+                        })
+                        fsMapView = this
+                    }
+                },
+                update = { /* no-op */ },
+            )
+
+            // Close button — top-left corner.
+            androidx.compose.material3.IconButton(
+                onClick = onDismiss,
+                modifier = Modifier.align(Alignment.TopStart).padding(16.dp),
+            ) {
+                Icon(Icons.Filled.Close, contentDescription = "Close full screen map", tint = Color.White)
+            }
+
+            // Zoom controls — bottom-right.
+            MapZoomControls(
+                onZoomIn = { fsMapView?.controller?.zoomIn() },
+                onZoomOut = { fsMapView?.controller?.zoomOut() },
+                onRecenter = {},
+                showUser = false,
+                onSatellite = { toggleSatelliteView(fsMapView) },
+                compact = false,
+                mapView = fsMapView,
+                modifier = Modifier.align(Alignment.BottomEnd)
+                    .padding(16.dp)
+                    .navigationBarsPadding(),
+            )
+
+            MapOfflineNotice(
+                modifier = Modifier.align(Alignment.TopCenter).padding(top = 64.dp),
+            )
+        }
+
+        MapViewLifecycleEffect(fsMapView)
+    }
 }
 
 /** Create an aurora-themed teardrop pin drawable. */

@@ -113,6 +113,11 @@ fun UserAchievementsScreen(
     ) {
         // Gamer-style mineral texture overlay — speckles, glowing flecks, veins
         GamerRockTexture(modifier = Modifier.fillMaxSize())
+        // Subtle starburst sparkles layered over the gamer texture.
+        com.rork.rockscout.ui.components.TwinklingStars(
+            starCount = 20,
+            maxAlpha = 0.4f,
+        )
 
         if (h == null || state == null) {
             Box(
