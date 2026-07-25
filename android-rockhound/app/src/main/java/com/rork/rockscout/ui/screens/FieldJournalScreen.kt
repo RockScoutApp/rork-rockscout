@@ -252,19 +252,21 @@ fun FieldJournalScreen(navController: NavController) {
                         },
                         onShare = {
                             scope.launch {
-                                ShareCardImage.share(
-                                    context = context,
-                                    title = entry.location.ifBlank { "Field Journal" } +
-                                        "  •  " + SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(entry.date)),
-                                    subtitle = entry.weatherSummary.ifBlank { SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(entry.date)) },
-                                    body = entry.notes.ifBlank { null },
-                                    accentHex = 0xFF6FA8C7,
-                                    photoBitmap = entry.photoUris.firstOrNull()?.let { uriStr ->
-                                        ShareCardImage.loadDownsampled(context, android.net.Uri.parse(uriStr))
-                                    },
-                                    caption = "Logged with RockScout",
-                                    fileName = "rockscout_journal_${entry.id}",
-                                )
+                                runCatching {
+                                    ShareCardImage.share(
+                                        context = context,
+                                        title = entry.location.ifBlank { "Field Journal" } +
+                                            "  •  " + SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(entry.date)),
+                                        subtitle = entry.weatherSummary.ifBlank { SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(entry.date)) },
+                                        body = entry.notes.ifBlank { null },
+                                        accentHex = 0xFF6FA8C7,
+                                        photoBitmap = entry.photoUris.firstOrNull()?.let { uriStr ->
+                                            ShareCardImage.loadDownsampled(context, android.net.Uri.parse(uriStr))
+                                        },
+                                        caption = "Logged with RockScout",
+                                        fileName = "rockscout_journal_${entry.id}",
+                                    )
+                                }
                             }
                         },
                     )
@@ -311,19 +313,21 @@ fun FieldJournalScreen(navController: NavController) {
             },
             onShare = {
                 scope.launch {
-                    ShareCardImage.share(
-                        context = context,
-                        title = entry.location.ifBlank { "Field Journal" } +
-                            "  •  " + SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(entry.date)),
-                        subtitle = entry.weatherSummary.ifBlank { SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(entry.date)) },
-                        body = entry.notes.ifBlank { null },
-                        accentHex = 0xFF6FA8C7,
-                        photoBitmap = entry.photoUris.firstOrNull()?.let { uriStr ->
-                            ShareCardImage.loadDownsampled(context, android.net.Uri.parse(uriStr))
-                        },
-                        caption = "Logged with RockScout",
-                        fileName = "rockscout_journal_${entry.id}",
-                    )
+                    runCatching {
+                        ShareCardImage.share(
+                            context = context,
+                            title = entry.location.ifBlank { "Field Journal" } +
+                                "  •  " + SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(entry.date)),
+                            subtitle = entry.weatherSummary.ifBlank { SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(entry.date)) },
+                            body = entry.notes.ifBlank { null },
+                            accentHex = 0xFF6FA8C7,
+                            photoBitmap = entry.photoUris.firstOrNull()?.let { uriStr ->
+                                ShareCardImage.loadDownsampled(context, android.net.Uri.parse(uriStr))
+                            },
+                            caption = "Logged with RockScout",
+                            fileName = "rockscout_journal_${entry.id}",
+                        )
+                    }
                 }
             },
             onShareToProfile = { shareToProfileEntry = entry },

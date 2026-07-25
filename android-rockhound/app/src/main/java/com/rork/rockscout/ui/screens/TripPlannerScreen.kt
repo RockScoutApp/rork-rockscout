@@ -430,18 +430,20 @@ fun TripPlannerScreen(navController: NavController) {
                         onArchive = { pendingArchiveTrip = trip },
                         onShare = {
                             scope.launch {
-                                ShareCardImage.share(
-                                    context = context,
-                                    title = trip.name,
-                                    subtitle = "Trip on " + SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(trip.date)) +
-                                        "  •  ${trip.stops.size} stop${if (trip.stops.size != 1) "s" else ""}",
-                                    body = trip.stops.joinToString(" → ") { it.locationName } +
-                                        if (trip.targetSpecimens.isNotEmpty()) "\nHunting: " + trip.targetSpecimens.joinToString(", ") else "",
-                                    accentHex = 0xFFE8A33D,
-                                    photoBitmap = null,
-                                    caption = "Planned with RockScout",
-                                    fileName = "rockscout_trip_${trip.id}",
-                                )
+                                runCatching {
+                                    ShareCardImage.share(
+                                        context = context,
+                                        title = trip.name,
+                                        subtitle = "Trip on " + SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(trip.date)) +
+                                            "  •  ${trip.stops.size} stop${if (trip.stops.size != 1) "s" else ""}",
+                                        body = trip.stops.joinToString(" → ") { it.locationName } +
+                                            if (trip.targetSpecimens.isNotEmpty()) "\nHunting: " + trip.targetSpecimens.joinToString(", ") else "",
+                                        accentHex = 0xFFE8A33D,
+                                        photoBitmap = null,
+                                        caption = "Planned with RockScout",
+                                        fileName = "rockscout_trip_${trip.id}",
+                                    )
+                                }
                             }
                         },
                         onShareToProfile = { shareToProfileTrip = trip },
@@ -498,18 +500,20 @@ fun TripPlannerScreen(navController: NavController) {
             },
             onShare = {
                 scope.launch {
-                    ShareCardImage.share(
-                        context = context,
-                        title = trip.name,
-                        subtitle = "Trip on " + SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(trip.date)) +
-                            "  •  ${trip.stops.size} stop${if (trip.stops.size != 1) "s" else ""}",
-                        body = trip.stops.joinToString(" → ") { it.locationName } +
-                            if (trip.targetSpecimens.isNotEmpty()) "\nHunting: " + trip.targetSpecimens.joinToString(", ") else "",
-                        accentHex = 0xFFE8A33D,
-                        photoBitmap = null,
-                        caption = "Planned with RockScout",
-                        fileName = "rockscout_trip_${trip.id}",
-                    )
+                    runCatching {
+                        ShareCardImage.share(
+                            context = context,
+                            title = trip.name,
+                            subtitle = "Trip on " + SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(trip.date)) +
+                                "  •  ${trip.stops.size} stop${if (trip.stops.size != 1) "s" else ""}",
+                            body = trip.stops.joinToString(" → ") { it.locationName } +
+                                if (trip.targetSpecimens.isNotEmpty()) "\nHunting: " + trip.targetSpecimens.joinToString(", ") else "",
+                            accentHex = 0xFFE8A33D,
+                            photoBitmap = null,
+                            caption = "Planned with RockScout",
+                            fileName = "rockscout_trip_${trip.id}",
+                        )
+                    }
                 }
             },
             onShareToProfile = { shareToProfileTrip = trip },

@@ -236,6 +236,9 @@ class SpecimenClusterOverlay(
 
     private fun drawClusterBadge(canvas: Canvas, cx: Float, cy: Float, count: Int) {
         ensurePaints()
+        val badge = badgePaint ?: return
+        val stroke = strokePaint ?: return
+        val text = textPaint ?: return
         val r = badgeRadiusPx(count)
         // Soft halo so the badge reads against any map background.
         val halo = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -244,11 +247,10 @@ class SpecimenClusterOverlay(
             style = Paint.Style.FILL
         }
         canvas.drawCircle(cx, cy, r + 6f, halo)
-        canvas.drawCircle(cx, cy, r, badgePaint!!)
-        canvas.drawCircle(cx, cy, r, strokePaint!!)
-        val tp = textPaint!!
-        val fm = tp.fontMetrics
+        canvas.drawCircle(cx, cy, r, badge)
+        canvas.drawCircle(cx, cy, r, stroke)
+        val fm = text.fontMetrics
         val textY = cy - (fm.ascent + fm.descent) / 2f
-        canvas.drawText(count.toString(), cx, textY, tp)
+        canvas.drawText(count.toString(), cx, textY, text)
     }
 }

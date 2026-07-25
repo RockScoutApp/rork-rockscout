@@ -827,14 +827,16 @@ fun HomeScreen(navController: NavController) {
                 onShare = {
                     // Reuse the share-card flow with a clean level-up / badge card.
                     scope.launch {
-                        com.rork.rockscout.ui.components.ShareCardImage.share(
-                            context = context,
-                            title = if (celeb.type == "level_up") "LEVEL UP!" else "BADGE EARNED!",
-                            subtitle = celeb.detail,
-                            body = "Posted from RockScout",
-                            accentHex = 0xFFE8A33D,
-                            fileName = "rockscout_${celeb.type}_${System.currentTimeMillis()}",
-                        )
+                        runCatching {
+                            com.rork.rockscout.ui.components.ShareCardImage.share(
+                                context = context,
+                                title = if (celeb.type == "level_up") "LEVEL UP!" else "BADGE EARNED!",
+                                subtitle = celeb.detail,
+                                body = "Posted from RockScout",
+                                accentHex = 0xFFE8A33D,
+                                fileName = "rockscout_${celeb.type}_${System.currentTimeMillis()}",
+                            )
+                        }
                     }
                 },
                 onShareToProfile = {
@@ -853,14 +855,16 @@ fun HomeScreen(navController: NavController) {
                 data = achData,
                 onShare = {
                     scope.launch {
-                        com.rork.rockscout.ui.components.ShareCardImage.share(
-                            context = context,
-                            title = "ACHIEVEMENT UNLOCKED!",
-                            subtitle = achData.name,
-                            body = "${achData.description} (+${achData.rewardXp} XP) — Posted from RockScout",
-                            accentHex = 0xFF9B7BD8,
-                            fileName = "rockscout_achievement_${System.currentTimeMillis()}",
-                        )
+                        runCatching {
+                            com.rork.rockscout.ui.components.ShareCardImage.share(
+                                context = context,
+                                title = "ACHIEVEMENT UNLOCKED!",
+                                subtitle = achData.name,
+                                body = "${achData.description} (+${achData.rewardXp} XP) — Posted from RockScout",
+                                accentHex = 0xFF9B7BD8,
+                                fileName = "rockscout_achievement_${System.currentTimeMillis()}",
+                            )
+                        }
                     }
                 },
                 onShareToProfile = {
@@ -879,14 +883,16 @@ fun HomeScreen(navController: NavController) {
                 data = badgeData,
                 onShare = {
                     scope.launch {
-                        com.rork.rockscout.ui.components.ShareCardImage.share(
-                            context = context,
-                            title = "BADGE EARNED!",
-                            subtitle = badgeData.name,
-                            body = "${badgeData.description} — Posted from RockScout",
-                            accentHex = 0xFFE8A33D,
-                            fileName = "rockscout_badge_${System.currentTimeMillis()}",
-                        )
+                        runCatching {
+                            com.rork.rockscout.ui.components.ShareCardImage.share(
+                                context = context,
+                                title = "BADGE EARNED!",
+                                subtitle = badgeData.name,
+                                body = "${badgeData.description} — Posted from RockScout",
+                                accentHex = 0xFFE8A33D,
+                                fileName = "rockscout_badge_${System.currentTimeMillis()}",
+                            )
+                        }
                     }
                 },
                 onShareToProfile = {

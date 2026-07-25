@@ -485,21 +485,23 @@ fun TradingFloorScreen(navController: NavController) {
                             },
                             onShare = {
                                 scope.launch {
-                                    val photo: android.graphics.Bitmap? = listing.photoUri?.let { uriStr ->
-                                        ShareCardImage.loadDownsampled(context, android.net.Uri.parse(uriStr))
+                                    runCatching {
+                                        val photo: android.graphics.Bitmap? = listing.photoUri?.let { uriStr ->
+                                            ShareCardImage.loadDownsampled(context, android.net.Uri.parse(uriStr))
+                                        }
+                                        val sub = (if (listing.type == ListingType.HAVE) "HAVE" else "WANT") +
+                                            "  \u2022  " + SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(listing.createdAt))
+                                        ShareCardImage.share(
+                                            context = context,
+                                            title = listing.specimenName,
+                                            subtitle = sub,
+                                            body = listing.description.ifBlank { null },
+                                            accentHex = if (listing.type == ListingType.HAVE) 0xFFE8A33D else 0xFF6FA8C7,
+                                            photoBitmap = photo,
+                                            caption = "Posted from RockScout Trade Board",
+                                            fileName = "rockscout_trade_${listing.id}",
+                                        )
                                     }
-                                    val sub = (if (listing.type == ListingType.HAVE) "HAVE" else "WANT") +
-                                        "  \u2022  " + SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(listing.createdAt))
-                                    ShareCardImage.share(
-                                        context = context,
-                                        title = listing.specimenName,
-                                        subtitle = sub,
-                                        body = listing.description.ifBlank { null },
-                                        accentHex = if (listing.type == ListingType.HAVE) 0xFFE8A33D else 0xFF6FA8C7,
-                                        photoBitmap = photo,
-                                        caption = "Posted from RockScout Trade Board",
-                                        fileName = "rockscout_trade_${listing.id}",
-                                    )
                                 }
                             },
                             onShareToProfile = { shareToProfileListing = listing },
@@ -573,21 +575,23 @@ fun TradingFloorScreen(navController: NavController) {
             },
             onShare = {
                 scope.launch {
-                    val photo: android.graphics.Bitmap? = listing.photoUri?.let { uriStr ->
-                        ShareCardImage.loadDownsampled(context, android.net.Uri.parse(uriStr))
+                    runCatching {
+                        val photo: android.graphics.Bitmap? = listing.photoUri?.let { uriStr ->
+                            ShareCardImage.loadDownsampled(context, android.net.Uri.parse(uriStr))
+                        }
+                        val sub = (if (listing.type == ListingType.HAVE) "HAVE" else "WANT") +
+                            "  \u2022  " + SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(listing.createdAt))
+                        ShareCardImage.share(
+                            context = context,
+                            title = listing.specimenName,
+                            subtitle = sub,
+                            body = listing.description.ifBlank { null },
+                            accentHex = if (listing.type == ListingType.HAVE) 0xFFE8A33D else 0xFF6FA8C7,
+                            photoBitmap = photo,
+                            caption = "Posted from RockScout Trade Board",
+                            fileName = "rockscout_trade_${listing.id}",
+                        )
                     }
-                    val sub = (if (listing.type == ListingType.HAVE) "HAVE" else "WANT") +
-                        "  \u2022  " + SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(listing.createdAt))
-                    ShareCardImage.share(
-                        context = context,
-                        title = listing.specimenName,
-                        subtitle = sub,
-                        body = listing.description.ifBlank { null },
-                        accentHex = if (listing.type == ListingType.HAVE) 0xFFE8A33D else 0xFF6FA8C7,
-                        photoBitmap = photo,
-                        caption = "Posted from RockScout Trade Board",
-                        fileName = "rockscout_trade_${listing.id}",
-                    )
                 }
             },
             onShareToProfile = { shareToProfileListing = listing; selectedListing = null },

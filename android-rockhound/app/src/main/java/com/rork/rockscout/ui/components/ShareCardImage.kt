@@ -71,13 +71,31 @@ object ShareCardImage {
         caption: String = DEFAULT_CAPTION,
         fileName: String = "rockscout_share_${System.currentTimeMillis()}",
     ) {
-        val bitmap = withContext(Dispatchers.Default) {
-            buildCard(title, subtitle, body, accentHex, photoBitmap)
+        // Catch every throwable so a share failure never crashes the caller's
+        // coroutine scope (which would crash the whole app). The worst case is a
+        // user-friendly toast shown by launchShareIntent's safe wrapper.
+        try {
+            val bitmap = withContext(Dispatchers.Default) {
+                runCatching { buildCard(title, subtitle, body, accentHex, photoBitmap) }
+                    .getOrNull()
+            } ?: return
+            val uri = withContext(Dispatchers.IO) {
+                writeCache(context, bitmap, fileName)
+            } ?: return
+            launchShareIntent(context, uri, caption)
+        } catch (_: kotlinx.coroutines.CancellationException) {
+            // Don't swallow cancellation — let it propagate normally.
+            throw kotlinx.coroutines.CancellationException()
+        } catch (_: Throwable) {
+            // OOM, bitmap creation failure, file write failure — all non-fatal.
+            withContext(Dispatchers.Main) {
+                android.widget.Toast.makeText(
+                    context,
+                    "Could not create share image. Please try again.",
+                    android.widget.Toast.LENGTH_SHORT,
+                ).show()
+            }
         }
-        val uri = withContext(Dispatchers.IO) {
-            writeCache(context, bitmap, fileName)
-        } ?: return
-        launchShareIntent(context, uri, caption)
     }
 
     /** Renders the 1080×1350 card bitmap. Public so previews/tests can use it. */
@@ -232,6 +250,7 @@ object ShareCardImage {
 
     /** Center-crop source rect for filling [dstW]×[dstH] from a [srcW]×[srcH] bitmap. */
     private fun centerCropSrc(srcW: Int, srcH: Int, dstW: Int, dstH: Int): Rect {
+        if (srcW <= 0 || srcH <= 0) return Rect(0, 0, dstW.coerceAtLeast(1), dstH.coerceAtLeast(1))
         val srcRatio = srcW.toFloat() / srcH.toFloat()
         val dstRatio = dstW.toFloat() / dstH.toFloat()
         return if (srcRatio > dstRatio) {

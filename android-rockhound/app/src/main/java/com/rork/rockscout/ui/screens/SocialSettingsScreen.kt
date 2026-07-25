@@ -210,8 +210,10 @@ fun SocialSettingsScreen(
                     else "Location monitoring OFF",
                 helper = if (locationLocked)
                     "Free trial ended — go Premium or donate to unlock live nearby alerts."
-                else if (profile.locationMonitoring && nearby.firstOrNull()?.first?.name != null && nearby.firstOrNull()?.second != null)
-                    "Nearest: ${nearby.first()!!.first.name} · ${nearby.first()!!.second.toInt()} mi"
+                else if (profile.locationMonitoring && nearby.firstOrNull()?.first?.name != null && nearby.firstOrNull()?.second != null) {
+                    val first = nearby.first()
+                    "Nearest: ${first.first.name} · ${first.second.toInt()} mi"
+                }
                 else "Turn on to enable RockScout social, dig site tracking, trip planner routing, and more!",
                 accent = if (profile.locationMonitoring && !locationLocked) Color(0xFF5CC98C)
                     else if (locationLocked) Citrine else TextLow,
