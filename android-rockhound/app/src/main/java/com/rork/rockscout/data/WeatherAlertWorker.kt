@@ -214,6 +214,29 @@ class WeatherAlertWorker(
                 request,
             )
         }
+
+        /**
+         * Ensure the chain is running without resetting an already-pending check.
+         * Uses KEEP policy so a cold start doesn't cancel and restart the
+         * 3-minute timer of a scheduled check. If no work is queued, this
+         * enqueues one; if one is already queued, it's left untouched.
+         * Called from [WorkScheduler.ensureWeatherChain] on app start.
+         */
+        fun ensureChainRunning(context: Context) {
+            val request = OneTimeWorkRequestBuilder<WeatherAlertWorker>()
+                .setInitialDelay(CHECK_INTERVAL_MINUTES, TimeUnit.MINUTES)
+                .setConstraints(
+                    Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .build(),
+                )
+                .build()
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                WORK_NAME,
+                ExistingWorkPolicy.KEEP,
+                request,
+            )
+        }
     }
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }

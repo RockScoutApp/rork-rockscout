@@ -25,7 +25,7 @@ import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
 /**
- * Self-rescheduling worker that checks the planetary Kp index every ~15 minutes
+ * Self-rescheduling worker that checks the planetary Kp index every ~3 minutes
  * and posts a local notification when aurora is likely visible from the user's
  * latitude. Only fires at night (between sunset and sunrise) and uses a per-Kp-level
  * cooldown so the same storm doesn't trigger repeated notifications.
@@ -47,11 +47,13 @@ class AuroraAlertWorker(
         private const val KEY_LAST_NOTIFIED_MS = "last_notified_ms"
         private const val COOLDOWN_MS = 3 * 60 * 60 * 1000L // 3 hours per Kp level
 
-        /** Check interval — 15 minutes (Kp changes slower than NWS alerts). */
-        const val CHECK_INTERVAL_MINUTES = 15L
+        /** Check interval — 3 minutes for near-instant Kp alerts, matching the
+         *  weather alert chain. Kp can spike quickly during geomagnetic storms. */
+        const val CHECK_INTERVAL_MINUTES = 3L
 
         /**
          * Schedule the next aurora check in the self-rescheduling chain.
+         * Uses REPLACE so each worker run cleanly queues the next tick.
          */
         fun scheduleNext(context: Context, delayMinutes: Long = CHECK_INTERVAL_MINUTES) {
             val request = OneTimeWorkRequestBuilder<AuroraAlertWorker>()
@@ -65,6 +67,29 @@ class AuroraAlertWorker(
             WorkManager.getInstance(context).enqueueUniqueWork(
                 WORK_NAME,
                 ExistingWorkPolicy.REPLACE,
+                request,
+            )
+        }
+
+        /**
+         * Ensure the chain is running without resetting an already-pending check.
+         * Uses KEEP policy so a cold start doesn't cancel and restart the
+         * 3-minute timer of a scheduled check. If no work is queued, this
+         * enqueues one; if one is already queued, it's left untouched.
+         * Called from [WorkScheduler.ensureAuroraChain] on app start.
+         */
+        fun ensureChainRunning(context: Context) {
+            val request = OneTimeWorkRequestBuilder<AuroraAlertWorker>()
+                .setInitialDelay(CHECK_INTERVAL_MINUTES, TimeUnit.MINUTES)
+                .setConstraints(
+                    Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.CONNECTED)
+                        .build(),
+                )
+                .build()
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                WORK_NAME,
+                ExistingWorkPolicy.KEEP,
                 request,
             )
         }

@@ -15,10 +15,11 @@ import java.util.concurrent.TimeUnit
 /**
  * Schedules and manages the three periodic background workers:
  * - [UpdateCheckWorker] — checks for app updates every 6 hours (requires network)
- * - [ProximityCheckWorker] — checks for nearby dig sites every 15 minutes (requires location)
+ * - [ProximityCheckWorker] — checks for nearby dig sites every 10 minutes (requires location)
  * - [GemShowRefreshWorker] — refreshes the gem show list near the end of each month
  * - [NotificationSummaryWorker] — checks for engagement + new-posts summaries every 1 hour
  * - [WeatherAlertWorker] — self-rescheduling chain that polls NWS API every 3 minutes
+ * - [AuroraAlertWorker] — self-rescheduling chain that polls NOAA SWPC Kp index every 3 minutes
  *
  * Call [schedule] from Application.onCreate().
  */
@@ -113,15 +114,23 @@ object WorkScheduler {
         // the general location monitoring toggle — the worker fetches the device
         // location on its own for weather alerts. The chain starts here and each
         // run schedules the next; it stops when the weather alerts toggle is off.
-        scheduleWeatherChain(context)
+        // Only (re)start the chain if the toggle is on, and use KEEP so a cold
+        // start doesn't reset the 3-minute timer of an already-pending check.
+        if (PersistenceManager.isWeatherAlertsEnabled()) {
+            ensureWeatherChain(context)
+        }
 
         // Aurora alert check — self-rescheduling chain that polls the NOAA SWPC
-        // Kp index every 15 minutes. Only fires at night when aurora is visible.
+        // Kp index every 3 minutes. Only fires at night when aurora is visible.
         // Independent of NWS weather alerts. Starts here and each run schedules
         // the next; it stops when the aurora alerts toggle is off.
-        scheduleAuroraChain(context)
+        // Only (re)start the chain if the toggle is on, and use KEEP so a cold
+        // start doesn't reset the 3-minute timer of an already-pending check.
+        if (PersistenceManager.isAuroraAlertsEnabled()) {
+            ensureAuroraChain(context)
+        }
 
-        Log.d(TAG, "Scheduled update check (6h), proximity check (10min), notification summary (1h), gem show refresh (monthly, in ${daysUntilMonthEnd}d), weather alerts (${WeatherAlertWorker.CHECK_INTERVAL_MINUTES}min chain)")
+        Log.d(TAG, "Scheduled update check (6h), proximity check (10min), notification summary (1h), gem show refresh (monthly, in ${daysUntilMonthEnd}d), weather alerts (${WeatherAlertWorker.CHECK_INTERVAL_MINUTES}min chain), aurora alerts (${AuroraAlertWorker.CHECK_INTERVAL_MINUTES}min chain)")
     }
 
     /**
@@ -170,13 +179,24 @@ object WorkScheduler {
     }
 
     /**
-     * Starts the self-rescheduling weather alert chain. Each worker run schedules
-     * the next one in 3 minutes, creating a near-instant polling loop.
-     * Called from [schedule] on app start and whenever the weather toggle is enabled.
+     * Starts the self-rescheduling weather alert chain from scratch (REPLACE).
+     * Use this when the user explicitly enables the toggle — it should start
+     * fresh regardless of any stale pending work.
+     * Called from the Social Settings / Severe Weather toggle handlers.
      */
     fun scheduleWeatherChain(context: Context) {
         WeatherAlertWorker.scheduleNext(context, WeatherAlertWorker.CHECK_INTERVAL_MINUTES)
         Log.d(TAG, "Started weather alert chain (${WeatherAlertWorker.CHECK_INTERVAL_MINUTES}min cycle)")
+    }
+
+    /**
+     * Ensures the weather alert chain is running without resetting an already-
+     * pending check. Uses KEEP policy so a cold start doesn't cancel and restart
+     * the 3-minute timer. Called from [schedule] on app start.
+     */
+    fun ensureWeatherChain(context: Context) {
+        WeatherAlertWorker.ensureChainRunning(context)
+        Log.d(TAG, "Ensured weather alert chain is running (${WeatherAlertWorker.CHECK_INTERVAL_MINUTES}min cycle)")
     }
 
     /**
@@ -190,13 +210,24 @@ object WorkScheduler {
     }
 
     /**
-     * Starts the self-rescheduling aurora alert chain. Each worker run schedules
-     * the next one in 15 minutes. Called from [schedule] on app start and
-     * whenever the aurora toggle is enabled.
+     * Starts the self-rescheduling aurora alert chain from scratch (REPLACE).
+     * Use this when the user explicitly enables the toggle — it should start
+     * fresh regardless of any stale pending work.
+     * Called from the AuroraScreen toggle handler.
      */
     fun scheduleAuroraChain(context: Context) {
         AuroraAlertWorker.scheduleNext(context, AuroraAlertWorker.CHECK_INTERVAL_MINUTES)
         Log.d(TAG, "Started aurora alert chain (${AuroraAlertWorker.CHECK_INTERVAL_MINUTES}min cycle)")
+    }
+
+    /**
+     * Ensures the aurora alert chain is running without resetting an already-
+     * pending check. Uses KEEP policy so a cold start doesn't cancel and restart
+     * the 3-minute timer. Called from [schedule] on app start.
+     */
+    fun ensureAuroraChain(context: Context) {
+        AuroraAlertWorker.ensureChainRunning(context)
+        Log.d(TAG, "Ensured aurora alert chain is running (${AuroraAlertWorker.CHECK_INTERVAL_MINUTES}min cycle)")
     }
 
     /**

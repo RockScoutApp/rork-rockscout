@@ -65,7 +65,7 @@ data class UserProfile(
      *  specifically for weather alerts. */
     val weatherAlertsEnabled: Boolean = false,
     /** Aurora Alerts toggle — when on, a self-rescheduling worker checks Kp every
-     *  15 minutes and posts a notification when aurora is likely visible from
+     *  3 minutes and posts a notification when aurora is likely visible from
      *  the user's latitude. Only fires at night. Independent of NWS weather alerts. */
     val auroraAlertsEnabled: Boolean = false,
     /** Current hunter status shown in scans and on pings. Defaults to off-grid. */
