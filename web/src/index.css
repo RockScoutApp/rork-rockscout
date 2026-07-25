@@ -199,4 +199,21 @@
   .field-border {
     border: 1px dashed hsl(var(--border));
   }
+
+  /* Parchment scroll background — mirrors the Android app's creator note dialog */
+  .scroll-parchment {
+    background:
+      radial-gradient(ellipse at 50% 50%, transparent, hsl(0 0% 0% / 0.10) 70%, hsl(0 0% 0% / 0.18) 100%),
+      linear-gradient(
+        180deg,
+        hsl(36 35% 67%) 0%,
+        hsl(38 42% 76%) 8%,
+        hsl(40 48% 83%) 25%,
+        hsl(42 52% 89%) 50%,
+        hsl(40 48% 83%) 75%,
+        hsl(38 42% 76%) 92%,
+        hsl(36 35% 67%) 100%
+      );
+    border: 1px solid hsl(34 28% 56% / 0.35);
+  }
 }

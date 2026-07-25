@@ -315,7 +315,7 @@ private val howToSections: List<HowToSection> = listOf(
             "The satellite button cycles through 3 zoom levels: first tap zooms to 16 (satellite appears), second tap zooms to 19 (deepest detail), third tap restores your original view.",
             "Every map shows a sync-status pill (top-left) that reports whether the offline tiles for the visible area are up to date, cached, or stale. Tap the pill to refresh the cache for the current area. When offline, it tells you whether the cached tiles are fresh or may be stale so you know if you can trust the map.",
             "Every map can be expanded to fullscreen with a close button in the top-left corner. The My Location button centers the map directly on your current GPS position. If you accidentally drop a pin by tapping the map, a Cancel/Remove Pin button lets you clear it.",
-            "Found a great dig site not on the map? Use the Upload New Location form to add it after review.",
+            "Found a dig site not on the map? Use the Add Location form to add it after review.",
         ),
     ),
     HowToSection(
@@ -500,7 +500,7 @@ private val howToSections: List<HowToSection> = listOf(
         steps = listOf(
             "Found a specimen that isn't in the database? Use the Upload Specimen pill (found on the Specimen Database screen, the Field Captures screen, and specimen detail pages).",
             "Submit up to 4 photos plus a name, date found, location, and description. If the specimen already exists in the database and your location is a common find spot for it, you'll get a small pop-up letting you know it's already included. If the location is unusual for that specimen, it goes to developer review instead.",
-            "Found a great dig site, rock shop, or gem show that isn't on the map? Use the Upload New Location form on the Dig Sites map or any map screen.",
+            "Found a dig site, rock shop, or gem show that isn't on the map? Use the Add Location form on the Dig Sites map or any map screen.",
             "After review, submitted locations appear on the Dig Sites map for every RockScout user to discover.",
             "Help build the most thorough rock database and the most complete hunting map on the app market!",
         ),

@@ -18,6 +18,7 @@ import {
   BookOpen,
   Heart,
   Bell,
+  ScrollText,
   Trophy,
   FlaskConical,
   Search,
@@ -55,6 +56,8 @@ import {
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { SITE } from "@/content/legal";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { useState } from "react";
 
 const SHOTS = [
   { src: "/images/screenshots/01_home_dashboard.webp", alt: "Home dashboard with AI rock identification, level progress, and Trade Board" },
@@ -220,7 +223,19 @@ const SpecimenMarquee = ({ reverse = false }: { reverse?: boolean }) => {
   );
 };
 
-const Hero = () => (
+// Creator note paragraphs — mirror the Android app's "A Note to My Fellow RockScouts" dialog.
+const CREATOR_NOTE_PARAGRAPHS: string[] = [
+  "First of all, I'd like to say this is the actual creator typing this. Although I did use AI in the creation of this app, this is not AI writing this note. I assure you, I'm a real, live boy.",
+  "I've been a rockhounder for 30+ years, and as every single rockhounder knows, identification can be a bit of a struggle from time to time. If you're picking up your first rock that you're going to keep forever and ever, or you've got 132,649 specimens because you keep every rock you get your hands on (like me), there's always a use for a phenomenal rock ID app. Normally, I wouldn't say phenomenal when describing much of anything (except maybe food). But if you're a rock hound, or even just the outdoorsy type, considering how much hiking and camping info there is in here as well, then that's really the only appropriate word for this. I packed as much accurate ID power and info into this thing as I could. No joke. It uses 3 different AI models, when most other rock apps only use 1. It also cross-checks with the app database images (which I put quite a bit of time into), runs a web search cross-check, and even asks you clarifying questions when a rock is tough to get a solid identification on. Basically, it does everything in its power to provide the highest accuracy possible. Plus I included a whole ton of other informational sections, and created a whole social network just for rockhounds. You can build a friends list, chat on an in-app Messenger, post questions and photos to a community-wide Q&A board, show off specimens in a postable Profile feed, haggle on a Trade Board (a marketplace for trading, selling, or buying rocks), snap quick field photos with the field kit camera, and loads more. and yes, there's image moderation, and a fairly forgiving profanity filter. The free version does not have access to any of the social aspects, so it keeps it rated G for the littles, but still gives them a ton of content to explore. And just to be clear — you don't necessarily need a subscription to get you 'money's worth' out of this thing. The free version alone gives you access to the (ad supported) rock identification engine, the entire mineral and specimen database with detailed info pages, the interactive map with dig sites and rock shops, the Field Camera, the glossary, the daily streak challenges, and plenty more to dig in to. (See what I did there?)? The free tier is ad supported, but all the ads are the most family-friendly rating I can make them. Free users can watch a couple short videos to receive a free identification token as well. No limit. The free version is still useful, but the premium version completely unlocks the highest levels of ID and everything else in the app. Literally something for all ages and levels of expertise. I do however, have to recommend 18+ due to the social aspect (which users can toggle on or off in their social settings). Gotta keep the kids safe. The adults too, for that matter, so be smart and use your own discretion if you plan on meeting up with other rockhounders. Safety always comes first.",
+  "Seeing as how rockhounding is a mostly social hobby, I've added both a \"Submit Specimen\" button and an \"Add Location\" option so users can send in special or unique specimens they've found (that aren't in the current database) and dig sites, rock shops, or shows that aren't on the map yet. After review, both get added to the database and map for every RockScout user to discover. Also, if you find something in RockScout that needs to be added, fixed, made more legible, etc, please take a screenshot and email me with it (through the Contact Us tab) so I can promptly fix the issue. The OCD in me wants this app perfect, so don't hesitate to reach out with issues or suggestions.",
+  "So in closing, I'd like to give a huge thank you for helping to support this app. I'll do my best to keep adding things, and tweaking other things, to make this app every rockhounders best friend. Every subscription and donation helps make this one of the most, if not THE most, accurate and thorough rock app you can find. And don't forget, the more people that join, the larger RockScouts social network becomes, so tell all your rockhounding friends to get the app!",
+  "Now I'll go ahead and let AI take back over and break down everything this bad boy can do. I know it's a bit of a long read, but bear with it. You'll be happy you did. It's pretty awesome. Happy Hunting!",
+];
+
+const Hero = () => {
+  const [noteOpen, setNoteOpen] = useState(false);
+  return (
+  <>
   <section className="relative overflow-hidden grain">
     {/* Sparkle particles echoing the app's specimen-card motif */}
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
@@ -357,7 +372,36 @@ const Hero = () => (
       </div>
     </div>
   </section>
-);
+  <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
+    <DialogContent className="max-w-2xl gap-0 overflow-hidden p-0 sm:rounded-2xl">
+      <DialogTitle className="sr-only">A Note to My Fellow RockScouts</DialogTitle>
+      <div className="scroll-parchment max-h-[80vh] overflow-y-auto px-6 py-6 sm:px-8 sm:py-8">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 className="font-display text-xl font-bold text-amber-900 sm:text-2xl">A Note to My Fellow RockScouts</h2>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-700/30 bg-amber-100/60 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-amber-800">
+            <ScrollText className="h-3 w-3" /> From the creator
+          </span>
+        </div>
+        <div className="space-y-4">
+          {CREATOR_NOTE_PARAGRAPHS.map((p, i) => (
+            <p key={i} className="text-[13px] leading-relaxed text-stone-800 sm:text-sm sm:leading-relaxed">{p}</p>
+          ))}
+        </div>
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setNoteOpen(false)}
+            className="inline-flex items-center justify-center rounded-xl border border-amber-700/40 bg-amber-200/70 px-6 py-2.5 text-sm font-semibold text-amber-900 transition-colors hover:bg-amber-300/70"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </DialogContent>
+  </Dialog>
+  </>
+  );
+};
 
 const Features = () => (
   <section className="mx-auto max-w-6xl px-4 py-24 sm:px-6">

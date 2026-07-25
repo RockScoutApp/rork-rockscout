@@ -450,7 +450,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     steps: [
       `Found a specimen that isn't in the database? Use the Upload Specimen pill (found on the Specimen Database screen, the Field Captures screen, and specimen detail pages).`,
       `Submit up to 4 photos plus a name, date found, location, and description. If the specimen already exists in the database and your location is a common find spot for it, you'll get a small pop-up letting you know it's already included. If the location is unusual for that specimen, it goes to developer review instead.`,
-      `Found a great dig site, rock shop, or gem show that isn't on the map? Use the Submit Location / Add Location form on the Dig Sites map or any map screen.`,
+      `Found a dig site, rock shop, or gem show that isn't on the map? Use the Add Location form on the Dig Sites map or any map screen.`,
       `After review, submitted locations appear on the Dig Sites map for every RockScout user to discover.`,
       `Help build the most thorough rock database and the most complete hunting map on the app market!`,
     ],

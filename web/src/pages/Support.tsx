@@ -10,7 +10,7 @@ const FAQ = [
   },
   {
     q: "Is RockScout free?",
-    a: "Yes. Every user gets a 7-day full-access trial with 5 AI identification tokens. After the trial, these features stay free forever: browsing the full specimen database & geology guides, the field camera (saves to your in-app Saved Images), NWS severe weather alerts, and browsing dig sites & offline maps. AI identification, social features (Friends, Messenger, Community, Trade Board), My Rocks, Wishlist, Field Captures, Trip Planner, and Field Journal require Premium ($9.99/mo) or a donation. You can also earn free ID tokens by watching short rock-related videos. Pricing is shown in the app before any purchase.",
+    a: "Yes. Every user gets a 7-day full-access trial with 5 AI identification tokens. After the trial, these features stay free forever: (ad supported) rock identification, browsing the full specimen database & geology guides, the field camera (saves to your in-app Saved Images), NWS severe weather alerts, browsing dig sites & offline maps, and the glossary. AI identification tokens can also be earned free by watching a couple short videos — no weekly cap. Social features (Friends, Messenger, Community, Trade Board), My Rocks, Wishlist, Field Captures, Trip Planner, and Field Journal require Premium ($9.99/mo) or a donation. The free version does not have access to any of the social aspects, so it stays rated G for younger users. Pricing is shown in the app before any purchase.",
   },
   {
     q: "Can I use RockScout offline?",
