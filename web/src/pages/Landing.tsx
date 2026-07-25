@@ -81,7 +81,7 @@ const FEATURES = [
   {
     icon: MapIcon,
     title: "Field maps & dig sites",
-    body: "Discover nearby dig sites, gem shows, and BLM collecting areas. Drop pins, plan trips, cache tiles for offline, and get proximity alerts when you're close to a good spot.",
+    body: "Discover nearby dig sites, gem shows, and BLM collecting areas. Drop pins, plan trips, cache tiles for offline, and get proximity alerts when you're close to a good spot. Every map can be expanded to fullscreen, the My Location button centers on your GPS, and an accidental pin tap can be undone with the Remove Pin button.",
     tag: "Never miss a outcrop",
     image: "/images/field-maps-dig-sites.webp",
     imageAlt: "A field map spread on a picnic table at a dig site with geologists and mountains in the background",
@@ -452,7 +452,7 @@ const FEATURES_LIST = [
   {
     icon: Route,
     title: "Trip Planner & Calendar",
-    desc: "Build multi-stop routes with gear checklists and custom map pins, so the whole crew knows where to meet and what to bring. Long-press and drag stops to reorder them, view a dashed polyline connecting all stops on the map, and see estimated travel time between each stop. Export planned trips to a standalone month-grid Calendar screen — drag and drop trip cards to reschedule, create and edit trips, and archive completed trips.",
+    desc: "Build multi-stop routes with gear checklists and custom map pins, so the whole crew knows where to meet and what to bring. Long-press and drag stops to reorder them — the stop swaps to the position under your finger, with a dashed polyline connecting all stops on the map and estimated travel time between each stop. Move up buttons are also available for quick single-step reordering. Export planned trips to a standalone month-grid Calendar screen — drag and drop trip cards to reschedule, create and edit trips, and archive completed trips.",
     items: ["Multi-stop routes", "Drag-and-drop reorder", "Route polyline", "Est. travel time", "Gear checklists", "Custom pins", "Trip Calendar", "Archived trips"],
   },
   {
@@ -482,7 +482,7 @@ const FEATURES_LIST = [
   {
     icon: Zap,
     title: "Aurora Forecaster & Space Weather",
-    desc: "Real-time space weather with Kp index, Bz, solar wind speed, and visibility status. View 24-hour Kp and 7-day F10.7 trend charts, a 3-day forecast, and active sunspot regions with tappable detail views showing magnetic evolution history. Save custom coordinates to track aurora visibility, set a custom Kp notification threshold for push alerts, and share your Kp status to social media.",
+    desc: "Real-time space weather with Kp index, Bz, solar wind speed, and visibility status. View 24-hour Kp and 7-day F10.7 trend charts, a 3-day forecast, and active sunspot regions with tappable detail views showing magnetic evolution history. Save custom coordinates to track aurora visibility, set a custom Kp notification threshold for instant push alerts the moment your Kp is reached, and share your Kp status to social media.",
     items: ["Real-time Kp index", "24h Kp trend chart", "7-day F10.7 chart", "3-day forecast", "Sunspot evolution", "Saved spots map", "Custom Kp alerts", "Share to social"],
   },
   {
@@ -500,7 +500,7 @@ const FEATURES_LIST = [
   {
     icon: Bell,
     title: "Search, alerts & notifications",
-    desc: "Global search across specimens, locations, and guides. A dedicated notification center with deep links, a separate mail icon with unread count, NWS severe weather alerts, and proximity pings when you're near a dig site.",
+    desc: "Global search across specimens, locations, and guides. A dedicated notification center with deep links, a separate mail icon with unread count, instant NWS severe weather alerts the moment they're issued, instant Kp/aurora alerts when your threshold is reached, and proximity pings when you're near a dig site.",
     items: ["Global search", "Notification center", "Message icon", "NWS weather alerts", "Proximity pings"],
   },
   {
@@ -518,7 +518,7 @@ const FEATURES_LIST = [
   {
     icon: Upload,
     title: "Submit specimens & add locations",
-    desc: "Found a specimen that isn't in the database? Submit up to 4 photos plus any info you have — after review it gets added to the Specimen Database or Rocks Are Amazing for every RockScout user to discover. Found a great dig site, rock shop, or gem show not on the map? Use the Submit Location form to add it, reviewed before going live for everyone.",
+    desc: "Found a specimen that isn't in the database? Use the Upload Specimen pill on the Specimen Database screen, Field Captures screen, or specimen detail pages. Submit up to 4 photos plus a name, date found, location, and description. If the specimen already exists and your location is a common find spot for it, you'll get a small pop-up letting you know it's already included; if the location is unusual for that specimen, it goes to developer review. Approved entries get added to the Specimen Database or Rocks Are Amazing for every RockScout user to discover. Found a great dig site, rock shop, or gem show not on the map? Use the Upload New Location form to add it, reviewed before going live for everyone.",
     items: ["Submit specimens", "Submit locations", "Reviewed by RockScout", "Community-built database"],
   },
   {

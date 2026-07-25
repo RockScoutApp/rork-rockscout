@@ -26,8 +26,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Hiking
 import androidx.compose.material.icons.filled.Terrain
@@ -75,13 +77,23 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import coil3.compose.AsyncImage
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -878,6 +890,12 @@ internal fun TripEditorDialog(
     var showRestoreDraft by remember { mutableStateOf(false) }
     var categoryMenuExpanded by remember { mutableStateOf(false) }
 
+    // Drag-to-reorder stops state
+    var draggingStopIndex by remember { mutableStateOf<Int?>(null) }
+    var dragFingerPos by remember { mutableStateOf(Offset.Zero) }
+    val stopRowRects = remember { mutableStateMapOf<Int, Rect>() }
+    val haptic = LocalHapticFeedback.current
+
     val draftKey = initial?.id ?: "new"
 
     // Build a Trip snapshot for the route map. We now synthesize a transient
@@ -1152,9 +1170,48 @@ Planned with RockScout""".trimIndent()
                             Box(modifier = Modifier.width(1.dp).height(8.dp).background(Citrine.copy(alpha = 0.3f)))
                         }
                     }
+                    val isDragging = draggingStopIndex == idx
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .onGloballyPositioned { coords ->
+                                stopRowRects[idx] = Rect(
+                                    offset = coords.localToRoot(Offset.Zero),
+                                    size = Size(
+                                        coords.size.width.toFloat(),
+                                        coords.size.height.toFloat(),
+                                    ),
+                                )
+                            }
+                            .then(if (isDragging) Modifier.graphicsLayer { alpha = 0.3f } else Modifier)
+                            .pointerInput(idx) {
+                                detectDragGesturesAfterLongPress(
+                                    onDragStart = {
+                                        draggingStopIndex = idx
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    },
+                                    onDrag = { change, delta ->
+                                        change.consume()
+                                        dragFingerPos = Offset(
+                                            dragFingerPos.x + delta.x,
+                                            dragFingerPos.y + delta.y,
+                                        )
+                                        // Find which stop row the finger is over
+                                        val targetIdx = stopRowRects.entries
+                                            .firstOrNull { it.value.contains(dragFingerPos) }?.key
+                                        if (targetIdx != null && targetIdx != draggingStopIndex) {
+                                            val item = stops.removeAt(draggingStopIndex!!)
+                                            stops.add(targetIdx, item)
+                                            draggingStopIndex = targetIdx
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        }
+                                    },
+                                    onDragEnd = { draggingStopIndex = null; dragFingerPos = Offset.Zero; stopRowRects.clear() },
+                                    onDragCancel = { draggingStopIndex = null; dragFingerPos = Offset.Zero; stopRowRects.clear() },
+                                )
+                            },
                     ) {
                         Box(
                             modifier = Modifier.size(26.dp).clip(RoundedCornerShape(6.dp))
@@ -1164,6 +1221,13 @@ Planned with RockScout""".trimIndent()
                         ) { Text("${idx + 1}", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Bold) }
                         Spacer(Modifier.width(10.dp))
                         Text(stop.locationName, style = MaterialTheme.typography.bodyMedium, color = DarkTextHigh, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                        Icon(
+                            Icons.Filled.DragHandle,
+                            contentDescription = "Drag to reorder",
+                            tint = TextLow,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(4.dp))
                         // Move up/down buttons for reordering
                         if (idx > 0) {
                             SculptedIconButton(

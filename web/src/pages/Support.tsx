@@ -42,7 +42,7 @@ const FAQ = [
   },
   {
     q: "What is the Aurora Forecaster?",
-    a: "The Aurora Forecaster is a real-time space weather tool inside the app. It shows the current Kp index, Bz value, solar wind speed, and aurora visibility status for your latitude, plus 24-hour Kp and 7-day F10.7 trend charts, a 3-day forecast, and active sunspot regions with tappable detail views showing magnetic evolution history. You can save custom coordinates as aurora watching spots, set a custom Kp notification threshold for push alerts, and share your Kp status to social media.",
+    a: "The Aurora Forecaster is a real-time space weather tool inside the app. It shows the current Kp index, Bz value, solar wind speed, and aurora visibility status for your latitude, plus 24-hour Kp and 7-day F10.7 trend charts, a 3-day forecast, and active sunspot regions with tappable detail views showing magnetic evolution history. You can save custom coordinates as aurora watching spots, set a custom Kp notification threshold for instant push alerts the moment your Kp is reached, and share your Kp status to social media.",
   },
   {
     q: "What is the Stars & Constellations guide?",
@@ -50,7 +50,7 @@ const FAQ = [
   },
   {
     q: "Can I plan trips with the Trip Planner and Calendar?",
-    a: "Yes — the Trip Planner lets you build multi-stop routes with drag-and-drop stop reordering, a connecting polyline on the map, estimated travel times between stops, and gear checklists. A standalone Calendar screen on the home screen shows all planned trips in a month grid where you can drag and drop trip cards to reschedule them, create and edit trips, and archive completed trips.",
+    a: "Yes — the Trip Planner lets you build multi-stop routes with long-press drag-and-drop stop reordering (the stop swaps to the position under your finger), a connecting polyline on the map, estimated travel times between stops, and gear checklists. Move up buttons are also available for quick single-step reordering. A standalone Calendar screen on the home screen shows all planned trips in a month grid where you can drag and drop trip cards to reschedule them, create and edit trips, and archive completed trips.",
   },
   {
     q: "What are the Common Wildlife tiles?",
