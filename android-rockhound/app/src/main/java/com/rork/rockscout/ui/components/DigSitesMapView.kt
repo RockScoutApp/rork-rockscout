@@ -108,14 +108,9 @@ fun DigSitesMapView(
     var showClearParkingConfirm by remember { mutableStateOf(false) }
     // Live cache timestamp for the user's current area — drives the sync-status
     // pill on the dig sites map. Re-read after a prefetch / refresh.
-    var areaCacheTimestamp by remember { mutableStateOf<Long?>(null) }
-
     // Load persisted parking spot on first composition.
     LaunchedEffect(Unit) {
         parkingSpot = PersistenceManager.loadParkingSpot()
-        if (userLat != 0.0 || userLng != 0.0) {
-            areaCacheTimestamp = PersistenceManager.areaCacheTime(userLat, userLng)
-        }
     }
 
     // Gem shows with valid coordinates.
@@ -197,13 +192,6 @@ fun DigSitesMapView(
     // SqlTileWriter lock. The map loads tiles on demand for visible areas;
     // users can manually download offline tiles from each location's detail
     // screen via the "Download offline maps" button.
-    LaunchedEffect(mapView) {
-        if (mapView == null) return@LaunchedEffect
-        // Only refresh the cache-timestamp indicator; no prefetch.
-        if (userLat != 0.0 || userLng != 0.0) {
-            areaCacheTimestamp = PersistenceManager.areaCacheTime(userLat, userLng)
-        }
-    }
 
     Box(modifier = modifier.clip(RoundedCornerShape(20.dp))) {
         AndroidView(
@@ -301,33 +289,6 @@ fun DigSitesMapView(
 
         MapOfflineNotice(
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 12.dp),
-        )
-
-        MapCacheStatusIndicator(
-            cachedAtMillis = areaCacheTimestamp,
-            onRefresh = {
-                val mv = mapView ?: return@MapCacheStatusIndicator
-                val center = mv.mapCenter
-                scope.launch {
-                    withContext(Dispatchers.IO) {
-                        runCatching {
-                            MapTileCacheManager.prefetchUserArea(
-                                context = context,
-                                lat = center.latitude,
-                                lng = center.longitude,
-                            )
-                        }
-                    }
-                    areaCacheTimestamp = PersistenceManager.areaCacheTime(center.latitude, center.longitude)
-                    android.widget.Toast.makeText(
-                        context,
-                        "Offline tiles refreshed.",
-                        android.widget.Toast.LENGTH_SHORT,
-                    ).show()
-                }
-            },
-            label = "Area tiles",
-            modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
         )
 
         // Bottom-left row: offline download button + pin-drop hint (same row, aligned padding)

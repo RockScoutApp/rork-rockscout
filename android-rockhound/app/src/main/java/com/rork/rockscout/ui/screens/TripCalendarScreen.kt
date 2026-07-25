@@ -354,9 +354,14 @@ fun TripCalendarScreen(navController: NavController) {
 
             // Calendar grid — proper 7-day week rows
             item {
-                // Build the full grid: leading blanks + all days, then chunk into weeks of 7
+                // Build the full grid: leading blanks + all days, then chunk into weeks of 7.
+                // We fill leading/trailing cells with previous/next month dates so the grid
+                // is always complete and never has empty dead-space cells.
                 val totalCells = firstDayOfWeek + daysInMonth
                 val weeks = (0 until totalCells).chunked(7)
+                val prevMonth = (currentMonth.clone() as Calendar).apply { add(Calendar.MONTH, -1) }
+                val prevDaysInMonth = prevMonth.getActualMaximum(Calendar.DAY_OF_MONTH)
+                val nextMonthDayOffset = 1
 
                 Column(
                     modifier = Modifier
@@ -370,9 +375,29 @@ fun TripCalendarScreen(navController: NavController) {
                         Row(modifier = Modifier.fillMaxWidth()) {
                             weekCells.forEach { cellIndex ->
                                 val day = cellIndex - firstDayOfWeek + 1
-                                if (day < 1 || day > daysInMonth) {
-                                    // Empty cell for days before the 1st or after the last day
-                                    Box(modifier = Modifier.weight(1f).aspectRatio(1f))
+                                val isCurrentMonth = day in 1..daysInMonth
+                                val displayDay = when {
+                                    cellIndex < firstDayOfWeek -> prevDaysInMonth - (firstDayOfWeek - cellIndex - 1)
+                                    cellIndex >= firstDayOfWeek + daysInMonth -> nextMonthDayOffset + (cellIndex - (firstDayOfWeek + daysInMonth))
+                                    else -> day
+                                }
+                                val isPaddingCell = !isCurrentMonth
+
+                                if (isPaddingCell) {
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .aspectRatio(1f)
+                                            .padding(2.dp),
+                                        contentAlignment = Alignment.TopStart,
+                                    ) {
+                                        Text(
+                                            text = displayDay.toString(),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = TextMid.copy(alpha = 0.35f),
+                                            fontWeight = FontWeight.Normal,
+                                        )
+                                    }
                                 } else {
                                     val dateCal = (currentMonth.clone() as Calendar).apply {
                                         set(Calendar.DAY_OF_MONTH, day)

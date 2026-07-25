@@ -80,6 +80,8 @@ import com.rork.rockscout.ui.components.SculptedButton
 import com.rork.rockscout.ui.components.processSavedImage
 import com.rork.rockscout.ui.components.SculptedOutlinedButton
 import com.rork.rockscout.ui.components.SculptedTextButton
+import com.rork.rockscout.ui.components.SculptedIconButton
+import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.noAutoFocus
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.theme.Aqua
@@ -210,32 +212,39 @@ fun AddLocationDialog(
         cameraLauncher.launch(uri)
     }
 
-    AlertDialog(
-        onDismissRequest = { if (!isSubmitting) onDismiss() },
-        modifier = Modifier.fillMaxWidth().padding(4.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
-        properties = androidx.compose.ui.window.DialogProperties(
-            dismissOnBackPress = !isSubmitting,
-            dismissOnClickOutside = false,
-        ),
-        title = {
-            Column {
-                Text(dialogTitle, style = MaterialTheme.typography.headlineSmall)
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    dialogSubtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextLow,
-                )
-            }
+    ScreenScaffold(
+        title = dialogTitle,
+        onBack = { if (!isSubmitting) onDismiss() },
+        actions = {
+            SculptedIconButton(
+                icon = Icons.Filled.Close,
+                contentDescription = "Close",
+                onClick = { if (!isSubmitting) onDismiss() },
+                accent = Citrine,
+                iconTint = Color.White,
+                backgroundColor = Slate800,
+                size = 40.dp,
+                shadowElevation = 3.dp,
+            )
         },
-        text = {
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+        ) {
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .weight(1f)
                     .verticalScroll(rememberScrollState())
                     .imePadding(),
             ) {
+                Text(
+                    dialogSubtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextLow,
+                )
+                Spacer(Modifier.height(16.dp))
                 // ── Location name ──
                 OutlinedTextField(
                     value = name,
@@ -425,7 +434,7 @@ fun AddLocationDialog(
                                 ) {
                                     Icon(Icons.Filled.Download, contentDescription = "Saved Images", tint = Citrine, modifier = Modifier.size(24.dp))
                                     Spacer(Modifier.height(2.dp))
-                                    Text("Saved Images", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Medium)
+                                    Text("Saved", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Medium)
                                 }
                             }
                         }
@@ -451,152 +460,159 @@ fun AddLocationDialog(
                     }
                 }
             }
-        },
-        confirmButton = {
-            SculptedButton(
-                text = if (isSubmitting) "Uploading…" else "Upload New Location",
-                onClick = {
-                    if (isSubmitting) return@SculptedButton
-                    if (name.isBlank()) return@SculptedButton
-                    val coords = pinLocation
-                    if (coords == null) return@SculptedButton
 
-                    isSubmitting = true
-                    moderationError = null
-                    submitStatus = null
-                    scope.launch {
-                        // 1. Moderate photos if any
-                        if (photoUris.isNotEmpty()) {
-                            val moderationOk = withContext(Dispatchers.IO) {
-                                photoUris.all { uri ->
-                                    runCatching {
-                                        val bitmap = com.rork.rockscout.data.ImageUtils.decodeSampledBitmap(
-                                            context, uri,
-                                        ) ?: return@runCatching true
-                                        val baos = java.io.ByteArrayOutputStream()
-                                        bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, baos)
-                                        val base64 = android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP)
-                                        val result = ImageModerator.scan(base64, "image/jpeg")
-                                        if (result.triState == com.rork.rockscout.data.ModerationTriState.EXPLICIT) {
-                                            false
-                                        } else {
-                                            if (result.triState == com.rork.rockscout.data.ModerationTriState.QUESTIONABLE) {
-                                                // Allow but submit to the review queue
-                                                val persistentPath = runCatching {
-                                                    com.rork.rockscout.data.ImageUtils.copyUriToInternalStorage(
-                                                        context, uri, "location_submissions",
+            // Bottom action bar — Cancel + Upload
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                SculptedTextButton(
+                    text = "Cancel",
+                    onClick = { if (!isSubmitting) onDismiss() },
+                    accent = Citrine,
+                    textColor = Citrine,
+                    modifier = Modifier.weight(1f),
+                )
+                SculptedButton(
+                    text = if (isSubmitting) "Uploading…" else "Upload New Location",
+                    onClick = {
+                        if (isSubmitting) return@SculptedButton
+                        if (name.isBlank()) return@SculptedButton
+                        val coords = pinLocation
+                        if (coords == null) return@SculptedButton
+
+                        isSubmitting = true
+                        moderationError = null
+                        submitStatus = null
+                        scope.launch {
+                            // 1. Moderate photos if any
+                            if (photoUris.isNotEmpty()) {
+                                val moderationOk = withContext(Dispatchers.IO) {
+                                    photoUris.all { uri ->
+                                        runCatching {
+                                            val bitmap = com.rork.rockscout.data.ImageUtils.decodeSampledBitmap(
+                                                context, uri,
+                                            ) ?: return@runCatching true
+                                            val baos = java.io.ByteArrayOutputStream()
+                                            bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, baos)
+                                            val base64 = android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP)
+                                            val result = ImageModerator.scan(base64, "image/jpeg")
+                                            if (result.triState == com.rork.rockscout.data.ModerationTriState.EXPLICIT) {
+                                                false
+                                            } else {
+                                                if (result.triState == com.rork.rockscout.data.ModerationTriState.QUESTIONABLE) {
+                                                    // Allow but submit to the review queue
+                                                    val persistentPath = runCatching {
+                                                        com.rork.rockscout.data.ImageUtils.copyUriToInternalStorage(
+                                                            context, uri, "location_submissions",
+                                                        )
+                                                    }.getOrNull()?.toString() ?: uri.toString()
+                                                    ImageReviewRepository.instance.submitReview(
+                                                        userId = auth.currentUserId ?: "unknown",
+                                                        userName = profile.name.ifBlank { "Anonymous" },
+                                                        userAvatar = profile.avatarEmoji,
+                                                        imageUri = persistentPath,
+                                                        type = "location_submission",
+                                                        reason = result.reason,
                                                     )
-                                                }.getOrNull()?.toString() ?: uri.toString()
-                                                ImageReviewRepository.instance.submitReview(
-                                                    userId = auth.currentUserId ?: "unknown",
-                                                    userName = profile.name.ifBlank { "Anonymous" },
-                                                    userAvatar = profile.avatarEmoji,
-                                                    imageUri = persistentPath,
-                                                    type = "location_submission",
-                                                    reason = result.reason,
-                                                )
+                                                }
+                                                true
                                             }
-                                            true
+                                        }.getOrDefault(true)
+                                    }
+                                }
+                                if (!moderationOk) {
+                                    moderationError = "One or more photos were flagged by moderation and cannot be used. Please remove them and try again."
+                                    isSubmitting = false
+                                    return@launch
+                                }
+                            }
+
+                            // 2. Copy photos to internal storage for persistence
+                            val persistentUris = withContext(Dispatchers.IO) {
+                                photoUris.map { uri ->
+                                    runCatching {
+                                        com.rork.rockscout.data.ImageUtils.copyUriToInternalStorage(
+                                            context, uri, "location_submissions",
+                                        )
+                                    }.getOrNull()?.toString() ?: uri.toString()
+                                }
+                            }
+
+                            // 3. Web verification (type-aware)
+                            var webVerified = false
+                            var webSnippet = ""
+                            var webUrl = ""
+                            withContext(Dispatchers.IO) {
+                                webVerified = runCatching {
+                                    when (submissionMode) {
+                                        "campground" -> DigSiteSearchService.verifyCampground(name, coords.first, coords.second) { snippet, url ->
+                                            webSnippet = snippet
+                                            webUrl = url
                                         }
-                                    }.getOrDefault(true)
+                                        "trailhead" -> DigSiteSearchService.verifyTrailhead(name, coords.first, coords.second) { snippet, url ->
+                                            webSnippet = snippet
+                                            webUrl = url
+                                        }
+                                        else -> DigSiteSearchService.verifyLocation(name, coords.first, coords.second) { snippet, url ->
+                                            webSnippet = snippet
+                                            webUrl = url
+                                        }
+                                    }
+                                }.getOrDefault(false)
+                            }
+
+                            // 4. Create submission
+                            val submission = LocationSubmissionStore.LocationSubmission(
+                                id = "loc-sub-${UUID.randomUUID()}",
+                                name = name.trim(),
+                                type = effectiveTypes[selectedTypeIndex].first,
+                                address = address.trim(),
+                                comments = comments.trim(),
+                                latitude = coords.first,
+                                longitude = coords.second,
+                                photoUris = persistentUris,
+                                submitterName = profile.name.ifBlank { "Anonymous" },
+                                submitterId = auth.currentUserId,
+                                submittedAt = System.currentTimeMillis(),
+                                webVerified = webVerified,
+                                webSnippet = webSnippet,
+                                webUrl = webUrl,
+                                locationCategory = submissionMode,
+                            )
+
+                            runCatching {
+                                if (webVerified) {
+                                    // Auto-approve: add to CustomDigLocationStore immediately
+                                    LocationSubmissionStore.add(submission.copy(status = "approved"))
+                                    CustomDigLocationStore.addApprovedLocation(submission)
+                                    submitStatus = "Web-verified and auto-approved! It's now on the map."
+                                } else {
+                                    // Send to Developer Console for manual review
+                                    LocationSubmissionStore.add(submission)
+                                    submitStatus = "Submitted for review. A developer will verify it shortly."
                                 }
+                            }.onFailure {
+                                submitStatus = "Something went wrong saving your submission. Please try again."
                             }
-                            if (!moderationOk) {
-                                moderationError = "One or more photos were flagged by moderation and cannot be used. Please remove them and try again."
-                                isSubmitting = false
-                                return@launch
-                            }
+
+                            isSubmitting = false
+                            // Wait a moment to show the status, then close
+                            kotlinx.coroutines.delay(1500)
+                            onSubmitted(webVerified)
                         }
-
-                        // 2. Copy photos to internal storage for persistence
-                        val persistentUris = withContext(Dispatchers.IO) {
-                            photoUris.map { uri ->
-                                runCatching {
-                                    com.rork.rockscout.data.ImageUtils.copyUriToInternalStorage(
-                                        context, uri, "location_submissions",
-                                    )
-                                }.getOrNull()?.toString() ?: uri.toString()
-                            }
-                        }
-
-                        // 3. Web verification (type-aware)
-                        var webVerified = false
-                        var webSnippet = ""
-                        var webUrl = ""
-                        withContext(Dispatchers.IO) {
-                            webVerified = runCatching {
-                                when (submissionMode) {
-                                    "campground" -> DigSiteSearchService.verifyCampground(name, coords.first, coords.second) { snippet, url ->
-                                        webSnippet = snippet
-                                        webUrl = url
-                                    }
-                                    "trailhead" -> DigSiteSearchService.verifyTrailhead(name, coords.first, coords.second) { snippet, url ->
-                                        webSnippet = snippet
-                                        webUrl = url
-                                    }
-                                    else -> DigSiteSearchService.verifyLocation(name, coords.first, coords.second) { snippet, url ->
-                                        webSnippet = snippet
-                                        webUrl = url
-                                    }
-                                }
-                            }.getOrDefault(false)
-                        }
-
-                        // 4. Create submission
-                        val submission = LocationSubmissionStore.LocationSubmission(
-                            id = "loc-sub-${UUID.randomUUID()}",
-                            name = name.trim(),
-                            type = effectiveTypes[selectedTypeIndex].first,
-                            address = address.trim(),
-                            comments = comments.trim(),
-                            latitude = coords.first,
-                            longitude = coords.second,
-                            photoUris = persistentUris,
-                            submitterName = profile.name.ifBlank { "Anonymous" },
-                            submitterId = auth.currentUserId,
-                            submittedAt = System.currentTimeMillis(),
-                            webVerified = webVerified,
-                            webSnippet = webSnippet,
-                            webUrl = webUrl,
-                            locationCategory = submissionMode,
-                        )
-
-                        runCatching {
-                            if (webVerified) {
-                                // Auto-approve: add to CustomDigLocationStore immediately
-                                LocationSubmissionStore.add(submission.copy(status = "approved"))
-                                CustomDigLocationStore.addApprovedLocation(submission)
-                                submitStatus = "Web-verified and auto-approved! It's now on the map."
-                            } else {
-                                // Send to Developer Console for manual review
-                                LocationSubmissionStore.add(submission)
-                                submitStatus = "Submitted for review. A developer will verify it shortly."
-                            }
-                        }.onFailure {
-                            submitStatus = "Something went wrong saving your submission. Please try again."
-                        }
-
-                        isSubmitting = false
-                        // Wait a moment to show the status, then close
-                        kotlinx.coroutines.delay(1500)
-                        onSubmitted(webVerified)
-                    }
-                },
-                accent = Citrine,
-                containerColor = Citrine,
-                textColor = Color.Black,
-                enabled = !isSubmitting && name.isNotBlank() && pinLocation != null,
-            )
-        },
-        dismissButton = {
-            SculptedTextButton(
-                text = "Cancel",
-                onClick = { if (!isSubmitting) onDismiss() },
-                accent = Citrine,
-                textColor = Citrine,
-            )
-        },
-    )
+                    },
+                    accent = Citrine,
+                    containerColor = Citrine,
+                    textColor = Color.Black,
+                    modifier = Modifier.weight(1.5f),
+                    enabled = !isSubmitting && name.isNotBlank() && pinLocation != null,
+                )
+            }
+        }
+    }
 
     // Pin picker map sheet
     if (showPinPicker) {

@@ -50,6 +50,8 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.rork.rockscout.data.CommunityRepository
 import com.rork.rockscout.data.SocialRepository
+import com.rork.rockscout.ui.components.CommunityCommentInputRow
+import com.rork.rockscout.ui.components.CommunityReplyComposer
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.FullScreenImageViewer
 import com.rork.rockscout.ui.components.SculptedButton
@@ -146,6 +148,11 @@ fun CommunityPostDetailScreen(
     // Which comment is currently being replied to
     var replyingToCommentId by remember { mutableStateOf<String?>(null) }
     val replyBodies = remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    val replyImageUris = remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
+    val replyImageErrors = remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
+    var commentBody by remember { mutableStateOf("") }
+    var commentImageUri by remember { mutableStateOf<String?>(null) }
+    var commentImageError by remember { mutableStateOf<String?>(null) }
     var viewerImageUrl by remember { mutableStateOf<String?>(null) }
     var repostTarget by remember { mutableStateOf<CommunityRepository.PostRow?>(null) }
     var commentSortMode by remember { mutableStateOf(DetailCommentSortMode.Popular) }
@@ -429,19 +436,63 @@ fun CommunityPostDetailScreen(
             if (sortedReplies.isNotEmpty()) {
                 item(key = "first_reply_${comment.id}") {
                     val firstReply = sortedReplies.first()
+                    val firstReplying = replyingToCommentId == firstReply.id
                     DetailCommentRow(
                         comment = firstReply,
                         isMine = firstReply.user_id == myUserId,
                         likeCount = commentLikes[firstReply.id]?.size ?: 0,
                         isLiked = likedCommentIds.contains(firstReply.id),
                         onLike = { scope.launch { repo.toggleCommentLike(firstReply.id) } },
-                        onReply = {},
-                        isReplying = false,
+                        onReply = { replyingToCommentId = firstReply.id },
+                        isReplying = firstReplying,
                         isReply = true,
                         parentCommentBody = comment.body,
                         authorName = authors[firstReply.user_id]?.displayName ?: "Unknown",
                         onImageClick = { url -> viewerImageUrl = url },
                     )
+                    if (firstReplying) {
+                        Spacer(Modifier.height(6.dp))
+                        val replyImgUri = replyImageUris.value[firstReply.id]
+                        CommunityReplyComposer(
+                            body = replyBodies.value[firstReply.id] ?: "",
+                            onBodyChange = { body ->
+                                replyBodies.value = replyBodies.value + (firstReply.id to body)
+                            },
+                            onSubmit = {
+                                val body = replyBodies.value[firstReply.id] ?: ""
+                                val cleanImg = replyImgUri?.takeIf { !it.startsWith("__") && it != "__loading__" }
+                                if (body.isNotBlank() || cleanImg != null) {
+                                    scope.launch {
+                                        repo.addComment(post.id, body, firstReply.id, cleanImg)
+                                        replyBodies.value = replyBodies.value - firstReply.id
+                                        replyImageUris.value = replyImageUris.value - firstReply.id
+                                        replyImageErrors.value = replyImageErrors.value - firstReply.id
+                                        replyingToCommentId = null
+                                    }
+                                }
+                            },
+                            imageUri = replyImgUri,
+                            imageModerating = replyImgUri == "__loading__",
+                            imageError = replyImageErrors.value[firstReply.id],
+                            onImagePicked = { uri ->
+                                if (uri == null) {
+                                    replyImageUris.value = replyImageUris.value - firstReply.id
+                                    replyImageErrors.value = replyImageErrors.value - firstReply.id
+                                } else if (uri.startsWith("__error:")) {
+                                    replyImageErrors.value = replyImageErrors.value + (firstReply.id to uri.substring(8))
+                                    replyImageUris.value = replyImageUris.value - firstReply.id
+                                } else {
+                                    replyImageUris.value = replyImageUris.value + (firstReply.id to uri)
+                                    replyImageErrors.value = replyImageErrors.value - firstReply.id
+                                }
+                            },
+                            onImageRemove = {
+                                replyImageUris.value = replyImageUris.value - firstReply.id
+                                replyImageErrors.value = replyImageErrors.value - firstReply.id
+                            },
+                            onCancel = { replyingToCommentId = null },
+                        )
+                    }
                 }
 
                 // "View all N replies" / "Collapse" button when there are more than 1 reply
@@ -483,19 +534,63 @@ fun CommunityPostDetailScreen(
                         item(key = "expanded_replies_${comment.id}") {
                             Column {
                                 sortedReplies.drop(1).forEach { reply ->
+                                    val replyReplying = replyingToCommentId == reply.id
                                     DetailCommentRow(
                                         comment = reply,
                                         isMine = reply.user_id == myUserId,
                                         likeCount = commentLikes[reply.id]?.size ?: 0,
                                         isLiked = likedCommentIds.contains(reply.id),
                                         onLike = { scope.launch { repo.toggleCommentLike(reply.id) } },
-                                        onReply = {},
-                                        isReplying = false,
+                                        onReply = { replyingToCommentId = reply.id },
+                                        isReplying = replyReplying,
                                         isReply = true,
                                         parentCommentBody = comment.body,
                                         authorName = authors[reply.user_id]?.displayName ?: "Unknown",
                                         onImageClick = { url -> viewerImageUrl = url },
                                     )
+                                    if (replyReplying) {
+                                        Spacer(Modifier.height(6.dp))
+                                        val replyImgUri = replyImageUris.value[reply.id]
+                                        CommunityReplyComposer(
+                                            body = replyBodies.value[reply.id] ?: "",
+                                            onBodyChange = { body ->
+                                                replyBodies.value = replyBodies.value + (reply.id to body)
+                                            },
+                                            onSubmit = {
+                                                val body = replyBodies.value[reply.id] ?: ""
+                                                val cleanImg = replyImgUri?.takeIf { !it.startsWith("__") && it != "__loading__" }
+                                                if (body.isNotBlank() || cleanImg != null) {
+                                                    scope.launch {
+                                                        repo.addComment(post.id, body, reply.id, cleanImg)
+                                                        replyBodies.value = replyBodies.value - reply.id
+                                                        replyImageUris.value = replyImageUris.value - reply.id
+                                                        replyImageErrors.value = replyImageErrors.value - reply.id
+                                                        replyingToCommentId = null
+                                                    }
+                                                }
+                                            },
+                                            imageUri = replyImgUri,
+                                            imageModerating = replyImgUri == "__loading__",
+                                            imageError = replyImageErrors.value[reply.id],
+                                            onImagePicked = { uri ->
+                                                if (uri == null) {
+                                                    replyImageUris.value = replyImageUris.value - reply.id
+                                                    replyImageErrors.value = replyImageErrors.value - reply.id
+                                                } else if (uri.startsWith("__error:")) {
+                                                    replyImageErrors.value = replyImageErrors.value + (reply.id to uri.substring(8))
+                                                    replyImageUris.value = replyImageUris.value - reply.id
+                                                } else {
+                                                    replyImageUris.value = replyImageUris.value + (reply.id to uri)
+                                                    replyImageErrors.value = replyImageErrors.value - reply.id
+                                                }
+                                            },
+                                            onImageRemove = {
+                                                replyImageUris.value = replyImageUris.value - reply.id
+                                                replyImageErrors.value = replyImageErrors.value - reply.id
+                                            },
+                                            onCancel = { replyingToCommentId = null },
+                                        )
+                                    }
                                     Spacer(Modifier.height(4.dp))
                                 }
                             }
@@ -508,26 +603,96 @@ fun CommunityPostDetailScreen(
             if (replyingToCommentId == comment.id) {
                 item(key = "reply_composer_${comment.id}") {
                     Column(modifier = Modifier.padding(start = 20.dp, top = 6.dp)) {
-                        DetailReplyComposer(
+                        val replyImgUri = replyImageUris.value[comment.id]
+                        CommunityReplyComposer(
                             body = replyBodies.value[comment.id] ?: "",
                             onBodyChange = { body ->
                                 replyBodies.value = replyBodies.value + (comment.id to body)
                             },
                             onSubmit = {
                                 val body = replyBodies.value[comment.id] ?: ""
-                                if (body.isNotBlank()) {
+                                val cleanImg = replyImgUri?.takeIf { !it.startsWith("__") && it != "__loading__" }
+                                if (body.isNotBlank() || cleanImg != null) {
                                     scope.launch {
-                                        repo.addComment(post.id, body, comment.id, null)
+                                        repo.addComment(post.id, body, comment.id, cleanImg)
                                         replyBodies.value = replyBodies.value - comment.id
+                                        replyImageUris.value = replyImageUris.value - comment.id
+                                        replyImageErrors.value = replyImageErrors.value - comment.id
                                         replyingToCommentId = null
                                     }
                                 }
+                            },
+                            imageUri = replyImgUri,
+                            imageModerating = replyImgUri == "__loading__",
+                            imageError = replyImageErrors.value[comment.id],
+                            onImagePicked = { uri ->
+                                if (uri == null) {
+                                    replyImageUris.value = replyImageUris.value - comment.id
+                                    replyImageErrors.value = replyImageErrors.value - comment.id
+                                } else if (uri.startsWith("__error:")) {
+                                    replyImageErrors.value = replyImageErrors.value + (comment.id to uri.substring(8))
+                                    replyImageUris.value = replyImageUris.value - comment.id
+                                } else {
+                                    replyImageUris.value = replyImageUris.value + (comment.id to uri)
+                                    replyImageErrors.value = replyImageErrors.value - comment.id
+                                }
+                            },
+                            onImageRemove = {
+                                replyImageUris.value = replyImageUris.value - comment.id
+                                replyImageErrors.value = replyImageErrors.value - comment.id
                             },
                             onCancel = { replyingToCommentId = null },
                         )
                     }
                 }
             }
+        }
+
+        // Add a comment input at the bottom of the detail screen
+        item {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Add a comment",
+                style = MaterialTheme.typography.labelMedium,
+                color = TextMid,
+                fontWeight = FontWeight.Bold,
+            )
+            Spacer(Modifier.height(6.dp))
+            CommunityCommentInputRow(
+                body = commentBody,
+                onBodyChange = { commentBody = it },
+                onSubmit = {
+                    val cleanImg = commentImageUri?.takeIf { !it.startsWith("__") && it != "__loading__" }
+                    if (commentBody.isNotBlank() || cleanImg != null) {
+                        scope.launch {
+                            repo.addComment(post.id, commentBody, null, cleanImg)
+                            commentBody = ""
+                            commentImageUri = null
+                            commentImageError = null
+                        }
+                    }
+                },
+                imageUri = commentImageUri,
+                imageModerating = commentImageUri == "__loading__",
+                imageError = commentImageError,
+                onImagePicked = { uri ->
+                    if (uri == null) {
+                        commentImageUri = null
+                        commentImageError = null
+                    } else if (uri.startsWith("__error:")) {
+                        commentImageError = uri.substring(8)
+                        commentImageUri = null
+                    } else {
+                        commentImageUri = uri
+                        commentImageError = null
+                    }
+                },
+                onImageRemove = {
+                    commentImageUri = null
+                    commentImageError = null
+                },
+                placeholder = "Add a comment…",
+            )
         }
     }
 
@@ -663,15 +828,13 @@ private fun DetailCommentRow(
                 }
             }
             Spacer(Modifier.height(4.dp))
-            if (!isReply) {
-                Text(
-                    "Reply",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (isReplying) Citrine else TextMid,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onReply() },
-                )
-            }
+            Text(
+                "Reply",
+                style = MaterialTheme.typography.labelSmall,
+                color = if (isReplying) Citrine else TextMid,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.clickable { onReply() },
+            )
         }
     }
 }

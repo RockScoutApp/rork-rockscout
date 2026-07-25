@@ -561,24 +561,6 @@ fun CommunityPostCard(
                     isReplying = replyingToCommentId == comment.id,
                     onImageClick = { url -> viewerImageUrl = url },
                 )
-                if (visibleReplies.isNotEmpty()) {
-                    Spacer(Modifier.height(4.dp))
-                    visibleReplies.forEach { reply ->
-                        CommunityCommentRow(
-                            comment = reply,
-                            isMine = reply.user_id == myUserId,
-                            likeCount = commentLikes[reply.id]?.size ?: 0,
-                            isLiked = likedCommentIds.contains(reply.id),
-                            onLike = { onCommentLike(reply.id) },
-                            onReply = {},
-                            isReplying = replyingToCommentId == reply.id,
-                            isReply = true,
-                            parentCommentBody = comment.body,
-                            onImageClick = { url -> viewerImageUrl = url },
-                        )
-                        if (reply != visibleReplies.last()) Spacer(Modifier.height(4.dp))
-                    }
-                }
                 if (replyingToCommentId == comment.id) {
                     CommunityReplyComposer(
                         body = replyBody,
@@ -591,6 +573,37 @@ fun CommunityPostCard(
                         onImageRemove = onReplyImageRemove,
                         modifier = Modifier.padding(start = 20.dp, top = 6.dp),
                     )
+                }
+                if (visibleReplies.isNotEmpty()) {
+                    Spacer(Modifier.height(4.dp))
+                    visibleReplies.forEach { reply ->
+                        CommunityCommentRow(
+                            comment = reply,
+                            isMine = reply.user_id == myUserId,
+                            likeCount = commentLikes[reply.id]?.size ?: 0,
+                            isLiked = likedCommentIds.contains(reply.id),
+                            onLike = { onCommentLike(reply.id) },
+                            onReply = { onReplyStart(reply.id) },
+                            isReplying = replyingToCommentId == reply.id,
+                            isReply = true,
+                            parentCommentBody = comment.body,
+                            onImageClick = { url -> viewerImageUrl = url },
+                        )
+                        if (replyingToCommentId == reply.id) {
+                            CommunityReplyComposer(
+                                body = replyBody,
+                                onBodyChange = onReplyBodyChange,
+                                onSubmit = onReplySubmit,
+                                imageUri = replyImageUri,
+                                imageModerating = replyImageModerating,
+                                imageError = replyImageError,
+                                onImagePicked = onReplyImagePicked,
+                                onImageRemove = onReplyImageRemove,
+                                modifier = Modifier.padding(start = 40.dp, top = 6.dp),
+                            )
+                        }
+                        if (reply != visibleReplies.last()) Spacer(Modifier.height(4.dp))
+                    }
                 }
                 if (comment != visibleTopLevel.last()) Spacer(Modifier.height(6.dp))
             }
@@ -760,23 +773,19 @@ private fun CommunityCommentRow(
                 }
             }
             Spacer(Modifier.height(4.dp))
-            // Nested replies hide their own Reply action so parent and child comments don't
-            // stack Reply buttons (master build task M). Only top-level comments reply.
-            if (!isReply) {
-                Text(
-                    "Reply",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (isReplying) Citrine else TextMid,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onReply() },
-                )
-            }
+            Text(
+                "Reply",
+                style = MaterialTheme.typography.labelSmall,
+                color = if (isReplying) Citrine else TextMid,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.clickable { onReply() },
+            )
         }
     }
 }
 
 @Composable
-private fun CommunityReplyComposer(
+fun CommunityReplyComposer(
     body: String,
     onBodyChange: (String) -> Unit,
     onSubmit: () -> Unit,
@@ -785,25 +794,51 @@ private fun CommunityReplyComposer(
     imageError: String? = null,
     onImagePicked: ((String?) -> Unit)? = null,
     onImageRemove: (() -> Unit)? = null,
+    onCancel: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
-    CommunityCommentInputRow(
-        body = body,
-        onBodyChange = onBodyChange,
-        onSubmit = onSubmit,
-        imageUri = imageUri,
-        imageModerating = imageModerating,
-        imageError = imageError,
-        onImagePicked = onImagePicked,
-        onImageRemove = onImageRemove,
-        placeholder = "Write a reply…",
-        modifier = modifier,
-    )
+    Column(modifier = modifier.fillMaxWidth()) {
+        CommunityCommentInputRow(
+            body = body,
+            onBodyChange = onBodyChange,
+            onSubmit = onSubmit,
+            imageUri = imageUri,
+            imageModerating = imageModerating,
+            imageError = imageError,
+            onImagePicked = onImagePicked,
+            onImageRemove = onImageRemove,
+            placeholder = "Write a reply…",
+            modifier = Modifier.fillMaxWidth(),
+        )
+        if (onCancel != null) {
+            Spacer(Modifier.height(6.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SculptedButton(
+                    text = "Cancel",
+                    onClick = onCancel,
+                    accent = DarkTextMid,
+                    textColor = DarkTextMid,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                )
+                val canSubmit = body.isNotBlank() && !imageModerating &&
+                    (imageUri == null || (!imageUri.startsWith("__") && imageUri != "__loading__"))
+                SculptedButton(
+                    text = "Reply",
+                    onClick = { if (canSubmit) onSubmit() },
+                    accent = Citrine,
+                    containerColor = if (canSubmit) Citrine else Color(0xFF3A3830),
+                    textColor = if (canSubmit) Ink else DarkTextMid,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
+                    enabled = canSubmit,
+                )
+            }
+        }
+    }
 }
 
 /** Reusable comment/reply input row with optional image attachment and moderation. */
 @Composable
-private fun CommunityCommentInputRow(
+fun CommunityCommentInputRow(
     body: String,
     onBodyChange: (String) -> Unit,
     onSubmit: () -> Unit,

@@ -97,6 +97,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import coil3.compose.AsyncImage
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -969,6 +970,17 @@ internal fun TripEditorDialog(
         draftSavedAt = null
     }
 
+    val currentTripSnapshot = Trip(
+        id = draftKey,
+        name = name,
+        date = dateMillis,
+        stops = stops.toList(),
+        targetSpecimens = targetSpecimens.toList(),
+        gearChecklist = gearChecklist.toList(),
+        notes = notes,
+        specimenMarkers = specimenMarkers.toList(),
+    )
+
     // ── Auto-save draft logic ──
     LaunchedEffect(name, dateMillis, stops.toList(), targetSpecimens.toList(), gearChecklist.toList(), notes, specimenMarkers.toList()) {
         val hasContent = name.isNotBlank() ||
@@ -983,20 +995,16 @@ internal fun TripEditorDialog(
             clearDraft()
             return@LaunchedEffect
         }
+        // For existing trips, don't create a draft that simply matches the saved trip.
+        if (initial != null && initial.hasSameEditableContentAs(currentTripSnapshot)) {
+            clearDraft()
+            return@LaunchedEffect
+        }
         kotlinx.coroutines.delay(3000)
         runCatching {
             val draftJson = kotlinx.serialization.json.Json.encodeToString(
                 Trip.serializer(),
-                Trip(
-                    id = draftKey,
-                    name = name,
-                    date = dateMillis,
-                    stops = stops.toList(),
-                    targetSpecimens = targetSpecimens.toList(),
-                    gearChecklist = gearChecklist.toList(),
-                    notes = notes,
-                    specimenMarkers = specimenMarkers.toList(),
-                ),
+                currentTripSnapshot,
             )
             val draftFile = java.io.File(context.filesDir, "trip_draft_$draftKey.json")
             draftFile.writeText(draftJson)
@@ -1011,6 +1019,16 @@ internal fun TripEditorDialog(
         if (draftFile.exists()) {
             val ageMs = System.currentTimeMillis() - draftFile.lastModified()
             if (ageMs < 7L * 24 * 60 * 60 * 1000) {
+                // Only prompt if the draft differs from the saved trip.
+                if (initial != null) {
+                    val draft = runCatching {
+                        kotlinx.serialization.json.Json.decodeFromString(Trip.serializer(), draftFile.readText())
+                    }.getOrNull()
+                    if (draft != null && initial.hasSameEditableContentAs(draft)) {
+                        draftFile.delete()
+                        return@LaunchedEffect
+                    }
+                }
                 showRestoreDraft = true
             } else {
                 draftFile.delete()
@@ -1145,6 +1163,25 @@ Planned with RockScout""".trimIndent()
                 Spacer(Modifier.height(12.dp))
                 Text("Stops (long-press to drag & reorder)", style = MaterialTheme.typography.titleSmall, color = DarkTextHigh, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(6.dp))
+                if (stops.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF2A2820))
+                            .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                            .padding(horizontal = 14.dp, vertical = 18.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            "No stops yet. Tap + Add a stop or + Drop a custom pin.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextLow,
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                    Spacer(Modifier.height(6.dp))
+                }
                 stops.forEachIndexed { idx, stop ->
                     // Travel duration badge between stops
                     if (idx > 0 && idx - 1 < segmentDurations.size) {
@@ -1176,12 +1213,14 @@ Planned with RockScout""".trimIndent()
                     // `idx` alone cancels the in-flight gesture the moment stops
                     // move, which is why reordering felt broken.
                     val dragKey = "${stop.locationId}-${stop.order}"
+                    var stopRowCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
                             .onGloballyPositioned { coords ->
+                                stopRowCoords = coords
                                 stopRowRects[idx] = Rect(
                                     offset = coords.localToRoot(Offset.Zero),
                                     size = Size(
@@ -1193,16 +1232,14 @@ Planned with RockScout""".trimIndent()
                             .then(if (isDragging) Modifier.graphicsLayer { alpha = 0.3f } else Modifier)
                             .pointerInput(dragKey) {
                                 detectDragGesturesAfterLongPress(
-                                    onDragStart = {
+                                    onDragStart = { startOffset ->
                                         draggingStopIndex = idx
+                                        dragFingerPos = stopRowCoords?.localToRoot(startOffset) ?: Offset.Zero
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     },
-                                    onDrag = { change, delta ->
+                                    onDrag = { change, _ ->
                                         change.consume()
-                                        dragFingerPos = Offset(
-                                            dragFingerPos.x + delta.x,
-                                            dragFingerPos.y + delta.y,
-                                        )
+                                        dragFingerPos = stopRowCoords?.localToRoot(change.position) ?: dragFingerPos
                                         // Find which stop row the finger is over
                                         val currentDragIdx = draggingStopIndex ?: return@detectDragGesturesAfterLongPress
                                         val targetIdx = stopRowRects.entries
@@ -1924,6 +1961,18 @@ Planned with RockScout""".trimIndent()
             onDismiss = { pendingRemoveMarker = null },
         )
     }
+}
+
+/** Compares the editable content fields of two trips (ignoring id/createdAt/etc.).
+ * Used to decide whether a draft is meaningfully different from the saved trip. */
+private fun Trip.hasSameEditableContentAs(other: Trip): Boolean {
+    return name == other.name &&
+        date == other.date &&
+        stops == other.stops &&
+        targetSpecimens == other.targetSpecimens &&
+        gearChecklist == other.gearChecklist &&
+        notes == other.notes &&
+        specimenMarkers == other.specimenMarkers
 }
 
 private enum class LocationFilterMode { Name, State, Country }

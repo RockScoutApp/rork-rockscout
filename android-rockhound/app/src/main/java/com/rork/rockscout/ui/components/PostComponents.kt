@@ -557,6 +557,19 @@ fun PostCard(
                     onReply = { onReplyStart(comment.id) },
                     isReplying = replyingToCommentId == comment.id,
                 )
+                if (replyingToCommentId == comment.id) {
+                    ReplyComposer(
+                        body = replyBody,
+                        onBodyChange = onReplyBodyChange,
+                        onSubmit = onReplySubmit,
+                        imageUri = replyImageUri,
+                        imageModerating = replyImageModerating,
+                        imageError = replyImageError,
+                        onImagePicked = onReplyImagePicked,
+                        onImageRemove = onReplyImageRemove,
+                        modifier = Modifier.padding(start = 20.dp, top = 6.dp),
+                    )
+                }
                 if (visibleReplies.isNotEmpty()) {
                     Spacer(Modifier.height(4.dp))
                     visibleReplies.forEach { reply ->
@@ -571,21 +584,21 @@ fun PostCard(
                             isReply = true,
                             parentCommentBody = comment.body,
                         )
+                        if (replyingToCommentId == reply.id) {
+                            ReplyComposer(
+                                body = replyBody,
+                                onBodyChange = onReplyBodyChange,
+                                onSubmit = onReplySubmit,
+                                imageUri = replyImageUri,
+                                imageModerating = replyImageModerating,
+                                imageError = replyImageError,
+                                onImagePicked = onReplyImagePicked,
+                                onImageRemove = onReplyImageRemove,
+                                modifier = Modifier.padding(start = 40.dp, top = 6.dp),
+                            )
+                        }
                         if (reply != visibleReplies.last()) Spacer(Modifier.height(4.dp))
                     }
-                }
-                if (replyingToCommentId == comment.id) {
-                    ReplyComposer(
-                        body = replyBody,
-                        onBodyChange = onReplyBodyChange,
-                        onSubmit = onReplySubmit,
-                        imageUri = replyImageUri,
-                        imageModerating = replyImageModerating,
-                        imageError = replyImageError,
-                        onImagePicked = onReplyImagePicked,
-                        onImageRemove = onReplyImageRemove,
-                        modifier = Modifier.padding(start = 20.dp, top = 6.dp),
-                    )
                 }
                 if (comment != visibleTopLevel.last()) Spacer(Modifier.height(6.dp))
             }
