@@ -2732,6 +2732,7 @@ private fun SpecimenSubmissionReviewCard(
 ) {
     val subTime = SimpleDateFormat("MM/dd/yyyy", Locale.US).format(Date(submission.submittedAt))
     var editableInfoText by remember(submission.id) { mutableStateOf(submission.infoText) }
+    val displayName = submission.name.trim().ifBlank { "Unnamed specimen" }
 
     Box(
         modifier = Modifier
@@ -2746,6 +2747,16 @@ private fun SpecimenSubmissionReviewCard(
             .padding(14.dp),
     ) {
         Column {
+            // Specimen name
+            Text(
+                displayName,
+                style = MaterialTheme.typography.titleMedium,
+                color = DarkTextHigh,
+                fontWeight = FontWeight.Bold,
+                maxLines = 2,
+            )
+            Spacer(Modifier.height(6.dp))
+
             // Submitter info
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(

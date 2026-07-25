@@ -91,7 +91,7 @@ import com.rork.rockscout.ui.components.filterSpecimensByCategory
 import com.rork.rockscout.ui.components.InterstitialAdTrigger
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.SculptedButton
-import com.rork.rockscout.ui.components.SculptedIconButton
+import com.rork.rockscout.ui.components.UploadSpecimenPill
 import com.rork.rockscout.ui.components.CardHeart
 import com.rork.rockscout.ui.components.SpecimenAddShare
 import com.rork.rockscout.ui.components.SpecimenListItem
@@ -311,13 +311,8 @@ fun SpecimenListScreen(navController: NavController) {
                     }
                 }
                 Spacer(Modifier.weight(1f))
-                SculptedIconButton(
-                    icon = Icons.Filled.CloudUpload,
-                    contentDescription = "Submit specimen",
+                UploadSpecimenPill(
                     onClick = { showSubmitDialog = true },
-                    accent = Citrine,
-                    iconTint = Citrine,
-                    size = 40.dp,
                 )
             }
             Text(

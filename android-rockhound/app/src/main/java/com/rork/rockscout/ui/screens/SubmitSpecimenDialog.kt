@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -59,12 +60,14 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
 import com.rork.rockscout.data.AppRepository
+import com.rork.rockscout.data.CustomSpecimenStore
 import com.rork.rockscout.data.ImageModerator
 import com.rork.rockscout.data.ImageUtils
 import com.rork.rockscout.data.ModerationResult
 import com.rork.rockscout.data.ModerationTriState
 import com.rork.rockscout.data.ProfanityFilter
 import com.rork.rockscout.data.SeedData
+import com.rork.rockscout.data.Specimen
 import com.rork.rockscout.data.SpecimenSubmissionStore
 import com.rork.rockscout.ui.components.SavedImagesPickerDialog
 import com.rork.rockscout.ui.components.SculptedButton
@@ -98,7 +101,9 @@ fun SubmitSpecimenDialog(
     val profile = repo.profile.value
 
     val imageUris = remember { mutableStateListOf<String>() }
-    var infoText by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
+    var dateFound by remember { mutableStateOf(formatToday()) }
+    var description by remember { mutableStateOf("") }
     var selectedLocation by remember { mutableStateOf("") }
     var locationDropdownExpanded by remember { mutableStateOf(false) }
     var customLocation by remember { mutableStateOf("") }
@@ -106,6 +111,7 @@ fun SubmitSpecimenDialog(
     var isModerating by remember { mutableStateOf(false) }
     var showSavedImagePicker by remember { mutableStateOf(false) }
     var pendingRemovePhotoIdx by remember { mutableStateOf<Int?>(null) }
+    var alreadyInDatabaseSpecimen by remember { mutableStateOf<Specimen?>(null) }
     val scope = rememberCoroutineScope()
 
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -209,6 +215,26 @@ fun SubmitSpecimenDialog(
                     color = DarkTextMid,
                 )
 
+                // Specimen name
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = ProfanityFilter.filter(it) },
+                    label = { Text("Specimen name *") },
+                    placeholder = { Text("e.g. Abelsonite") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().noAutoFocus(),
+                )
+
+                // Date found
+                OutlinedTextField(
+                    value = dateFound,
+                    onValueChange = { dateFound = it },
+                    label = { Text("Date found") },
+                    placeholder = { Text("Jul 25, 2026") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().noAutoFocus(),
+                )
+
                 // Upload area
                 Text(
                     text = "Photos (up to 4)",
@@ -287,12 +313,12 @@ fun SubmitSpecimenDialog(
                     }
                 }
 
-                // Info text box
+                // Description
                 OutlinedTextField(
-                    value = infoText,
-                    onValueChange = { infoText = ProfanityFilter.filter(it) },
-                    label = { Text("Specimen information") },
-                    placeholder = { Text("Name, description, what you know about it…") },
+                    value = description,
+                    onValueChange = { description = ProfanityFilter.filter(it) },
+                    label = { Text("Description") },
+                    placeholder = { Text("What you know about it — color, texture, hardness, how you identified it…") },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp).noAutoFocus(),
                     minLines = 3,
                 )
@@ -377,20 +403,29 @@ fun SubmitSpecimenDialog(
                     selectedLocation.isNotBlank()
                 }
                 val canSubmit = imageUris.isNotEmpty() &&
-                    infoText.isNotBlank() &&
+                    name.trim().isNotBlank() &&
                     locationValid &&
                     isSignedIn
                 val finalLocation = if (useCustomLocation) customLocation.trim() else selectedLocation
                 SculptedButton(
                     text = "Submit Specimen",
                     onClick = {
+                        val trimmedName = name.trim()
+                        val matchingSpecimen = findExistingSpecimen(trimmedName)
+                        if (matchingSpecimen != null && isCommonLocation(matchingSpecimen, finalLocation)) {
+                            alreadyInDatabaseSpecimen = matchingSpecimen
+                            return@SculptedButton
+                        }
+
                         val submission = SpecimenSubmissionStore.SpecimenSubmission(
                             id = UUID.randomUUID().toString(),
                             submitterName = profile.name.ifBlank { "Anonymous" },
                             submitterId = com.rork.rockscout.data.AuthRepository.instance.currentUserId,
                             submitterAvatar = profile.avatarEmoji,
                             imageUris = imageUris.toList(),
-                            infoText = ProfanityFilter.filter(infoText.trim()),
+                            name = trimmedName,
+                            infoText = ProfanityFilter.filter(description.trim()),
+                            dateFound = dateFound.trim(),
                             location = finalLocation,
                             submittedAt = System.currentTimeMillis(),
                         )
@@ -436,7 +471,7 @@ fun SubmitSpecimenDialog(
     }
 
     pendingRemovePhotoIdx?.let { idx ->
-        androidx.compose.material3.AlertDialog(
+        AlertDialog(
             onDismissRequest = { pendingRemovePhotoIdx = null },
             title = { Text("Remove photo?", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
             text = { Text("Remove this photo from the submission?", color = DarkTextMid) },
@@ -464,5 +499,61 @@ fun SubmitSpecimenDialog(
             titleContentColor = DarkTextHigh,
             textContentColor = DarkTextMid,
         )
+    }
+
+    alreadyInDatabaseSpecimen?.let { spec ->
+        AlertDialog(
+            onDismissRequest = { alreadyInDatabaseSpecimen = null },
+            title = {
+                Text(
+                    "Already in the database",
+                    color = DarkTextHigh,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            text = {
+                Text(
+                    "${spec.name} is already included in the RockScout database. You can view it in the Specimen Database.",
+                    color = DarkTextMid,
+                )
+            },
+            confirmButton = {
+                SculptedTextButton(
+                    text = "Close",
+                    onClick = { alreadyInDatabaseSpecimen = null },
+                    accent = Citrine,
+                    textColor = Citrine,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            containerColor = Color(0xFF1E1C16),
+            titleContentColor = DarkTextHigh,
+            textContentColor = DarkTextMid,
+        )
+    }
+}
+
+private fun formatToday(): String {
+    val formatter = java.text.SimpleDateFormat("MMM d, yyyy", java.util.Locale.getDefault())
+    return formatter.format(java.util.Date())
+}
+
+/** Look for a specimen in the database whose name matches the entered name. */
+private fun findExistingSpecimen(name: String): Specimen? {
+    val normalized = name.lowercase()
+    if (normalized.isBlank()) return null
+    return (SeedData.allSpecimens + CustomSpecimenStore.specimens.value).firstOrNull { spec ->
+        val specName = spec.name.trim().lowercase()
+        specName == normalized || specName.contains(normalized) || normalized.contains(specName)
+    }
+}
+
+/** Returns true if the submitted location is one of the common find spots for this specimen. */
+private fun isCommonLocation(specimen: Specimen, location: String): Boolean {
+    val loc = location.trim().lowercase()
+    if (loc.isBlank()) return false
+    return specimen.whereFound.any { where ->
+        val whereNormalized = where.trim().lowercase()
+        whereNormalized.contains(loc) || loc.contains(whereNormalized)
     }
 }

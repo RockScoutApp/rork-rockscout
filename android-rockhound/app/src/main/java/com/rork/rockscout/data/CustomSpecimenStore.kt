@@ -105,11 +105,19 @@ object CustomSpecimenStore {
         targetDatabase: String,
     ): Specimen {
         val infoText = submission.infoText.trim()
-        // Derive name from first line or first sentence of info text
-        val name = infoText.lineSequence().firstOrNull()?.takeIf { it.isNotBlank() }
-            ?: infoText.substringBefore(".").takeIf { it.isNotBlank() }
-            ?: "User Submitted Specimen"
+        // Prefer the user-provided name; fall back to deriving from the description.
+        val name = submission.name.trim().ifBlank {
+            infoText.lineSequence().firstOrNull()?.takeIf { it.isNotBlank() }
+                ?: infoText.substringBefore(".").takeIf { it.isNotBlank() }
+                ?: "User Submitted Specimen"
+        }
         val tagline = if (infoText.length > 80) infoText.take(80) + "…" else infoText.ifBlank { "Submitted by ${submission.submitterName}" }
+        val description = buildString {
+            append(infoText.ifBlank { "No description provided." })
+            if (submission.dateFound.isNotBlank()) {
+                append("\n\nDate found: ${submission.dateFound}")
+            }
+        }
 
         return Specimen(
             id = "custom-${submission.id}",
@@ -119,7 +127,7 @@ object CustomSpecimenStore {
             tagline = tagline,
             emoji = "\uD83E\uDEA8",
             colorHex = 0xFF6FA8C7,
-            description = infoText.ifBlank { "No description provided." },
+            description = description,
             formation = "—",
             hardness = "—",
             luster = "—",

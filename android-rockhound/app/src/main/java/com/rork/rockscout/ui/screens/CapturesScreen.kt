@@ -74,6 +74,7 @@ import com.rork.rockscout.ui.components.ShareToProfileComposer
 import com.rork.rockscout.ui.components.SpecimenMarkerMap
 import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.SculptedTextButton
+import com.rork.rockscout.ui.components.UploadSpecimenPill
 import com.rork.rockscout.ui.components.rockClassColor
 import com.rork.rockscout.ui.components.DeleteConfirmDialog
 import com.rork.rockscout.ui.components.glowingBorder
@@ -105,6 +106,7 @@ fun CapturesScreen(navController: NavController) {
     var shareToProfileCapture by remember { mutableStateOf<CapturedPhoto?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var pendingDeleteCapture by remember { mutableStateOf<CapturedPhoto?>(null) }
+    var showUploadSpecimenDialog by remember { mutableStateOf(false) }
 
     // Selection mode state
     var selectionMode by remember { mutableStateOf(false) }
@@ -195,6 +197,7 @@ fun CapturesScreen(navController: NavController) {
                     onPageSelected = { page ->
                         pagerScope.launch { pagerState.animateScrollToPage(page) }
                     },
+                    onUploadClick = { showUploadSpecimenDialog = true },
                 )
 
                 HorizontalPager(
@@ -350,6 +353,10 @@ fun CapturesScreen(navController: NavController) {
             onDismiss = { pendingDeleteCapture = null },
         )
     }
+
+    if (showUploadSpecimenDialog) {
+        SubmitSpecimenDialog(onDismiss = { showUploadSpecimenDialog = false })
+    }
 }
 
 /* ── Pill switcher — Captures / Specimen Map ─────────────────────────────── */
@@ -358,6 +365,7 @@ fun CapturesScreen(navController: NavController) {
 private fun CapturesPagePillSwitcher(
     currentPage: Int,
     onPageSelected: (Int) -> Unit,
+    onUploadClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -382,7 +390,7 @@ private fun CapturesPagePillSwitcher(
                         RoundedCornerShape(24.dp),
                     )
                     .clickable { onPageSelected(page) }
-                    .padding(horizontal = 28.dp, vertical = 8.dp),
+                    .padding(horizontal = 24.dp, vertical = 8.dp),
             ) {
                 Text(
                     label,
@@ -392,9 +400,11 @@ private fun CapturesPagePillSwitcher(
                 )
             }
             if (page < 1) {
-                Spacer(Modifier.width(12.dp))
+                Spacer(Modifier.width(10.dp))
             }
         }
+        Spacer(Modifier.width(10.dp))
+        UploadSpecimenPill(onClick = onUploadClick)
     }
 }
 

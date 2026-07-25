@@ -24,7 +24,11 @@ object SpecimenSubmissionStore {
         val submitterId: String?,
         val submitterAvatar: String,
         val imageUris: List<String>,
+        /** User-provided specimen name (used for duplicate detection and review). */
+        val name: String = "",
         val infoText: String,
+        /** User-provided date the specimen was found, e.g. "Jul 25, 2026". */
+        val dateFound: String = "",
         val location: String,
         val submittedAt: Long,
         val status: String = "pending",
