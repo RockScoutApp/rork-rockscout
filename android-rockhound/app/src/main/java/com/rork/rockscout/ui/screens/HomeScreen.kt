@@ -409,12 +409,6 @@ fun HomeScreen(navController: NavController) {
     val infoTiles = listOf(
         HomeTile("Rocks Are Amazing", "${RocksAreAmazingSpecimens.allAmazing.size} wonders · Earth's most stunning formations", Icons.Filled.CollectionsBookmark, Color(0xFF44AACC), Routes.ROCKS_ARE_AMAZING,
             SpecimenImages.urls["bismuth-crystal"]?.firstOrNull()),
-        HomeTile("BLM Public Lands", "State rules, dig sites, trailheads & campgrounds", Icons.Filled.Terrain, Color(0xFFC97B4A), Routes.BLM_GUIDE,
-            BLM_HOME_TILE_NATURE),
-        HomeTile("Finding Meteorites", "How to hunt and identify space rocks", Icons.Filled.Public, Color(0xFFC0C0C0), Routes.METEORITE_HUNTING,
-            SpecimenImages.urls["amazing-meteorite-hunting"]?.firstOrNull()),
-        HomeTile("Rock & Gem Resources", "Trusted geology, gem & fossil websites", Icons.Filled.Public, Color(0xFF7CB5EC), Routes.RESOURCE_LINKS,
-            GEM_MINERAL_HERO_URL),
         HomeTile("Exploring Geology", "Learn how rocks, minerals & gems form", Icons.Filled.MenuBook, Color(0xFFD9B26A), Routes.ROCK_INFO,
             SpecimenImages.urls["granite"]?.firstOrNull()),
         HomeTile("Exploring Paleontology", "Fossils, eras & deep-time history", Icons.Filled.Nature, Color(0xFFC9A87C), Routes.PALEONTOLOGY,
@@ -433,6 +427,17 @@ fun HomeScreen(navController: NavController) {
             SpecimenImages.urls["quartz"]?.firstOrNull()),
         HomeTile("Lapidary Basics", "Cut, polish & cab your finds into jewelry", Icons.Filled.Construction, Color(0xFFE8A33D), Routes.LAPIDARY_BASICS,
             SpecimenImages.urls["lapidary-tile"]?.firstOrNull()),
+    )
+
+    // Field-guide tiles live under the Gear Guide banner in the field kit
+    // section instead of the Explore & learn carousel.
+    val fieldGuideTiles = listOf(
+        HomeTile("BLM Public Lands", "State rules, dig sites, trailheads & campgrounds", Icons.Filled.Terrain, Color(0xFFC97B4A), Routes.BLM_GUIDE,
+            BLM_HOME_TILE_NATURE),
+        HomeTile("Finding Meteorites", "How to hunt and identify space rocks", Icons.Filled.Public, Color(0xFFC0C0C0), Routes.METEORITE_HUNTING,
+            SpecimenImages.urls["amazing-meteorite-hunting"]?.firstOrNull()),
+        HomeTile("Rock & Gem Resources", "Trusted geology, gem & fossil websites", Icons.Filled.Public, Color(0xFF7CB5EC), Routes.RESOURCE_LINKS,
+            GEM_MINERAL_HERO_URL),
     )
 
     val featuredSpecimens = remember {
@@ -624,6 +629,18 @@ fun HomeScreen(navController: NavController) {
                     imageUrl = "https://r2-pub.rork.com/attachments/78k8yy4tgahby3o9opb6j.png",
                     onClick = { navController.navigate(Routes.GEAR_GUIDE) },
                 )
+            }
+            // Field-guide tiles moved under the Gear Guide so they live
+            // with the rest of the field kit, separate from Explore & learn.
+            item {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    items(fieldGuideTiles) { tile ->
+                        InfoTileCard(
+                            tile = tile,
+                            onClick = { navController.navigate(tile.route) },
+                        )
+                    }
+                }
             }
 
             item {
