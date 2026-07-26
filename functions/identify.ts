@@ -1,4 +1,9 @@
-import { SPECIMEN_DB } from "./specimens";
+import { SPECIMEN_DB, type SpecimenEntry } from "./specimens";
+import {
+  embedText,
+  matchSpecimenEmbeddings,
+  type EmbeddingMatch,
+} from "./embeddings";
 
 export async function handleIdentify(
   request: Request,
@@ -41,53 +46,93 @@ export async function handleIdentify(
       );
     }
 
-    const result = await callVisionModel(toolkitUrl, toolkitSecret, imageData, mimeType);
     const responseHeaders = { ...cors, "Content-Type": "application/json" };
 
-    if (!result.ok) {
-      const errorBody = await result.text().catch(() => "unknown error");
-      console.error("AI Gateway error:", result.status, errorBody);
-      return Response.json(
-        { error: `AI identification failed (${result.status})` },
-        { status: 502, headers: responseHeaders },
-      );
+    // ── Embedding-first identification pipeline ──────────────────────────
+    // New flow: describe photo → embed description → pgvector match →
+    // narrowed candidates → visual comparison. Falls back to the old
+    // text-first Haiku pass (full 58K-token DB in system prompt) if Supabase
+    // or the embedding pipeline is unavailable.
+    const supabaseUrl = env.EXPO_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+    const embeddingEnabled = !!(supabaseUrl && supabaseAnonKey);
+
+    let parsed: IdentificationResult;
+    let usedEmbeddingFlow = false;
+
+    if (embeddingEnabled) {
+      try {
+        // Step 1: Lightweight Haiku pass — describe the photo in specimen
+        // vocabulary (no DB in context, just visual observation).
+        const photoDescription = await callDescribePhoto(
+          toolkitUrl, toolkitSecret, imageData, mimeType,
+        );
+        if (photoDescription) {
+          // Step 2: Embed the description and match against pgvector.
+          const queryEmbedding = await embedText(toolkitUrl, toolkitSecret, photoDescription);
+          const matchCount = useSonnet ? 20 : 25;
+          const embeddingMatches = await matchSpecimenEmbeddings(
+            supabaseUrl!, supabaseAnonKey!, queryEmbedding, matchCount,
+          );
+          if (embeddingMatches.length > 0) {
+            parsed = {
+              matches: embeddingMatchesToMatchResults(embeddingMatches),
+              summary: "Narrowed by embedding index — pending visual comparison.",
+            };
+            usedEmbeddingFlow = true;
+          }
+        }
+      } catch (err) {
+        console.error("Embedding flow failed, falling back to text-first:", String(err));
+      }
     }
 
-    const data = await result.json() as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-
-    const content = data.choices?.[0]?.message?.content;
-    if (!content) {
-      console.error("No content in AI response:", JSON.stringify(data));
-      return Response.json(
-        { error: "No identification results returned" },
-        { status: 502, headers: responseHeaders },
-      );
+    if (!usedEmbeddingFlow) {
+      // Fallback: old text-first flow (full 58K-token DB in system prompt).
+      const result = await callVisionModel(toolkitUrl, toolkitSecret, imageData, mimeType);
+      if (!result.ok) {
+        const errorBody = await result.text().catch(() => "unknown error");
+        console.error("AI Gateway error:", result.status, errorBody);
+        return Response.json(
+          { error: `AI identification failed (${result.status})` },
+          { status: 502, headers: responseHeaders },
+        );
+      }
+      const data = await result.json() as {
+        choices?: Array<{ message?: { content?: string } }>;
+      };
+      const content = data.choices?.[0]?.message?.content;
+      if (!content) {
+        console.error("No content in AI response:", JSON.stringify(data));
+        return Response.json(
+          { error: "No identification results returned" },
+          { status: 502, headers: responseHeaders },
+        );
+      }
+      parsed = parseIdentificationResponse(content);
     }
-
-    const parsed = parseIdentificationResponse(content);
 
     // Determine if clarification is needed (top match below 85%)
     const topConfidence = parsed.matches.length > 0 ? parsed.matches[0].confidence : 0;
     const isAmbiguous = topConfidence < 85 && parsed.matches.length > 0;
 
     // ── Visual reference comparison ───────────────────────────────────────
-    // After Haiku's text-based first pass, send the user's photo + the top 5
-    // candidates' reference images to a vision model for visual comparison.
-    // This lets the model actually *see* what each specimen looks like rather
-    // than working blind from text descriptions.
+    // In the embedding-first flow, this is the primary identification step —
+    // the model compares the user's photo against the reference images of the
+    // embedding-narrowed candidates (25 for free, 20 for premium).
+    // In the fallback flow, it refines the top 5 from the text-first pass.
     //   • Free tier → Haiku visual comparison
     //   • Premium/Pro → Sonnet visual comparison
     // If the visual match confidence is >= 92%, short-circuit the entire
     // remaining pipeline (Sonnet re-rank, Gemini, web search, clarification).
+    const visualMaxCandidates = usedEmbeddingFlow ? (useSonnet ? 20 : 25) : 5;
     const visualResult = await callVisualReferenceComparison(
-      toolkitUrl, toolkitSecret, imageData, mimeType, parsed.matches, useSonnet,
+      toolkitUrl, toolkitSecret, imageData, mimeType, parsed.matches, useSonnet, visualMaxCandidates,
     );
 
     let finalMatches = parsed.matches;
     let finalSummary = parsed.summary;
-    const modelsUsed: string[] = ["haiku"];
+    const modelsUsed: string[] = usedEmbeddingFlow ? ["embedding", "haiku-describe"] : ["haiku"];
     let sonnetDisagreed = false;
     let visualReferenceUsed = false;
     let visualShortCircuit = false;
@@ -335,6 +380,87 @@ function stripDataUriPrefix(b64: string): string {
   return comma === -1 ? b64 : b64.slice(comma + 1);
 }
 
+// --- Embedding-first pipeline helpers ---
+
+/** Convert pgvector match RPC results into MatchResult objects for the
+ *  visual comparison step. Confidence is mapped from cosine similarity
+ *  (0–1) to the 0–100 scale the rest of the pipeline uses. Reasoning is
+ *  a placeholder — the real reasoning comes from the LLM visual pass. */
+function embeddingMatchesToMatchResults(matches: EmbeddingMatch[]): MatchResult[] {
+  return matches.map((m) => {
+    const spec = SPECIMEN_DB.find((s) => s.id === m.specimen_id);
+    const confidence = Math.max(1, Math.min(99, Math.round(m.max_similarity * 100)));
+    return {
+      id: m.specimen_id,
+      name: spec?.name ?? m.specimen_id,
+      confidence,
+      reasoning: `Embedding index match (similarity ${m.max_similarity.toFixed(3)}).`,
+    };
+  });
+}
+
+/** Lightweight Haiku pass that describes the user's photo in specimen
+ *  vocabulary WITHOUT the full database in context. The returned text is
+ *  embedded and matched against the pgvector index to narrow candidates.
+ *  Returns null on any failure — the caller falls back to the text-first
+ *  flow. */
+async function callDescribePhoto(
+  toolkitUrl: string,
+  secret: string,
+  imageBase64: string,
+  mimeType: string,
+): Promise<string | null> {
+  const describePrompt = `Observe this rock, mineral, crystal, gem, or fossil photograph carefully and describe what you see using the vocabulary a field geologist would use.
+
+Describe in 3-5 sentences:
+- Primary color(s), color zoning, banding patterns
+- Crystal habit or form (cubes, hexagonal prisms, blades, needles, botryoidal, massive, microcrystalline, etc.)
+- Luster (metallic, vitreous, waxy, pearly, dull, adamantine, silky)
+- Texture (crystalline, grainy, smooth, fibrous, bladed, banded)
+- Transparency (transparent, translucent, opaque)
+- Any visible matrix or associated minerals
+- Any special optical effects (chatoyancy, asterism, play of color, adularescence, iridescence)
+- For fossils: shape, symmetry, surface texture, skeletal features
+
+Return ONLY the description prose — no JSON, no markdown, no preamble.`;
+
+  const messages = [
+    {
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+        { type: "text", text: describePrompt },
+      ],
+    },
+  ];
+
+  try {
+    const response = await fetch(`${toolkitUrl}/v2/vercel/v1/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${secret}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "anthropic/claude-haiku-4.5",
+        messages,
+        max_tokens: 512,
+        temperature: 0.1,
+      }),
+    });
+    if (!response.ok) return null;
+    const data = await response.json() as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const content = data.choices?.[0]?.message?.content;
+    if (!content || content.trim().length === 0) return null;
+    return content.trim();
+  } catch (err) {
+    console.error("callDescribePhoto error:", String(err));
+    return null;
+  }
+}
+
 async function callVisionModel(
   toolkitUrl: string,
   secret: string,
@@ -451,11 +577,14 @@ async function callVisualReferenceComparison(
   mimeType: string,
   preliminaryMatches: MatchResult[],
   useSonnet: boolean,
+  maxCandidates: number = 5,
 ): Promise<IdentificationResult | null> {
   if (preliminaryMatches.length === 0) return null;
 
-  // Look up reference image URLs for the top 5 candidates
-  const topCandidates = preliminaryMatches.slice(0, 5);
+  // Look up reference image URLs for the top candidates (up to maxCandidates).
+  // In the embedding-first flow this is 25 (free) / 20 (premium); in the
+  // fallback text-first flow it's 5.
+  const topCandidates = preliminaryMatches.slice(0, maxCandidates);
   const refs: Array<{ id: string; name: string; imageUrl: string }> = [];
   for (const m of topCandidates) {
     const spec = SPECIMEN_DB.find(s => s.id === m.id);
@@ -554,7 +683,9 @@ async function callSonnetRerank(
   preliminaryMatches: MatchResult[],
   summary: string,
 ): Promise<IdentificationResult | null> {
-  const systemPrompt = buildSystemPrompt();
+  // Embedding-first flow: use the trimmed candidate-only system prompt
+  // instead of the full 58K-token database.
+  const systemPrompt = buildCandidateSystemPrompt(preliminaryMatches);
   const matchList = preliminaryMatches.slice(0, 5)
     .map(m => `- ${m.name} (${m.confidence}%): ${m.reasoning}`)
     .join("\n");
@@ -615,7 +746,10 @@ async function callGeminiThirdOpinion(
   sonnetMatches: MatchResult[],
   summary: string,
 ): Promise<IdentificationResult | null> {
-  const systemPrompt = buildSystemPrompt();
+  // Embedding-first flow: use the trimmed candidate-only system prompt.
+  // Combine both match sets for the candidate list.
+  const allCandidates = [...haikuMatches, ...sonnetMatches];
+  const systemPrompt = buildCandidateSystemPrompt(allCandidates);
   const haikuList = haikuMatches.slice(0, 5).map(m => `- ${m.name} (${m.confidence}%)`).join("\n");
   const sonnetList = sonnetMatches.slice(0, 5).map(m => `- ${m.name} (${m.confidence}%)`).join("\n");
   const userPrompt = `Two prior models disagreed on this specimen photo.
@@ -1307,6 +1441,64 @@ ${rockList}
 ${fossilList}`;
 }
 
+/** Candidate-only system prompt for the embedding-first flow. Instead of
+ *  dumping the full 794-specimen database (58K tokens) into context, this
+ *  includes ONLY the narrowed candidate set's metadata — enough for the
+ *  rerank / tie-breaker models to reason about the candidates without the
+ *  massive prompt. The diagnostic-features guide and confidence calibration
+ *  are retained; only the specimen list is trimmed. */
+function buildCandidateSystemPrompt(candidates: MatchResult[]): string {
+  const seen = new Set<string>();
+  const rows: string[] = [];
+  for (const m of candidates) {
+    if (seen.has(m.id)) continue;
+    seen.add(m.id);
+    const spec = SPECIMEN_DB.find((s) => s.id === m.id);
+    if (!spec) continue;
+    const parts = [`- ${spec.id}: "${spec.name}" [${spec.category}]`];
+    if (spec.tagline) parts.push(spec.tagline);
+    if (spec.colors) parts.push(`Colors: ${spec.colors}`);
+    if (spec.hardness && spec.hardness !== "—") parts.push(`H=${spec.hardness}`);
+    if (spec.luster) parts.push(`Luster: ${spec.luster}`);
+    if (spec.crystal && spec.crystal !== "N/A") parts.push(`Crystal: ${spec.crystal}`);
+    if (spec.streak && spec.streak !== "—" && spec.streak !== "N/A") parts.push(`Streak: ${spec.streak}`);
+    rows.push(parts.join(" | "));
+  }
+  const candidateList = rows.join("\n");
+
+  return `You are an expert field geologist and mineralogist with 30+ years of experience identifying rocks, minerals, crystals, gems, and fossils from photographs.
+
+A pre-filter step has narrowed the database to these ${rows.length} candidates. Only consider these specimens — never invent IDs.
+
+## DIAGNOSTIC FEATURES (in priority order)
+1. **Crystal habit**: cubic (fluorite, galena, pyrite), hexagonal prisms (quartz, beryl, tourmaline, apatite), rhombohedral (calcite, dolomite), octahedral (diamond, fluorite, magnetite), bladed (kyanite, barite, feldspar), needles/fibrous (millerite, actinolite, rutile), botryoidal (malachite, hematite, smithsonite, chalcedony), dendritic (native copper, manganese), massive/granular (granite, basalt), microcrystalline (agate, jasper, chert).
+2. **Color**: brass-yellow metallic→pyrite/chalcopyrite/gold; lead-gray→galena/stibnite; purple→amethyst/fluorite/lepidolite/charoite; emerald green→malachite/dioptase/emerald/epidote; sky blue→turquoise/aquamarine/chrysocolla/larimar; pink→rhodochrosite/rose quartz/rhodonite; red→ruby/cinnabar/realgar/jasper; orange→carnelian/fire opal/crocoite/spessartine; black→obsidian/basalt/hematite/schorl/magnetite; banded→agate/malachite/rhodochrosite/banded iron.
+3. **Luster**: metallic (pyrite, galena, hematite, chalcopyrite), vitreous (quartz, fluorite, calcite, topaz, beryl), waxy (chalcedony, turquoise, opal, jade), pearly (talc, muscovite, stilbite), adamantine (diamond, zircon, cerussite), silky (gypsum satin spar, fibrous malachite), dull/earthy (kaolinite, limonite, bauxite).
+4. **Texture**: banded concentric→agate/malachite/onyx; fibrous→asbestos/actinolite; granular interlocking→granite/gabbro/pegmatite; conchoidal fracture→obsidian/opal/quartz/flint; foliated→slate/schist/gneiss; vesicular→pumice/scoria; oolitic→oolitic limestone/hematite.
+5. **Optical effects**: play of color→precious opal; chatoyancy→cat's eye/tiger's eye; asterism→star sapphire/ruby; adularescence→moonstone/larvikite; labradorescence→labradorite/spectrolite; iridescence→bornite/ammolite; color change→alexandrite/zultanite.
+6. **Fossils**: spiral shells→ammonite/nautiloid/gastropod; segmented stems→crinoid/calamites; leaf imprints→fossil fern/ginkgo; teeth→shark/megalodon/dinosaur; bone cross-sections→dinosaur bone/petrified wood; enrolled→trilobite.
+
+## CONFIDENCE CALIBRATION
+- **90-98%**: Multiple diagnostic features clearly visible and aligned
+- **75-89%**: Strong match but one feature unclear or ambiguous
+- **55-74%**: Good candidate but significant lookalikes exist
+- **30-54%**: Possible but uncertain — photo quality or variability creates doubt
+- **Below 30%**: Include only as a plausible alternative worth checking
+
+## RULES
+1. Only match against the candidates below — never invent IDs
+2. If not a rock/mineral/fossil, say so in summary and return empty matches
+3. If too blurry/dark, say so and return low-confidence matches
+4. Distinguish similar candidates using subtle features (streak, luster, associated minerals, crystal system)
+5. For polished/cut stones, consider both rough mineral identity and cut form
+6. For rocks, identify the rock type AND any prominent minerals visible
+7. Always provide exactly 5 matches, ranked by confidence highest to lowest
+8. Each reasoning must mention specific visual evidence from the photo
+
+## CANDIDATES (${rows.length})
+${candidateList}`;
+}
+
 // --- Types ---
 
 interface MatchResult {
@@ -1485,18 +1677,6 @@ function parseClarificationResponse(content: string): IdentificationResult {
 type Env = {
   EXPO_PUBLIC_TOOLKIT_URL: string;
   EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY: string;
-};
-
-type SpecimenEntry = {
-  id: string;
-  name: string;
-  category: string;
-  tagline: string;
-  colors: string;
-  hardness: string;
-  luster: string;
-  crystal: string;
-  streak: string;
-  rarity: string;
-  imageUrl: string;
+  EXPO_PUBLIC_SUPABASE_URL?: string;
+  EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
 };

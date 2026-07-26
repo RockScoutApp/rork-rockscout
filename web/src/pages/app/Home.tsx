@@ -1,0 +1,178 @@
+import { useNavigate } from "react-router-dom";
+import {
+  Camera,
+  BookOpen,
+  Map,
+  Gem,
+  Heart,
+  ClipboardList,
+  Calendar,
+  ArrowRightLeft,
+  Users,
+  Sparkles,
+  Award,
+  Compass,
+  Star,
+  Telescope,
+} from "lucide-react";
+
+interface Tile {
+  to: string;
+  icon: typeof Camera;
+  label: string;
+  description: string;
+  featured?: boolean;
+  dim?: boolean;
+}
+
+const TILES: Tile[] = [
+  {
+    to: "/app/identify",
+    icon: Camera,
+    label: "Identify a Rock",
+    description:
+      "Snap a photo and let AI identify your specimen from 900+ known rocks, minerals, gems, and fossils.",
+    featured: true,
+  },
+  {
+    to: "/app/specimens",
+    icon: BookOpen,
+    label: "Specimen Database",
+    description: "Browse 900+ rocks, minerals, crystals, gems, and fossils.",
+  },
+  {
+    to: "/app/map",
+    icon: Map,
+    label: "Maps & Dig Sites",
+    description: "Find nearby collecting sites, mines, and gem shows.",
+  },
+  {
+    to: "/app/collection",
+    icon: Gem,
+    label: "My Collection",
+    description: "Your identified and saved specimens.",
+  },
+  {
+    to: "/app/collection",
+    icon: Heart,
+    label: "Wishlist",
+    description: "Specimens you're hunting for next.",
+  },
+  {
+    to: "/app/collection",
+    icon: ClipboardList,
+    label: "Field Journal",
+    description: "Log your field trips and finds.",
+    dim: true,
+  },
+  {
+    to: "/app/collection",
+    icon: Calendar,
+    label: "Trip Planner",
+    description: "Plan your next rockhounding adventure.",
+    dim: true,
+  },
+  {
+    to: "/app/collection",
+    icon: ArrowRightLeft,
+    label: "Trade Board",
+    description: "Swap, sell, and trade specimens.",
+    dim: true,
+  },
+  {
+    to: "/app/collection",
+    icon: Users,
+    label: "Community",
+    description: "Connect with fellow rockhounds.",
+    dim: true,
+  },
+  {
+    to: "/app/collection",
+    icon: Sparkles,
+    label: "Aurora Tracker",
+    description: "Aurora forecasts and visibility maps.",
+    dim: true,
+  },
+  {
+    to: "/app/collection",
+    icon: Telescope,
+    label: "Stars & Constellations",
+    description: "Night sky guide for field trips.",
+    dim: true,
+  },
+  {
+    to: "/app/collection",
+    icon: Compass,
+    label: "Gear Guide",
+    description: "Recommended tools and equipment.",
+    dim: true,
+  },
+  {
+    to: "/app/collection",
+    icon: Award,
+    label: "Achievements",
+    description: "Level up and earn badges.",
+    dim: true,
+  },
+];
+
+export default function Home() {
+  const navigate = useNavigate();
+
+  return (
+    <div className="space-y-6">
+      <div className="fade-rise">
+        <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
+          Welcome back
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          What are you hunting for today?
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {TILES.map((tile, i) => (
+          <button
+            key={tile.label}
+            onClick={() => navigate(tile.to)}
+            className={`group flex flex-col items-start gap-3 rounded-xl border border-border bg-card p-5 text-left transition-all hover:border-primary/40 hover:bg-card/80 ${
+              tile.featured
+                ? "citrine-glow sm:col-span-2 lg:col-span-3"
+                : ""
+            } ${tile.dim ? "opacity-50" : ""}`}
+            style={{ animationDelay: `${i * 30}ms` }}
+          >
+            <div
+              className={`flex h-11 w-11 items-center justify-center rounded-lg transition-colors ${
+                tile.featured
+                  ? "bg-primary/20 text-primary"
+                  : "bg-muted text-muted-foreground group-hover:bg-primary/15 group-hover:text-primary"
+              }`}
+            >
+              <tile.icon className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-display text-base font-semibold text-foreground">
+                {tile.label}
+                {tile.dim && (
+                  <span className="ml-2 text-xs font-normal text-muted-foreground">
+                    soon
+                  </span>
+                )}
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {tile.description}
+              </p>
+            </div>
+            {tile.featured && (
+              <div className="mt-1 flex items-center gap-1.5 text-sm font-medium text-primary">
+                <Star className="h-4 w-4" />
+                Start here
+              </div>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}

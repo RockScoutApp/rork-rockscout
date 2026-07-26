@@ -9,6 +9,8 @@ import {
   ChevronRight,
   Download,
   Apple,
+  Monitor,
+  Smartphone,
   Check,
   Mountain,
   Compass,
@@ -291,18 +293,31 @@ const Hero = () => {
 
         <div className="mt-6 flex flex-col gap-3 sm:mt-9 sm:flex-row sm:items-center">
           <a
+            href="/app"
+            className="inline-flex items-center justify-center gap-2.5 rounded-2xl bg-primary px-6 py-3.5 font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            <Monitor className="h-5 w-5" />
+            Install on PC
+          </a>
+          <a
             href={SITE.playStoreUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2.5 rounded-2xl border border-primary/40 bg-primary/10 px-6 py-3.5 font-semibold text-primary/80 transition-colors hover:bg-primary/20 hover:text-primary"
           >
             <Download className="h-5 w-5" />
-            Coming soon to Google Play
+            Get on Android
           </a>
-          <span className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-card/50 px-5 py-3.5 text-sm font-medium text-muted-foreground">
-            <Apple className="h-4 w-4" /> iOS coming soon
-          </span>
+          <a
+            href="/app"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-card/50 px-5 py-3.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-card"
+          >
+            <Smartphone className="h-4 w-4" /> iPhone (Beta)
+          </a>
         </div>
+        <p className="mt-3 text-xs text-muted-foreground">
+          <Apple className="mr-1 inline h-3 w-3" />Native iOS app coming soon to the App Store
+        </p>
 
         <dl className="mt-8 grid max-w-md grid-cols-2 gap-x-4 gap-y-4 sm:mt-12 sm:gap-x-6 sm:gap-y-5">
           {STATS.map((s) => (
@@ -866,13 +881,26 @@ const CTA = () => (
         </p>
         <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:mt-9 sm:flex-row">
           <a
+            href="/app"
+            className="inline-flex items-center justify-center gap-2.5 rounded-2xl bg-primary px-8 py-4 font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            <Monitor className="h-5 w-5" />
+            Install on PC
+          </a>
+          <a
             href={SITE.playStoreUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center gap-2.5 rounded-2xl border border-primary/40 bg-primary/10 px-8 py-4 font-semibold text-primary/80 transition-colors hover:bg-primary/20 hover:text-primary"
           >
             <Download className="h-5 w-5" />
-            Coming soon to Google Play
+            Get on Android
+          </a>
+          <a
+            href="/app"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-card/60 px-6 py-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-card"
+          >
+            <Smartphone className="h-4 w-4" /> iPhone (Beta)
           </a>
           <Link
             to="/support"
@@ -881,6 +909,9 @@ const CTA = () => (
             Questions? Visit Support <ChevronRight className="h-4 w-4" />
           </Link>
         </div>
+        <p className="mx-auto mt-4 text-center text-xs text-muted-foreground">
+          <Apple className="mr-1 inline h-3 w-3" />Native iOS app coming soon to the App Store
+        </p>
         <ul className="mx-auto mt-9 flex max-w-md flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
           <li className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-primary" /> Free tier: limited use, but still plenty of useful resources</li>
           <li className="inline-flex items-center gap-1.5"><BadgeCheck className="h-3.5 w-3.5 text-primary" /> Premium: app fully unlocked with Unlimited IDs</li>

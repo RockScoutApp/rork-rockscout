@@ -14,6 +14,11 @@ export interface SpecimenEntry {
   streak: string;
   rarity: string;
   imageUrl: string;
+  /** Full per-specimen image set from the Kotlin Specimen.imageUrls field.
+   *  Most auto-generated specimens have an empty list here and fall back to
+   *  [imageUrl] at backfill time. Populated for specimens with real photo
+   *  galleries. Optional — omitted from the auto-generated rows. */
+  imageUrls?: string[];
 }
 
 export const SPECIMEN_DB: SpecimenEntry[] = [

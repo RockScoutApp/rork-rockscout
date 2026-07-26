@@ -40,6 +40,10 @@ const RATE_LIMITS: Record<string, RateLimitConfig> = {
   "/dev-sms-verify": { rpm: 3, burst: 1 },
   "/trial": { rpm: 5, burst: 2 },
   "/delete-account": { rpm: 3, burst: 1 },
+  // Admin-triggered embedding backfill — low rpm, large payload.
+  "/embeddings-backfill": { rpm: 2, burst: 1 },
+  // Admin-triggered specimen catalog backfill — low rpm, large payload.
+  "/specimen-catalog-backfill": { rpm: 2, burst: 1 },
   "/app-version": { rpm: 60, burst: 10 },
 };
 

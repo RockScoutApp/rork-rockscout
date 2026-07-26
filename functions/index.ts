@@ -9,6 +9,8 @@ import { handleTrial } from "./trial";
 import { handleDevSmsVerify } from "./dev-sms-verify";
 import { handleDeleteAccount } from "./delete-account";
 import { handleEmailVerification } from "./email-verification";
+import { handleEmbeddingsBackfill } from "./embeddings-backfill";
+import { handleSpecimenCatalogBackfill } from "./specimen-catalog-backfill";
 import {
   buildCorsHeaders,
   guardEndpoint,
@@ -118,6 +120,39 @@ export default {
         env as unknown as {
           RESEND_API_KEY?: string;
           EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
+        },
+        cors,
+      );
+    }
+
+    // Embedding backfill — admin-triggered, toolkit-secret guarded, low rpm.
+    // No app-key required (the toolkit secret gates this). Idempotent upsert,
+    // safe to re-run.
+    if (url.pathname === "/embeddings-backfill" && request.method === "POST") {
+      const guard = guardEndpoint(request, env, "/embeddings-backfill", cors, env.RATE_LIMIT_KV);
+      if (guard) return guard;
+      return handleEmbeddingsBackfill(
+        request,
+        env as unknown as {
+          EXPO_PUBLIC_TOOLKIT_URL?: string;
+          EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
+          EXPO_PUBLIC_SUPABASE_URL?: string;
+          EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
+        },
+        cors,
+      );
+    }
+
+    // Specimen catalog backfill — admin-triggered, toolkit-secret guarded.
+    // Populates the specimen_catalog reference table from SPECIMEN_DB.
+    if (url.pathname === "/specimen-catalog-backfill" && request.method === "POST") {
+      const guard = guardEndpoint(request, env, "/specimen-catalog-backfill", cors, env.RATE_LIMIT_KV);
+      if (guard) return guard;
+      return handleSpecimenCatalogBackfill(
+        request,
+        env as unknown as {
+          EXPO_PUBLIC_SUPABASE_URL?: string;
+          EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
         },
         cors,
       );
