@@ -449,6 +449,33 @@ export type Database = {
           },
         ]
       }
+      rockscout_payment_events: {
+        Row: {
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string
+          stripe_event_id: string
+          user_id: string | null
+        }
+        Insert: {
+          event_type: string
+          id?: string
+          payload?: Json
+          processed_at?: string
+          stripe_event_id: string
+          user_id?: string | null
+        }
+        Update: {
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string
+          stripe_event_id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       rockscout_pings: {
         Row: {
           created_at: string
@@ -500,6 +527,9 @@ export type Database = {
           referred_by: string | null
           scan_radius_miles: number
           status: string
+          stripe_customer_id: string | null
+          tokens: number
+          unlock_until: string | null
           updated_at: string
           xp: number
         }
@@ -523,6 +553,9 @@ export type Database = {
           referred_by?: string | null
           scan_radius_miles?: number
           status?: string
+          stripe_customer_id?: string | null
+          tokens?: number
+          unlock_until?: string | null
           updated_at?: string
           xp?: number
         }
@@ -546,8 +579,47 @@ export type Database = {
           referred_by?: string | null
           scan_radius_miles?: number
           status?: string
+          stripe_customer_id?: string | null
+          tokens?: number
+          unlock_until?: string | null
           updated_at?: string
           xp?: number
+        }
+        Relationships: []
+      }
+      rockscout_push_subscriptions: {
+        Row: {
+          auth_key: string
+          categories: Json
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh_key: string
+          platform: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auth_key: string
+          categories?: Json
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh_key: string
+          platform?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auth_key?: string
+          categories?: Json
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh_key?: string
+          platform?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
