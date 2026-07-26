@@ -196,7 +196,6 @@ import com.rork.rockscout.data.PurchaseManager
 import com.rork.rockscout.data.PurchaseResult
 import com.rork.rockscout.data.IdentifyAccessManager
 import com.rork.rockscout.data.UpdateManager
-import com.rork.rockscout.data.ApkInstaller
 import com.rork.rockscout.ui.components.TokenBank
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.theme.Amethyst
@@ -1348,20 +1347,7 @@ private fun MiniSearchBar(
 @Composable
 private fun HomeGreeting(name: String) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val scope = rememberCoroutineScope()
     val updateInfo by UpdateManager.updateInfo.collectAsStateWithLifecycle()
-    val installStatus by ApkInstaller.status.collectAsStateWithLifecycle()
-    val installProgress by ApkInstaller.progress.collectAsStateWithLifecycle()
-    val installError by ApkInstaller.error.collectAsStateWithLifecycle()
-    var showUpdateDialog by remember { mutableStateOf(false) }
-
-    // Auto-dismiss the dialog once the system installer is launched or the
-    // flow resets to IDLE after a failure the user has already seen.
-    LaunchedEffect(installStatus) {
-        if (installStatus == ApkInstaller.Status.DONE) {
-            showUpdateDialog = false
-        }
-    }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -1394,7 +1380,7 @@ private fun HomeGreeting(name: String) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            // Inline "Update Now" button — only shown when an app update is available.
+            // Inline "Update Now" button — opens the Play Store listing.
             if (updateInfo != null) {
                 Spacer(Modifier.width(8.dp))
                 Box(
@@ -1403,20 +1389,7 @@ private fun HomeGreeting(name: String) {
                             shape = RoundedCornerShape(8.dp),
                             accent = Success,
                             shadowElevation = 4.dp,
-                            onClick = {
-                                val info = updateInfo ?: return@sculpted
-                                if (info.apkUrl.isNotEmpty()) {
-                                    // Self-update: download + system installer.
-                                    ApkInstaller.reset()
-                                    showUpdateDialog = true
-                                    scope.launch {
-                                        UpdateManager.downloadAndInstall(context)
-                                    }
-                                } else {
-                                    // No APK published — fall back to Play Store.
-                                    UpdateManager.openStore(context)
-                                }
-                            },
+                            onClick = { UpdateManager.openStore(context) },
                         )
                         .clip(RoundedCornerShape(8.dp))
                         .background(Success)
@@ -1436,167 +1409,8 @@ private fun HomeGreeting(name: String) {
             }
         }
     }
-
-    if (showUpdateDialog) {
-        UpdateDownloadDialog(
-            status = installStatus,
-            progress = installProgress,
-            error = installError,
-            changelog = updateInfo?.changelog,
-            onDismiss = {
-                showUpdateDialog = false
-                ApkInstaller.reset()
-            },
-            onRetry = {
-                ApkInstaller.reset()
-                scope.launch {
-                    UpdateManager.downloadAndInstall(context)
-                }
-            },
-        )
-    }
 }
 
-@Composable
-private fun UpdateDownloadDialog(
-    status: ApkInstaller.Status,
-    progress: Int,
-    error: String?,
-    changelog: String?,
-    onDismiss: () -> Unit,
-    onRetry: () -> Unit,
-) {
-    val canDismiss = status == ApkInstaller.Status.IDLE ||
-        status == ApkInstaller.Status.FAILED ||
-        status == ApkInstaller.Status.DONE
-    AlertDialog(
-        onDismissRequest = { if (canDismiss) onDismiss() },
-        title = {
-            Text(
-                text = when (status) {
-                    ApkInstaller.Status.DOWNLOADING -> "Downloading update…"
-                    ApkInstaller.Status.INSTALLING -> "Preparing installer…"
-                    ApkInstaller.Status.DONE -> "Ready to install"
-                    ApkInstaller.Status.FAILED -> "Update failed"
-                    ApkInstaller.Status.IDLE -> "Update available"
-                },
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = TextHigh,
-            )
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (!changelog.isNullOrBlank() && status != ApkInstaller.Status.FAILED) {
-                    Text(
-                        text = changelog,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextMid,
-                    )
-                }
-                when (status) {
-                    ApkInstaller.Status.DOWNLOADING -> {
-                        LinearProgressIndicator(
-                            progress = { progress / 100f },
-                            modifier = Modifier.fillMaxWidth(),
-                            color = Success,
-                            trackColor = Success.copy(alpha = 0.2f),
-                        )
-                        Text(
-                            text = "$progress%",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = TextMid,
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-                    ApkInstaller.Status.INSTALLING -> {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp,
-                                color = Success,
-                            )
-                            Text(
-                                text = "Preparing the system installer…",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextMid,
-                            )
-                        }
-                    }
-                    ApkInstaller.Status.DONE -> {
-                        Text(
-                            text = "Android will now ask you to confirm the install. Tap Install in the system dialog — your data and account stay in place, no uninstall needed.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = TextMid,
-                        )
-                    }
-                    ApkInstaller.Status.FAILED -> {
-                        Text(
-                            text = error ?: "Something went wrong downloading the update. Check your connection and try again, or grab it from the Play Store.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
-                    ApkInstaller.Status.IDLE -> {
-                        Text(
-                            text = "A new version of RockScout is available. Tap Update to download and install it over the current app — your account, collection, and settings stay in place.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = TextMid,
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            when (status) {
-                ApkInstaller.Status.FAILED -> {
-                    Text(
-                        text = "Retry",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = Success,
-                        modifier = Modifier.clickable { onRetry() },
-                    )
-                }
-                ApkInstaller.Status.DONE -> {
-                    Text(
-                        text = "Close",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = TextMid,
-                        modifier = Modifier.clickable { onDismiss() },
-                    )
-                }
-                ApkInstaller.Status.IDLE -> {
-                    Text(
-                        text = "Cancel",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = TextMid,
-                        modifier = Modifier.clickable { onDismiss() },
-                    )
-                }
-                else -> {
-                    // DOWNLOADING / INSTALLING — no dismiss affordance while in flight.
-                    Spacer(Modifier.width(0.dp))
-                }
-            }
-        },
-        dismissButton = {
-            if (status == ApkInstaller.Status.FAILED) {
-                Text(
-                    text = "Close",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = TextMid,
-                    modifier = Modifier.clickable { onDismiss() },
-                )
-            }
-        },
-    )
-}
 
 @Composable
 private fun IdentifyHero(onClick: () -> Unit) {

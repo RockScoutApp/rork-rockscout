@@ -97,22 +97,19 @@ object UpdateManager {
     }
 
     /**
-     * Downloads the new APK (when [AppUpdateInfo.apkUrl] is set) and launches
-     * the system installer, which installs over the existing app — no
-     * uninstall needed. Falls back to [openStore] if no APK URL is published.
-     * Returns true if the self-update flow was started, false if it fell back.
+     * Always opens the appropriate app store listing for the update.
+     *
+     * The direct-APK self-install path has been removed because it frequently
+     * triggered the system "App not installed" dialog when the downloaded APK
+     * was incomplete, corrupted, or signed with a different key than the
+     * currently installed build. Redirecting to the store is the only reliable
+     * way to guarantee updates install cleanly.
+     *
+     * Returns true when the store intent was launched.
      */
-    suspend fun downloadAndInstall(context: Context): Boolean {
-        val info = _updateInfo.value
-        val apkUrl = info?.apkUrl?.takeIf { it.isNotEmpty() }
-        val fallbackUrl = info?.storeUrl?.takeIf { it.isNotEmpty() } ?: DEFAULT_PLAY_STORE_URL
-        return if (apkUrl != null) {
-            ApkInstaller.downloadAndInstall(context, apkUrl, fallbackUrl)
-            true
-        } else {
-            openStore(context)
-            false
-        }
+    fun downloadAndInstall(context: Context): Boolean {
+        openStore(context)
+        return true
     }
 
     private fun installedVersionCode(context: Context): Int {
