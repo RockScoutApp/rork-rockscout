@@ -306,6 +306,81 @@ export type Database = {
         }
         Relationships: []
       }
+      rockscout_favorite_spots: {
+        Row: {
+          created_at: string
+          id: string
+          latitude: number
+          longitude: number
+          name: string
+          region: string
+          spot_id: string
+          spot_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          name: string
+          region?: string
+          spot_id: string
+          spot_type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          name?: string
+          region?: string
+          spot_id?: string
+          spot_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      rockscout_field_journal: {
+        Row: {
+          created_at: string
+          dig_site_id: string | null
+          entry_date: string
+          id: string
+          location: string
+          notes: string
+          photo_urls: Json
+          updated_at: string
+          user_id: string
+          weather_summary: string
+        }
+        Insert: {
+          created_at?: string
+          dig_site_id?: string | null
+          entry_date?: string
+          id?: string
+          location?: string
+          notes?: string
+          photo_urls?: Json
+          updated_at?: string
+          user_id: string
+          weather_summary?: string
+        }
+        Update: {
+          created_at?: string
+          dig_site_id?: string | null
+          entry_date?: string
+          id?: string
+          location?: string
+          notes?: string
+          photo_urls?: Json
+          updated_at?: string
+          user_id?: string
+          weather_summary?: string
+        }
+        Relationships: []
+      }
       rockscout_message_requests: {
         Row: {
           body: string
@@ -497,6 +572,51 @@ export type Database = {
           last_message_at?: string
           user_a?: string
           user_b?: string
+        }
+        Relationships: []
+      }
+      rockscout_trips: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          gear_checklist: Json
+          id: string
+          is_archived: boolean
+          name: string
+          notes: string
+          stops: Json
+          target_specimens: Json
+          trip_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          gear_checklist?: Json
+          id?: string
+          is_archived?: boolean
+          name: string
+          notes?: string
+          stops?: Json
+          target_specimens?: Json
+          trip_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          gear_checklist?: Json
+          id?: string
+          is_archived?: boolean
+          name?: string
+          notes?: string
+          stops?: Json
+          target_specimens?: Json
+          trip_date?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

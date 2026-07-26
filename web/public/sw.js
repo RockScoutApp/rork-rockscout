@@ -2,7 +2,8 @@
 // Caches the app shell so the site still loads with no connection.
 // Network-first for navigation requests (fresh content when online),
 // cache-first for static assets.
-const CACHE_NAME = "rockscout-v2";
+const CACHE_NAME = "rockscout-v3";
+const TILE_CACHE = "rockscout-tiles-v1";
 const SHELL_ASSETS = [
   "/",
   "/app",
@@ -12,6 +13,12 @@ const SHELL_ASSETS = [
   "/apple-touch-icon.png",
   "/pwa-192.png",
   "/pwa-512.png",
+];
+const TILE_HOSTS = [
+  "tile.openstreetmap.org",
+  "a.tile.openstreetmap.org",
+  "b.tile.openstreetmap.org",
+  "c.tile.openstreetmap.org",
 ];
 
 self.addEventListener("install", (event) => {
@@ -33,6 +40,25 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
+
+  // Map tiles: cache-first into a separate cache, with stale-while-revalidate.
+  if (TILE_HOSTS.includes(url.hostname)) {
+    event.respondWith(
+      caches.open(TILE_CACHE).then((cache) =>
+        cache.match(request).then((cached) => {
+          const fetchPromise = fetch(request)
+            .then((response) => {
+              if (response.ok) cache.put(request, response.clone());
+              return response;
+            })
+            .catch(() => cached || Response.error());
+          return cached || fetchPromise;
+        }),
+      ),
+    );
+    return;
+  }
+
   // Never touch cross-origin or API requests.
   if (url.origin !== self.location.origin) return;
 

@@ -7,6 +7,7 @@ import {
   User,
   LogOut,
   Gem,
+  MapPin,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import IosBetaBanner from "@/components/app/IosBetaBanner";
@@ -24,6 +25,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/app/identify", icon: Camera, label: "Identify" },
   { to: "/app/collection", icon: Gem, label: "Collection" },
   { to: "/app/map", icon: Map, label: "Map" },
+  { to: "/app/favorites", icon: MapPin, label: "Spots" },
   { to: "/app/profile", icon: User, label: "Profile" },
 ];
 

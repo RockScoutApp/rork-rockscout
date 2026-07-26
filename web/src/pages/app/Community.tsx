@@ -1,0 +1,502 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Users,
+  Plus,
+  Heart,
+  MessageCircle,
+  Trash2,
+  X,
+  Loader2,
+  Send,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+
+interface Post {
+  id: string;
+  user_id: string;
+  source_type: string;
+  source_ref_id: string | null;
+  title: string;
+  tagline: string;
+  image_uri: string | null;
+  caption: string;
+  location_text: string;
+  created_at: string;
+}
+
+interface PostWithMeta extends Post {
+  owner_emoji: string;
+  owner_name: string;
+  like_count: number;
+  liked_by_me: boolean;
+  comment_count: number;
+}
+
+interface Comment {
+  id: string;
+  post_id: string;
+  user_id: string;
+  body: string;
+  created_at: string;
+  author_emoji: string;
+  author_name: string;
+}
+
+const formatTime = (iso: string): string => {
+  const d = new Date(iso);
+  const diff = Date.now() - d.getTime();
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+};
+
+export default function Community() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [showEditor, setShowEditor] = useState(false);
+  const [form, setForm] = useState({ title: "", caption: "", location_text: "" });
+  const [expandedPost, setExpandedPost] = useState<string | null>(null);
+  const [commentText, setCommentText] = useState("");
+
+  const { data: posts, isLoading } = useQuery<PostWithMeta[]>({
+    queryKey: ["community-posts", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("rockscout_posts")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      const rows = (data ?? []) as Post[];
+      if (rows.length === 0) return [];
+
+      const ownerIds = [...new Set(rows.map((r) => r.user_id))];
+      const { data: profiles } = await supabase
+        .from("rockscout_profiles")
+        .select("id, display_name, avatar_emoji")
+        .in("id", ownerIds);
+      const profileMap = new Map(
+        (profiles ?? []).map((p) => [p.id as string, p]),
+      );
+
+      const postIds = rows.map((r) => r.id);
+      const { data: likes } = await supabase
+        .from("rockscout_post_likes")
+        .select("post_id, user_id")
+        .in("post_id", postIds);
+      const { data: commentCounts } = await supabase
+        .from("rockscout_post_comments")
+        .select("post_id")
+        .in("post_id", postIds);
+
+      const likeMap = new Map<string, number>();
+      (likes ?? []).forEach((l) => {
+        likeMap.set(l.post_id, (likeMap.get(l.post_id) ?? 0) + 1);
+      });
+      const commentMap = new Map<string, number>();
+      (commentCounts ?? []).forEach((c) => {
+        commentMap.set(c.post_id, (commentMap.get(c.post_id) ?? 0) + 1);
+      });
+      const likedByMe = new Set(
+        (likes ?? []).filter((l) => l.user_id === user?.id).map((l) => l.post_id),
+      );
+
+      return rows.map((r) => {
+        const p = profileMap.get(r.user_id);
+        return {
+          ...r,
+          owner_emoji: p?.avatar_emoji ?? "💎",
+          owner_name: p?.display_name ?? "Rockhound",
+          like_count: likeMap.get(r.id) ?? 0,
+          liked_by_me: likedByMe.has(r.id),
+          comment_count: commentMap.get(r.id) ?? 0,
+        };
+      }) as PostWithMeta[];
+    },
+    enabled: !!user,
+  });
+
+  const { data: comments } = useQuery<Comment[]>({
+    queryKey: ["post-comments", expandedPost],
+    queryFn: async () => {
+      if (!expandedPost) return [];
+      const { data, error } = await supabase
+        .from("rockscout_post_comments")
+        .select("*")
+        .eq("post_id", expandedPost)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      const rows = (data ?? []) as unknown as Array<{
+        id: string;
+        post_id: string;
+        user_id: string;
+        body: string;
+        created_at: string;
+      }>;
+      if (rows.length === 0) return [];
+
+      const userIds = [...new Set(rows.map((r) => r.user_id))];
+      const { data: profiles } = await supabase
+        .from("rockscout_profiles")
+        .select("id, display_name, avatar_emoji")
+        .in("id", userIds);
+      const profileMap = new Map(
+        (profiles ?? []).map((p) => [p.id as string, p]),
+      );
+
+      return rows.map((r) => {
+        const p = profileMap.get(r.user_id);
+        return {
+          ...r,
+          author_emoji: p?.avatar_emoji ?? "💎",
+          author_name: p?.display_name ?? "Rockhound",
+        };
+      }) as Comment[];
+    },
+    enabled: !!expandedPost,
+  });
+
+  const createPost = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Sign in to post");
+      const { error } = await supabase.from("rockscout_posts").insert({
+        user_id: user.id,
+        source_type: "journal",
+        title: form.title,
+        caption: form.caption,
+        location_text: form.location_text,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Posted to the community feed");
+      queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+      setShowEditor(false);
+      setForm({ title: "", caption: "", location_text: "" });
+    },
+    onError: (err) =>
+      toast.error(err instanceof Error ? err.message : "Failed to post"),
+  });
+
+  const deletePost = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("rockscout_posts")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Post deleted");
+      queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+    },
+    onError: () => toast.error("Failed to delete post"),
+  });
+
+  const toggleLike = useMutation({
+    mutationFn: async (post: PostWithMeta) => {
+      if (!user) throw new Error("Sign in to like posts");
+      if (post.liked_by_me) {
+        const { error } = await supabase
+          .from("rockscout_post_likes")
+          .delete()
+          .eq("post_id", post.id)
+          .eq("user_id", user.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("rockscout_post_likes")
+          .insert({ post_id: post.id, user_id: user.id });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+    },
+    onError: (err) =>
+      toast.error(err instanceof Error ? err.message : "Failed to toggle like"),
+  });
+
+  const addComment = useMutation({
+    mutationFn: async () => {
+      if (!user || !expandedPost || !commentText.trim()) return;
+      const { error } = await supabase
+        .from("rockscout_post_comments")
+        .insert({
+          post_id: expandedPost,
+          user_id: user.id,
+          body: commentText.trim(),
+        });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["post-comments", expandedPost] });
+      queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+      setCommentText("");
+    },
+    onError: (err) =>
+      toast.error(err instanceof Error ? err.message : "Failed to comment"),
+  });
+
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+        <Users className="h-10 w-10 text-muted-foreground" />
+        <p className="text-muted-foreground">Sign in to join the community</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
+            Community
+          </h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Share your finds and connect with fellow rockhounds
+          </p>
+        </div>
+        <Button size="sm" onClick={() => setShowEditor(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Post
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      ) : posts && posts.length > 0 ? (
+        <div className="space-y-4">
+          {posts.map((post) => (
+            <div
+              key={post.id}
+              className="space-y-3 rounded-xl border border-border bg-card p-4"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{post.owner_emoji}</span>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {post.owner_name}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {formatTime(post.created_at)}
+                      {post.location_text && ` · ${post.location_text}`}
+                    </p>
+                  </div>
+                </div>
+                {post.user_id === user.id && (
+                  <button
+                    onClick={() => deletePost.mutate(post.id)}
+                    className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    aria-label="Delete post"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+
+              {post.title && (
+                <h3 className="font-display text-base font-semibold text-foreground">
+                  {post.title}
+                </h3>
+              )}
+
+              {post.caption && (
+                <p className="text-sm leading-relaxed text-foreground/80">
+                  {post.caption}
+                </p>
+              )}
+
+              {post.image_uri && (
+                <img
+                  src={post.image_uri}
+                  alt={post.title || "Community post"}
+                  className="max-h-80 w-full rounded-lg object-cover"
+                />
+              )}
+
+              <div className="flex items-center gap-4 border-t border-border pt-2">
+                <button
+                  onClick={() => toggleLike.mutate(post)}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-primary"
+                >
+                  <Heart
+                    className={`h-4 w-4 ${
+                      post.liked_by_me ? "fill-primary text-primary" : ""
+                    }`}
+                  />
+                  {post.like_count > 0 && post.like_count}
+                </button>
+                <button
+                  onClick={() =>
+                    setExpandedPost(
+                      expandedPost === post.id ? null : post.id,
+                    )
+                  }
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  {post.comment_count > 0 && post.comment_count}
+                </button>
+              </div>
+
+              {expandedPost === post.id && (
+                <div className="space-y-3 border-t border-border pt-3">
+                  {comments && comments.length > 0 ? (
+                    <div className="space-y-2">
+                      {comments.map((c) => (
+                        <div key={c.id} className="flex gap-2">
+                          <span className="text-base">{c.author_emoji}</span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm">
+                              <span className="font-medium text-foreground">
+                                {c.author_name}
+                              </span>{" "}
+                              <span className="text-muted-foreground">
+                                {c.body}
+                              </span>
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatTime(c.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      No comments yet.
+                    </p>
+                  )}
+                  <div className="flex gap-2">
+                    <Input
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addComment.mutate();
+                        }
+                      }}
+                      placeholder="Write a comment..."
+                      className="flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => addComment.mutate()}
+                      disabled={!commentText.trim() || addComment.isPending}
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+          <Users className="h-8 w-8 text-muted-foreground" />
+          <p className="max-w-sm text-sm text-muted-foreground">
+            No posts yet. Share a find, a field trip story, or a specimen you're
+            proud of with the community.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowEditor(true)}
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Share a post
+          </Button>
+        </div>
+      )}
+
+      {/* Post editor */}
+      <Dialog open={showEditor} onOpenChange={setShowEditor}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share with the community</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="post-title">Title</Label>
+              <Input
+                id="post-title"
+                value={form.title}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, title: e.target.value }))
+                }
+                placeholder="e.g. Found my first Herkimer Diamond!"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="post-caption">Caption</Label>
+              <Textarea
+                id="post-caption"
+                value={form.caption}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, caption: e.target.value }))
+                }
+                placeholder="Tell the story behind your find..."
+                rows={4}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="post-location">Location (optional)</Label>
+              <Input
+                id="post-location"
+                value={form.location_text}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, location_text: e.target.value }))
+                }
+                placeholder="e.g. Herkimer, NY"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowEditor(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => createPost.mutate()}
+              disabled={
+                createPost.isPending || (!form.title && !form.caption)
+              }
+            >
+              {createPost.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Post"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

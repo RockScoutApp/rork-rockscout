@@ -26,6 +26,35 @@ import Specimens from "./pages/app/Specimens";
 import SpecimenDetail from "./pages/app/SpecimenDetail";
 import Collection from "./pages/app/Collection";
 import MapPage from "./pages/app/MapPage";
+import LocationDetail from "./pages/app/LocationDetail";
+import FavoriteSpots from "./pages/app/FavoriteSpots";
+import FieldJournal from "./pages/app/FieldJournal";
+import TripPlanner from "./pages/app/TripPlanner";
+import TradeBoard from "./pages/app/TradeBoard";
+import Community from "./pages/app/Community";
+import Friends from "./pages/app/Friends";
+import UserProfile from "./pages/app/UserProfile";
+import Achievements from "./pages/app/Achievements";
+import ReferenceLibrary from "./pages/app/ReferenceLibrary";
+import GearGuide from "./pages/app/GearGuide";
+import GemShows from "./pages/app/GemShows";
+import Paywall from "./pages/app/Paywall";
+import Notifications from "./pages/app/Notifications";
+import Referral from "./pages/app/Referral";
+import Glossary from "./pages/app/Glossary";
+import MohsScale from "./pages/app/MohsScale";
+import CrystalSystems from "./pages/app/CrystalSystems";
+import GeologyReference from "./pages/app/GeologyReference";
+import Fluorescence from "./pages/app/Fluorescence";
+import MineralCare from "./pages/app/MineralCare";
+import LapidaryBasics from "./pages/app/LapidaryBasics";
+import MeteoriteHunting from "./pages/app/MeteoriteHunting";
+import Paleontology from "./pages/app/Paleontology";
+import AuroraTracker from "./pages/app/AuroraTracker";
+import StarsConstellations from "./pages/app/StarsConstellations";
+import SevereWeather from "./pages/app/SevereWeather";
+import NaturalWonders from "./pages/app/NaturalWonders";
+import BlmGuide from "./pages/app/BlmGuide";
 import Profile from "./pages/app/Profile";
 import type { ReactNode } from "react";
 
@@ -80,6 +109,35 @@ const App = () => (
               <Route path="specimens/:id" element={<SpecimenDetail />} />
               <Route path="collection" element={<Collection />} />
               <Route path="map" element={<MapPage />} />
+              <Route path="locations/:id" element={<LocationDetail />} />
+              <Route path="favorites" element={<FavoriteSpots />} />
+              <Route path="journal" element={<FieldJournal />} />
+              <Route path="trips" element={<TripPlanner />} />
+              <Route path="trade" element={<TradeBoard />} />
+              <Route path="community" element={<Community />} />
+              <Route path="friends" element={<Friends />} />
+              <Route path="profile/:id" element={<UserProfile />} />
+              <Route path="achievements" element={<Achievements />} />
+              <Route path="reference" element={<ReferenceLibrary />} />
+              <Route path="gear" element={<GearGuide />} />
+              <Route path="gem-shows" element={<GemShows />} />
+              <Route path="paywall" element={<Paywall />} />
+              <Route path="notifications" element={<Notifications />} />
+              <Route path="referral" element={<Referral />} />
+              <Route path="glossary" element={<Glossary />} />
+              <Route path="mohs-scale" element={<MohsScale />} />
+              <Route path="crystal-systems" element={<CrystalSystems />} />
+              <Route path="geology" element={<GeologyReference />} />
+              <Route path="fluorescence" element={<Fluorescence />} />
+              <Route path="mineral-care" element={<MineralCare />} />
+              <Route path="lapidary" element={<LapidaryBasics />} />
+              <Route path="meteorite-hunting" element={<MeteoriteHunting />} />
+              <Route path="paleontology" element={<Paleontology />} />
+              <Route path="aurora" element={<AuroraTracker />} />
+              <Route path="stars" element={<StarsConstellations />} />
+              <Route path="severe-weather" element={<SevereWeather />} />
+              <Route path="natural-wonders" element={<NaturalWonders />} />
+              <Route path="blm-guide" element={<BlmGuide />} />
               <Route path="profile" element={<Profile />} />
             </Route>
 
