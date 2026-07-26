@@ -269,6 +269,13 @@ const Hero = () => {
           >
             <BookOpen className="h-3.5 w-3.5" /> How to use
           </Link>
+          <button
+            type="button"
+            onClick={() => setNoteOpen(true)}
+            className="inline-flex items-center gap-2 rounded-full border border-amber-600/30 bg-amber-100/60 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-amber-800 transition-colors hover:border-amber-600/60 hover:bg-amber-200/70"
+          >
+            <ScrollText className="h-3.5 w-3.5" /> A note from the creator
+          </button>
         </div>
         <img
           src="/images/rockscout-hero-logo.webp"
@@ -552,6 +559,12 @@ const FEATURES_LIST = [
     title: "Submit specimens & add locations",
     desc: "Found a specimen that isn't in the database? Use the Upload Specimen pill on the Specimen Database screen, Field Captures screen, or specimen detail pages. Submit up to 4 photos plus a name, date found, location, and description. If the specimen already exists and your location is a common find spot for it, you'll get a small pop-up letting you know it's already included; if the location is unusual for that specimen, it goes to developer review. Approved entries get added to the Specimen Database or Rocks Are Amazing for every RockScout user to discover. Found a great dig site, rock shop, or gem show not on the map? Use the Upload New Location form to add it, reviewed before going live for everyone.",
     items: ["Submit specimens", "Submit locations", "Reviewed by RockScout", "Community-built database"],
+  },
+  {
+    icon: MapPin,
+    title: "Share-a-Spot deep links",
+    desc: "Tap a specimen marker on the specimen marker map to open its detail view, then hit Share a Spot to generate a rockscout:// deep link encoding the spot's coordinates and name. Send the link to friends — when they open it, RockScout jumps straight to a Shared Spot screen showing the location on a map with a close button. The easiest way to point fellow rockhounds at an exact find spot.",
+    items: ["Tap a specimen marker", "Share a Spot button", "rockscout:// deep link", "Opens on friend's device"],
   },
   {
     icon: Share2,

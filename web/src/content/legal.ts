@@ -7,7 +7,7 @@ export const SITE = {
   url: "https://rockscout.net",
   tagline: "Identify. Collect. Explore.",
   description:
-    "RockScout is the field companion for rockhounds — AI rock & mineral identification, a specimen database, dig-site maps, a collection tracker, and a community of hunters and traders.",
+    "RockScout is the field companion for rockhounds — AI rock & mineral identification powered by three models, a 900+ specimen database, dig-site maps, a collection tracker, a trip planner, an aurora forecaster, a Share-a-Spot deep-link tool, and a moderated community of hunters and traders.",
   supportEmail: "support@rockscout.net",
   pressEmail: "press@rockscout.net",
   playStoreUrl: "https://play.google.com/store/apps/details?id=com.rork.rockscout",

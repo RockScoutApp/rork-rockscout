@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Diamond
 import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.SwapHoriz
@@ -503,6 +504,20 @@ private val howToSections: List<HowToSection> = listOf(
             "Found a dig site, rock shop, or gem show that isn't on the map? Use the Add Location form on the Dig Sites map or any map screen.",
             "After review, submitted locations appear on the Dig Sites map for every RockScout user to discover.",
             "Help build the most thorough rock database and the most complete hunting map on the app market!",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Share,
+        accent = Aqua,
+        title = "Share-a-Spot Deep Links",
+        shortLabel = "Share a Spot",
+        steps = listOf(
+            "Open the Field Captures Specimen Map (the swipeable second page of Field Captures) or the Trip Planner specimen marker map.",
+            "Tap any specimen marker pin on the map to open that specimen's detail view.",
+            "A new \"Share a Spot\" card appears on the detail page when you arrived from a marker pin. Tap Share a Spot to generate a rockscout://spot deep link encoding the spot's coordinates and specimen name.",
+            "The system share sheet opens so you can send the link via Messenger, text, email, or any app you like.",
+            "Friends who tap the link on a device with RockScout installed jump straight to a Shared Spot screen showing the spot on a map with a Close button.",
+            "This is the easiest way to point fellow rockhounds at an exact find spot — no typing coordinates by hand.",
         ),
     ),
     HowToSection(
