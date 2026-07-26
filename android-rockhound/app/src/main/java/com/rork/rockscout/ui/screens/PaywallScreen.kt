@@ -86,6 +86,7 @@ import com.rork.rockscout.data.AuthRepository
 import com.rork.rockscout.data.IapConfig
 import com.rork.rockscout.data.PurchaseManager
 import com.rork.rockscout.data.PurchaseResult
+import com.rork.rockscout.data.SafeLinkOpener
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.SculptedButton
@@ -249,9 +250,10 @@ fun PaywallScreen(navController: NavController) {
                             SculptedOutlinedButton(
                                 text = "Manage Subscription",
                                 onClick = {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/account/subscriptions"))
-                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    runCatching { context.startActivity(intent) }
+                                    SafeLinkOpener.openUrl(
+                                        context,
+                                        "https://play.google.com/store/account/subscriptions",
+                                    )
                                 },
                                 accent = Aqua,
                                 textColor = Aqua,

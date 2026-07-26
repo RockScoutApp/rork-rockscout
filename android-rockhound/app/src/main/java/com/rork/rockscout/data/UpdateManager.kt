@@ -93,11 +93,7 @@ object UpdateManager {
     /** Opens the user's appropriate app store listing for the update. */
     fun openStore(context: Context) {
         val url = _updateInfo.value?.storeUrl ?: DEFAULT_PLAY_STORE_URL
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        runCatching { context.startActivity(intent) }
-            .onFailure { Log.w(TAG, "Could not open store: ${it.message}") }
+        SafeLinkOpener.openUrl(context, url)
     }
 
     /**
@@ -109,8 +105,9 @@ object UpdateManager {
     suspend fun downloadAndInstall(context: Context): Boolean {
         val info = _updateInfo.value
         val apkUrl = info?.apkUrl?.takeIf { it.isNotEmpty() }
+        val fallbackUrl = info?.storeUrl?.takeIf { it.isNotEmpty() } ?: DEFAULT_PLAY_STORE_URL
         return if (apkUrl != null) {
-            ApkInstaller.downloadAndInstall(context, apkUrl)
+            ApkInstaller.downloadAndInstall(context, apkUrl, fallbackUrl)
             true
         } else {
             openStore(context)

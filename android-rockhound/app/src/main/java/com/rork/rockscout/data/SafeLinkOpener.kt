@@ -19,6 +19,17 @@ object SafeLinkOpener {
     private const val TAG = "SafeLinkOpener"
 
     /**
+     * Check whether the system has an activity that can handle this intent.
+     * Useful for guarding external launches so the app never shows the
+     * system "App not installed" dialog.
+     */
+    fun canHandle(context: Context, intent: Intent): Boolean {
+        return runCatching {
+            context.packageManager.resolveActivity(intent, 0) != null
+        }.getOrDefault(false)
+    }
+
+    /**
      * Open a URL in the system browser (or app that handles the URL scheme).
      * Shows a toast if no browser is available.
      */
@@ -41,11 +52,16 @@ object SafeLinkOpener {
         val fallback = Intent(Intent.ACTION_VIEW, Uri.parse(fallbackGeoUri)).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        runCatching { context.startActivity(primary) }
-            .onFailure {
-                Log.w(TAG, "Google Maps not available, trying generic geo intent: ${it.message}")
-                launch(context, fallback, "No maps app found.")
-            }
+        if (canHandle(context, primary)) {
+            runCatching { context.startActivity(primary) }
+                .onFailure {
+                    Log.w(TAG, "Google Maps launch failed: ${it.message}")
+                    launch(context, fallback, "No maps app found.")
+                }
+        } else {
+            Log.w(TAG, "Google Maps not available, trying generic geo intent")
+            launch(context, fallback, "No maps app found.")
+        }
     }
 
     /**
@@ -86,11 +102,16 @@ object SafeLinkOpener {
         val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(mapsUrl)).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        runCatching { context.startActivity(gmapsIntent) }
-            .onFailure {
-                Log.w(TAG, "Google Maps not available, trying browser URL: ${it.message}")
-                launch(context, browserIntent, "No maps app found. Install Google Maps or another navigation app for directions.")
-            }
+        if (canHandle(context, gmapsIntent)) {
+            runCatching { context.startActivity(gmapsIntent) }
+                .onFailure {
+                    Log.w(TAG, "Google Maps launch failed: ${it.message}")
+                    launch(context, browserIntent, "No maps app found. Install Google Maps or another navigation app for directions.")
+                }
+        } else {
+            Log.w(TAG, "Google Maps not available, trying browser URL")
+            launch(context, browserIntent, "No maps app found. Install Google Maps or another navigation app for directions.")
+        }
     }
 
     /**
@@ -106,11 +127,16 @@ object SafeLinkOpener {
         val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(mapsUrl)).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        runCatching { context.startActivity(gmapsIntent) }
-            .onFailure {
-                Log.w(TAG, "Google Maps not available, trying browser URL: ${it.message}")
-                launch(context, browserIntent, "No maps app found. Install Google Maps or another navigation app for directions.")
-            }
+        if (canHandle(context, gmapsIntent)) {
+            runCatching { context.startActivity(gmapsIntent) }
+                .onFailure {
+                    Log.w(TAG, "Google Maps launch failed: ${it.message}")
+                    launch(context, browserIntent, "No maps app found. Install Google Maps or another navigation app for directions.")
+                }
+        } else {
+            Log.w(TAG, "Google Maps not available, trying browser URL")
+            launch(context, browserIntent, "No maps app found. Install Google Maps or another navigation app for directions.")
+        }
     }
 
     /**

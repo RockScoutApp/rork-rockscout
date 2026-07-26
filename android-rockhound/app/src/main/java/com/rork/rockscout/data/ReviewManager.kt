@@ -67,30 +67,20 @@ class ReviewManager(private val context: Context) {
     /**
      * Open the app's Play Store listing page directly.
      * Used as a fallback when the in-app review API isn't available.
+     * Falls back to the web Play Store URL if the Play Store app is missing.
      */
     private fun fallbackToPlayStore(): Boolean {
-        return try {
-            val packageName = context.packageName
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(intent)
-            true
-        } catch (e: Exception) {
-            // Play Store not installed — try the web URL
-            try {
-                val packageName = context.packageName
-                val intent = Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse("https://play.google.com/store/apps/details?id=$packageName"),
-                ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
-                context.startActivity(intent)
-                true
-            } catch (e2: Exception) {
-                Log.w("ReviewManager", "Could not open Play Store: ${e2.message}")
-                false
-            }
+        val packageName = context.packageName
+        val marketIntent = Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$packageName")).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
+        if (SafeLinkOpener.canHandle(context, marketIntent)) {
+            SafeLinkOpener.launch(context, marketIntent, "No app available to open the Play Store.")
+            return true
+        }
+        val webUrl = "https://play.google.com/store/apps/details?id=$packageName"
+        SafeLinkOpener.openUrl(context, webUrl)
+        return true
     }
 
     /**

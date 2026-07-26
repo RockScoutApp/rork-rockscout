@@ -146,9 +146,10 @@ fun StateParkDetailScreen(
                                 .background(Citrine.copy(alpha = 0.15f))
                                 .glowingBorder(2.dp, Citrine.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
                                 .clickable {
-                                    val gmmIntentUri = Uri.parse("geo:${park.latitude},${park.longitude}?q=${park.latitude},${park.longitude}(${park.name})")
-                                    val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri).setPackage("com.google.android.apps.maps")
-                                    SafeLinkOpener.openUrl(context, mapIntent.dataString ?: "geo:${park.latitude},${park.longitude}")
+                                    SafeLinkOpener.openGeo(
+                                        context,
+                                        "geo:${park.latitude},${park.longitude}?q=${park.latitude},${park.longitude}(${park.name})",
+                                    )
                                 }
                                 .padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,

@@ -57,15 +57,20 @@ object ApkInstaller {
     /**
      * Downloads [apkUrl] into the app cache, then triggers the system installer.
      * Throws on failure so callers can surface a message; also publishes to [error].
+     *
+     * @param fallbackStoreUrl  When the APK cannot be installed (e.g. the file
+     *        is corrupt, signatures differ, or no package installer is available),
+     *        the user is redirected to this store URL instead of seeing the system
+     *        "App not installed" dialog.
      */
-    suspend fun downloadAndInstall(context: Context, apkUrl: String) {
+    suspend fun downloadAndInstall(context: Context, apkUrl: String, fallbackStoreUrl: String = "") {
         _error.value = null
         _progress.value = 0
         _status.value = Status.DOWNLOADING
         try {
             val apkFile = downloadApk(context, apkUrl)
             _status.value = Status.INSTALLING
-            launchSystemInstaller(context, apkFile)
+            launchSystemInstaller(context, apkFile, fallbackStoreUrl)
             _status.value = Status.DONE
         } catch (e: CancellationException) {
             _status.value = Status.IDLE
@@ -74,6 +79,9 @@ object ApkInstaller {
             Log.e(TAG, "Self-update failed", e)
             _error.value = e.message ?: "Download failed"
             _status.value = Status.FAILED
+            if (fallbackStoreUrl.isNotBlank()) {
+                SafeLinkOpener.openUrl(context, fallbackStoreUrl)
+            }
         }
     }
 
@@ -118,8 +126,16 @@ object ApkInstaller {
      * Fires the system "Install APK" intent via FileProvider. The user still has
      * to tap Install in the system dialog — Android never lets apps silently
      * install another APK.
+     *
+     * Guards against the "App not installed" dialog by verifying the APK file
+     * is non-empty and that the system has a package installer that can handle it.
+     * If not, it falls back to the Play Store listing.
      */
-    private fun launchSystemInstaller(context: Context, apkFile: File) {
+    private fun launchSystemInstaller(context: Context, apkFile: File, fallbackStoreUrl: String) {
+        if (!apkFile.exists() || apkFile.length() <= 0) {
+            throw IllegalStateException("Downloaded APK is missing or empty.")
+        }
+
         val uri = FileProvider.getUriForFile(
             context,
             "${context.packageName}.fileprovider",
@@ -134,7 +150,22 @@ object ApkInstaller {
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
         }
+
+        if (!SafeLinkOpener.canHandle(context, intent)) {
+            Log.w(TAG, "No package installer available for APK; falling back to store")
+            if (fallbackStoreUrl.isNotBlank()) {
+                SafeLinkOpener.openUrl(context, fallbackStoreUrl)
+            }
+            throw IllegalStateException("No package installer available for this APK.")
+        }
+
         runCatching { context.startActivity(intent) }
-            .onFailure { Log.e(TAG, "Could not launch installer", it) }
+            .onFailure { e ->
+                Log.e(TAG, "Could not launch installer", e)
+                if (fallbackStoreUrl.isNotBlank()) {
+                    SafeLinkOpener.openUrl(context, fallbackStoreUrl)
+                }
+                throw e
+            }
     }
 }
