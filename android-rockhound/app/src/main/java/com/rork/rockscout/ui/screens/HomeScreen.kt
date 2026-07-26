@@ -54,6 +54,7 @@ import androidx.compose.material.icons.filled.Brightness3
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.NightsStay
+import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Nature
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Diamond
@@ -108,6 +109,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -142,6 +144,9 @@ import com.rork.rockscout.data.MassiveExpansion
 import com.rork.rockscout.data.MeteoriteSpecimens
 import com.rork.rockscout.data.RocksAreAmazingSpecimens
 import com.rork.rockscout.data.SeedData
+import com.rork.rockscout.data.GearGuide
+import com.rork.rockscout.data.GearItem
+import com.rork.rockscout.data.SafeLinkOpener
 import com.rork.rockscout.data.Specimen
 import com.rork.rockscout.data.SpecimenImages
 import com.rork.rockscout.R
@@ -216,6 +221,8 @@ import com.rork.rockscout.ui.components.profileBorderColor
 import com.rork.rockscout.ui.components.statusAccent
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.screens.AURORA_TILE_BG_URL
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 
 /** Home screen Identify hero background URL. Public so the offline bulk-download registry can include it. */
 const val IDENTIFY_HERO_BACKGROUND_URL = "https://r2-pub.rork.com/attachments/t5vh4q8xpxmg46mq3j955.jpg"
@@ -556,14 +563,7 @@ fun HomeScreen(navController: NavController) {
             // Community, Trip Planner, Field Journal) so their borders match.
             val bannerAccent = Color(0xFFE8A33D)
             item {
-                FullWidthBannerTile(
-                    label = "Gear Guide",
-                    subtitle = "Curated kits for every level — from first hunt to advanced field collecting",
-                    icon = Icons.Filled.Diamond,
-                    accent = Aqua,
-                    imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/10ba26f0-a7d8-4ea7-964b-864eb46744d6.png",
-                    onClick = { navController.navigate(Routes.GEAR_GUIDE) },
-                )
+                HomeGearGuideTile(navController = navController)
             }
             item {
                 FullWidthBannerTile(
@@ -2986,6 +2986,199 @@ private fun FullWidthBannerTile(
                 Icon(Icons.Filled.Lock, contentDescription = "Locked", tint = Color(0xFFE8A33D), modifier = Modifier.size(16.dp))
             }
         }
+    }
+}
+
+/**
+ * Tall home-screen Gear Guide tile that shows a scrollable preview of gear items.
+ *
+ * The card is 200dp tall (double the normal banner height). The header and footer
+ * are clickable and open the full Gear Guide screen; the scrollable list itself
+ * consumes taps so scrolling does not accidentally launch the full-screen view,
+ * while individual gear rows inside the list still open their Amazon links.
+ */
+@Composable
+private fun HomeGearGuideTile(navController: NavController) {
+    val context = LocalContext.current
+    val gearItems = remember { GearGuide.allItems }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .sculpted(
+                shape = RoundedCornerShape(20.dp),
+                accent = Aqua,
+                shadowElevation = 8.dp,
+                onClick = { navController.navigate(Routes.GEAR_GUIDE) },
+            )
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFF2A2820), Color(0xFF1E1C16), Color(0xFF16140F))
+                )
+            )
+            .glowingBorder(3.dp, Cyan.copy(alpha = 0.50f), RoundedCornerShape(20.dp)),
+    ) {
+        // Background image.
+        AsyncImage(
+            model = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/10ba26f0-a7d8-4ea7-964b-864eb46744d6.png",
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(20.dp)),
+            contentScale = ContentScale.Crop,
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(Color(0xFF0D0C08).copy(alpha = 0.55f), Color(0xFF0D0C08).copy(alpha = 0.32f), Color(0xFF0D0C08).copy(alpha = 0.18f))
+                    )
+                ),
+        )
+        // Accent glow.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.TopCenter)
+                .height(70.dp)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Aqua.copy(alpha = 0.22f), Color.Transparent)
+                    )
+                ),
+        )
+        // Localized dark scrim behind the text row.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.horizontalGradient(
+                        listOf(Color(0xFF0A0906).copy(alpha = 0.55f), Color(0xFF0A0906).copy(alpha = 0.30f), Color.Transparent)
+                    )
+                ),
+        )
+        // Header.
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(44.dp)
+                    .shadow(
+                        elevation = 6.dp,
+                        shape = RoundedCornerShape(14.dp),
+                        ambientColor = Aqua.copy(alpha = 0.40f),
+                        spotColor = Aqua,
+                    )
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(
+                        Brush.radialGradient(
+                            listOf(Aqua.copy(alpha = 0.45f), Aqua.copy(alpha = 0.15f))
+                        )
+                    )
+                    .glowingBorder(3.dp, Cyan.copy(alpha = 0.75f), RoundedCornerShape(14.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Filled.Diamond, contentDescription = null, tint = Color.White, modifier = Modifier.size(26.dp))
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Gear Guide",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        shadow = Shadow(color = Color.Black.copy(alpha = 0.7f), offset = Offset(0f, 1f), blurRadius = 4f),
+                    ),
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    text = "Curated kits for every level — from first hunt to advanced field collecting",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        shadow = Shadow(color = Color.Black.copy(alpha = 0.6f), offset = Offset(0f, 1f), blurRadius = 3f),
+                    ),
+                    color = Color(0xFFE8E0D0),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = Aqua.copy(alpha = 0.85f), modifier = Modifier.size(28.dp))
+        }
+        // Scrollable gear preview. pointerInput consumes taps in the list area so the
+        // card's clickable does not fire while the user is scrolling.
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 68.dp, bottom = 28.dp, start = 12.dp, end = 12.dp)
+                .pointerInput(Unit) { detectTapGestures { } },
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            items(gearItems, key = { it.id }) { item ->
+                HomeGearItemRow(
+                    item = item,
+                    onClick = { SafeLinkOpener.openUrl(context, item.url) },
+                )
+            }
+        }
+        // Footer hint.
+        Text(
+            text = "Tap to see the full gear guide",
+            style = MaterialTheme.typography.labelSmall,
+            color = Aqua.copy(alpha = 0.85f),
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 8.dp)
+                .background(Color(0xFF0A0906).copy(alpha = 0.55f), RoundedCornerShape(8.dp))
+                .padding(horizontal = 8.dp, vertical = 2.dp),
+        )
+    }
+}
+
+@Composable
+private fun HomeGearItemRow(item: GearItem, onClick: () -> Unit) {
+    val rowShape = RoundedCornerShape(10.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(rowShape)
+            .background(Color(0xFF3A3830).copy(alpha = 0.92f))
+            .glowingBorder(1.dp, Aqua.copy(alpha = 0.35f), rowShape)
+            .clickable(onClick = onClick)
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(Aqua.copy(alpha = 0.22f))
+                .glowingBorder(1.dp, Aqua.copy(alpha = 0.35f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(item.emoji, style = MaterialTheme.typography.titleSmall)
+        }
+        Spacer(Modifier.width(10.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                item.name,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                item.priceBand,
+                style = MaterialTheme.typography.labelSmall,
+                color = Aqua,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+        Icon(Icons.Filled.OpenInNew, contentDescription = "Open ${item.name}", tint = Aqua, modifier = Modifier.size(16.dp))
     }
 }
 

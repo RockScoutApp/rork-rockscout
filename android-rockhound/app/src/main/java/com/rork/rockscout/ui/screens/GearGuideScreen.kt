@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Diamond
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -79,6 +80,15 @@ fun GearGuideScreen(navController: NavController) {
                     SculptedIconButton(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
+                        onClick = { navController.popBackStack() },
+                        accent = Citrine,
+                        iconTint = Citrine,
+                    )
+                },
+                actions = {
+                    SculptedIconButton(
+                        icon = Icons.Filled.Close,
+                        contentDescription = "Close",
                         onClick = { navController.popBackStack() },
                         accent = Citrine,
                         iconTint = Citrine,
