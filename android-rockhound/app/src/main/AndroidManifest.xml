@@ -76,6 +76,7 @@
                 <data android:scheme="rockscout" android:host="contact_us" />
                 <data android:scheme="rockscout" android:host="notifications" />
                 <data android:scheme="rockscout" android:host="user_profile" />
+                <data android:scheme="rockscout" android:host="spot" />
             </intent-filter>
         </activity>
 

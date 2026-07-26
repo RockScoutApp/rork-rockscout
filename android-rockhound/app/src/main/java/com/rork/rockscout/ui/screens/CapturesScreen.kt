@@ -252,7 +252,13 @@ fun CapturesScreen(navController: NavController) {
                             captures = captures,
                             modifier = Modifier.fillMaxSize(),
                             onPinTapped = { capture ->
-                                navController.navigate(Routes.specimen(capture.specimenId))
+                                navController.navigate(
+                                    Routes.specimen(
+                                        capture.specimenId,
+                                        lat = capture.latitude,
+                                        lng = capture.longitude,
+                                    ),
+                                )
                             },
                         )
                     }

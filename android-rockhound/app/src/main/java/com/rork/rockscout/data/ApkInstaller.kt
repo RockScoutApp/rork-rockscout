@@ -38,7 +38,12 @@ object ApkInstaller {
     private const val INSTALLER_REQUEST_CODE = 77001
     private const val SESSION_ID_KEY = "com.rork.rockscout.update.session_id"
 
-    enum class Status { IDLE, DOWNLOADING, INSTALLING, DONE, FAILED }
+    enum class Status { IDLE, DOWNLOADING, INSTALLING, DONE, FAILED, SIGNING_CONFLICT }
+
+    /** Thrown when the downloaded APK is signed with a different key than the
+     *  installed app. Surfaced to the UI as a friendly dialog offering to
+     *  uninstall the old version before reinstalling. */
+    private class SigningConflictException(message: String) : Exception(message)
 
     private val _status = MutableStateFlow(Status.IDLE)
     val status: StateFlow<Status> = _status.asStateFlow()
@@ -54,6 +59,16 @@ object ApkInstaller {
         _status.value = Status.IDLE
         _progress.value = 0
         _error.value = null
+    }
+
+    /** Launch the system uninstall flow for RockScout so the user can remove
+     *  the old (differently-signed) build before installing the new one.
+     *  Uses a safe launch so a missing handler never crashes the app. */
+    fun launchUninstall(context: Context) {
+        val intent = Intent(Intent.ACTION_DELETE, Uri.parse("package:${context.packageName}")).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        SafeLinkOpener.launch(context, intent, "Unable to open the uninstall screen.")
     }
 
     /**
@@ -74,6 +89,12 @@ object ApkInstaller {
             _status.value = Status.INSTALLING
             launchSystemInstaller(context, apkFile, fallbackStoreUrl)
             _status.value = Status.DONE
+        } catch (e: SigningConflictException) {
+            // Signing conflict — do NOT auto-redirect to the store. Surface the
+            // friendly dialog so the user can uninstall the old build first.
+            Log.w(TAG, "Signing conflict: ${e.message}")
+            _error.value = e.message
+            _status.value = Status.SIGNING_CONFLICT
         } catch (e: CancellationException) {
             _status.value = Status.IDLE
             throw e
@@ -240,7 +261,7 @@ object ApkInstaller {
         }
 
         if (!signaturesMatch(installedInfo, archiveInfo)) {
-            throw IllegalStateException(
+            throw SigningConflictException(
                 "Downloaded update was signed with a different key. Please install from the Play Store instead.",
             )
         }

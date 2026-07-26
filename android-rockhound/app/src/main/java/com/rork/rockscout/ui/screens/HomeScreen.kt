@@ -196,6 +196,7 @@ import com.rork.rockscout.data.PurchaseManager
 import com.rork.rockscout.data.PurchaseResult
 import com.rork.rockscout.data.IdentifyAccessManager
 import com.rork.rockscout.data.UpdateManager
+import com.rork.rockscout.data.ApkInstaller
 import com.rork.rockscout.ui.components.TokenBank
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.theme.Amethyst
@@ -206,6 +207,7 @@ import com.rork.rockscout.ui.theme.CyanDeep
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.CitrineSoft
 import com.rork.rockscout.ui.theme.CitrineDeep
+import com.rork.rockscout.ui.theme.Danger
 import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Ink
@@ -1348,6 +1350,25 @@ private fun MiniSearchBar(
 private fun HomeGreeting(name: String) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val updateInfo by UpdateManager.updateInfo.collectAsStateWithLifecycle()
+    val apkStatus by ApkInstaller.status.collectAsStateWithLifecycle()
+
+    // Friendly signing-conflict dialog — shown when a downloaded update APK
+    // is signed with a different key than the installed build. Instead of the
+    // system "App not installed" dialog, we apologize and offer to uninstall
+    // the old version so the new one can install cleanly.
+    if (apkStatus == ApkInstaller.Status.SIGNING_CONFLICT) {
+        SigningConflictDialog(
+            onUninstall = {
+                ApkInstaller.launchUninstall(context)
+                ApkInstaller.reset()
+            },
+            onDismiss = {
+                // Fall back to the Play Store listing as a courtesy.
+                ApkInstaller.reset()
+                UpdateManager.openStore(context)
+            },
+        )
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -1380,7 +1401,8 @@ private fun HomeGreeting(name: String) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            // Inline "Update Now" button — opens the Play Store listing.
+            // Inline "Update Now" button — tries an in-app self-update when a
+            // direct APK URL is available, otherwise opens the Play Store listing.
             if (updateInfo != null) {
                 Spacer(Modifier.width(8.dp))
                 Box(
@@ -1389,7 +1411,7 @@ private fun HomeGreeting(name: String) {
                             shape = RoundedCornerShape(8.dp),
                             accent = Success,
                             shadowElevation = 4.dp,
-                            onClick = { UpdateManager.openStore(context) },
+                            onClick = { UpdateManager.downloadAndInstall(context) },
                         )
                         .clip(RoundedCornerShape(8.dp))
                         .background(Success)
@@ -1409,6 +1431,59 @@ private fun HomeGreeting(name: String) {
             }
         }
     }
+}
+
+/**
+ * Friendly, apologetic dialog shown when a downloaded update APK is signed
+ * with a different key than the installed build. Android refuses to install
+ * an APK over an existing app with a different signing certificate; instead
+ * of letting the system show its generic "App not installed" dialog, we
+ * explain what happened and offer to uninstall the old version so the new
+ * one can install cleanly. A secondary action dismisses the dialog and
+ * falls back to the Play Store listing.
+ */
+@Composable
+private fun SigningConflictDialog(
+    onUninstall: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "Update can't be installed",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = TextHigh,
+            )
+        },
+        text = {
+            Text(
+                "We're sorry — this update is signed with a different key than the " +
+                    "version currently installed on your device, so Android won't let " +
+                    "it install over the existing app.\n\n" +
+                    "To update, uninstall the old version first, then install the new " +
+                    "one. Your account, collection, and saved data are stored online and " +
+                    "will be restored when you sign back in.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextMid,
+            )
+        },
+        confirmButton = {
+            SculptedTextButton(
+                text = "Uninstall old version",
+                onClick = onUninstall,
+                accent = Danger,
+            )
+        },
+        dismissButton = {
+            SculptedTextButton(
+                text = "Open Play Store",
+                onClick = onDismiss,
+                accent = Citrine,
+            )
+        },
+    )
 }
 
 

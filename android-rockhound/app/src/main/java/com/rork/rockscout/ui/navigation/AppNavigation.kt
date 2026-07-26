@@ -43,6 +43,7 @@ import com.rork.rockscout.ui.screens.SearchScreen
 import com.rork.rockscout.ui.screens.ElementDetailScreen
 import com.rork.rockscout.ui.screens.PeriodicTableScreen
 import com.rork.rockscout.ui.screens.SpecimenDetailScreen
+import com.rork.rockscout.ui.screens.SharedSpotScreen
 import com.rork.rockscout.ui.screens.SpecimenListScreen
 import com.rork.rockscout.ui.screens.RocksAreAmazingScreen
 import com.rork.rockscout.ui.screens.SavedImagesScreen
@@ -166,7 +167,8 @@ object Routes {
     const val SPECIMEN_LIST = "specimenlist"
     const val GUIDE_DETAIL = "guide/{guideId}"
     const val PERIOD_DETAIL = "period/{periodId}"
-    const val SPECIMEN_DETAIL = "specimen/{specimenId}"
+    const val SPECIMEN_DETAIL = "specimen/{specimenId}?lat={lat}&lng={lng}"
+    const val SHARED_SPOT = "shared_spot/{lat}/{lng}?name={name}"
     const val PERIODIC_TABLE = "periodic_table"
     const val ELEMENT_DETAIL = "element/{atomicNumber}"
     const val DISCOVER_HUNTERS = "discover_hunters"
@@ -228,7 +230,15 @@ object Routes {
     fun element(atomicNumber: Int) = "element/$atomicNumber"
     fun guide(id: String) = "guide/$id"
     fun period(id: String) = "period/$id"
-    fun specimen(id: String) = "specimen/$id"
+    fun specimen(id: String, lat: Double? = null, lng: Double? = null): String {
+        val base = "specimen/$id"
+        if (lat == null || lng == null) return base
+        return "$base?lat=$lat&lng=$lng"
+    }
+    fun sharedSpot(lat: Double, lng: Double, name: String = ""): String {
+        val encoded = Uri.encode(name)
+        return "shared_spot/$lat/$lng?name=$encoded"
+    }
     fun messengerThread(otherUserId: String) = "messenger/$otherUserId"
     fun messengerRequest(requestId: String) = "messenger_request/$requestId"
     fun userProfile(userId: String) = "user_profile/$userId"
@@ -316,6 +326,22 @@ private fun handleDeepLink(uri: Uri, navController: NavController) {
             val id = segments.firstOrNull()
             if (id != null) {
                 navController.navigate(Routes.specimen(id))
+            }
+        }
+        "spot" -> {
+            // Format: rockscout://spot/<lat>,<lng>?name=<encoded+name>
+            // The first path segment is "<lat>,<lng>"; name is a query param.
+            val coordSegment = segments.firstOrNull()
+            if (coordSegment != null) {
+                val parts = coordSegment.split(',')
+                if (parts.size == 2) {
+                    val lat = parts[0].toDoubleOrNull()
+                    val lng = parts[1].toDoubleOrNull()
+                    if (lat != null && lng != null) {
+                        val name = uri.getQueryParameter("name") ?: ""
+                        navController.navigate(Routes.sharedSpot(lat, lng, name))
+                    }
+                }
             }
         }
         "period" -> {
@@ -711,11 +737,37 @@ fun AppNavigation(
         }
         composable(
             Routes.SPECIMEN_DETAIL,
-            arguments = listOf(navArgument("specimenId") { type = NavType.StringType }),
+            arguments = listOf(
+                navArgument("specimenId") { type = NavType.StringType },
+                navArgument("lat") { type = NavType.StringType; defaultValue = "" },
+                navArgument("lng") { type = NavType.StringType; defaultValue = "" },
+            ),
         ) { entry ->
+            val lat = entry.arguments?.getString("lat")?.toDoubleOrNull()
+            val lng = entry.arguments?.getString("lng")?.toDoubleOrNull()
             SpecimenDetailScreen(
                 navController = navController,
                 specimenId = entry.arguments?.getString("specimenId").orEmpty(),
+                spotLatitude = lat,
+                spotLongitude = lng,
+            )
+        }
+        composable(
+            Routes.SHARED_SPOT,
+            arguments = listOf(
+                navArgument("lat") { type = NavType.StringType },
+                navArgument("lng") { type = NavType.StringType },
+                navArgument("name") { type = NavType.StringType; defaultValue = "" },
+            ),
+        ) { entry ->
+            val lat = entry.arguments?.getString("lat")?.toDoubleOrNull() ?: 0.0
+            val lng = entry.arguments?.getString("lng")?.toDoubleOrNull() ?: 0.0
+            val name = entry.arguments?.getString("name").orEmpty()
+            SharedSpotScreen(
+                navController = navController,
+                latitude = lat,
+                longitude = lng,
+                spotName = name,
             )
         }
         composable(Routes.MINERAL_CARE) { MineralCareGuideScreen(navController) }

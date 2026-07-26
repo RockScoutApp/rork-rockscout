@@ -97,17 +97,32 @@ object UpdateManager {
     }
 
     /**
-     * Always opens the appropriate app store listing for the update.
+     * Attempts an in-app self-update when a direct APK URL is available from the
+     * backend; otherwise falls back to the app store listing.
      *
-     * The direct-APK self-install path has been removed because it frequently
-     * triggered the system "App not installed" dialog when the downloaded APK
-     * was incomplete, corrupted, or signed with a different key than the
-     * currently installed build. Redirecting to the store is the only reliable
-     * way to guarantee updates install cleanly.
+     * When [AppUpdateInfo.apkUrl] is non-empty, the APK is downloaded and the
+     * system package installer is launched. ApkInstaller fully validates the
+     * download first (magic bytes, package name, version code, signing
+     * certificate) so a corrupted or mismatched APK never reaches the installer.
      *
-     * Returns true when the store intent was launched.
+     * If a signing conflict is detected (the downloaded APK is signed with a
+     * different key than the installed build), ApkInstaller surfaces a
+     * [ApkInstaller.Status.SIGNING_CONFLICT] state instead of triggering the
+     * system "App not installed" dialog. The UI observes this and shows a
+     * friendly dialog offering to uninstall the old version first.
+     *
+     * Returns true when an update flow was started (direct APK or store).
      */
     fun downloadAndInstall(context: Context): Boolean {
+        val info = _updateInfo.value
+        val apkUrl = info?.apkUrl?.ifBlank { null }
+        if (apkUrl != null) {
+            val storeUrl = info?.storeUrl?.ifBlank { DEFAULT_PLAY_STORE_URL } ?: DEFAULT_PLAY_STORE_URL
+            scope.launch {
+                ApkInstaller.downloadAndInstall(context, apkUrl, fallbackStoreUrl = storeUrl)
+            }
+            return true
+        }
         openStore(context)
         return true
     }

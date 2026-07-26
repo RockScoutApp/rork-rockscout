@@ -96,7 +96,16 @@ import com.rork.rockscout.ui.theme.TextMid
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun SpecimenDetailScreen(navController: NavController, specimenId: String) {
+fun SpecimenDetailScreen(
+    navController: NavController,
+    specimenId: String,
+    /** Latitude of the specimen marker pin the user tapped to reach this
+     *  screen. When non-null (along with [spotLongitude]), a "Share a Spot"
+     *  button is shown so the user can share this specific hunting spot. */
+    spotLatitude: Double? = null,
+    /** Longitude of the specimen marker pin. See [spotLatitude]. */
+    spotLongitude: Double? = null,
+) {
     val spec = SeedData.specimenById(specimenId)
     val repo = AppRepository.instance
     val collection by repo.collection.collectAsStateWithLifecycle()
@@ -247,6 +256,16 @@ fun SpecimenDetailScreen(navController: NavController, specimenId: String) {
                     items = GearGuide.gearForRockClass(spec.rockClass),
                     accent = accent,
                 )
+            }
+            // Share-a-Spot card — only shown when the user arrived from a
+            // specimen marker pin tap (i.e. we have the pin's coordinates).
+            if (spotLatitude != null && spotLongitude != null) {
+                item { ShareASpotCard(
+                    specimenName = spec.name,
+                    latitude = spotLatitude,
+                    longitude = spotLongitude,
+                    accent = accent,
+                ) }
             }
         }
     }
@@ -552,6 +571,151 @@ private fun ThumbnailGallery(imageUrls: List<String>, labels: List<String>, acce
                             color = Aqua,
                             fontWeight = if (index < 4) FontWeight.SemiBold else FontWeight.Normal,
                             modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * "Share a Spot" card — shown on the specimen detail screen when the user
+ * reached it by tapping a specimen marker pin on the map. Generates a
+ * `rockscout://spot/<lat>,<lng>?name=<specimen>` deep link so the user can
+ * share this specific rock hunting spot with friends via the system share
+ * sheet. Friends who tap the link open the same spot in RockScout.
+ */
+@Composable
+private fun ShareASpotCard(
+    specimenName: String,
+    latitude: Double,
+    longitude: Double,
+    accent: Color,
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
+        Row(
+            modifier = Modifier.padding(bottom = 8.dp, start = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(4.dp, 18.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(accent),
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                "SHARE THIS SPOT".uppercase(),
+                style = MaterialTheme.typography.labelMedium,
+                color = Aqua,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+        DarkCard(modifier = Modifier.fillMaxWidth(), accent = accent) {
+            Column(modifier = Modifier.fillMaxWidth().padding(4.dp)) {
+                Row(verticalAlignment = Alignment.Top) {
+                    Icon(
+                        Icons.Filled.Share,
+                        contentDescription = null,
+                        tint = accent,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            "Found a great spot for $specimenName?",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = DarkTextHigh,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Share this exact location with friends so they can hunt here too. " +
+                                "They'll get a deep link that opens the spot on the map in RockScout.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = DarkTextMid,
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "\uD83D\uDCCD " + String.format(java.util.Locale.US, "%.5f, %.5f", latitude, longitude),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = accent,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
+                Spacer(Modifier.height(12.dp))
+                androidx.compose.foundation.layout.Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    androidx.compose.foundation.layout.Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .sculpted(
+                                shape = RoundedCornerShape(12.dp),
+                                accent = accent,
+                                shadowElevation = 4.dp,
+                                onClick = {
+                                    val deepLink = buildSpotDeepLink(latitude, longitude, specimenName)
+                                    val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                        type = "text/plain"
+                                        putExtra(android.content.Intent.EXTRA_SUBJECT, "Rock hunting spot: $specimenName")
+                                        putExtra(
+                                            android.content.Intent.EXTRA_TEXT,
+                                            "$specimenName — a rock hunting spot shared with you via RockScout.\n\n" +
+                                                "Open in RockScout: $deepLink\n\n" +
+                                                "Coordinates: " + String.format(java.util.Locale.US, "%.5f, %.5f", latitude, longitude),
+                                        )
+                                    }
+                                    com.rork.rockscout.data.SafeLinkOpener.openShareChooser(
+                                        context = context,
+                                        shareIntent = shareIntent,
+                                        title = "Share this rock hunting spot",
+                                    )
+                                },
+                        )
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(accent.copy(alpha = 0.12f))
+                        .glowingBorder(1.5.dp, accent.copy(alpha = 0.40f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            "Share a Spot",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = accent,
+                        )
+                    }
+                    androidx.compose.foundation.layout.Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .sculpted(
+                                shape = RoundedCornerShape(12.dp),
+                                accent = Aqua,
+                                shadowElevation = 4.dp,
+                                onClick = {
+                                    com.rork.rockscout.data.SafeLinkOpener.openMaps(
+                                        context = context,
+                                        googleMapsUri = "google.navigation:q=$latitude,$longitude",
+                                        fallbackGeoUri = "geo:$latitude,$longitude?q=$latitude,$longitude",
+                                    )
+                                },
+                        )
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Aqua.copy(alpha = 0.12f))
+                        .glowingBorder(1.5.dp, Aqua.copy(alpha = 0.40f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            "Get Directions",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Aqua,
                         )
                     }
                 }
