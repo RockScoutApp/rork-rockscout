@@ -7,6 +7,8 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
@@ -48,6 +50,13 @@ object NotificationHelper {
     const val NOTIF_WEATHER_BASE = 4000
     const val NOTIF_AURORA_ID = 4500
     const val NOTIF_OFFLINE_SYNC_ID = 5001
+
+    /** Load the full-color RockScout logo used as the notification large icon. */
+    private fun largeIcon(context: Context): Bitmap? = try {
+        BitmapFactory.decodeResource(context.resources, R.drawable.ic_notification_large)
+    } catch (_: Exception) {
+        null
+    }
 
     /** Create the two notification channels. Call from Application.onCreate(). */
     fun createChannels(context: Context) {
@@ -209,6 +218,7 @@ object NotificationHelper {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_UPDATES)
             .setSmallIcon(R.drawable.ic_notification)
+            .setLargeIcon(largeIcon(context))
             .setContentTitle("RockScout updated to v$newVersionName")
             .setContentText(changelog.take(80))
             .setStyle(NotificationCompat.BigTextStyle().bigText(changelog))
@@ -256,6 +266,7 @@ object NotificationHelper {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_OFFLINE_SYNC)
             .setSmallIcon(R.drawable.ic_notification)
+            .setLargeIcon(largeIcon(context))
             .setContentTitle(title)
             .setContentText(body)
             .setStyle(NotificationCompat.BigTextStyle().bigText(body))
@@ -297,6 +308,7 @@ object NotificationHelper {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_PROXIMITY)
             .setSmallIcon(R.drawable.ic_notification)
+            .setLargeIcon(largeIcon(context))
             .setContentTitle(title)
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
@@ -343,6 +355,7 @@ object NotificationHelper {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_PROXIMITY)
             .setSmallIcon(R.drawable.ic_notification)
+            .setLargeIcon(largeIcon(context))
             .setContentTitle(title)
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
@@ -395,6 +408,7 @@ object NotificationHelper {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_SOCIAL)
             .setSmallIcon(R.drawable.ic_notification)
+            .setLargeIcon(largeIcon(context))
             .setContentTitle(title)
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
@@ -447,6 +461,7 @@ object NotificationHelper {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_SOCIAL)
             .setSmallIcon(R.drawable.ic_notification)
+            .setLargeIcon(largeIcon(context))
             .setContentTitle(title)
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
@@ -501,6 +516,7 @@ object NotificationHelper {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_SOCIAL)
             .setSmallIcon(R.drawable.ic_notification)
+            .setLargeIcon(largeIcon(context))
             .setContentTitle(title)
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
@@ -549,6 +565,7 @@ object NotificationHelper {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_WEATHER)
             .setSmallIcon(R.drawable.ic_notification)
+            .setLargeIcon(largeIcon(context))
             .setContentTitle(title)
             .setContentText(message.take(100))
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
@@ -590,6 +607,7 @@ object NotificationHelper {
 
         val builder = NotificationCompat.Builder(context, CHANNEL_AURORA)
             .setSmallIcon(R.drawable.ic_notification)
+            .setLargeIcon(largeIcon(context))
             .setContentTitle(title)
             .setContentText(message.take(100))
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
@@ -661,6 +679,7 @@ object NotificationHelper {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_SOCIAL)
             .setSmallIcon(R.drawable.ic_notification)
+            .setLargeIcon(largeIcon(context))
             .setContentTitle(title)
             .setContentText(items.first())
             .setStyle(NotificationCompat.BigTextStyle().bigText(bigText))
@@ -704,6 +723,7 @@ object NotificationHelper {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_TRADE)
             .setSmallIcon(R.drawable.ic_notification)
+            .setLargeIcon(largeIcon(context))
             .setContentTitle(title)
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
@@ -757,6 +777,7 @@ object NotificationHelper {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ENGAGEMENT)
             .setSmallIcon(R.drawable.ic_notification)
+            .setLargeIcon(largeIcon(context))
             .setContentTitle(title)
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
@@ -800,6 +821,7 @@ object NotificationHelper {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_MODERATION)
             .setSmallIcon(R.drawable.ic_notification)
+            .setLargeIcon(largeIcon(context))
             .setContentTitle(title)
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
@@ -836,6 +858,7 @@ object NotificationHelper {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_DEVELOPER)
             .setSmallIcon(R.drawable.ic_notification)
+            .setLargeIcon(largeIcon(context))
             .setContentTitle("RockScout Developer PIN")
             .setContentText("Your code is $pin")
             .setStyle(NotificationCompat.BigTextStyle().bigText("Your 6-digit developer access code is $pin. It expires in 5 minutes."))
@@ -881,6 +904,7 @@ object NotificationHelper {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_LOCATIONS)
             .setSmallIcon(R.drawable.ic_notification)
+            .setLargeIcon(largeIcon(context))
             .setContentTitle(title)
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
