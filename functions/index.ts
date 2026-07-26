@@ -1,6 +1,6 @@
 import { handleIdentify, handleClarify } from "./identify";
 // RockScout backend — Cloudflare Worker entry (auth + rate-limit enabled).
-// Routes: /ping, /identify, /identify/clarify, /app-version, /welcome-email, /image-rejection-email, /referral/*, /dev-sms-verify.
+// Routes: /ping, /identify, /identify/clarify, /app-version, /welcome-email, /image-rejection-email, /referral/*, /dev-sms-verify, /stripe/*, /push/*.
 import { handleAppVersion } from "./app-version";
 import { handleWelcomeEmail } from "./welcome-email";
 import { handleImageRejectionEmail } from "./image-rejection-email";
@@ -11,6 +11,9 @@ import { handleDeleteAccount } from "./delete-account";
 import { handleEmailVerification } from "./email-verification";
 import { handleEmbeddingsBackfill } from "./embeddings-backfill";
 import { handleSpecimenCatalogBackfill } from "./specimen-catalog-backfill";
+import { handleStripeCheckout } from "./stripe-checkout";
+import { handleStripeWebhook } from "./stripe-webhook";
+import { handlePush } from "./push";
 import {
   buildCorsHeaders,
   guardEndpoint,
@@ -125,6 +128,58 @@ export default {
       );
     }
 
+    // Stripe Checkout session creation — app-key guarded, rate limited.
+    if (url.pathname === "/stripe/checkout" && request.method === "POST") {
+      const guard = guardEndpoint(request, env, "/stripe/checkout", cors, env.RATE_LIMIT_KV);
+      if (guard) return guard;
+      return handleStripeCheckout(
+        request,
+        env as unknown as {
+          STRIPE_SECRET_KEY?: string;
+          EXPO_PUBLIC_RORK_APP_KEY?: string;
+          EXPO_PUBLIC_SUPABASE_URL?: string;
+          EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
+        },
+        cors,
+      );
+    }
+
+    // Stripe webhook — raw body, Stripe-Signature header. NOT app-key guarded
+    // (Stripe sends its own signature). Auth is via HMAC signature verification.
+    if (url.pathname === "/stripe/webhook" && request.method === "POST") {
+      return handleStripeWebhook(
+        request,
+        env as unknown as {
+          STRIPE_SECRET_KEY?: string;
+          STRIPE_WEBHOOK_SECRET?: string;
+          EXPO_PUBLIC_SUPABASE_URL?: string;
+          EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
+          SUPABASE_SERVICE_ROLE_KEY?: string;
+        },
+        cors,
+      );
+    }
+
+    // Web Push subscribe / unsubscribe / send.
+    if (url.pathname.startsWith("/push/") && request.method === "POST") {
+      const rateLimitPath = url.pathname === "/push/send" ? "/push/send" : "/push/subscribe";
+      const guard = guardEndpoint(request, env, rateLimitPath, cors, env.RATE_LIMIT_KV);
+      if (guard) return guard;
+      return handlePush(
+        request,
+        env as unknown as {
+          EXPO_PUBLIC_RORK_APP_KEY?: string;
+          EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
+          EXPO_PUBLIC_SUPABASE_URL?: string;
+          EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
+          SUPABASE_SERVICE_ROLE_KEY?: string;
+          VAPID_PUBLIC_KEY?: string;
+          VAPID_PRIVATE_KEY?: string;
+        },
+        cors,
+      );
+    }
+
     // Embedding backfill — admin-triggered, toolkit-secret guarded, low rpm.
     // No app-key required (the toolkit secret gates this). Idempotent upsert,
     // safe to re-run.
@@ -173,6 +228,17 @@ type Env = {
   TWILIO_ACCOUNT_SID?: string;
   TWILIO_AUTH_TOKEN?: string;
   TWILIO_PHONE_FROM?: string;
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
+  STRIPE_PRICE_PREMIUM_MONTHLY?: string;
+  STRIPE_PRICE_DONATION_2?: string;
+  STRIPE_PRICE_DONATION_4?: string;
+  STRIPE_PRICE_TOKENS_1?: string;
+  STRIPE_PRICE_TOKENS_4?: string;
+  STRIPE_PRICE_TOKENS_10?: string;
+  SUPABASE_SERVICE_ROLE_KEY?: string;
+  VAPID_PUBLIC_KEY?: string;
+  VAPID_PRIVATE_KEY?: string;
 };
 
 // Re-export for auth module type compatibility.

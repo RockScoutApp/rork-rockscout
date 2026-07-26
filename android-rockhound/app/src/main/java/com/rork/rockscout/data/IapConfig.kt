@@ -16,7 +16,7 @@ object IapConfig {
     /** Offering identifier configured in RevenueCat dashboard. */
     const val OFFERING_ID = "default"
 
-    /** Monthly Premium subscription — $9.99/mo, full unlimited access, ad-free, all 3 AI models. */
+    /** Monthly Premium subscription — $5.99/mo, full unlimited access, ad-free, all 3 AI models. */
     const val PACKAGE_MONTHLY = "monthly"
 
     /** Annual Premium subscription — legacy, kept for existing subscribers only. Not shown in UI. */
@@ -67,9 +67,9 @@ object IapConfig {
      * Donations grant identifier tokens (sized off the $0.50/token rate) and a
      * tier-based temporary full-feature unlock (location monitoring, field
      * captures, wishlist, my rocks, favorite spots, RockScout Friends).
-     * All donations are Haiku-only (single-model AI identification).
-     *   $3.00   →  5 tokens   (+ 2 days unlock)  — Haiku only
-     *   $6.00   → 10 tokens   (+ 1 week unlock)  — Haiku only
+     * All donations grant Haiku AND Sonnet model access.
+     *   $2.00   →  5 tokens   (+ 2 days unlock)  — Haiku + Sonnet
+     *   $4.00   → 10 tokens   (+ 5 days unlock)  — Haiku + Sonnet
      */
     const val PACKAGE_DONATION_2 = "donation_2"
     const val PACKAGE_DONATION_5 = "donation_5"
@@ -105,8 +105,8 @@ object IapConfig {
 
     /** Preset donation tiers shown in the dropdown (trimmed to 2 options). */
     val PRESET_DONATIONS = listOf(
-        DonationOption(PACKAGE_DONATION_2, 3, "$3.00", tokenGrant = 5, locationDays = 2),
-        DonationOption(PACKAGE_DONATION_5, 6, "$6.00", tokenGrant = 10, locationDays = 7),
+        DonationOption(PACKAGE_DONATION_2, 2, "$2.00", tokenGrant = 5, locationDays = 2),
+        DonationOption(PACKAGE_DONATION_5, 4, "$4.00", tokenGrant = 10, locationDays = 5),
     )
 
     /** Map of donation packageId → token grant quantity. */
@@ -122,6 +122,7 @@ object IapConfig {
         return when (donationLocationDays(packageId)) {
             0 -> ""
             2 -> "+ 2 days unlock"
+            5 -> "+ 5 days unlock"
             7 -> "+ 1 wk unlock"
             14 -> "+ 2 wks unlock"
             21 -> "+ 3 wks unlock"

@@ -4169,7 +4169,7 @@ private val fellowRockScoutsFeatures: List<FeatureEntry> = listOf(
     FeatureEntry(
         15,
         "Tokens & Subscriptions",
-        "power your hunts with a token bank for identifications, try everything free for 7 days, unlock unlimited IDs and every feature with $9.99/mo Premium, and support the app with one-time donations that grant tokens and bonus access. Plus a Storage setting in Social Settings lets you choose Standard (150MB) or Maximum (2GB) cache size — Maximum stores all 3,500+ specimen images and every dig site map for offline use",
+        "power your hunts with a token bank for identifications, try everything free for 7 days, unlock unlimited IDs and every feature with $5.99/mo Premium, and support the app with one-time donations that grant tokens and bonus access. Plus a Storage setting in Social Settings lets you choose Standard (150MB) or Maximum (2GB) cache size — Maximum stores all 3,500+ specimen images and every dig site map for offline use",
     ),
     FeatureEntry(
         16,
@@ -4691,7 +4691,7 @@ private fun TrialInfoPopup(
                 )
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    text = "You get a 1-week free trial with 5 identification tokens. Full access — AI rock identifier, dig sites, field captures, wishlist, favorite spots, and RockScout Friends. After 7 days, donate any amount to keep going, or go Premium for $9.99/mo. One trial per device — make it count!",
+                    text = "You get a 1-week free trial with 5 identification tokens. Full access — AI rock identifier, dig sites, field captures, wishlist, favorite spots, and RockScout Friends. After 7 days, donate any amount to keep going, or go Premium for $5.99/mo. One trial per device — make it count!",
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextMid,
                     textAlign = TextAlign.Center,
@@ -4762,7 +4762,7 @@ private fun TrialExpiredBanner(
             }
             Spacer(Modifier.height(8.dp))
             Text(
-                text = "Subscribe to Premium for $9.99/mo or donate any amount to keep identifying rocks and using all features. Your account, collections, and captures are saved.",
+                text = "Subscribe to Premium for $5.99/mo or donate any amount to keep identifying rocks and using all features. Your account, collections, and captures are saved.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextMid,
             )

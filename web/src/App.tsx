@@ -56,6 +56,8 @@ import SevereWeather from "./pages/app/SevereWeather";
 import NaturalWonders from "./pages/app/NaturalWonders";
 import BlmGuide from "./pages/app/BlmGuide";
 import Profile from "./pages/app/Profile";
+import OfflineDownloads from "./pages/app/OfflineDownloads";
+import Settings from "./pages/app/Settings";
 import type { ReactNode } from "react";
 
 const queryClient = new QueryClient();
@@ -139,6 +141,8 @@ const App = () => (
               <Route path="natural-wonders" element={<NaturalWonders />} />
               <Route path="blm-guide" element={<BlmGuide />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="offline" element={<OfflineDownloads />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -1999,7 +1999,7 @@ private fun IdentifyLockCard(
             Spacer(Modifier.height(14.dp))
             // Go Premium CTA
             SculptedOutlinedButton(
-                text = "Go Premium · $9.99/mo",
+                text = "Go Premium · $5.99/mo",
                 onClick = onGoPremium,
                 accent = Citrine,
                 textColor = Citrine,

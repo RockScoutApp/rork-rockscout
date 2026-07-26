@@ -229,7 +229,7 @@ object SubscriptionAdminManager {
         val recentRenews: Int = 0,
         val totalOverrides: Int = 0,
     ) {
-        fun estimatedMrr(premiumPrice: Double = 9.99): Double {
+        fun estimatedMrr(premiumPrice: Double = 5.99): Double {
             return premiumUsers * premiumPrice
         }
     }

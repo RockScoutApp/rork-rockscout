@@ -548,7 +548,7 @@ private val howToSections: List<HowToSection> = listOf(
             "After the trial, these stay FREE forever: browsing the full specimen database & geology guides, the Field Camera (saves to Saved Images), NWS severe weather alerts, and browsing dig sites & offline maps.",
             "After the trial, these require Premium or a donation: AI identification & ID tokens, RockScout Friends/Messenger/Community, Trade Board & Discover Hunters, My Rocks/Wishlist/Field Captures/Favorite Spots, and Trip Planner/Field Journal/specimen submissions.",
             "Two ways to keep identifying free: watch 2 short rock-related videos to earn 1 ID token (no weekly cap), or make a donation of any amount for tokens plus a temporary full-feature unlock (2 days up to 1 month).",
-            "Premium ($9.99/mo) unlocks everything: unlimited AI identifies with all 3 models (Haiku + Sonnet + Gemini 2.5 Pro tie-breaker), ad-free, 250-mile nearby radius, 24-hour pings, premium gem badge, and early access to new features.",
+            "Premium ($5.99/mo) unlocks everything: unlimited AI identifies with all 3 models (Haiku + Sonnet + Gemini 2.5 Pro tie-breaker), ad-free, 250-mile nearby radius, 24-hour pings, premium gem badge, and early access to new features.",
             "Check your token balance anytime via the Token Bank icon in the home header.",
             "Tap the Token Bank to open the Token Info screen for details and purchasing options.",
         ),

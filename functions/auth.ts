@@ -45,6 +45,9 @@ const RATE_LIMITS: Record<string, RateLimitConfig> = {
   // Admin-triggered specimen catalog backfill — low rpm, large payload.
   "/specimen-catalog-backfill": { rpm: 2, burst: 1 },
   "/app-version": { rpm: 60, burst: 10 },
+  "/stripe/checkout": { rpm: 10, burst: 3 },
+  "/push/subscribe": { rpm: 10, burst: 3 },
+  "/push/send": { rpm: 30, burst: 10 },
 };
 
 /** In-memory rate-limit state (per-isolate fallback when KV is absent). */
@@ -172,4 +175,15 @@ type Env = {
   TWILIO_ACCOUNT_SID?: string;
   TWILIO_AUTH_TOKEN?: string;
   TWILIO_PHONE_FROM?: string;
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
+  STRIPE_PRICE_PREMIUM_MONTHLY?: string;
+  STRIPE_PRICE_DONATION_2?: string;
+  STRIPE_PRICE_DONATION_4?: string;
+  STRIPE_PRICE_TOKENS_1?: string;
+  STRIPE_PRICE_TOKENS_4?: string;
+  STRIPE_PRICE_TOKENS_10?: string;
+  SUPABASE_SERVICE_ROLE_KEY?: string;
+  VAPID_PUBLIC_KEY?: string;
+  VAPID_PRIVATE_KEY?: string;
 };

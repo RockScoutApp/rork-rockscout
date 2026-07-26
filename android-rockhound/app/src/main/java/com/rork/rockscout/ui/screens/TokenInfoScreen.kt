@@ -260,7 +260,7 @@ fun TokenInfoScreen(navController: NavController) {
                                 )
                                 Spacer(Modifier.height(2.dp))
                                 Text(
-                                    text = "$9.99/mo — unlock ad-free access, location alerts, and unlimited identifies.",
+                                    text = "$5.99/mo — unlock ad-free access, location alerts, and unlimited identifies.",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = DarkTextMid,
                                 )
@@ -444,7 +444,7 @@ private fun HowTokensWorkCard() {
         val steps = listOf(
             Triple("1", "Free Trial", "New users get 5 free identifies over a 1-week trial. Trial uses + purchased tokens are combined in your token bank."),
             Triple("2", "Tokens", "After the trial, each identify costs 1 token. Donate to fill your token bank — donations also unlock location monitoring, ad-free access, and the rest of the app for a limited time."),
-            Triple("3", "Go Premium", "Go Premium for $9.99/mo to unlock ad-free access, location alerts, and unlimited identifies."),
+            Triple("3", "Go Premium", "Go Premium for $5.99/mo to unlock ad-free access, location alerts, and unlimited identifies."),
         )
         steps.forEach { (num, title, body) ->
             Row(

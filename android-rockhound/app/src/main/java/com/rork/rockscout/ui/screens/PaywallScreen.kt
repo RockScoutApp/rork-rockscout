@@ -674,7 +674,7 @@ private fun PremiumTierCard(
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
-                        text = "$9.99/mo",
+                        text = "$5.99/mo",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Citrine,
                         fontWeight = FontWeight.SemiBold,
@@ -790,7 +790,7 @@ private fun PremiumTierCard(
             } else {
                 Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     SculptedButton(
-                        text = "Go Premium · $9.99/mo",
+                        text = "Go Premium · $5.99/mo",
                         onClick = onPurchase,
                         accent = Citrine,
                         containerColor = Citrine,

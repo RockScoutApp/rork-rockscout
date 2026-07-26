@@ -14,6 +14,9 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
+const BACKEND_URL = import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL as string;
+const APP_KEY = import.meta.env.EXPO_PUBLIC_RORK_APP_KEY as string;
+
 interface Profile {
   id: string;
   is_pro: boolean;
@@ -81,11 +84,34 @@ export default function Paywall() {
       type: "subscription" | "donation" | "tokens";
       priceId: string;
     }) => {
-      // Placeholder — in production this calls a Cloudflare Worker
-      // that creates a Stripe Checkout Session and returns the URL.
-      throw new Error(
-        "Stripe checkout is not yet wired up. Payment processing will be available soon — for now, enjoy the free tier!",
-      );
+      if (!user) throw new Error("Sign in to purchase.");
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      const response = await fetch(`${BACKEND_URL}/stripe/checkout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-App-Key": APP_KEY,
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          type,
+          priceId,
+          userId: user.id,
+          email: user.email,
+        }),
+      });
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as {
+          error?: string;
+        };
+        throw new Error(
+          body.error || `Checkout could not start (${response.status})`,
+        );
+      }
+      const checkout = (await response.json()) as { url: string };
+      // Redirect to Stripe-hosted Checkout.
+      window.location.href = checkout.url;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-profile-paywall"] });
