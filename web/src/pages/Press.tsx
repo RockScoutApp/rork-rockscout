@@ -1,8 +1,8 @@
-import { Download, Mail, Apple } from "lucide-react";
+import { Download, Mail } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { SITE } from "@/content/legal";
 
-const BOILERPLATE = `${SITE.name} is the field companion for rockhounds — AI rock & mineral identification, a growing specimen database, dig-site maps with offline caching, a collection tracker, and a moderated community with a peer-to-peer trade board. Founded in ${SITE.foundedYear}, ${SITE.name} is built by a small team of collectors and engineers. The Android app is coming soon to Google Play with an optional Pro subscription; iOS is coming soon.`;
+const BOILERPLATE = `${SITE.name} is the field companion for rockhounds — AI rock & mineral identification, a growing specimen database, dig-site maps with offline caching, a collection tracker, and a moderated community with a peer-to-peer trade board. Founded in ${SITE.foundedYear}, ${SITE.name} is built by a small team of collectors and engineers. The Android, iOS (beta), and PC apps are coming soon; an optional Pro subscription will be available at launch.`;
 
 const SHOTS = [
   { src: "/images/screenshots/01_home_dashboard.webp", alt: "Home dashboard" },
@@ -20,7 +20,7 @@ const SHOTS = [
 const FACTS = [
   { label: "Product", value: SITE.name },
   { label: "Tagline", value: SITE.tagline },
-  { label: "Platform", value: "Android (iOS coming soon)" },
+  { label: "Platform", value: "Android, iOS (Beta) & PC — all coming soon" },
   { label: "Category", value: "Lifestyle / Outdoor / Education" },
   { label: "Pricing", value: "Free with ads, optional Pro subscription" },
   { label: "Founded", value: String(SITE.foundedYear) },
@@ -106,14 +106,12 @@ const Press = () => (
           >
             <Mail className="h-4 w-4" /> Email press
           </a>
-          <a
-            href={SITE.playStoreUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-xl border border-primary/40 bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary/80 transition-colors hover:bg-primary/20 hover:text-primary"
+          <span
+            aria-disabled
+            className="inline-flex cursor-default items-center gap-2 rounded-xl border border-primary/40 bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary/80"
           >
-            <Download className="h-4 w-4" /> Coming soon to Google Play
-          </a>
+            <Download className="h-4 w-4" /> Coming soon to Android, iOS &amp; PC
+          </span>
         </div>
       </div>
     </section>

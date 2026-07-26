@@ -59,14 +59,12 @@ export const Navbar = () => {
           ))}
         </div>
         <div className="flex items-center gap-2">
-          <a
-            href={SITE.playStoreUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hidden items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary/80 transition-colors hover:bg-primary/20 hover:text-primary sm:inline-flex sm:px-4 sm:py-2 sm:text-sm"
+          <span
+            aria-disabled
+            className="hidden cursor-default items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary/80 sm:inline-flex sm:px-4 sm:py-2 sm:text-sm"
           >
-            Coming soon to Google Play
-          </a>
+            Coming soon to Android
+          </span>
           {/* Mobile hamburger */}
           <button
             type="button"
@@ -95,15 +93,13 @@ export const Navbar = () => {
                   {l.label}
                 </Link>
               ))}
-              <a
-                href={SITE.playStoreUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              <span
+                aria-disabled
                 onClick={() => setMenuOpen(false)}
-                className="mt-2 inline-flex items-center justify-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary/80 transition-colors hover:bg-primary/20 hover:text-primary"
+                className="mt-2 inline-flex cursor-default items-center justify-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary/80"
               >
-                Coming soon to Google Play
-              </a>
+                Coming soon to Android
+              </span>
             </div>
           </div>
         </div>

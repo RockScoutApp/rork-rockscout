@@ -292,28 +292,26 @@ const Hero = () => {
         </p>
 
         <div className="mt-6 flex flex-col gap-3 sm:mt-9 sm:flex-row sm:items-center">
-          <a
-            href="/app"
-            className="inline-flex items-center justify-center gap-2.5 rounded-2xl bg-primary px-6 py-3.5 font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          <span
+            aria-disabled
+            className="inline-flex cursor-default items-center justify-center gap-2.5 rounded-2xl bg-primary px-6 py-3.5 font-semibold text-primary-foreground"
           >
             <Monitor className="h-5 w-5" />
-            Install on PC
-          </a>
-          <a
-            href={SITE.playStoreUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2.5 rounded-2xl border border-primary/40 bg-primary/10 px-6 py-3.5 font-semibold text-primary/80 transition-colors hover:bg-primary/20 hover:text-primary"
+            Coming soon to PC
+          </span>
+          <span
+            aria-disabled
+            className="inline-flex cursor-default items-center justify-center gap-2.5 rounded-2xl border border-primary/40 bg-primary/10 px-6 py-3.5 font-semibold text-primary/80"
           >
             <Download className="h-5 w-5" />
-            Get on Android
-          </a>
-          <a
-            href="/app"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-card/50 px-5 py-3.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-card"
+            Coming soon to Android
+          </span>
+          <span
+            aria-disabled
+            className="inline-flex cursor-default items-center justify-center gap-2 rounded-2xl border border-border bg-card/50 px-5 py-3.5 text-sm font-medium text-muted-foreground"
           >
-            <Smartphone className="h-4 w-4" /> iPhone (Beta)
-          </a>
+            <Smartphone className="h-4 w-4" /> Coming soon to iOS (Beta)
+          </span>
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
           <Apple className="mr-1 inline h-3 w-3" />Native iOS app coming soon to the App Store
@@ -877,31 +875,29 @@ const CTA = () => (
           Ready to find your next specimen?
         </h2>
         <p className="mx-auto mt-4 max-w-md text-balance text-base text-muted-foreground sm:mt-5 sm:text-lg">
-          RockScout is coming soon to Google Play. Be the first to know when it launches.
+          RockScout is coming soon to Google Play, the App Store, and PC. Be the first to know when it launches.
         </p>
         <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:mt-9 sm:flex-row">
-          <a
-            href="/app"
-            className="inline-flex items-center justify-center gap-2.5 rounded-2xl bg-primary px-8 py-4 font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          <span
+            aria-disabled
+            className="inline-flex cursor-default items-center justify-center gap-2.5 rounded-2xl bg-primary px-8 py-4 font-semibold text-primary-foreground"
           >
             <Monitor className="h-5 w-5" />
-            Install on PC
-          </a>
-          <a
-            href={SITE.playStoreUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2.5 rounded-2xl border border-primary/40 bg-primary/10 px-8 py-4 font-semibold text-primary/80 transition-colors hover:bg-primary/20 hover:text-primary"
+            Coming soon to PC
+          </span>
+          <span
+            aria-disabled
+            className="inline-flex cursor-default items-center justify-center gap-2.5 rounded-2xl border border-primary/40 bg-primary/10 px-8 py-4 font-semibold text-primary/80"
           >
             <Download className="h-5 w-5" />
-            Get on Android
-          </a>
-          <a
-            href="/app"
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-card/60 px-6 py-4 text-sm font-medium text-muted-foreground transition-colors hover:bg-card"
+            Coming soon to Android
+          </span>
+          <span
+            aria-disabled
+            className="inline-flex cursor-default items-center justify-center gap-2 rounded-2xl border border-border bg-card/60 px-6 py-4 text-sm font-medium text-muted-foreground"
           >
-            <Smartphone className="h-4 w-4" /> iPhone (Beta)
-          </a>
+            <Smartphone className="h-4 w-4" /> Coming soon to iOS (Beta)
+          </span>
           <Link
             to="/support"
             className="inline-flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-card/60 px-6 py-4 text-sm font-medium text-foreground transition-colors hover:bg-card"
