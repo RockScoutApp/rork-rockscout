@@ -3,7 +3,9 @@ package com.rork.rockscout.data
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageInfo
 import android.content.pm.PackageInstaller
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.util.Log
@@ -127,14 +129,15 @@ object ApkInstaller {
      * to tap Install in the system dialog — Android never lets apps silently
      * install another APK.
      *
-     * Guards against the "App not installed" dialog by verifying the APK file
-     * is non-empty and that the system has a package installer that can handle it.
-     * If not, it falls back to the Play Store listing.
+     * Guards against the system "App not installed" dialog by fully validating the
+     * APK before launch: it must be a non-empty ZIP/APK, parseable by the package
+     * manager, match the current package name, have a higher version code, and be
+     * signed with the same certificate as the installed app. If anything is wrong,
+     * it falls back to the Play Store listing instead of asking the system to
+     * install a broken or incompatible APK.
      */
     private fun launchSystemInstaller(context: Context, apkFile: File, fallbackStoreUrl: String) {
-        if (!apkFile.exists() || apkFile.length() <= 0) {
-            throw IllegalStateException("Downloaded APK is missing or empty.")
-        }
+        validateApk(context, apkFile)
 
         val uri = FileProvider.getUriForFile(
             context,
@@ -167,5 +170,117 @@ object ApkInstaller {
                 }
                 throw e
             }
+    }
+
+    /**
+     * Validates the downloaded APK before the system installer is ever asked to
+     * handle it. This prevents the system "App not installed" dialog that appears
+     * when the installer receives a corrupted, mismatched, or downgraded APK.
+     *
+     * Checks, in order:
+     * 1. File exists and is non-empty.
+     * 2. File starts with the ZIP/APK magic bytes ("PK").
+     * 3. PackageManager can parse the archive and read its package info.
+     * 4. APK package name matches the currently installed app.
+     * 5. APK version code is strictly greater than the installed version code.
+     * 6. APK signing certificate(s) match the installed app.
+     * 7. On Android 8+, the app is allowed to request package installs.
+     *
+     * Throws [IllegalStateException] with a human-readable message if any check fails.
+     */
+    private fun validateApk(context: Context, apkFile: File) {
+        if (!apkFile.exists() || apkFile.length() <= 0) {
+            throw IllegalStateException("Downloaded update is missing or empty.")
+        }
+
+        // APKs are ZIP archives — the first two bytes must be "PK".
+        val magic = apkFile.inputStream().use { it.readNBytes(2) }
+        if (magic.size < 2 || magic[0] != 'P'.code.toByte() || magic[1] != 'K'.code.toByte()) {
+            throw IllegalStateException("Downloaded update is not a valid APK file.")
+        }
+
+        val packageManager = context.packageManager
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            PackageManager.GET_SIGNING_CERTIFICATES
+        } else {
+            @Suppress("DEPRECATION")
+            PackageManager.GET_SIGNATURES
+        }
+
+        val archiveInfo = packageManager.getPackageArchiveInfo(apkFile.absolutePath, flags)
+            ?: throw IllegalStateException("Downloaded update is not a valid Android package.")
+
+        val installedInfo = runCatching {
+            packageManager.getPackageInfo(context.packageName, flags)
+        }.getOrNull()
+            ?: throw IllegalStateException("Could not read the installed app information.")
+
+        if (archiveInfo.packageName != context.packageName) {
+            throw IllegalStateException(
+                "Downloaded update does not match RockScout (package mismatch).",
+            )
+        }
+
+        val installedVersion = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            installedInfo.longVersionCode.toInt()
+        } else {
+            @Suppress("DEPRECATION")
+            installedInfo.versionCode
+        }
+        val apkVersion = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            archiveInfo.longVersionCode.toInt()
+        } else {
+            @Suppress("DEPRECATION")
+            archiveInfo.versionCode
+        }
+        if (apkVersion <= installedVersion) {
+            throw IllegalStateException(
+                "Downloaded update is not newer than the installed version.",
+            )
+        }
+
+        if (!signaturesMatch(installedInfo, archiveInfo)) {
+            throw IllegalStateException(
+                "Downloaded update was signed with a different key. Please install from the Play Store instead.",
+            )
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            !packageManager.canRequestPackageInstalls()
+        ) {
+            throw IllegalStateException(
+                "This app isn't allowed to install updates. Please enable 'Install unknown apps' for RockScout in Settings, or update from the Play Store.",
+            )
+        }
+    }
+
+    /**
+     * Compares the signing certificate(s) of the installed app and the downloaded
+     * APK. Android requires the certificates to match exactly when installing an
+     * update over an existing app; otherwise the install fails with the system
+     * "App not installed" dialog.
+     */
+    private fun signaturesMatch(installedInfo: PackageInfo, archiveInfo: PackageInfo): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val installedSigners = installedInfo.signingInfo?.apkContentsSigners
+            val archiveSigners = archiveInfo.signingInfo?.apkContentsSigners
+            if (installedSigners.isNullOrEmpty() || archiveSigners.isNullOrEmpty()) return false
+            installedSigners.size == archiveSigners.size &&
+                installedSigners.zip(archiveSigners).all { (a, b) ->
+                    a.toByteArray().contentEquals(b.toByteArray())
+                }
+        } else {
+            @Suppress("DEPRECATION")
+            val installedSignatures = installedInfo.signatures
+            @Suppress("DEPRECATION")
+            val archiveSignatures = archiveInfo.signatures
+            if (installedSignatures.isNullOrEmpty() || archiveSignatures.isNullOrEmpty()) {
+                return false
+            }
+            installedSignatures.size == archiveSignatures.size &&
+                installedSignatures.zip(archiveSignatures).all { (a, b) ->
+                    a.toByteArray().contentEquals(b.toByteArray())
+                }
+        }
     }
 }
