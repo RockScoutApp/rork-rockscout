@@ -146,7 +146,7 @@ export default function Notifications() {
         </div>
       </div>
 
-      {/* Push opt-in + settings panel */
+      {/* Push opt-in + settings panel */}
       {showSettings && (
         <div className="space-y-4 rounded-xl border border-border bg-card p-4">
           <div className="flex items-center justify-between gap-3">
