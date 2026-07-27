@@ -35,6 +35,48 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+self.addEventListener("push", (event) => {
+  let payload: { title?: string; body?: string; url?: string } = {};
+  try {
+    payload = event.data ? (event.data.json() as typeof payload) : {};
+  } catch {
+    payload = { title: "RockScout", body: event.data ? event.data.text() : "" };
+  }
+  const title = payload.title || "RockScout";
+  const body = payload.body || "";
+  const url = payload.url || "/app/notifications";
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: "/pwa-192.png",
+      badge: "/pwa-192.png",
+      data: { url },
+      tag: "rockscout-notification",
+      renotify: true,
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || "/app/notifications";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      // Focus an existing open tab if one matches the origin.
+      for (const client of clientList) {
+        if ("focus" in client) {
+          (client as WindowClient).focus();
+          (client as WindowClient).navigate?.(targetUrl);
+          return;
+        }
+      }
+      // Otherwise open a new tab.
+      if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+      return Promise.resolve();
+    }),
+  );
+});
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;

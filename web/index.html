@@ -43,7 +43,46 @@
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Boot placeholder: visible until React mounts. Prevents a black screen
+           if JS is slow, blocked, or a stale service worker intercepts the page.
+           Removed by React once it renders. -->
+      <div id="boot-placeholder" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:hsl(30 23% 7%);z-index:0">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:16px;color:hsl(36 40% 92%);font-family:Inter,ui-sans-serif,system-ui,sans-serif">
+          <div style="width:36px;height:36px;border:2.5px solid hsl(36 80% 58%);border-top-color:transparent;border-radius:50%;animation:boot-spin .8s linear infinite"></div>
+          <span style="font-size:13px;letter-spacing:.04em;opacity:.7">Loading RockScout…</span>
+        </div>
+      </div>
+      <style>@keyframes boot-spin{to{transform:rotate(360deg)}}</style>
+    </div>
+
+    <!-- Self-healing service-worker guard. If a stale SW is holding a broken
+         cached shell and the page is still in the boot placeholder after 8s,
+         force-unregister every SW on this origin and reload. This recovers
+         returning visitors whose browser won't let go of an old version. -->
+    <script>
+      (function () {
+        var bootEl = document.getElementById('boot-placeholder');
+        var timer = setTimeout(function () {
+          if (bootEl && bootEl.parentNode) {
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations().then(function (regs) {
+                return Promise.all(regs.map(function (r) { return r.unregister(); }))
+                  .then(function () { window.location.reload(); })
+                  .catch(function () { window.location.reload(); });
+              });
+            } else {
+              window.location.reload();
+            }
+          }
+        }, 8000);
+        // React calls this once mounted to clear the timer + placeholder.
+        window.__rockscoutBootDone = function () {
+          clearTimeout(timer);
+          if (bootEl && bootEl.parentNode) bootEl.parentNode.removeChild(bootEl);
+        };
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
