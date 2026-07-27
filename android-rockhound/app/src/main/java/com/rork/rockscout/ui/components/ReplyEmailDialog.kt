@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -63,9 +62,29 @@ import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Danger
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+
+/**
+ * Maximum total raw size for all email attachments combined.
+ *
+ * Email attachments are base64-encoded in transit (~33% overhead), so this
+ * raw budget keeps the encoded message under Gmail's 25 MB limit and
+ * Outlook's 20 MB limit with room for the email body text. After
+ * recompression (2048px / JPEG 85), each photo is typically 1–2 MB, so
+ * four photos total ~4–8 MB — well under this ceiling. The guard exists
+ * as a safety net for edge cases (many high-detail images).
+ */
+private const val MAX_TOTAL_ATTACHMENT_BYTES = 18L * 1024L * 1024L
+
+/**
+ * A recompressed attachment: the shareable [uri] (via FileProvider) and
+ * its on-disk [bytes] for total-size accounting.
+ */
+private data class Attachment(val uri: Uri, val bytes: Long)
 
 /**
  * Small dialog that lets the user enter or edit their reply-to email
@@ -76,6 +95,14 @@ import java.io.FileOutputStream
  * attachment. The user can upload additional images (up to 4 total) from
  * their gallery or Saved Images — useful when they've taken multiple
  * photos of the find from different angles.
+ *
+ * **Size handling:** All images — captured, gallery, and Saved Images —
+ * are recompressed through the same pipeline (2048px max long edge,
+ * JPEG quality 85) before attachment. This keeps resolution high enough
+ * for an expert to zoom and see grain/texture, while bounding each file
+ * to ~1–2 MB. A per-image 5 MB pre-filter rejects absurdly large picks
+ * before decoding, and a total-attachment guard (18 MB) prevents
+ * exceeding email providers' size limits.
  *
  * Pre-fills with the user's RockScout login email, falling back to
  * the last-used reply email persisted in SharedPreferences, or empty.
@@ -114,15 +141,21 @@ fun ReplyEmailDialog(
 
     // --- Multi-photo attachment state ---
     val maxImages = 4
-    val extraImageUris = remember { mutableStateListOf<Uri>() }
+    val extraAttachments = remember { mutableStateListOf<Attachment>() }
     var includeCapturedPhoto by remember { mutableStateOf(capturedBitmap != null) }
     var imageModerating by remember { mutableStateOf(false) }
     var moderationRejected by remember { mutableStateOf<String?>(null) }
     var showSavedImagePicker by remember { mutableStateOf(false) }
+    var totalSizeError by remember { mutableStateOf<String?>(null) }
 
     val capturedCount = if (includeCapturedPhoto && capturedBitmap != null) 1 else 0
-    val totalPhotos = capturedCount + extraImageUris.size
+    val totalPhotos = capturedCount + extraAttachments.size
     val canAddMore = totalPhotos < maxImages
+
+    // Running total of extra attachment sizes (captured bitmap estimated at ~2 MB)
+    val capturedEstimateBytes = if (includeCapturedPhoto && capturedBitmap != null) 2_000_000L else 0L
+    val extraTotalBytes = extraAttachments.sumOf { it.bytes }
+    val runningTotalBytes = capturedEstimateBytes + extraTotalBytes
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -153,9 +186,9 @@ fun ReplyEmailDialog(
                 return@launch
             }
 
-            val contentUri = copyToPhotosCache(context, uri)
-            if (contentUri != null) {
-                extraImageUris.add(contentUri)
+            val attachment = recompressToPhotosCache(context, uri)
+            if (attachment != null) {
+                extraAttachments.add(attachment)
             } else {
                 Toast.makeText(context, "Could not save image. Please try again.", Toast.LENGTH_SHORT).show()
             }
@@ -169,14 +202,21 @@ fun ReplyEmailDialog(
                 showSavedImagePicker = false
                 if (!canAddMore) return@SavedImagesPickerDialog
 
+                val sourceUri = if (savedImage.localUri != null) {
+                    Uri.parse(savedImage.localUri)
+                } else {
+                    Uri.parse(savedImage.url)
+                }
+
+                // Size pre-filter — same as gallery path
+                if (ImageUtils.isOverUploadLimit(context, sourceUri)) {
+                    moderationRejected = "That image is over 5 MB. Please choose a smaller photo."
+                    return@SavedImagesPickerDialog
+                }
+
                 imageModerating = true
                 moderationRejected = null
                 scope.launch {
-                    val sourceUri = if (savedImage.localUri != null) {
-                        Uri.parse(savedImage.localUri)
-                    } else {
-                        Uri.parse(savedImage.url)
-                    }
                     val base64 = ImageUtils.uriToModerationBase64(context, sourceUri)
                     if (base64 == null) {
                         imageModerating = false
@@ -192,9 +232,9 @@ fun ReplyEmailDialog(
                         return@launch
                     }
 
-                    val contentUri = copyToPhotosCache(context, sourceUri)
-                    if (contentUri != null) {
-                        extraImageUris.add(contentUri)
+                    val attachment = recompressToPhotosCache(context, sourceUri)
+                    if (attachment != null) {
+                        extraAttachments.add(attachment)
                     } else {
                         Toast.makeText(context, "Could not save image. Please try again.", Toast.LENGTH_SHORT).show()
                     }
@@ -274,13 +314,13 @@ fun ReplyEmailDialog(
                     }
 
                     // Extra uploaded photos (loaded async via Coil)
-                    extraImageUris.forEachIndexed { idx, uri ->
+                    extraAttachments.forEachIndexed { idx, attachment ->
                         AttachmentThumbnail(
                             modifier = Modifier.size(56.dp),
-                            onRemove = { extraImageUris.removeAt(idx) },
+                            onRemove = { extraAttachments.removeAt(idx) },
                         ) {
                             AsyncImage(
-                                model = uri,
+                                model = attachment.uri,
                                 contentDescription = "Photo ${idx + 2}",
                                 modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(10.dp)),
                                 contentScale = ContentScale.Crop,
@@ -323,8 +363,29 @@ fun ReplyEmailDialog(
                     }
                 }
 
+                // Running total size indicator
+                if (totalPhotos > 0) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = "Total size: ${formatBytes(runningTotalBytes)} / ${formatBytes(MAX_TOTAL_ATTACHMENT_BYTES)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (runningTotalBytes > MAX_TOTAL_ATTACHMENT_BYTES) Danger else DarkTextMid,
+                    )
+                }
+
                 // Moderation error
                 moderationRejected?.let { msg ->
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = msg,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Danger,
+                        textAlign = TextAlign.Start,
+                    )
+                }
+
+                // Total size error (shown at launch time)
+                totalSizeError?.let { msg ->
                     Spacer(Modifier.height(8.dp))
                     Text(
                         text = msg,
@@ -341,12 +402,28 @@ fun ReplyEmailDialog(
                 onClick = {
                     prefs.edit().putString("last_reply_email", replyEmail).apply()
 
-                    // Build the full attachment list
+                    // Write the captured bitmap and build the full attachment list
                     val attachmentUris = mutableListOf<Uri>()
+                    var totalBytes = 0L
+
                     if (includeCapturedPhoto && capturedBitmap != null) {
-                        writeBitmapToPhotosCache(context, capturedBitmap)?.let { attachmentUris.add(it) }
+                        val captured = writeBitmapToPhotosCache(context, capturedBitmap)
+                        if (captured != null) {
+                            attachmentUris.add(captured.uri)
+                            totalBytes += captured.bytes
+                        }
                     }
-                    attachmentUris.addAll(extraImageUris)
+                    for (a in extraAttachments) {
+                        attachmentUris.add(a.uri)
+                        totalBytes += a.bytes
+                    }
+
+                    // Final total-size guard — prevents exceeding email provider limits
+                    if (totalBytes > MAX_TOTAL_ATTACHMENT_BYTES) {
+                        totalSizeError = "Total attachment size (${formatBytes(totalBytes)}) exceeds the ${formatBytes(MAX_TOTAL_ATTACHMENT_BYTES)} email limit. Remove a photo or two and try again."
+                        return@SculptedTextButton
+                    }
+                    totalSizeError = null
 
                     launchEmailDraft(
                         context = context,
@@ -406,33 +483,37 @@ private fun AttachmentThumbnail(
 }
 
 /**
- * Copies a content/file/http [uri] into the cache `photos/` directory
+ * Recompresses a content/file/http [uri] into the cache `photos/` directory
  * (configured in file_paths.xml as the `captured_photos` FileProvider path)
- * and returns the shareable [Uri] via FileProvider.
+ * and returns the shareable [Uri] via FileProvider along with the file size.
  *
- * Returns null on any I/O or FileProvider failure.
+ * Uses the same pipeline as the ID capture: decode via [ImageUtils.decodeSampledBitmap]
+ * (2048px max long edge) and compress at JPEG quality 85. This bounds each
+ * attachment to ~1–2 MB while preserving enough resolution for an expert to
+ * zoom and see grain, crystal faces, and texture.
+ *
+ * Decoding and compression run on [Dispatchers.IO] to avoid blocking the UI.
+ *
+ * Returns null on any I/O, decode, or FileProvider failure.
  */
-private fun copyToPhotosCache(context: android.content.Context, uri: Uri): Uri? {
-    return try {
-        val scheme = uri.scheme
-        val inputStream: java.io.InputStream? = if (scheme == "http" || scheme == "https") {
-            java.net.URL(uri.toString()).openStream()
-        } else {
-            context.contentResolver.openInputStream(uri)
-        }
-        if (inputStream == null) return null
-
+private suspend fun recompressToPhotosCache(
+    context: android.content.Context,
+    uri: Uri,
+): Attachment? = withContext(Dispatchers.IO) {
+    try {
+        val bitmap = ImageUtils.decodeSampledBitmap(context, uri) ?: return@withContext null
         val dir = File(context.cacheDir, "photos").apply { mkdirs() }
         val file = File(dir, "expert_extra_${System.currentTimeMillis()}.jpg")
         FileOutputStream(file).use { out ->
-            inputStream.use { it.copyTo(out) }
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
         }
-        if (file.length() == 0L) return null
-        FileProvider.getUriForFile(
+        if (file.length() == 0L) return@withContext null
+        val shareUri = FileProvider.getUriForFile(
             context,
             "${context.packageName}.fileprovider",
             file,
         )
+        Attachment(shareUri, file.length())
     } catch (_: Throwable) {
         null
     }
@@ -440,23 +521,35 @@ private fun copyToPhotosCache(context: android.content.Context, uri: Uri): Uri? 
 
 /**
  * Writes a [Bitmap] to the cache `photos/` directory and returns the
- * FileProvider [Uri] for sharing.
+ * FileProvider [Uri] plus file size for sharing.
  */
-private fun writeBitmapToPhotosCache(context: android.content.Context, bitmap: Bitmap): Uri? {
+private fun writeBitmapToPhotosCache(
+    context: android.content.Context,
+    bitmap: Bitmap,
+): Attachment? {
     return try {
         val dir = File(context.cacheDir, "photos").apply { mkdirs() }
         val file = File(dir, "expert_${System.currentTimeMillis()}.jpg")
         FileOutputStream(file).use { out ->
             bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
         }
-        FileProvider.getUriForFile(
+        val shareUri = FileProvider.getUriForFile(
             context,
             "${context.packageName}.fileprovider",
             file,
         )
+        Attachment(shareUri, file.length())
     } catch (_: Throwable) {
         null
     }
+}
+
+/**
+ * Formats a byte count as a human-readable MB string.
+ */
+private fun formatBytes(bytes: Long): String {
+    val mb = bytes / (1024.0 * 1024.0)
+    return if (mb < 10) String.format("%.1f MB", mb) else String.format("%.0f MB", mb)
 }
 
 /**
