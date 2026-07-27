@@ -278,7 +278,7 @@ export default function FieldJournal() {
 
       {/* Editor dialog */}
       <Dialog open={showEditor} onOpenChange={setShowEditor}>
-        <DialogContent className="max-w-md">
+        <DialogContent aria-describedby={undefined} className="max-w-md">
           <DialogHeader>
             <DialogTitle>
               {editingId ? "Edit entry" : "New journal entry"}

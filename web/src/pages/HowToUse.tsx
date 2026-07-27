@@ -668,7 +668,7 @@ const HowToUse = () => {
 
       {/* Section popup dialog */}
       <Dialog open={selectedIdx !== null} onOpenChange={(open) => { if (!open) setSelectedIdx(null); }}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden p-0 sm:rounded-2xl">
+        <DialogContent aria-describedby={undefined} className="max-w-2xl max-h-[85vh] overflow-hidden p-0 sm:rounded-2xl">
           {selected && (
             <div className="flex flex-col h-[85vh] sm:h-[85vh]">
               {/* Header */}

@@ -385,7 +385,7 @@ const Hero = () => {
     </div>
   </section>
   <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
-    <DialogContent className="max-w-2xl gap-0 overflow-hidden p-0 sm:rounded-2xl">
+    <DialogContent aria-describedby={undefined} className="max-w-2xl gap-0 overflow-hidden p-0 sm:rounded-2xl">
       <DialogTitle className="sr-only">A Note to My Fellow RockScouts</DialogTitle>
       <div className="scroll-parchment max-h-[80vh] overflow-y-auto px-6 py-6 sm:px-8 sm:py-8">
         <div className="mb-4 flex items-center justify-between gap-3">

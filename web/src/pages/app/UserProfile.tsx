@@ -366,7 +366,7 @@ export default function UserProfile() {
 
       {/* Profile editor */}
       <Dialog open={showEditor} onOpenChange={setShowEditor}>
-        <DialogContent className="max-w-md">
+        <DialogContent aria-describedby={undefined} className="max-w-md">
           <DialogHeader>
             <DialogTitle>Edit your profile</DialogTitle>
           </DialogHeader>

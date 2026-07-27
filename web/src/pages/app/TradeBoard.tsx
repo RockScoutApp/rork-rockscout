@@ -371,7 +371,7 @@ export default function TradeBoard() {
 
       {/* Listing editor */}
       <Dialog open={showEditor} onOpenChange={setShowEditor}>
-        <DialogContent className="max-w-md">
+        <DialogContent aria-describedby={undefined} className="max-w-md">
           <DialogHeader>
             <DialogTitle>Post a trade listing</DialogTitle>
           </DialogHeader>

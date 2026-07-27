@@ -495,7 +495,7 @@ export default function TripPlanner() {
 
       {/* Trip editor dialog */}
       <Dialog open={showEditor} onOpenChange={setShowEditor}>
-        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+        <DialogContent aria-describedby={undefined} className="max-h-[90vh] max-w-lg overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editingId ? "Edit trip" : "New trip"}
