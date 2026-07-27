@@ -3,7 +3,9 @@ import { ARTIFACT_DB, ARTIFACT_MAP } from "./artifacts";
 import {
   embedText,
   matchSpecimenEmbeddings,
+  matchArtifactEmbeddings,
   type EmbeddingMatch,
+  type ArtifactEmbeddingMatch,
 } from "./embeddings";
 
 export async function handleIdentify(
@@ -297,9 +299,16 @@ export async function handleIdentify(
 /**
  * Artifact-first identification pipeline. Runs when the user confirms (or
  * suspects) they're scanning an artifact — uses ARTIFACT_DB as the candidate
- * set instead of the rock/mineral/fossil specimen database. Mirrors the
- * rock-ID flow (describe → visual comparison → optional re-rank) but with
- * artifact-specific prompts and reference images.
+ * set instead of the rock/mineral/fossil specimen database.
+ *
+ * Follows the SAME embedding-first pipeline as the rock-ID flow:
+ *   1. Haiku describes the photo in artifact vocabulary (no DB in context)
+ *   2. The description is embedded and matched against the artifact_embeddings
+ *      pgvector index to narrow candidates
+ *   3. Visual reference comparison against the narrowed candidate images
+ *   4. Optional Sonnet re-rank on ambiguous matches (top < 85%)
+ * Falls back to the old text-first flow (full DB in system prompt) if the
+ * embedding pipeline is unavailable.
  *
  * The rock-ID path (handleIdentify above) is completely untouched — this is
  * a separate, self-contained branch.
@@ -326,39 +335,76 @@ async function identifyArtifact(
   const useSonnet = tier === "premium" || tier === "pro";
   const modelsUsed: string[] = ["artifact-mode"];
 
-  try {
-    // Step 1: Haiku pass — describe the photo in artifact vocabulary and
-    // match against the full artifact catalog in one call (106 artifacts
-    // is small enough to fit in a single system prompt, unlike the 808-
-    // specimen rock database which requires the embedding-first narrowing).
-    const result = await callArtifactVisionModel(
-      toolkitUrl, toolkitSecret, imageData, mimeType,
-    );
-    if (!result.ok) {
-      const errorBody = await result.text().catch(() => "unknown error");
-      console.error("Artifact AI Gateway error:", result.status, errorBody);
-      return Response.json(
-        { error: `Artifact identification failed (${result.status})` },
-        { status: 502, headers: responseHeaders },
-      );
-    }
-    const data = await result.json() as {
-      choices?: Array<{ message?: { content?: string } }>;
-    };
-    const content = data.choices?.[0]?.message?.content;
-    if (!content) {
-      console.error("No content in artifact AI response:", JSON.stringify(data));
-      return Response.json(
-        { error: "No artifact identification results returned" },
-        { status: 502, headers: responseHeaders },
-      );
-    }
-    let parsed = parseIdentificationResponse(content);
-    modelsUsed.push(useSonnet ? "haiku-artifact" : "haiku-artifact");
+  // ── Embedding-first pipeline (mirrors the rock-ID flow) ──────────────
+  const supabaseUrl = env.EXPO_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+  const embeddingEnabled = !!(supabaseUrl && supabaseAnonKey);
 
-    // Step 2: Visual reference comparison — send the user's photo alongside
+  try {
+    let parsed: IdentificationResult;
+    let usedEmbeddingFlow = false;
+
+    if (embeddingEnabled) {
+      try {
+        // Step 1: Lightweight Haiku pass — describe the photo in artifact
+        // vocabulary (no DB in context, just visual observation).
+        const photoDescription = await callDescribeArtifactPhoto(
+          toolkitUrl, toolkitSecret, imageData, mimeType,
+        );
+        if (photoDescription) {
+          // Step 2: Embed the description and match against pgvector.
+          const queryEmbedding = await embedText(toolkitUrl, toolkitSecret, photoDescription);
+          const matchCount = useSonnet ? 20 : 25;
+          const embeddingMatches = await matchArtifactEmbeddings(
+            supabaseUrl!, supabaseAnonKey!, queryEmbedding, matchCount,
+          );
+          if (embeddingMatches.length > 0) {
+            parsed = {
+              matches: artifactEmbeddingMatchesToMatchResults(embeddingMatches),
+              summary: "Narrowed by embedding index — pending visual comparison.",
+            };
+            usedEmbeddingFlow = true;
+          }
+        }
+      } catch (err) {
+        console.error("Artifact embedding flow failed, falling back to text-first:", String(err));
+      }
+    }
+
+    if (!usedEmbeddingFlow) {
+      // Fallback: old text-first flow (full 106-artifact DB in system prompt).
+      const result = await callArtifactVisionModel(
+        toolkitUrl, toolkitSecret, imageData, mimeType,
+      );
+      if (!result.ok) {
+        const errorBody = await result.text().catch(() => "unknown error");
+        console.error("Artifact AI Gateway error:", result.status, errorBody);
+        return Response.json(
+          { error: `Artifact identification failed (${result.status})` },
+          { status: 502, headers: responseHeaders },
+        );
+      }
+      const data = await result.json() as {
+        choices?: Array<{ message?: { content?: string } }>;
+      };
+      const content = data.choices?.[0]?.message?.content;
+      if (!content) {
+        console.error("No content in artifact AI response:", JSON.stringify(data));
+        return Response.json(
+          { error: "No artifact identification results returned" },
+          { status: 502, headers: responseHeaders },
+        );
+      }
+      parsed = parseIdentificationResponse(content);
+      modelsUsed.push("haiku-artifact");
+    }
+
+    // Step 3: Visual reference comparison — send the user's photo alongside
     // the top artifact reference images for a direct visual match.
-    const visualMaxCandidates = useSonnet ? 12 : 15;
+    // In the embedding-first flow, this is the primary identification step.
+    const visualMaxCandidates = usedEmbeddingFlow
+      ? (useSonnet ? 20 : 25)
+      : (useSonnet ? 12 : 15);
     const visualResult = await callArtifactVisualComparison(
       toolkitUrl, toolkitSecret, imageData, mimeType, parsed.matches, useSonnet, visualMaxCandidates,
     );
@@ -366,17 +412,29 @@ async function identifyArtifact(
     let finalMatches = parsed.matches;
     let finalSummary = parsed.summary;
     let visualReferenceUsed = false;
+    let visualShortCircuit = false;
+
+    if (usedEmbeddingFlow) {
+      modelsUsed.push("haiku-artifact-describe");
+    }
 
     if (visualResult) {
       modelsUsed.push(useSonnet ? "sonnet-artifact-visual" : "haiku-artifact-visual");
       visualReferenceUsed = true;
       finalMatches = visualResult.matches;
       finalSummary = visualResult.summary;
+
+      // Short-circuit if visual confidence is very high (same as rock flow).
+      const visualTopConf = visualResult.matches.length > 0
+        ? visualResult.matches[0].confidence : 0;
+      if (visualTopConf >= 92) {
+        visualShortCircuit = true;
+      }
     }
 
-    // Optional Sonnet re-rank on ambiguous artifact matches (top < 85%).
+    // Step 4: Optional Sonnet re-rank on ambiguous artifact matches (top < 85%).
     const topConf = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
-    if (useSonnet && topConf < 85 && finalMatches.length > 0) {
+    if (!visualShortCircuit && useSonnet && topConf < 85 && finalMatches.length > 0) {
       const sonnetResult = await callSonnetArtifactRerank(
         toolkitUrl, toolkitSecret, imageData, mimeType, finalMatches, finalSummary,
       );
@@ -388,7 +446,7 @@ async function identifyArtifact(
       }
     }
 
-    const needsClarification = topConf < 85 && finalMatches.length > 0;
+    const needsClarification = !visualShortCircuit && topConf < 85 && finalMatches.length > 0;
 
     const artifactResponse: IdentifyResponse = {
       matches: finalMatches,
@@ -408,6 +466,89 @@ async function identifyArtifact(
       { error: "Internal server error" },
       { status: 500, headers: cors },
     );
+  }
+}
+
+/** Convert artifact embedding match RPC results into MatchResult objects
+ *  for the visual comparison step. Mirrors embeddingMatchesToMatchResults
+ *  for specimens — confidence is mapped from cosine similarity (0–1) to
+ *  the 0–100 scale. Reasoning is a placeholder; the real reasoning comes
+ *  from the LLM visual pass. */
+function artifactEmbeddingMatchesToMatchResults(
+  matches: ArtifactEmbeddingMatch[],
+): MatchResult[] {
+  return matches.map((m) => {
+    const art = ARTIFACT_MAP[m.artifact_id];
+    const confidence = Math.max(1, Math.min(99, Math.round(m.max_similarity * 100)));
+    return {
+      id: m.artifact_id,
+      name: art?.name ?? m.artifact_id,
+      confidence,
+      reasoning: `Embedding index match (similarity ${m.max_similarity.toFixed(3)}).`,
+    };
+  });
+}
+
+/** Lightweight Haiku pass that describes the user's photo in artifact
+ *  vocabulary WITHOUT the full database in context — mirrors
+ *  callDescribePhoto for specimens. The returned text is embedded and
+ *  matched against the pgvector artifact index to narrow candidates.
+ *  Returns null on any failure — the caller falls back to the text-first
+ *  flow (full DB in system prompt). */
+async function callDescribeArtifactPhoto(
+  toolkitUrl: string,
+  secret: string,
+  imageBase64: string,
+  mimeType: string,
+): Promise<string | null> {
+  const describePrompt = `Observe this prehistoric artifact photograph carefully and describe what you see using the vocabulary an archaeologist would use.
+
+Describe in 3-5 sentences:
+- Overall shape (lanceolate, stemmed, corner-notched, bifacial, disc, tubular, oval, triangular, pick, etc.)
+- Flaking pattern (collateral, parallel, oblique, random, pressure-flaked, bifacial, unifacial)
+- Base style (concave, convex, straight, notched, bifurcated, ground, grooved, shouldered)
+- Material hints (chert, flint, obsidian, slate, shell, ceramic, stone, bone, wood)
+- Surface treatment (incised, cord-marked, polished, serrated, cortex, retouched)
+- Size and proportions if discernible
+- Any hafting features (notches, stem, tang, groove)
+- Cultural or temporal markers if visible
+
+Return ONLY the description prose — no JSON, no markdown, no preamble.`;
+
+  const messages = [
+    {
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+        { type: "text", text: describePrompt },
+      ],
+    },
+  ];
+
+  try {
+    const response = await fetch(`${toolkitUrl}/v2/vercel/v1/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${secret}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "anthropic/claude-haiku-4.5",
+        messages,
+        max_tokens: 512,
+        temperature: 0.1,
+      }),
+    });
+    if (!response.ok) return null;
+    const data = await response.json() as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const content = data.choices?.[0]?.message?.content;
+    if (!content || content.trim().length === 0) return null;
+    return content.trim();
+  } catch (err) {
+    console.error("callDescribeArtifactPhoto error:", String(err));
+    return null;
   }
 }
 

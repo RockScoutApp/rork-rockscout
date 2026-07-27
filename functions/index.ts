@@ -10,6 +10,7 @@ import { handleDevSmsVerify } from "./dev-sms-verify";
 import { handleDeleteAccount } from "./delete-account";
 import { handleEmailVerification } from "./email-verification";
 import { handleEmbeddingsBackfill } from "./embeddings-backfill";
+import { handleArtifactsBackfill } from "./artifacts-backfill";
 import { handleSpecimenCatalogBackfill } from "./specimen-catalog-backfill";
 import { handleStripeCheckout } from "./stripe-checkout";
 import { handleStripeWebhook } from "./stripe-webhook";
@@ -212,6 +213,24 @@ export default {
       return handleSpecimenCatalogBackfill(
         request,
         env as unknown as {
+          EXPO_PUBLIC_SUPABASE_URL?: string;
+          EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
+        },
+        cors,
+      );
+    }
+
+    // Artifact embeddings backfill — admin-triggered, toolkit-secret guarded.
+    // Populates the artifact_embeddings table from ARTIFACT_DB for the
+    // embedding-first artifact identification pipeline. Idempotent upsert.
+    if (url.pathname === "/artifacts-backfill" && request.method === "POST") {
+      const guard = guardEndpoint(request, env, "/artifacts-backfill", cors, env.RATE_LIMIT_KV);
+      if (guard) return guard;
+      return handleArtifactsBackfill(
+        request,
+        env as unknown as {
+          EXPO_PUBLIC_TOOLKIT_URL?: string;
+          EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
           EXPO_PUBLIC_SUPABASE_URL?: string;
           EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
         },

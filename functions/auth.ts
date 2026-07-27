@@ -44,6 +44,8 @@ const RATE_LIMITS: Record<string, RateLimitConfig> = {
   "/embeddings-backfill": { rpm: 2, burst: 1 },
   // Admin-triggered specimen catalog backfill — low rpm, large payload.
   "/specimen-catalog-backfill": { rpm: 2, burst: 1 },
+  // Admin-triggered artifact embeddings backfill — low rpm, large payload.
+  "/artifacts-backfill": { rpm: 2, burst: 1 },
   "/app-version": { rpm: 60, burst: 10 },
   "/stripe/checkout": { rpm: 10, burst: 3 },
   "/push/subscribe": { rpm: 10, burst: 3 },

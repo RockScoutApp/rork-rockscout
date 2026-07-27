@@ -18,6 +18,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      artifact_embeddings: {
+        Row: {
+          artifact_id: string
+          created_at: string
+          embedding_model: string
+          id: number
+          image_url: string
+          text_embedding: string | null
+        }
+        Insert: {
+          artifact_id: string
+          created_at?: string
+          embedding_model?: string
+          id?: never
+          image_url: string
+          text_embedding?: string | null
+        }
+        Update: {
+          artifact_id?: string
+          created_at?: string
+          embedding_model?: string
+          id?: never
+          image_url?: string
+          text_embedding?: string | null
+        }
+        Relationships: []
+      }
       connections: {
         Row: {
           created_at: string
@@ -808,6 +835,13 @@ export type Database = {
     }
     Functions: {
       cleanup_expired_pings: { Args: never; Returns: undefined }
+      match_artifact_embeddings: {
+        Args: { match_count?: number; query_embedding: string }
+        Returns: {
+          artifact_id: string
+          max_similarity: number
+        }[]
+      }
       match_specimen_embeddings: {
         Args: { match_count?: number; query_embedding: string }
         Returns: {
