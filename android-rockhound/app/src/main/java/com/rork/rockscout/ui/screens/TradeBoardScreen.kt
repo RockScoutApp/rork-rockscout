@@ -804,6 +804,15 @@ internal fun ListingEditorDialog(
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
     ) { uri -> if (uri != null) {
+        // Reject files larger than 5 MB before any pipeline work.
+        if (ImageUtils.isOverUploadLimit(context, uri)) {
+            android.widget.Toast.makeText(
+                context,
+                "That image is over 5 MB. Please choose a smaller photo.",
+                android.widget.Toast.LENGTH_LONG,
+            ).show()
+            return@rememberLauncherForActivityResult
+        }
         scope.launch {
             val base64 = ImageUtils.uriToModerationBase64(context, uri)
             if (base64 == null) {

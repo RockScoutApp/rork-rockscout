@@ -28,6 +28,12 @@ object ImageUtils {
      *  sensors produce ~30k×30k bitmaps that would otherwise allocate ~3GB). */
     private const val MAX_CAPTURE_DIMENSION = 2048
 
+    /** Maximum allowed size for a user-selected upload image (5 MB).
+     *  Picks larger than this are rejected before any moderation / upload
+     *  pipeline runs, preventing base64-encoding OOMs and failed uploads
+     *  on slow connections. */
+    const val MAX_UPLOAD_BYTES = 5L * 1024L * 1024L
+
     /**
      * Load a content URI as a base64-encoded JPEG string suitable for [ImageModerator.scan].
      * Returns null if the URI cannot be read.
@@ -42,6 +48,26 @@ object ImageUtils {
         } catch (_: Exception) {
             null
         }
+    }
+
+    /** Returns the byte size of the content at [uri], or null if it can't be
+     *  determined (e.g. the provider doesn't expose a length). Uses the
+     *  AssetFileDescriptor length — a fast metadata query safe to call on
+     *  the main thread — so callers can gate uploads without a full file read. */
+    fun uriSizeBytes(context: Context, uri: Uri): Long? = try {
+        context.contentResolver.openAssetFileDescriptor(uri, "r")?.use { afd ->
+            afd.length.takeIf { it >= 0 }
+        }
+    } catch (_: Throwable) {
+        null
+    }
+
+    /** Returns true when the content at [uri] exceeds [MAX_UPLOAD_BYTES].
+     *  Returns false when the size is unknown so uploads are not blocked
+     *  on providers that don't report a length (graceful degradation). */
+    fun isOverUploadLimit(context: Context, uri: Uri): Boolean {
+        val bytes = uriSizeBytes(context, uri) ?: return false
+        return bytes > MAX_UPLOAD_BYTES
     }
 
     /** Resize a bitmap to fit within [maxDimension] while maintaining aspect ratio. */

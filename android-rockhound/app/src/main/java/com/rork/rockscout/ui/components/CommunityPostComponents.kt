@@ -857,6 +857,11 @@ fun CommunityCommentInputRow(
         contract = ActivityResultContracts.GetContent(),
     ) { uri ->
         if (uri != null && onImagePicked != null) {
+            // Reject files larger than 5 MB before any pipeline work.
+            if (ImageUtils.isOverUploadLimit(context, uri)) {
+                onImagePicked("__error:That image is over 5 MB. Please choose a smaller photo.")
+                return@rememberLauncherForActivityResult
+            }
             onImagePicked("__loading__")
             scope.launch {
                 val base64 = ImageUtils.uriToModerationBase64(context, uri)

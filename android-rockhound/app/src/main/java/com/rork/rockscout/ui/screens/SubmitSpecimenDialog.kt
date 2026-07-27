@@ -119,6 +119,17 @@ fun SubmitSpecimenDialog(
     ) { uri ->
         if (uri == null || imageUris.size >= 4) return@rememberLauncherForActivityResult
 
+        // Reject files larger than 5 MB before any pipeline work to prevent
+        // base64-encoding OOMs and failed uploads on slow connections.
+        if (ImageUtils.isOverUploadLimit(context, uri)) {
+            Toast.makeText(
+                context,
+                "That image is over 5 MB. Please choose a smaller photo.",
+                Toast.LENGTH_LONG,
+            ).show()
+            return@rememberLauncherForActivityResult
+        }
+
         scope.launch {
             isModerating = true
             val base64 = ImageUtils.uriToModerationBase64(context, uri)

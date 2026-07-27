@@ -1146,11 +1146,18 @@ private fun EditProfileSheet(
     // (needed to avoid blocking the save when they kept their own name).
     val originalName = remember { name.trim() }
     val coroutineScope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     val bgGalleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
         if (uri != null) {
+            // Reject files larger than 5 MB before moderation to prevent
+            // base64-encoding OOMs and failed uploads.
+            if (ImageUtils.isOverUploadLimit(context, uri)) {
+                bgRejected = "That image is over 5 MB. Please choose a smaller photo."
+                return@rememberLauncherForActivityResult
+            }
             bgModerating = true
             bgRejected = null
             onBackgroundSelected(uri)

@@ -158,6 +158,12 @@ fun FieldCaptureCard(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
+            // Reject files larger than 5 MB before moderation to prevent
+            // base64-encoding OOMs and failed uploads.
+            if (ImageUtils.isOverUploadLimit(context, uri)) {
+                moderationRejected = "That image is over 5 MB. Please choose a smaller photo."
+                return@rememberLauncherForActivityResult
+            }
             imageModerating = true
             moderationRejected = null
             coroutineScope.launch {

@@ -200,6 +200,15 @@ fun AddLocationDialog(
         contract = ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
         if (uri != null && photoUris.size < 4) {
+            // Reject files larger than 5 MB before adding to the upload set.
+            if (com.rork.rockscout.data.ImageUtils.isOverUploadLimit(context, uri)) {
+                android.widget.Toast.makeText(
+                    context,
+                    "That image is over 5 MB. Please choose a smaller photo.",
+                    android.widget.Toast.LENGTH_LONG,
+                ).show()
+                return@rememberLauncherForActivityResult
+            }
             photoUris.add(uri)
         }
     }

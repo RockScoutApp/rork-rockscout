@@ -547,6 +547,13 @@ fun IdentifyScreen(navController: NavController) {
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
+            // Reject files larger than 5 MB before decoding to prevent OOMs
+            // and failed identification requests on slow connections.
+            if (com.rork.rockscout.data.ImageUtils.isOverUploadLimit(context, uri)) {
+                errorMessage = "That image is over 5 MB. Please choose a smaller photo."
+                state = ScanState.ERROR
+                return@rememberLauncherForActivityResult
+            }
             scope.launch {
                 try {
                     val bitmap = withContext(Dispatchers.IO) {

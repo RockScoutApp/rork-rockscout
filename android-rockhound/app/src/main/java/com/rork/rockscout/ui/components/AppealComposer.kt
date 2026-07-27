@@ -95,6 +95,15 @@ fun AppealComposer(
         contract = ActivityResultContracts.GetContent(),
     ) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
+        // Reject files larger than 5 MB before copying to internal storage.
+        if (ImageUtils.isOverUploadLimit(context, uri)) {
+            Toast.makeText(
+                context,
+                "That image is over 5 MB. Please choose a smaller photo.",
+                Toast.LENGTH_LONG,
+            ).show()
+            return@rememberLauncherForActivityResult
+        }
         scope.launch {
             val persistentPath = ImageUtils.copyUriToInternalStorage(
                 context, uri, "appeal_images",
