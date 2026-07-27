@@ -22,6 +22,14 @@
  * VAPID keys come from VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY env vars.
  */
 
+// VAPID keys for Web Push (RFC 8292). Generated P-256 ECDSA pair.
+// Env vars VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY take precedence if set;
+// these fallbacks ensure push works without additional env configuration.
+const FALLBACK_VAPID_PUBLIC_KEY =
+  "BLtKfWHPcWrMDASWRB7jSqALMwG-w9x3Io8Ehux72XWXZ4_n3BcYSGaQnfldDMb82DdbQXZVSdHMfO67tGkEMC4";
+const FALLBACK_VAPID_PRIVATE_KEY =
+  "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgtAJ-WhJyRELf1j5LcUaCwaZLwrLUKuBqNVe1B2lSMuOhRANCAAS7Sn1hz3FqzAwElkQe40qgCzMBvsPcdyKPBIbse9l1l2eP59wXGEhmkJ35XQzG_Ng3W0F2VUnRzHzuu7RpBDAu";
+
 const CORS_JSON = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -213,7 +221,9 @@ async function handleSend(
     return Response.json({ error: "Unauthorized." }, { status: 401, headers });
   }
 
-  if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) {
+  const vapidPublic = env.VAPID_PUBLIC_KEY ?? FALLBACK_VAPID_PUBLIC_KEY;
+  const vapidPrivate = env.VAPID_PRIVATE_KEY ?? FALLBACK_VAPID_PRIVATE_KEY;
+  if (!vapidPublic || !vapidPrivate) {
     return Response.json({ error: "VAPID keys not configured." }, { status: 503, headers });
   }
 
@@ -267,8 +277,8 @@ async function handleSend(
         body.title!,
         body.body!,
         body.url ?? "/app/notifications",
-        env.VAPID_PUBLIC_KEY!,
-        env.VAPID_PRIVATE_KEY!,
+        vapidPublic,
+        vapidPrivate,
       );
       if (ok) sent++;
       else failed++;
