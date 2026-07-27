@@ -58,6 +58,48 @@ import BlmGuide from "./pages/app/BlmGuide";
 import Profile from "./pages/app/Profile";
 import OfflineDownloads from "./pages/app/OfflineDownloads";
 import Settings from "./pages/app/Settings";
+import FieldCaptures from "./pages/app/FieldCaptures";
+import SavedImages from "./pages/app/SavedImages";
+import Wishlist from "./pages/app/Wishlist";
+import Artifacts from "./pages/app/Artifacts";
+import ArtifactDetail from "./pages/app/ArtifactDetail";
+import Locations from "./pages/app/Locations";
+import GemShowDetail from "./pages/app/GemShowDetail";
+import AllAchievements from "./pages/app/AllAchievements";
+import InAppHowToUse from "./pages/app/InAppHowToUse";
+import ContactUs from "./pages/app/ContactUs";
+import TokenInfo from "./pages/app/TokenInfo";
+import ThankYou from "./pages/app/ThankYou";
+import Search from "./pages/app/Search";
+import CommunityPostDetail from "./pages/app/CommunityPostDetail";
+import PrehistoricOrganisms from "./pages/app/PrehistoricOrganisms";
+import PeriodicTable from "./pages/app/PeriodicTable";
+import TectonicVolcanic from "./pages/app/TectonicVolcanic";
+import ResourceLinks from "./pages/app/ResourceLinks";
+import RocksAreAmazing from "./pages/app/RocksAreAmazing";
+import RockTypes from "./pages/app/RockTypes";
+import MineralId from "./pages/app/MineralId";
+import CrystalHardness from "./pages/app/CrystalHardness";
+import RockCycleTools from "./pages/app/RockCycleTools";
+import GeoTimeScale from "./pages/app/GeoTimeScale";
+import MassExtinctions from "./pages/app/MassExtinctions";
+import FossilTypes from "./pages/app/FossilTypes";
+import GeologicPeriods from "./pages/app/GeologicPeriods";
+import PeriodDetail from "./pages/app/PeriodDetail";
+import StateParks from "./pages/app/StateParks";
+import StateParkDetail from "./pages/app/StateParkDetail";
+import TradingFloor from "./pages/app/TradingFloor";
+import MyTrades from "./pages/app/MyTrades";
+import SocialSettings from "./pages/app/SocialSettings";
+import DiscoverHunters from "./pages/app/DiscoverHunters";
+import RockScoutsMap from "./pages/app/RockScoutsMap";
+import ArchivedTrips from "./pages/app/ArchivedTrips";
+import ProfileFriends from "./pages/app/ProfileFriends";
+import SharedSpot from "./pages/app/SharedSpot";
+import Disclaimer from "./pages/app/Disclaimer";
+import DeveloperConsole from "./pages/app/DeveloperConsole";
+import Scan from "./pages/app/Scan";
+import Messenger from "./pages/app/Messenger";
 import type { ReactNode } from "react";
 
 const queryClient = new QueryClient();
@@ -143,6 +185,48 @@ const App = () => (
               <Route path="profile" element={<Profile />} />
               <Route path="offline" element={<OfflineDownloads />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="captures" element={<FieldCaptures />} />
+              <Route path="saved-images" element={<SavedImages />} />
+              <Route path="wishlist" element={<Wishlist />} />
+              <Route path="artifacts" element={<Artifacts />} />
+              <Route path="artifacts/:id" element={<ArtifactDetail />} />
+              <Route path="locations" element={<Locations />} />
+              <Route path="gem-shows/:id" element={<GemShowDetail />} />
+              <Route path="all-achievements" element={<AllAchievements />} />
+              <Route path="how-to-use" element={<InAppHowToUse />} />
+              <Route path="contact" element={<ContactUs />} />
+              <Route path="token-info" element={<TokenInfo />} />
+              <Route path="thank-you/:tokens/:days" element={<ThankYou />} />
+              <Route path="search" element={<Search />} />
+              <Route path="community/:postId" element={<CommunityPostDetail />} />
+              <Route path="prehistoric-organisms" element={<PrehistoricOrganisms />} />
+              <Route path="periodic-table" element={<PeriodicTable />} />
+              <Route path="tectonic-volcanic" element={<TectonicVolcanic />} />
+              <Route path="resource-links" element={<ResourceLinks />} />
+              <Route path="rocks-are-amazing" element={<RocksAreAmazing />} />
+              <Route path="rock-types" element={<RockTypes />} />
+              <Route path="mineral-id" element={<MineralId />} />
+              <Route path="crystal-hardness" element={<CrystalHardness />} />
+              <Route path="rock-cycle" element={<RockCycleTools />} />
+              <Route path="geo-time-scale" element={<GeoTimeScale />} />
+              <Route path="mass-extinctions" element={<MassExtinctions />} />
+              <Route path="fossil-types" element={<FossilTypes />} />
+              <Route path="geologic-periods" element={<GeologicPeriods />} />
+              <Route path="period/:id" element={<PeriodDetail />} />
+              <Route path="state-parks" element={<StateParks />} />
+              <Route path="state-park/:id" element={<StateParkDetail />} />
+              <Route path="trading-floor" element={<TradingFloor />} />
+              <Route path="my-trades" element={<MyTrades />} />
+              <Route path="social-settings" element={<SocialSettings />} />
+              <Route path="discover-hunters" element={<DiscoverHunters />} />
+              <Route path="rockscouts-map" element={<RockScoutsMap />} />
+              <Route path="archived-trips" element={<ArchivedTrips />} />
+              <Route path="profile/friends" element={<ProfileFriends />} />
+              <Route path="shared-spot/:lat/:lng" element={<SharedSpot />} />
+              <Route path="disclaimer" element={<Disclaimer />} />
+              <Route path="dev-console" element={<DeveloperConsole />} />
+              <Route path="scan" element={<Scan />} />
+              <Route path="messenger" element={<Messenger />} />
             </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

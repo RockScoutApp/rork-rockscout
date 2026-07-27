@@ -15,8 +15,11 @@ import io.ktor.client.plugins.onDownload
 import io.ktor.client.request.get
 import io.ktor.client.statement.readBytes
 import io.ktor.http.isSuccess
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -54,6 +57,8 @@ object ApkInstaller {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    private val backupScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     /** Reset back to IDLE so the dialog can be dismissed cleanly. */
     fun reset() {
         _status.value = Status.IDLE
@@ -63,8 +68,28 @@ object ApkInstaller {
 
     /** Launch the system uninstall flow for RockScout so the user can remove
      *  the old (differently-signed) build before installing the new one.
-     *  Uses a safe launch so a missing handler never crashes the app. */
+     *  Uses a safe launch so a missing handler never crashes the app.
+     *
+     *  Before launching the uninstall, backs up the user's full SharedPreferences
+     *  to the cloud (keyed by their user ID) so it can be restored after reinstall.
+     *  The backup is fire-and-forget — if it fails, the uninstall still proceeds
+     *  (the user just won't get the automatic restore). */
     fun launchUninstall(context: Context) {
+        // Cloud-backup the user's settings before uninstalling so they survive.
+        val userId = AuthRepository.instance.currentUserId
+        if (userId != null) {
+            try {
+                val settingsJson = PersistenceManager.exportAllSettingsAsJson()
+                backupScope.launch {
+                    SettingsBackupApi.backupSettings(userId, settingsJson)
+                        .onFailure { Log.w(TAG, "Settings cloud backup failed: ${it.message}") }
+                        .onSuccess { Log.d(TAG, "Settings cloud backup saved for user $userId") }
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Could not export settings for backup: ${e.message}")
+            }
+        }
+
         val intent = Intent(Intent.ACTION_DELETE, Uri.parse("package:${context.packageName}")).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }

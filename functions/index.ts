@@ -15,6 +15,8 @@ import { handleSpecimenCatalogBackfill } from "./specimen-catalog-backfill";
 import { handleStripeCheckout } from "./stripe-checkout";
 import { handleStripeWebhook } from "./stripe-webhook";
 import { handlePush } from "./push";
+import { handleMuseums } from "./museums";
+import { handleSettingsBackup } from "./settings-backup";
 import {
   buildCorsHeaders,
   guardEndpoint,
@@ -234,6 +236,30 @@ export default {
           EXPO_PUBLIC_SUPABASE_URL?: string;
           EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
         },
+        cors,
+      );
+    }
+
+    // Museum finder — queries OpenStreetMap for artifact-relevant museums.
+    // Used by the "Ask an Expert" feature on the artifact uncertainty card.
+    if (url.pathname === "/museums" && request.method === "POST") {
+      const guard = guardEndpoint(request, env, "/museums", cors, env.RATE_LIMIT_KV);
+      if (guard) return guard;
+      return handleMuseums(request, env, cors);
+    }
+
+    // Settings backup/restore — used by the signing-conflict flow to preserve
+    // user data across uninstall. Backup is stored in Cloudflare KV with a 30-day TTL.
+    if (
+      (url.pathname === "/settings/backup" && request.method === "PUT") ||
+      (url.pathname === "/settings/restore" && request.method === "GET")
+    ) {
+      const rateLimitPath = url.pathname === "/settings/backup" ? "/settings/backup" : "/settings/restore";
+      const guard = guardEndpoint(request, env, rateLimitPath, cors, env.RATE_LIMIT_KV);
+      if (guard) return guard;
+      return handleSettingsBackup(
+        request,
+        env as unknown as { SETTINGS_KV?: KVNamespace },
         cors,
       );
     }

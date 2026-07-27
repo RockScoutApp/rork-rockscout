@@ -1,0 +1,2349 @@
+/**
+ * Artifact catalog — arrowheads, hand axes, beads, stone tools, and more.
+ * Ported from Android ArtifactSpecimens.kt. This is a SEPARATE data set
+ * from the specimen database — artifacts never mix with specimens.
+ */
+
+export interface Artifact {
+  id: string;
+  name: string;
+  family: string;
+  subFamily: string;
+  tagline: string;
+  emoji: string;
+  accentHex: string;
+  imageUrl: string;
+  whereFound: string[];
+  description: string;
+  howMade: string;
+  funFacts: string[];
+  tribe: string;
+  timePeriod: string;
+  addedAtMs: number;
+}
+
+export const artifacts: Artifact[] = [
+  {
+    "id": "art-clovis-point",
+    "name": "Clovis Point",
+    "family": "Arrowheads",
+    "subFamily": "Lanceolate Point",
+    "tagline": "The spear tip that hunted mammoths at the end of the Ice Age",
+    "emoji": "🔺",
+    "accentHex": "#8B6D4B",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/ca44cafb-2e4f-4d3b-9334-174ceedf713b.png",
+    "whereFound": [
+      "North America",
+      "Central America"
+    ],
+    "description": "The Clovis point is the iconic fluted lanceolate spear point of the Paleoindian period. Large, finely flaked, and fluted on both faces, it was the weapon of choice for the first peoples of the Americas who hunted megafauna like mammoths and giant bison.",
+    "howMade": "Knapped from high-quality chert, obsidian, or agate using hard-hammer percussion followed by pressure flaking. The distinctive flutes were created by removing long flakes from the base — a technique so demanding that fewer than 1 in 100 modern knappers can reproduce it.",
+    "funFacts": [
+      "First identified near Clovis",
+      "New Mexico in 1929.",
+      "Some Clovis points are over 8 inches long.",
+      "The flute may have helped seat the point onto a wooden foreshaft."
+    ],
+    "tribe": "Paleoindian (Clovis culture)",
+    "timePeriod": "Paleoindian · 10,000–9,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-folsom-point",
+    "name": "Folsom Point",
+    "family": "Arrowheads",
+    "subFamily": "Lanceolate Point",
+    "tagline": "Smaller, finer, fluted — built for the bison runners",
+    "emoji": "🔺",
+    "accentHex": "#9E8B6D",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/89f466fe-00b0-4300-98bb-637799db6530.png",
+    "whereFound": [
+      "Great Plains",
+      "Southwest"
+    ],
+    "description": "The Folsom point is a smaller, more refined lanceolate point than Clovis, with deep parallel fluting running nearly the full length of the blade. It marks a shift to hunting modern bison after the megafauna extinction.",
+    "howMade": "Knapped from fine-grained chert or flint. The deep fluting was achieved by a specialized jig technique — the knapper would clamp the preform and drive a channel flake off each face with a billet.",
+    "funFacts": [
+      "Named for Folsom",
+      "New Mexico",
+      "where a point was found embedded in extinct bison bones in 1908.",
+      "The fluting is so deep it nearly reaches the tip — a feat few modern knappers can replicate.",
+      "Folsom hunters used atlatls to launch these darts at running bison."
+    ],
+    "tribe": "Paleoindian (Folsom culture)",
+    "timePeriod": "Paleoindian · 9,000–8,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-dalton-point",
+    "name": "Dalton Point",
+    "family": "Arrowheads",
+    "subFamily": "Lanceolate Point",
+    "tagline": "The transitional blade that bridged the Paleoindian and Archaic worlds",
+    "emoji": "🔺",
+    "accentHex": "#B89A6A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/bb77784b-f258-4061-adf4-af09386e0415.png",
+    "whereFound": [
+      "Southeast",
+      "Mid-South"
+    ],
+    "description": "The Dalton point is a medium lanceolate point with a concave base and finely ground edges. It bridges the gap between the fluted Paleoindian points and the stemmed Archaic points, showing the transition as the climate warmed and megafauna disappeared.",
+    "howMade": "Knapped from tan to cream chert. The edges were ground smooth near the base for hafting, and the blade was resharpened repeatedly — many Daltons show beveling from years of reuse.",
+    "funFacts": [
+      "Dalton points were often resharpened so many times they became tiny 'thumbnail' scrapers.",
+      "The concave base may have helped bind the point to the haft with pitch.",
+      "Some Daltons were placed as grave goods — among the earliest burial offerings in North America."
+    ],
+    "tribe": "Transitional Paleoindian / Early Archaic (Dalton culture)",
+    "timePeriod": "Transitional · 8,500–7,900 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-scottsbluff-point",
+    "name": "Scottsbluff Point",
+    "family": "Arrowheads",
+    "subFamily": "Stemmed Point",
+    "tagline": "A stemmed Paleoindian spear point from the bison plains",
+    "emoji": "🔺",
+    "accentHex": "#C9A87C",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/d6d57b37-541e-40a3-a391-13bbe91261ef.png",
+    "whereFound": [
+      "Great Plains",
+      "Western"
+    ],
+    "description": "The Scottsbluff is a large, stemmed Paleoindian spear point with parallel sides and a shouldered stem. It belongs to the Cody complex — a Paleoindian tradition that specialized in bison hunting on the open plains.",
+    "howMade": "Knapped from banded agate or chert using collateral flaking — each flake scar runs straight across the blade in parallel rows. The stem was ground smooth for hafting.",
+    "funFacts": [
+      "Named after Scottsbluff",
+      "Nebraska.",
+      "Some Scottsbluff points are made from Teepee Canyon agate — a stone so beautiful it was traded hundreds of miles.",
+      "The Cody complex also produced the ' Eden' point",
+      "a cousin with even finer flaking."
+    ],
+    "tribe": "Paleoindian (Cody complex)",
+    "timePeriod": "Paleoindian · 8,500–8,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-agate-basin-point",
+    "name": "Agate Basin Point",
+    "family": "Arrowheads",
+    "subFamily": "Lanceolate Point",
+    "tagline": "A long, slender Paleoindian killer — no stem, no flute, just edge",
+    "emoji": "🔺",
+    "accentHex": "#A87C5C",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/ee3c96a2-79f4-42fb-9691-b4149ffa8591.png",
+    "whereFound": [
+      "Great Plains",
+      "Rocky Mountains"
+    ],
+    "description": "The Agate Basin point is a large, unstemmed lanceolate spear point with long parallel flaking scars. It has no flute and no stem — it was hafted directly into a split wooden shaft.",
+    "howMade": "Knapped from maroon or banded chert using long, sweeping percussion flakes. The basal edges were ground smooth so the point wouldn't cut through its haft binding.",
+    "funFacts": [
+      "Named after the Agate Basin site in eastern Wyoming.",
+      "Found in association with bison kill sites — some still embedded in bone.",
+      "The absence of fluting makes it easier to identify than Clovis or Folsom."
+    ],
+    "tribe": "Paleoindian (Agate Basin culture)",
+    "timePeriod": "Paleoindian · 8,500–7,500 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-plano-point",
+    "name": "Plano Point",
+    "family": "Arrowheads",
+    "subFamily": "Lanceolate Point",
+    "tagline": "The unstemmed workhorse of the Late Paleoindian plains",
+    "emoji": "🔺",
+    "accentHex": "#B8A88A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/f1d8e5a7-900b-42cb-857e-d9987e558420.png",
+    "whereFound": [
+      "Great Plains",
+      "Canada"
+    ],
+    "description": "Plano points are a broad category of large, unstemmed lanceolate spear points from the Late Paleoindian period. They lack fluting and stems, relying on fine collateral flaking and ground bases for hafting.",
+    "howMade": "Knapped from gray-tan chert using parallel to collateral flaking. The base was ground or smoothed for a snug fit into a split shaft.",
+    "funFacts": [
+      "'Plano' means 'flat' — referring to the unworked",
+      "flat base.",
+      "Plano hunters drove bison over cliff jumps called 'pishkun' — some kills took hundreds of animals.",
+      "The tradition spans over 2",
+      "000 years across the plains."
+    ],
+    "tribe": "Late Paleoindian (Plano cultures)",
+    "timePeriod": "Late Paleoindian · 8,000–5,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-adena-point",
+    "name": "Adena Point",
+    "family": "Arrowheads",
+    "subFamily": "Stemmed Point",
+    "tagline": "The broad-bladed spear of the mound builders",
+    "emoji": "🔺",
+    "accentHex": "#9E8B6D",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/76f13766-609a-4873-95e9-245cc119a04c.png",
+    "whereFound": [
+      "Ohio Valley",
+      "Eastern Central",
+      "Northeastern",
+      "Gulf Coastal",
+      "Northern Central"
+    ],
+    "description": "The Adena point is a medium-to-large broad-bladed Early Woodland spear point with a straight to slightly convex stem. It was used by the Adena culture — among the first peoples of the Eastern Woodlands to build burial mounds.",
+    "howMade": "Knapped from olive-gray chert with rust inclusions. The broad blade was finished with pressure flaking, and the stem was ground for hafting. Regional variants differ in stem shape.",
+    "funFacts": [
+      "Adena people built some of the earliest burial mounds in North America.",
+      "Regional variants span from the Gulf Coast to the Northeast — all merged here as one card.",
+      "The Adena 'pipe' — a carved stone effigy of a kneeling figure — is Ohio's state artifact."
+    ],
+    "tribe": "Early Woodland (Adena culture)",
+    "timePeriod": "Early Woodland · 1,000–200 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-hell-gap-point",
+    "name": "Hell Gap Point",
+    "family": "Arrowheads",
+    "subFamily": "Lanceolate Point",
+    "tagline": "A long, parallel-flaked Paleoindian point with a constricted base",
+    "emoji": "🔺",
+    "accentHex": "#B8860B",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/539a2bbf-459d-41da-9542-ff9d619c0926.png",
+    "whereFound": [
+      "Great Plains",
+      "Rocky Mountains"
+    ],
+    "description": "The Hell Gap point is a long lanceolate Paleoindian point with parallel oblique flaking and a slightly constricted base. It belongs to the Late Paleoindian Hell Gap complex, which bridged the gap between Clovis/Folsom and the later Plano traditions.",
+    "howMade": "Knapped from honey-amber chert with rust inclusions using parallel oblique percussion flaking. The long, narrow form required careful platform preparation — the blade is nearly twice as long as it is wide.",
+    "funFacts": [
+      "Named after the Hell Gap site in eastern Wyoming",
+      "excavated in the 1960s.",
+      "Hell Gap points are among the longest Paleoindian forms — some exceed 6 inches.",
+      "The complex shows a clear evolution from lanceolate to stemmed forms over 1",
+      "500 years."
+    ],
+    "tribe": "Late Paleoindian (Hell Gap complex)",
+    "timePeriod": "Late Paleoindian · 8,000–7,500 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-plainview-point",
+    "name": "Plainview Point",
+    "family": "Arrowheads",
+    "subFamily": "Lanceolate Point",
+    "tagline": "A finely flaked Paleoindian point with a concave base",
+    "emoji": "🔺",
+    "accentHex": "#A89078",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/71d26fb9-6d38-4bcc-87d1-b79640ba2960.png",
+    "whereFound": [
+      "Great Plains",
+      "Southwest"
+    ],
+    "description": "The Plainview point is a medium lanceolate Paleoindian point with fine parallel flaking and a shallow concave base. It is named for the Plainview site in Texas, where a cache of over 100 points was found together.",
+    "howMade": "Knapped from mottled gray-tan chert with cream banding using parallel percussion flaking. The concave base was ground smooth for hafting, and the edges show fine pressure-flake retouch.",
+    "funFacts": [
+      "The Plainview cache in Texas held 100+ perfectly finished points — possibly a ritual deposit.",
+      "The flaking is so uniform that individual points are hard to tell apart.",
+      "Plainview hunters likely targeted now-extinct bison species."
+    ],
+    "tribe": "Late Paleoindian (Plainview complex)",
+    "timePeriod": "Late Paleoindian · 8,000–7,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-meserve-point",
+    "name": "Meserve Point",
+    "family": "Arrowheads",
+    "subFamily": "Serrated Lanceolate",
+    "tagline": "A serrated blade — the saw-toothed Paleoindian knife-spear",
+    "emoji": "🔺",
+    "accentHex": "#6E6E6E",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/b5b3b532-e9a5-4a9b-bcf0-1b2f8e808cf1.png",
+    "whereFound": [
+      "Great Plains",
+      "Eastern"
+    ],
+    "description": "The Meserve point is a serrated lanceolate Paleoindian point with fine parallel flaking and a straight to slightly concave base. The serrations along the blade edge made it an effective cutting tool as well as a spear tip.",
+    "howMade": "Knapped from dark gray flint with white speckles using parallel percussion followed by pressure flaking. The serrations were created by alternating pressure flakes along each edge — a time-consuming finish.",
+    "funFacts": [
+      "The serrations act like a saw — they cut cleaner and stay sharp longer than a straight edge.",
+      "Meserve points are relatively rare — found mainly in the Central Plains.",
+      "The serrations may have been functional",
+      "decorative",
+      "or both."
+    ],
+    "tribe": "Late Paleoindian (Meserve complex)",
+    "timePeriod": "Late Paleoindian · 7,500–6,500 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-calf-creek-point",
+    "name": "Calf Creek Point",
+    "family": "Arrowheads",
+    "subFamily": "Serrated Corner-Notched",
+    "tagline": "A broad serrated Early Archaic point with deep corner notches",
+    "emoji": "🔺",
+    "accentHex": "#B8860B",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/c0dba752-1c0e-4e6b-848c-82d16b5e1247.png",
+    "whereFound": [
+      "Ozarks",
+      "Oklahoma",
+      "Southwest"
+    ],
+    "description": "The Calf Creek point is a broad, deeply corner-notched Early Archaic point with fine serrations along the blade edges. The combination of barbed shoulders and serrated edges made it a formidable hunting weapon.",
+    "howMade": "Knapped from banded agate with tan and brown stripes. The broad blade was thinned with percussion flaking, then the edges were serrated with pressure flaking. The deep notches were the last step — one slip and the barb was gone.",
+    "funFacts": [
+      "Named after Calf Creek in Oklahoma",
+      "where a cache of finely made points was found.",
+      "Some Calf Creek points are made of Boone chert — an Ozark material prized for its banding.",
+      "The deep notches created barbs nearly 1/2 inch long — serious holding power."
+    ],
+    "tribe": "Early Archaic (Calf Creek culture)",
+    "timePeriod": "Early Archaic · 6,000–5,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-kirk-point",
+    "name": "Kirk Corner-Notched Point",
+    "family": "Arrowheads",
+    "subFamily": "Corner-Notched",
+    "tagline": "The most common Early Archaic point in the Southeast",
+    "emoji": "🔺",
+    "accentHex": "#D4A56A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/32a56c33-b675-4fb1-acc8-889eb824f5a6.png",
+    "whereFound": [
+      "Southeast",
+      "Eastern",
+      "Midwest"
+    ],
+    "description": "The Kirk Corner-Notched point is a medium-to-large Early Archaic point with deep corner notches, barbed shoulders, and a straight to expanded stem. It is one of the most widely distributed point types in eastern North America.",
+    "howMade": "Knapped from translucent amber chert using percussion to shape the blade, then pressure flaking to create the deep notches. The stem was thinned for hafting, and the barbs were left sharp.",
+    "funFacts": [
+      "Kirk points are found from Florida to New York — a span of over 1",
+      "000 miles.",
+      "Some Kirk points show heavy re-sharpening — they were used for years.",
+      "The Kirk tradition includes both corner-notched and stemmed variants."
+    ],
+    "tribe": "Early Archaic (Kirk culture)",
+    "timePeriod": "Early Archaic · 7,500–6,500 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-palmer-point",
+    "name": "Palmer Corner-Notched Point",
+    "family": "Arrowheads",
+    "subFamily": "Corner-Notched",
+    "tagline": "A tiny serrated Early Archaic point — small but deadly",
+    "emoji": "🔺",
+    "accentHex": "#C89878",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/ec10f5ec-c417-4c5d-91b4-2bcca380255b.png",
+    "whereFound": [
+      "Southeast",
+      "Eastern"
+    ],
+    "description": "The Palmer point is a small, finely serrated Early Archaic corner-notched point. Often less than an inch long, it is one of the smallest recognized point types — possibly used for small game or as an arrow tip in the earliest days of bow use.",
+    "howMade": "Knapped from caramel-colored chert on a tiny flake. The serrations and notches were created with fine pressure flaking — working at this scale required a steady hand and a sharp antler tine.",
+    "funFacts": [
+      "Some Palmer points are barely 1.5 cm long — true micro-artifacts.",
+      "They may represent the transition from atlatl darts to arrows.",
+      "Their small size makes them easy to miss in excavation — many are found in screened dirt."
+    ],
+    "tribe": "Early Archaic (Kirk/Palmer culture)",
+    "timePeriod": "Early Archaic · 7,500–6,800 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-lecroy-point",
+    "name": "LeCroy Bifurcated Point",
+    "family": "Arrowheads",
+    "subFamily": "Bifurcated Stem",
+    "tagline": "A split-stem Early Archaic point — the notched base that grips the haft",
+    "emoji": "🔺",
+    "accentHex": "#D8A8B8",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/9669175e-1ca2-4151-bf2f-5d09c6e588ff.png",
+    "whereFound": [
+      "Southeast",
+      "Eastern",
+      "Midwest"
+    ],
+    "description": "The LeCroy point is an Early Archaic bifurcated-stem point with a notched, split base and a serrated blade. The bifurcated stem — a deep notch in the base — created two tangs that gripped the haft like fingers.",
+    "howMade": "Knapped from pinkish-tan chert. The blade was shaped with percussion flaking, serrated with pressure flaking, and the base was split by a deep notch — the defining feature of the bifurcated tradition.",
+    "funFacts": [
+      "The bifurcated stem tradition spans the entire Eastern Woodlands in the Early Archaic.",
+      "The split base may have helped the point absorb shock on impact.",
+      "LeCroy points are often found in pairs — possibly used as matched atlatl dart points."
+    ],
+    "tribe": "Early Archaic (Bifurcated tradition)",
+    "timePeriod": "Early Archaic · 6,500–5,500 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-stanly-point",
+    "name": "Stanly Stemmed Point",
+    "family": "Arrowheads",
+    "subFamily": "Stemmed Point",
+    "tagline": "The straight-stemmed workhorse of the Middle Archaic",
+    "emoji": "🔺",
+    "accentHex": "#9E8B6D",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/093631cd-98c6-4cf9-8e09-6b7e9348821a.png",
+    "whereFound": [
+      "Southeast",
+      "Eastern",
+      "Midwest"
+    ],
+    "description": "The Stanly Stemmed point is a Middle Archaic point with a straight-sided stem and a broad triangular blade. It is a classic example of the stemmed tradition that replaced the notched forms of the Early Archaic.",
+    "howMade": "Knapped from olive-gray chert with rust veins. The blade was shaped with broad percussion flakes, and the stem was defined by notch-like shoulders and straight-edge grinding for hafting.",
+    "funFacts": [
+      "Stanly points are a marker of the Middle Archaic in the Southeast.",
+      "The straight stem was ground smooth to prevent cutting the haft binding.",
+      "They are found in streambeds and river terraces across the Piedmont."
+    ],
+    "tribe": "Middle Archaic (Stanly culture)",
+    "timePeriod": "Middle Archaic · 5,500–4,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-morrow-mountain-point",
+    "name": "Morrow Mountain Stemmed Point",
+    "family": "Arrowheads",
+    "subFamily": "Contracting Stem",
+    "tagline": "A short tapered stem — the Piedmont Archaic classic",
+    "emoji": "🔺",
+    "accentHex": "#7A8B6D",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/d5af0977-5ad2-411c-8765-ad4e4c17f01f.png",
+    "whereFound": [
+      "Southeast",
+      "Eastern"
+    ],
+    "description": "The Morrow Mountain point is a Middle Archaic stemmed point with a short, contracting (tapered) stem and a broad triangular blade. It is named for Morrow Mountain in North Carolina — a major quarry site for rhyolite.",
+    "howMade": "Knapped from greenish-gray rhyolite, often quarried directly from Morrow Mountain. The contracting stem was created by pressure flaking from both sides, tapering it to a rounded base.",
+    "funFacts": [
+      "Morrow Mountain was a major rhyolite quarry — points from there are found 200+ miles away.",
+      "The contracting stem fits snugly into a notched haft — no lashing needed.",
+      "Many show a weathered cortex on one face — the knapper used a flat nodule."
+    ],
+    "tribe": "Middle Archaic (Morrow Mountain culture)",
+    "timePeriod": "Middle Archaic · 5,000–3,500 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-guilford-point",
+    "name": "Guilford Lanceolate Point",
+    "family": "Arrowheads",
+    "subFamily": "Lanceolate Point",
+    "tagline": "A large thin lanceolate — the Middle Archaic showpiece",
+    "emoji": "🔺",
+    "accentHex": "#D4B896",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/4b1c5a1c-74a5-414e-b02f-1dcc69578528.png",
+    "whereFound": [
+      "Eastern",
+      "Southeast"
+    ],
+    "description": "The Guilford Lanceolate is a large, thin lanceolate Middle Archaic point with broad parallel flaking and a straight to slightly concave base. It is one of the largest Archaic point types — some exceed 5 inches in length.",
+    "howMade": "Knapped from cream and tan banded chert using broad parallel percussion flakes. The thin cross-section required exceptional skill — the blade is often less than 5mm thick at the midpoint.",
+    "funFacts": [
+      "Guilford points are so thin they are sometimes called 'translucent' when held to light.",
+      "They may have been prestige objects — the skill required to make them was rare.",
+      "Some Guilfords show no use-wear — they were buried as offerings",
+      "not used."
+    ],
+    "tribe": "Middle Archaic (Guilford culture)",
+    "timePeriod": "Middle Archaic · 4,500–3,500 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-savannah-river-point",
+    "name": "Savannah River Point",
+    "family": "Arrowheads",
+    "subFamily": "Broad Stemmed",
+    "tagline": "The large broad-stemmed Late Archaic point of the Southeast",
+    "emoji": "🔺",
+    "accentHex": "#5A6E5A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/faaafe06-4c0e-47b6-976b-4dbda778ad09.png",
+    "whereFound": [
+      "Southeast",
+      "Eastern"
+    ],
+    "description": "The Savannah River point is a large, broad-stemmed Late Archaic point with a square stem and a wide triangular blade. It is one of the largest common Archaic types — some were used as spear points, others as knives.",
+    "howMade": "Knapped from dark greenish metavolcanic stone, often quarried from the Carolina slate belt. The broad blade was shaped with percussion, and the square stem was defined by deep notches and edge grinding.",
+    "funFacts": [
+      "Savannah River points are made from metavolcanic stone — traded up to 300 miles from quarry.",
+      "Some exceed 6 inches — among the largest Archaic points in the East.",
+      "They overlap with the start of the Woodland period — a transitional form."
+    ],
+    "tribe": "Late Archaic (Savannah River culture)",
+    "timePeriod": "Late Archaic · 3,000–1,500 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-corner-tang-knife",
+    "name": "Corner-Tang Knife",
+    "family": "Arrowheads",
+    "subFamily": "Corner-Tanged Knife",
+    "tagline": "A diagonal corner notch — the knife that fit one finger",
+    "emoji": "🔺",
+    "accentHex": "#B8966A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/e7a63531-da9e-41e4-b2be-223d49522109.png",
+    "whereFound": [
+      "Southwest",
+      "Great Plains",
+      "Texas"
+    ],
+    "description": "The corner-tang knife is a unique Early Archaic form with a single diagonal notch in one corner, creating a tang for a handle. Unlike projectile points, these were knives — the offset tang allowed a one-finger grip for slicing.",
+    "howMade": "Knapped from banded brown and tan chert into a leaf-shaped blade. A single deep notch was cut diagonally into one corner, creating the tang. The opposite edge was left sharp for cutting.",
+    "funFacts": [
+      "Corner-tang knives are almost unique to Texas — a regional specialty.",
+      "The diagonal tang fit between two fingers — an ergonomic grip for slicing.",
+      "They are found in caches — possibly burial goods or trade stocks."
+    ],
+    "tribe": "Early Archaic (Texas / Southwest)",
+    "timePeriod": "Early Archaic · 6,000–4,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-atlatl-dart-point",
+    "name": "Atlatl Dart Point",
+    "family": "Spear Points & Dart Tips",
+    "subFamily": "Broad Lanceolate Dart",
+    "tagline": "The broad tip that rode the lever — thrown twice as hard",
+    "emoji": "🔱",
+    "accentHex": "#8B7355",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/d8815646-2ee9-43a2-94df-91569841388e.png",
+    "whereFound": [
+      "North America",
+      "Great Plains",
+      "Archaic"
+    ],
+    "description": "The atlatl dart point is a broad, heavy lanceolate point mounted on a long dart thrown with an atlatl (spear-thrower). The atlatl acted as a lever, doubling the dart's range and force — these points hit with enough energy to penetrate deep into large game.",
+    "howMade": "Knapped from mottled gray chert with cream inclusions using collateral percussion flaking. The broad blade provided a wide cutting surface, and the concave base was ground for a secure haft onto the dart foreshaft.",
+    "funFacts": [
+      "An atlatl dart can fly over 100 meters — further than most bows.",
+      "The dart's flexibility stored energy on release",
+      "adding speed.",
+      "These points are found embedded in bison and deer bones at kill sites."
+    ],
+    "tribe": "Paleoindian / Archaic (various)",
+    "timePeriod": "Paleoindian–Archaic · 8,000–1,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-eden-point",
+    "name": "Eden Point",
+    "family": "Spear Points & Dart Tips",
+    "subFamily": "Thin Lanceolate Dart",
+    "tagline": "The cousin of Scottsbluff — even finer, even thinner",
+    "emoji": "🔱",
+    "accentHex": "#B8967A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/2a613097-ac06-4abd-b078-fafb8a288b0f.png",
+    "whereFound": [
+      "Great Plains",
+      "Western"
+    ],
+    "description": "The Eden point is a thin lanceolate Paleoindian dart point with extremely fine collateral flaking — each flake scar runs straight across the blade in parallel rows. It is the most refined variant of the Cody complex, even more delicately made than the Scottsbluff.",
+    "howMade": "Knapped from banded tan and brown agate using collateral pressure flaking. The flakes were driven from the edge to the centerline in perfectly parallel rows — a technique requiring exceptional control.",
+    "funFacts": [
+      "Eden points are considered the finest flaking of any Paleoindian tradition.",
+      "Some are so thin they are translucent when backlit.",
+      "They are found alongside Scottsbluff points in Cody complex caches."
+    ],
+    "tribe": "Paleoindian (Cody complex)",
+    "timePeriod": "Paleoindian · 8,500–8,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-midland-point",
+    "name": "Midland Point",
+    "family": "Spear Points & Dart Tips",
+    "subFamily": "Small Lanceolate Dart",
+    "tagline": "The unfluted Folsom cousin — small, thin, and lethal",
+    "emoji": "🔱",
+    "accentHex": "#D4B896",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/747f0d21-ac5c-4e35-ae31-09682f3b1a5b.png",
+    "whereFound": [
+      "Great Plains",
+      "Southwest"
+    ],
+    "description": "The Midland point is a small, thin lanceolate Paleoindian point with fine pressure flaking and no flute. It is found alongside Folsom points and may represent a smaller dart tip used for different game or a Folsom variant made when fluting failed.",
+    "howMade": "Knapped from translucent honey chert using fine pressure flaking. The thin, unfluted form was easier to produce than a fluted Folsom — but just as sharp.",
+    "funFacts": [
+      "Midland points may be unfluted Folsom points — or a distinct type.",
+      "They are found in the same bison kill sites as Folsom points.",
+      "The lack of fluting makes them lighter and faster than Folsom."
+    ],
+    "tribe": "Paleoindian (Folsom/Midland)",
+    "timePeriod": "Paleoindian · 9,000–8,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-goshen-point",
+    "name": "Goshen Point",
+    "family": "Spear Points & Dart Tips",
+    "subFamily": "Lanceolate Dart",
+    "tagline": "The Plainview cousin with a concave base — a Plains hunter's tip",
+    "emoji": "🔱",
+    "accentHex": "#D8A8B8",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/cf587ecb-619b-4f5c-862b-4cace45dd1cb.png",
+    "whereFound": [
+      "Great Plains",
+      "Northern Plains"
+    ],
+    "description": "The Goshen point is a lanceolate Paleoindian dart point with fine parallel flaking and a concave base. It overlaps in time with both Plainview and Folsom and shows features of both — a transitional form on the Northern Plains.",
+    "howMade": "Knapped from pinkish-tan chert with subtle banding using parallel pressure flaking. The concave base was ground for hafting onto a dart foreshaft.",
+    "funFacts": [
+      "Goshen points are among the rarest Paleoindian types — found mainly in Montana.",
+      "They show traits of both Plainview and Folsom — a possible ancestor form.",
+      "The Goshen level at the Hell Gap site dates to 9",
+      "000 BCE."
+    ],
+    "tribe": "Paleoindian (Goshen culture)",
+    "timePeriod": "Paleoindian · 9,000–8,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-milnesand-point",
+    "name": "Milnesand Point",
+    "family": "Spear Points & Dart Tips",
+    "subFamily": "Broad Lanceolate Dart",
+    "tagline": "A broad Paleoindian dart tip — found in a famous New Mexico cache",
+    "emoji": "🔱",
+    "accentHex": "#8B4A3A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/00ba627b-1b9a-42bf-b2cf-6c52603ddde6.png",
+    "whereFound": [
+      "Southwest",
+      "Great Plains"
+    ],
+    "description": "The Milnesand point is a broad lanceolate Paleoindian dart point with random parallel flaking and a concave base. It is closely related to Plainview and was found in a cache of finely made points at the Milnesand site in New Mexico.",
+    "howMade": "Knapped from dark brown jasper with red inclusions using broad percussion flaking. The wide blade provided a large wound channel, and the base was ground smooth for hafting.",
+    "funFacts": [
+      "The Milnesand cache held dozens of pristine points — a ritual deposit.",
+      "The dark jasper gives these points a distinctive",
+      "almost metallic sheen.",
+      "They overlap with the Plainview complex — possibly a regional variant."
+    ],
+    "tribe": "Late Paleoindian (Plainview/Milnesand)",
+    "timePeriod": "Late Paleoindian · 8,000–7,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-angostura-point",
+    "name": "Angostura Point",
+    "family": "Spear Points & Dart Tips",
+    "subFamily": "Oblique-Flaked Lanceolate",
+    "tagline": "The oblique-flaked dart — sweeping scars from edge to edge",
+    "emoji": "🔱",
+    "accentHex": "#9E8B6D",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/6f32c418-185e-4023-8b21-512e8a2da09d.png",
+    "whereFound": [
+      "Great Plains",
+      "Rocky Mountains",
+      "Black Hills"
+    ],
+    "description": "The Angostura point is a large lanceolate Paleoindian/Early Archaic dart point with distinctive oblique transverse flaking — the flake scars sweep diagonally across the blade rather than running straight. This creates a beautiful herringbone pattern.",
+    "howMade": "Knapped from banded brown and gray chert using oblique percussion — each flake was driven diagonally across the blade. The technique is difficult and distinctive to the Angostura tradition.",
+    "funFacts": [
+      "The oblique flaking pattern is unique — no other Paleoindian type matches it.",
+      "Angostura points are found from the Black Hills to the Southern Plains.",
+      "The diagonal scars may have improved cutting efficiency by creating a serrated edge."
+    ],
+    "tribe": "Late Paleoindian / Early Archaic (Angostura)",
+    "timePeriod": "Late Paleoindian–Early Archaic · 7,500–6,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-hardaway-point",
+    "name": "Hardaway Side-Notched Point",
+    "family": "Spear Points & Dart Tips",
+    "subFamily": "Side-Notched Dart",
+    "tagline": "The deep side-notched Early Archaic dart — a Piedmont staple",
+    "emoji": "🔱",
+    "accentHex": "#5A6E5A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/58182a7c-1d36-42ba-bace-6c9507eed6d3.png",
+    "whereFound": [
+      "Southeast",
+      "Eastern",
+      "Piedmont"
+    ],
+    "description": "The Hardaway Side-Notched point is an Early Archaic dart point with deep side notches and a concave base. It is named for the Hardaway site in North Carolina — one of the most important Archaic quarry and workshop sites in eastern North America.",
+    "howMade": "Knapped from dark metavolcanic greenstone with white veining, often quarried from the nearby Carolina slate belt. The deep side notches were created with pressure flaking after the blade was shaped.",
+    "funFacts": [
+      "The Hardaway site produced thousands of points — a major manufacturing center.",
+      "The metavolcanic stone was traded across the Southeast.",
+      "Hardaway points are a marker of the Early Archaic in the Piedmont."
+    ],
+    "tribe": "Early Archaic (Hardaway culture)",
+    "timePeriod": "Early Archaic · 7,500–6,500 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-kirk-stemmed-point",
+    "name": "Kirk Stemmed Point",
+    "family": "Spear Points & Dart Tips",
+    "subFamily": "Stemmed Serrated Dart",
+    "tagline": "The stemmed, serrated Middle Archaic dart — a cutting machine",
+    "emoji": "🔱",
+    "accentHex": "#D4A56A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/e711f615-0ef3-428a-bd97-461aff67bb63.png",
+    "whereFound": [
+      "Southeast",
+      "Eastern",
+      "Midwest"
+    ],
+    "description": "The Kirk Stemmed point is a Middle Archaic dart point with a short straight stem and serrated blade edges. It is the stemmed variant of the Kirk tradition — larger and heavier than the corner-notched form, suited to atlatl darts.",
+    "howMade": "Knapped from caramel-amber chert with rust speckles. The blade was shaped with percussion, serrated with pressure flaking, and the stem was defined by shoulders and basal grinding.",
+    "funFacts": [
+      "The Kirk tradition includes both corner-notched and stemmed forms.",
+      "Serrations along the edge created a saw-like cutting surface.",
+      "The stemmed form may represent a shift from dart to spear thrusting."
+    ],
+    "tribe": "Early–Middle Archaic (Kirk culture)",
+    "timePeriod": "Early–Middle Archaic · 7,000–5,500 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-big-sandy-point",
+    "name": "Big Sandy Point",
+    "family": "Spear Points & Dart Tips",
+    "subFamily": "Side-Notched Bifurcated Dart",
+    "tagline": "Deep side notches and a split base — the Appalachian dart",
+    "emoji": "🔱",
+    "accentHex": "#C8C8B8",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/1707da34-aebf-4d6d-b190-58619a96da02.png",
+    "whereFound": [
+      "Eastern",
+      "Southeast",
+      "Appalachian"
+    ],
+    "description": "The Big Sandy point is an Early Archaic dart point with deep side notches, a bifurcated (split) base, and fine serrations. It is a classic Early Archaic type of the Appalachian region, found from Tennessee to Alabama.",
+    "howMade": "Knapped from light gray chert with cream swirls. The deep side notches and bifurcated base were created with pressure flaking — the combination created a secure haft with two gripping tangs.",
+    "funFacts": [
+      "Named for the Big Sandy site in western Tennessee.",
+      "The bifurcated base is shared with the LeCroy tradition — a widespread Early Archaic trait.",
+      "The serrations helped the point cut cleanly on penetration."
+    ],
+    "tribe": "Early Archaic (Big Sandy culture)",
+    "timePeriod": "Early Archaic · 7,000–5,500 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-geneva-point",
+    "name": "Geneva Point",
+    "family": "Spear Points & Dart Tips",
+    "subFamily": "Contracting-Stem Dart",
+    "tagline": "A broad blade with a tapered stem — the Late Archaic thrusting spear",
+    "emoji": "🔱",
+    "accentHex": "#6A7A8B",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/ea85d22a-c1f9-4ff5-974c-7bf668228ea7.png",
+    "whereFound": [
+      "Northeastern",
+      "Eastern",
+      "Great Lakes"
+    ],
+    "description": "The Geneva point is a Late Archaic dart/spear point with a broad triangular blade and a long contracting stem. It is found across the Northeast and Great Lakes region, often made from locally available glacial cobbles.",
+    "howMade": "Knapped from banded slate with bluish-gray tones, often from glacial erratics. The broad blade was shaped with percussion, and the contracting stem was created by pressure flaking from both sides.",
+    "funFacts": [
+      "Geneva points are often made from glacial slate — a durable Northeastern material.",
+      "The contracting stem fits tightly into a split haft — no lashing required.",
+      "Some show beveled edges from repeated resharpening."
+    ],
+    "tribe": "Late Archaic (Geneva culture)",
+    "timePeriod": "Late Archaic · 3,500–1,500 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-robbins-nodule-point",
+    "name": "Robbins Nodule Point",
+    "family": "Spear Points & Dart Tips",
+    "subFamily": "Nodule-Based Early Woodland Dart",
+    "tagline": "Made on a flat chert nodule — cortex left on for grip",
+    "emoji": "🔱",
+    "accentHex": "#9E8B6D",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/7e89b93a-5958-4607-9344-cfb0cefb3d9e.png",
+    "whereFound": [
+      "Ohio Valley",
+      "Eastern",
+      "Midwest"
+    ],
+    "description": "The Robbins Nodule point is an Early Woodland spear/dart point made on a flat chert nodule, with the natural cortex (outer rind) left on one face for grip. It is associated with the Adena culture and represents an efficient use of raw material.",
+    "howMade": "Knapped from an olive-tan chert nodule — the flat ventral face was left as natural cortex, while the dorsal face was flaked into a blade with a contracting stem. The cortex provided a non-slip grip.",
+    "funFacts": [
+      "Leaving the cortex on saved time — only one face needed flaking.",
+      "Robbins points are an Adena tradition — found in Ohio Valley mounds.",
+      "The flat nodule form creates a thin",
+      "wide blade — efficient cutting."
+    ],
+    "tribe": "Early Woodland (Adena culture)",
+    "timePeriod": "Early Woodland · 1,000–200 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-resharpened-dart-point",
+    "name": "Re-Sharpened Archaic Dart Point",
+    "family": "Spear Points & Dart Tips",
+    "subFamily": "Re-Sharpened / Beveled",
+    "tagline": "A dart tip worn down to a stub — and still deadly",
+    "emoji": "🔱",
+    "accentHex": "#6E6E6E",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/c9e6f1ef-e397-4fa5-833c-b3f9b58b5347.png",
+    "whereFound": [
+      "North America",
+      "Worldwide"
+    ],
+    "description": "This heavily re-sharpened Archaic dart point started as a large lanceolate blade but was resharpened so many times that only a small triangular stub remains. The beveled edges show years of use — each resharpening removed material until the point was nearly spent.",
+    "howMade": "Originally knapped from dark gray flint, then repeatedly resharpened with pressure flaking. Each resharpening created a beveled edge — alternating faces were flaked, giving the blade a twisted, asymmetric profile.",
+    "funFacts": [
+      "Re-sharpened points are common — stone was valuable and not wasted.",
+      "The beveled edge from resharpening is called 'alternate beveling'.",
+      "A point reduced to a stub was often repurposed as a scraper."
+    ],
+    "tribe": "Archaic (various)",
+    "timePeriod": "Archaic · 6,000–1,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-acheulean-hand-axe",
+    "name": "Acheulean Hand Axe",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Bifacial Core Tool",
+    "tagline": "The stone tool that built humanity — used for a million years",
+    "emoji": "🪓",
+    "accentHex": "#6B5B4A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/6ed6f0d9-455c-4ec6-9164-9dbff4c5f6af.png",
+    "whereFound": [
+      "Africa",
+      "Europe",
+      "Asia"
+    ],
+    "description": "The Acheulean hand axe is the longest-used tool in human history — a teardrop-shaped bifacial stone tool made by Homo erectus. It served as a multi-purpose tool: chopping, cutting, scraping, digging, and butchering.",
+    "howMade": "Knapped from flint or basalt using hard-hammer percussion. The maker removed flakes from both faces to create a symmetrical cutting edge around the entire perimeter, leaving a rounded butt for the hand.",
+    "funFacts": [
+      "Used continuously for over 1.5 million years — longer than any other tool.",
+      "Some hand axes show no wear — they may have been status objects or courtship gifts.",
+      "The symmetry is so consistent that archaeologists call it 'the Acheulean ideal'."
+    ],
+    "tribe": "Homo erectus / Lower Paleolithic",
+    "timePeriod": "Lower Paleolithic · 1.76 million–130,000 years ago",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-cordiform-hand-axe",
+    "name": "Cordiform Hand Axe",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Heart-Shaped Bifacial",
+    "tagline": "The heart-shaped axe of the Neanderthals",
+    "emoji": "🪓",
+    "accentHex": "#D49A6E",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/24afd3bd-533d-442e-8776-75359fd418fe.png",
+    "whereFound": [
+      "Europe",
+      "Southwest Asia"
+    ],
+    "description": "The cordiform (heart-shaped) hand axe is a refined Middle Paleolithic bifacial tool associated with Neanderthals and early modern humans. Its carefully shaped point and rounded base make it one of the most aesthetically refined stone tools of the era.",
+    "howMade": "Knapped from honey-amber flint using soft-hammer percussion (bone or antler billet). Fine retouch around the entire edge created a sharp, symmetrical cutting surface.",
+    "funFacts": [
+      "'Cordiform' means 'heart-shaped' — some are so symmetrical they look intentional.",
+      "Neanderthals may have preferred certain colored flints — an early sign of aesthetics.",
+      "These tools overlap with the Mousterian tool kit."
+    ],
+    "tribe": "Neanderthals / Middle Paleolithic",
+    "timePeriod": "Middle Paleolithic · 300,000–40,000 years ago",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-ovate-hand-axe",
+    "name": "Ovate Hand Axe",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Oval Bifacial",
+    "tagline": "The rounded all-purpose chopper of the Acheulean",
+    "emoji": "🪓",
+    "accentHex": "#B87333",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/4e8201d0-8ed5-4da6-b2dc-a7321a3104ab.png",
+    "whereFound": [
+      "Europe",
+      "Africa",
+      "Western Asia"
+    ],
+    "description": "The ovate hand axe is a broad, oval-shaped bifacial tool from the Acheulean tradition. Thicker and rounder than the classic pointed form, it was optimized for chopping and heavy-duty cutting tasks.",
+    "howMade": "Knapped from chert or flint using hard-hammer percussion, then refined with soft-hammer retouch. The oval outline provides a continuous cutting edge with no weak points.",
+    "funFacts": [
+      "Ovate forms are among the most common Acheulean shapes in Britain.",
+      "Some ovate axes were reworked into other shapes as they were resharpened.",
+      "The thick center provided weight for chopping — the thin edge for slicing."
+    ],
+    "tribe": "Homo erectus / heidelbergensis / Acheulean",
+    "timePeriod": "Lower–Middle Paleolithic · 500,000–100,000 years ago",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-micoquian-hand-axe",
+    "name": "Micoquian Hand Axe",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Asymmetric Bifacial",
+    "tagline": "The refined pointed axe of the last Neanderthals",
+    "emoji": "🪓",
+    "accentHex": "#8B7355",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/45477196-b7ec-4d2a-b642-4f020d8b9929.png",
+    "whereFound": [
+      "Central Europe",
+      "Eastern Europe"
+    ],
+    "description": "The Micoquian hand axe is a thin, asymmetric bifacial tool with a pointed tip and broad base, associated with the Keilmessergruppe — a late Neanderthal technocomplex. It shows remarkable refinement in flaking technique.",
+    "howMade": "Knapped from honey-amber flint using soft-hammer percussion. The asymmetric planform was intentional — one side was left thicker for gripping while the other was thinned for cutting.",
+    "funFacts": [
+      "Named after the La Micoque site in the Dordogne",
+      "France.",
+      "Micoquian tools are among the most sophisticated Neanderthal stone tools.",
+      "Some show 'tranchet' sharpening — a single blow that refreshes the cutting edge."
+    ],
+    "tribe": "Neanderthals / Keilmessergruppe",
+    "timePeriod": "Middle Paleolithic · 130,000–40,000 years ago",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-limande-hand-axe",
+    "name": "Limande Hand Axe",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Elongated Bifacial",
+    "tagline": "The flat, elongated axe — slimmed down for precision",
+    "emoji": "🪓",
+    "accentHex": "#A0826D",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/9637bf30-cf49-46eb-bd1a-e42d657ea4f4.png",
+    "whereFound": [
+      "Western Europe",
+      "North Africa"
+    ],
+    "description": "The limande is an elongated, flat-oval hand axe with finely retouched edges. Thinner than the ovate form, it was suited for cutting and slicing rather than heavy chopping.",
+    "howMade": "Knapped from gray chert with rust inclusions using soft-hammer percussion. The thin profile required careful platform preparation to avoid snapping the piece.",
+    "funFacts": [
+      "'Limande' means 'flounder' — the flat shape resembles the fish.",
+      "The thin cross-section made it one of the most efficient cutting tools of the Paleolithic.",
+      "Some limandes show edge damage consistent with butchery."
+    ],
+    "tribe": "Homo heidelbergensis / Neanderthals",
+    "timePeriod": "Middle Paleolithic · 200,000–40,000 years ago",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-triangular-hand-axe",
+    "name": "Triangular Hand Axe",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Triangular Bifacial",
+    "tagline": "Three sharp corners — the heavy-duty chopper",
+    "emoji": "🪓",
+    "accentHex": "#7A6B5A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/31051dde-ad49-4b8d-a1f0-48fd556be7a2.png",
+    "whereFound": [
+      "Africa",
+      "Europe"
+    ],
+    "description": "The triangular hand axe is a bifacial tool with a clear triangular silhouette — a broad cutting edge opposite a pointed tip. The geometry concentrates force at the tip for piercing.",
+    "howMade": "Knapped from dark flint using hard-hammer percussion. The triangular form was achieved by removing large corner flakes, then refining the edges with pressure flaking.",
+    "funFacts": [
+      "The triangular form is one of the most recognizable Acheulean variants.",
+      "Some triangular axes show use-wear from digging in addition to cutting.",
+      "The broad edge could chop through small bones and tough hide."
+    ],
+    "tribe": "Homo erectus / Acheulean",
+    "timePeriod": "Lower Paleolithic · 800,000–200,000 years ago",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-biface-cleaver",
+    "name": "Biface Cleaver",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Cleaver",
+    "tagline": "A broad straight edge for butchering the big game",
+    "emoji": "🪓",
+    "accentHex": "#5B6B5A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/fe6737ca-73ae-4f73-84ea-8bd1391dc23e.png",
+    "whereFound": [
+      "Africa",
+      "Western Asia"
+    ],
+    "description": "The biface cleaver is a large Acheulean tool with a broad, straight cutting edge opposite a thick rounded butt — designed for chopping through joints and heavy butchery. It was the 'meat cleaver' of the Paleolithic.",
+    "howMade": "Knapped from basalt or quartzite using hard-hammer percussion. The straight cutting edge was created by a single large 'tranchet' flake removal that left a sharp, fresh edge.",
+    "funFacts": [
+      "Cleavers are a hallmark of the African Acheulean — rarer in Europe.",
+      "The broad edge could sever a mammoth limb in a few blows.",
+      "Some cleavers were made on large flakes rather than cores."
+    ],
+    "tribe": "Homo erectus / Acheulean",
+    "timePeriod": "Lower Paleolithic · 1.4 million–200,000 years ago",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-pick-hand-axe",
+    "name": "Pick Hand Axe",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Elongated Pick",
+    "tagline": "The thick pointed axe — a chisel for breaking earth and bone",
+    "emoji": "🪓",
+    "accentHex": "#9A8B7A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/33185053-c458-4fd4-9b67-8e41d6cd6e81.png",
+    "whereFound": [
+      "Africa",
+      "Europe"
+    ],
+    "description": "The pick hand axe is an elongated, thick bifacial tool with a narrow pointed tip. Its mass and geometry made it suited for breaking through tough materials — earth, ice, and dense bone.",
+    "howMade": "Knapped from quartzite or chert using hard-hammer percussion. The thick profile was retained deliberately — the tool needed mass behind the point to deliver force.",
+    "funFacts": [
+      "Picks are among the heaviest Acheulean tools.",
+      "Some may have been used for digging tubers in hard ground.",
+      "The thick cross-section resisted breakage under heavy impact."
+    ],
+    "tribe": "Homo erectus / Acheulean",
+    "timePeriod": "Lower Paleolithic · 800,000–200,000 years ago",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-discoidal-hand-axe",
+    "name": "Discoidal Hand Axe",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Discoid Bifacial",
+    "tagline": "The round disc axe — a 360-degree cutting edge",
+    "emoji": "🪓",
+    "accentHex": "#6A5A6A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/be08be6f-ebae-4e8c-8ec5-c9b0a47096de.png",
+    "whereFound": [
+      "Europe",
+      "Africa"
+    ],
+    "description": "The discoidal hand axe is a round, disc-shaped bifacial tool with a continuous flaked edge around the entire circumference. The circular form provides no 'weak' point — every part of the edge cuts equally.",
+    "howMade": "Knapped from dark chert using alternating percussion from both faces. The disc shape was achieved by removing flakes in a radial pattern from the center outward.",
+    "funFacts": [
+      "The round edge could be rotated as one section dulled — self-sharpening.",
+      "Discoidal forms are especially common in the Middle Paleolithic.",
+      "Some were used as cores — flakes were struck off them as needed."
+    ],
+    "tribe": "Neanderthals / Middle Paleolithic",
+    "timePeriod": "Middle Paleolithic · 200,000–40,000 years ago",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-uniface-hand-axe",
+    "name": "Uniface Hand Axe",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Unifacial Large Flake",
+    "tagline": "One-sided and fast to make — the quick chopper",
+    "emoji": "🪓",
+    "accentHex": "#B8967A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/6b99bd5b-4857-4e89-b165-20a7936e4024.png",
+    "whereFound": [
+      "Africa",
+      "Europe",
+      "Asia"
+    ],
+    "description": "The uniface hand axe is a large flake tool with flaking on only one face — the other retains the natural cortex. Faster to produce than a bifacial axe, it was the expedient option when time mattered.",
+    "howMade": "A large flake was struck from a core, then the dorsal face was retouched to create a sharp working edge. The ventral face and cortex were left unmodified for grip.",
+    "funFacts": [
+      "Uniface axes were the 'fast food' of the Paleolithic — quick",
+      "functional",
+      "disposable.",
+      "The cortex on the back provided a natural non-slip grip.",
+      "Some were used once and discarded — they were that easy to make."
+    ],
+    "tribe": "Homo erectus / Various",
+    "timePeriod": "Lower–Middle Paleolithic · 1 million–40,000 years ago",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-shouldered-hand-axe",
+    "name": "Shouldered Hand Axe",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Shouldered Bifacial",
+    "tagline": "A knobbed base for a better grip — the ergonomic axe",
+    "emoji": "🪓",
+    "accentHex": "#8B9A8B",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/f511d8de-0ba8-44be-8c72-34f07853254f.png",
+    "whereFound": [
+      "Europe"
+    ],
+    "description": "The shouldered hand axe is a bifacial tool with distinct shoulders near the base, creating a narrowed 'tang' for the hand. The shoulders prevent the tool from slipping during use — an early ergonomic innovation.",
+    "howMade": "Knapped from gray chert using soft-hammer percussion. The shoulders were formed by deep notching flakes, then the tang was rounded for comfort.",
+    "funFacts": [
+      "The shouldered form is a late Acheulean innovation.",
+      "Some shouldered axes may have been hafted — the tang fits a handle.",
+      "The design anticipates the tanged points of the Mesolithic."
+    ],
+    "tribe": "Late Acheulean / Early Middle Paleolithic",
+    "timePeriod": "Middle Paleolithic · 200,000–100,000 years ago",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-lens-hand-axe",
+    "name": "Lens-Shaped Hand Axe",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Thin Lenticular Bifacial",
+    "tagline": "So thin it's almost a blade — the master knapper's showpiece",
+    "emoji": "🪓",
+    "accentHex": "#6A7A8B",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/fc023ccc-4359-4b2f-9c47-f25f9d23e0aa.png",
+    "whereFound": [
+      "Europe",
+      "Africa"
+    ],
+    "description": "The lens-shaped hand axe is a remarkably thin, flat bifacial tool with a lenticular cross-section. Producing such thinness required exceptional skill — one wrong blow and the piece snaps.",
+    "howMade": "Knapped from fine flint using soft-hammer percussion and pressure flaking. The thin profile was achieved by removing broad, shallow flakes from both faces — a technique only mastered knappers could execute.",
+    "funFacts": [
+      "Lens-shaped axes are considered the pinnacle of Acheulean craftsmanship.",
+      "Some are so thin they are translucent at the edges.",
+      "They may have served as prestige objects rather than work tools."
+    ],
+    "tribe": "Late Acheulean / Homo heidelbergensis",
+    "timePeriod": "Late Lower Paleolithic · 400,000–200,000 years ago",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-three-quarter-grooved-axe",
+    "name": "Three-Quarter Grooved Axe",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Grooved Ground Stone",
+    "tagline": "The grooved axe head that felled the forests of the Archaic",
+    "emoji": "🪓",
+    "accentHex": "#4A6B5A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/0dac21b9-b356-4c52-bb07-7bad720713f1.png",
+    "whereFound": [
+      "Eastern",
+      "Midwest",
+      "Southeast"
+    ],
+    "description": "The three-quarter grooved axe is a polished stone axe head with a groove running around three sides (leaving the bit ungrooved). The groove secured the head to a wooden handle with rawhide or cordage. It was the primary woodworking tool of the Archaic period.",
+    "howMade": "Pecked and ground from greenstone, diabase, or basalt into a rectangular form, then the groove was pecked deeper on three sides. The bit was ground sharp on an abrasive stone.",
+    "funFacts": [
+      "The three-quarter groove left the bit area smooth for a cleaner cut.",
+      "These axes were essential for making dugout canoes and clearing land.",
+      "Some are so well polished they reflect light like glass."
+    ],
+    "tribe": "Archaic / Woodland (various)",
+    "timePeriod": "Archaic–Woodland · 3,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-full-grooved-axe",
+    "name": "Full Grooved Axe",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Grooved Ground Stone",
+    "tagline": "A complete groove for a rock-solid haft",
+    "emoji": "🪓",
+    "accentHex": "#3A5A5A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/396f9414-ce8e-41e7-8e9c-d381cc1a5dc1.png",
+    "whereFound": [
+      "Eastern",
+      "Midwest",
+      "Southeast"
+    ],
+    "description": "The full grooved axe is a polished stone axe head with a groove encircling the entire middle. The full groove provides maximum security for the haft — the head cannot slip off even under heavy impact.",
+    "howMade": "Pecked and ground from dark basalt or greenstone. The groove was pecked completely around the piece, then the bit was ground to a sharp edge on a flat abrasive stone.",
+    "funFacts": [
+      "Full-grooved axes are older than three-quarter-grooved forms.",
+      "The full groove was harder to make but more secure.",
+      "Some show polished surfaces from centuries of use and resharpening."
+    ],
+    "tribe": "Archaic (various)",
+    "timePeriod": "Archaic · 5,000–1,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-celt-ungrooved",
+    "name": "Celt (Ungrooved Axe)",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Polished Ungrooved",
+    "tagline": "No groove, no problem — the hafted axe that didn't need one",
+    "emoji": "🪓",
+    "accentHex": "#2A6B4A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/dd894eb0-8ab1-4c76-976a-a37765204df9.png",
+    "whereFound": [
+      "Eastern",
+      "Midwest",
+      "Southeast"
+    ],
+    "description": "The celt is an ungrooved polished stone axe head — a smooth trapezoidal blade that was set into a split wooden handle or a socketed club. Without a groove, it relied entirely on the haft's grip.",
+    "howMade": "Ground and polished from greenstone or metamorphosed basalt into a trapezoidal shape. The poll (back) was rounded for fitting into a handle, and the bit was ground to a sharp edge.",
+    "funFacts": [
+      "Celts are the most common polished stone axe in eastern North America.",
+      "The word 'celt' comes from Latin 'celtes' — a chisel.",
+      "Some celts were mounted in antler sleeves",
+      "then set into wooden handles."
+    ],
+    "tribe": "Woodland / Mississippian (various)",
+    "timePeriod": "Woodland–Mississippian · 1,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-notched-axe",
+    "name": "Notched Axe",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Notched Ground Stone",
+    "tagline": "Side notches for a snug, slip-free haft",
+    "emoji": "🪓",
+    "accentHex": "#3A6B5A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/0441ccb5-5f0f-4a74-87f8-849d1bc1fcb7.png",
+    "whereFound": [
+      "Southeast",
+      "Midwest"
+    ],
+    "description": "The notched axe is a polished greenstone axe head with two lateral notches near the poll. The notches served as lashing points — cordage wrapped through them to lock the head to its handle.",
+    "howMade": "Pecked and ground from dark greenstone. The lateral notches were pecked and then ground smooth. The bit was sharpened by grinding on a flat whetstone.",
+    "funFacts": [
+      "Notched axes are a regional variant — most common in the Southeast.",
+      "The notches allowed a tighter binding than a simple groove.",
+      "Some notched axes show use as adzes — flipped for shaving wood."
+    ],
+    "tribe": "Mississippian (various)",
+    "timePeriod": "Mississippian · 1,000–1,500 CE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-ground-stone-adze",
+    "name": "Ground Stone Adze",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Ground Stone Adze",
+    "tagline": "The woodworking blade that shaved wood like butter",
+    "emoji": "🪓",
+    "accentHex": "#4A6B6A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/eb42ea73-1f8f-4f24-9bcf-af655a91f74d.png",
+    "whereFound": [
+      "Pacific Northwest",
+      "Eastern",
+      "Southeast"
+    ],
+    "description": "The ground stone adze is a polished stone woodworking tool with a beveled bit — mounted at a right angle to the handle, it shaves and hollows wood. It was essential for making canoes, totem poles, and wooden tools.",
+    "howMade": "Ground from greenstone or jadeite into a rectangular form with a steeply beveled bit. The bevel was ground at a 30–45° angle for efficient shaving of wood fibers.",
+    "funFacts": [
+      "Pacific Northwest adzes were sometimes made of jadeite — harder than steel.",
+      "Adzes shave wood rather than chop — the bevel lifts fibers like a plane.",
+      "Wear-polish on working edges can identify what wood was worked."
+    ],
+    "tribe": "Various (Pacific NW / Eastern)",
+    "timePeriod": "Archaic–contact · 3,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-core-axe",
+    "name": "Core Axe",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Core-Based Bifacial",
+    "tagline": "A thick core worked into a chopper — the heavy-duty original",
+    "emoji": "🪓",
+    "accentHex": "#8B7B6A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/bb61b26f-7cbd-4bb3-aef1-f4ef4670330e.png",
+    "whereFound": [
+      "Africa",
+      "Europe",
+      "Asia"
+    ],
+    "description": "The core axe is a thick bifacial tool made from a stone core rather than a flake. The heavy mass made it ideal for breaking, chopping, and heavy impact tasks.",
+    "howMade": "A large stone core was flaked on both faces to create a rough bifacial edge. The thick profile was retained — the tool needed mass to deliver force.",
+    "funFacts": [
+      "Core axes are among the earliest bifacial tools — predating the Acheulean.",
+      "The Oldowan 'chopper' is essentially a crude core axe.",
+      "Some core axes were used as sources for flakes — dual-purpose tools."
+    ],
+    "tribe": "Homo habilis / erectus",
+    "timePeriod": "Lower Paleolithic · 2.6 million–500,000 years ago",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-chopper",
+    "name": "Chopper",
+    "family": "Hand Axes & Axe Heads",
+    "subFamily": "Crude Chopping Tool",
+    "tagline": "The very first stone tool — a rock with an edge",
+    "emoji": "🪓",
+    "accentHex": "#A8967A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/0385e416-e3bd-418d-bbb8-acc406820fbb.png",
+    "whereFound": [
+      "Africa",
+      "Europe",
+      "Asia"
+    ],
+    "description": "The chopper is the simplest stone tool — a river cobble with a few flakes removed from one edge to create a rough cutting surface. It is the defining tool of the Oldowan, the earliest known stone tool industry.",
+    "howMade": "A round quartzite cobble was struck with a hammerstone to remove several flakes from one edge. The resulting jagged edge could chop, cut, and scrape.",
+    "funFacts": [
+      "The oldest known choppers are 2.6 million years old — from Gona",
+      "Ethiopia.",
+      "Choppers were likely made by Homo habilis — 'handy man'.",
+      "Some 'choppers' may actually have been cores — the flakes were the real tools."
+    ],
+    "tribe": "Homo habilis / Oldowan",
+    "timePeriod": "Lower Paleolithic · 2.6 million–1.7 million years ago",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-flint-drill",
+    "name": "Flint Drill",
+    "family": "Drill Bits",
+    "subFamily": "Bifacial Drill",
+    "tagline": "The bit that bored holes in shell, bone, and wood",
+    "emoji": "🔩",
+    "accentHex": "#4A5A8B",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/814d47cb-cc0c-457c-be05-3332edb9e7cf.png",
+    "whereFound": [
+      "North America",
+      "Europe",
+      "Asia"
+    ],
+    "description": "The flint drill is a small bifacial tool with a narrow, projecting tip designed for drilling holes in shell, bone, antler, and wood. It was the tool that made beads, pendants, and sewn clothing possible.",
+    "howMade": "Knapped from chert with pressure flaking to create a slender, robust tip. The tip was kept thick enough to resist breaking under rotation, while the edges near the base were thinned for hafting.",
+    "funFacts": [
+      "Drills were spun between the palms or with a bow drill for speed.",
+      "Some drill bits show helical wear polish from rotation.",
+      "A broken drill tip was often re-sharpened into a new",
+      "shorter drill."
+    ],
+    "tribe": "Archaic / Woodland (various)",
+    "timePeriod": "Archaic–Woodland · 6,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-micro-drill",
+    "name": "Micro-Drill",
+    "family": "Drill Bits",
+    "subFamily": "Tiny Precision Drill",
+    "tagline": "A pin-point bit for the finest bead work",
+    "emoji": "🔩",
+    "accentHex": "#6A7A9B",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/dd72a50b-7d9e-44be-ac3d-a31faef69864.png",
+    "whereFound": [
+      "North America",
+      "Europe"
+    ],
+    "description": "The micro-drill is a thumbnail-sized flint bit with a needle-fine tip. Used for drilling the tiny holes in shell disc beads, it was the precision instrument of the ancient bead-making workshop.",
+    "howMade": "Made on a tiny chalcedony or chert flake, pressure-flaked to a fine point. The tip had to be both sharp and strong — a break meant starting over.",
+    "funFacts": [
+      "Micro-drills could bore holes less than 1mm in diameter.",
+      "They were hafted in reed or bone handles for grip.",
+      "Bead-making sites are littered with exhausted micro-drills."
+    ],
+    "tribe": "Archaic / Woodland (various)",
+    "timePeriod": "Archaic–Woodland · 3,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-t-drill",
+    "name": "T-Drill",
+    "family": "Drill Bits",
+    "subFamily": "T-Shaped Hafted Drill",
+    "tagline": "A cross-bar handle for the spinning drill",
+    "emoji": "🔩",
+    "accentHex": "#5A5A8B",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/58842252-c923-4f40-8f0d-837b52db9595.png",
+    "whereFound": [
+      "North America",
+      "Europe"
+    ],
+    "description": "The T-drill is a flint drill bit with a T-shaped or cross-shaped top, designed to be hafted in a handle that could be spun like a modern drill bit. The crossbar provided grip for rapid rotation.",
+    "howMade": "Knapped from chert to create a drilling tip with a wider T-shaped top. The top was seated in a notched handle, and the whole assembly was spun with a bow or between the palms.",
+    "funFacts": [
+      "The T-shape kept the bit from pulling out of its haft during rotation.",
+      "Bow drills with T-drills could spin fast enough to generate friction heat.",
+      "Some T-drills were used for fire-starting as well as boring."
+    ],
+    "tribe": "Archaic / Woodland (various)",
+    "timePeriod": "Archaic–Woodland · 5,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-reamer",
+    "name": "Flint Reamer",
+    "family": "Drill Bits",
+    "subFamily": "Short Reaming Bit",
+    "tagline": "The tool that widened holes and cleaned edges",
+    "emoji": "🔩",
+    "accentHex": "#B89A4A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/b03e5bfb-59e1-4840-9f02-8565e4119f9d.png",
+    "whereFound": [
+      "North America",
+      "Europe"
+    ],
+    "description": "The flint reamer is a small, robust pointed tool used for enlarging and smoothing pre-drilled holes. Shorter and thicker than a drill, it could widen a hole without snapping.",
+    "howMade": "Made on a chert flake with a short, stout point. The tip was pressure-flaked to a blunt but sharp point — strong enough to scrape, not so sharp it would break.",
+    "funFacts": [
+      "Reamers were used after drilling to smooth the hole's interior.",
+      "They also served as perforators for leather — punching lacing holes.",
+      "A reamer is thicker than a drill by design — strength over finesse."
+    ],
+    "tribe": "Archaic / Woodland (various)",
+    "timePeriod": "Archaic–Woodland · 6,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-gunflint",
+    "name": "Gunflint",
+    "family": "Drill Bits",
+    "subFamily": "Flintlock Spark Stone",
+    "tagline": "The small stone that fired every shot for 300 years",
+    "emoji": "🔩",
+    "accentHex": "#4A4A6A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/fa02448a-919d-4d78-8aed-1f1da4043148.png",
+    "whereFound": [
+      "Europe",
+      "North America"
+    ],
+    "description": "The gunflint is a small, rectangular dark flint block with a chipped working edge, held in the jaws of a flintlock mechanism. When the trigger was pulled, it struck the steel frizzen, showering sparks into the gunpowder pan.",
+    "howMade": "Knapped from high-quality dark flint into a standardized rectangular form. The working edge was held upward in the cock (hammer) and struck the steel frizzen at a precise angle.",
+    "funFacts": [
+      "A skilled flint knapper could produce 200 gunflints per hour.",
+      "English gunflints from Brandon were the standard for the British Army.",
+      "A good gunflint could fire 30–50 shots before needing replacement."
+    ],
+    "tribe": "European / Colonial (various)",
+    "timePeriod": "Historic · 1600–1850 CE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-end-scraper",
+    "name": "End Scraper",
+    "family": "Flaked Stone Tools",
+    "subFamily": "Unifacial Scraper",
+    "tagline": "The hide-prep tool that kept people warm through the Ice Age",
+    "emoji": "🔪",
+    "accentHex": "#B8A88A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/0793c6ae-5a4a-4fd0-86c1-b8a54e644219.png",
+    "whereFound": [
+      "North America",
+      "Europe"
+    ],
+    "description": "The end scraper is a unifacial flake tool with steep retouch on one end, creating a scraping edge. It was primarily used to scrape fat and tissue from animal hides during leather and clothing production.",
+    "howMade": "Made on a blade-like flake of chert. The working end was retouched at a steep angle (60–90°) to create a durable scraping edge that wouldn't dull quickly.",
+    "funFacts": [
+      "End scrapers are among the most common tools at Paleoindian campsites.",
+      "Wear patterns show some were used to scrape hides",
+      "others to work wood or bone.",
+      "Spent end scrapers were often re-sharpened until nothing was left."
+    ],
+    "tribe": "Paleoindian / Archaic (various)",
+    "timePeriod": "Paleoindian–Archaic · 10,000 BCE onward",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-side-scraper",
+    "name": "Side Scraper",
+    "family": "Flaked Stone Tools",
+    "subFamily": "Lateral Scraper",
+    "tagline": "The long-edge scraper for hides and wood",
+    "emoji": "🔪",
+    "accentHex": "#C9A05A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/43ae9494-0ef3-41cf-af77-3112da2f05c6.png",
+    "whereFound": [
+      "Europe",
+      "Africa",
+      "North America"
+    ],
+    "description": "The side scraper is a unifacial flake tool with steep retouch along one long edge. It was used for scraping hides, smoothing wood, and processing plant materials — a versatile workhorse of the toolkit.",
+    "howMade": "Made on a chert flake with retouch along one long side. The working edge was shaped at a steep angle for durability — the opposite edge was left sharp for cutting.",
+    "funFacts": [
+      "Side scrapers are the most common tool type in the Mousterian.",
+      "Neanderthals used them to scrape hides with remarkable consistency.",
+      "The steep edge angle is called 'quadrifacial retouch' when applied on both faces."
+    ],
+    "tribe": "Neanderthals / Various",
+    "timePeriod": "Middle Paleolithic onward · 200,000–10,000 years ago",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-burin",
+    "name": "Burin",
+    "family": "Flaked Stone Tools",
+    "subFamily": "Engraving Tool",
+    "tagline": "The chisel that carved bone and antler into art and tools",
+    "emoji": "🔪",
+    "accentHex": "#2A8B8B",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/67d871fa-9702-4ed6-a6a5-5dee1eba3fdb.png",
+    "whereFound": [
+      "Europe",
+      "North America",
+      "Asia"
+    ],
+    "description": "The burin is a specialized flint tool with a sharp, chisel-like transverse edge, created by removing a 'burin spall' from the edge. It was the primary tool for engraving and carving bone, antler, and ivory.",
+    "howMade": "A burin spall was struck from the edge of a flake using a punch or direct blow, leaving a sharp, strong transverse edge. Different burin types (dihedral, angle, transverse) produced different carving profiles.",
+    "funFacts": [
+      "Burins were the tools that carved the Venus figurines of the Upper Paleolithic.",
+      "The burin edge is the strongest edge in knapping — it rarely breaks.",
+      "Wear polish on burins can identify whether they carved bone or antler."
+    ],
+    "tribe": "Upper Paleolithic / Various",
+    "timePeriod": "Upper Paleolithic onward · 40,000–10,000 years ago",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-graver-spall",
+    "name": "Graver Spall",
+    "family": "Flaked Stone Tools",
+    "subFamily": "Fine Engraving Spall",
+    "tagline": "The micro-chisel for the finest lines and decorations",
+    "emoji": "🔪",
+    "accentHex": "#8B5A9B",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/db83c04e-3fe7-4618-9f70-27822c087c82.png",
+    "whereFound": [
+      "Europe",
+      "North America"
+    ],
+    "description": "The graver spall is a small flake with a sharp, projecting spur used for fine engraving. Finer than a burin, it could incise delicate lines on bone, shell, and stone — the artist's tool of the ancient world.",
+    "howMade": "Made on a small flake with a projecting spur created by notch-and-flake technique. The spur was the engraving point — sharp enough to scribe hair-thin lines.",
+    "funFacts": [
+      "Gravers were used to engrave the decoration on Mississippian shell gorgets.",
+      "Some graver spalls are barely 1 cm long — true micro-tools.",
+      "The spur is fragile — most gravers are found with broken tips."
+    ],
+    "tribe": "Paleoindian / Woodland / Various",
+    "timePeriod": "Paleoindian onward · 10,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-unifacial-tool",
+    "name": "Unifacial Tool",
+    "family": "Flaked Stone Tools",
+    "subFamily": "General Unifacial Flake",
+    "tagline": "One face flaked, one face flat — the all-purpose flake tool",
+    "emoji": "🔪",
+    "accentHex": "#D4A56A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/cc05987a-2fd0-4c3e-a2d7-d4c2d8f31553.png",
+    "whereFound": [
+      "Worldwide"
+    ],
+    "description": "The unifacial tool is a flake with retouch on only one face — the other retains the flat ventral surface. This is the most common and versatile tool form in the archaeological record.",
+    "howMade": "A flake was struck from a core, then retouched on the dorsal face to create the desired edge shape. The flat ventral face provided a stable cutting edge with minimal effort.",
+    "funFacts": [
+      "Unifacial tools are faster to make than bifacial — one face is already sharp.",
+      "They include scrapers",
+      "knives",
+      "perforators",
+      "and denticulates.",
+      "The cortex on the back provides a natural grip."
+    ],
+    "tribe": "Various (worldwide)",
+    "timePeriod": "Lower Paleolithic onward · 2.6 million years ago–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-bolas-stone",
+    "name": "Bolas Stone",
+    "family": "Flaked Stone Tools",
+    "subFamily": "Hunting Weight",
+    "tagline": "The weighted cord that brought down running prey",
+    "emoji": "🔪",
+    "accentHex": "#5A5A6A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/3e447920-faf2-48fd-86d4-065d224cd164.png",
+    "whereFound": [
+      "North America",
+      "South America"
+    ],
+    "description": "The bolas stone is a rounded, grooved stone weight attached to a cord. Multiple stones were tied to separate cords and thrown at prey — the cords wrapped around the animal's legs, bringing it down.",
+    "howMade": "A round cobble was pecked with a groove around its equator, then polished. A cord was wrapped through the groove and tied. Two or three stones on cords formed a complete hunting weapon.",
+    "funFacts": [
+      "Bolas were used to hunt birds",
+      "guanacos",
+      "and even bison.",
+      "The grooves show wear from cord friction.",
+      "Bolas are still used by South American gauchos today."
+    ],
+    "tribe": "Paleoindian / Archaic / South American (various)",
+    "timePeriod": "Paleoindian onward · 10,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-polyhedron-core",
+    "name": "Polyhedron Core",
+    "family": "Flaked Stone Tools",
+    "subFamily": "Multi-Faced Core",
+    "tagline": "The raw material block — every flake a potential tool",
+    "emoji": "🔪",
+    "accentHex": "#4A4A4A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/fb8065eb-e1eb-43d0-82ea-25717a495f7e.png",
+    "whereFound": [
+      "Africa",
+      "Europe",
+      "Asia"
+    ],
+    "description": "The polyhedron core is a stone block from which multiple flakes have been removed, leaving angular facets. It is the 'parent' of many flake tools — the source material of the toolkit.",
+    "howMade": "Flakes were systematically removed from a stone core using a hammerstone. Each removal left a scar (facet). The core itself could later be used as a chopper or discarded.",
+    "funFacts": [
+      "A single core can yield dozens of usable flakes.",
+      "Cores are found by the thousands at quarry sites.",
+      "The shape of the scars reveals the knapper's technique."
+    ],
+    "tribe": "Homo erectus / Various (worldwide)",
+    "timePeriod": "Lower Paleolithic onward · 1.8 million years ago–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-manuport",
+    "name": "Manuport",
+    "family": "Flaked Stone Tools",
+    "subFamily": "Carried Non-Local Stone",
+    "tagline": "A stone carried with intent — the earliest sign of a thinking mind",
+    "emoji": "🔪",
+    "accentHex": "#8B4A3A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/2682f461-b9a2-4a26-9cd9-d309a77c3fcf.png",
+    "whereFound": [
+      "Africa",
+      "Worldwide"
+    ],
+    "description": "A manuport is a stone carried to a site by humans but not modified into a tool. It may have been selected for color, shape, or symbolic value — the earliest evidence of human aesthetic or symbolic thinking.",
+    "howMade": "No manufacture — a manuport is unmodified. Its significance is its presence in a context where the stone type does not naturally occur. Someone chose to carry it.",
+    "funFacts": [
+      "The Makapansgat jasper cobble — carried 3 million years ago — resembles a face.",
+      "Red ochre manuports were the earliest 'crayons' for body painting.",
+      "Manuports blur the line between tool",
+      "art",
+      "and symbol."
+    ],
+    "tribe": "Australopithecus / Homo (various)",
+    "timePeriod": "Pliocene onward · 3 million years ago–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-backed-knife",
+    "name": "Backed Knife",
+    "family": "Flaked Stone Tools",
+    "subFamily": "Blunted-Back Knife",
+    "tagline": "One sharp edge, one blunt back — safe for the cutting hand",
+    "emoji": "🔪",
+    "accentHex": "#5B9A6A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/97a27580-631d-4781-9ef1-cbaa25687e45.png",
+    "whereFound": [
+      "Europe",
+      "Africa",
+      "North America"
+    ],
+    "description": "The backed knife is a flake tool with one sharp cutting edge and one deliberately blunted ('backed') edge. The blunting allows the user to press on the back without cutting their fingers.",
+    "howMade": "A chert flake was retouched on one edge to create a sharp cutting surface. The opposite edge was blunted with steep retouch — dulling it for safe handling.",
+    "funFacts": [
+      "Backed knives are common in the Upper Paleolithic and Mesolithic.",
+      "Some were hafted in bone or antler handles for even safer grip.",
+      "The backed edge shows intentional 'outrêche' retouch."
+    ],
+    "tribe": "Upper Paleolithic / Various",
+    "timePeriod": "Upper Paleolithic onward · 40,000–5,000 years ago",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-flint-sickle",
+    "name": "Flint Sickle",
+    "family": "Flaked Stone Tools",
+    "subFamily": "Denticulate Harvesting Blade",
+    "tagline": "The toothed blade that harvested the first farms",
+    "emoji": "🔪",
+    "accentHex": "#C94A3A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/45c56443-69b6-4a03-aa76-42c232897fd8.png",
+    "whereFound": [
+      "Middle East",
+      "Europe",
+      "North America"
+    ],
+    "description": "The flint sickle is an elongated curved blade with fine denticulate (saw-tooth) serrations on the cutting edge. It was mounted in a wooden or bone handle and used to harvest grain — the tool that enabled agriculture.",
+    "howMade": "Knapped from tan flint into a long, curved blade. The cutting edge was serrated with fine pressure flaking, creating tiny teeth that cut cereal stalks cleanly. The glossy patina is 'sickle gloss' — polish from cutting silica-rich grasses.",
+    "funFacts": [
+      "Sickle gloss is caused by silica in plant stems polishing the edge.",
+      "The earliest sickles are from the Natufian culture",
+      "12",
+      "000 years ago.",
+      "The denticulate edge cuts grain more cleanly than a straight edge."
+    ],
+    "tribe": "Natufian / Neolithic / Various",
+    "timePeriod": "Natufian onward · 10,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-biface-knife",
+    "name": "Biface Knife",
+    "family": "Flaked Stone Tools",
+    "subFamily": "Thin Bifacial Blade",
+    "tagline": "The leaf-shaped blade — sharp on both edges, thin as a dime",
+    "emoji": "🔪",
+    "accentHex": "#6A8B5A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/9b6a7e86-e87d-4b38-b22e-bc165edc89c2.png",
+    "whereFound": [
+      "North America",
+      "Europe"
+    ],
+    "description": "The biface knife is a large, thin bifacial blade with fine pressure flaking, shaped like a willow leaf. Sharp on both edges and thin enough to slice with minimal effort, it was the premier cutting tool.",
+    "howMade": "Knapped from translucent chalcedony or chert using soft-hammer percussion and pressure flaking. The thin, leaf-shaped form required exceptional skill — the edges were refined to near-transparency.",
+    "funFacts": [
+      "Some biface knives are so thin they are called 'translucent knives'.",
+      "They may have been prestige objects as much as working tools.",
+      "The edges show fine pressure-flake serrations from resharpening."
+    ],
+    "tribe": "Paleoindian / Archaic (various)",
+    "timePeriod": "Paleoindian–Archaic · 10,000–3,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-shell-beads",
+    "name": "Shell Beads",
+    "family": "Native Beads",
+    "subFamily": "Shell Disc & Tubular",
+    "tagline": "The first currency of the continent — wampum before wampum",
+    "emoji": "📿",
+    "accentHex": "#E8DCC8",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/87b24473-32ce-4354-a598-0f9ad054c3f3.png",
+    "whereFound": [
+      "Eastern",
+      "Gulf Coastal",
+      "Northeastern"
+    ],
+    "description": "Shell beads are among the oldest ornaments in North America. Drilled disc beads and tubular beads were made from whelk and conch shells, strung into necklaces, belts, and wampum — serving as decoration, ceremony, and even currency.",
+    "howMade": "Shells were broken into blanks, ground round on a stone, and drilled with a stone bit or reed-and-sand drill. The beads were then polished smooth and strung on sinew or plant fiber.",
+    "funFacts": [
+      "Shell beads over 5",
+      "000 years old have been found in Archaic shell rings.",
+      "Wampum belts recorded treaties and history — each bead was a 'word'.",
+      "Purple wampum came from the inside of the quahog shell — rarer and more valuable."
+    ],
+    "tribe": "Archaic / Woodland / Northeastern (various)",
+    "timePeriod": "Archaic onward · 3,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-shell-disc-bead",
+    "name": "Shell Disc Bead",
+    "family": "Native Beads",
+    "subFamily": "Flat Disc Bead",
+    "tagline": "The tiny white coin of the ancient bead trade",
+    "emoji": "📿",
+    "accentHex": "#F0E8D8",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/f9ce2b97-ff03-4a60-a96f-364ff088f14d.png",
+    "whereFound": [
+      "Eastern",
+      "Gulf Coastal",
+      "Northeastern"
+    ],
+    "description": "The shell disc bead is a small, flat, round bead drilled through the center. Made from whelk or conch shell, these were the most common bead type in eastern North America — the 'small change' of the bead economy.",
+    "howMade": "A shell blank was ground round on an abrasive stone, then drilled with a micro-drill. The bead was polished smooth. Thousands could be produced in a single workshop.",
+    "funFacts": [
+      "Disc beads were strung by the thousands into ceremonial belts.",
+      "Some disc beads are less than 3mm across — true micro-work.",
+      "The earliest shell disc beads in North America date to 5",
+      "000 BCE."
+    ],
+    "tribe": "Archaic / Woodland (various)",
+    "timePeriod": "Archaic onward · 5,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-tubular-shell-bead",
+    "name": "Tubular Shell Bead",
+    "family": "Native Beads",
+    "subFamily": "Cylindrical Shell Bead",
+    "tagline": "The long white column bead — cut from the conch's spine",
+    "emoji": "📿",
+    "accentHex": "#E8D8C8",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/fce04a36-6969-4404-94b3-80036196cea5.png",
+    "whereFound": [
+      "Eastern",
+      "Gulf Coastal",
+      "Mississippian"
+    ],
+    "description": "The tubular shell bead is a long, cylindrical bead made from the central column of a conch shell. Cut, drilled, and polished, these were strung into necklaces and ceremonial regalia.",
+    "howMade": "The conch's central column was cut into segments, each drilled lengthwise with a flint bit. The exterior was ground smooth and polished. The natural curve of the column gave each bead a slight arc.",
+    "funFacts": [
+      "Tubular beads from the Mississippian era are called 'runtees'.",
+      "The conch shell's column is the strongest part — durable beads.",
+      "Some tubular beads were engraved with designs before polishing."
+    ],
+    "tribe": "Mississippian / Southeastern (various)",
+    "timePeriod": "Mississippian · 1,000–1,500 CE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-wampum-bead",
+    "name": "Wampum Bead",
+    "family": "Native Beads",
+    "subFamily": "Purple & White Cylindrical",
+    "tagline": "The bead that recorded treaties, laws, and history",
+    "emoji": "📿",
+    "accentHex": "#6A4A8B",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/c9c1f843-630c-4f66-a32f-8f3d76ec1c7d.png",
+    "whereFound": [
+      "Northeastern",
+      "Eastern"
+    ],
+    "description": "Wampum beads are small cylindrical beads made from quahog shell — purple from the shell's interior, white from the exterior. Strung into belts, they recorded treaties, laws, and historical events.",
+    "howMade": "The quahog shell was cut into rectangular blanks, drilled, then ground into cylinders. Purple beads (from the shell's inner lip) were twice as valuable as white. Each bead was 5–7mm long.",
+    "funFacts": [
+      "The word 'wampum' comes from the Narragansett 'wampumpeag' — 'white shell beads'.",
+      "The Iroquois Confederacy recorded its constitution on a wampum belt.",
+      "Wampum was not 'money' — it was a mnemonic device for oral records."
+    ],
+    "tribe": "Northeastern (Iroquois / Algonquian)",
+    "timePeriod": "Woodland–contact · 500 BCE–1800 CE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-bone-bead",
+    "name": "Bone Bead",
+    "family": "Native Beads",
+    "subFamily": "Bird Bone Tube Bead",
+    "tagline": "Cut from a bird's wing bone — the lightest bead in the kit",
+    "emoji": "📿",
+    "accentHex": "#F0E8D0",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/441c76f9-2317-44d6-b204-c60806c6cc71.png",
+    "whereFound": [
+      "North America",
+      "Europe",
+      "Asia"
+    ],
+    "description": "Bone beads are short tubular beads cut from the hollow bones of birds. Lightweight and easy to produce, they were strung into necklaces, sewn onto clothing, and used as decorative trim.",
+    "howMade": "A bird bone (often a wing bone) was cut into segments with a flint burin or saw. The segments were polished smooth and sometimes decorated with incised lines before stringing.",
+    "funFacts": [
+      "Bird bone beads are found worldwide — from Paleolithic Europe to Mississippian America.",
+      "Some were decorated with geometric incised patterns.",
+      "The hollow center needed no drilling — nature provided the hole."
+    ],
+    "tribe": "Various (worldwide)",
+    "timePeriod": "Upper Paleolithic onward · 30,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-steatite-bead",
+    "name": "Steatite Bead",
+    "family": "Native Beads",
+    "subFamily": "Soft-Stone Tabular Bead",
+    "tagline": "Carved from soapstone — the easy-to-work bead material",
+    "emoji": "📿",
+    "accentHex": "#5A7A6A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/0a320164-ae18-4fdd-863e-9eab38686e80.png",
+    "whereFound": [
+      "Eastern",
+      "Southeast"
+    ],
+    "description": "Steatite beads are flat, tabular beads carved from soapstone — a soft, easily worked stone. They could be cut, drilled, and shaped with simple tools, making them a common ornament.",
+    "howMade": "Steatite was cut into thin slabs, then shaped into rectangular or oval beads. A hole was drilled with a flint bit. Some beads were fired to harden the surface.",
+    "funFacts": [
+      "Steatite is so soft it can be scratched with a fingernail.",
+      "Firing steatite beads makes them hard enough to resist wear.",
+      "Some steatite beads were incised with decorative patterns."
+    ],
+    "tribe": "Archaic / Woodland (various)",
+    "timePeriod": "Archaic onward · 3,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-barrel-bead",
+    "name": "Barrel Bead",
+    "family": "Native Beads",
+    "subFamily": "Rounded Cylindrical Bead",
+    "tagline": "The chunky rounded bead — polished to a warm glow",
+    "emoji": "📿",
+    "accentHex": "#D8C8A8",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/cd1048f2-4d73-4cd0-a2af-13eb8882d3c6.png",
+    "whereFound": [
+      "Eastern",
+      "Midwest"
+    ],
+    "description": "The barrel bead is a chunky, cylindrical bead with rounded edges, made from bone or shell. Its robust shape resisted breakage and its rounded profile felt smooth against the skin.",
+    "howMade": "A bone segment was ground into a barrel shape with rounded edges, then drilled through the center. The surface was polished with sand to a warm, smooth finish.",
+    "funFacts": [
+      "Barrel beads were often strung alternately with disc beads.",
+      "The rounded shape prevented the cord from chafing at the bead's edge.",
+      "Some barrel beads were stained with ochre for color."
+    ],
+    "tribe": "Woodland / Mississippian (various)",
+    "timePeriod": "Woodland onward · 1,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-shell-bead-column",
+    "name": "Shell Bead Column",
+    "family": "Native Beads",
+    "subFamily": "Strung Shell Column",
+    "tagline": "A column of white shell — the finished necklace, ready to wear",
+    "emoji": "📿",
+    "accentHex": "#E8D8E0",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/2d47ad40-cfec-4eb9-b958-f2089ed3f586.png",
+    "whereFound": [
+      "Eastern",
+      "Gulf Coastal",
+      "Mississippian"
+    ],
+    "description": "A shell bead column is a finished string of tubular and disc shell beads, ready for wear or trade. Strung on sinew, the beads form a continuous column of polished white shell.",
+    "howMade": "Individual shell beads were strung on a sinew cord. The beads were arranged by size — larger tubular beads alternating with smaller disc beads for visual rhythm.",
+    "funFacts": [
+      "Complete bead strings are rare finds — the cord usually decays.",
+      "Shell bead strings were a standard trade item across the Mississippian world.",
+      "The total length indicated the string's value."
+    ],
+    "tribe": "Mississippian (various)",
+    "timePeriod": "Mississippian · 1,000–1,500 CE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-shell-gorget",
+    "name": "Shell Gorget",
+    "family": "Native Beads",
+    "subFamily": "Engraved Shell Pendant",
+    "tagline": "A shield of shell, engraved with the symbols of the Southeast",
+    "emoji": "📿",
+    "accentHex": "#E0D8C0",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/010d4249-e218-442f-95c4-3126c0e95880.png",
+    "whereFound": [
+      "Southeast",
+      "Mississippian"
+    ],
+    "description": "The shell gorget is a large, round, polished shell pendant with a central hole and engraved designs. Worn on the chest, it displayed the wearer's clan affiliation or spiritual symbols.",
+    "howMade": "A large whelk shell was cut into a disc, ground smooth, and drilled with a suspension hole. The surface was engraved with concentric circles, rattlesnake designs, or the 'weeping eye' motif.",
+    "funFacts": [
+      "The 'weeping eye' motif is associated with the Southeastern Ceremonial Complex.",
+      "Some gorgets depict celestial scenes — stars",
+      "suns",
+      "and underworld beings.",
+      "Shell gorgets were traded from the Gulf Coast to Ohio."
+    ],
+    "tribe": "Mississippian / Southeastern Ceremonial Complex",
+    "timePeriod": "Mississippian · 1,000–1,500 CE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-shell-pendant",
+    "name": "Shell Pendant",
+    "family": "Native Beads",
+    "subFamily": "Simple Shell Ornament",
+    "tagline": "A single shell, polished and hung — the simplest adornment",
+    "emoji": "📿",
+    "accentHex": "#D8E0E8",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/c40fe20e-def7-4eeb-8cf5-f3dfb51daebb.png",
+    "whereFound": [
+      "Eastern",
+      "Gulf Coastal",
+      "Pacific Coast"
+    ],
+    "description": "The shell pendant is a whole or shaped shell with a single drilled suspension hole. The simplest form of personal adornment, it was worn as a necklace or sewn onto clothing.",
+    "howMade": "A whelk or olivella shell was selected for its natural beauty, then a small hole was drilled near the lip for suspension. Some were polished or shaped, others left in their natural form.",
+    "funFacts": [
+      "Olivella shell beads were the 'small change' of the Pacific coast trade.",
+      "Some pendants retained the shell's natural color and iridescence.",
+      "The earliest shell pendants in North America are 10",
+      "000 years old."
+    ],
+    "tribe": "Archaic / Woodland (various)",
+    "timePeriod": "Archaic onward · 8,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-stone-pendant",
+    "name": "Stone Pendant",
+    "family": "Native Beads",
+    "subFamily": "Polished Stone Ornament",
+    "tagline": "A polished stone, hung from the neck — quiet and durable",
+    "emoji": "📿",
+    "accentHex": "#5A6B7A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/0abfc91a-7429-444c-bf1e-afa49b5d82f6.png",
+    "whereFound": [
+      "Eastern",
+      "Midwest"
+    ],
+    "description": "The stone pendant is a polished, oval slate ornament with a drilled suspension hole. Less ornate than a gorget, it was a simple, durable personal adornment worn on a cord.",
+    "howMade": "A slate blank was ground into an oval shape and polished smooth. A hole was drilled near one end with a flint bit. The surface could be plain or incised with simple designs.",
+    "funFacts": [
+      "Slate pendants are common in Woodland period sites.",
+      "Some were incised with clan symbols or geometric patterns.",
+      "The polished surface developed a soft sheen from years of wear."
+    ],
+    "tribe": "Woodland (various)",
+    "timePeriod": "Woodland · 1,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-shell-pin",
+    "name": "Shell Pin",
+    "family": "Native Beads",
+    "subFamily": "Shell Hair Pin",
+    "tagline": "A polished shell pin — the finishing touch for ceremonial dress",
+    "emoji": "📿",
+    "accentHex": "#C8D8C0",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/ca479c65-1806-4db5-b42e-43277bf49e3b.png",
+    "whereFound": [
+      "Southeast",
+      "Mississippian"
+    ],
+    "description": "The shell pin is a long, polished pin made from a conch shell column. Used to fasten clothing or secure hair in ceremonial contexts, it was both functional and decorative.",
+    "howMade": "A conch shell column was cut to length and ground to a smooth, pointed pin. The wide end was polished into a rounded head. The pin was pushed through fabric or hair.",
+    "funFacts": [
+      "Shell pins are often found in elite Mississippian burials.",
+      "Some pins have carved or engraved heads.",
+      "The conch shell column's natural curve gives the pin a slight",
+      "elegant arc."
+    ],
+    "tribe": "Mississippian (various)",
+    "timePeriod": "Mississippian · 1,000–1,500 CE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-shell-gouge",
+    "name": "Shell Gouge",
+    "family": "Shell Tools",
+    "subFamily": "Shell Cutting Tool",
+    "tagline": "When stone was scarce, the shell became the blade",
+    "emoji": "🐚",
+    "accentHex": "#E8DCC8",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/c4270618-bb2a-4707-be40-d90c26042fdd.png",
+    "whereFound": [
+      "Gulf Coastal",
+      "Southeast"
+    ],
+    "description": "Shell gouges are large marine shells modified into cutting and scraping tools. The natural edge of the shell was sharpened, and a beveled working end was ground for precision work on wood, hide, or food.",
+    "howMade": "A large whelk shell was broken to expose the working edge, then ground on an abrasive stone to create a beveled gouge. The natural curvature of the shell provided the handle.",
+    "funFacts": [
+      "Shell tools were common in coastal areas where good knapping stone was scarce.",
+      "Some shell gouges show wear from woodworking — they carved canoe paddles.",
+      "The whelk shell's natural spiral makes an excellent grip."
+    ],
+    "tribe": "Archaic / Coastal (various)",
+    "timePeriod": "Archaic onward · 3,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-shell-fishhook",
+    "name": "Shell Fishhook",
+    "family": "Shell Tools",
+    "subFamily": "Carved Shell Hook",
+    "tagline": "A hook of mother-of-pearl — catching fish with the sea's own shell",
+    "emoji": "🐚",
+    "accentHex": "#6A9AB8",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/7fbd9424-31e3-41ff-9b6c-2d2486e2da38.png",
+    "whereFound": [
+      "Pacific Coast",
+      "Gulf Coastal"
+    ],
+    "description": "The shell fishhook is a carved J-shaped hook made from a large marine shell. The iridescent nacre may have attracted fish. These hooks were used for line fishing in coastal and island communities.",
+    "howMade": "A shell blank was cut and ground into a J-shape with a sharpened barb. The shank was drilled or notched for tying the line. The nacre surface was left natural — its iridescence was a feature.",
+    "funFacts": [
+      "Shell fishhooks are over 20",
+      "000 years old — among the oldest fishing gear.",
+      "Some hooks were carved from pearl shell for extra iridescence.",
+      "The hook's size indicated the target species."
+    ],
+    "tribe": "Coastal / Island (various)",
+    "timePeriod": "Upper Paleolithic onward · 20,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-bone-needle",
+    "name": "Bone Needle",
+    "family": "Bone Tools",
+    "subFamily": "Drilled-Eye Needle",
+    "tagline": "The slender pin that stitched the first clothing",
+    "emoji": "🦴",
+    "accentHex": "#F0E8D0",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/e08c8ecd-d1b0-490d-9f2e-5ef87b532651.png",
+    "whereFound": [
+      "Europe",
+      "North America",
+      "Asia"
+    ],
+    "description": "The bone needle is a slender, polished bone tool with a drilled eye at the top and a sharp point at the bottom. It enabled the sewing of fitted clothing — a technology essential for surviving Ice Age winters.",
+    "howMade": "A long bone splinter was ground and polished into a slender shaft. The eye was drilled with a micro-flint bit. The point was sharpened on a stone. Some needles are under 2 inches long.",
+    "funFacts": [
+      "The oldest bone needles are 40",
+      "000 years old — from Russia.",
+      "Some needles are so fine they could sew modern denim.",
+      "The eye was the hardest part to make — drilling bone required patience."
+    ],
+    "tribe": "Upper Paleolithic / Various (worldwide)",
+    "timePeriod": "Upper Paleolithic onward · 40,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-bone-awl",
+    "name": "Bone Awl",
+    "family": "Bone Tools",
+    "subFamily": "Piercing Tool",
+    "tagline": "The pointed bone that punched holes in leather for lacing",
+    "emoji": "🦴",
+    "accentHex": "#3A4A5A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/93de7900-4895-4a80-afe8-45c13369f320.png",
+    "whereFound": [
+      "North America",
+      "Europe",
+      "Asia"
+    ],
+    "description": "The bone awl is a pointed bone tool made from a deer ulna or splinter, used for piercing leather to create lacing holes. It was essential for assembling clothing, bags, and shelters.",
+    "howMade": "A deer ulna or long bone splinter was ground to a sharp point. The natural bone shape provided the handle. The tip was kept sharp by occasional re-grinding.",
+    "funFacts": [
+      "Bone awls are among the most common tools at habitation sites.",
+      "The ulna of deer was a preferred material — its natural curve fit the hand.",
+      "Some awls show polish from years of punching through hide."
+    ],
+    "tribe": "Paleoindian / Archaic / Various",
+    "timePeriod": "Paleoindian onward · 10,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-shell-effigy",
+    "name": "Shell Effigy Pendant",
+    "family": "Shell Effigies",
+    "subFamily": "Engraved Pendant",
+    "tagline": "A whispered prayer carved on a shell",
+    "emoji": "🐚",
+    "accentHex": "#6D8B7B",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/7f21ba08-649f-4de9-ac9c-b46bfe3163e3.png",
+    "whereFound": [
+      "Southeast",
+      "Mississippian"
+    ],
+    "description": "Shell effigy pendants are engraved marine shells depicting serpents, birds, or spiritual figures. These were ceremonial objects — worn as pendants, placed in graves, or traded as sacred objects across the Mississippian world.",
+    "howMade": "A polished whelk shell was engraved using a flint graver. The design was cut into the shell's surface, sometimes filled with pigment to make the image stand out.",
+    "funFacts": [
+      "Some shell engravings depict the 'weeping eye' motif — a Mississippian symbol.",
+      "Shells were traded from the Gulf Coast as far north as Ohio.",
+      "Engraved shells are often found in elite graves — markers of high status."
+    ],
+    "tribe": "Mississippian / Southeastern Ceremonial Complex",
+    "timePeriod": "Mississippian · 1,000–1,500 CE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-atlatl-weight",
+    "name": "Atlatl Weight",
+    "family": "Ornaments & Weights",
+    "subFamily": "Spear-Thrower Counterweight",
+    "tagline": "The polished stone that balanced the spear-thrower",
+    "emoji": "⚖️",
+    "accentHex": "#3A5A4A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/cfc147dc-917f-41ff-8569-c7f041788cff.png",
+    "whereFound": [
+      "North America"
+    ],
+    "description": "The atlatl weight is a polished, oval or lenticular stone attached to a spear-thrower (atlatl) to improve balance and throwing power. It is one of the most distinctive artifacts of the Archaic period.",
+    "howMade": "Ground and polished from slate or greenstone into an oval or lenticular shape. A groove or hole allowed attachment to the atlatl shaft with sinew.",
+    "funFacts": [
+      "The weight improved throw accuracy by changing the atlatl's balance point.",
+      "Some weights are beautifully polished — possibly ceremonial.",
+      "The atlatl predates the bow by at least 10",
+      "000 years."
+    ],
+    "tribe": "Archaic (various)",
+    "timePeriod": "Archaic · 6,000–1,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-bannerstone",
+    "name": "Bannerstone",
+    "family": "Ornaments & Weights",
+    "subFamily": "Ornamental Atlatl Weight",
+    "tagline": "The butterfly stone — too beautiful to be just a weight",
+    "emoji": "⚖️",
+    "accentHex": "#2A4A6A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/f0c0433a-1432-4b5c-b29e-6d80b2bb22b0.png",
+    "whereFound": [
+      "Eastern",
+      "Midwest",
+      "Southeast"
+    ],
+    "description": "The bannerstone is a polished, symmetrically shaped stone — often butterfly, pick, or saddle-shaped — with a central hole. Mounted on an atlatl, it may have served as both weight and ceremonial emblem.",
+    "howMade": "Ground and polished from slate or banded metamorphic stone. The central hole was drilled with a flint bit and reamer. Some are so thin and symmetrical they are considered works of art.",
+    "funFacts": [
+      "Bannerstones are found in a dazzling variety of shapes.",
+      "Some are made from banded slate with striking natural patterns.",
+      "Their exact function remains debated — weight",
+      "emblem",
+      "or both."
+    ],
+    "tribe": "Archaic (various)",
+    "timePeriod": "Archaic · 4,000–1,000 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-gorget",
+    "name": "Stone Gorget",
+    "family": "Ornaments & Weights",
+    "subFamily": "Polished Stone Pendant",
+    "tagline": "A flat polished stone, worn at the throat — a badge of rank",
+    "emoji": "⚖️",
+    "accentHex": "#6A4A6A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/6680670d-7df7-49cf-8e71-d6fba97e875e.png",
+    "whereFound": [
+      "Eastern",
+      "Midwest"
+    ],
+    "description": "The stone gorget is a polished, flat, elongated stone with two drilled holes, worn around the neck. It may have served as a throat guard, a badge of status, or a ceremonial emblem.",
+    "howMade": "A slate blank was ground into a flat, rectangular or oval form. Two holes were drilled at the top for the suspension cord. The surface was polished smooth, sometimes incised.",
+    "funFacts": [
+      "Gorgets are often found in elite burials — markers of high status.",
+      "The two-hole design suggests they were worn flat against the chest.",
+      "Some gorgets are engraved with clan or ceremonial symbols."
+    ],
+    "tribe": "Woodland / Archaic (various)",
+    "timePeriod": "Archaic–Woodland · 3,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-plummet",
+    "name": "Plumb Bob",
+    "family": "Ornaments & Weights",
+    "subFamily": "Teardrop Weight",
+    "tagline": "A polished teardrop — fishing weight or ceremonial charm?",
+    "emoji": "⚖️",
+    "accentHex": "#4A6A5A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/32070f41-46fd-4263-97c1-72b17e70b0cb.png",
+    "whereFound": [
+      "Southeast",
+      "Gulf Coastal"
+    ],
+    "description": "The plumb bob is a polished, teardrop or top-shaped stone weight with a small drilled hole at the top. Its exact function is debated — it may have been a fishing net weight, a plumb line, or a ceremonial object.",
+    "howMade": "Ground and polished from greenstone or hematite into a teardrop shape. A small hole was drilled at the narrow end for a cord. Some show exceptional polish.",
+    "funFacts": [
+      "Some plummets are made of hematite — heavy and magnetic.",
+      "They may have served as net sinkers for fishing.",
+      "Their polished beauty suggests they were also ornaments."
+    ],
+    "tribe": "Archaic / Woodland (various)",
+    "timePeriod": "Archaic–Woodland · 3,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-ceramic-pipe",
+    "name": "Ceramic Pipe",
+    "family": "Pipes & Medicine Tubes",
+    "subFamily": "Earthenware Pipe",
+    "tagline": "Fired clay and medicine smoke — the everyday ritual",
+    "emoji": "🧵",
+    "accentHex": "#B86A4A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/c7dbd2a7-b921-47fc-b324-09e93392bec6.png",
+    "whereFound": [
+      "Eastern",
+      "Southeast"
+    ],
+    "description": "Ceramic pipes are molded clay smoking pipes with a rounded bowl and tapered stem. More common than stone pipes, they were used for everyday smoking of tobacco and herbal mixtures — both recreationally and medicinally.",
+    "howMade": "Hand-molded from local clay, then fired in an open pit. The warm orange-brown color comes from iron-rich clay fired in an oxidizing atmosphere.",
+    "funFacts": [
+      "Early European trade pipes were excluded — these are Native-made.",
+      "Some ceramic pipes have decorated rims — stamped",
+      "incised",
+      "or punctated.",
+      "The stem was often long enough to rest on the ground while seated."
+    ],
+    "tribe": "Woodland / Mississippian (various)",
+    "timePeriod": "Woodland onward · 500 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-effigy-pipe",
+    "name": "Effigy Pipe",
+    "family": "Pipes & Medicine Tubes",
+    "subFamily": "Animal Effigy Platform Pipe",
+    "tagline": "A pipe shaped like a creature — smoke rising from its back",
+    "emoji": "🪨",
+    "accentHex": "#9B4A3C",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/8b829ded-2cf5-4e6e-95aa-4292301cbd3f.png",
+    "whereFound": [
+      "Midwest",
+      "Southeast"
+    ],
+    "description": "The effigy pipe is a carved stone smoking pipe shaped like an animal — a bird, bear, frog, or human figure. The bowl rises from the creature's back or head. These were ceremonial objects of the highest artistry.",
+    "howMade": "Carved from catlinite (pipestone) or steatite into an animal form. The bowl was drilled into the creature's back, and a hole was bored for the stem. The surface was polished to a warm red sheen.",
+    "funFacts": [
+      "The famous 'Adena Pipe' — a humanoid effigy — is Ohio's state artifact.",
+      "Bird effigies are associated with the Southeastern Ceremonial Complex.",
+      "The animal depicted may have been the owner's clan totem."
+    ],
+    "tribe": "Adena / Mississippian (various)",
+    "timePeriod": "Early Woodland–Mississippian · 1,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-medicine-tube",
+    "name": "Medicine Tube",
+    "family": "Pipes & Medicine Tubes",
+    "subFamily": "Tubular Smoking Implement",
+    "tagline": "A simple tube of stone — the earliest form of the pipe",
+    "emoji": "🪨",
+    "accentHex": "#7A5A4A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/bdca3da8-60d8-43df-99f1-bed15a723098.png",
+    "whereFound": [
+      "Midwest",
+      "Southeast"
+    ],
+    "description": "The medicine tube is a polished, tubular stone smoking implement with a bore running the full length. The simplest pipe form, it was used for ritual smoking of herbal mixtures in ceremony.",
+    "howMade": "Carved from steatite into a cylindrical form. A bore was drilled through the full length with a reed-and-sand drill. One end served as the mouthpiece, the other as the bowl.",
+    "funFacts": [
+      "Tubular pipes are among the earliest smoking implements in North America.",
+      "Some were wrapped in copper sheet — a sign of high status.",
+      "The herbs smoked were not always tobacco — dogbane and red willow were common."
+    ],
+    "tribe": "Adena / Early Woodland",
+    "timePeriod": "Early Woodland · 1,000–200 BCE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-game-disc",
+    "name": "Stone Game Disc",
+    "family": "Game Discs",
+    "subFamily": "Polished Disc",
+    "tagline": "The casino chip of the ancient world",
+    "emoji": "⚪",
+    "accentHex": "#5A5A5A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/8055b243-c83a-48d1-a4e0-b596234af342.png",
+    "whereFound": [
+      "Southeast",
+      "Midwest"
+    ],
+    "description": "Stone game discs are flat, circular, polished stones used in Native games of chance and skill. They were thrown, spun, or rolled in betting games — and some may have been used in a version of 'chunkey', a Mississippian sport.",
+    "howMade": "Ground from dark schist or slate into a perfect disc, then polished with sand and water. Some have a central drilling — possibly for a spindle or string.",
+    "funFacts": [
+      "Chunkey was a Mississippian game where players threw spears at a rolling disc.",
+      "Game discs were often buried with their owners — you took your luck to the afterlife.",
+      "Some discs show wear from rolling — they were used for thousands of throws."
+    ],
+    "tribe": "Mississippian / Southeastern (various)",
+    "timePeriod": "Mississippian · 1,000–1,500 CE",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-pottery-sherd",
+    "name": "Decorated Pottery Sherd",
+    "family": "Pottery",
+    "subFamily": "Incised & Cord-Marked",
+    "tagline": "A fragment of everyday life — fired and preserved for 1,000 years",
+    "emoji": "🏺",
+    "accentHex": "#B8805A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/4ef0dcf4-1e57-4333-afe9-f5ecf055d4f5.png",
+    "whereFound": [
+      "Southeast",
+      "Midwest",
+      "Northeastern"
+    ],
+    "description": "This decorated pottery sherd shows the geometric surface treatment typical of Woodland and Mississippian pottery — incised lines and cord-marked texture pressed into the wet clay before firing. Pottery revolutionized storage and cooking.",
+    "howMade": "Coil-built from local clay mixed with grit or shell temper. The surface was decorated by impressing cord-wrapped paddles or incising geometric patterns. Fired in an open pit to a warm tan color.",
+    "funFacts": [
+      "Pottery appeared in North America around 2",
+      "500 BCE — later than most of the world.",
+      "Cord-marking wasn't just decoration — it helped the pot expand and contract during heating.",
+      "A single pot can be identified to its tribe and time period from its surface treatment."
+    ],
+    "tribe": "Woodland / Mississippian (various)",
+    "timePeriod": "Woodland onward · 1,000 BCE–contact",
+    "addedAtMs": 0
+  },
+  {
+    "id": "art-atlatl-handle",
+    "name": "Wooden Atlatl Hook",
+    "family": "Wooden Artifacts",
+    "subFamily": "Spear-Thrower",
+    "tagline": "The lever that made the spear fly twice as far",
+    "emoji": "🪵",
+    "accentHex": "#7A5A3A",
+    "imageUrl": "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/a4685565-f6f1-4ff4-acd2-cec4de2f9a1b.png",
+    "whereFound": [
+      "Great Basin",
+      "Southwest"
+    ],
+    "description": "The atlatl is a wooden spear-thrower that acts as a lever, doubling the throwing range and force of a dart. Wooden atlatls are rare — they only survive in dry caves and arid environments.",
+    "howMade": "Carved from a single piece of hardwood with a finger grip and a hooked distal end. The hook engaged the nock of a dart, and the thrower's arm leveraged the flexible shaft for added power.",
+    "funFacts": [
+      "The atlatl predates the bow and arrow by thousands of years.",
+      "Some atlatls had stone or shell weights attached — possibly for balance or ceremony.",
+      "Atlatl darts could fly over 100 meters — further than most bows."
+    ],
+    "tribe": "Archaic / Great Basin (various)",
+    "timePeriod": "Paleoindian–Archaic · 10,000 BCE onward",
+    "addedAtMs": 0
+  },
+];
+
+export const artifactFamilies: string[] = ["Arrowheads", "Bone Tools", "Drill Bits", "Flaked Stone Tools", "Game Discs", "Hand Axes & Axe Heads", "Native Beads", "Ornaments & Weights", "Pipes & Medicine Tubes", "Pottery", "Shell Effigies", "Shell Tools", "Spear Points & Dart Tips", "Wooden Artifacts"];
+
+/** Find an artifact by ID. */
+export const findArtifactById = (id: string): Artifact | undefined =>
+  artifacts.find((a) => a.id === id);

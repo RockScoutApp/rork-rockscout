@@ -770,4 +770,88 @@ object PersistenceManager {
         ensureInitialized()
         prefs.edit().clear().apply()
     }
+
+    // --------------------------------------------- signing-conflict backup
+
+    /**
+     * Exports ALL persisted keys as a single JSON string, for cloud backup
+     * before the signing-conflict uninstall flow. The blob includes every
+     * key in SharedPreferences: profile, collection, wishlist, settings,
+     * toggles, trips, journal, captures, etc.
+     *
+     * Used by [ApkInstaller] before launching the system uninstall intent
+     * so the user's data survives the reinstall.
+     */
+    fun exportAllSettingsAsJson(): String {
+        ensureInitialized()
+        val allEntries = mutableMapOf<String, Any?>()
+        for (entry in prefs.all.entries) {
+            allEntries[entry.key] = entry.value
+        }
+        return json.encodeToString(allEntries)
+    }
+
+    /**
+     * Restores ALL persisted keys from a JSON blob previously created by
+     * [exportAllSettingsAsJson]. Writes every key back into SharedPreferences.
+     *
+     * Called on sign-in when a cloud backup exists and local data is empty
+     * (fresh install after uninstall). If local data already exists, the
+     * restore is skipped — the user already has their data.
+     *
+     * @return true if any keys were restored, false if the blob was empty/invalid.
+     */
+    fun restoreAllSettingsFromJson(jsonBlob: String): Boolean {
+        ensureInitialized()
+        return runCatching {
+            @Suppress("UNCHECKED_CAST")
+            val map = json.decodeFromString<Map<String, Any?>>(jsonBlob)
+            if (map.isEmpty()) return false
+            val editor = prefs.edit()
+            for ((key, value) in map) {
+                when (value) {
+                    is Boolean -> editor.putBoolean(key, value)
+                    is Int -> editor.putInt(key, value)
+                    is Long -> editor.putLong(key, value)
+                    is Float -> editor.putFloat(key, value)
+                    is String -> editor.putString(key, value)
+                    is Number -> {
+                        // kotlinx.serialization stores numbers as Long or Double
+                        val asLong = value.toLong()
+                        val asInt = value.toInt()
+                        if (asLong == asInt.toLong()) {
+                            editor.putInt(key, asInt)
+                        } else {
+                            editor.putLong(key, asLong)
+                        }
+                    }
+                    null -> editor.remove(key)
+                    else -> editor.putString(key, value.toString())
+                }
+            }
+            editor.apply()
+            Log.d(TAG, "Restored ${map.size} settings keys from cloud backup")
+            true
+        }.onFailure { Log.w(TAG, "Failed to restore settings from JSON: ${it.message}") }
+            .getOrDefault(false)
+    }
+
+    /**
+     * Returns true when the local SharedPreferences appear to be empty (fresh
+     * install). Used to decide whether to restore a cloud backup on sign-in.
+     */
+    fun isLocalDataEmpty(): Boolean {
+        ensureInitialized()
+        return prefs.all.isEmpty()
+    }
+
+    /**
+     * Reloads all persisted data from SharedPreferences into [AppRepository].
+     * Called after a cloud settings restore so the in-memory repository
+     * reflects the restored data without requiring an app restart.
+     */
+    fun reloadIntoRepository() {
+        ensureInitialized()
+        loadInto(AppRepository.instance)
+    }
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   Home,
@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import IosBetaBanner from "@/components/app/IosBetaBanner";
 import KeyboardHelpOverlay from "@/components/app/KeyboardHelpOverlay";
+import FieldCameraDialog from "@/components/app/FieldCameraDialog";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -37,8 +38,16 @@ export default function AppLayout() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [helpOpen, setHelpOpen] = useState(false);
+  const [fieldCameraOpen, setFieldCameraOpen] = useState(false);
 
   useKeyboardShortcuts({ onToggleHelp: () => setHelpOpen((v) => !v) });
+
+  // Listen for the "open-field-camera" custom event dispatched by the Home tile
+  useEffect(() => {
+    const handler = () => setFieldCameraOpen(true);
+    window.addEventListener("open-field-camera", handler);
+    return () => window.removeEventListener("open-field-camera", handler);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -137,6 +146,10 @@ export default function AppLayout() {
       </nav>
 
       <KeyboardHelpOverlay open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <FieldCameraDialog
+        open={fieldCameraOpen}
+        onDismiss={() => setFieldCameraOpen(false)}
+      />
     </div>
   );
 }

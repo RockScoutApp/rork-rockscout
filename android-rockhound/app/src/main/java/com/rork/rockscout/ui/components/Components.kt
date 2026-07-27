@@ -1670,6 +1670,32 @@ fun SpecimenListItem(
                                 style = MaterialTheme.typography.displaySmall,
                             )
                         }
+                        // NEW badge — shown for specimens added to the catalog within the last 7 days.
+                        // Matches the ArtifactListItem badge style exactly (gold gradient, glowingBorder,
+                        // ExtraBold 9sp "NEW" text, TopStart alignment, 4dp padding).
+                        if (specimen.isNew()) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopStart)
+                                    .padding(4.dp)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            listOf(Color(0xFFFFD54F), Color(0xFFFFA000))
+                                        )
+                                    )
+                                    .glowingBorder(1.dp, Color(0xFFFFD54F).copy(alpha = 0.9f), RoundedCornerShape(6.dp))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                            ) {
+                                Text(
+                                    text = "NEW",
+                                    color = Color(0xFF1A1306),
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 9.sp,
+                                    letterSpacing = 0.5.sp,
+                                )
+                            }
+                        }
                     }
 
                     // Right column: 5 evenly-spaced rows, each weight(1f),

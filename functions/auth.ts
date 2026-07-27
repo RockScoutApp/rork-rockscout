@@ -50,6 +50,9 @@ const RATE_LIMITS: Record<string, RateLimitConfig> = {
   "/stripe/checkout": { rpm: 10, burst: 3 },
   "/push/subscribe": { rpm: 10, burst: 3 },
   "/push/send": { rpm: 30, burst: 10 },
+  "/museums": { rpm: 10, burst: 3 },
+  "/settings/backup": { rpm: 5, burst: 2 },
+  "/settings/restore": { rpm: 10, burst: 3 },
 };
 
 /** In-memory rate-limit state (per-isolate fallback when KV is absent). */

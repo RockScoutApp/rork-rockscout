@@ -139,6 +139,8 @@ import com.rork.rockscout.ui.components.TagChip
 import com.rork.rockscout.ui.components.ThankYouCelebration
 import com.rork.rockscout.ui.components.rockClassColor
 import com.rork.rockscout.ui.components.SculptedButton
+import com.rork.rockscout.ui.components.MuseumFinderSheet
+import com.rork.rockscout.ui.components.ReplyEmailDialog
 import com.rork.rockscout.ui.components.SculptedOutlinedButton
 import com.rork.rockscout.ui.components.SculptedTextButton
 import com.rork.rockscout.ui.components.sculpted
@@ -230,6 +232,10 @@ fun IdentifyScreen(navController: NavController) {
 
     // Celebration overlay — shown after a successful donation
     var celebrationLevel by remember { mutableStateOf<CelebrationLevel?>(null) }
+
+    // Ask an Expert — museum finder + reply email dialog (uncertainty card)
+    var showMuseumFinder by remember { mutableStateOf(false) }
+    var emailTargetMuseum by remember { mutableStateOf<com.rork.rockscout.data.Museum?>(null) }
 
     // Rewarded video flow — 2 videos = 1 bonus ID token for free users
     var showRewardedVideo by remember { mutableStateOf(false) }
@@ -1172,6 +1178,17 @@ fun IdentifyScreen(navController: NavController) {
                                         color = DarkTextLow,
                                         lineHeight = 18.sp,
                                     )
+                                    Spacer(Modifier.height(10.dp))
+                                    SculptedButton(
+                                        text = "Ask an Expert",
+                                        onClick = { showMuseumFinder = true },
+                                        accent = Warning,
+                                        containerColor = Warning,
+                                        textColor = Color.Black,
+                                        icon = Icons.Filled.HelpOutline,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+                                    )
                                 }
                             }
                         }
@@ -1290,6 +1307,32 @@ fun IdentifyScreen(navController: NavController) {
             ThankYouCelebration(
                 level = level,
                 onDismiss = { celebrationLevel = null },
+            )
+        }
+
+        // Ask an Expert — museum finder bottom sheet (shown from uncertainty card)
+        if (showMuseumFinder) {
+            MuseumFinderSheet(
+                onDismiss = { showMuseumFinder = false },
+                onEmailExpert = { museum ->
+                    emailTargetMuseum = museum
+                    showMuseumFinder = false
+                },
+                artifactMatchNames = artifactMatches.map { it.first.name },
+                artifactConfidences = artifactMatches.map { it.second.confidence },
+                aiSummary = aiSummary,
+            )
+        }
+
+        // Reply email dialog — shown after user picks a museum to email
+        emailTargetMuseum?.let { museum ->
+            ReplyEmailDialog(
+                museum = museum,
+                onDismiss = { emailTargetMuseum = null },
+                artifactMatchNames = artifactMatches.map { it.first.name },
+                artifactConfidences = artifactMatches.map { it.second.confidence },
+                aiSummary = aiSummary,
+                capturedBitmap = capturedBitmap,
             )
         }
 

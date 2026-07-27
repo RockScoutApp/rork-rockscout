@@ -278,6 +278,25 @@ class AuthRepository private constructor() {
                 saveSession(user.id, user.email)
                 // Link RevenueCat to the user's account so purchases carry over.
                 scope.launch { PurchaseManager.instance.linkRevenueCatUser(user.id) }
+                // Cloud-restore settings if this is a fresh install (e.g. after a
+                // signing-conflict uninstall + reinstall). If local data already
+                // exists, the restore is skipped — the user already has their data.
+                if (PersistenceManager.isLocalDataEmpty()) {
+                    scope.launch {
+                        SettingsBackupApi.restoreSettings(user.id)
+                            .onSuccess { settingsJson ->
+                                if (settingsJson != null) {
+                                    val restored = PersistenceManager.restoreAllSettingsFromJson(settingsJson)
+                                    if (restored) {
+                                        Log.d("AuthRepository", "Restored settings from cloud backup for user ${user.id}")
+                                        // Reload the restored data into AppRepository
+                                        PersistenceManager.reloadIntoRepository()
+                                    }
+                                }
+                            }
+                            .onFailure { Log.w("AuthRepository", "Settings restore failed: ${it.message}") }
+                    }
+                }
             }
             Unit
         }.onFailure {

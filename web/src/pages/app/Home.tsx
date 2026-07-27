@@ -19,6 +19,8 @@ import {
   Bell,
   Gift,
   Zap,
+  Image as ImageIcon,
+  Bone,
 } from "lucide-react";
 
 interface Tile {
@@ -27,7 +29,8 @@ interface Tile {
   label: string;
   description: string;
   featured?: boolean;
-  dim?: boolean;
+  /** When set, clicking the tile opens this callback instead of navigating. */
+  onClick?: () => void;
 }
 
 const TILES: Tile[] = [
@@ -58,10 +61,36 @@ const TILES: Tile[] = [
     description: "Your identified and saved specimens.",
   },
   {
-    to: "/app/collection",
+    to: "/app/wishlist",
     icon: Heart,
     label: "Wishlist",
     description: "Specimens you're hunting for next.",
+  },
+  {
+    to: "",
+    icon: Camera,
+    label: "Field Camera",
+    description: "Capture and save field photos to any destination.",
+    onClick: () =>
+      window.dispatchEvent(new CustomEvent("open-field-camera")),
+  },
+  {
+    to: "/app/captures",
+    icon: MapPin,
+    label: "Field Captures",
+    description: "Your field camera photos and capture cards.",
+  },
+  {
+    to: "/app/saved-images",
+    icon: ImageIcon,
+    label: "My Saved Images",
+    description: "Your saved photo gallery.",
+  },
+  {
+    to: "/app/artifacts",
+    icon: Bone,
+    label: "Artifacts",
+    description: "Arrowheads, hand axes, beads, and stone tools.",
   },
   {
     to: "/app/favorites",
@@ -100,18 +129,16 @@ const TILES: Tile[] = [
     description: "Connect and message fellow rockhounds.",
   },
   {
-    to: "/app/collection",
+    to: "/app/aurora",
     icon: Sparkles,
     label: "Aurora Tracker",
     description: "Aurora forecasts and visibility maps.",
-    dim: true,
   },
   {
-    to: "/app/collection",
+    to: "/app/stars",
     icon: Telescope,
     label: "Stars & Constellations",
     description: "Night sky guide for field trips.",
-    dim: true,
   },
   {
     to: "/app/gear",
@@ -175,12 +202,15 @@ export default function Home() {
         {TILES.map((tile, i) => (
           <button
             key={tile.label}
-            onClick={() => navigate(tile.to)}
+            onClick={() => {
+              if (tile.onClick) tile.onClick();
+              else navigate(tile.to);
+            }}
             className={`group flex flex-col items-start gap-3 rounded-xl border border-border bg-card p-5 text-left transition-all hover:border-primary/40 hover:bg-card/80 ${
               tile.featured
                 ? "citrine-glow sm:col-span-2 lg:col-span-3"
                 : ""
-            } ${tile.dim ? "opacity-50" : ""}`}
+            }`}
             style={{ animationDelay: `${i * 30}ms` }}
           >
             <div
@@ -195,11 +225,6 @@ export default function Home() {
             <div>
               <h3 className="font-display text-base font-semibold text-foreground">
                 {tile.label}
-                {tile.dim && (
-                  <span className="ml-2 text-xs font-normal text-muted-foreground">
-                    soon
-                  </span>
-                )}
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 {tile.description}

@@ -36,7 +36,19 @@ data class Specimen(
     val geologicalPeriod: String? = null,  // fossil-only: which period it lived
     val age: String? = null,               // fossil-only: age in millions of years
     val imageUrls: List<String> = emptyList(), // real specimen photographs
-)
+    val catalogAddedAtMs: Long = 0L,       // epoch ms when added to catalog; 0 = legacy (no badge)
+) {
+    /** True when this entry was added to the catalog within the last 7 days. */
+    fun isNew(): Boolean {
+        if (catalogAddedAtMs == 0L) return false
+        val ageMs = System.currentTimeMillis() - catalogAddedAtMs
+        return ageMs in 0..(SEVEN_DAYS_MS)
+    }
+
+    private companion object {
+        const val SEVEN_DAYS_MS = 7L * 24 * 60 * 60 * 1000
+    }
+}
 
 /** A dig site, mine, quarry, or public collecting area. */
 data class DigLocation(
