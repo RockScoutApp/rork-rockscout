@@ -2,7 +2,7 @@
 // Caches the app shell so the site still loads with no connection.
 // Network-first for navigation requests (fresh content when online),
 // cache-first for static assets.
-const CACHE_NAME = "rockscout-v4";
+const CACHE_NAME = "rockscout-v5";
 const TILE_CACHE = "rockscout-tiles-v1";
 const SHELL_ASSETS = [
   "/",
@@ -36,21 +36,32 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("push", (event) => {
-  let payload: { title?: string; body?: string; url?: string } = {};
+  var payload = { title: "RockScout", body: "", url: "" };
   try {
-    payload = event.data ? (event.data.json() as typeof payload) : {};
-  } catch {
-    payload = { title: "RockScout", body: event.data ? event.data.text() : "" };
+    if (event.data) {
+      var parsed = event.data.json();
+      if (parsed && typeof parsed === "object") {
+        if (parsed.title) payload.title = parsed.title;
+        if (parsed.body) payload.body = parsed.body;
+        if (parsed.url) payload.url = parsed.url;
+      }
+    }
+  } catch (e) {
+    try {
+      if (event.data) payload.body = event.data.text();
+    } catch (e2) {
+      /* ignore */
+    }
   }
-  const title = payload.title || "RockScout";
-  const body = payload.body || "";
-  const url = payload.url || "/app/notifications";
+  var title = payload.title || "RockScout";
+  var body = payload.body || "";
+  var url = payload.url || "/app/notifications";
   event.waitUntil(
     self.registration.showNotification(title, {
-      body,
+      body: body,
       icon: "/pwa-192.png",
       badge: "/pwa-192.png",
-      data: { url },
+      data: { url: url },
       tag: "rockscout-notification",
       renotify: true,
     }),
@@ -59,14 +70,15 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const targetUrl = (event.notification.data && event.notification.data.url) || "/app/notifications";
+  var targetUrl = (event.notification.data && event.notification.data.url) || "/app/notifications";
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
       // Focus an existing open tab if one matches the origin.
-      for (const client of clientList) {
+      for (var i = 0; i < clientList.length; i++) {
+        var client = clientList[i];
         if ("focus" in client) {
-          (client as WindowClient).focus();
-          (client as WindowClient).navigate?.(targetUrl);
+          client.focus();
+          if (client.navigate) client.navigate(targetUrl);
           return;
         }
       }
@@ -78,10 +90,10 @@ self.addEventListener("notificationclick", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  const { request } = event;
+  var request = event.request;
   if (request.method !== "GET") return;
 
-  const url = new URL(request.url);
+  var url = new URL(request.url);
 
   // Map tiles: cache-first into a separate cache, with stale-while-revalidate.
   if (TILE_HOSTS.includes(url.hostname)) {
