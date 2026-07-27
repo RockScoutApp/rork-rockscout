@@ -1,5 +1,6 @@
 package com.rork.rockscout.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,118 +11,92 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.rork.rockscout.data.ArtifactSpecimens
 import com.rork.rockscout.ui.components.ArtifactListItem
 import com.rork.rockscout.ui.components.RockBackground
-import com.rork.rockscout.ui.components.SculptedIconButton
+import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.glowingBorder
-import com.rork.rockscout.ui.components.sculpted
 import com.rork.rockscout.ui.navigation.Routes
-import com.rork.rockscout.ui.theme.Citrine
+import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.TextHigh
 import com.rork.rockscout.ui.theme.TextMid
 
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun ArtifactsScreen(navController: NavController) {
     val accent = Color(0xFFB87333) // warm clay/ochre artifact accent
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Artifacts",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onBackground,
+    // Explicitly wire the system back button to the NavController so the
+    // hardware/gesture back reliably pops the back stack instead of closing
+    // the app when the stack is non-empty.
+    BackHandler(enabled = true) { navController.popBackStack() }
+
+    ScreenScaffold(
+        title = "Artifacts",
+        onBack = { navController.popBackStack() },
+        background = { RockBackground(it) },
+    ) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 20.dp, end = 20.dp,
+                top = 8.dp,
+                bottom = 40.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            // Hero header
+            item {
+                ArtifactsHero(accent = accent)
+                Spacer(Modifier.height(8.dp))
+            }
+
+            // Render each section
+            ArtifactSpecimens.sections.forEach { section ->
+                item(key = "header-${section.title}") {
+                    Spacer(Modifier.height(12.dp))
+                    ArtifactSectionHeader(
+                        title = section.title,
+                        subtitle = section.subtitle,
+                        accent = accent,
                     )
-                },
-                navigationIcon = {
-                    SculptedIconButton(
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        onClick = { navController.popBackStack() },
-                        accent = Citrine,
-                        iconTint = Citrine,
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                ),
-            )
-        },
-        containerColor = Color.Transparent,
-    ) { innerPadding ->
-        RockBackground {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
-                contentPadding = PaddingValues(
-                    start = 20.dp, end = 20.dp,
-                    top = innerPadding.calculateTopPadding() + 8.dp,
-                    bottom = 40.dp,
-                ),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-            ) {
-                // Hero header
-                item {
-                    ArtifactsHero(accent = accent)
                     Spacer(Modifier.height(8.dp))
                 }
-
-                // Render each section
-                ArtifactSpecimens.sections.forEach { section ->
-                    item(key = "header-${section.title}") {
-                        Spacer(Modifier.height(12.dp))
-                        ArtifactSectionHeader(
-                            title = section.title,
-                            subtitle = section.subtitle,
-                            accent = accent,
-                        )
-                        Spacer(Modifier.height(8.dp))
-                    }
-                    item(key = "header-label-${section.title}") {
-                        Text(
-                            text = "${section.artifacts.size} ${if (section.artifacts.size == 1) "entry" else "entries"}",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = TextMid,
-                            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
-                        )
-                    }
-                    items(section.artifacts.size, key = { section.artifacts[it].id }) { idx ->
-                        val artifact = section.artifacts[idx]
-                        ArtifactListItem(
-                            artifact = artifact,
-                            accent = Color(artifact.accentHex),
-                            onClick = {
-                                navController.navigate(Routes.artifactDetail(artifact.id))
-                            },
-                        )
-                    }
+                item(key = "header-label-${section.title}") {
+                    Text(
+                        text = "${section.artifacts.size} ${if (section.artifacts.size == 1) "entry" else "entries"}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = TextMid,
+                        modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
+                    )
+                }
+                items(section.artifacts.size, key = { section.artifacts[it].id }) { idx ->
+                    val artifact = section.artifacts[idx]
+                    ArtifactListItem(
+                        artifact = artifact,
+                        accent = Color(artifact.accentHex),
+                        onClick = {
+                            navController.navigate(Routes.artifactDetail(artifact.id))
+                        },
+                    )
                 }
             }
         }
