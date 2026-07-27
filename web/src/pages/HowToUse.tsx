@@ -68,7 +68,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
       `Otherwise, the app runs a web search cross-check for maximum accuracy.`,
       `If the AI needs more information to narrow down the ID, it asks you a few clarification questions (e.g. hardness, streak color, or environment) — answer them and the final result re-ranks the candidates for higher accuracy.`,
       `If your rock has multiple minerals, the AI auto-detects the assemblage and breaks down each component.`,
-      `Results show the specimen name, confidence level, properties, and where to find more. A "verified against database images" badge appears when the visual reference step was used.`,
+      `Results show the specimen name, confidence level, properties, and where to find more — the AI has already visually compared your photo against the database reference images to reach that ranking.`,
       `Free users get a 7-day trial with 5 tokens. After that, tokens or a Premium subscription are needed.`,
     ],
   },
