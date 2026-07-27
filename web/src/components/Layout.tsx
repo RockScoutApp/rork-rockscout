@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { SITE } from "@/content/legal";
 import { InstallAppButton } from "@/components/InstallAppButton";
+import { AuthPill } from "@/components/AuthPill";
 
 type NavLink = { to: string; label: string };
 
@@ -59,12 +60,7 @@ export const Navbar = () => {
           ))}
         </div>
         <div className="flex items-center gap-2">
-          <span
-            aria-disabled
-            className="hidden cursor-default items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary/80 sm:inline-flex sm:px-4 sm:py-2 sm:text-sm"
-          >
-            Coming soon to Android
-          </span>
+          <AuthPill />
           {/* Mobile hamburger */}
           <button
             type="button"
@@ -93,13 +89,9 @@ export const Navbar = () => {
                   {l.label}
                 </Link>
               ))}
-              <span
-                aria-disabled
-                onClick={() => setMenuOpen(false)}
-                className="mt-2 inline-flex cursor-default items-center justify-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-3 text-sm font-semibold text-primary/80"
-              >
-                Coming soon to Android
-              </span>
+              <div className="mt-2 flex justify-center">
+                <AuthPill />
+              </div>
             </div>
           </div>
         </div>
