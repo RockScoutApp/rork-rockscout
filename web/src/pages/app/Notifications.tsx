@@ -16,6 +16,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { toast } from "sonner";
 
 interface Notification {
@@ -53,6 +54,7 @@ export default function Notifications() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showSettings, setShowSettings] = useState(false);
+  const push = usePushNotifications();
 
   const { data: notifications, isLoading } = useQuery<Notification[]>({
     queryKey: ["notifications", user?.id],
@@ -144,31 +146,67 @@ export default function Notifications() {
         </div>
       </div>
 
-      {/* Settings panel */}
+      {/* Push opt-in + settings panel */
       {showSettings && (
-        <div className="space-y-3 rounded-xl border border-border bg-card p-4">
-          <h3 className="font-display text-sm font-semibold text-foreground">
-            Notification categories
-          </h3>
-          {[
-            { id: "social", label: "Social — friends, messages, posts" },
-            { id: "trade", label: "Trade board — interest on your listings" },
-            { id: "engagement", label: "Engagement — likes and comments" },
-          ].map((cat) => (
-            <div
-              key={cat.id}
-              className="flex items-center justify-between gap-3"
-            >
-              <Label htmlFor={`notif-${cat.id}`} className="text-sm">
-                {cat.label}
-              </Label>
-              <Switch id={`notif-${cat.id}`} defaultChecked />
+        <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1">
+              <h3 className="font-display text-sm font-semibold text-foreground">
+                Push notifications
+              </h3>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {push.supported
+                  ? push.subscribed
+                    ? "Enabled on this device."
+                    : "Get lock-screen alerts even when the app is closed."
+                  : "Not supported on this browser."}
+              </p>
             </div>
-          ))}
-          <p className="text-xs text-muted-foreground">
-            System push notifications can be enabled from your browser or device
-            settings.
-          </p>
+            {push.supported && (
+              <Switch
+                checked={push.subscribed}
+                disabled={push.loading}
+                onCheckedChange={(checked) => {
+                  if (checked) void push.subscribe();
+                  else void push.unsubscribe();
+                }}
+              />
+            )}
+          </div>
+
+          {push.supported && push.permission === "denied" && !push.subscribed && (
+            <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
+              Notification permission was blocked. Enable it in your browser site
+              settings to allow push.
+            </p>
+          )}
+
+          {push.supported && push.subscribed && (
+            <div className="space-y-2 border-t border-border pt-3">
+              <p className="text-xs font-medium text-muted-foreground">
+                Categories
+              </p>
+              {push.categories.map((cat) => (
+                <div
+                  key={cat.id}
+                  className="flex items-center justify-between gap-3"
+                >
+                  <Label htmlFor={`push-${cat.id}`} className="text-sm">
+                    {cat.label}
+                  </Label>
+                  <Switch
+                    id={`push-${cat.id}`}
+                    checked={push.selectedCategories.has(cat.id)}
+                    onCheckedChange={() => push.toggleCategory(cat.id)}
+                  />
+                </div>
+              ))}
+              <p className="pt-1 text-xs text-muted-foreground">
+                Category changes apply to the next notification. To update this
+                device's categories now, disable and re-enable push.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
