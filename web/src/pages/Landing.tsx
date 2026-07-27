@@ -8,7 +8,6 @@ import {
   ShieldCheck,
   ChevronRight,
   Download,
-  Apple,
   Monitor,
   Smartphone,
   Check,
@@ -310,12 +309,9 @@ const Hero = () => {
             aria-disabled
             className="inline-flex cursor-default items-center justify-center gap-2 rounded-2xl border border-border bg-card/50 px-5 py-3.5 text-sm font-medium text-muted-foreground"
           >
-            <Smartphone className="h-4 w-4" /> Coming soon to iOS (Beta)
+            <Smartphone className="h-4 w-4" /> Native iOS app coming soon to the App Store
           </span>
         </div>
-        <p className="mt-3 text-xs text-muted-foreground">
-          <Apple className="mr-1 inline h-3 w-3" />Native iOS app coming soon to the App Store
-        </p>
 
         <dl className="mt-8 grid max-w-md grid-cols-2 gap-x-4 gap-y-4 sm:mt-12 sm:gap-x-6 sm:gap-y-5">
           {STATS.map((s) => (
@@ -688,7 +684,7 @@ type FieldStory =
 const FIELD_STORIES: FieldStory[] = [
   {
     type: "gear",
-    span: "md:col-span-2 md:row-span-2",
+    span: "md:col-span-2 md:row-span-3",
   },
   {
     type: "story",
@@ -896,7 +892,7 @@ const CTA = () => (
             aria-disabled
             className="inline-flex cursor-default items-center justify-center gap-2 rounded-2xl border border-border bg-card/60 px-6 py-4 text-sm font-medium text-muted-foreground"
           >
-            <Smartphone className="h-4 w-4" /> Coming soon to iOS (Beta)
+            <Smartphone className="h-4 w-4" /> Native iOS app coming soon to the App Store
           </span>
           <Link
             to="/support"
@@ -905,9 +901,6 @@ const CTA = () => (
             Questions? Visit Support <ChevronRight className="h-4 w-4" />
           </Link>
         </div>
-        <p className="mx-auto mt-4 text-center text-xs text-muted-foreground">
-          <Apple className="mr-1 inline h-3 w-3" />Native iOS app coming soon to the App Store
-        </p>
         <ul className="mx-auto mt-9 flex max-w-md flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
           <li className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-primary" /> Free tier: limited use, but still plenty of useful resources</li>
           <li className="inline-flex items-center gap-1.5"><BadgeCheck className="h-3.5 w-3.5 text-primary" /> Premium: app fully unlocked with Unlimited IDs</li>
