@@ -1685,10 +1685,16 @@ private fun MatchRow(
             Spacer(Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Name is weighted + ellipsised so a long specimen name can
+                    // never push the confidence pill or the top-match sparkle off
+                    // the right edge of the row.
                     Text(
                         spec.name,
                         style = MaterialTheme.typography.titleLarge,
                         color = Color.White,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
                     )
                     if (isTop) {
                         Spacer(Modifier.width(6.dp))
