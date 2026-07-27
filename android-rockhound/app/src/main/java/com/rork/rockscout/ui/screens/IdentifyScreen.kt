@@ -119,6 +119,8 @@ import com.rork.rockscout.data.IdentifyResponse
 import com.rork.rockscout.data.IapConfig
 import com.rork.rockscout.data.PurchaseManager
 import com.rork.rockscout.data.PurchaseResult
+import com.rork.rockscout.data.Artifact
+import com.rork.rockscout.data.ArtifactSpecimens
 import com.rork.rockscout.data.SeedData
 import com.rork.rockscout.data.Specimen
 import com.rork.rockscout.data.GearGuide
@@ -201,6 +203,13 @@ fun IdentifyScreen(navController: NavController) {
     var capturedUri by remember { mutableStateOf<Uri?>(null) }
     var capturedBase64 by remember { mutableStateOf("") }
     var matches by remember { mutableStateOf<List<Pair<Specimen, IdentifyMatch>>>(emptyList()) }
+    // Parallel artifact match list — populated only when the user confirmed
+    // an artifact and the backend ran in "artifacts" search mode. Kept fully
+    // separate from the specimen `matches` list so the specimen flow is
+    // untouched. When `artifactMatches` is non-empty, the results screen
+    // renders ArtifactMatchRow instead of MatchRow and shows the "Identify
+    // the rock material too" secondary button.
+    var artifactMatches by remember { mutableStateOf<List<Pair<Artifact, IdentifyMatch>>>(emptyList()) }
     var aiSummary by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
     var clarificationQuestions by remember { mutableStateOf<List<ClarificationQuestion>>(emptyList()) }
@@ -251,6 +260,7 @@ fun IdentifyScreen(navController: NavController) {
         capturedUri = null
         capturedBase64 = ""
         matches = emptyList()
+        artifactMatches = emptyList()
         aiSummary = ""
         errorMessage = ""
         moderationReason = ""
@@ -314,6 +324,52 @@ fun IdentifyScreen(navController: NavController) {
                     accessManager.refundIdentify(consumedCredit)
                     errorMessage = response.error
                     state = ScanState.ERROR
+                    return@launch
+                }
+
+                // ── Artifact vs specimen match resolution ──────────────────────
+                // In artifact search mode, matches come back with artifact IDs
+                // ("art-...") that exist in ArtifactSpecimens, not SeedData. We
+                // resolve them into a parallel `artifactMatches` list and render
+                // ArtifactMatchRow instead of MatchRow. The specimen flow is
+                // untouched.
+                val isArtifactSearch = pendingSearchMode == "artifacts"
+                if (isArtifactSearch) {
+                    val artifactMap = ArtifactSpecimens.allArtifacts.associateBy { it.id }
+                    val matchedArtifacts = response.matches.mapNotNull { match ->
+                        artifactMap[match.id]?.let { it to match }
+                    }
+                    if (matchedArtifacts.isEmpty()) {
+                        // Refund — no valid artifact matches returned.
+                        accessManager.refundIdentify(consumedCredit)
+                        errorMessage = "No matching artifacts found. Try a clearer photo showing the artifact's shape and flaking pattern."
+                        state = ScanState.ERROR
+                        return@launch
+                    }
+                    // Save top artifact match as field capture
+                    val topArtifact = matchedArtifacts.first()
+                    val imageUriStr = capturedUri?.toString() ?: ""
+                    AppRepository.instance.addCapture(
+                        CapturedPhoto(
+                            id = UUID.randomUUID().toString(),
+                            specimenId = topArtifact.first.id,
+                            specimenEmoji = topArtifact.first.emoji,
+                            confidence = topArtifact.second.confidence,
+                            timestamp = System.currentTimeMillis(),
+                            imageUris = if (imageUriStr.isNotBlank()) listOf(imageUriStr) else emptyList(),
+                        )
+                    )
+                    AchievementsRepository.award(XpSource.IDENTIFY, familyTag = topArtifact.first.id)
+                    AchievementsRepository.award(XpSource.CAPTURE)
+
+                    // Artifact mode skips clarification (the backend doesn't
+                    // generate clarification questions for artifacts).
+                    artifactMatches = matchedArtifacts
+                    matches = emptyList()
+                    aiSummary = response.summary
+                    webReferences = response.webReferences
+                    assemblageResult = response.assemblage
+                    state = ScanState.RESULTS
                     return@launch
                 }
 
@@ -1079,6 +1135,75 @@ fun IdentifyScreen(navController: NavController) {
                 }
             }
 
+            // ── Artifact match results ──────────────────────────────────────
+            // Rendered when the user confirmed an artifact and the backend ran
+            // in "artifacts" search mode. Fully separate from the specimen
+            // results block below — the two are mutually exclusive.
+            if (state == ScanState.RESULTS && artifactMatches.isNotEmpty()) {
+                item {
+                    Text(
+                        "BEST ARTIFACT MATCHES",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = TextMid,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
+                itemsIndexed(artifactMatches) { index, (artifact, match) ->
+                    AnimatedVisibility(visible = true, enter = fadeIn()) {
+                        ArtifactMatchRow(
+                            artifact = artifact,
+                            match = match,
+                            isTop = index == 0,
+                            onClick = { navController.navigate(Routes.artifactDetail(artifact.id)) },
+                            onPhotoClick = { urls, page ->
+                                viewerUrls = urls
+                                viewerInitialPage = page
+                            },
+                        )
+                    }
+                }
+                // Secondary pass — identify the rock material the artifact is
+                // made from (chert, obsidian, flint, etc.). Reuses the captured
+                // photo and runs the normal rock-ID flow without consuming a
+                // second credit from the user.
+                item {
+                    Spacer(Modifier.height(4.dp))
+                    OutlinedButton(
+                        onClick = {
+                            // Run a rock-material pass on the same photo.
+                            // Reset artifact matches and run the normal flow.
+                            artifactMatches = emptyList()
+                            startIdentification(searchMode = "rocks")
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = Citrine,
+                        ),
+                    ) {
+                        Icon(
+                            Icons.Filled.Diamond,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "Identify the rock material too",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+                item {
+                    GearLinksCard(
+                        sectionTitle = "Tools to confirm this ID at home",
+                        items = GearGuide.confirmIdGear,
+                        accent = Citrine,
+                    )
+                }
+            }
+
             // Match results
             if (state == ScanState.RESULTS && matches.isNotEmpty()) {
                 item {
@@ -1747,6 +1872,127 @@ private fun MatchRow(
                         style = MaterialTheme.typography.bodySmall,
                         minLines = 2,
                     )
+                }
+                Spacer(Modifier.height(6.dp))
+                ConfidenceBar(match.confidence, accent)
+            }
+            Spacer(Modifier.width(10.dp))
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    "${match.confidence}%",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (isTop) Success else DarkTextMid,
+                )
+                Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = DarkTextMid)
+            }
+        }
+    }
+}
+
+/** Artifact match row — visually parallel to [MatchRow] but reads from the
+ *  [Artifact] model. Renders the artifact image, name, family/sub-family,
+ *  confidence pill, reasoning, and confidence bar. Tapping navigates to the
+ *  artifact detail screen.
+ *
+ *  Kept self-contained so the specimen [MatchRow] and its call sites are
+ *  completely untouched. */
+@Composable
+private fun ArtifactMatchRow(
+    artifact: Artifact,
+    match: IdentifyMatch,
+    isTop: Boolean,
+    onClick: () -> Unit,
+    onPhotoClick: (List<String>, Int) -> Unit = { _, _ -> },
+) {
+    val accent = Color(artifact.accentHex)
+    val imageUrls = listOf(artifact.imageUrl)
+
+    DarkCard(
+        accent = accent,
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        contentPadding = PaddingValues(14.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Artifact image
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(
+                        Brush.radialGradient(listOf(accent.copy(alpha = 0.32f), Color(0xFF1A1812)))
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                AsyncImage(
+                    model = artifact.imageUrl,
+                    contentDescription = "Image of ${artifact.name}",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable { onPhotoClick(imageUrls, 0) },
+                    contentScale = ContentScale.Crop,
+                )
+            }
+            Spacer(Modifier.width(14.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        artifact.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    if (isTop) {
+                        Spacer(Modifier.width(6.dp))
+                        Icon(
+                            Icons.Filled.AutoAwesome,
+                            contentDescription = null,
+                            tint = Citrine,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    val confColor = when {
+                        match.confidence >= 80 -> Success
+                        match.confidence >= 60 -> Citrine
+                        else -> Warning
+                    }
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(confColor.copy(alpha = 0.18f))
+                            .border(1.dp, confColor.copy(alpha = 0.55f), RoundedCornerShape(6.dp))
+                            .padding(horizontal = 7.dp, vertical = 2.dp),
+                    ) {
+                        Text(
+                            "${match.confidence}% match",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = confColor,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+                Text(
+                    "${artifact.family} \u00b7 ${artifact.subFamily}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = DarkTextMid,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                )
+                Spacer(Modifier.height(6.dp))
+                if (match.reasoning.isNotEmpty()) {
+                    Text(
+                        match.reasoning,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = DarkTextMid,
+                        maxLines = 2,
+                        minLines = 2,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        lineHeight = 18.sp,
+                    )
+                } else {
+                    Text("", style = MaterialTheme.typography.bodySmall, minLines = 2)
                 }
                 Spacer(Modifier.height(6.dp))
                 ConfidenceBar(match.confidence, accent)

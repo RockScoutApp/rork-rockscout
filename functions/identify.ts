@@ -1,4 +1,5 @@
 import { SPECIMEN_DB, type SpecimenEntry } from "./specimens";
+import { ARTIFACT_DB, ARTIFACT_MAP } from "./artifacts";
 import {
   embedText,
   matchSpecimenEmbeddings,
@@ -19,6 +20,9 @@ export async function handleIdentify(
        *  "pro" = Haiku + Sonnet + Gemini third opinion on the hardest cases.
        *  Defaults to "free" so missing/legacy callers stay on the safe path. */
       entitlement?: string;
+      /** Search mode: "rocks" (default — current behavior, artifacts excluded)
+       *  or "artifacts" (artifacts prioritized in the candidate set). */
+      searchMode?: string;
     };
 
     if (!body.imageBase64) {
@@ -31,6 +35,16 @@ export async function handleIdentify(
     const mimeType = body.mimeType ?? "image/jpeg";
     const imageData = stripDataUriPrefix(body.imageBase64);
     const tier = ((body.entitlement ?? "free") as string).toLowerCase();
+    const searchMode = (body.searchMode ?? "rocks").toLowerCase();
+
+    // ── Artifact identification branch ───────────────────────────────────
+    // When the user confirms (or suspects) they're scanning an artifact, we
+    // route to a dedicated artifact-first pipeline that uses ARTIFACT_DB as
+    // the candidate set instead of the rock/mineral/fossil specimen database.
+    // The rock-ID flow below is completely untouched.
+    if (searchMode === "artifacts") {
+      return await identifyArtifact(request, env, cors, imageData, mimeType, tier);
+    }
     // Premium and legacy Pro both get all 3 models (Haiku + Sonnet + Gemini).
     // Free stays Haiku-only.
     const useSonnet = tier === "premium" || tier === "pro";
@@ -277,6 +291,378 @@ export async function handleIdentify(
       { error: "Internal server error" },
       { status: 500, headers: cors },
     );
+  }
+}
+
+/**
+ * Artifact-first identification pipeline. Runs when the user confirms (or
+ * suspects) they're scanning an artifact — uses ARTIFACT_DB as the candidate
+ * set instead of the rock/mineral/fossil specimen database. Mirrors the
+ * rock-ID flow (describe → visual comparison → optional re-rank) but with
+ * artifact-specific prompts and reference images.
+ *
+ * The rock-ID path (handleIdentify above) is completely untouched — this is
+ * a separate, self-contained branch.
+ */
+async function identifyArtifact(
+  request: Request,
+  env: Env,
+  cors: Record<string, string>,
+  imageData: string,
+  mimeType: string,
+  tier: string,
+): Promise<Response> {
+  const responseHeaders = { ...cors, "Content-Type": "application/json" };
+  const toolkitUrl = env.EXPO_PUBLIC_TOOLKIT_URL ?? "https://toolkit.rork.com";
+  const toolkitSecret = env.EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY;
+
+  if (!toolkitSecret) {
+    return Response.json(
+      { error: "Toolkit secret not configured" },
+      { status: 500, headers: cors },
+    );
+  }
+
+  const useSonnet = tier === "premium" || tier === "pro";
+  const modelsUsed: string[] = ["artifact-mode"];
+
+  try {
+    // Step 1: Haiku pass — describe the photo in artifact vocabulary and
+    // match against the full artifact catalog in one call (106 artifacts
+    // is small enough to fit in a single system prompt, unlike the 808-
+    // specimen rock database which requires the embedding-first narrowing).
+    const result = await callArtifactVisionModel(
+      toolkitUrl, toolkitSecret, imageData, mimeType,
+    );
+    if (!result.ok) {
+      const errorBody = await result.text().catch(() => "unknown error");
+      console.error("Artifact AI Gateway error:", result.status, errorBody);
+      return Response.json(
+        { error: `Artifact identification failed (${result.status})` },
+        { status: 502, headers: responseHeaders },
+      );
+    }
+    const data = await result.json() as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) {
+      console.error("No content in artifact AI response:", JSON.stringify(data));
+      return Response.json(
+        { error: "No artifact identification results returned" },
+        { status: 502, headers: responseHeaders },
+      );
+    }
+    let parsed = parseIdentificationResponse(content);
+    modelsUsed.push(useSonnet ? "haiku-artifact" : "haiku-artifact");
+
+    // Step 2: Visual reference comparison — send the user's photo alongside
+    // the top artifact reference images for a direct visual match.
+    const visualMaxCandidates = useSonnet ? 12 : 15;
+    const visualResult = await callArtifactVisualComparison(
+      toolkitUrl, toolkitSecret, imageData, mimeType, parsed.matches, useSonnet, visualMaxCandidates,
+    );
+
+    let finalMatches = parsed.matches;
+    let finalSummary = parsed.summary;
+    let visualReferenceUsed = false;
+
+    if (visualResult) {
+      modelsUsed.push(useSonnet ? "sonnet-artifact-visual" : "haiku-artifact-visual");
+      visualReferenceUsed = true;
+      finalMatches = visualResult.matches;
+      finalSummary = visualResult.summary;
+    }
+
+    // Optional Sonnet re-rank on ambiguous artifact matches (top < 85%).
+    const topConf = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
+    if (useSonnet && topConf < 85 && finalMatches.length > 0) {
+      const sonnetResult = await callSonnetArtifactRerank(
+        toolkitUrl, toolkitSecret, imageData, mimeType, finalMatches, finalSummary,
+      );
+      if (sonnetResult) {
+        modelsUsed.push("sonnet-artifact");
+        const merged = mergeRankings(finalMatches, sonnetResult.matches);
+        finalMatches = merged.matches;
+        finalSummary = merged.summary;
+      }
+    }
+
+    const needsClarification = topConf < 85 && finalMatches.length > 0;
+
+    const artifactResponse: IdentifyResponse = {
+      matches: finalMatches,
+      summary: finalSummary,
+      needsClarification,
+      clarificationQuestions: [],
+      webReferences: [],
+      modelsUsed,
+      visualReferenceUsed,
+      assemblage: undefined,
+    };
+
+    return Response.json(artifactResponse, { headers: responseHeaders });
+  } catch (err: unknown) {
+    console.error("Artifact identify error:", String(err));
+    return Response.json(
+      { error: "Internal server error" },
+      { status: 500, headers: cors },
+    );
+  }
+}
+
+/** Build the artifact system prompt — the full ARTIFACT_DB as a compact
+ *  reference list, grouped by family. */
+function buildArtifactSystemPrompt(): string {
+  const families = [
+    "Arrowheads", "Spear Points & Dart Tips", "Hand Axes & Axe Heads",
+    "Drill Bits", "Flaked Stone Tools", "Stone Effigies", "Native Beads",
+    "Shell Tools", "Shell Effigies", "Ornaments & Weights",
+    "Pipes & Medicine Tubes", "Game Discs", "Pottery",
+    "Wooden Artifacts", "Bone Tools",
+  ];
+
+  const sections = families.map((family) => {
+    const items = ARTIFACT_DB.filter((a) => a.family === family);
+    if (items.length === 0) return "";
+    const lines = items.map((a) =>
+      `- ${a.id}: "${a.name}" [${a.subFamily}] ${a.tagline} — ${a.tribe}, ${a.timePeriod}`
+    );
+    return `### ${family}\n${lines.join("\n")}`;
+  }).filter((s) => s.length > 0);
+
+  return `You are an expert archaeologist identifying prehistoric artifacts from photographs. The user has confirmed (or suspects) that their photo shows an artifact — a knapped stone tool, point, bead, effigy, pipe, game disc, pottery sherd, or other human-made object of stone, shell, wood, or ceramic.
+
+Here is the complete artifact reference database (${ARTIFACT_DB.length} artifacts across ${families.length} families). Match the user's photo against these entries:
+
+${sections.join("\n\n")}
+
+For each match, explain which visual features (shape, flaking pattern, notching, base style, material, size hints) support the identification and what distinguishes it from similar types.`;
+}
+
+/** Haiku vision call for artifact identification. */
+async function callArtifactVisionModel(
+  toolkitUrl: string,
+  secret: string,
+  imageBase64: string,
+  mimeType: string,
+): Promise<Response> {
+  const systemPrompt = buildArtifactSystemPrompt();
+  const userPrompt = `Analyze this artifact photograph carefully. Identify which artifact type from the database it matches.
+
+STEP 1 — OBSERVE: Describe what you see:
+- Overall shape (lanceolate, stemmed, corner-notched, bifacial, disc, tubular, etc.)
+- Flaking pattern (collateral, parallel, oblique, random, pressure-flaked)
+- Base style (concave, convex, straight, notched, bifurcated, ground)
+- Material hints (chert, flint, obsidian, slate, shell, ceramic, stone)
+- Size and proportions if discernible
+- Any surface treatment (incised, cord-marked, polished, serrated)
+- Cultural or temporal markers if visible
+
+STEP 2 — COMPARE: Match against the artifact database. Consider:
+- Which types share the observed shape and flaking pattern?
+- Which match the base style and notching?
+- Which are from the right material and region?
+
+STEP 3 — RANK: Return exactly 5 matches with honest confidence scores:
+- 90-98%: Near-certain match with multiple distinguishing features aligned
+- 75-89%: Strong match with most features aligned
+- 55-74%: Good match but significant lookalikes exist
+- 30-54%: Possible match
+- Below 30%: Unlikely but worth mentioning
+
+Return ONLY valid JSON — no markdown, no extra text:
+{
+  "matches": [
+    {
+      "id": "artifact-id from database",
+      "name": "Artifact Name",
+      "confidence": 85,
+      "reasoning": "2-3 sentences explaining which visual features support this match."
+    }
+  ],
+  "summary": "3-4 sentence description of the artifact and your identification reasoning."
+}`;
+
+  const messages = [
+    {
+      role: "system",
+      content: [
+        { type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } },
+      ],
+    },
+    {
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+        { type: "text", text: userPrompt },
+      ],
+    },
+  ];
+
+  return fetch(`${toolkitUrl}/v2/vercel/v1/chat/completions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${secret}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "anthropic/claude-haiku-4.5",
+      messages,
+      max_tokens: 4096,
+      temperature: 0.2,
+    }),
+  });
+}
+
+/** Visual reference comparison for artifacts — sends the user's photo
+ *  alongside the top artifact reference images. */
+async function callArtifactVisualComparison(
+  toolkitUrl: string,
+  secret: string,
+  imageBase64: string,
+  mimeType: string,
+  preliminaryMatches: MatchResult[],
+  useSonnet: boolean,
+  maxCandidates: number = 12,
+): Promise<IdentificationResult | null> {
+  if (preliminaryMatches.length === 0) return null;
+
+  const topCandidates = preliminaryMatches.slice(0, maxCandidates);
+  const refs: Array<{ id: string; name: string; imageUrl: string }> = [];
+  for (const m of topCandidates) {
+    const art = ARTIFACT_MAP[m.id];
+    if (art?.imageUrl) {
+      refs.push({ id: art.id, name: art.name, imageUrl: art.imageUrl });
+    }
+  }
+  if (refs.length === 0) return null;
+
+  const userContent: Array<Record<string, unknown>> = [
+    { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+    { type: "text", text: "This is the user's photo. Below are reference images for the top artifact candidates. Compare the user's photo against each reference image visually." },
+  ];
+
+  for (let i = 0; i < refs.length; i++) {
+    userContent.push({ type: "image_url", image_url: { url: refs[i].imageUrl } });
+    userContent.push({ type: "text", text: `Reference ${i + 1}: ${refs[i].name} (id: ${refs[i].id})` });
+  }
+
+  const refList = refs.map((r, i) => `${i + 1}. ${r.name} (id: ${r.id})`).join("\n");
+
+  const prompt = `You are comparing a user's artifact photo against database reference images.
+
+The first image is the user's unknown artifact. The following images are reference photos for these candidates:
+${refList}
+
+Visually compare the user's photo against each reference image. Focus on:
+- Overall shape and silhouette match
+- Flaking pattern and surface treatment
+- Base style, notching, and hafting features
+- Material color and texture
+- Proportions and size hints
+
+Rank all candidates by how well the user's photo visually matches the reference image. You may reorder from the initial ranking if visual comparison suggests a different top match.
+
+Return ONLY valid JSON — no markdown:
+{
+  "matches": [
+    { "id": "artifact-id", "name": "Name", "confidence": 90, "reasoning": "Visual comparison reasoning." }
+  ],
+  "summary": "Updated analysis after visual comparison."
+}`;
+
+  const messages = [
+    { role: "user", content: [...userContent, { type: "text", text: prompt }] },
+  ];
+
+  try {
+    const response = await fetch(`${toolkitUrl}/v2/vercel/v1/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${secret}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: useSonnet ? "anthropic/claude-sonnet-4" : "anthropic/claude-haiku-4.5",
+        messages,
+        max_tokens: 4096,
+        temperature: 0.15,
+      }),
+    });
+    if (!response.ok) return null;
+    const data = await response.json() as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) return null;
+    return parseIdentificationResponse(content);
+  } catch (err) {
+    console.error("Artifact visual comparison error:", String(err));
+    return null;
+  }
+}
+
+/** Sonnet re-rank for ambiguous artifact matches. */
+async function callSonnetArtifactRerank(
+  toolkitUrl: string,
+  secret: string,
+  imageBase64: string,
+  mimeType: string,
+  preliminaryMatches: MatchResult[],
+  summary: string,
+): Promise<IdentificationResult | null> {
+  const systemPrompt = buildArtifactSystemPrompt();
+  const matchNames = preliminaryMatches.slice(0, 5).map((m) => `${m.name} (${m.confidence}%)`).join(", ");
+  const userPrompt = `Re-evaluate this artifact photo independently. A first-pass model returned these candidates: ${matchNames}
+
+Initial summary: ${summary}
+
+Look at the photo again with fresh eyes and return your own ranked matches. You may agree, reorder, or introduce new candidates from the artifact database — but every id must exist in the reference database.
+
+Return ONLY valid JSON — no markdown:
+{
+  "matches": [
+    { "id": "artifact-id", "name": "Name", "confidence": 90, "reasoning": "Reasoning." }
+  ],
+  "summary": "Updated analysis."
+}`;
+
+  const messages = [
+    { role: "system", content: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }] },
+    {
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+        { type: "text", text: userPrompt },
+      ],
+    },
+  ];
+
+  try {
+    const response = await fetch(`${toolkitUrl}/v2/vercel/v1/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${secret}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "anthropic/claude-sonnet-4",
+        messages,
+        max_tokens: 4096,
+        temperature: 0.15,
+      }),
+    });
+    if (!response.ok) return null;
+    const data = await response.json() as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) return null;
+    return parseIdentificationResponse(content);
+  } catch (err) {
+    console.error("Sonnet artifact re-rank error:", String(err));
+    return null;
   }
 }
 
