@@ -1699,6 +1699,29 @@ private fun MatchRow(
                             modifier = Modifier.size(18.dp),
                         )
                     }
+                    Spacer(Modifier.width(8.dp))
+                    // Confidence pill — shows how certain the AI is of this match,
+                    // right next to the specimen name so users see it at a glance.
+                    // Color-coded: green >=80, amber >=60, red otherwise.
+                    val confColor = when {
+                        match.confidence >= 80 -> Success
+                        match.confidence >= 60 -> Citrine
+                        else -> Warning
+                    }
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(confColor.copy(alpha = 0.18f))
+                            .border(1.dp, confColor.copy(alpha = 0.55f), RoundedCornerShape(6.dp))
+                            .padding(horizontal = 7.dp, vertical = 2.dp),
+                    ) {
+                        Text(
+                            "${match.confidence}% match",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = confColor,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                 }
                 Text(spec.category, style = MaterialTheme.typography.bodyMedium, color = DarkTextMid, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                 Spacer(Modifier.height(6.dp))
