@@ -684,7 +684,7 @@ type FieldStory =
 const FIELD_STORIES: FieldStory[] = [
   {
     type: "gear",
-    span: "md:col-span-2 md:row-span-5",
+    span: "row-span-5 md:col-span-2 md:row-span-2",
   },
   {
     type: "story",
