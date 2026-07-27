@@ -20,10 +20,15 @@ function useAuthState() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setIsLoading(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        setSession(data.session);
+      })
+      .catch(() => {
+        // Env vars missing or network error — treat as no session.
+      })
+      .finally(() => setIsLoading(false));
 
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, newSession) => {
