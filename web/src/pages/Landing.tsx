@@ -290,26 +290,33 @@ const Hero = () => {
           specimen database, a collection tracker, and a community of hunters and traders — built for the field, ready for any dig.
         </p>
 
-        <div className="mt-6 flex flex-col gap-3 sm:mt-9 sm:flex-row sm:items-center">
+        <div className="mt-6 flex flex-col gap-3">
           <span
             aria-disabled
-            className="inline-flex cursor-default items-center justify-center gap-2.5 rounded-2xl bg-primary px-6 py-3.5 font-semibold text-primary-foreground"
+            className="inline-flex h-20 w-48 cursor-default items-center justify-center gap-2.5 rounded-2xl bg-primary px-4 font-semibold text-primary-foreground"
           >
-            <Monitor className="h-5 w-5" />
-            Coming soon to PC
+            <Monitor className="h-5 w-5 shrink-0" />
+            <span className="text-center leading-tight">
+              Coming soon<br />to PC
+            </span>
           </span>
           <span
             aria-disabled
-            className="inline-flex cursor-default items-center justify-center gap-2.5 rounded-2xl border border-primary/40 bg-primary/10 px-6 py-3.5 font-semibold text-primary/80"
+            className="inline-flex h-20 w-48 cursor-default items-center justify-center gap-2.5 rounded-2xl border border-primary/40 bg-primary/10 px-4 font-semibold text-primary/80"
           >
-            <Download className="h-5 w-5" />
-            Coming soon to Android
+            <Download className="h-5 w-5 shrink-0" />
+            <span className="text-center leading-tight">
+              Coming soon<br />to Android
+            </span>
           </span>
           <span
             aria-disabled
-            className="inline-flex cursor-default items-center justify-center gap-2 rounded-2xl border border-border bg-card/50 px-5 py-3.5 text-sm font-medium text-muted-foreground"
+            className="inline-flex h-20 w-48 cursor-default items-center justify-center gap-2.5 rounded-2xl border border-border bg-card/50 px-4 text-sm font-medium text-muted-foreground"
           >
-            <Smartphone className="h-4 w-4" /> Native iOS app coming soon to the App Store
+            <Smartphone className="h-4 w-4 shrink-0" />
+            <span className="text-center leading-tight">
+              coming to<br />iOS soon
+            </span>
           </span>
         </div>
 
@@ -873,26 +880,33 @@ const CTA = () => (
         <p className="mx-auto mt-4 max-w-md text-balance text-base text-muted-foreground sm:mt-5 sm:text-lg">
           RockScout is coming soon to Google Play, the App Store, and PC. Be the first to know when it launches.
         </p>
-        <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:mt-9 sm:flex-row">
+        <div className="mt-7 flex flex-col items-center justify-center gap-3">
           <span
             aria-disabled
-            className="inline-flex cursor-default items-center justify-center gap-2.5 rounded-2xl bg-primary px-8 py-4 font-semibold text-primary-foreground"
+            className="inline-flex h-20 w-48 cursor-default items-center justify-center gap-2.5 rounded-2xl bg-primary px-4 font-semibold text-primary-foreground"
           >
-            <Monitor className="h-5 w-5" />
-            Coming soon to PC
+            <Monitor className="h-5 w-5 shrink-0" />
+            <span className="text-center leading-tight">
+              Coming soon<br />to PC
+            </span>
           </span>
           <span
             aria-disabled
-            className="inline-flex cursor-default items-center justify-center gap-2.5 rounded-2xl border border-primary/40 bg-primary/10 px-8 py-4 font-semibold text-primary/80"
+            className="inline-flex h-20 w-48 cursor-default items-center justify-center gap-2.5 rounded-2xl border border-primary/40 bg-primary/10 px-4 font-semibold text-primary/80"
           >
-            <Download className="h-5 w-5" />
-            Coming soon to Android
+            <Download className="h-5 w-5 shrink-0" />
+            <span className="text-center leading-tight">
+              Coming soon<br />to Android
+            </span>
           </span>
           <span
             aria-disabled
-            className="inline-flex cursor-default items-center justify-center gap-2 rounded-2xl border border-border bg-card/60 px-6 py-4 text-sm font-medium text-muted-foreground"
+            className="inline-flex h-20 w-48 cursor-default items-center justify-center gap-2.5 rounded-2xl border border-border bg-card/60 px-4 text-sm font-medium text-muted-foreground"
           >
-            <Smartphone className="h-4 w-4" /> Native iOS app coming soon to the App Store
+            <Smartphone className="h-4 w-4 shrink-0" />
+            <span className="text-center leading-tight">
+              coming to<br />iOS soon
+            </span>
           </span>
           <Link
             to="/support"
