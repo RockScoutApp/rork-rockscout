@@ -42,6 +42,7 @@ import {
   HelpCircle,
   Diamond,
   Library,
+  Landmark,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { SITE } from "@/content/legal";
@@ -531,8 +532,8 @@ const FEATURES_LIST = [
   {
     icon: Trophy,
     title: "Achievements, XP & badges",
-    desc: "101 achievements and 31 badges with confetti level-ups. Earn XP for every action and share brag-worthy level-up cards.",
-    items: ["101 achievements", "31 badges", "XP & leveling"],
+    desc: "101 achievements and 31 badges with confetti level-ups. Earn XP for every action, track your progress on each locked achievement with a visual progress bar, and share brag-worthy level-up cards.",
+    items: ["102 achievements", "34 badges", "Progress bars on locked achievements", "XP & leveling"],
   },
   {
     icon: Zap,
@@ -561,7 +562,7 @@ const FEATURES_LIST = [
   {
     icon: Backpack,
     title: "Gear, tokens & design",
-    desc: "Beginner-to-advanced Gear Guide with 48+ tools and Amazon links. 7-day free trial, $9.99/mo Premium, or one-time donations for tokens. Immersive 3D design with an optional 2GB offline cache mode plus a one-tap bulk download that caches every specimen photo, guide illustration, and hero image (~3.5 GB) so the whole app works fully offline.",
+    desc: "Beginner-to-advanced Gear Guide with 48+ tools and Amazon links. 7-day free trial, $5.99/mo Premium, or one-time donations for tokens. Immersive 3D design with an optional 2GB offline cache mode plus a one-tap bulk download that caches every specimen photo, guide illustration, and hero image (~3.5 GB) so the whole app works fully offline.",
     items: ["Gear Guide", "Tokens & Premium", "3D design", "2GB cache mode", "Bulk offline download (~3.5 GB)"],
   },
   {
@@ -573,8 +574,8 @@ const FEATURES_LIST = [
   {
     icon: Upload,
     title: "Submit specimens & add locations",
-    desc: "Found a specimen that isn't in the database? Use the Upload Specimen pill on the Specimen Database screen, Field Captures screen, or specimen detail pages. Submit up to 4 photos plus a name, date found, location, and description. If the specimen already exists and your location is a common find spot for it, you'll get a small pop-up letting you know it's already included; if the location is unusual for that specimen, it goes to developer review. Approved entries get added to the Specimen Database or Rocks Are Amazing for every RockScout user to discover. Found a great dig site, rock shop, or gem show not on the map? Use the Upload New Location form to add it, reviewed before going live for everyone.",
-    items: ["Submit specimens", "Submit locations", "Reviewed by RockScout", "Community-built database"],
+    desc: "Found a specimen that isn't in the database? Use the Upload Specimen pill on the Specimen Database screen, Field Captures screen, or specimen detail pages. Submit up to 4 photos plus a name, date found, location, and description — images are automatically checked against a 5 MB size limit to prevent upload failures. If the specimen already exists and your location is a common find spot for it, you'll get a small pop-up letting you know it's already included; if the location is unusual for that specimen, it goes to developer review. Approved entries get added to the Specimen Database or Rocks Are Amazing for every RockScout user to discover. Found a great dig site, rock shop, or gem show not on the map? Use the Upload New Location form to add it, reviewed before going live for everyone.",
+    items: ["Submit specimens", "5 MB image check", "Submit locations", "Reviewed by RockScout", "Community-built database"],
   },
   {
     icon: MapPin,
@@ -601,6 +602,18 @@ const FEATURES_LIST = [
     items: ["Curated wonder gallery", "Swipe-through categories", "User submissions welcome"],
   },
   {
+    icon: Landmark,
+    title: "Artifacts & stone tools",
+    desc: "A growing catalog of 100+ authentic prehistoric artifacts — arrowheads (20+ types), spear points & dart tips, hand axes & axe heads, flaked stone tools, drill bits, native beads, stone effigies, pipes, ornaments, shell and bone tools, pottery, and more. Each entry has a generated reference image, cultural period, material, and how it was made and used. A NEW badge flags artifacts added in the last 48 hours.",
+    items: ["100+ artifacts", "Arrowheads", "Spear points", "Hand axes", "Stone effigies", "Drill bits & beads", "NEW badge on recent adds"],
+  },
+  {
+    icon: Mountain,
+    title: "Natural wonders of the world",
+    desc: "36 world-famous geological sites with stunning photos, formation stories, rocks to find, and visitor tips. From the Grand Canyon and Giant's Causeway to Mount Vesuvius, Salar de Uyuni, and the Zhangjiajie Pillars — including the Naica Crystal Caves in Chihuahua, Mexico, where giant selenite crystals grow from floor to ceiling. A perfect bucket-list planner for dig-friendly destinations.",
+    items: ["36 geological wonders", "Naica Crystal Caves", "Formation stories", "Rocks to find", "Visitor tips"],
+  },
+  {
     icon: Library,
     title: "Rock & gem resources",
     desc: "A curated set of trusted external geology, gem, and fossil websites — museums, university mineralogy departments, and reputable reference sites. Links open in your device's browser so you can dig deeper into any topic, making it a perfect research companion alongside the in-app Specimen Database.",
@@ -611,6 +624,24 @@ const FEATURES_LIST = [
     title: "Glossary",
     desc: "A full rock & mineral glossary built right into the field kit. Look up hundreds of geological terms, crystal habits, and mineral properties on the spot — no internet required. Perfect for beginners and experts alike.",
     items: ["Hundreds of terms", "Crystal habits", "Mineral properties", "Offline-ready"],
+  },
+  {
+    icon: Sparkles,
+    title: "NEW badges & recently added specimens",
+    desc: "A NEW badge automatically appears on any specimen or artifact card added to the catalog within the last 48 hours. Spot the latest database additions at a glance across the Specimen Database, Artifacts tile, and any category-filtered view — the badge disappears automatically after 48 hours.",
+    items: ["48-hour NEW badge", "Specimen Database", "Artifacts tile", "Category-filtered views"],
+  },
+  {
+    icon: ShieldCheck,
+    title: "App updates, sign-in & safety",
+    desc: "When a signing conflict is detected during an update, a friendly dialog explains that the old version must be uninstalled and offers a button to trigger the system uninstall flow. After reinstalling and signing back in, all your settings are restored from the cloud exactly as they were. A confirmation dialog on the logout button prevents accidental sign-outs, and your collections, captures, friends, and achievements are tied to your account — not your device.",
+    items: ["Signing conflict dialog", "Settings restored after reinstall", "Logout confirmation", "Account-tied data"],
+  },
+  {
+    icon: Monitor,
+    title: "Desktop web app & keyboard shortcuts",
+    desc: "The RockScout web app is a full PWA with desktop-optimized layouts — wider multi-column grids, a split map + location list view, and vim-style keyboard shortcuts. Press \"?\" for the shortcuts overlay, \"/\" to focus search, and \"g\" followed by a letter to jump to any section. Install the PWA to your desktop for a standalone app window.",
+    items: ["Desktop multi-column grids", "Map + list split view", "Keyboard shortcuts", "Installable PWA"],
   },
 ];
 

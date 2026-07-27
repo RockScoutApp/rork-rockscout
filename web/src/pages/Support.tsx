@@ -10,7 +10,7 @@ const FAQ = [
   },
   {
     q: "Is RockScout free?",
-    a: "Yes. Every user gets a 7-day full-access trial with 5 AI identification tokens. After the trial, these features stay free forever: (ad supported) rock identification, browsing the full specimen database & geology guides, the field camera (saves to your in-app Saved Images), NWS severe weather alerts, browsing dig sites & offline maps, and the glossary. AI identification tokens can also be earned free by watching a couple short videos — no weekly cap. Social features (Friends, Messenger, Community, Trade Board), My Rocks, Wishlist, Field Captures, Trip Planner, and Field Journal require Premium ($9.99/mo) or a donation. The free version does not have access to any of the social aspects, so it stays rated G for younger users. Pricing is shown in the app before any purchase.",
+    a: "Yes. Every user gets a 7-day full-access trial with 5 AI identification tokens. After the trial, these features stay free forever: (ad supported) rock identification, browsing the full specimen database & geology guides, the field camera (saves to your in-app Saved Images), NWS severe weather alerts, browsing dig sites & offline maps, and the glossary. AI identification tokens can also be earned free by watching a couple short videos — no weekly cap. Social features (Friends, Messenger, Community, Trade Board), My Rocks, Wishlist, Field Captures, Trip Planner, and Field Journal require Premium ($5.99/mo) or a donation. The free version does not have access to any of the social aspects, so it stays rated G for younger users. Pricing is shown in the app before any purchase.",
   },
   {
     q: "Can I use RockScout offline?",
@@ -39,6 +39,38 @@ const FAQ = [
   {
     q: "Someone is harassing me in direct messages. What do I do?",
     a: "Block them from their profile or from the message thread, then report the conversation. Our team reviews reports and takes action under the Community Guidelines.",
+  },
+  {
+    q: "What is the Artifacts & Stone Tools tile?",
+    a: "The Artifacts tile is a growing catalog of 100+ authentic prehistoric artifacts, each with its own generated reference image. Families include Arrowheads (20+ types), Spear Points & Dart Tips (12+), Hand Axes & Axe Heads (20+), Flaked Stone Tools (12+), Drill Bits (6+), Native Beads (13+), Stone Effigies (7+), Pipes & Medicine Tubes, Ornaments & Weights, Shell Tools, Bone Tools, Pottery, Game Discs, and Wooden Artifacts. The tile is linked to the Specimen Database via the ARTIFACTS category chip at the top of the specimen list — artifacts never appear inside the main specimen database, only through the Artifacts tile or the category chip. A NEW badge appears on any artifact added within the last 48 hours.",
+  },
+  {
+    q: "What are the Natural Wonders?",
+    a: "The Natural Wonders tile features 36 world-famous geological sites with stunning photos, formation stories, rocks to find, and visitor tips. From the Grand Canyon and Giant's Causeway to Mount Vesuvius, Salar de Uyuni, and the Zhangjiajie Pillars — including the Naica Crystal Caves in Chihuahua, Mexico, where giant selenite crystals grow from floor to ceiling, some over 36 feet long. Each card opens a full detail page and is a great bucket-list trip-planning resource.",
+  },
+  {
+    q: "What does the NEW badge mean?",
+    a: "A NEW badge automatically appears on any specimen or artifact card that was added to the catalog within the last 48 hours. It works across the Specimen Database, Artifacts tile, and any category-filtered view. After 48 hours the badge disappears automatically — the specimen stays in the catalog but is no longer flagged as new.",
+  },
+  {
+    q: "How do achievement progress bars work?",
+    a: "On the All Achievements page, each locked achievement now shows a visual progress bar indicating how close you are to earning it — so you always know what to do next to level up. Earn XP for every action and the bars fill as you make progress toward each goal.",
+  },
+  {
+    q: "What happens when there's a signing conflict during an update?",
+    a: "When the app detects that the installed APK was signed with a different key than the new version, a friendly dialog explains that the old version must be uninstalled to update, and offers a button to trigger the system uninstall flow directly. After reinstalling the new version, sign back in with your RockScout account — all your settings (hunter status, cache mode, notification preferences, aurora thresholds, and more) are restored from the cloud exactly as they were. Your collections, captures, friends, and achievements are tied to your account, not your device.",
+  },
+  {
+    q: "Why is there a confirmation dialog when I log out?",
+    a: "A confirmation dialog appears when you tap the logout button in Settings to prevent accidental sign-outs. Your data stays safe on your account either way — signing back in restores everything.",
+  },
+  {
+    q: "Is there an image size limit for uploads?",
+    a: "Yes. Images selected for upload (specimen submissions, field captures, community posts, profile backgrounds, and trade listings) are automatically checked against a 5 MB size limit. If a photo is too large, you'll get a friendly notification to pick a smaller file, preventing upload failures before they happen.",
+  },
+  {
+    q: "Does the web app work on desktop?",
+    a: "Yes — the RockScout web app is a full PWA with desktop-optimized layouts: wider multi-column grids, a split map + location list view on the Dig Sites page, and vim-style keyboard shortcuts. Press \"?\" for the shortcuts overlay, \"/\" to focus search, and \"g\" followed by a letter to jump to any section (g h for Home, g m for Map, etc.). Install the PWA to your desktop from your browser's install prompt for a standalone app window.",
   },
   {
     q: "What is the Aurora Forecaster?",

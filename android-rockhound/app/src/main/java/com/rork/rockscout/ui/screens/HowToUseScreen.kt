@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CameraAlt
@@ -44,6 +45,7 @@ import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Diamond
 import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
@@ -356,7 +358,8 @@ private val howToSections: List<HowToSection> = listOf(
             "Tap your avatar on the home screen to open your Profile.",
             "Your Player Card shows your level, XP progress, hunter status, and earned badges.",
             "Set your hunter status: Off Grid, Hunting, Digging, or Trading — each shows a color-coded profile border.",
-            "Browse 101 achievements and 31 badges on the Achievements page.",
+            "Browse 102 achievements and 34 badges on the Achievements page.",
+            "Each locked achievement on the All Achievements page now shows a visual progress bar indicating how close you are to earning it — so you always know what to do next to level up.",
             "Earn XP for every action — identifying rocks, adding to your collection, capturing field photos, trading, and more.",
             "Level up to unlock new tiers with unique emojis and brag-worthy celebration pop-ups.",
             "Share level-up and badge-earn cards to your profile feed or straight to social media.",
@@ -456,6 +459,32 @@ private val howToSections: List<HowToSection> = listOf(
         ),
     ),
     HowToSection(
+        icon = Icons.Filled.AccountBox,
+        accent = Color(0xFFC97B4A),
+        title = "Artifacts & Stone Tools",
+        shortLabel = "Artifacts",
+        steps = listOf(
+            "Tap the \"Artifacts\" tile on the home screen to browse a growing catalog of over 100 authentic prehistoric artifacts, each with its own generated reference image on a unique background.",
+            "Families include Arrowheads (20+ types from Clovis and Folsom to Mississippian triangle points), Spear Points & Dart Tips (12+ Paleoindian and Archaic forms), Hand Axes & Axe Heads (20+ Acheulean and Neolithic bifaces), Flaked Stone Tools (12+ scrapers, knives, and gravers), Drill Bits (6+ awl and drill forms), Native Beads (13+ shell, stone, and copper beads), Stone Effigies (7+ animal and human effigies from the Woodland and Mississippian periods), Pipes & Medicine Tubes, Ornaments & Weights, Shell Tools, Bone Tools, Pottery, Game Discs, and Wooden Artifacts.",
+            "Each artifact card shows a reference image, cultural period, material, and a detailed description of how it was made and used.",
+            "The Artifacts tile is linked to the Specimen Database via the ARTIFACTS category chip at the top of the specimen list — tap the chip to filter the full database down to artifacts only. Artifacts never appear inside the main specimen database list; they are only accessible through the Artifacts tile or the category chip.",
+            "A NEW badge appears on any artifact added to the catalog within the last 48 hours, so you can spot the latest additions at a glance.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Public,
+        accent = Color(0xFF2EC4B6),
+        title = "Natural Wonders of the World",
+        shortLabel = "Natural Wonders",
+        steps = listOf(
+            "Tap the \"Natural Wonders\" tile on the home screen to explore 36 world-famous geological sites and the rocks and minerals you can find at each one.",
+            "Each wonder includes a stunning photo, location, geological formation story, rocks to find, and fun facts — from the Grand Canyon and Giant's Causeway to Mount Vesuvius, Salar de Uyuni, and the Zhangjiajie Pillars.",
+            "Recent additions include the Naica Crystal Caves (Chihuahua, Mexico) — the Cave of the Crystals, where giant selenite crystals grow from floor to ceiling, some over 36 feet long — plus Sossusvlei Red Dunes, Þingvellir Rift Valley, Tongariro Volcanic Complex, and more.",
+            "Each card opens a full detail page with the formation's geological history, what rocks and minerals are found there, and visitor tips for rockhounds.",
+            "Use Natural Wonders as a bucket-list trip planner — many of these sites are dig-friendly destinations you can add to your Trip Planner.",
+        ),
+    ),
+    HowToSection(
         icon = Icons.Filled.Public,
         accent = Color(0xFF7CB5EC),
         title = "Rock & Gem Resources",
@@ -500,7 +529,8 @@ private val howToSections: List<HowToSection> = listOf(
         shortLabel = "Submit",
         steps = listOf(
             "Found a specimen that isn't in the database? Use the Upload Specimen pill (found on the Specimen Database screen, the Field Captures screen, and specimen detail pages).",
-            "Submit up to 4 photos plus a name, date found, location, and description. If the specimen already exists in the database and your location is a common find spot for it, you'll get a small pop-up letting you know it's already included. If the location is unusual for that specimen, it goes to developer review instead.",
+            "Submit up to 4 photos plus a name, date found, location, and description. Images are automatically checked against a 5 MB size limit — if a photo is too large, you'll get a friendly notification to pick a smaller file, preventing upload failures before they happen.",
+            "If the specimen already exists in the database and your location is a common find spot for it, you'll get a small pop-up letting you know it's already included. If the location is unusual for that specimen, it goes to developer review instead.",
             "Found a dig site, rock shop, or gem show that isn't on the map? Use the Add Location form on the Dig Sites map or any map screen.",
             "After review, submitted locations appear on the Dig Sites map for every RockScout user to discover.",
             "Help build the most thorough rock database and the most complete hunting map on the app market!",
@@ -551,6 +581,30 @@ private val howToSections: List<HowToSection> = listOf(
             "Premium ($5.99/mo) unlocks everything: unlimited AI identifies with all 3 models (Haiku + Sonnet + Gemini 2.5 Pro tie-breaker), ad-free, 250-mile nearby radius, 24-hour pings, premium gem badge, and early access to new features.",
             "Check your token balance anytime via the Token Bank icon in the home header.",
             "Tap the Token Bank to open the Token Info screen for details and purchasing options.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Star,
+        accent = Color(0xFFE8C547),
+        title = "NEW Badges & Recently Added Specimens",
+        shortLabel = "NEW Badge",
+        steps = listOf(
+            "A NEW badge automatically appears on any specimen or artifact card that was added to the catalog within the last 48 hours.",
+            "Spot the latest database additions at a glance — no need to hunt through the full list to find what's new.",
+            "The badge works across the Specimen Database, Artifacts tile, and any category-filtered view.",
+            "After 48 hours, the badge disappears automatically — the specimen stays in the catalog but is no longer flagged as new.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Security,
+        accent = Color(0xFF45B56A),
+        title = "App Updates, Sign-in & Safety",
+        shortLabel = "Updates & Safety",
+        steps = listOf(
+            "When the app detects a signing conflict during an update (the installed APK was signed with a different key than the new version), a friendly dialog explains that the old version must be uninstalled to update — and offers a button to trigger the system uninstall flow directly.",
+            "After reinstalling the new version, just sign back in with your RockScout account. All your settings — hunter status, cache mode, notification preferences, aurora thresholds, and more — are restored from the cloud, exactly as they were before.",
+            "A confirmation dialog appears when you tap the logout button in Settings, preventing accidental sign-outs.",
+            "Your collections, captures, friends, and achievements are tied to your account, not your device — they carry over to any device when you sign back in.",
         ),
     ),
 )
