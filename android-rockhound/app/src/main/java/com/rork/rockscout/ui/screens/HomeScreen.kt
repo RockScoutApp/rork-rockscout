@@ -413,9 +413,7 @@ fun HomeScreen(navController: NavController) {
             SpecimenImages.urls["pyrite"]?.firstOrNull()),
         HomeTile("My Saved Images", "${savedImages.size} saved · Photos you've saved from the app", Icons.Filled.Download, Color(0xFF44AACC), Routes.SAVED_IMAGES,
             SpecimenImages.urls["amazonite-smoky-quartz-assemblage"]?.firstOrNull()),
-        HomeTile("Aurora Forecaster", "Northern lights forecast for your location", Icons.Filled.NightsStay, Color(0xFF00E5C9), Routes.AURORA,
-            AURORA_TILE_BG_URL),
-        HomeTile("Saved Spots", "${auroraSavedSpots.size} saved · Aurora visibility at your favorite locations", Icons.Filled.LocationOn, Color(0xFF00E5C9), Routes.AURORA,
+        HomeTile("Aurora Forecaster", "Northern lights forecast & saved aurora spots", Icons.Filled.NightsStay, Color(0xFF00E5C9), Routes.AURORA,
             AURORA_TILE_BG_URL),
         HomeTile("Severe Weather", "NWS alerts + live storm chaser streams", Icons.Filled.Warning, Color(0xFFFF6B3D), Routes.SEVERE_WEATHER,
             "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/e2803cb6-56f0-4506-84cb-0a36be573f7e.png"),
@@ -593,23 +591,13 @@ fun HomeScreen(navController: NavController) {
             }
             item {
                 FullWidthBannerTile(
-                    label = "Trip Planner",
-                    subtitle = if (socialLocked) "Subscribe or donate to plan and share trips" else "${trips.size} planned trips · Build a multi-stop hunt and share it",
+                    label = "Trip Planner & Field Journal",
+                    subtitle = if (socialLocked) "Subscribe or donate to plan and share trips" else "${trips.size} trips · ${journalEntries.size} journal entries · Plan hunts & log your days in the field",
                     icon = Icons.Filled.Map,
                     accent = bannerAccent,
                     imageUrl = "https://r2-pub.rork.com/attachments/78k8yy4tgahby3o9opb6j.png",
                     locked = socialLocked,
-                    onClick = { if (socialLocked) navController.navigate(Routes.PAYWALL) else navController.navigate(Routes.TRIP_PLANNER) },
-                )
-            }
-            item {
-                FullWidthBannerTile(
-                    label = "Field Journal",
-                    subtitle = "${journalEntries.size} entries · The story of each day in the field",
-                    icon = Icons.Filled.MenuBook,
-                    accent = bannerAccent,
-                    imageUrl = "https://r2-pub.rork.com/attachments/abxrhqw66vap6ksxlr670.png",
-                    onClick = { navController.navigate(Routes.FIELD_JOURNAL) },
+                    onClick = { if (socialLocked) navController.navigate(Routes.PAYWALL) else navController.navigate(Routes.tripJournal(0)) },
                 )
             }
             item {
@@ -1503,7 +1491,7 @@ private fun IdentifyHero(onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(190.dp)
+            .height(248.dp)
             .sculpted(
                 shape = RoundedCornerShape(26.dp),
                 accent = Citrine,

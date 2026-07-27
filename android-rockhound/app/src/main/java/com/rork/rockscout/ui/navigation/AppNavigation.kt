@@ -63,6 +63,7 @@ import com.rork.rockscout.ui.screens.NaturalWondersScreen
 import com.rork.rockscout.ui.screens.TokenInfoScreen
 import com.rork.rockscout.ui.screens.WishlistScreen
 import com.rork.rockscout.ui.screens.TripPlannerScreen
+import com.rork.rockscout.ui.screens.TripJournalScreen
 import com.rork.rockscout.ui.screens.ArchivedTripsScreen
 import com.rork.rockscout.ui.screens.FieldJournalScreen
 import com.rork.rockscout.ui.screens.TradeBoardScreen
@@ -150,6 +151,8 @@ object Routes {
     const val TRIP_PLANNER = "trip_planner"
     const val ARCHIVED_TRIPS = "archived_trips"
     const val FIELD_JOURNAL = "field_journal"
+    const val TRIP_JOURNAL = "trip_journal?initialTab={initialTab}"
+    fun tripJournal(initialTab: Int = 0): String = "trip_journal?initialTab=$initialTab"
     const val TRADE_BOARD = "trade_board"
     const val COMMUNITY = "community"
     const val COMMUNITY_POST_DETAIL = "community_post/{postId}"
@@ -632,6 +635,13 @@ fun AppNavigation(
         composable(Routes.TRIP_PLANNER) { TripPlannerScreen(navController) }
         composable(Routes.ARCHIVED_TRIPS) { ArchivedTripsScreen(navController) }
         composable(Routes.FIELD_JOURNAL) { FieldJournalScreen(navController) }
+        composable(
+            Routes.TRIP_JOURNAL,
+            arguments = listOf(navArgument("initialTab") { type = NavType.IntType; defaultValue = 0 }),
+        ) { entry ->
+            val initialTab = entry.arguments?.getInt("initialTab") ?: 0
+            TripJournalScreen(navController, initialTabIndex = initialTab)
+        }
         composable(Routes.TRADE_BOARD) { TradeBoardScreen(navController) }
         composable(Routes.COMMUNITY) { com.rork.rockscout.ui.screens.CommunityScreen(navController) }
         composable(

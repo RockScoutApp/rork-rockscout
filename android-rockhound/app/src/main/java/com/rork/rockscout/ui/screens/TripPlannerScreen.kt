@@ -183,7 +183,7 @@ import com.rork.rockscout.data.TripStopType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TripPlannerScreen(navController: NavController) {
+fun TripPlannerScreen(navController: NavController, embedded: Boolean = false) {
     // ─── Premium gating: Trip Planner is a premium feature ───
     val accessManager = com.rork.rockscout.data.IdentifyAccessManager.instance
     val purchaseManager = com.rork.rockscout.data.PurchaseManager.instance
@@ -254,42 +254,7 @@ fun TripPlannerScreen(navController: NavController) {
         }
     }
 
-    ScreenScaffold(
-        title = "Trip Planner",
-        onBack = { navController.popBackStack() },
-        background = { innerContent ->
-            Box(modifier = Modifier.fillMaxSize()) {
-                Image(
-                    painter = painterResource(id = R.drawable.trip_planner_background),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
-                AsyncImage(
-                    model = "https://r2-pub.rork.com/attachments/78k8yy4tgahby3o9opb6j.png",
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
-                // Darker scrim so the busy photo is visible but every tile stays legible.
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(
-                                    Color.Black.copy(alpha = 0.42f),
-                                    Color.Black.copy(alpha = 0.52f),
-                                    Color.Black.copy(alpha = 0.62f),
-                                    Color.Black.copy(alpha = 0.72f),
-                                )
-                            )
-                        )
-                )
-                innerContent()
-            }
-        },
-    ) {
+    val tripContent: @Composable () -> Unit = {
         Column(modifier = Modifier.fillMaxSize()) {
             val pillShape = RoundedCornerShape(50.dp)
             Row(
@@ -485,6 +450,53 @@ fun TripPlannerScreen(navController: NavController) {
             }
         }
     }
+    }
+
+    if (embedded) {
+        // Embedded mode: render without the ScreenScaffold wrapper so the
+        // merged Trip Planner & Field Journal screen can host this as a tab
+        // page inside its own scaffold + pill switcher.
+        tripContent()
+    } else {
+        ScreenScaffold(
+            title = "Trip Planner",
+            onBack = { navController.popBackStack() },
+            background = { innerContent ->
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Image(
+                        painter = painterResource(id = R.drawable.trip_planner_background),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                    AsyncImage(
+                        model = "https://r2-pub.rork.com/attachments/78k8yy4tgahby3o9opb6j.png",
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                    // Darker scrim so the busy photo is visible but every tile stays legible.
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color.Black.copy(alpha = 0.42f),
+                                        Color.Black.copy(alpha = 0.52f),
+                                        Color.Black.copy(alpha = 0.62f),
+                                        Color.Black.copy(alpha = 0.72f),
+                                    )
+                                )
+                            )
+                    )
+                    innerContent()
+                }
+            },
+        ) {
+            tripContent()
+        }
+    }
 
     if (showEditor) {
         TripEditorDialog(
@@ -650,7 +662,6 @@ fun TripPlannerScreen(navController: NavController) {
             preFilledCoords = pendingLocationCoords,
         )
     }
-}
 }
 
 @Composable

@@ -123,7 +123,7 @@ import com.rork.rockscout.ui.components.DeleteConfirmDialog
 import com.rork.rockscout.ui.components.glowingBorder
 
 @Composable
-fun FieldJournalScreen(navController: NavController) {
+fun FieldJournalScreen(navController: NavController, embedded: Boolean = false) {
     val repo = AppRepository.instance
     // Field Journal is a personal tool — always free, never locked.
     val entries by repo.journalEntries.collectAsStateWithLifecycle()
@@ -155,48 +155,7 @@ fun FieldJournalScreen(navController: NavController) {
         }
     }
 
-    ScreenScaffold(
-        title = "Field Journal",
-        onBack = { navController.popBackStack() },
-        actions = {
-            IconButton(onClick = { editingEntry = null; showEditor = true }) {
-                Icon(Icons.Filled.Add, contentDescription = "New entry", tint = MaterialTheme.colorScheme.onBackground)
-            }
-        },
-        background = { innerContent ->
-            Box(modifier = Modifier.fillMaxSize()) {
-                Image(
-                    painter = painterResource(id = R.drawable.field_journal_background),
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
-                AsyncImage(
-                    model = "https://r2-pub.rork.com/attachments/abxrhqw66vap6ksxlr670.png",
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                )
-                // Darker scrim so the field-journal photo stays visible while
-                // every tile and line of text remains clearly legible.
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(
-                                    Color.Black.copy(alpha = 0.40f),
-                                    Color.Black.copy(alpha = 0.52f),
-                                    Color.Black.copy(alpha = 0.64f),
-                                    Color.Black.copy(alpha = 0.76f),
-                                )
-                            )
-                        )
-                )
-                innerContent()
-            }
-        },
-    ) {
+    val journalContent: @Composable () -> Unit = {
         if (entries.isEmpty()) {
             EmptyState(
                 emoji = "\uD83D\uDCD6",
@@ -258,6 +217,80 @@ fun FieldJournalScreen(navController: NavController) {
                     )
                 }
             }
+        }
+    }
+
+    if (embedded) {
+        // Embedded mode: render without the ScreenScaffold wrapper so the
+        // merged Trip Planner & Field Journal screen can host this as a tab
+        // page inside its own scaffold + pill switcher.
+        Box(modifier = Modifier.fillMaxSize()) {
+            journalContent()
+            // Floating add button for embedded mode (no top-bar action).
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 20.dp, bottom = 24.dp)
+                    .size(52.dp)
+                    .sculpted(
+                        shape = CircleShape,
+                        accent = Aqua,
+                        shadowElevation = 8.dp,
+                        circular = true,
+                        onClick = { editingEntry = null; showEditor = true },
+                    )
+                    .clip(CircleShape)
+                    .background(Aqua.copy(alpha = 0.18f))
+                    .glowingBorder(2.dp, Aqua, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = "New entry", tint = Aqua, modifier = Modifier.size(26.dp))
+            }
+        }
+    } else {
+        ScreenScaffold(
+            title = "Field Journal",
+            onBack = { navController.popBackStack() },
+            actions = {
+                IconButton(onClick = { editingEntry = null; showEditor = true }) {
+                    Icon(Icons.Filled.Add, contentDescription = "New entry", tint = MaterialTheme.colorScheme.onBackground)
+                }
+            },
+            background = { innerContent ->
+                Box(modifier = Modifier.fillMaxSize()) {
+                    Image(
+                        painter = painterResource(id = R.drawable.field_journal_background),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                    AsyncImage(
+                        model = "https://r2-pub.rork.com/attachments/abxrhqw66vap6ksxlr670.png",
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                    // Darker scrim so the field-journal photo stays visible while
+                    // every tile and line of text remains clearly legible.
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color.Black.copy(alpha = 0.40f),
+                                        Color.Black.copy(alpha = 0.52f),
+                                        Color.Black.copy(alpha = 0.64f),
+                                        Color.Black.copy(alpha = 0.76f),
+                                    )
+                                )
+                            )
+                    )
+                    innerContent()
+                }
+            },
+        ) {
+            journalContent()
         }
     }
 

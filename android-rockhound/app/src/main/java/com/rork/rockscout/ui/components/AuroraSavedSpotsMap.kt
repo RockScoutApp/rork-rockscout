@@ -196,14 +196,24 @@ fun AuroraSavedSpotsMap(
             .fillMaxWidth()
             .imePadding(),
     ) {
-        // Section header with aurora background image — tappable so users can
-        // jump straight into the Aurora Forecaster from the Saved Spots banner.
+        // Section header with aurora background image — tappable so users
+        // can jump into a dedicated full-screen Saved Spots map page with all
+        // markers, zoom controls, and the add-spot flow.
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp)
                 .clip(RoundedCornerShape(16.dp))
-                .clickable { onHeaderClick() },
+                .clickable {
+                    // Capture the current embedded map viewport so the
+                    // full-screen page opens at the same center/zoom.
+                    mapView?.let {
+                        fullscreenCenter = GeoPoint(it.mapCenter.latitude, it.mapCenter.longitude)
+                        fullscreenZoom = it.zoomLevelDouble
+                    }
+                    onHeaderClick()
+                    isFullscreen = true
+                },
         ) {
             AsyncImage(
                 model = AURORA_SAVED_SPOTS_BG_URL,

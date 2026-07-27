@@ -33,6 +33,8 @@ data class FavoriteSpotEntry(
  *  - BLM campgrounds:                "campground:{name}"
  *  - BLM dig sites:                  "blmsite:{stateCode}:{siteName}"
  *  - BLM states:                     "blmstate:{stateCode}"
+ *  - Specimen markers / custom pins:  "pin:{lat}:{lng}:{name}"
+ *  - Searched / inputted locations:   "search:{lat}:{lng}:{name}"
  */
 object FavoriteSpotResolver {
 
@@ -41,6 +43,8 @@ object FavoriteSpotResolver {
     private const val CAMPGROUND_PREFIX = "campground:"
     private const val BLM_SITE_PREFIX = "blmsite:"
     private const val BLM_STATE_PREFIX = "blmstate:"
+    private const val PIN_PREFIX = "pin:"
+    private const val SEARCH_PREFIX = "search:"
 
     // ── ID generators (used by detail screens when toggling favorites) ──
 
@@ -49,6 +53,16 @@ object FavoriteSpotResolver {
     fun campgroundId(name: String): String = "$CAMPGROUND_PREFIX$name"
     fun blmSiteId(stateCode: String, siteName: String): String = "$BLM_SITE_PREFIX$stateCode:$siteName"
     fun blmStateId(stateCode: String): String = "$BLM_STATE_PREFIX$stateCode"
+
+    // ── Specimen marker / custom pin / search location IDs ──
+
+    /** Favorite ID for a specimen marker or custom pin dropped on a map. */
+    fun pinId(latitude: Double, longitude: Double, name: String): String =
+        "$PIN_PREFIX$latitude:$longitude:$name"
+
+    /** Favorite ID for a searched or manually inputted location. */
+    fun searchId(latitude: Double, longitude: Double, name: String): String =
+        "$SEARCH_PREFIX$latitude:$longitude:$name"
 
     // ── Resolution ──
 
@@ -63,8 +77,36 @@ object FavoriteSpotResolver {
             id.startsWith(CAMPGROUND_PREFIX) -> resolveCampground(id.removePrefix(CAMPGROUND_PREFIX))
             id.startsWith(BLM_SITE_PREFIX) -> resolveBlmSite(id.removePrefix(BLM_SITE_PREFIX))
             id.startsWith(BLM_STATE_PREFIX) -> resolveBlmState(id.removePrefix(BLM_STATE_PREFIX))
+            id.startsWith(PIN_PREFIX) -> resolveCoordinatePin(id.removePrefix(PIN_PREFIX), "Specimen Pin")
+            id.startsWith(SEARCH_PREFIX) -> resolveCoordinatePin(id.removePrefix(SEARCH_PREFIX), "Searched Location")
             else -> resolveDigLocation(id)
         }
+    }
+
+    /**
+     * Resolves a coordinate-based pin/search favorite of the form
+     * "{lat}:{lng}:{name}". The name may itself contain colons, so only the
+     * first two colons are treated as coordinate delimiters.
+     */
+    private fun resolveCoordinatePin(body: String, typeLabel: String): FavoriteSpotEntry? {
+        val firstColon = body.indexOf(':')
+        if (firstColon < 0) return null
+        val secondColon = body.indexOf(':', startIndex = firstColon + 1)
+        if (secondColon < 0) return null
+        val lat = body.substring(0, firstColon).toDoubleOrNull() ?: return null
+        val lng = body.substring(firstColon + 1, secondColon).toDoubleOrNull() ?: return null
+        val name = body.substring(secondColon + 1).ifBlank { "Saved Spot" }
+        return FavoriteSpotEntry(
+            id = "$PIN_PREFIX$body",
+            name = name,
+            region = String.format("%.4f, %.4f", lat, lng),
+            latitude = lat,
+            longitude = lng,
+            typeLabel = typeLabel,
+            emoji = "📌",
+            accent = Citrine,
+            route = "",
+        )
     }
 
     private fun resolvePark(parkId: String): FavoriteSpotEntry? {

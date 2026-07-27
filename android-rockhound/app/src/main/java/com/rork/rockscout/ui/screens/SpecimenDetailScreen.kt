@@ -111,9 +111,16 @@ fun SpecimenDetailScreen(
     val collection by repo.collection.collectAsStateWithLifecycle()
     val wishlist by repo.wishlist.collectAsStateWithLifecycle()
     val likedSpecimens by repo.likedSpecimens.collectAsStateWithLifecycle()
+    val favoriteSpots by repo.favoriteSpots.collectAsStateWithLifecycle()
     val context = androidx.compose.ui.platform.LocalContext.current
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     var shareToProfileSpec by remember { mutableStateOf<Specimen?>(null) }
+
+    // Favorite-spot ID for this specimen marker (only when opened from a pin).
+    val spotFavId = if (spotLatitude != null && spotLongitude != null)
+        com.rork.rockscout.data.FavoriteSpotResolver.pinId(spotLatitude, spotLongitude, spec?.name ?: "Specimen Spot")
+    else null
+    val isSpotFavorited = spotFavId != null && favoriteSpots.contains(spotFavId)
 
     if (spec == null) {
         RockBackground {
@@ -257,8 +264,9 @@ fun SpecimenDetailScreen(
                     accent = accent,
                 )
             }
-            // Share-a-Spot card — only shown when the user arrived from a
-            // specimen marker pin tap (i.e. we have the pin's coordinates).
+            // Share-a-Spot + Add to Favorite Spots card — only shown when the
+            // user arrived from a specimen marker pin tap (i.e. we have the
+            // pin's coordinates).
             if (spotLatitude != null && spotLongitude != null) {
                 item { ShareASpotCard(
                     specimenName = spec.name,
@@ -266,6 +274,43 @@ fun SpecimenDetailScreen(
                     longitude = spotLongitude,
                     accent = accent,
                 ) }
+                item {
+                    val favAccent = if (isSpotFavorited) Success else Citrine
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Obsidian.copy(alpha = 0.7f))
+                            .glowingBorder(1.5.dp, favAccent.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                            .clickable {
+                                spotFavId?.let { repo.toggleFavoriteSpot(it) }
+                            }
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            if (isSpotFavorited) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
+                            contentDescription = "Add to Favorite Spots",
+                            tint = favAccent,
+                            modifier = Modifier.size(22.dp),
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (isSpotFavorited) "Saved to Favorite Spots" else "Add to Favorite Spots",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = "Bookmark this specimen hunting spot for quick access from My Favorite Spots.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = DarkTextMid,
+                            )
+                        }
+                    }
+                }
             }
         }
     }
