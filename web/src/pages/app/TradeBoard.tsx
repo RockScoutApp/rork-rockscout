@@ -297,25 +297,25 @@ export default function TradeBoard() {
                   )}
                 </div>
 
-                <div>
-                  <h3 className="font-display text-base font-semibold text-foreground">
+                <div className="min-w-0">
+                  <h3 className="truncate font-display text-base font-semibold text-foreground">
                     {listing.specimen_name || "Unnamed specimen"}
                   </h3>
                   {listing.condition && (
-                    <p className="mt-0.5 text-xs text-muted-foreground">
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
                       Condition: {listing.condition}
                     </p>
                   )}
                 </div>
 
                 {listing.description && (
-                  <p className="text-sm leading-relaxed text-muted-foreground">
+                  <p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">
                     {listing.description}
                   </p>
                 )}
 
                 {listing.want_in_return && (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="line-clamp-2 text-sm text-muted-foreground">
                     <span className="font-medium text-foreground">
                       Looking for:
                     </span>{" "}
