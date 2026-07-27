@@ -1,5 +1,5 @@
 import { SPECIMEN_DB, type SpecimenEntry } from "./specimens";
-import { ARTIFACT_DB, ARTIFACT_MAP } from "./artifacts";
+import { ARTIFACT_DB, ARTIFACT_MAP, type ArtifactEntry } from "./artifacts";
 import {
   embedText,
   matchSpecimenEmbeddings,
@@ -333,6 +333,7 @@ async function identifyArtifact(
   }
 
   const useSonnet = tier === "premium" || tier === "pro";
+  const useGemini = tier === "premium" || tier === "pro";
   const modelsUsed: string[] = ["artifact-mode"];
 
   // ── Embedding-first pipeline (mirrors the rock-ID flow) ──────────────
@@ -433,6 +434,8 @@ async function identifyArtifact(
     }
 
     // Step 4: Optional Sonnet re-rank on ambiguous artifact matches (top < 85%).
+    // Mirrors the rock-ID tiered accuracy ladder exactly.
+    let sonnetDisagreed = false;
     const topConf = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
     if (!visualShortCircuit && useSonnet && topConf < 85 && finalMatches.length > 0) {
       const sonnetResult = await callSonnetArtifactRerank(
@@ -440,23 +443,67 @@ async function identifyArtifact(
       );
       if (sonnetResult) {
         modelsUsed.push("sonnet-artifact");
+        const haikuTopId = finalMatches.length > 0 ? finalMatches[0].id : undefined;
         const merged = mergeRankings(finalMatches, sonnetResult.matches);
         finalMatches = merged.matches;
         finalSummary = merged.summary;
+        sonnetDisagreed = sonnetResult.matches.length > 0 &&
+          sonnetResult.matches[0].id !== haikuTopId;
+
+        // Gemini third opinion when both Sonnet and Haiku land < 85% or disagree.
+        // Mirrors the rock-ID callGeminiThirdOpinion gate.
+        const sonnetTopConf = sonnetResult.matches.length > 0
+          ? sonnetResult.matches[0].confidence : 0;
+        if (useGemini && (sonnetTopConf < 85 || sonnetDisagreed)) {
+          const geminiResult = await callGeminiArtifactThirdOpinion(
+            toolkitUrl, toolkitSecret, imageData, mimeType,
+            finalMatches, sonnetResult.matches, finalSummary,
+          );
+          if (geminiResult) {
+            modelsUsed.push("gemini-artifact");
+            const resolved = mergeRankingsThreeWay(
+              finalMatches, sonnetResult.matches, geminiResult.matches,
+            );
+            finalMatches = resolved.matches;
+            finalSummary = resolved.summary;
+          }
+        }
       }
     }
 
-    const needsClarification = !visualShortCircuit && topConf < 85 && finalMatches.length > 0;
+    // Step 5: Web search + clarification when still ambiguous after the full
+    // accuracy ladder. Mirrors the rock-ID flow exactly.
+    const finalTopConfidence = finalMatches.length > 0
+      ? finalMatches[0].confidence : 0;
+    const needsClarification = !visualShortCircuit && finalTopConfidence < 85 && finalMatches.length > 0;
+
+    let clarificationQuestions: ClarificationQuestion[] = [];
+    let webReferences: WebReference[] = [];
+
+    if (needsClarification && finalMatches.length > 0) {
+      clarificationQuestions = await generateArtifactClarificationQuestions(
+        toolkitUrl, toolkitSecret, finalMatches, finalSummary,
+      );
+      webReferences = await searchWebReferences(toolkitUrl, toolkitSecret, finalMatches);
+    }
+
+    // Uncertainty flag — only fires when the ENTIRE pipeline (database,
+    // Haiku, Sonnet, Gemini, and web search) still can't produce a
+    // reasonably confident match. The app shows a notification that the
+    // object could not be fully distinguished between an actual artifact
+    // and a similar-shaped natural rock.
+    const uncertainArtifact = !visualShortCircuit && finalTopConfidence < 55;
 
     const artifactResponse: IdentifyResponse = {
       matches: finalMatches,
       summary: finalSummary,
       needsClarification,
-      clarificationQuestions: [],
-      webReferences: [],
+      clarificationQuestions,
+      webReferences,
       modelsUsed,
       visualReferenceUsed,
       assemblage: undefined,
+      uncertainArtifact,
     };
 
     return Response.json(artifactResponse, { headers: responseHeaders });
@@ -737,7 +784,7 @@ Return ONLY valid JSON — no markdown:
     };
     const content = data.choices?.[0]?.message?.content;
     if (!content) return null;
-    return parseIdentificationResponse(content);
+    return parseArtifactIdentificationResponse(content);
   } catch (err) {
     console.error("Artifact visual comparison error:", String(err));
     return null;
@@ -800,10 +847,313 @@ Return ONLY valid JSON — no markdown:
     };
     const content = data.choices?.[0]?.message?.content;
     if (!content) return null;
-    return parseIdentificationResponse(content);
+    return parseArtifactIdentificationResponse(content);
   } catch (err) {
     console.error("Sonnet artifact re-rank error:", String(err));
     return null;
+  }
+}
+
+/** Gemini third-opinion for the artifact pipeline — mirrors
+ *  callGeminiThirdOpinion for specimens. Casts a tie-breaking vote when the
+ *  Haiku and Sonnet passes disagree on the top pick or both land < 85%. */
+async function callGeminiArtifactThirdOpinion(
+  toolkitUrl: string,
+  secret: string,
+  imageBase64: string,
+  mimeType: string,
+  haikuMatches: MatchResult[],
+  sonnetMatches: MatchResult[],
+  summary: string,
+): Promise<IdentificationResult | null> {
+  const allCandidates = [...haikuMatches, ...sonnetMatches];
+  const systemPrompt = buildArtifactCandidateSystemPrompt(allCandidates);
+  const haikuList = haikuMatches.slice(0, 5).map(m => `- ${m.name} (${m.confidence}%)`).join("\n");
+  const sonnetList = sonnetMatches.slice(0, 5).map(m => `- ${m.name} (${m.confidence}%)`).join("\n");
+  const userPrompt = `Two prior models disagreed on this artifact photo.
+
+Model A (first pass) candidates:
+${haikuList}
+
+Model B (re-rank) candidates:
+${sonnetList}
+
+Summary: ${summary}
+
+You are the tie-breaker. Look at the photo yourself and return your own ranked matches. Every id must exist in the reference database. Return the same JSON shape.`;
+
+  const messages = [
+    {
+      role: "system",
+      content: [
+        { type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } },
+      ],
+    },
+    {
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+        { type: "text", text: userPrompt },
+      ],
+    },
+  ];
+
+  try {
+    const response = await fetch(`${toolkitUrl}/v2/vercel/v1/chat/completions`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-pro",
+        messages,
+        max_tokens: 4096,
+        temperature: 0.1,
+      }),
+    });
+    if (!response.ok) return null;
+    const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) return null;
+    return parseArtifactIdentificationResponse(content);
+  } catch (err) {
+    console.error("Gemini artifact third-opinion error:", String(err));
+    return null;
+  }
+}
+
+/** Candidate-only system prompt for the artifact pipeline — mirrors
+ *  buildCandidateSystemPrompt for specimens. Includes ONLY the narrowed
+ *  candidate set's metadata so the rerank / tie-breaker models can reason
+ *  about the candidates without the full 106-artifact DB in context. */
+function buildArtifactCandidateSystemPrompt(candidates: MatchResult[]): string {
+  const seen = new Set<string>();
+  const rows: string[] = [];
+  for (const m of candidates) {
+    if (seen.has(m.id)) continue;
+    seen.add(m.id);
+    const art = ARTIFACT_MAP[m.id];
+    if (!art) continue;
+    const parts = [`- ${art.id}: "${art.name}" [${art.family} / ${art.subFamily}]`];
+    if (art.tagline) parts.push(art.tagline);
+    if (art.tribe) parts.push(`Culture: ${art.tribe}`);
+    if (art.timePeriod) parts.push(`Period: ${art.timePeriod}`);
+    rows.push(parts.join(" | "));
+  }
+  const candidateList = rows.join("\n");
+
+  return `You are an expert archaeologist identifying prehistoric artifacts from photographs.
+
+A pre-filter step has narrowed the database to these ${rows.length} candidates. Only consider these artifacts — never invent IDs.
+
+## DIAGNOSTIC FEATURES (in priority order)
+1. **Overall shape**: lanceolate, stemmed, corner-notched, bifacial, disc, tubular, oval, triangular, pick, cordiform, ovate, etc.
+2. **Flaking pattern**: collateral, parallel, oblique, random, pressure-flaked, bifacial, unifacial
+3. **Base style**: concave, convex, straight, notched, bifurcated, ground, grooved, shouldered
+4. **Material**: chert, flint, obsidian, slate, shell, ceramic, stone, bone, wood
+5. **Surface treatment**: incised, cord-marked, polished, serrated, cortex, retouched
+6. **Hafting features**: notches, stem, tang, groove
+
+## CONFIDENCE CALIBRATION
+- **90-98%**: Multiple diagnostic features clearly visible and aligned
+- **75-89%**: Strong match but one feature unclear or ambiguous
+- **55-74%**: Good candidate but significant lookalikes exist
+- **30-54%**: Possible but uncertain — photo quality or variability creates doubt
+- **Below 30%**: Include only as a plausible alternative worth checking
+
+## RULES
+1. Only match against the candidates below — never invent IDs
+2. Always provide exactly 5 matches, ranked by confidence highest to lowest
+3. Each reasoning must mention specific visual evidence from the photo
+
+## CANDIDATES (${rows.length})
+${candidateList}`;
+}
+
+/** Generate clarification questions tailored to ambiguous artifact matches.
+ *  Mirrors generateClarificationQuestions for specimens but uses artifact
+ *  vocabulary (shape, flaking, base style, material, hafting). */
+async function generateArtifactClarificationQuestions(
+  toolkitUrl: string,
+  secret: string,
+  matches: MatchResult[],
+  summary: string,
+): Promise<ClarificationQuestion[]> {
+  const topNames = matches.slice(0, 4).map(m => `${m.name} (${m.confidence}%)`).join(", ");
+  const matchDetails = matches.slice(0, 4).map(m => {
+    const art = ARTIFACT_MAP[m.id];
+    return `- ${m.name}: ${m.reasoning}${art ? ` | Family: ${art.family}, Culture: ${art.tribe}, Period: ${art.timePeriod}` : ""}`;
+  }).join("\n");
+
+  const prompt = `You are helping a user identify a prehistoric artifact from a photo. The AI vision model returned these ambiguous matches:
+
+${matchDetails}
+
+Summary: ${summary}
+
+The top match confidence is below 85%, meaning there's ambiguity. Generate 3-4 short questions that will help disambiguate between these candidates. Each question should have 3-5 multiple-choice options.
+
+Focus on properties the user can easily observe:
+- Overall shape (lanceolate, triangular, stemmed, corner-notched, etc.)
+- Flaking pattern (parallel, oblique, random, pressure-flaked)
+- Base style (concave, straight, notched, bifurcated, ground)
+- Material color and type (gray chert, black obsidian, tan flint, etc.)
+- Size and proportions
+- Surface treatment (polished, serrated, cortex, incised)
+- Context (where found — field, creek, construction site)
+
+Return ONLY valid JSON — no markdown, no extra text:
+{
+  "questions": [
+    {
+      "id": "shape",
+      "question": "What is the overall shape of the object?",
+      "options": ["Lanceolate (leaf-shaped)", "Triangular", "Stemmed", "Corner-notched", "Round/disc"]
+    }
+  ]
+}`;
+
+  try {
+    const response = await fetch(`${toolkitUrl}/v2/vercel/v1/chat/completions`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "anthropic/claude-haiku-4.5",
+        messages: [
+          { role: "system", content: "You are an archaeology expert assistant. Return only valid JSON." },
+          { role: "user", content: prompt },
+        ],
+        max_tokens: 1500,
+        temperature: 0.3,
+      }),
+    });
+    if (!response.ok) return getDefaultArtifactQuestions(matches);
+    const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) return getDefaultArtifactQuestions(matches);
+
+    let jsonStr = content.trim();
+    const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (jsonMatch) jsonStr = jsonMatch[1].trim();
+    if (!jsonStr.startsWith("{")) {
+      const firstBrace = jsonStr.indexOf("{");
+      const lastBrace = jsonStr.lastIndexOf("}");
+      if (firstBrace !== -1 && lastBrace !== -1) {
+        jsonStr = jsonStr.slice(firstBrace, lastBrace + 1);
+      }
+    }
+    const parsed = JSON.parse(jsonStr) as { questions: ClarificationQuestion[] };
+    if (!Array.isArray(parsed.questions) || parsed.questions.length === 0) {
+      return getDefaultArtifactQuestions(matches);
+    }
+    return parsed.questions
+      .filter(q => q.id && q.question && Array.isArray(q.options) && q.options.length >= 2)
+      .slice(0, 4);
+  } catch (err) {
+    console.error("Artifact clarification question generation error:", String(err));
+    return getDefaultArtifactQuestions(matches);
+  }
+}
+
+/** Fallback clarification questions for artifacts when the AI generation
+ *  fails. Mirrors getDefaultQuestions for specimens but uses artifact
+ *  vocabulary. */
+function getDefaultArtifactQuestions(matches: MatchResult[]): ClarificationQuestion[] {
+  const arts = matches.slice(0, 4)
+    .map(m => ARTIFACT_MAP[m.id])
+    .filter(Boolean) as ArtifactEntry[];
+
+  const questions: ClarificationQuestion[] = [];
+
+  // Shape question — based on subFamily hints
+  const shapes = new Set<string>();
+  arts.forEach(a => {
+    const sf = a.subFamily.toLowerCase();
+    if (sf.includes("lanceolate")) shapes.add("Lanceolate (leaf-shaped)");
+    if (sf.includes("stemmed")) shapes.add("Stemmed");
+    if (sf.includes("notched")) shapes.add("Notched");
+    if (sf.includes("bifacial") || sf.includes("bifacial")) shapes.add("Bifacial (worked both sides)");
+    if (sf.includes("disc") || sf.includes("oval") || sf.includes("cordiform")) shapes.add("Round / oval");
+  });
+  if (shapes.size > 1) {
+    questions.push({
+      id: "shape",
+      question: "What is the overall shape of the object?",
+      options: Array.from(shapes).slice(0, 5),
+    });
+  }
+
+  // Material question
+  questions.push({
+    id: "material",
+    question: "What material is it made from?",
+    options: ["Gray/tan chert or flint", "Black obsidian", "Quartz or quartzite", "Slate or other stone", "Shell or bone"],
+  });
+
+  // Size question
+  questions.push({
+    id: "size",
+    question: "How large is the object?",
+    options: ["Under 1 inch", "1-2 inches", "2-4 inches", "Over 4 inches", "Not sure"],
+  });
+
+  // Context question
+  questions.push({
+    id: "context",
+    question: "Where did you find it?",
+    options: ["Field or plowed ground", "Creek or riverbed", "Construction site", "Desert or open land", "Bought / unknown"],
+  });
+
+  return questions.slice(0, 4);
+}
+
+/** Parse the artifact identification response — validates IDs against
+ *  ARTIFACT_DB instead of SPECIMEN_DB. Without this, all artifact IDs
+ *  ("art-*") would be silently filtered out by parseIdentificationResponse. */
+function parseArtifactIdentificationResponse(content: string): IdentificationResult {
+  let jsonStr = content.trim();
+  const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (jsonMatch) {
+    jsonStr = jsonMatch[1].trim();
+  }
+  if (!jsonStr.startsWith("{")) {
+    const firstBrace = jsonStr.indexOf("{");
+    const lastBrace = jsonStr.lastIndexOf("}");
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      jsonStr = jsonStr.slice(firstBrace, lastBrace + 1);
+    }
+  }
+  try {
+    const parsed = JSON.parse(jsonStr) as IdentificationResult;
+    if (!Array.isArray(parsed.matches)) {
+      throw new Error("matches is not an array");
+    }
+    const validIds = new Set(ARTIFACT_DB.map((a) => a.id));
+    const idToName = new Map(ARTIFACT_DB.map((a) => [a.id, a.name]));
+    parsed.matches = parsed.matches
+      .filter((m) => validIds.has(m.id))
+      .sort((a, b) => b.confidence - a.confidence)
+      .slice(0, 5)
+      .map((m) => ({
+        id: m.id,
+        name: idToName.get(m.id) ?? m.name ?? "Unknown",
+        confidence: Math.min(100, Math.max(0, Math.round(m.confidence))),
+        reasoning: m.reasoning ?? "",
+      }));
+    if (parsed.matches.length === 0) {
+      return {
+        matches: [],
+        summary: parsed.summary ?? "The AI couldn't identify this as an artifact. Try a clearer photo showing the object's shape and flaking pattern.",
+      };
+    }
+    return {
+      matches: parsed.matches,
+      summary: parsed.summary ?? "",
+    };
+  } catch {
+    console.error("Failed to parse artifact AI JSON response:", jsonStr.slice(0, 500));
+    return {
+      matches: [],
+      summary: "The AI response couldn't be parsed. Please try again with a clearer photo.",
+    };
   }
 }
 
@@ -2164,6 +2514,11 @@ interface IdentifyResponse {
   visualReferenceUsed?: boolean;
   /** Assemblage analysis result — present when the specimen is a multi-mineral assemblage. */
   assemblage?: AssemblageResult;
+  /** Artifact-only: true when the full pipeline (database + Haiku + Sonnet +
+   *  Gemini + web search) still can't produce a reasonably confident match
+   *  (top < 55%). The app shows a notification that the object could not be
+   *  fully distinguished between an actual artifact and a similar-shaped rock. */
+  uncertainArtifact?: boolean;
 }
 
 interface ExaSearchResult {

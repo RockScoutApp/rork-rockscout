@@ -74,6 +74,11 @@ data class IdentifyResponse(
     val modelsUsed: List<String> = emptyList(),
     /** Assemblage analysis — present when the specimen is a multi-mineral assemblage. */
     val assemblage: AssemblageResult? = null,
+    /** Artifact-only: true when the full pipeline (database + Haiku + Sonnet +
+     *  Gemini + web search) still can't produce a reasonably confident match.
+     *  The app shows a notification that the object could not be fully
+     *  distinguished between an actual artifact and a similar-shaped rock. */
+    val uncertainArtifact: Boolean = false,
 )
 
 @Serializable

@@ -215,6 +215,7 @@ fun IdentifyScreen(navController: NavController) {
     var clarificationQuestions by remember { mutableStateOf<List<ClarificationQuestion>>(emptyList()) }
     var webReferences by remember { mutableStateOf<List<WebReference>>(emptyList()) }
     var assemblageResult by remember { mutableStateOf<AssemblageResult?>(null) }
+    var uncertainArtifact by remember { mutableStateOf(false) }
     var preliminaryMatches by remember { mutableStateOf<List<IdentifyMatch>>(emptyList()) }
     var preliminarySummary by remember { mutableStateOf("") }
     val answers = remember { mutableStateMapOf<String, String>() }
@@ -267,6 +268,7 @@ fun IdentifyScreen(navController: NavController) {
         clarificationQuestions = emptyList()
         webReferences = emptyList()
         assemblageResult = null
+        uncertainArtifact = false
         preliminaryMatches = emptyList()
         preliminarySummary = ""
         answers.clear()
@@ -369,6 +371,7 @@ fun IdentifyScreen(navController: NavController) {
                     aiSummary = response.summary
                     webReferences = response.webReferences
                     assemblageResult = response.assemblage
+                    uncertainArtifact = response.uncertainArtifact
                     state = ScanState.RESULTS
                     return@launch
                 }
@@ -1140,6 +1143,40 @@ fun IdentifyScreen(navController: NavController) {
             // in "artifacts" search mode. Fully separate from the specimen
             // results block below — the two are mutually exclusive.
             if (state == ScanState.RESULTS && artifactMatches.isNotEmpty()) {
+                // Uncertainty notification — only shown when the ENTIRE pipeline
+                // (database + Haiku + Sonnet + Gemini + web search) couldn't
+                // produce a reasonably confident match. Lets the user know the
+                // object could not be fully distinguished between an actual
+                // artifact and a similar-shaped natural rock.
+                if (uncertainArtifact) {
+                    item {
+                        DarkCard(modifier = Modifier.fillMaxWidth(), accent = Warning) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Filled.HelpOutline,
+                                    contentDescription = null,
+                                    tint = Warning,
+                                    modifier = Modifier.size(22.dp),
+                                )
+                                Spacer(Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        "Hard to distinguish",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                    Text(
+                                        "Our AI ran the full analysis pipeline and couldn't confidently tell whether this is an actual artifact or a similarly shaped natural rock. The matches below are our best guesses — consider consulting a local archaeologist for confirmation.",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = DarkTextLow,
+                                        lineHeight = 18.sp,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
                 item {
                     Text(
                         "BEST ARTIFACT MATCHES",
