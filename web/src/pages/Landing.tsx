@@ -684,7 +684,7 @@ type FieldStory =
 const FIELD_STORIES: FieldStory[] = [
   {
     type: "gear",
-    span: "row-span-3 md:col-span-2 md:row-span-2",
+    span: "row-span-2 md:col-span-2 md:row-span-2",
   },
   {
     type: "story",
@@ -795,7 +795,7 @@ const FieldStories = () => (
         </span>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 auto-rows-[200px] sm:auto-rows-[260px] sm:grid-cols-2 sm:gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 auto-rows-[150px] sm:auto-rows-[260px] sm:grid-cols-2 sm:gap-4 md:grid-cols-4">
         {FIELD_STORIES.map((story) => (
           <figure
             key={story.type === "gear" ? "gear" : story.src}
