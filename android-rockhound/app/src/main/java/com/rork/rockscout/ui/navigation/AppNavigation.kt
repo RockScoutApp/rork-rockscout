@@ -46,6 +46,8 @@ import com.rork.rockscout.ui.screens.SpecimenDetailScreen
 import com.rork.rockscout.ui.screens.SharedSpotScreen
 import com.rork.rockscout.ui.screens.SpecimenListScreen
 import com.rork.rockscout.ui.screens.RocksAreAmazingScreen
+import com.rork.rockscout.ui.screens.ArtifactsScreen
+import com.rork.rockscout.ui.screens.ArtifactDetailScreen
 import com.rork.rockscout.ui.screens.SavedImagesScreen
 import com.rork.rockscout.ui.screens.MeteoriteHuntingScreen
 import com.rork.rockscout.ui.screens.ContactUsScreen
@@ -193,6 +195,8 @@ object Routes {
     const val AURORA = "aurora"
     const val SEVERE_WEATHER = "severe_weather"
     const val GLOSSARY = "glossary"
+    const val ARTIFACTS = "artifacts"
+    const val ARTIFACT_DETAIL = "artifact/{artifactId}"
     const val NATURAL_WONDERS = "natural_wonders"
 
     // Stars & Constellations sub-screens
@@ -254,6 +258,7 @@ object Routes {
     fun stateParkDetail(parkId: String) = "state_park/$parkId"
     fun thankYou(tokens: Int, days: Int) = "thank_you/$tokens/$days"
     fun disclaimer(isGate: Boolean) = "disclaimer?isGate=$isGate"
+    fun artifactDetail(id: String) = "artifact/$id"
 }
 
 /**
@@ -528,6 +533,16 @@ fun AppNavigation(
         composable(Routes.PALEONTOLOGY) { PaleontologyScreen(navController) }
         composable(Routes.PREHISTORIC_ORGANISMS) { PrehistoricOrganismsScreen(navController) }
         composable(Routes.ROCKS_ARE_AMAZING) { RocksAreAmazingScreen(navController) }
+        composable(Routes.ARTIFACTS) { ArtifactsScreen(navController) }
+        composable(
+            Routes.ARTIFACT_DETAIL,
+            arguments = listOf(navArgument("artifactId") { type = NavType.StringType }),
+        ) { entry ->
+            ArtifactDetailScreen(
+                navController = navController,
+                artifactId = entry.arguments?.getString("artifactId").orEmpty(),
+            )
+        }
         composable(Routes.GEAR_GUIDE) { GearGuideScreen(navController) }
         composable(Routes.SAVED_IMAGES) { SavedImagesScreen(navController) }
         composable(Routes.METEORITE_HUNTING) { MeteoriteHuntingScreen(navController) }

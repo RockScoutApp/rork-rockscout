@@ -20,6 +20,9 @@ data class IdentifyRequest(
      *  "free" = Haiku only, "premium" = Haiku + Sonnet re-rank on ambiguous,
      *  "pro" = Haiku + Sonnet + Gemini third opinion on the hardest cases. */
     val entitlement: String = "free",
+    /** Search mode: "rocks" (default — current behavior, artifacts excluded)
+     *  or "artifacts" (artifacts prioritized in the candidate set). */
+    val searchMode: String = "rocks",
 )
 
 @Serializable
@@ -88,6 +91,13 @@ data class ClarifyRequest(
     val summary: String,
 )
 
+@Serializable
+data class ArtifactDetectionResult(
+    val isArtifact: Boolean = false,
+    val confidence: Int = 0,
+    val error: String? = null,
+)
+
 /**
  * Calls the Cloudflare Worker backend to identify a specimen from a base64-encoded photo.
  * Uses the Rork AI proxy with Claude Sonnet 5 for vision analysis.
@@ -141,6 +151,7 @@ object IdentifyApi {
         imageBase64: String,
         mimeType: String = "image/jpeg",
         entitlement: String = "free",
+        searchMode: String = "rocks",
     ): IdentifyResponse {
         val response = identifyClient.post("$BASE_URL/identify") {
             contentType(ContentType.Application.Json)
@@ -152,6 +163,7 @@ object IdentifyApi {
                         imageBase64 = imageBase64,
                         mimeType = mimeType,
                         entitlement = entitlement,
+                        searchMode = searchMode,
                     ),
                 )
             )
@@ -198,6 +210,37 @@ object IdentifyApi {
             json.decodeFromString(IdentifyResponse.serializer(), body)
         } catch (e: Exception) {
             IdentifyResponse(error = "Failed to parse clarification results: ${e.message}")
+        }
+    }
+
+    /**
+     * Lightweight artifact-detection pre-pass (Haiku-only, fast, cheap).
+     * Returns whether the photo likely contains an artifact (knapped stone tool,
+     * point, bead, or other artifact) and a confidence score.
+     * Consumes NO credit — it's a cheap gate, not a full ID.
+     */
+    suspend fun detectArtifact(imageBase64: String, mimeType: String = "image/jpeg"): ArtifactDetectionResult {
+        return try {
+            val response = identifyClient.post("$BASE_URL/identify/artifact-detect") {
+                contentType(ContentType.Application.Json)
+                if (APP_KEY.isNotBlank()) header("X-App-Key", APP_KEY)
+                setBody(
+                    json.encodeToString(
+                        IdentifyRequest.serializer(),
+                        IdentifyRequest(
+                            imageBase64 = imageBase64,
+                            mimeType = mimeType,
+                            entitlement = "free",
+                            searchMode = "detect-artifact",
+                        ),
+                    )
+                )
+            }
+            val body = response.body<String>()
+            json.decodeFromString(ArtifactDetectionResult.serializer(), body)
+        } catch (e: Exception) {
+            // Fail open — if the pre-pass fails, skip straight to normal ID
+            ArtifactDetectionResult(isArtifact = false, confidence = 0)
         }
     }
 }

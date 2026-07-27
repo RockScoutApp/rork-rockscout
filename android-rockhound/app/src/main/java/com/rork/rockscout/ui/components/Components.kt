@@ -1498,7 +1498,7 @@ fun FormationEnvironmentBadge(
  *  reads as part of the card's color identity, sitting directly on the card
  *  background with no shadow box behind it. */
 @Composable
-private fun AutoSizeTaglineText(
+fun AutoSizeTaglineText(
     text: String,
     accent: Color,
     modifier: Modifier = Modifier,

@@ -280,6 +280,92 @@ export async function handleIdentify(
   }
 }
 
+/**
+ * Lightweight artifact-detection pre-pass (Haiku-only, fast, cheap).
+ * Returns { isArtifact, confidence } — no credit consumed on the client.
+ * Used by the IdentifyScreen confirmation gate before the full identify runs.
+ */
+export async function handleArtifactDetect(
+  request: Request,
+  env: Env,
+  cors: Record<string, string>,
+): Promise<Response> {
+  try {
+    const body = await request.json() as {
+      imageBase64: string;
+      mimeType?: string;
+    };
+
+    if (!body.imageBase64) {
+      return Response.json(
+        { error: "imageBase64 is required" },
+        { status: 400, headers: cors },
+      );
+    }
+
+    const mimeType = body.mimeType ?? "image/jpeg";
+    const imageData = stripDataUriPrefix(body.imageBase64);
+    const toolkitUrl = env.EXPO_PUBLIC_TOOLKIT_URL ?? "https://toolkit.rork.com";
+    const toolkitSecret = env.EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY;
+
+    if (!toolkitSecret) {
+      return Response.json(
+        { error: "Toolkit secret not configured" },
+        { status: 500, headers: cors },
+      );
+    }
+
+    // Single Haiku call — cheap and fast (~5-10s). No DB needed in context.
+    const detectPrompt = `You are an expert archaeologist. Look at this photo and determine: is this a prehistoric artifact (knapped stone tool, arrowhead, spear point, hand axe, scraper, drill, bead, effigy, pipe, game disc, pottery sherd, or other human-made object of stone, shell, wood, or ceramic)?
+
+Respond with ONLY a JSON object:
+{"isArtifact": true/false, "confidence": 0-100}
+
+- isArtifact: true if the object appears to be a human-made artifact
+- confidence: your confidence level (0-100)
+
+If it's clearly a natural rock, mineral, crystal, or fossil, return isArtifact: false with high confidence.
+If it's clearly an artifact, return isArtifact: true with high confidence.
+If you're unsure, return your best guess with appropriate confidence.`;
+
+    const result = await callVisionModel(
+      toolkitUrl,
+      toolkitSecret,
+      imageData,
+      mimeType,
+      detectPrompt,
+      "claude-haiku-4-5",
+    );
+
+    // Parse the JSON response from the model
+    let isArtifact = false;
+    let confidence = 0;
+    try {
+      const cleaned = result.trim()
+        .replace(/^```json\s*/i, "")
+        .replace(/```$/, "")
+        .trim();
+      const parsed = JSON.parse(cleaned);
+      isArtifact = !!parsed.isArtifact;
+      confidence = Math.max(0, Math.min(100, Number(parsed.confidence) || 0));
+    } catch {
+      // If parsing fails, fail open — don't block the user
+      isArtifact = false;
+      confidence = 0;
+    }
+
+    return Response.json(
+      { isArtifact, confidence },
+      { headers: { ...cors, "Content-Type": "application/json" } },
+    );
+  } catch (error) {
+    return Response.json(
+      { isArtifact: false, confidence: 0, error: "Detection failed" },
+      { headers: { ...cors, "Content-Type": "application/json" } },
+    );
+  }
+}
+
 export async function handleClarify(
   request: Request,
   env: Env,

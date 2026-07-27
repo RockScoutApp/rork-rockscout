@@ -78,6 +78,7 @@ import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
@@ -441,6 +442,8 @@ fun HomeScreen(navController: NavController) {
             SpecimenImages.urls["herkimer"]?.firstOrNull()),
         HomeTile("Lapidary Basics", "Cut, polish & cab your finds into jewelry", Icons.Filled.Construction, Color(0xFFE8A33D), Routes.LAPIDARY_BASICS,
             SpecimenImages.urls["lapidary-tile"]?.firstOrNull()),
+        HomeTile("Artifacts", "Arrowheads, hand axes, beads & stone tools", Icons.Filled.AccountBalance, Color(0xFFB87333), Routes.ARTIFACTS,
+            "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/ca44cafb-2e4f-4d3b-9334-174ceedf713b.png"),
         HomeTile("Natural Wonders", "World-famous geological sites & what to find there", Icons.Filled.Public, Color(0xFF1B3A4B), Routes.NATURAL_WONDERS,
             "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/057bdf45-4a43-426e-bc68-7b48842d4acf.png"),
     )

@@ -171,6 +171,7 @@ private enum class ScanState {
     IDLE,
     CAPTURED,
     MODERATING,
+    ARTIFACT_CONFIRM, // Artifact-detection pre-pass suspects an artifact
     SCANNING,
     CLARIFY_QUESTIONS,
     CLARIFYING,
@@ -236,6 +237,7 @@ fun IdentifyScreen(navController: NavController) {
     }
 
     var moderationReason by remember { mutableStateOf("") }
+    var pendingSearchMode by remember { mutableStateOf("rocks") }
 
     // Live network connectivity — the AI identifier requires a signal to reach
     // the Cloudflare Worker backend. When offline, show a notice so the user
@@ -261,7 +263,7 @@ fun IdentifyScreen(navController: NavController) {
         customAnswers.clear()
     }
 
-    fun startIdentification() {
+    fun startIdentification(searchMode: String = "rocks") {
         val bitmap = capturedBitmap ?: return
         // Gate: consume a credit before firing the AI call.
         val consumedCredit = accessManager.consumeIdentify(isPremium)
@@ -271,6 +273,7 @@ fun IdentifyScreen(navController: NavController) {
         }
         state = ScanState.SCANNING
         errorMessage = ""
+        pendingSearchMode = searchMode
 
         scope.launch {
             try {
@@ -296,7 +299,7 @@ fun IdentifyScreen(navController: NavController) {
                     isPremium -> "premium"
                     else -> "free"
                 }
-                val response = cached ?: IdentifyApi.identify(base64, "image/jpeg", entitlement).also {
+                val response = cached ?: IdentifyApi.identify(base64, "image/jpeg", entitlement, pendingSearchMode).also {
                     // Cache only successful, non-error first-pass results. Errors
                     // and clarification re-rank calls are never cached (re-rank
                     // depends on user answers, which are unique each time).
@@ -414,8 +417,23 @@ fun IdentifyScreen(navController: NavController) {
                     state = ScanState.REJECTED
                     return@launch
                 }
-                // Passed moderation — proceed to the credit-gated identify flow.
-                startIdentification()
+                // Passed moderation — run the artifact-detection pre-pass
+                // (Haiku-only, fast, cheap, no credit consumed). If it suspects
+                // an artifact, show the confirmation popup before proceeding.
+                val detectBase64 = withContext(Dispatchers.IO) {
+                    val resized = resizeBitmap(bitmap, 1024)
+                    val baos = ByteArrayOutputStream()
+                    resized.compress(Bitmap.CompressFormat.JPEG, 80, baos)
+                    android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP)
+                }
+                val detection = IdentifyApi.detectArtifact(detectBase64, "image/jpeg")
+                if (detection.isArtifact && detection.confidence >= 70) {
+                    // Suspected artifact — ask the user to confirm before routing
+                    state = ScanState.ARTIFACT_CONFIRM
+                } else {
+                    // Not an artifact (or detection failed) — normal rock-ID flow
+                    startIdentification()
+                }
             } catch (e: Exception) {
                 // Moderation hiccup — fail open and proceed to identification.
                 startIdentification()
@@ -868,7 +886,19 @@ fun IdentifyScreen(navController: NavController) {
                             shape = RoundedCornerShape(14.dp),
                         )
                     }
+                    ScanState.ARTIFACT_CONFIRM -> Spacer(Modifier.height(0.dp))
                     ScanState.LOCKED -> Spacer(Modifier.height(0.dp))
+                }
+            }
+
+            // Artifact confirmation popup — 3 vertically stacked, centered pill buttons
+            if (state == ScanState.ARTIFACT_CONFIRM) {
+                item {
+                    ArtifactConfirmPopup(
+                        onYes = { startIdentification(searchMode = "artifacts") },
+                        onMaybe = { startIdentification(searchMode = "artifacts") },
+                        onNo = { startIdentification(searchMode = "rocks") },
+                    )
                 }
             }
 
@@ -1127,6 +1157,7 @@ fun IdentifyScreen(navController: NavController) {
 private fun PhotoPreview(bitmap: Bitmap?, state: ScanState, onRetake: () -> Unit, onCamera: () -> Unit) {
     val showBitmap = state == ScanState.CAPTURED ||
         state == ScanState.MODERATING ||
+        state == ScanState.ARTIFACT_CONFIRM ||
         state == ScanState.SCANNING ||
         state == ScanState.CLARIFY_QUESTIONS ||
         state == ScanState.CLARIFYING ||
@@ -2294,6 +2325,105 @@ private fun AssemblageCard(assemblage: AssemblageResult) {
                     Spacer(Modifier.height(6.dp))
                 }
             }
+        }
+    }
+}
+
+/**
+ * Artifact confirmation popup — 3 vertically stacked, centered pill buttons.
+ * Shown when the AI artifact-detection pre-pass suspects the photo contains
+ * an artifact (knapped stone tool, point, bead, etc.). The user confirms
+ * before the full identify runs.
+ *
+ * - Yes (warm clay accent, primary) → searches artifacts first
+ * - Maybe? (clay accent, secondary) → searches artifacts first
+ * - No (neutral / Aqua accent) → normal rock-ID flow
+ */
+@Composable
+private fun ArtifactConfirmPopup(
+    onYes: () -> Unit,
+    onMaybe: () -> Unit,
+    onNo: () -> Unit,
+) {
+    val clayAccent = Color(0xFFB87333)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        // Question header
+        DarkCard(
+            modifier = Modifier.fillMaxWidth(),
+            accent = clayAccent,
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(
+                    Icons.Filled.HelpOutline,
+                    contentDescription = null,
+                    tint = clayAccent,
+                    modifier = Modifier.size(24.dp),
+                )
+                Spacer(Modifier.width(10.dp))
+                Column {
+                    Text(
+                        "Is this an artifact?",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = TextHigh,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        "Our AI thinks this might be a knapped stone tool, point, or other artifact. Help us search the right database.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextMid,
+                    )
+                }
+            }
+        }
+
+        // Yes — warm clay accent, primary
+        SculptedButton(
+            text = "Yes",
+            onClick = onYes,
+            accent = clayAccent,
+            containerColor = clayAccent,
+            textColor = Ink,
+            modifier = Modifier.fillMaxWidth().height(54.dp),
+            shape = RoundedCornerShape(14.dp),
+        )
+
+        // Maybe? — clay accent, secondary (outlined)
+        OutlinedButton(
+            onClick = onMaybe,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(54.dp)
+                .sculpted(shape = RoundedCornerShape(14.dp), accent = clayAccent, shadowElevation = 6.dp)
+                .background(Slate800, RoundedCornerShape(14.dp)),
+            shape = RoundedCornerShape(14.dp),
+            border = BorderStroke(1.5.dp, clayAccent),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = clayAccent),
+        ) {
+            Text("Maybe?", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+        }
+
+        // No — neutral / Aqua accent (matches the existing Discard pill aesthetic)
+        OutlinedButton(
+            onClick = onNo,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(54.dp)
+                .sculpted(shape = RoundedCornerShape(14.dp), accent = Aqua, shadowElevation = 6.dp)
+                .background(Slate800, RoundedCornerShape(14.dp)),
+            shape = RoundedCornerShape(14.dp),
+            border = BorderStroke(1.5.dp, Aqua),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = Aqua),
+        ) {
+            Text("No", fontWeight = FontWeight.Bold, fontSize = 16.sp)
         }
     }
 }

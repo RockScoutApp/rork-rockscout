@@ -1,6 +1,6 @@
-import { handleIdentify, handleClarify } from "./identify";
+import { handleIdentify, handleClarify, handleArtifactDetect } from "./identify";
 // RockScout backend — Cloudflare Worker entry (auth + rate-limit enabled).
-// Routes: /ping, /identify, /identify/clarify, /app-version, /welcome-email, /image-rejection-email, /referral/*, /dev-sms-verify, /stripe/*, /push/*.
+// Routes: /ping, /identify, /identify/clarify, /identify/artifact-detect, /app-version, /welcome-email, /image-rejection-email, /referral/*, /dev-sms-verify, /stripe/*, /push/*.
 import { handleAppVersion } from "./app-version";
 import { handleWelcomeEmail } from "./welcome-email";
 import { handleImageRejectionEmail } from "./image-rejection-email";
@@ -51,6 +51,12 @@ export default {
       const guard = guardEndpoint(request, env, "/identify/clarify", cors, env.RATE_LIMIT_KV);
       if (guard) return guard;
       return handleClarify(request, env, cors);
+    }
+
+    if (url.pathname === "/identify/artifact-detect" && request.method === "POST") {
+      const guard = guardEndpoint(request, env, "/identify/artifact-detect", cors, env.RATE_LIMIT_KV);
+      if (guard) return guard;
+      return handleArtifactDetect(request, env, cors);
     }
 
     // Email endpoints — auth + rate limit.

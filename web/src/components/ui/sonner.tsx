@@ -1,14 +1,19 @@
-import { useTheme } from "next-themes";
 import { Toaster as Sonner, toast } from "sonner";
 
 type ToasterProps = React.ComponentProps<typeof Sonner>;
 
+/**
+ * Sonner toaster.
+ *
+ * The site is statically dark via CSS variables in index.css (no light theme,
+ * no theme toggle anywhere), so the theme is hardcoded to "dark". This avoids
+ * pulling in next-themes' useTheme() which expects a ThemeProvider in the tree
+ * — none exists here, and a missing provider is a latent mount-time crash risk.
+ */
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme();
-
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme="dark"
       className="toaster group"
       toastOptions={{
         classNames: {

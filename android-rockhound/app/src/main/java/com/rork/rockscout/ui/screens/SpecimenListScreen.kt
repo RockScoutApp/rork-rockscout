@@ -373,8 +373,57 @@ fun SpecimenListScreen(navController: NavController) {
                 textStyle = MaterialTheme.typography.bodyMedium,
             )
 
-            // Specimen list
-            if (filtered.isEmpty()) {
+            // ARTIFACTS chip — swap list source (the ONLY specimen-DB connection point).
+            // Specimen data, filter, and card are NOT touched — this is a screen-level
+            // early-return that renders ArtifactListItem instead of SpecimenListItem.
+            if (selectedFilter == ListCategoryFilter.ARTIFACTS) {
+                val artifacts = remember(query) {
+                    val all = com.rork.rockscout.data.ArtifactSpecimens.allArtifacts
+                    if (query.isBlank()) all
+                    else all.filter { it.name.contains(query, ignoreCase = true) ||
+                        it.family.contains(query, ignoreCase = true) ||
+                        it.tagline.contains(query, ignoreCase = true) ||
+                        it.whereFound.any { it.contains(query, ignoreCase = true) } }
+                }
+                if (artifacts.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                "No artifacts match \"$query\"",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = TextMid,
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "Try a different search term.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = TextMid,
+                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .navigationBarsPadding(),
+                        contentPadding = PaddingValues(
+                            start = 8.dp, end = 16.dp, top = 4.dp, bottom = 40.dp,
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                    ) {
+                        items(artifacts, key = { it.id }) { artifact ->
+                            com.rork.rockscout.ui.components.ArtifactListItem(
+                                artifact = artifact,
+                                accent = Color(artifact.accentHex),
+                                onClick = { navController.navigate(Routes.artifactDetail(artifact.id)) },
+                            )
+                        }
+                    }
+                }
+            } else if (filtered.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
