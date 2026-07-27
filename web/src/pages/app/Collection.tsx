@@ -113,7 +113,7 @@ export default function Collection() {
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       ) : filtered.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {filtered.map((item) => (
             <div
               key={item.id}

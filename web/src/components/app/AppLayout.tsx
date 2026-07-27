@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   Home,
@@ -8,9 +9,12 @@ import {
   LogOut,
   Gem,
   MapPin,
+  Keyboard,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import IosBetaBanner from "@/components/app/IosBetaBanner";
+import KeyboardHelpOverlay from "@/components/app/KeyboardHelpOverlay";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -32,6 +36,9 @@ const NAV_ITEMS: NavItem[] = [
 export default function AppLayout() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [helpOpen, setHelpOpen] = useState(false);
+
+  useKeyboardShortcuts({ onToggleHelp: () => setHelpOpen((v) => !v) });
 
   const handleSignOut = async () => {
     await signOut();
@@ -74,8 +81,22 @@ export default function AppLayout() {
           ))}
         </nav>
 
-        <div className="border-t border-border p-3">
-          <div className="mb-2 truncate px-3 text-xs text-muted-foreground">
+        <div className="space-y-1 border-t border-border p-3">
+          <button
+            onClick={() => setHelpOpen(true)}
+            className="hidden w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground md:flex"
+            aria-label="Keyboard shortcuts help"
+            title="Keyboard shortcuts (?)"
+          >
+            <Keyboard className="h-5 w-5" />
+            Shortcuts
+            <span className="ml-auto flex items-center gap-1">
+              <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-sans text-[10px] font-semibold text-muted-foreground">
+                ?
+              </kbd>
+            </span>
+          </button>
+          <div className="mb-1 truncate px-3 text-xs text-muted-foreground">
             {user?.email}
           </div>
           <button
@@ -88,9 +109,9 @@ export default function AppLayout() {
         </div>
       </aside>
 
-      {/* Main content */}
+      {/* Main content — wider on large/desktop screens for multi-column grids */}
       <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
-        <div className="mx-auto max-w-5xl px-4 py-6 md:px-8 md:py-8">
+        <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8 md:py-8 xl:max-w-6xl 2xl:max-w-7xl">
           <Outlet />
         </div>
       </main>
@@ -105,9 +126,7 @@ export default function AppLayout() {
             className={({ isActive }) =>
               cn(
                 "flex flex-1 flex-col items-center gap-1 py-2.5 text-[10px] font-medium transition-colors",
-                isActive
-                  ? "text-primary"
-                  : "text-muted-foreground",
+                isActive ? "text-primary" : "text-muted-foreground",
               )
             }
           >
@@ -116,6 +135,8 @@ export default function AppLayout() {
           </NavLink>
         ))}
       </nav>
+
+      <KeyboardHelpOverlay open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>
   );
 }

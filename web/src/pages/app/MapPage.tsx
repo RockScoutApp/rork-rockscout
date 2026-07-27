@@ -234,6 +234,10 @@ export default function MapPage() {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
+  // The nearby list is always renderable when we have markers; on desktop it
+  // sits in a side column next to the map, on mobile it stacks below.
+  const showList = visibleMarkers.length > 0;
+
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3">
@@ -341,122 +345,145 @@ export default function MapPage() {
         </div>
       )}
 
-      {/* Map container */}
-      <div className="relative overflow-hidden rounded-xl border border-border">
-        <div ref={mapRef} className="h-[400px] w-full md:h-[550px]" />
-        {visibleMarkers.length > 500 && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1 text-xs text-white backdrop-blur">
-            Showing 500 of {visibleMarkers.length} — zoom in or filter to see
-            more
+      {/* Desktop split: map on the left, scrollable location list on the right.
+          On mobile the map stacks on top and the list flows below. */}
+      <div className="grid gap-4 lg:grid-cols-[1fr_360px] xl:grid-cols-[1fr_400px]">
+        {/* Map column */}
+        <div className="space-y-4">
+          <div className="relative overflow-hidden rounded-xl border border-border">
+            <div
+              ref={mapRef}
+              className="h-[400px] w-full md:h-[550px] lg:h-[640px]"
+            />
+            {visibleMarkers.length > 500 && (
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1 text-xs text-white backdrop-blur">
+                Showing 500 of {visibleMarkers.length} — zoom in or filter to
+                see more
+              </div>
+            )}
+          </div>
+
+          {/* Selected marker info card */}
+          {selectedMarker && (
+            <div className="space-y-3 rounded-xl border border-border bg-card p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-lg"
+                    style={{
+                      backgroundColor: `${getTypeMeta(selectedMarker.type).color}20`,
+                    }}
+                  >
+                    {getTypeMeta(selectedMarker.type).emoji}
+                  </div>
+                  <div>
+                    <h3 className="font-display font-semibold text-foreground">
+                      {selectedMarker.name}
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedMarker.region}
+                    </p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {getTypeLabel(selectedMarker.type)}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedMarker(null)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => openInMaps(selectedMarker)}
+                  className="gap-2"
+                >
+                  <Layers className="h-4 w-4" />
+                  Directions
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() =>
+                    navigate(`/app/locations/${selectedMarker.id}`)
+                  }
+                >
+                  View details
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Location list column — visible on desktop alongside the map,
+            and stacked below the map on mobile. */}
+        {showList && (
+          <div className="flex flex-col rounded-xl border border-border bg-card">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card/95 px-4 py-3 backdrop-blur">
+              <h3 className="font-display text-sm font-semibold text-foreground">
+                {nearbyOnly && userLocation
+                  ? "Nearest locations"
+                  : "All locations"}
+              </h3>
+              <span className="text-xs text-muted-foreground">
+                {Math.min(visibleMarkers.length, 100)} shown
+              </span>
+            </div>
+            <div className="max-h-[640px] space-y-2 overflow-y-auto p-3 lg:max-h-[640px]">
+              {(visibleMarkers as (MapMarker & { _dist?: number })[])
+                .slice(0, 100)
+                .map((marker) => {
+                  const meta = getTypeMeta(marker.type);
+                  const isSelected = selectedMarker?.id === marker.id;
+                  return (
+                    <button
+                      key={marker.id}
+                      onClick={() => {
+                        setSelectedMarker(marker);
+                        mapInstance.current?.setView(
+                          [marker.latitude, marker.longitude],
+                          12,
+                          { animate: true },
+                        );
+                      }}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors",
+                        isSelected
+                          ? "border-primary/50 bg-primary/5"
+                          : "border-border bg-card hover:border-primary/40",
+                      )}
+                    >
+                      <div
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-base"
+                        style={{ backgroundColor: `${meta.color}20` }}
+                      >
+                        {meta.emoji}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {marker.name}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {marker.region}
+                        </p>
+                      </div>
+                      {marker._dist != null && (
+                        <span className="shrink-0 text-xs font-medium text-primary">
+                          {marker._dist < 1
+                            ? `${Math.round(marker._dist * 5280)} ft`
+                            : `${Math.round(marker._dist)} mi`}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+            </div>
           </div>
         )}
       </div>
-
-      {/* Selected marker info card */}
-      {selectedMarker && (
-        <div className="space-y-3 rounded-xl border border-border bg-card p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-start gap-3">
-              <div
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-lg"
-                style={{
-                  backgroundColor: `${getTypeMeta(selectedMarker.type).color}20`,
-                }}
-              >
-                {getTypeMeta(selectedMarker.type).emoji}
-              </div>
-              <div>
-                <h3 className="font-display font-semibold text-foreground">
-                  {selectedMarker.name}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {selectedMarker.region}
-                </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {getTypeLabel(selectedMarker.type)}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setSelectedMarker(null)}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => openInMaps(selectedMarker)}
-              className="gap-2"
-            >
-              <Layers className="h-4 w-4" />
-              Directions
-            </Button>
-            <Button
-              size="sm"
-              onClick={() =>
-                navigate(`/app/locations/${selectedMarker.id}`)
-              }
-            >
-              View details
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Nearby list (when location enabled) */}
-      {nearbyOnly && userLocation && visibleMarkers.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="font-display text-sm font-semibold text-foreground">
-            Nearest locations
-          </h3>
-          <div className="max-h-96 space-y-2 overflow-y-auto">
-            {(visibleMarkers as (MapMarker & { _dist?: number })[])
-              .slice(0, 20)
-              .map((marker) => {
-                const meta = getTypeMeta(marker.type);
-                return (
-                  <button
-                    key={marker.id}
-                    onClick={() => {
-                      setSelectedMarker(marker);
-                      mapInstance.current?.setView(
-                        [marker.latitude, marker.longitude],
-                        12,
-                        { animate: true },
-                      );
-                    }}
-                    className="flex w-full items-center gap-3 rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-primary/40"
-                  >
-                    <div
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-base"
-                      style={{ backgroundColor: `${meta.color}20` }}
-                    >
-                      {meta.emoji}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {marker.name}
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {marker.region}
-                      </p>
-                    </div>
-                    {marker._dist != null && (
-                      <span className="shrink-0 text-xs font-medium text-primary">
-                        {marker._dist < 1
-                          ? `${Math.round(marker._dist * 5280)} ft`
-                          : `${Math.round(marker._dist)} mi`}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

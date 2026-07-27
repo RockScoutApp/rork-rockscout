@@ -260,7 +260,7 @@ export default function TradeBoard() {
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       ) : filtered.length > 0 ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {filtered.map((listing) => {
             const expired = isExpired(listing.expires_at);
             const isMine = listing.owner_user_id === user?.id;
