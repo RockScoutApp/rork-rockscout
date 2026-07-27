@@ -35,24 +35,30 @@ export default function Profile() {
       </div>
 
       <div className="space-y-2">
-        <button className="flex w-full items-center gap-3 rounded-lg border border-border bg-card p-4 text-left transition-colors hover:border-primary/40">
+        <button
+          onClick={() => navigate("/app/achievements")}
+          className="flex w-full items-center gap-3 rounded-lg border border-border bg-card p-4 text-left transition-colors hover:border-primary/40"
+        >
           <Award className="h-5 w-5 text-primary" />
           <div className="flex-1">
             <p className="text-sm font-medium text-foreground">
               Achievements
             </p>
             <p className="text-xs text-muted-foreground">
-              Level up and earn badges — coming soon
+              Level up and earn badges
             </p>
           </div>
         </button>
 
-        <button className="flex w-full items-center gap-3 rounded-lg border border-border bg-card p-4 text-left transition-colors hover:border-primary/40">
+        <button
+          onClick={() => navigate("/app/settings")}
+          className="flex w-full items-center gap-3 rounded-lg border border-border bg-card p-4 text-left transition-colors hover:border-primary/40"
+        >
           <Settings className="h-5 w-5 text-primary" />
           <div className="flex-1">
             <p className="text-sm font-medium text-foreground">Settings</p>
             <p className="text-xs text-muted-foreground">
-              Notifications, offline cache, theme — coming soon
+              Notifications, offline cache, theme
             </p>
           </div>
         </button>
