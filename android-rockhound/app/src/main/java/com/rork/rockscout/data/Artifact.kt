@@ -25,6 +25,9 @@ package com.rork.rockscout.data
  * @param funFacts notable facts
  * @param tribe associated culture or tradition
  * @param timePeriod age range (e.g. "Paleoindian · 10,000–9,000 BCE")
+ * @param addedAtMs epoch milliseconds when this entry was added to the catalog;
+ *   0 means it is a legacy entry (not shown as new). Entries with a timestamp
+ *   within the last 48 hours display a "NEW" badge in list views.
  */
 data class Artifact(
     val id: String,
@@ -41,4 +44,16 @@ data class Artifact(
     val funFacts: List<String>,
     val tribe: String,
     val timePeriod: String,
-)
+    val addedAtMs: Long = 0L,
+) {
+    /** True when this entry was added to the catalog within the last 48 hours. */
+    fun isNew(): Boolean {
+        if (addedAtMs == 0L) return false
+        val ageMs = System.currentTimeMillis() - addedAtMs
+        return ageMs in 0..(FORTY_EIGHT_HOURS_MS)
+    }
+
+    private companion object {
+        const val FORTY_EIGHT_HOURS_MS = 48L * 60 * 60 * 1000
+    }
+}

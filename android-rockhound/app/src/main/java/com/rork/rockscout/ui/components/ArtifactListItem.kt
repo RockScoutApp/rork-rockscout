@@ -119,6 +119,30 @@ fun ArtifactListItem(
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
                         )
+                        // NEW badge — shown for artifacts added to the catalog within the last 48 hours.
+                        if (artifact.isNew()) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopStart)
+                                    .padding(4.dp)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            listOf(Color(0xFFFFD54F), Color(0xFFFFA000))
+                                        )
+                                    )
+                                    .glowingBorder(1.dp, Color(0xFFFFD54F).copy(alpha = 0.9f), RoundedCornerShape(6.dp))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                            ) {
+                                Text(
+                                    text = "NEW",
+                                    color = Color(0xFF1A1306),
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 9.sp,
+                                    letterSpacing = 0.5.sp,
+                                )
+                            }
+                        }
                     }
 
                     // Right column — name + family + locations

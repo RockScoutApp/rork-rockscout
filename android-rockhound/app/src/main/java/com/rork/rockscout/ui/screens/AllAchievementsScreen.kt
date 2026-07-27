@@ -390,20 +390,51 @@ private fun AllAchievementsItem(
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                     )
                     Spacer(Modifier.height(4.dp))
+                    // Visual progress bar — taller and more prominent for locked achievements
+                    // so the user can see at a glance how close they are to earning it.
+                    val progressFraction = (progress.toFloat() / achievement.threshold.toFloat()).coerceIn(0f, 1f)
+                    val barHeight = if (earned) 5.dp else 8.dp
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(5.dp)
-                            .clip(RoundedCornerShape(3.dp))
+                            .height(barHeight)
+                            .clip(RoundedCornerShape(4.dp))
                             .background(Color(0x22FFFFFF)),
                     ) {
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth((progress.toFloat() / achievement.threshold.toFloat()).coerceIn(0f, 1f))
-                                .height(5.dp)
-                                .clip(RoundedCornerShape(3.dp))
-                                .background(accent),
+                                .fillMaxWidth(progressFraction)
+                                .height(barHeight)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(
+                                    if (earned) {
+                                        Brush.horizontalGradient(listOf(accent, accent))
+                                    } else {
+                                        Brush.horizontalGradient(
+                                            listOf(Color(0xFF7CB5EC), Color(0xFF5A9AE0), Color(0xFF4A8ACF))
+                                        )
+                                    }
+                                ),
                         )
+                        // Shimmer sweep on the filled portion for locked achievements — visual cue
+                        // that progress is being tracked and the achievement is within reach.
+                        if (!earned && progressFraction > 0f) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            listOf(
+                                                Color.Transparent,
+                                                Color.White.copy(alpha = 0.25f + glow * 0.20f),
+                                                Color.White.copy(alpha = 0.40f + glow * 0.25f),
+                                                Color.White.copy(alpha = 0.25f + glow * 0.20f),
+                                                Color.Transparent,
+                                            )
+                                        )
+                                    ),
+                            )
+                        }
                     }
                     Spacer(Modifier.height(2.dp))
                     Row(
@@ -416,12 +447,24 @@ private fun AllAchievementsItem(
                             color = if (earned) accent else DarkTextMid,
                             fontWeight = FontWeight.Bold,
                         )
-                        Text(
-                            if (earned) "EARNED" else "LOCKED",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (earned) accent else DarkTextMid,
-                            fontWeight = FontWeight.Bold,
-                        )
+                        // For locked achievements, show the percentage complete so the user
+                        // can see exactly how close they are to earning it.
+                        if (earned) {
+                            Text(
+                                "EARNED",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = accent,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        } else {
+                            val pct = (progressFraction * 100).toInt()
+                            Text(
+                                if (pct == 0) "LOCKED" else "$pct% · LOCKED",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (pct > 0) Color(0xFF7CB5EC) else DarkTextMid,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
                     }
                 }
             }

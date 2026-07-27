@@ -50,7 +50,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material.icons.filled.Login
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
@@ -1390,6 +1390,7 @@ private fun RockScoutFriendsSection(
     onMemberCollection: (String) -> Unit,
     onMemberWishlist: (String) -> Unit,
 ) {
+    var showSignOutConfirm by remember { mutableStateOf(false) }
     SocialCard(modifier = Modifier.fillMaxWidth(), accent = Citrine) {
         Column(modifier = Modifier.fillMaxWidth()) {
             // Sign-in / account tile
@@ -1428,7 +1429,7 @@ private fun RockScoutFriendsSection(
                 }
                 if (isSignedIn) {
                     OutlinedButton(
-                        onClick = onSignOut,
+                        onClick = { showSignOutConfirm = true },
                         shape = RoundedCornerShape(50.dp),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
@@ -1607,6 +1608,37 @@ private fun RockScoutFriendsSection(
                 }
             }
         }
+    }
+
+    // Sign-out confirmation dialog — prevents accidental sign-outs by requiring
+    // an explicit confirm before [onSignOut] is invoked.
+    if (showSignOutConfirm) {
+        AlertDialog(
+            onDismissRequest = { showSignOutConfirm = false },
+            title = { Text("Sign out?", style = MaterialTheme.typography.headlineSmall) },
+            text = {
+                Text(
+                    "You'll be signed out of RockScout on this device. Your collection, captures, and posts stay safely stored — you can sign back in anytime to pick up where you left off.",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            },
+            confirmButton = {
+                androidx.compose.material3.Button(
+                    onClick = {
+                        showSignOutConfirm = false
+                        onSignOut()
+                    },
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Citrine),
+                ) {
+                    Text("Sign out", color = Ink, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { showSignOutConfirm = false }) {
+                    Text("Cancel", color = TextLow)
+                }
+            },
+        )
     }
 }
 
