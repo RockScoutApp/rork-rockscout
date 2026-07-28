@@ -21,7 +21,12 @@ import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,11 +43,13 @@ import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.TextHigh
+import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.TextMid
 
 @Composable
 fun ArtifactsScreen(navController: NavController) {
     val accent = Color(0xFFB87333) // warm clay/ochre artifact accent
+    var showRecentlyAddedOnly by remember { mutableStateOf(false) }
 
     // Explicitly wire the system back button to the NavController so the
     // hardware/gesture back reliably pops the back stack instead of closing
@@ -69,34 +76,84 @@ fun ArtifactsScreen(navController: NavController) {
                 Spacer(Modifier.height(8.dp))
             }
 
-            // Render each section
+            // Recently Added filter chip
+            item {
+                val toggleShape = RoundedCornerShape(12.dp)
+                val toggleAccent = Citrine
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 0.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.Start,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(toggleShape)
+                            .background(if (showRecentlyAddedOnly) toggleAccent else toggleAccent.copy(alpha = 0.12f))
+                            .glowingBorder(1.dp, toggleAccent.copy(alpha = if (showRecentlyAddedOnly) 0.9f else 0.45f), toggleShape)
+                            .clickable { showRecentlyAddedOnly = !showRecentlyAddedOnly }
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                    ) {
+                        Text(
+                            text = "Recently Added",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = if (showRecentlyAddedOnly) Color(0xFF1A1306) else toggleAccent,
+                            fontWeight = if (showRecentlyAddedOnly) FontWeight.Bold else FontWeight.Medium,
+                        )
+                    }
+                }
+            }
+
+            // Render each section — filtered when Recently Added is on
             ArtifactSpecimens.sections.forEach { section ->
-                item(key = "header-${section.title}") {
-                    Spacer(Modifier.height(12.dp))
-                    ArtifactSectionHeader(
-                        title = section.title,
-                        subtitle = section.subtitle,
-                        accent = accent,
-                    )
-                    Spacer(Modifier.height(8.dp))
+                val filteredArtifacts = if (showRecentlyAddedOnly) {
+                    section.artifacts.filter { it.isNew() }
+                } else {
+                    section.artifacts
                 }
-                item(key = "header-label-${section.title}") {
-                    Text(
-                        text = "${section.artifacts.size} ${if (section.artifacts.size == 1) "entry" else "entries"}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = TextMid,
-                        modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
-                    )
+                if (filteredArtifacts.isNotEmpty()) {
+                    item(key = "header-${section.title}") {
+                        Spacer(Modifier.height(12.dp))
+                        ArtifactSectionHeader(
+                            title = section.title,
+                            subtitle = section.subtitle,
+                            accent = accent,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                    }
+                    item(key = "header-label-${section.title}") {
+                        Text(
+                            text = "${filteredArtifacts.size} ${if (filteredArtifacts.size == 1) "entry" else "entries"}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = TextMid,
+                            modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
+                        )
+                    }
+                    items(filteredArtifacts.size, key = { filteredArtifacts[it].id }) { idx ->
+                        val artifact = filteredArtifacts[idx]
+                        ArtifactListItem(
+                            artifact = artifact,
+                            accent = Color(artifact.accentHex),
+                            onClick = {
+                                navController.navigate(Routes.artifactDetail(artifact.id))
+                            },
+                        )
+                    }
                 }
-                items(section.artifacts.size, key = { section.artifacts[it].id }) { idx ->
-                    val artifact = section.artifacts[idx]
-                    ArtifactListItem(
-                        artifact = artifact,
-                        accent = Color(artifact.accentHex),
-                        onClick = {
-                            navController.navigate(Routes.artifactDetail(artifact.id))
-                        },
-                    )
+            }
+
+            // Empty state when Recently Added filter is on and nothing matches
+            if (showRecentlyAddedOnly && ArtifactSpecimens.sections.all { section -> section.artifacts.none { it.isNew() } }) {
+                item {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 48.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            text = "No artifacts added in the last 7 days. Check back soon!",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextMid,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        )
+                    }
                 }
             }
         }

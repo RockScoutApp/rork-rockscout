@@ -12,7 +12,19 @@ data class StatePark(
     val hasCamping: Boolean,
     val feeInfo: String,
     val website: String?,
-)
+    val addedAtMs: Long = 0L,            // epoch ms when added; 0 = legacy (no badge)
+) {
+    /** True when this park was added within the last 7 days. */
+    fun isNew(): Boolean {
+        if (addedAtMs == 0L) return false
+        val ageMs = System.currentTimeMillis() - addedAtMs
+        return ageMs in 0..(SEVEN_DAYS_MS)
+    }
+
+    private companion object {
+        const val SEVEN_DAYS_MS = 7L * 24 * 60 * 60 * 1000
+    }
+}
 
 /** Curated state parks with geological, mineral collecting, or fossil relevance.
  *  Parks are organized by state and prioritized by visitation, geological interest,

@@ -49,7 +49,19 @@ data class BlmTrailhead(
     val description: String,
     val latitude: Double,
     val longitude: Double,
-)
+    val addedAtMs: Long = 0L,            // epoch ms when added; 0 = legacy (no badge)
+) {
+    /** True when this trailhead was added within the last 7 days. */
+    fun isNew(): Boolean {
+        if (addedAtMs == 0L) return false
+        val ageMs = System.currentTimeMillis() - addedAtMs
+        return ageMs in 0..(SEVEN_DAYS_MS)
+    }
+
+    private companion object {
+        const val SEVEN_DAYS_MS = 7L * 24 * 60 * 60 * 1000
+    }
+}
 
 /** A BLM campground near rockhounding areas. */
 data class BlmCampground(
@@ -60,7 +72,19 @@ data class BlmCampground(
     val feeInfo: String,
     val latitude: Double,
     val longitude: Double,
-)
+    val addedAtMs: Long = 0L,            // epoch ms when added; 0 = legacy (no badge)
+) {
+    /** True when this campground was added within the last 7 days. */
+    fun isNew(): Boolean {
+        if (addedAtMs == 0L) return false
+        val ageMs = System.currentTimeMillis() - addedAtMs
+        return ageMs in 0..(SEVEN_DAYS_MS)
+    }
+
+    private companion object {
+        const val SEVEN_DAYS_MS = 7L * 24 * 60 * 60 * 1000
+    }
+}
 
 /** An important-info section for the BLM guide. */
 data class BlmInfoSection(

@@ -304,6 +304,15 @@ object WorkScheduler {
     }
 
     /**
+     * Schedule the periodic settings-cloud-backup worker (every 12h, network only).
+     * Safe to call multiple times — uses KEEP policy.
+     */
+    fun scheduleSettingsBackup(context: Context) {
+        SettingsBackupWorker.schedulePeriodic(context)
+        Log.d(TAG, "Scheduled settings backup worker (every 12h)")
+    }
+
+    /**
      * Cancels the nightly offline-database sync when the user turns the toggle
      * off in Storage settings.
      */

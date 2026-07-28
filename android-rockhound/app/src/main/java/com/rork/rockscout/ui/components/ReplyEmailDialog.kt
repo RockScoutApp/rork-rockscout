@@ -125,7 +125,9 @@ private data class Attachment(val uri: Uri, val bytes: Long)
 @Composable
 fun ReplyEmailDialog(
     museum: Museum,
+    museums: List<Museum> = emptyList(),
     onDismiss: () -> Unit,
+    onAddRecipient: () -> Unit = {},
     artifactMatchNames: List<String> = emptyList(),
     artifactConfidences: List<Int> = emptyList(),
     aiSummary: String = "",
@@ -428,6 +430,7 @@ fun ReplyEmailDialog(
                     launchEmailDraft(
                         context = context,
                         museum = museum,
+                        museums = museums,
                         replyEmail = replyEmail,
                         artifactMatchNames = artifactMatchNames,
                         artifactConfidences = artifactConfidences,
@@ -508,6 +511,9 @@ private suspend fun recompressToPhotosCache(
             bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
         }
         if (file.length() == 0L) return@withContext null
+        // Preserve EXIF metadata (GPS, timestamp, camera) from the source;
+        // orientation is normalized to NORMAL since pixels are already upright.
+        ImageUtils.copyExifMetadata(context, uri, file)
         val shareUri = FileProvider.getUriForFile(
             context,
             "${context.packageName}.fileprovider",
@@ -570,6 +576,7 @@ private fun formatBytes(bytes: Long): String {
 private fun launchEmailDraft(
     context: android.content.Context,
     museum: Museum,
+    museums: List<Museum> = emptyList(),
     replyEmail: String,
     artifactMatchNames: List<String>,
     artifactConfidences: List<Int>,
@@ -577,6 +584,10 @@ private fun launchEmailDraft(
     attachmentUris: List<Uri>,
     userLocationText: String,
 ) {
+    // Build the recipient list: all museums with emails (single + multi)
+    val allMuseums = if (museums.isNotEmpty()) museums else listOf(museum)
+    val recipientEmails = allMuseums.mapNotNull { it.email?.takeIf { e -> e.isNotBlank() } }
+    val skippedCount = allMuseums.size - recipientEmails.size
     val subject = "RockScout — Artifact Identification Assistance"
     val photoCount = attachmentUris.size
 
@@ -638,9 +649,16 @@ private fun launchEmailDraft(
         }
     }
 
-    // Add recipient if museum has an email
-    if (!museum.email.isNullOrBlank()) {
-        intent.putExtra(Intent.EXTRA_EMAIL, arrayOf(museum.email))
+    // Add recipients — all museums with email addresses
+    if (recipientEmails.isNotEmpty()) {
+        intent.putExtra(Intent.EXTRA_EMAIL, recipientEmails.toTypedArray())
+    }
+    if (skippedCount > 0) {
+        Toast.makeText(
+            context,
+            "$skippedCount museum${if (skippedCount > 1) "s" else ""} don't have a public email and will be skipped.",
+            Toast.LENGTH_SHORT,
+        ).show()
     }
 
     val chooser = Intent.createChooser(intent, "Send to museum expert").apply {
@@ -651,7 +669,7 @@ private fun launchEmailDraft(
     }.onFailure {
         Toast.makeText(
             context,
-            "No email app found. Please send manually to ${museum.email ?: "the museum"}.",
+            "No email app found. Please send manually to ${recipientEmails.firstOrNull() ?: "the museum"}.",
             Toast.LENGTH_LONG,
         ).show()
     }

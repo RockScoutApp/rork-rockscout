@@ -276,6 +276,74 @@ object DigSiteSearchService {
         }
     }
 
+    /**
+     * Search for rock-related places near a specific lat/lng within a radius.
+     * Uses the same Exa proxy endpoint as [searchRockLocations], but the query
+     * includes the radius so Exa can prioritize geographically relevant results.
+     *
+     * @param lat latitude of the user's current location
+     * @param lng longitude of the user's current location
+     * @param searchArea a human-readable location string (e.g. "Portland, Oregon, USA")
+     * @param radiusMiles search radius in miles (e.g. 50 or 100)
+     * @return list of discovered sites, or empty list on error
+     */
+    suspend fun searchNearLocation(
+        lat: Double,
+        lng: Double,
+        searchArea: String,
+        radiusMiles: Int,
+    ): List<DigSiteDiscoveryStore.DiscoveredSite> = withContext(Dispatchers.IO) {
+        val toolkitUrl = BuildSecrets.resolve("EXPO_PUBLIC_TOOLKIT_URL", BuildSecrets.TOOLKIT_URL)
+        val secret = BuildSecrets.resolve("EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY", BuildSecrets.RORK_TOOLKIT_SECRET_KEY)
+        if (toolkitUrl.isBlank() || secret.isBlank()) {
+            return@withContext emptyList()
+        }
+
+        val query = "rock hunting dig sites rock shops mineral collecting museums metaphysical stores near $searchArea within $radiusMiles miles"
+
+        val requestBody = buildJsonObject {
+            put("query", query)
+            put("type", "auto")
+            put("numResults", 10)
+            put("contents", buildJsonObject {
+                put("highlights", true)
+                put("text", true)
+            })
+        }.toString()
+
+        try {
+            val proxyUrl = "$toolkitUrl/v2/exa/search"
+            val response = client.post(proxyUrl) {
+                contentType(ContentType.Application.Json)
+                setBody(requestBody)
+                headers.append("Authorization", "Bearer $secret")
+            }
+            val raw: String = response.body()
+            val parsed = json.decodeFromString(ExaResponse.serializer(), raw)
+
+            parsed.results.mapNotNull { result ->
+                val name = result.title?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+                val url = result.url?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+                val description = (result.highlights?.firstOrNull() ?: result.text ?: "")
+                    .take(300)
+                val type = classifySite(name, description)
+
+                DigSiteDiscoveryStore.DiscoveredSite(
+                    id = "nearme-${System.currentTimeMillis()}-${name.hashCode()}",
+                    name = name,
+                    type = type,
+                    region = searchArea,
+                    url = url,
+                    description = description,
+                    searchArea = "$searchArea ($radiusMiles mi)",
+                    discoveredAt = System.currentTimeMillis(),
+                )
+            }
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
     /** Classify a discovered site as dig site, rock shop, or general. */
     private fun classifySite(name: String, description: String): String {
         val text = "$name $description".lowercase()

@@ -127,6 +127,7 @@ fun SpecimenListScreen(navController: NavController) {
     }
     var query by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf<ListCategoryFilter?>(null) }
+    var showRecentlyAddedOnly by remember { mutableStateOf(false) }
 
     // Full-screen viewer state
     var viewerUrls by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -153,11 +154,12 @@ fun SpecimenListScreen(navController: NavController) {
     }
 
     val selected = selectedFilter
-    val filtered = remember(allSpecimens, query, selectedFilter) {
+    val filtered = remember(allSpecimens, query, selectedFilter, showRecentlyAddedOnly) {
         val byCategory = filterSpecimensByCategory(allSpecimens, selected)
+        val byRecent = if (showRecentlyAddedOnly) byCategory.filter { it.isNew() } else byCategory
 
-        if (query.isBlank()) byCategory
-        else byCategory.filter { spec ->
+        if (query.isBlank()) byRecent
+        else byRecent.filter { spec ->
             spec.name.contains(query, ignoreCase = true) ||
             spec.category.contains(query, ignoreCase = true) ||
             spec.chemicalFormula.contains(query, ignoreCase = true) ||
@@ -330,7 +332,29 @@ fun SpecimenListScreen(navController: NavController) {
                 onNavigate = { navController.navigate(Routes.ROCKS_ARE_AMAZING) },
             )
 
-            // Search bar
+            // Recently Added filter chip
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.Start,
+            ) {
+                val toggleShape = RoundedCornerShape(12.dp)
+                val toggleAccent = Citrine
+                Box(
+                    modifier = Modifier
+                        .clip(toggleShape)
+                        .background(if (showRecentlyAddedOnly) toggleAccent else toggleAccent.copy(alpha = 0.12f))
+                        .glowingBorder(1.dp, toggleAccent.copy(alpha = if (showRecentlyAddedOnly) 0.9f else 0.45f), toggleShape)
+                        .clickable { showRecentlyAddedOnly = !showRecentlyAddedOnly }
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                ) {
+                    Text(
+                        text = "Recently Added",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = if (showRecentlyAddedOnly) Color(0xFF1A1306) else toggleAccent,
+                        fontWeight = if (showRecentlyAddedOnly) FontWeight.Bold else FontWeight.Medium,
+                    )
+                }
+            }
             TextField(
                 value = query,
                 onValueChange = { query = it },

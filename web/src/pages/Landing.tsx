@@ -294,29 +294,20 @@ const Hero = () => {
         <div className="mt-6 flex flex-col gap-3">
           <span
             aria-disabled
-            className="inline-flex h-20 w-48 cursor-default items-center justify-center gap-2.5 rounded-2xl bg-primary px-4 font-semibold text-primary-foreground"
-          >
-            <Monitor className="h-5 w-5 shrink-0" />
-            <span className="text-center leading-tight">
-              Coming soon<br />to PC
-            </span>
-          </span>
-          <span
-            aria-disabled
-            className="inline-flex h-20 w-48 cursor-default items-center justify-center gap-2.5 rounded-2xl border border-primary/40 bg-primary/10 px-4 font-semibold text-primary/80"
+            className="inline-flex h-14 w-56 cursor-default items-center justify-center gap-2.5 rounded-full bg-primary px-5 font-semibold text-primary-foreground"
           >
             <Download className="h-5 w-5 shrink-0" />
             <span className="text-center leading-tight">
-              Coming soon<br />to Android
+              Coming soon to Google Play
             </span>
           </span>
           <span
             aria-disabled
-            className="inline-flex h-20 w-48 cursor-default items-center justify-center gap-2.5 rounded-2xl border border-border bg-card/50 px-4 text-sm font-medium text-muted-foreground"
+            className="inline-flex h-14 w-56 cursor-default items-center justify-center gap-2.5 rounded-full border border-primary/40 bg-primary/10 px-5 font-semibold text-primary/80"
           >
-            <Smartphone className="h-4 w-4 shrink-0" />
+            <Smartphone className="h-5 w-5 shrink-0" />
             <span className="text-center leading-tight">
-              coming to<br />iOS soon
+              Coming soon to iOS
             </span>
           </span>
         </div>
@@ -909,34 +900,25 @@ const CTA = () => (
           Ready to find your next specimen?
         </h2>
         <p className="mx-auto mt-4 max-w-md text-balance text-base text-muted-foreground sm:mt-5 sm:text-lg">
-          RockScout is coming soon to Google Play, the App Store, and PC. Be the first to know when it launches.
+          RockScout is coming soon to Google Play and the App Store. Be the first to know when it launches.
         </p>
         <div className="mt-7 flex flex-col items-center justify-center gap-3">
           <span
             aria-disabled
-            className="inline-flex h-20 w-48 cursor-default items-center justify-center gap-2.5 rounded-2xl bg-primary px-4 font-semibold text-primary-foreground"
-          >
-            <Monitor className="h-5 w-5 shrink-0" />
-            <span className="text-center leading-tight">
-              Coming soon<br />to PC
-            </span>
-          </span>
-          <span
-            aria-disabled
-            className="inline-flex h-20 w-48 cursor-default items-center justify-center gap-2.5 rounded-2xl border border-primary/40 bg-primary/10 px-4 font-semibold text-primary/80"
+            className="inline-flex h-14 w-56 cursor-default items-center justify-center gap-2.5 rounded-full bg-primary px-5 font-semibold text-primary-foreground"
           >
             <Download className="h-5 w-5 shrink-0" />
             <span className="text-center leading-tight">
-              Coming soon<br />to Android
+              Coming soon to Google Play
             </span>
           </span>
           <span
             aria-disabled
-            className="inline-flex h-20 w-48 cursor-default items-center justify-center gap-2.5 rounded-2xl border border-border bg-card/60 px-4 text-sm font-medium text-muted-foreground"
+            className="inline-flex h-14 w-56 cursor-default items-center justify-center gap-2.5 rounded-full border border-primary/40 bg-primary/10 px-5 font-semibold text-primary/80"
           >
-            <Smartphone className="h-4 w-4 shrink-0" />
+            <Smartphone className="h-5 w-5 shrink-0" />
             <span className="text-center leading-tight">
-              coming to<br />iOS soon
+              Coming soon to iOS
             </span>
           </span>
           <Link

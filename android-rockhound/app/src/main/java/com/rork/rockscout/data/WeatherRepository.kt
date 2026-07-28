@@ -137,6 +137,10 @@ object WeatherRepository {
         }.body<String>()
         val resp = json.decodeFromString(OpenMeteoResponse.serializer(), raw)
 
+        // Side-channel: push the IANA timezone to UserTimezoneProvider as a
+        // free byproduct of every weather fetch — zero extra network calls.
+        UserTimezoneProvider.updateFromWeather(resp.timezone, resp.utcOffsetSeconds)
+
         val current = resp.current
         val zoneOffset = ZoneOffset.ofTotalSeconds(resp.utcOffsetSeconds)
         val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
@@ -325,6 +329,7 @@ object WeatherRepository {
     @Serializable
     private data class OpenMeteoResponse(
         @SerialName("utc_offset_seconds") val utcOffsetSeconds: Int,
+        @SerialName("timezone") val timezone: String = "",
         @SerialName("current") val current: CurrentBlock,
         @SerialName("hourly") val hourly: HourlyBlock,
     )

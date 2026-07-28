@@ -1396,6 +1396,34 @@ fun SpecimenGlyph(
     }
 }
 
+/** Gold "NEW" badge pill — shown for catalog entries added within the last 7 days.
+ *  Shared by all card types: specimens, artifacts, dig sites, state parks, trailheads, campgrounds.
+ *  Matches the original inline badge style: gold gradient, glowingBorder, ExtraBold 9sp "NEW" text. */
+@Composable
+fun NewBadge(
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(
+                Brush.horizontalGradient(
+                    listOf(Color(0xFFFFD54F), Color(0xFFFFA000))
+                )
+            )
+            .glowingBorder(1.dp, Color(0xFFFFD54F).copy(alpha = 0.9f), RoundedCornerShape(6.dp))
+            .padding(horizontal = 6.dp, vertical = 2.dp),
+    ) {
+        Text(
+            text = "NEW",
+            color = Color(0xFF1A1306),
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 9.sp,
+            letterSpacing = 0.5.sp,
+        )
+    }
+}
+
 /** Square thumbnail for a specimen card — shows the main image, or the emoji fallback. */
 @Composable
 fun SpecimenThumbnail(

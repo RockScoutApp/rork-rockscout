@@ -7,6 +7,8 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -86,6 +89,7 @@ import kotlinx.coroutines.launch
 fun MuseumFinderSheet(
     onDismiss: () -> Unit,
     onEmailExpert: (Museum) -> Unit,
+    onEmailExperts: (List<Museum>) -> Unit = {},
     artifactMatchNames: List<String> = emptyList(),
     artifactConfidences: List<Int> = emptyList(),
     aiSummary: String = "",
@@ -97,6 +101,7 @@ fun MuseumFinderSheet(
     var isLoading by remember { mutableStateOf(true) }
     var museums by remember { mutableStateOf<List<Museum>>(emptyList()) }
     var expandedRadius by remember { mutableStateOf(false) }
+    val selectedMuseums = remember { mutableStateListOf<Museum>() }
     var searchRadius by remember { mutableStateOf(50) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var hasLocationPermission by remember {
@@ -319,11 +324,37 @@ fun MuseumFinderSheet(
 
                     // Museum cards
                     museums.forEach { museum ->
+                        val isSelected = selectedMuseums.any { it.name == museum.name && it.address == museum.address }
                         MuseumCard(
                             museum = museum,
+                            isSelected = isSelected,
+                            onToggleSelect = {
+                                if (isSelected) {
+                                    selectedMuseums.removeAll { it.name == museum.name && it.address == museum.address }
+                                } else {
+                                    selectedMuseums.add(museum)
+                                }
+                            },
                             onEmailExpert = { onEmailExpert(museum) },
                         )
                         Spacer(Modifier.height(10.dp))
+                    }
+
+                    // Compose Email button — appears when museums are selected
+                    if (selectedMuseums.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        SculptedButton(
+                            text = "Compose Email (${selectedMuseums.size})",
+                            onClick = {
+                                onEmailExperts(selectedMuseums.toList())
+                            },
+                            accent = Citrine,
+                            containerColor = Citrine,
+                            textColor = Color.Black,
+                            icon = Icons.Filled.Email,
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp, vertical = 14.dp),
+                        )
                     }
                 }
             }
@@ -334,12 +365,19 @@ fun MuseumFinderSheet(
 @Composable
 private fun MuseumCard(
     museum: Museum,
-    onEmailExpert: () -> Unit,
+    isSelected: Boolean = false,
+    onToggleSelect: () -> Unit = {},
+    onEmailExpert: () -> Unit = {},
 ) {
     val context = LocalContext.current
     DarkCard(
-        modifier = Modifier.fillMaxWidth(),
-        accent = Citrine.copy(alpha = 0.3f),
+        modifier = Modifier.fillMaxWidth()
+            .clickable(onClick = onToggleSelect)
+            .then(
+                if (isSelected) Modifier.border(2.dp, Citrine, RoundedCornerShape(16.dp))
+                else Modifier
+            ),
+        accent = if (isSelected) Citrine else Citrine.copy(alpha = 0.3f),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(14.dp),
     ) {
         // Name + type badge

@@ -79,6 +79,7 @@ import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
@@ -147,7 +148,12 @@ import com.rork.rockscout.data.RocksAreAmazingSpecimens
 import com.rork.rockscout.data.SeedData
 import com.rork.rockscout.data.GearGuide
 import com.rork.rockscout.data.GearItem
+import android.location.Geocoder
+import android.location.Address
 import com.rork.rockscout.data.SafeLinkOpener
+import com.rork.rockscout.data.DigSiteSearchService
+import com.rork.rockscout.data.DigSiteDiscoveryStore
+import com.rork.rockscout.data.LocationFetcher
 import com.rork.rockscout.data.Specimen
 import com.rork.rockscout.data.SpecimenImages
 import com.rork.rockscout.R
@@ -168,6 +174,7 @@ import com.rork.rockscout.ui.components.ReviewUsCard
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.SpecimenGlyph
 import com.rork.rockscout.ui.components.TagChip
+import com.rork.rockscout.ui.components.SearchNearMeResultRow
 import com.rork.rockscout.ui.components.ThankYouCelebration
 import com.rork.rockscout.ui.components.LevelUpCelebration
 import com.rork.rockscout.ui.components.AchievementCelebration
@@ -261,6 +268,14 @@ fun HomeScreen(navController: NavController) {
 
     var viewerUrls by remember { mutableStateOf<List<String>>(emptyList()) }
     var viewerInitialPage by remember { mutableIntStateOf(0) }
+
+    // Search Near Me state
+    var isSearchingNearMe by remember { mutableStateOf(false) }
+    var nearMeResults by remember { mutableStateOf<List<DigSiteDiscoveryStore.DiscoveredSite>>(emptyList()) }
+    var nearMeSearchRadius by remember { mutableIntStateOf(50) }
+    var nearMeSearchArea by remember { mutableStateOf("") }
+    var nearMeError by remember { mutableStateOf(false) }
+    var showNearMePermissionDialog by remember { mutableStateOf(false) }
 
     // Developer Console entry — 5 quick taps on the version text reveal the PIN pad
     var versionTapCount by remember { mutableIntStateOf(0) }
@@ -662,20 +677,197 @@ fun HomeScreen(navController: NavController) {
                         AppRepository.distanceMiles(current.first, current.second, it.latitude, it.longitude) <= 100.0
                     }
                 }
-                SectionLabel(
-                    if (hasNearbyWithinRadius) "Nearby hot spots (within 100 mi)"
-                    else "Featured locations across the US"
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    SectionLabel(
+                        when {
+                            isSearchingNearMe -> "Searching within ${nearMeSearchRadius} miles…"
+                            nearMeResults.isNotEmpty() -> "Found ${nearMeResults.size} spot(s) near you (${nearMeSearchArea})"
+                            nearMeError -> "Search failed"
+                            hasNearbyWithinRadius -> "Nearby hot spots (within 100 mi)"
+                            else -> "Featured locations across the US"
+                        }
+                    )
+                    // Search Near Me pill button — aligned right in the header row
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(if (isSearchingNearMe) Citrine.copy(alpha = 0.08f) else Citrine.copy(alpha = 0.15f))
+                            .clickable {
+                                if (!profile.nearbyPlacesEnabled || !LocationFetcher.hasPermission(context)) {
+                                    showNearMePermissionDialog = true
+                                } else {
+                                    isSearchingNearMe = true
+                                    nearMeError = false
+                                    nearMeResults = emptyList()
+                                    nearMeSearchRadius = 50
+                                    scope.launch {
+                                        val lat = current.first
+                                        val lng = current.second
+                                        // Reverse geocode: try Android Geocoder, fall back to profile homeRegion
+                                        val searchArea = reverseGeocode(context, lat, lng, profile.homeRegion)
+                                        nearMeSearchArea = searchArea
+                                        // 50-mile search
+                                        var results = DigSiteSearchService.searchNearLocation(lat, lng, searchArea, 50)
+                                        if (results.isEmpty()) {
+                                            // 100-mile retry
+                                            nearMeSearchRadius = 100
+                                            val broaderArea = searchArea.substringAfter(", ").ifBlank { searchArea }
+                                            results = DigSiteSearchService.searchNearLocation(lat, lng, broaderArea, 100)
+                                        }
+                                        if (results.isEmpty() && nearMeSearchRadius == 100) {
+                                            // Both searches returned nothing — check if it was an error vs genuinely empty
+                                            // For now treat empty as success (show empty state)
+                                        }
+                                        nearMeResults = results
+                                        if (results.isNotEmpty()) {
+                                            DigSiteDiscoveryStore.addAll(results)
+                                        }
+                                        isSearchingNearMe = false
+                                    }
+                                }
+                            }
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    ) {
+                        if (isSearchingNearMe) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = Citrine,
+                            )
+                        } else {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Filled.NearMe,
+                                    contentDescription = "Search near me",
+                                    tint = Citrine,
+                                    modifier = Modifier.size(14.dp),
+                                )
+                                Spacer(Modifier.width(4.dp))
+                                Text(
+                                    text = "Search Near Me",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Citrine,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
+                        }
+                    }
+                }
             }
-            items(nearby) { (loc, miles) ->
-                NearbyRow(
-                    name = loc.name,
-                    region = loc.region,
-                    summary = loc.summary,
-                    miles = miles,
-                    emoji = loc.type.emoji,
-                    onClick = { navController.navigate(Routes.location(loc.id)) },
-                )
+            // Inline search results — replace the nearby list when searching or results are available
+            if (isSearchingNearMe || nearMeResults.isNotEmpty() || nearMeError) {
+                if (isSearchingNearMe) {
+                    item {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                CircularProgressIndicator(color = Citrine)
+                                Spacer(Modifier.height(12.dp))
+                                Text(
+                                    text = "Searching within ${nearMeSearchRadius} miles of ${nearMeSearchArea}…",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = DarkTextMid,
+                                )
+                            }
+                        }
+                    }
+                } else if (nearMeError) {
+                    item {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Text(
+                                text = "Search failed. Check your connection and try again.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = DarkTextMid,
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            SculptedTextButton(
+                                text = "Retry",
+                                onClick = {
+                                    nearMeError = false
+                                    isSearchingNearMe = true
+                                    nearMeResults = emptyList()
+                                    nearMeSearchRadius = 50
+                                    scope.launch {
+                                        val lat = current.first
+                                        val lng = current.second
+                                        val searchArea = reverseGeocode(context, lat, lng, profile.homeRegion)
+                                        nearMeSearchArea = searchArea
+                                        var results = DigSiteSearchService.searchNearLocation(lat, lng, searchArea, 50)
+                                        if (results.isEmpty()) {
+                                            nearMeSearchRadius = 100
+                                            val broaderArea = searchArea.substringAfter(", ").ifBlank { searchArea }
+                                            results = DigSiteSearchService.searchNearLocation(lat, lng, broaderArea, 100)
+                                        }
+                                        nearMeResults = results
+                                        if (results.isNotEmpty()) {
+                                            DigSiteDiscoveryStore.addAll(results)
+                                        }
+                                        isSearchingNearMe = false
+                                    }
+                                },
+                                accent = Citrine,
+                            )
+                        }
+                    }
+                } else if (nearMeResults.isEmpty()) {
+                    item {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Text(
+                                text = "No rock-related places found within 100 miles of your location. Try browsing the full Dig Sites list.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = DarkTextMid,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            SculptedTextButton(
+                                text = "Browse Dig Sites",
+                                onClick = { navController.navigate(Routes.LOCATIONS) },
+                                accent = Citrine,
+                            )
+                        }
+                    }
+                } else {
+                    items(nearMeResults) { site ->
+                        SearchNearMeResultRow(
+                            site = site,
+                            onOpenUrl = { url ->
+                                SafeLinkOpener.openUrl(context, url)
+                            },
+                            modifier = Modifier.padding(vertical = 4.dp),
+                        )
+                    }
+                    item {
+                        Text(
+                            text = "These results have been saved for review — approved spots will appear on the Dig Sites map in a future update.",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = DarkTextMid,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        )
+                    }
+                }
+            } else {
+                items(nearby) { (loc, miles) ->
+                    NearbyRow(
+                        name = loc.name,
+                        region = loc.region,
+                        summary = loc.summary,
+                        miles = miles,
+                        emoji = loc.type.emoji,
+                        onClick = { navController.navigate(Routes.location(loc.id)) },
+                    )
+                }
             }
             item { SectionLabel("Explore & learn") }
             item {
@@ -810,6 +1002,32 @@ fun HomeScreen(navController: NavController) {
         if (showFellowRockScoutsNote) {
             FellowRockScoutsNoteDialog(
                 onDismiss = { showFellowRockScoutsNote = false }
+            )
+        }
+
+        // Search Near Me — location permission dialog
+        if (showNearMePermissionDialog) {
+            AlertDialog(
+                onDismissRequest = { showNearMePermissionDialog = false },
+                title = { Text("Location needed") },
+                text = { Text("Turn on Nearby Places and grant location permission to search for rock hunting spots near you.") },
+                confirmButton = {
+                    SculptedTextButton(
+                        text = "Go to Settings",
+                        onClick = {
+                            showNearMePermissionDialog = false
+                            navController.navigate(Routes.SOCIAL_SETTINGS)
+                        },
+                        accent = Citrine,
+                    )
+                },
+                dismissButton = {
+                    SculptedTextButton(
+                        text = "Cancel",
+                        onClick = { showNearMePermissionDialog = false },
+                        accent = DarkTextMid,
+                    )
+                },
             )
         }
 
@@ -3328,6 +3546,46 @@ private fun DashboardTile(tile: HomeTile, modifier: Modifier = Modifier, onClick
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
             )
         }
+    }
+}
+
+/** Reverse geocode lat/lng to a human-readable "City, State, Country" string.
+ *  Uses Android Geocoder on API 33+ (async), falls back to the profile
+ *  homeRegion, then to a coordinate string. Must be called from a coroutine. */
+private fun reverseGeocode(context: android.content.Context, lat: Double, lng: Double, homeRegion: String): String {
+    return try {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val geocoder = Geocoder(context)
+            var resolved = ""
+            geocoder.getFromLocation(lat, lng, 1) { addresses ->
+                val addr = addresses.firstOrNull()
+                if (addr != null) {
+                    val parts = mutableListOf<String>()
+                    addr.locality?.let { parts.add(it) }
+                    addr.adminArea?.let { parts.add(it) }
+                    addr.countryName?.let { parts.add(it) }
+                    resolved = parts.joinToString(", ")
+                }
+            }
+            // Geocoder async may not complete synchronously, wait briefly
+            Thread.sleep(500)
+            if (resolved.isNotBlank()) resolved else homeRegion.ifBlank { "%.2f, %.2f".format(lat, lng) }
+        } else {
+            @Suppress("DEPRECATION")
+            val addresses = Geocoder(context).getFromLocation(lat, lng, 1)
+            val addr = addresses?.firstOrNull()
+            if (addr != null) {
+                val parts = mutableListOf<String>()
+                addr.locality?.let { parts.add(it) }
+                addr.adminArea?.let { parts.add(it) }
+                addr.countryName?.let { parts.add(it) }
+                parts.joinToString(", ").ifBlank { homeRegion.ifBlank { "%.2f, %.2f".format(lat, lng) } }
+            } else {
+                homeRegion.ifBlank { "%.2f, %.2f".format(lat, lng) }
+            }
+        }
+    } catch (_: Throwable) {
+        homeRegion.ifBlank { "%.2f, %.2f".format(lat, lng) }
     }
 }
 

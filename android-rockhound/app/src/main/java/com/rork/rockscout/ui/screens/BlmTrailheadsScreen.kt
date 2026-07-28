@@ -43,6 +43,7 @@ import com.rork.rockscout.data.BlmTrailhead
 import com.rork.rockscout.data.BlmCampground
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.StatePickerPill
+import com.rork.rockscout.ui.components.NewBadge
 import com.rork.rockscout.ui.components.TagChip
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.components.sculpted
@@ -204,6 +205,9 @@ private fun TrailheadCard(trailhead: BlmTrailhead, onClick: () -> Unit) {
             .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.58f), Color.Black.copy(alpha = 0.68f), Color.Black.copy(alpha = 0.78f))))
             .glowingBorder(3.dp, accent.copy(alpha = 0.55f), shape),
     ) {
+        if (trailhead.isNew()) {
+            NewBadge(modifier = Modifier.align(Alignment.TopEnd).padding(8.dp))
+        }
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.Top) {
                 Box(modifier = Modifier.size(42.dp).clip(CircleShape).background(accent.copy(alpha = 0.16f)).glowingBorder(1.dp, accent.copy(alpha = 0.35f), CircleShape), contentAlignment = Alignment.Center) {
@@ -230,6 +234,9 @@ private fun CampgroundCard(campground: BlmCampground, onClick: () -> Unit) {
             .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.58f), Color.Black.copy(alpha = 0.68f), Color.Black.copy(alpha = 0.78f))))
             .glowingBorder(3.dp, accent.copy(alpha = 0.55f), shape),
     ) {
+        if (campground.isNew()) {
+            NewBadge(modifier = Modifier.align(Alignment.TopEnd).padding(8.dp))
+        }
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.Top) {
                 Box(modifier = Modifier.size(42.dp).clip(CircleShape).background(accent.copy(alpha = 0.16f)).glowingBorder(1.dp, accent.copy(alpha = 0.35f), CircleShape), contentAlignment = Alignment.Center) {

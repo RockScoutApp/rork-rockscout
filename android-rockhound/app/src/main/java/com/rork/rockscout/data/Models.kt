@@ -70,7 +70,19 @@ data class DigLocation(
     val tips: String,
     val submitterName: String? = null,
     val submittedPhotoUris: List<String> = emptyList(),
-)
+    val addedAtMs: Long = 0L,            // epoch ms when added; 0 = legacy (no badge)
+) {
+    /** True when this location was added within the last 7 days. */
+    fun isNew(): Boolean {
+        if (addedAtMs == 0L) return false
+        val ageMs = System.currentTimeMillis() - addedAtMs
+        return ageMs in 0..(SEVEN_DAYS_MS)
+    }
+
+    private companion object {
+        const val SEVEN_DAYS_MS = 7L * 24 * 60 * 60 * 1000
+    }
+}
 
 enum class LocationType(val label: String, val emoji: String) {
     PUBLIC_DIG("Public Dig Site", "⛏️"),

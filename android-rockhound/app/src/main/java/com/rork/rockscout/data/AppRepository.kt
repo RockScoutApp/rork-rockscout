@@ -450,6 +450,8 @@ class AppRepository {
     fun setHomeRegion(region: String) {
         _profile.value = _profile.value.copy(homeRegion = region)
         _locationRefreshTrigger.value++
+        // Re-resolve the user's timezone from the new home region.
+        UserTimezoneProvider.onHomeRegionChanged()
         persistProfile()
     }
 

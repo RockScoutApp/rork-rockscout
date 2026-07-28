@@ -67,6 +67,7 @@ import com.rork.rockscout.data.SeedData
 
 import com.rork.rockscout.ui.components.AlphabetIndex
 import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.NewBadge
 import com.rork.rockscout.ui.components.DigSitesMapView
 import com.rork.rockscout.ui.components.GlobalSearchSection
 import com.rork.rockscout.ui.components.InterstitialAdTrigger
@@ -701,7 +702,12 @@ private fun LocationCard(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
     ) {
         Row(verticalAlignment = Alignment.Top) {
-            SpecimenGlyph(emoji = loc.type.emoji, accent = Aqua, size = 50)
+            Box {
+                SpecimenGlyph(emoji = loc.type.emoji, accent = Aqua, size = 50)
+                if (loc.isNew()) {
+                    NewBadge(modifier = Modifier.align(Alignment.TopStart).padding(2.dp))
+                }
+            }
             Spacer(Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(loc.name, style = MaterialTheme.typography.titleLarge, color = Color.White)

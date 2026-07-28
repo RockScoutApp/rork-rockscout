@@ -140,6 +140,7 @@ object CustomSpecimenStore {
             uses = "—",
             rarity = "Uncommon",
             imageUrls = submission.imageUris,
+            catalogAddedAtMs = System.currentTimeMillis(),
         )
     }
 }

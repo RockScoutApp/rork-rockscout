@@ -4,6 +4,7 @@ package com.rork.rockscout.ui.screens
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -59,6 +60,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -127,6 +129,7 @@ import com.rork.rockscout.data.GearGuide
 import com.rork.rockscout.data.SpecimenImages
 import com.rork.rockscout.data.AssemblageResult
 import com.rork.rockscout.data.WebReference
+import com.rork.rockscout.data.SpecimenReportPdfExporter
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.GearLinksCard
 import com.rork.rockscout.ui.components.FullScreenImageViewer
@@ -227,6 +230,9 @@ fun IdentifyScreen(navController: NavController) {
     var viewerUrls by remember { mutableStateOf<List<String>>(emptyList()) }
     var viewerInitialPage by remember { mutableIntStateOf(0) }
 
+    // PDF report generation — tracks which match index is currently generating
+    var generatingReportIndex by remember { mutableIntStateOf(-1) }
+
     // Temp file URI for camera capture
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -236,6 +242,7 @@ fun IdentifyScreen(navController: NavController) {
     // Ask an Expert — museum finder + reply email dialog (uncertainty card)
     var showMuseumFinder by remember { mutableStateOf(false) }
     var emailTargetMuseum by remember { mutableStateOf<com.rork.rockscout.data.Museum?>(null) }
+    var emailTargetMuseums by remember { mutableStateOf<List<com.rork.rockscout.data.Museum>>(emptyList()) }
 
     // Rewarded video flow — 2 videos = 1 bonus ID token for free users
     var showRewardedVideo by remember { mutableStateOf(false) }
@@ -1214,6 +1221,31 @@ fun IdentifyScreen(navController: NavController) {
                                 viewerUrls = urls
                                 viewerInitialPage = page
                             },
+                            onGenerateReport = {
+                                generatingReportIndex = index
+                                scope.launch {
+                                    val reportData = SpecimenReportPdfExporter.ReportData(
+                                        capturedBitmap = capturedBitmap,
+                                        capturedUri = capturedUri,
+                                        matches = artifactMatches.map { (a, m) ->
+                                            SpecimenReportPdfExporter.MatchEntry(a.name, m.confidence, m.reasoning)
+                                        },
+                                        aiSummary = aiSummary,
+                                        assemblage = assemblageResult,
+                                        webReferences = webReferences,
+                                        locationText = "",
+                                        isArtifact = true,
+                                    )
+                                    val result = SpecimenReportPdfExporter.export(context, reportData)
+                                    generatingReportIndex = -1
+                                    if (result == null) {
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(context, "Could not generate the report. Try again.", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            },
+                            isGeneratingReport = generatingReportIndex == index,
                         )
                     }
                 }
@@ -1280,6 +1312,31 @@ fun IdentifyScreen(navController: NavController) {
                                 viewerUrls = urls
                                 viewerInitialPage = page
                             },
+                            onGenerateReport = {
+                                generatingReportIndex = index
+                                scope.launch {
+                                    val reportData = SpecimenReportPdfExporter.ReportData(
+                                        capturedBitmap = capturedBitmap,
+                                        capturedUri = capturedUri,
+                                        matches = matches.map { (s, m) ->
+                                            SpecimenReportPdfExporter.MatchEntry(s.name, m.confidence, m.reasoning)
+                                        },
+                                        aiSummary = aiSummary,
+                                        assemblage = assemblageResult,
+                                        webReferences = webReferences,
+                                        locationText = "",
+                                        isArtifact = false,
+                                    )
+                                    val result = SpecimenReportPdfExporter.export(context, reportData)
+                                    generatingReportIndex = -1
+                                    if (result == null) {
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(context, "Could not generate the report. Try again.", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            },
+                            isGeneratingReport = generatingReportIndex == index,
                         )
                     }
                 }
@@ -1316,6 +1373,12 @@ fun IdentifyScreen(navController: NavController) {
                 onDismiss = { showMuseumFinder = false },
                 onEmailExpert = { museum ->
                     emailTargetMuseum = museum
+                    emailTargetMuseums = listOf(museum)
+                    showMuseumFinder = false
+                },
+                onEmailExperts = { museums ->
+                    emailTargetMuseums = museums
+                    emailTargetMuseum = museums.firstOrNull()
                     showMuseumFinder = false
                 },
                 artifactMatchNames = artifactMatches.map { it.first.name },
@@ -1328,6 +1391,7 @@ fun IdentifyScreen(navController: NavController) {
         emailTargetMuseum?.let { museum ->
             ReplyEmailDialog(
                 museum = museum,
+                museums = emailTargetMuseums,
                 onDismiss = { emailTargetMuseum = null },
                 artifactMatchNames = artifactMatches.map { it.first.name },
                 artifactConfidences = artifactMatches.map { it.second.confidence },
@@ -1837,6 +1901,8 @@ private fun MatchRow(
     isTop: Boolean,
     onClick: () -> Unit,
     onPhotoClick: (List<String>, Int) -> Unit = { _, _ -> },
+    onGenerateReport: () -> Unit = {},
+    isGeneratingReport: Boolean = false,
 ) {
     val accent = rockClassColor(spec.rockClass)
     val imageUrls = SpecimenImages.urls[spec.id] ?: spec.imageUrls
@@ -1963,6 +2029,24 @@ private fun MatchRow(
                     style = MaterialTheme.typography.titleMedium,
                     color = if (isTop) Success else DarkTextMid,
                 )
+                if (isGeneratingReport) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp).padding(top = 4.dp),
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    Icon(
+                        Icons.Filled.Description,
+                        contentDescription = "Generate PDF report",
+                        tint = accent,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .padding(top = 4.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .clickable(onClick = onGenerateReport)
+                            .padding(2.dp),
+                    )
+                }
                 Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = DarkTextMid)
             }
         }
@@ -1983,6 +2067,8 @@ private fun ArtifactMatchRow(
     isTop: Boolean,
     onClick: () -> Unit,
     onPhotoClick: (List<String>, Int) -> Unit = { _, _ -> },
+    onGenerateReport: () -> Unit = {},
+    isGeneratingReport: Boolean = false,
 ) {
     val accent = Color(artifact.accentHex)
     val imageUrls = listOf(artifact.imageUrl)
@@ -2084,6 +2170,24 @@ private fun ArtifactMatchRow(
                     style = MaterialTheme.typography.titleMedium,
                     color = if (isTop) Success else DarkTextMid,
                 )
+                if (isGeneratingReport) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp).padding(top = 4.dp),
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    Icon(
+                        Icons.Filled.Description,
+                        contentDescription = "Generate PDF report",
+                        tint = accent,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .padding(top = 4.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                            .clickable(onClick = onGenerateReport)
+                            .padding(2.dp),
+                    )
+                }
                 Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = DarkTextMid)
             }
         }

@@ -4,8 +4,11 @@ import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.net.Uri
 import android.util.Base64
+import androidx.exifinterface.media.ExifInterface
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -82,6 +85,95 @@ object ImageUtils {
     }
 
     /**
+     * Read the EXIF orientation tag from a content/file/http [uri].
+     * Returns [ExifInterface.ORIENTATION_NORMAL] on any failure.
+     */
+    fun readExifOrientation(context: Context, uri: Uri): Int = try {
+        val stream: InputStream? = when (uri.scheme) {
+            "http", "https" -> java.net.URL(uri.toString()).openStream()
+            else -> context.contentResolver.openInputStream(uri)
+        }
+        stream?.use { ExifInterface(it).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL) }
+            ?: ExifInterface.ORIENTATION_NORMAL
+    } catch (_: Throwable) {
+        ExifInterface.ORIENTATION_NORMAL
+    }
+
+    /**
+     * Apply an EXIF orientation value to a [bitmap], returning a new bitmap
+     * rotated/flipped to match. Returns the original bitmap for
+     * [ExifInterface.ORIENTATION_NORMAL].
+     */
+    fun applyExifOrientation(bitmap: Bitmap, orientation: Int): Bitmap {
+        val matrix = Matrix()
+        when (orientation) {
+            ExifInterface.ORIENTATION_ROTATE_90 -> matrix.postRotate(90f)
+            ExifInterface.ORIENTATION_ROTATE_180 -> matrix.postRotate(180f)
+            ExifInterface.ORIENTATION_ROTATE_270 -> matrix.postRotate(270f)
+            ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> matrix.postScale(-1f, 1f)
+            ExifInterface.ORIENTATION_FLIP_VERTICAL -> matrix.postScale(1f, -1f)
+            ExifInterface.ORIENTATION_TRANSPOSE -> {
+                matrix.postRotate(90f)
+                matrix.postScale(-1f, 1f)
+            }
+            ExifInterface.ORIENTATION_TRANSVERSE -> {
+                matrix.postRotate(270f)
+                matrix.postScale(-1f, 1f)
+            }
+            else -> return bitmap
+        }
+        return try {
+            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        } catch (_: Throwable) {
+            bitmap
+        }
+    }
+
+    /**
+     * Copy EXIF metadata (GPS, timestamp, camera, exposure) from [srcUri] to
+     * [destFile]. Sets TAG_ORIENTATION to NORMAL (pixels are already upright).
+     * Best-effort — wraps in try/catch so EXIF preservation never fails the
+     * caller's operation.
+     */
+    fun copyExifMetadata(context: Context, srcUri: Uri, destFile: File) {
+        try {
+            val srcStream: InputStream? = when (srcUri.scheme) {
+                "http", "https" -> java.net.URL(srcUri.toString()).openStream()
+                else -> context.contentResolver.openInputStream(srcUri)
+            }
+            if (srcStream == null) return
+            val srcExif = srcStream.use { ExifInterface(it) }
+            val destExif = ExifInterface(destFile.absolutePath)
+            val tagsToCopy = listOf(
+                ExifInterface.TAG_GPS_LATITUDE,
+                ExifInterface.TAG_GPS_LATITUDE_REF,
+                ExifInterface.TAG_GPS_LONGITUDE,
+                ExifInterface.TAG_GPS_LONGITUDE_REF,
+                ExifInterface.TAG_GPS_ALTITUDE,
+                ExifInterface.TAG_GPS_ALTITUDE_REF,
+                ExifInterface.TAG_GPS_TIMESTAMP,
+                ExifInterface.TAG_GPS_DATESTAMP,
+                ExifInterface.TAG_DATETIME,
+                ExifInterface.TAG_DATETIME_ORIGINAL,
+                ExifInterface.TAG_DATETIME_DIGITIZED,
+                ExifInterface.TAG_MAKE,
+                ExifInterface.TAG_MODEL,
+                ExifInterface.TAG_F_NUMBER,
+                ExifInterface.TAG_EXPOSURE_TIME,
+                ExifInterface.TAG_FOCAL_LENGTH,
+                ExifInterface.TAG_PHOTOGRAPHIC_SENSITIVITY,
+            )
+            for (tag in tagsToCopy) {
+                srcExif.getAttribute(tag)?.let { destExif.setAttribute(tag, it) }
+            }
+            destExif.setAttribute(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL.toString())
+            destExif.saveAttributes()
+        } catch (_: Throwable) {
+            // Best-effort — never fail the caller's operation
+        }
+    }
+
+    /**
      * Decode a content/file/http [uri] to a Bitmap, downsampled so the longest
      * edge is at most [maxDimension] px. This bounds memory regardless of the
      * source's native resolution — critical for camera captures and gallery
@@ -92,6 +184,9 @@ object ImageUtils {
      * brings the longest edge to <= [maxDimension], then decodes the real
      * bitmap at that sample size. The returned bitmap is always non-null on a
      * successfully decodable source, and null on any I/O or decode failure.
+     *
+     * After decoding, the bitmap is rotated to match the source JPEG's EXIF
+     * orientation tag so the result is always upright.
      */
     fun decodeSampledBitmap(
         context: Context,
@@ -116,7 +211,10 @@ object ImageUtils {
             inSampleSize = sample
             inPreferredConfig = Bitmap.Config.ARGB_8888
         }
-        openStream()?.use { BitmapFactory.decodeStream(it, null, decodeOpts) }
+        val decoded = openStream()?.use { BitmapFactory.decodeStream(it, null, decodeOpts) }
+            ?: return null
+        val orientation = readExifOrientation(context, uri)
+        applyExifOrientation(decoded, orientation)
     } catch (_: Throwable) {
         null
     }
@@ -149,7 +247,17 @@ object ImageUtils {
             inSampleSize = sample
             inPreferredConfig = Bitmap.Config.ARGB_8888
         }
-        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, decodeOpts)
+        val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, decodeOpts)
+            ?: return null
+        val orientation = try {
+            ExifInterface(ByteArrayInputStream(bytes)).getAttributeInt(
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_NORMAL,
+            )
+        } catch (_: Throwable) {
+            ExifInterface.ORIENTATION_NORMAL
+        }
+        applyExifOrientation(decoded, orientation)
     } catch (_: Throwable) {
         null
     }

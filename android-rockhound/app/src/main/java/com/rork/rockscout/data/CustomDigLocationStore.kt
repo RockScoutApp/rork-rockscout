@@ -104,6 +104,7 @@ object CustomDigLocationStore {
             tips = if (sub.webSnippet.isNotBlank()) sub.webSnippet else "Submitted by ${sub.submitterName}. Verify access and hours before visiting.",
             submitterName = sub.submitterName,
             submittedPhotoUris = sub.photoUris,
+            addedAtMs = System.currentTimeMillis(),
         )
     }
 
@@ -146,6 +147,7 @@ object CustomDigLocationStore {
             difficulty = "Unknown",
             publicAccess = true,
             tips = "Added from web search result. Verify access and hours before visiting.",
+            addedAtMs = System.currentTimeMillis(),
         )
     }
 }

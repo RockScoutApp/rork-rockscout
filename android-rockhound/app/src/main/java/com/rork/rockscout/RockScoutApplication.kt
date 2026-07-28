@@ -25,6 +25,8 @@ import com.rork.rockscout.data.PurchaseManager
 import com.rork.rockscout.data.AuthRepository
 import com.rork.rockscout.data.CustomDigLocationStore
 import com.rork.rockscout.data.DigSiteDiscoveryStore
+import com.rork.rockscout.data.UserTimezoneProvider
+import com.rork.rockscout.data.EmailComposerDraftStore
 import com.rork.rockscout.data.CustomSpecimenStore
 import com.rork.rockscout.data.LocationSubmissionStore
 import com.rork.rockscout.data.LocalDataStore
@@ -193,6 +195,14 @@ class RockScoutApplication : Application() {
             DigSiteDiscoveryStore.initialize()
         }
 
+        safeInit("email-composer-draft") {
+            EmailComposerDraftStore.initialize(this)
+        }
+
+        safeInit("user-timezone-provider") {
+            UserTimezoneProvider.initialize()
+        }
+
         safeInit("custom-dig-location-store") {
             CustomDigLocationStore.initialize()
         }
@@ -261,6 +271,10 @@ class RockScoutApplication : Application() {
         safeInit("export-cache-cleanup") {
             ExportCleanupWorker.schedule(this)
             ExportCleanupWorker.runNow(this)
+        }
+
+        safeInit("settings-backup") {
+            WorkScheduler.scheduleSettingsBackup(this)
         }
 
         safeInit("proximity-check-now") {

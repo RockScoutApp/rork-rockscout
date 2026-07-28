@@ -112,5 +112,6 @@ dependencies {
     implementation(libs.osmdroid.android)
     implementation(libs.play.services.ads)
     implementation(libs.zxing.core)
+    implementation(libs.androidx.exifinterface)
     debugImplementation(libs.androidx.ui.tooling)
 }
