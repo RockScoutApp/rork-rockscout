@@ -85,6 +85,11 @@ object LocalDataStore {
     const val KEY_AUTH_EMAIL = "auth_current_email"
     const val KEY_AUTH_USER_ID = "auth_current_user_id"
 
+    // ---- Supabase session token keys -------------------------------------
+    const val KEY_SUPABASE_ACCESS_TOKEN = "supabase_access_token"
+    const val KEY_SUPABASE_REFRESH_TOKEN = "supabase_refresh_token"
+    const val KEY_LOCAL_AUTH_MIGRATED = "local_auth_migrated"
+
     /** Must be called once from Application.onCreate before any access. */
     fun initialize(context: Context) {
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)

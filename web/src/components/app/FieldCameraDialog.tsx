@@ -650,7 +650,7 @@ export default function FieldCameraDialog({
                     const isPaidDestination = dest.value !== "SAVED_IMAGES";
                     // TODO: wire trial/premium status from useAuth or a
                     // separate entitlement hook. For now, all destinations
-                    // are available — the web uses Stripe for premium.
+                    // are available — premium is managed via the mobile app.
                     return (
                       <button
                         key={dest.value}

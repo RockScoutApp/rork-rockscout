@@ -9,28 +9,41 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import java.util.UUID
 
 /**
- * Local self-contained auth — no Supabase backend.
+ * Supabase-backed authentication repository.
  *
- * Email + password accounts are stored in [LocalDataStore] under the
- * [LocalDataStore.KEY_USERS] table. Sessions are persisted via two keys
- * ([LocalDataStore.KEY_AUTH_EMAIL] / [LocalDataStore.KEY_AUTH_USER_ID]) so
- * the session survives app restarts without any server round-trip.
+ * Replaces the former local-only auth. Sign-up and sign-in now use the same
+ * Supabase project as the web PWA, so accounts are shared across Android,
+ * web, and iOS. Sessions are persisted via Supabase access/refresh tokens
+ * stored in [LocalDataStore].
  *
- * Exposes a [SessionStatus] flow (the local sealed class, not Supabase's)
- * so UI code that checks `sessionStatus is SessionStatus.Authenticated` and
- * accesses `.session?.user?.email` continues to work unchanged.
+ * Existing pre-migration users (userId starting with "local-") are silently
+ * upgraded on the next app launch: their stored email + password are used to
+ * create a Supabase account (or sign in if one already exists from the web).
+ * If the silent migration fails (e.g. password mismatch with an existing web
+ * account), [needsMigration] is set to true and the local session remains
+ * active until the user completes the migration manually.
+ *
+ * Email verification uses our custom 6-digit code sent via the backend
+ * ([EmailVerificationApi]). When the code is verified, the backend also
+ * confirms the Supabase email via the admin API, so the user doesn't need
+ * to click a separate Supabase confirmation link.
+ *
+ * Exposes the same [SessionStatus] flow and public API as the previous
+ * local-only implementation, so UI code requires no changes.
  */
 class AuthRepository private constructor() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    private val _sessionStatus = MutableStateFlow<SessionStatus>(SessionStatus.NotAuthenticated())
+    private val _sessionStatus = MutableStateFlow<SessionStatus>(SessionStatus.Initializing)
     val sessionStatus: StateFlow<SessionStatus> = _sessionStatus.asStateFlow()
+
+    private val _needsMigration = MutableStateFlow(false)
+    /** True when a pre-migration local account exists but couldn't be auto-upgraded to Supabase. */
+    val needsMigration: StateFlow<Boolean> = _needsMigration.asStateFlow()
 
     /** Currently signed-in user's id (null when not authenticated). */
     val currentUserId: String?
@@ -46,16 +59,7 @@ class AuthRepository private constructor() {
 
     /** True when the current session user's email has been verified. */
     val isEmailVerified: Boolean
-        get() {
-            val status = sessionStatus.value
-            return when (status) {
-                is SessionStatus.Authenticated -> {
-                    val users = LocalDataStore.getTable<LocalUser>(LocalDataStore.KEY_USERS)
-                    users.firstOrNull { it.id == status.session.user.id }?.email_verified ?: true
-                }
-                else -> false
-            }
-        }
+        get() = sessionStatus.value is SessionStatus.Authenticated
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -63,43 +67,189 @@ class AuthRepository private constructor() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    /** Restore the saved session from local storage, if any. Called once
-     *  from Application.onCreate. If the saved user's email is not verified,
-     *  the session is not restored — the user must sign in and verify.
-     *  If the saved user's account has been admin-deleted, the session is
-     *  set to [SessionStatus.AccountDeleted] so the blocking popup shows. */
+    /** Pending Supabase user ID from sign-up (used to confirm email via backend). */
+    private var pendingSupabaseUserId: String? = null
+
+    /** Pending password from sign-up (used to sign in after email confirmation). */
+    private var pendingPassword: String? = null
+
+    /**
+     * Restore the saved session. Called once from Application.onCreate.
+     *
+     * Priority:
+     * 1. Supabase access token → try getUser, fall back to refresh.
+     * 2. Local pre-migration session → attempt silent migration to Supabase.
+     * 3. Nothing → NotAuthenticated.
+     */
     fun initialize() {
+        val accessToken = LocalDataStore.getString(LocalDataStore.KEY_SUPABASE_ACCESS_TOKEN)
+        val refreshToken = LocalDataStore.getString(LocalDataStore.KEY_SUPABASE_REFRESH_TOKEN)
+
+        if (!accessToken.isNullOrBlank()) {
+            scope.launch { restoreSupabaseSession(accessToken, refreshToken) }
+            return
+        }
+
+        // No Supabase tokens — check for pre-migration local session.
         val savedEmail = LocalDataStore.getString(LocalDataStore.KEY_AUTH_EMAIL)
         val savedUserId = LocalDataStore.getString(LocalDataStore.KEY_AUTH_USER_ID)
-        if (!savedEmail.isNullOrBlank() && !savedUserId.isNullOrBlank()) {
-            val users = LocalDataStore.getTable<LocalUser>(LocalDataStore.KEY_USERS)
-            val user = users.firstOrNull { it.id == savedUserId }
-            if (user != null && user.account_deleted) {
-                // Admin-deleted account — show the blocking popup.
-                _sessionStatus.value = SessionStatus.AccountDeleted(
-                    email = savedEmail,
-                    userId = savedUserId,
-                    reason = user.deletion_reason ?: "Your account has been deleted by an administrator.",
-                )
-                return
-            }
-            if (user != null && !user.email_verified) {
-                // Unverified account — don't restore the session.
-                // Clear the saved session so the auth gate shows.
-                LocalDataStore.setString(LocalDataStore.KEY_AUTH_EMAIL, "")
-                LocalDataStore.setString(LocalDataStore.KEY_AUTH_USER_ID, "")
-                _sessionStatus.value = SessionStatus.NotAuthenticated()
-                return
-            }
+        val migrated = LocalDataStore.getBoolean(LocalDataStore.KEY_LOCAL_AUTH_MIGRATED, false)
+
+        if (!savedEmail.isNullOrBlank() && !savedUserId.isNullOrBlank()
+            && savedUserId.startsWith("local-") && !migrated
+        ) {
+            scope.launch { attemptMigration(savedEmail, savedUserId) }
+            return
+        }
+
+        // No session to restore.
+        _sessionStatus.value = SessionStatus.NotAuthenticated()
+    }
+
+    /** Restore a Supabase session from stored tokens. */
+    private suspend fun restoreSupabaseSession(accessToken: String, refreshToken: String?) {
+        // Try getUser with the access token.
+        val userResult = SupabaseAuthClient.getUser(accessToken)
+        if (userResult.isSuccess) {
+            val user = userResult.getOrThrow()
             _sessionStatus.value = SessionStatus.Authenticated(
-                Session(user = UserInfo(id = savedUserId, email = savedEmail))
+                Session(user = UserInfo(id = user.id, email = user.email))
             )
-            // Re-link RevenueCat to the restored session.
-            scope.launch { PurchaseManager.instance.linkRevenueCatUser(savedUserId) }
+            scope.launch { PurchaseManager.instance.linkRevenueCatUser(user.id) }
+            SupabaseDataSync.syncInBackground()
+            Log.i("AuthRepository", "Session restored for user=${user.id}")
+            return
+        }
+
+        // Access token expired — try refresh.
+        if (!refreshToken.isNullOrBlank()) {
+            val refreshResult = SupabaseAuthClient.refreshSession(refreshToken)
+            if (refreshResult.isSuccess) {
+                val auth = refreshResult.getOrThrow()
+                saveSupabaseTokens(auth.access_token, auth.refresh_token)
+                _sessionStatus.value = SessionStatus.Authenticated(
+                    Session(user = UserInfo(
+                        id = auth.user?.id ?: "",
+                        email = auth.user?.email ?: "",
+                    ))
+                )
+                scope.launch { PurchaseManager.instance.linkRevenueCatUser(auth.user?.id ?: "") }
+                SupabaseDataSync.syncInBackground()
+                Log.i("AuthRepository", "Session refreshed for user=${auth.user?.id}")
+                return
+            }
+        }
+
+        // Both failed — clear tokens and require sign-in.
+        clearSupabaseTokens()
+        _sessionStatus.value = SessionStatus.NotAuthenticated()
+        Log.w("AuthRepository", "Session restore failed — tokens cleared")
+    }
+
+    /**
+     * Attempt to silently migrate a pre-migration local account to Supabase.
+     * Tries sign-up first (new account), then sign-in (existing web account).
+     * On success, updates the stored userId and tokens. On failure, keeps the
+     * local session and sets [needsMigration] so the UI can prompt the user.
+     */
+    private suspend fun attemptMigration(email: String, oldUserId: String) {
+        val users = LocalDataStore.getTable<LocalUser>(LocalDataStore.KEY_USERS)
+        val user = users.firstOrNull { it.id == oldUserId }
+
+        if (user == null || user.password.isBlank()) {
+            _sessionStatus.value = SessionStatus.NotAuthenticated()
+            return
+        }
+
+        // Try sign-up (creates a new Supabase account with the same credentials).
+        val signUpResult = SupabaseAuthClient.signUp(email, user.password)
+        if (signUpResult.isSuccess) {
+            val auth = signUpResult.getOrThrow()
+            if (auth.access_token.isNotBlank()) {
+                // Session returned (email confirmation disabled) — migration complete.
+                completeMigration(auth, user.display_name, user.avatar_emoji)
+                Log.i("AuthRepository", "Silent migration via sign-up for $email")
+                return
+            }
+            // No session (email confirmation enabled) — need to verify email.
+            // Fall through to sign-in attempt (account exists but unconfirmed).
+        }
+
+        // Sign-up failed or no session — try sign-in (account may exist from web).
+        val signInResult = SupabaseAuthClient.signInWithPassword(email, user.password)
+        if (signInResult.isSuccess) {
+            val auth = signInResult.getOrThrow()
+            completeMigration(auth, user.display_name, user.avatar_emoji)
+            Log.i("AuthRepository", "Silent migration via sign-in for $email")
+            return
+        }
+
+        // Both failed — keep local session, flag for manual migration.
+        val signUpErr = signUpResult.exceptionOrNull()?.message
+        val signInErr = signInResult.exceptionOrNull()?.message
+        Log.w("AuthRepository", "Silent migration failed for $email: signUp=$signUpErr, signIn=$signInErr")
+
+        // Check if the account was admin-deleted locally.
+        if (user.account_deleted) {
+            _sessionStatus.value = SessionStatus.AccountDeleted(
+                email = email,
+                userId = oldUserId,
+                reason = user.deletion_reason ?: "Your account has been deleted by an administrator.",
+            )
+            return
+        }
+
+        _needsMigration.value = true
+        _sessionStatus.value = SessionStatus.Authenticated(
+            Session(user = UserInfo(id = oldUserId, email = email))
+        )
+        scope.launch { PurchaseManager.instance.linkRevenueCatUser(oldUserId) }
+    }
+
+    /** Finalize migration: save tokens, update userId, upsert profile, mark migrated. */
+    private suspend fun completeMigration(
+        auth: SupabaseAuthClient.AuthResponse,
+        displayName: String,
+        avatarEmoji: String,
+    ) {
+        saveSupabaseTokens(auth.access_token, auth.refresh_token)
+        val userId = auth.user?.id ?: ""
+        val email = auth.user?.email ?: ""
+        LocalDataStore.setString(LocalDataStore.KEY_AUTH_EMAIL, email)
+        LocalDataStore.setString(LocalDataStore.KEY_AUTH_USER_ID, userId)
+        LocalDataStore.setBoolean(LocalDataStore.KEY_LOCAL_AUTH_MIGRATED, true)
+        _needsMigration.value = false
+
+        // Upsert the profile so the web PWA can see this user.
+        scope.launch {
+            SupabaseAuthClient.upsertProfile(auth.access_token, userId, displayName, avatarEmoji)
+        }
+
+        _sessionStatus.value = SessionStatus.Authenticated(
+            Session(user = UserInfo(id = userId, email = email))
+        )
+        scope.launch { PurchaseManager.instance.linkRevenueCatUser(userId) }
+        SupabaseDataSync.syncInBackground()
+
+        // Cloud-restore settings if this is a fresh install.
+        if (PersistenceManager.isLocalDataEmpty()) {
+            scope.launch {
+                SettingsBackupApi.restoreSettings(userId)
+                    .onSuccess { settingsJson ->
+                        if (settingsJson != null) {
+                            val restored = PersistenceManager.restoreAllSettingsFromJson(settingsJson)
+                            if (restored) {
+                                Log.d("AuthRepository", "Restored settings from cloud backup for user $userId")
+                                PersistenceManager.reloadIntoRepository()
+                            }
+                        }
+                    }
+                    .onFailure { Log.w("AuthRepository", "Settings restore failed: ${it.message}") }
+            }
         }
     }
 
-    /** Sign up with email + password. Creates a local account and signs in. */
+    /** Sign up with email + password via Supabase. */
     suspend fun signUp(email: String, password: String): Result<Unit> {
         _isLoading.value = true
         _error.value = null
@@ -111,50 +261,44 @@ class AuthRepository private constructor() {
             if (password.length < 6) {
                 error("Password must be at least 6 characters.")
             }
-            val users = LocalDataStore.getTable<LocalUser>(LocalDataStore.KEY_USERS)
-            if (users.any { it.email.equals(trimmed, ignoreCase = true) }) {
-                error("An account with that email already exists.")
+
+            val result = SupabaseAuthClient.signUp(trimmed, password)
+            if (result.isFailure) {
+                error(result.exceptionOrNull()?.message ?: "Sign-up failed")
             }
-            val userId = "local-" + UUID.randomUUID().toString()
-            // Generate a unique default display name. "Rock Scout" is the base;
-            // if it's taken, append an incrementing number until we find one
-            // that no other user has (case-insensitive).
+
+            val auth = result.getOrThrow()
+            val userId = auth.user?.id ?: ""
+
+            if (auth.access_token.isNotBlank()) {
+                // Session returned (email confirmation disabled) — but we still
+                // use our 6-digit code for UX consistency. Store the session
+                // temporarily and transition to PendingVerification.
+                saveSupabaseTokens(auth.access_token, auth.refresh_token)
+            }
+
+            // Store pending info for verification + sign-in after confirmation.
+            pendingSupabaseUserId = userId
+            pendingPassword = password
+
+            // Generate a default display name.
             val baseName = "Rock Scout"
-            val usersList = users
-            var defaultName = baseName
-            var suffix = 2
-            while (usersList.any {
-                    it.display_name.trim().equals(defaultName, ignoreCase = true)
-                }) {
-                defaultName = "$baseName $suffix"
-                suffix++
-            }
-            val newUser = LocalUser(
-                id = userId,
-                email = trimmed,
-                password = password,
-                display_name = defaultName,
-                avatar_emoji = "\uD83E\uDD20",
-                status = "off",
-                club_enabled = false,
-                email_verified = false,
-            )
-            LocalDataStore.setTable(LocalDataStore.KEY_USERS, users + newUser)
-            // Do NOT save the session yet — the user must verify their email first.
-            // Set the session to PendingVerification so the UI shows the code entry panel.
+            val defaultName = baseName // Supabase profile upsert will handle uniqueness.
+
+            // Transition to PendingVerification — user must enter the 6-digit code.
             _sessionStatus.value = SessionStatus.PendingVerification(
                 email = trimmed,
                 userId = userId,
             )
+
             // Send the 6-digit verification code via the backend.
             val sendResult = EmailVerificationApi.sendCode(trimmed)
             if (sendResult is EmailVerificationApi.VerificationResult.Failed) {
-                // The account was created but we couldn't send the code.
-                // The user can resend from the verification panel.
                 Log.w("AuthRepository", "Initial verification code send failed: ${sendResult.message}")
             } else if (sendResult is EmailVerificationApi.VerificationResult.NetworkError) {
                 Log.w("AuthRepository", "Verification code send network error — user can resend")
             }
+
             // Send personalized welcome email (fire-and-forget).
             scope.launch { WelcomeEmailApi.sendWelcomeEmail(trimmed, defaultName) }
             Unit
@@ -166,9 +310,7 @@ class AuthRepository private constructor() {
         }
     }
 
-    /** Complete email verification by submitting the 6-digit [code].
-     *  On success, marks the user's email as verified, saves the session,
-     *  and transitions to Authenticated. */
+    /** Complete email verification by submitting the 6-digit [code]. */
     suspend fun completeVerification(code: String): Result<Unit> {
         val pending = sessionStatus.value as? SessionStatus.PendingVerification
             ?: return Result.failure(IllegalStateException("No pending verification."))
@@ -179,17 +321,49 @@ class AuthRepository private constructor() {
             if (trimmedCode.length != 6 || !trimmedCode.all { it.isDigit() }) {
                 error("Please enter the 6-digit code.")
             }
-            val result = EmailVerificationApi.verifyCode(pending.email, trimmedCode)
+
+            // Verify the code via backend. The backend also confirms the
+            // Supabase email via admin API when the code matches.
+            val supabaseUserId = pendingSupabaseUserId
+            val result = EmailVerificationApi.verifyCodeWithEmailConfirm(
+                email = pending.email,
+                code = trimmedCode,
+                supabaseUserId = supabaseUserId,
+            )
+
             when (result) {
                 is EmailVerificationApi.VerificationResult.Success -> {
-                    // Mark the user as email_verified = true in the local DB.
-                    LocalDataStore.updateTable<LocalUser>(LocalDataStore.KEY_USERS) { users ->
-                        users.map { if (it.id == pending.userId) it.copy(email_verified = true) else it }
+                    // Sign in with Supabase to get a fresh session.
+                    val password = pendingPassword ?: error("Session expired. Please sign in again.")
+                    val signInResult = SupabaseAuthClient.signInWithPassword(pending.email, password)
+                    if (signInResult.isSuccess) {
+                        val auth = signInResult.getOrThrow()
+                        saveSupabaseTokens(auth.access_token, auth.refresh_token)
+                        val userId = auth.user?.id ?: pending.userId
+                        val email = auth.user?.email ?: pending.email
+                        LocalDataStore.setString(LocalDataStore.KEY_AUTH_EMAIL, email)
+                        LocalDataStore.setString(LocalDataStore.KEY_AUTH_USER_ID, userId)
+                        LocalDataStore.setBoolean(LocalDataStore.KEY_LOCAL_AUTH_MIGRATED, true)
+                        _needsMigration.value = false
+
+                        // Upsert profile.
+                        scope.launch {
+                            SupabaseAuthClient.upsertProfile(
+                                auth.access_token, userId, "Rock Scout", "\uD83E\uDD20"
+                            )
+                        }
+
+                        _sessionStatus.value = SessionStatus.Authenticated(
+                            Session(user = UserInfo(id = userId, email = email))
+                        )
+                        scope.launch { PurchaseManager.instance.linkRevenueCatUser(userId) }
+                        SupabaseDataSync.syncInBackground()
+                    } else {
+                        // Sign-in might fail if Supabase email confirmation hasn't
+                        // propagated yet. In that case, save what we have.
+                        Log.w("AuthRepository", "Post-verification sign-in failed: ${signInResult.exceptionOrNull()?.message}")
+                        error("Email verified, but couldn't sign in. Please try signing in manually.")
                     }
-                    // Now save the session and transition to Authenticated.
-                    saveSession(pending.userId, pending.email)
-                    // Link RevenueCat to the user's account.
-                    scope.launch { PurchaseManager.instance.linkRevenueCatUser(pending.userId) }
                     Unit
                 }
                 is EmailVerificationApi.VerificationResult.Failed -> {
@@ -228,74 +402,94 @@ class AuthRepository private constructor() {
         }
     }
 
-    /** Cancel the pending verification and go back to the sign-up form.
-     *  Removes the unverified account so the email can be reused. */
+    /** Cancel the pending verification and go back to the sign-up form. */
     suspend fun cancelPendingVerification(): Result<Unit> {
         return runCatching {
-            val pending = sessionStatus.value as? SessionStatus.PendingVerification
-            if (pending != null) {
-                // Remove the unverified user from the local DB.
-                LocalDataStore.updateTable<LocalUser>(LocalDataStore.KEY_USERS) { users ->
-                    users.filter { it.id != pending.userId }
-                }
-            }
+            pendingSupabaseUserId = null
+            pendingPassword = null
+            // Clear any partial Supabase session from sign-up.
+            clearSupabaseTokens()
             _sessionStatus.value = SessionStatus.NotAuthenticated()
             _error.value = null
             Unit
         }
     }
 
-    /** Sign in with email + password. Validates against local accounts. */
+    /** Sign in with email + password via Supabase. */
     suspend fun signIn(email: String, password: String): Result<Unit> {
         _isLoading.value = true
         _error.value = null
         return runCatching {
             val trimmed = email.trim()
-            val users = LocalDataStore.getTable<LocalUser>(LocalDataStore.KEY_USERS)
-            val user = users.firstOrNull { it.email.equals(trimmed, ignoreCase = true) }
-                ?: error("No account found for that email. Try creating one.")
-            if (user.password != password) {
-                error("Incorrect password. Please try again.")
-            }
-            if (!user.email_verified) {
-                // Unverified account — send a new code and show verification panel.
-                _sessionStatus.value = SessionStatus.PendingVerification(
-                    email = user.email,
-                    userId = user.id,
-                )
-                val sendResult = EmailVerificationApi.sendCode(user.email)
-                if (sendResult is EmailVerificationApi.VerificationResult.Failed) {
-                    Log.w("AuthRepository", "Sign-in verification code send failed: ${sendResult.message}")
+            val result = SupabaseAuthClient.signInWithPassword(trimmed, password)
+
+            if (result.isFailure) {
+                val errMsg = result.exceptionOrNull()?.message ?: "Sign-in failed"
+                // Check if the error is "email not confirmed" — if so, transition
+                // to PendingVerification so the user can verify via our 6-digit code.
+                if (errMsg.contains("not confirmed", ignoreCase = true) ||
+                    errMsg.contains("email_not_confirmed", ignoreCase = true)
+                ) {
+                    pendingPassword = password
+                    _sessionStatus.value = SessionStatus.PendingVerification(
+                        email = trimmed,
+                        userId = "",
+                    )
+                    val sendResult = EmailVerificationApi.sendCode(trimmed)
+                    if (sendResult is EmailVerificationApi.VerificationResult.Failed) {
+                        Log.w("AuthRepository", "Sign-in verification code send failed: ${sendResult.message}")
+                    }
+                    return@runCatching Unit
                 }
-            } else if (user.account_deleted) {
-                // Admin-deleted account — show the blocking popup, do NOT restore session.
+                error(errMsg)
+            }
+
+            val auth = result.getOrThrow()
+            saveSupabaseTokens(auth.access_token, auth.refresh_token)
+            val userId = auth.user?.id ?: ""
+            val userEmail = auth.user?.email ?: trimmed
+
+            LocalDataStore.setString(LocalDataStore.KEY_AUTH_EMAIL, userEmail)
+            LocalDataStore.setString(LocalDataStore.KEY_AUTH_USER_ID, userId)
+            LocalDataStore.setBoolean(LocalDataStore.KEY_LOCAL_AUTH_MIGRATED, true)
+            _needsMigration.value = false
+
+            // Check local blocked list (admin-deleted accounts).
+            val blockedEmails = getBlockedEmails()
+            if (userEmail.lowercase() in blockedEmails) {
                 _sessionStatus.value = SessionStatus.AccountDeleted(
-                    email = user.email,
-                    userId = user.id,
-                    reason = user.deletion_reason ?: "Your account has been deleted by an administrator.",
+                    email = userEmail,
+                    userId = userId,
+                    reason = "Your account has been deleted by an administrator.",
                 )
-            } else {
-                saveSession(user.id, user.email)
-                // Link RevenueCat to the user's account so purchases carry over.
-                scope.launch { PurchaseManager.instance.linkRevenueCatUser(user.id) }
-                // Cloud-restore settings if this is a fresh install (e.g. after a
-                // signing-conflict uninstall + reinstall). If local data already
-                // exists, the restore is skipped — the user already has their data.
-                if (PersistenceManager.isLocalDataEmpty()) {
-                    scope.launch {
-                        SettingsBackupApi.restoreSettings(user.id)
-                            .onSuccess { settingsJson ->
-                                if (settingsJson != null) {
-                                    val restored = PersistenceManager.restoreAllSettingsFromJson(settingsJson)
-                                    if (restored) {
-                                        Log.d("AuthRepository", "Restored settings from cloud backup for user ${user.id}")
-                                        // Reload the restored data into AppRepository
-                                        PersistenceManager.reloadIntoRepository()
-                                    }
+                return@runCatching Unit
+            }
+
+            // Upsert profile (ensures the user has a row for web/other platforms).
+            scope.launch {
+                SupabaseAuthClient.upsertProfile(auth.access_token, userId, "Rock Scout", "\uD83E\uDD20")
+            }
+
+            _sessionStatus.value = SessionStatus.Authenticated(
+                Session(user = UserInfo(id = userId, email = userEmail))
+            )
+            scope.launch { PurchaseManager.instance.linkRevenueCatUser(userId) }
+            SupabaseDataSync.syncInBackground()
+
+            // Cloud-restore settings on fresh install.
+            if (PersistenceManager.isLocalDataEmpty()) {
+                scope.launch {
+                    SettingsBackupApi.restoreSettings(userId)
+                        .onSuccess { settingsJson ->
+                            if (settingsJson != null) {
+                                val restored = PersistenceManager.restoreAllSettingsFromJson(settingsJson)
+                                if (restored) {
+                                    Log.d("AuthRepository", "Restored settings from cloud backup for user $userId")
+                                    PersistenceManager.reloadIntoRepository()
                                 }
                             }
-                            .onFailure { Log.w("AuthRepository", "Settings restore failed: ${it.message}") }
-                    }
+                        }
+                        .onFailure { Log.w("AuthRepository", "Settings restore failed: ${it.message}") }
                 }
             }
             Unit
@@ -307,12 +501,16 @@ class AuthRepository private constructor() {
         }
     }
 
-    /** Sign out and clear the local session. */
+    /** Sign out and clear the Supabase session. */
     suspend fun signOut(): Result<Unit> {
         _isLoading.value = true
         return runCatching {
-            // Log out RevenueCat so the next user starts fresh.
+            val accessToken = LocalDataStore.getString(LocalDataStore.KEY_SUPABASE_ACCESS_TOKEN)
+            if (!accessToken.isNullOrBlank()) {
+                SupabaseAuthClient.signOut(accessToken)
+            }
             PurchaseManager.instance.logoutRevenueCatUser()
+            clearSupabaseTokens()
             LocalDataStore.setString(LocalDataStore.KEY_AUTH_EMAIL, "")
             LocalDataStore.setString(LocalDataStore.KEY_AUTH_USER_ID, "")
             _sessionStatus.value = SessionStatus.NotAuthenticated()
@@ -325,30 +523,29 @@ class AuthRepository private constructor() {
     }
 
     /**
-     * Delete the currently signed-in account and all associated device data.
-     * Removes the user from the local users table, wipes every persisted
-     * app-state and local-social table, logs out RevenueCat, and clears the
-     * session. This satisfies the Play Store in-app account-deletion requirement
-     * and mirrors the privacy policy promise that users can delete their account
-     * from within the app.
+     * Delete the currently signed-in account and all associated data.
+     * Notifies the backend to delete the Supabase auth user (which cascades
+     * to all Supabase tables via foreign keys), wipes local data, logs out
+     * RevenueCat, and clears the session.
      */
     suspend fun deleteAccount(): Result<Unit> {
         _isLoading.value = true
         return runCatching {
             val userId = currentUserId ?: error("No signed-in account to delete.")
             val userEmail = currentUserEmail
-            val users = LocalDataStore.getTable<LocalUser>(LocalDataStore.KEY_USERS)
-            LocalDataStore.setTable(LocalDataStore.KEY_USERS, users.filter { it.id != userId })
+            val accessToken = LocalDataStore.getString(LocalDataStore.KEY_SUPABASE_ACCESS_TOKEN)
+
+            // Notify the backend to delete the Supabase user.
+            if (!userEmail.isNullOrBlank()) {
+                scope.launch { DeleteAccountApi.notifyDeletionWithEmail(userEmail, userId, accessToken) }
+            }
+
             // Wipe all user-generated app state and local social tables.
             PersistenceManager.clearAll()
             LocalDataStore.clearAll()
-            // Log out RevenueCat and clear the active session.
             PurchaseManager.instance.logoutRevenueCatUser()
+            clearSupabaseTokens()
             _sessionStatus.value = SessionStatus.NotAuthenticated()
-            // Notify the backend so there is a server-side deletion record.
-            if (!userEmail.isNullOrBlank()) {
-                scope.launch { DeleteAccountApi.notifyDeletion(userEmail) }
-            }
             Unit
         }.onFailure {
             Log.e("AuthRepository", "deleteAccount failed", it)
@@ -370,36 +567,41 @@ class AuthRepository private constructor() {
     val deletedUserId: String?
         get() = (sessionStatus.value as? SessionStatus.AccountDeleted)?.userId
 
-    /** Admin: delete a user's account by [userId] with the given [reason].
-     *  Marks the user as deleted (does NOT remove from the DB so they can be
-     *  identified on sign-in). Logs the deletion to the deleted-accounts log.
-     *  If the user is currently signed in, their session is set to AccountDeleted. */
+    /**
+     * Admin: block a user's account by [userId] with the given [reason].
+     * Adds the user's email to the local blocked list and notifies the backend
+     * to disable the Supabase user. If the blocked user is currently signed in,
+     * their session is set to AccountDeleted.
+     */
     suspend fun adminDeleteAccount(userId: String, reason: String): Result<Unit> {
         return runCatching {
+            // Look up the user in the local users table (mock community members).
             val users = LocalDataStore.getTable<LocalUser>(LocalDataStore.KEY_USERS)
             val user = users.firstOrNull { it.id == userId }
-                ?: error("User not found.")
             val now = System.currentTimeMillis()
-            // Mark the user as deleted in the users table.
-            LocalDataStore.updateTable<LocalUser>(LocalDataStore.KEY_USERS) { rows ->
-                rows.map { if (it.id == userId) it.copy(account_deleted = true, deletion_reason = reason, deleted_at = now, restored_at = null) else it }
-            }
+
             // Log the deletion.
             val logEntry = LocalDeletedAccountLog(
                 id = "dellog-" + UUID.randomUUID(),
                 user_id = userId,
-                username = user.display_name,
-                email = user.email,
+                username = user?.display_name ?: "Unknown",
+                email = user?.email ?: "",
                 reason = reason,
                 deleted_at = now,
             )
             LocalDataStore.updateTable<LocalDeletedAccountLog>(LocalDataStore.KEY_DELETED_ACCOUNT_LOGS) { rows ->
                 listOf(logEntry) + rows
             }
-            // If the deleted user is currently signed in, set their session to AccountDeleted.
+
+            // Add to local blocked list.
+            if (user != null && user.email.isNotBlank()) {
+                addBlockedEmail(user.email)
+            }
+
+            // If the blocked user is currently signed in, show the blocking popup.
             if (currentUserId == userId) {
                 _sessionStatus.value = SessionStatus.AccountDeleted(
-                    email = user.email,
+                    email = user?.email ?: currentUserEmail ?: "",
                     userId = userId,
                     reason = reason,
                 )
@@ -410,28 +612,27 @@ class AuthRepository private constructor() {
         }
     }
 
-    /** Admin: restore a previously deleted user's account by [userId].
-     *  Clears the deletion flags and logs the restoration timestamp.
-     *  If the user is currently in AccountDeleted session state, they are
-     *  transitioned to Authenticated. */
+    /** Admin: restore a previously blocked user's account by [userId]. */
     suspend fun adminRestoreAccount(userId: String): Result<Unit> {
         return runCatching {
             val users = LocalDataStore.getTable<LocalUser>(LocalDataStore.KEY_USERS)
             val user = users.firstOrNull { it.id == userId }
-                ?: error("User not found.")
             val now = System.currentTimeMillis()
-            // Clear the deletion flags.
-            LocalDataStore.updateTable<LocalUser>(LocalDataStore.KEY_USERS) { rows ->
-                rows.map { if (it.id == userId) it.copy(account_deleted = false, deletion_reason = null, restored_at = now) else it }
+
+            // Remove from local blocked list.
+            if (user != null && user.email.isNotBlank()) {
+                removeBlockedEmail(user.email)
             }
-            // Update the deletion log entry with the restoration timestamp.
+
+            // Update the deletion log.
             LocalDataStore.updateTable<LocalDeletedAccountLog>(LocalDataStore.KEY_DELETED_ACCOUNT_LOGS) { rows ->
                 rows.map { if (it.user_id == userId && it.restored_at == null) it.copy(restored_at = now) else it }
             }
-            // If the user is currently in AccountDeleted session state, restore their session.
+
+            // If the user is currently in AccountDeleted state, restore their session.
             val deletedStatus = sessionStatus.value as? SessionStatus.AccountDeleted
             if (deletedStatus != null && deletedStatus.userId == userId) {
-                saveSession(userId, user.email)
+                _sessionStatus.value = SessionStatus.NotAuthenticated()
             }
             Unit
         }.onFailure {
@@ -439,12 +640,44 @@ class AuthRepository private constructor() {
         }
     }
 
-    /** Persist the session locally + update the flow. */
-    private fun saveSession(userId: String, email: String) {
-        LocalDataStore.setString(LocalDataStore.KEY_AUTH_EMAIL, email)
-        LocalDataStore.setString(LocalDataStore.KEY_AUTH_USER_ID, userId)
-        _sessionStatus.value = SessionStatus.Authenticated(
-            Session(user = UserInfo(id = userId, email = email))
+    // ─── Supabase token management ─────────────────────────────────────────
+
+    private fun saveSupabaseTokens(accessToken: String, refreshToken: String) {
+        LocalDataStore.setString(LocalDataStore.KEY_SUPABASE_ACCESS_TOKEN, accessToken)
+        LocalDataStore.setString(LocalDataStore.KEY_SUPABASE_REFRESH_TOKEN, refreshToken)
+    }
+
+    private fun clearSupabaseTokens() {
+        LocalDataStore.setString(LocalDataStore.KEY_SUPABASE_ACCESS_TOKEN, "")
+        LocalDataStore.setString(LocalDataStore.KEY_SUPABASE_REFRESH_TOKEN, "")
+    }
+
+    // ─── Local blocked-emails list (admin deletions) ───────────────────────
+
+    private fun getBlockedEmails(): Set<String> {
+        val raw = LocalDataStore.getString("blocked_emails") ?: return emptySet()
+        return try {
+            LocalDataStore.json.decodeFromString<List<String>>(raw).toSet()
+        } catch (e: Exception) {
+            emptySet()
+        }
+    }
+
+    private fun addBlockedEmail(email: String) {
+        val emails = getBlockedEmails().toMutableSet()
+        emails.add(email.lowercase())
+        LocalDataStore.setString(
+            "blocked_emails",
+            LocalDataStore.json.encodeToString(emails.toList()),
+        )
+    }
+
+    private fun removeBlockedEmail(email: String) {
+        val emails = getBlockedEmails().toMutableSet()
+        emails.remove(email.lowercase())
+        LocalDataStore.setString(
+            "blocked_emails",
+            LocalDataStore.json.encodeToString(emails.toList()),
         )
     }
 

@@ -1,6 +1,6 @@
 import { handleIdentify, handleClarify, handleArtifactDetect } from "./identify";
 // RockScout backend — Cloudflare Worker entry (auth + rate-limit enabled).
-// Routes: /ping, /identify, /identify/clarify, /identify/artifact-detect, /app-version, /welcome-email, /image-rejection-email, /referral/*, /dev-sms-verify, /stripe/*, /push/*.
+// Routes: /ping, /identify, /identify/clarify, /identify/artifact-detect, /app-version, /welcome-email, /image-rejection-email, /referral/*, /dev-sms-verify, /push/*.
 import { handleAppVersion } from "./app-version";
 import { handleWelcomeEmail } from "./welcome-email";
 import { handleImageRejectionEmail } from "./image-rejection-email";
@@ -12,8 +12,6 @@ import { handleEmailVerification } from "./email-verification";
 import { handleEmbeddingsBackfill } from "./embeddings-backfill";
 import { handleArtifactsBackfill } from "./artifacts-backfill";
 import { handleSpecimenCatalogBackfill } from "./specimen-catalog-backfill";
-import { handleStripeCheckout } from "./stripe-checkout";
-import { handleStripeWebhook } from "./stripe-webhook";
 import { handlePush } from "./push";
 import { handleMuseums } from "./museums";
 import { handleSettingsBackup } from "./settings-backup";
@@ -119,7 +117,7 @@ export default {
       if (guard) return guard;
       return handleEmailVerification(
         request,
-        env as unknown as { RESEND_API_KEY?: string; VERIFICATION_KV?: KVNamespace },
+        env as unknown as { RESEND_API_KEY?: string; VERIFICATION_KV?: KVNamespace; SUPABASE_SERVICE_ROLE_KEY?: string; EXPO_PUBLIC_SUPABASE_URL?: string },
         cors,
       );
     }
@@ -132,37 +130,7 @@ export default {
         env as unknown as {
           RESEND_API_KEY?: string;
           EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
-        },
-        cors,
-      );
-    }
-
-    // Stripe Checkout session creation — app-key guarded, rate limited.
-    if (url.pathname === "/stripe/checkout" && request.method === "POST") {
-      const guard = guardEndpoint(request, env, "/stripe/checkout", cors, env.RATE_LIMIT_KV);
-      if (guard) return guard;
-      return handleStripeCheckout(
-        request,
-        env as unknown as {
-          STRIPE_SECRET_KEY?: string;
-          EXPO_PUBLIC_RORK_APP_KEY?: string;
           EXPO_PUBLIC_SUPABASE_URL?: string;
-          EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
-        },
-        cors,
-      );
-    }
-
-    // Stripe webhook — raw body, Stripe-Signature header. NOT app-key guarded
-    // (Stripe sends its own signature). Auth is via HMAC signature verification.
-    if (url.pathname === "/stripe/webhook" && request.method === "POST") {
-      return handleStripeWebhook(
-        request,
-        env as unknown as {
-          STRIPE_SECRET_KEY?: string;
-          STRIPE_WEBHOOK_SECRET?: string;
-          EXPO_PUBLIC_SUPABASE_URL?: string;
-          EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
           SUPABASE_SERVICE_ROLE_KEY?: string;
         },
         cors,
@@ -279,14 +247,6 @@ type Env = {
   TWILIO_ACCOUNT_SID?: string;
   TWILIO_AUTH_TOKEN?: string;
   TWILIO_PHONE_FROM?: string;
-  STRIPE_SECRET_KEY?: string;
-  STRIPE_WEBHOOK_SECRET?: string;
-  STRIPE_PRICE_PREMIUM_MONTHLY?: string;
-  STRIPE_PRICE_DONATION_2?: string;
-  STRIPE_PRICE_DONATION_4?: string;
-  STRIPE_PRICE_TOKENS_1?: string;
-  STRIPE_PRICE_TOKENS_4?: string;
-  STRIPE_PRICE_TOKENS_10?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;

@@ -38,6 +38,7 @@ object EmailVerificationApi {
         val action: String,
         val email: String,
         val code: String,
+        val supabaseUserId: String? = null,
     )
 
     @Serializable
@@ -85,6 +86,50 @@ object EmailVerificationApi {
             }
         } catch (e: Exception) {
             Log.w(TAG, "Send code network error: ${e.message}")
+            VerificationResult.NetworkError
+        }
+    }
+
+    /**
+     * Verifies the [code] for [email] against the backend, and if a [supabaseUserId]
+     * is provided, asks the backend to also confirm the Supabase email via admin API.
+     * Returns true if the code matched.
+     */
+    suspend fun verifyCodeWithEmailConfirm(
+        email: String,
+        code: String,
+        supabaseUserId: String? = null,
+    ): VerificationResult {
+        val url = baseUrl() ?: return VerificationResult.NetworkError
+        return try {
+            val response = client.post("$url/email-verification") {
+                contentType(ContentType.Application.Json)
+                setBody(
+                    json.encodeToString(
+                        VerifyCodeRequest.serializer(),
+                        VerifyCodeRequest(
+                            action = "verify",
+                            email = email,
+                            code = code,
+                            supabaseUserId = supabaseUserId,
+                        ),
+                    ),
+                )
+            }
+            val body = response.body<String>()
+            val parsed = json.decodeFromString(VerificationResponse.serializer(), body)
+            if (parsed.ok && parsed.verified) {
+                Log.i(TAG, "Email verified: $email")
+                VerificationResult.Success
+            } else if (!parsed.ok && parsed.error?.contains("expired") == true) {
+                VerificationResult.Failed(parsed.error)
+            } else if (!parsed.ok) {
+                VerificationResult.Failed(parsed.error ?: "Invalid code")
+            } else {
+                VerificationResult.Failed("Verification failed")
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Verify code network error: ${e.message}")
             VerificationResult.NetworkError
         }
     }

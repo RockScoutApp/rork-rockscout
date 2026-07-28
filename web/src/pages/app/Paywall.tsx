@@ -1,21 +1,7 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  Zap,
-  Crown,
-  Gift,
-  Check,
-  Loader2,
-  Sparkles,
-  Heart,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { Crown, Check, Sparkles, Smartphone, Gift } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "sonner";
-
-const BACKEND_URL = import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL as string;
-const APP_KEY = import.meta.env.EXPO_PUBLIC_RORK_APP_KEY as string;
 
 interface Profile {
   id: string;
@@ -34,33 +20,8 @@ const PREMIUM_FEATURES = [
   "Early access to new features",
 ];
 
-const DONATION_TIERS = [
-  {
-    amount: 2,
-    tokens: 5,
-    unlockDays: 2,
-    label: "Supporter",
-    description: "5 ID tokens + 2 days of full access (Haiku + Sonnet models)",
-  },
-  {
-    amount: 4,
-    tokens: 10,
-    unlockDays: 5,
-    label: "Field Patron",
-    description: "10 ID tokens + 5 days of full access (Haiku + Sonnet models)",
-  },
-];
-
-const TOKEN_PACKS = [
-  { tokens: 1, price: 0.99, label: "Single ID" },
-  { tokens: 4, price: 2.99, label: "Quick Pack" },
-  { tokens: 10, price: 5.99, label: "Field Pack" },
-];
-
 export default function Paywall() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const [processing, setProcessing] = useState<string | null>(null);
 
   const { data: profile } = useQuery<Profile>({
     queryKey: ["my-profile-paywall", user?.id],
@@ -75,60 +36,6 @@ export default function Paywall() {
     },
     enabled: !!user,
   });
-
-  const startCheckout = useMutation({
-    mutationFn: async ({
-      type,
-      priceId,
-    }: {
-      type: "subscription" | "donation" | "tokens";
-      priceId: string;
-    }) => {
-      if (!user) throw new Error("Sign in to purchase.");
-      const { data } = await supabase.auth.getSession();
-      const token = data.session?.access_token;
-      const response = await fetch(`${BACKEND_URL}/stripe/checkout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-App-Key": APP_KEY,
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          type,
-          priceId,
-          userId: user.id,
-          email: user.email,
-        }),
-      });
-      if (!response.ok) {
-        const body = (await response.json().catch(() => ({}))) as {
-          error?: string;
-        };
-        throw new Error(
-          body.error || `Checkout could not start (${response.status})`,
-        );
-      }
-      const checkout = (await response.json()) as { url: string };
-      // Redirect to Stripe-hosted Checkout.
-      window.location.href = checkout.url;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["my-profile-paywall"] });
-    },
-    onError: (err) => {
-      toast.error(err instanceof Error ? err.message : "Checkout failed");
-    },
-  });
-
-  const handlePurchase = async (type: "subscription" | "donation" | "tokens", priceId: string) => {
-    setProcessing(priceId);
-    try {
-      await startCheckout.mutateAsync({ type, priceId });
-    } finally {
-      setProcessing(null);
-    }
-  };
 
   const isPro = profile?.is_pro ?? false;
 
@@ -186,121 +93,26 @@ export default function Paywall() {
           ))}
         </ul>
 
-        <Button
-          className="mt-5 w-full gap-2"
-          size="lg"
-          disabled={isPro || processing === "premium"}
-          onClick={() => handlePurchase("subscription", "premium-monthly")}
-        >
-          {processing === "premium" ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : isPro ? (
-            <>
-              <Check className="h-5 w-5" />
-              Active
-            </>
-          ) : (
-            <>
-              <Crown className="h-5 w-5" />
-              Go Premium
-            </>
-          )}
-        </Button>
-      </div>
-
-      {/* Donations */}
-      <div>
-        <h2 className="mb-3 font-display text-lg font-bold text-foreground">
-          One-Time Donations
-        </h2>
-        <p className="mb-4 text-sm text-muted-foreground">
-          Support RockScout and get tokens + temporary full access. No recurring
-          charge.
-        </p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {DONATION_TIERS.map((tier) => (
-            <div
-              key={tier.amount}
-              className="rounded-xl border border-border bg-card p-4"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Heart className="h-5 w-5 text-primary" />
-                  <span className="font-display text-sm font-semibold text-foreground">
-                    {tier.label}
-                  </span>
-                </div>
-                <span className="font-display text-xl font-bold text-foreground">
-                  ${tier.amount}
-                </span>
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                {tier.description}
-              </p>
-              <Button
-                className="mt-3 w-full"
-                variant="outline"
-                disabled={processing === `donation-${tier.amount}`}
-                onClick={() =>
-                  handlePurchase("donation", `donation-${tier.amount}`)
-                }
-              >
-                {processing === `donation-${tier.amount}` ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  `Donate $${tier.amount}`
-                )}
-              </Button>
+        {isPro ? (
+          <div className="mt-5 flex items-center justify-center gap-2 rounded-lg bg-primary/10 py-3">
+            <Check className="h-5 w-5 text-primary" />
+            <span className="text-sm font-medium text-primary">Active</span>
+          </div>
+        ) : (
+          <div className="mt-5 rounded-lg border border-border bg-card/50 p-4 text-center">
+            <div className="mb-2 flex items-center justify-center gap-2">
+              <Smartphone className="h-5 w-5 text-primary" />
+              <span className="text-sm font-semibold text-foreground">
+                Subscribe in the mobile app
+              </span>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Token packs */}
-      <div>
-        <h2 className="mb-3 font-display text-lg font-bold text-foreground">
-          Token Packs
-        </h2>
-        <p className="mb-4 text-sm text-muted-foreground">
-          Need a few more identifications? Buy tokens individually — no
-          subscription needed.
-        </p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {TOKEN_PACKS.map((pack) => (
-            <div
-              key={pack.tokens}
-              className="rounded-xl border border-border bg-card p-4 text-center"
-            >
-              <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-primary/15">
-                <Zap className="h-5 w-5 text-primary" />
-              </div>
-              <p className="font-display text-2xl font-bold text-foreground">
-                {pack.tokens}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {pack.tokens === 1 ? "token" : "tokens"}
-              </p>
-              <p className="mt-1 text-sm font-medium text-foreground">
-                ${pack.price}
-              </p>
-              <Button
-                className="mt-3 w-full"
-                variant="outline"
-                size="sm"
-                disabled={processing === `tokens-${pack.tokens}`}
-                onClick={() =>
-                  handlePurchase("tokens", `tokens-${pack.tokens}`)
-                }
-              >
-                {processing === `tokens-${pack.tokens}` ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  `Buy ${pack.tokens}`
-                )}
-              </Button>
-            </div>
-          ))}
-        </div>
+            <p className="text-xs text-muted-foreground">
+              Premium is available as an in-app purchase in the RockScout
+              Android and iOS apps. Download the app, sign in with this same
+              email, and your Premium subscription unlocks here automatically.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Free tier reminder */}

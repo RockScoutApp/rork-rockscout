@@ -87,7 +87,7 @@ function cleanupExpired() {
 
 export async function handleEmailVerification(
   request: Request,
-  env: { RESEND_API_KEY?: string; VERIFICATION_KV?: KVNamespace },
+  env: { RESEND_API_KEY?: string; VERIFICATION_KV?: KVNamespace; SUPABASE_SERVICE_ROLE_KEY?: string; EXPO_PUBLIC_SUPABASE_URL?: string },
   corsHeaders: Record<string, string>,
 ): Promise<Response> {
   if (request.method === "OPTIONS") {
@@ -104,7 +104,7 @@ export async function handleEmailVerification(
     );
   }
 
-  let body: { action?: string; email?: string; code?: string };
+  let body: { action?: string; email?: string; code?: string; supabaseUserId?: string };
   try {
     body = await request.json();
   } catch {
@@ -216,6 +216,20 @@ ${TAGLINE}`;
 
     if (submittedCode === entry.code) {
       await deleteCode(email, env.VERIFICATION_KV);
+
+      // Confirm the Supabase email via admin API if a supabaseUserId was provided.
+      // This lets the user sign in immediately without waiting for Supabase's own
+      // confirmation email — our 6-digit code IS the verification.
+      const supabaseUserId = body.supabaseUserId;
+      if (supabaseUserId && env.SUPABASE_SERVICE_ROLE_KEY && env.EXPO_PUBLIC_SUPABASE_URL) {
+        await confirmSupabaseEmail(
+          env.EXPO_PUBLIC_SUPABASE_URL,
+          env.SUPABASE_SERVICE_ROLE_KEY,
+          supabaseUserId,
+          email,
+        );
+      }
+
       return Response.json({ ok: true, verified: true }, { status: 200, headers });
     }
 
@@ -229,4 +243,40 @@ ${TAGLINE}`;
     { ok: false, error: "Unknown action. Use 'send' or 'verify'." },
     { status: 400, headers },
   );
+}
+
+/**
+ * Confirm a Supabase user's email via the admin API.
+ * Uses the service-role key (bypasses RLS). Best-effort — does not throw.
+ */
+async function confirmSupabaseEmail(
+  supabaseUrl: string,
+  serviceKey: string,
+  userId: string,
+  email: string,
+): Promise<void> {
+  try {
+    const resp = await fetch(
+      `${supabaseUrl}/auth/v1/admin/users/${encodeURIComponent(userId)}`,
+      {
+        method: "PUT",
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email_confirm: true,
+          email,
+        }),
+      },
+    );
+    if (!resp.ok) {
+      console.error("confirmSupabaseEmail failed", resp.status, await resp.text());
+    } else {
+      console.log(`Supabase email confirmed for user ${userId}`);
+    }
+  } catch (err) {
+    console.error("confirmSupabaseEmail error", err);
+  }
 }

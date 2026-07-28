@@ -30,7 +30,11 @@ object DeleteAccountApi {
     private val client = NetworkClient.client
 
     @Serializable
-    private data class DeleteAccountRequest(val email: String)
+    private data class DeleteAccountRequest(
+        val email: String,
+        val userId: String? = null,
+        val accessToken: String? = null,
+    )
 
     @Serializable
     private data class DeleteAccountResponse(val success: Boolean = false)
@@ -40,6 +44,16 @@ object DeleteAccountApi {
      * so the in-app deletion path is never blocked by the backend.
      */
     suspend fun notifyDeletion(email: String) {
+        notifyDeletionWithEmail(email, null, null)
+    }
+
+    /**
+     * Records the deletion request for [email], optionally passing the Supabase
+     * [userId] and [accessToken] so the backend can delete the Supabase auth user
+     * (which cascades to all Supabase tables via foreign keys).
+     * Silently fails on network errors so the in-app deletion path is never blocked.
+     */
+    suspend fun notifyDeletionWithEmail(email: String, userId: String?, accessToken: String?) {
         try {
             val baseUrl = BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", BuildSecrets.RORK_FUNCTIONS_URL)
                 .ifBlank { null } ?: return
@@ -48,7 +62,11 @@ object DeleteAccountApi {
                 setBody(
                     json.encodeToString(
                         DeleteAccountRequest.serializer(),
-                        DeleteAccountRequest(email = email),
+                        DeleteAccountRequest(
+                            email = email,
+                            userId = userId,
+                            accessToken = accessToken,
+                        ),
                     ),
                 )
             }
