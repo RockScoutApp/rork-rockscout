@@ -1,7 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Crown, Check, Sparkles, Smartphone, Gift } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
+import { syncEntitlement } from "@/lib/entitlement";
+import { useEffect } from "react";
 
 interface Profile {
   id: string;
@@ -22,6 +24,7 @@ const PREMIUM_FEATURES = [
 
 export default function Paywall() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: profile } = useQuery<Profile>({
     queryKey: ["my-profile-paywall", user?.id],
@@ -38,6 +41,18 @@ export default function Paywall() {
   });
 
   const isPro = profile?.is_pro ?? false;
+
+  // Sync RevenueCat entitlement → Supabase when the Paywall opens, so a
+  // user who just bought Premium on Android sees it reflected here.
+  useEffect(() => {
+    if (user?.id) {
+      void syncEntitlement(user.id).then(() => {
+        // Invalidate the profile query so the updated is_pro is fetched.
+        void queryClient.invalidateQueries({ queryKey: ["my-profile-paywall", user.id] });
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   return (
     <div className="space-y-6">

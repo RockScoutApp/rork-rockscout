@@ -196,6 +196,7 @@ class PurchaseManager {
             val params = PurchaseParams.Builder(activity, pkg).build()
             val result = Purchases.sharedInstance.awaitPurchase(params)
             updatePremiumStatus(result.customerInfo)
+            syncEntitlementToBackend()
             _purchaseMessage.value = "Purchase successful! Ads removed."
             PurchaseResult.Success
         } catch (e: PurchasesTransactionException) {
@@ -263,6 +264,7 @@ class PurchaseManager {
             val params = PurchaseParams.Builder(activity, pkg).build()
             val result = Purchases.sharedInstance.awaitPurchase(params)
             updatePremiumStatus(result.customerInfo)
+            syncEntitlementToBackend()
             _purchaseMessage.value = "Premium active! Unlimited access unlocked."
             PurchaseResult.Success
         } catch (e: PurchasesTransactionException) {
@@ -403,6 +405,7 @@ class PurchaseManager {
             _isLoading.value = true
             val info = Purchases.sharedInstance.awaitRestore()
             updatePremiumStatus(info)
+            syncEntitlementToBackend()
 
             // Re-grant non-subscription purchases (donations + token packs).
             // Track restored IDs to avoid double-granting on repeated restores.
@@ -509,6 +512,23 @@ class PurchaseManager {
 
     fun clearMessage() {
         _purchaseMessage.value = null
+    }
+
+    /**
+     * Push the current Premium entitlement state to the backend so the web PWA
+     * sees the user's Premium status. Fire-and-forget — failures are logged
+     * but never block the purchase/restore flow.
+     *
+     * Uses the Supabase user ID (the shared identity across Android, web, iOS)
+     * from [AuthRepository]. RevenueCat is linked to the same ID via
+     * [linkRevenueCatUser], so the backend can look up the entitlement by ID.
+     */
+    private fun syncEntitlementToBackend() {
+        if (com.rork.rockscout.BuildConfig.FORCE_PREMIUM) return
+        val userId = AuthRepository.instance.currentUserId ?: return
+        scope.launch {
+            EntitlementApi.syncEntitlement(userId)
+        }
     }
 
     /**

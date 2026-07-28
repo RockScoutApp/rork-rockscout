@@ -14,6 +14,7 @@ import { handleArtifactsBackfill } from "./artifacts-backfill";
 import { handleSpecimenCatalogBackfill } from "./specimen-catalog-backfill";
 import { handlePush } from "./push";
 import { handleMuseums } from "./museums";
+import { handleEntitlement } from "./entitlement";
 import { handleSettingsBackup } from "./settings-backup";
 import {
   buildCorsHeaders,
@@ -232,6 +233,23 @@ export default {
       );
     }
 
+    // Entitlement bridge — checks RevenueCat for active Premium, writes
+    // is_pro back to the Supabase profile. Called by the web app on sign-in
+    // and Paywall open, and by Android after a purchase.
+    if (url.pathname === "/entitlement" && request.method === "POST") {
+      const guard = guardEndpoint(request, env, "/entitlement", cors, env.RATE_LIMIT_KV);
+      if (guard) return guard;
+      return handleEntitlement(
+        request,
+        env as unknown as {
+          REVENUECAT_SECRET_API_KEY?: string;
+          SUPABASE_SERVICE_ROLE_KEY?: string;
+          EXPO_PUBLIC_SUPABASE_URL?: string;
+        },
+        cors,
+      );
+    }
+
     return new Response("not found", { status: 404, headers: cors });
   },
 };
@@ -248,6 +266,7 @@ type Env = {
   TWILIO_AUTH_TOKEN?: string;
   TWILIO_PHONE_FROM?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
+  REVENUECAT_SECRET_API_KEY?: string;
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;
 };

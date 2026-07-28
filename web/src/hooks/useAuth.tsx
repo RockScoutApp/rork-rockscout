@@ -2,6 +2,7 @@ import createContextHook from "@nkzw/create-context-hook";
 import { useEffect, useState, useCallback } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
+import { syncEntitlement } from "@/lib/entitlement";
 
 interface AuthState {
   session: Session | null;
@@ -100,13 +101,18 @@ function useAuthState() {
 
   const signIn = useCallback(async (email: string, password: string) => {
     setError(null);
-    const { error: err } = await supabase.auth.signInWithPassword({
+    const { data, error: err } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     if (err) {
       setError(err.message);
       throw err;
+    }
+    // Sync RevenueCat entitlement to Supabase is_pro so the web sees
+    // Premium status immediately if the user bought on Android/iOS.
+    if (data.user?.id) {
+      void syncEntitlement(data.user.id);
     }
   }, []);
 

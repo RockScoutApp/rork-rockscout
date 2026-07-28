@@ -52,6 +52,8 @@ const RATE_LIMITS: Record<string, RateLimitConfig> = {
   "/museums": { rpm: 10, burst: 3 },
   "/settings/backup": { rpm: 5, burst: 2 },
   "/settings/restore": { rpm: 10, burst: 3 },
+  // Entitlement bridge — called on sign-in + Paywall open (web) and after purchase (Android).
+  "/entitlement": { rpm: 10, burst: 3 },
 };
 
 /** In-memory rate-limit state (per-isolate fallback when KV is absent). */
@@ -180,6 +182,7 @@ type Env = {
   TWILIO_AUTH_TOKEN?: string;
   TWILIO_PHONE_FROM?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
+  REVENUECAT_SECRET_API_KEY?: string;
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;
 };
