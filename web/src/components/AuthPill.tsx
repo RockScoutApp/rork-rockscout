@@ -10,6 +10,7 @@ import {
   LayoutGrid,
   ChevronDown,
   Sparkles,
+  Smartphone,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
@@ -39,7 +40,7 @@ interface Profile {
 
 /**
  * Navbar sign-in pill. Lets website visitors sign in to verify their Premium
- * status — which is required to install the RockScout PWA on up to 3 devices.
+ * status — which is required to install the RockScout PWA on 2 more devices.
  * The pill is clearly labelled so its purpose is obvious at a glance.
  *
  * States:
@@ -48,7 +49,7 @@ interface Profile {
  *  - Signed in + Free: outline pill with email + dropdown (upgrade prompt).
  */
 export function AuthPill() {
-  const { user, session, isLoading, signIn, signUp, signOut, error, clearError } =
+  const { user, session, isLoading, signIn, signUp, signOut, error, clearError, setPremiumConfirmed } =
     useAuth();
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -57,6 +58,13 @@ export function AuthPill() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [verificationMsg, setVerificationMsg] = useState<string | null>(null);
+
+  // Email-code confirmation state for premium users
+  const [awaitingCode, setAwaitingCode] = useState(false);
+  const [codeInput, setCodeInput] = useState("");
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [codeSending, setCodeSending] = useState(false);
+  const [confirmedEmail, setConfirmedEmail] = useState("");
 
   // Only query premium status when we have a session (avoids unnecessary
   // requests on the marketing site for anonymous visitors).
@@ -81,7 +89,67 @@ export function AuthPill() {
     setEmail("");
     setPassword("");
     setVerificationMsg(null);
+    setAwaitingCode(false);
+    setCodeInput("");
+    setCodeError(null);
     clearError();
+  };
+
+  const sendVerificationCode = async (emailToSend: string) => {
+    setCodeSending(true);
+    setCodeError(null);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_RORK_FUNCTIONS_URL}/email-verification`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "send", email: emailToSend }),
+        },
+      );
+      if (!res.ok) throw new Error("Failed to send code");
+      setAwaitingCode(true);
+      setVerificationMsg(
+        "Premium account detected! Enter the 6-digit code sent to your email to confirm.",
+      );
+    } catch {
+      setCodeError("Could not send verification code. Please try again.");
+    } finally {
+      setCodeSending(false);
+    }
+  };
+
+  const verifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setCodeError(null);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_RORK_FUNCTIONS_URL}/email-verification`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "verify",
+            email: confirmedEmail,
+            code: codeInput.trim(),
+          }),
+        },
+      );
+      const data = await res.json();
+      if (res.ok && data.verified) {
+        setPremiumConfirmed(Date.now());
+        setAwaitingCode(false);
+        setDialogOpen(false);
+        resetForm();
+      } else {
+        setCodeError(data.error ?? "Invalid code. Try again.");
+      }
+    } catch {
+      setCodeError("Verification failed. Check your connection.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,8 +167,25 @@ export function AuthPill() {
         }
       } else {
         await signIn(email, password);
-        setDialogOpen(false);
-        resetForm();
+        // After sign-in, check if the user is premium — if so, require email-code confirmation
+        // before closing the dialog. Free users get frictionless sign-in.
+        // The profile query will refresh; we check is_pro after a brief delay.
+        setConfirmedEmail(email);
+        // Give the profile query time to load, then check premium status
+        setTimeout(async () => {
+          const { data: profileData } = await supabase
+            .from("rockscout_profiles")
+            .select("is_pro")
+            .eq("id", user?.id ?? "")
+            .maybeSingle();
+          // If we can't determine yet, skip confirmation (fail open)
+          if (profileData?.is_pro === true) {
+            await sendVerificationCode(email);
+          } else {
+            setDialogOpen(false);
+            resetForm();
+          }
+        }, 500);
       }
     } catch {
       // error is set in the hook
@@ -160,8 +245,8 @@ export function AuthPill() {
                 {mode === "signin" ? "Sign in to install" : "Create account"}
               </DialogTitle>
               <DialogDescription>
-                Verify your Premium account to install the RockScout PWA on up
-                to 3 devices — phone, tablet, and PC.
+                Verify your Premium account to install the RockScout PWA on 2
+                more devices, including tablets, laptops, or PCs.
               </DialogDescription>
             </DialogHeader>
 
@@ -178,47 +263,92 @@ export function AuthPill() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="authpill-email">Email</Label>
-                <Input
-                  id="authpill-email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="authpill-password">Password</Label>
-                <Input
-                  id="authpill-password"
-                  type="password"
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="At least 6 characters"
-                  autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                />
-              </div>
-              <Button
-                type="submit"
-                disabled={submitting}
-                className="w-full"
-                size="lg"
-              >
-                {submitting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : mode === "signin" ? (
-                  "Sign in"
-                ) : (
-                  "Create account"
+            {awaitingCode ? (
+              <form onSubmit={verifyCode} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="authpill-code">Verification code</Label>
+                  <Input
+                    id="authpill-code"
+                    type="text"
+                    required
+                    maxLength={6}
+                    value={codeInput}
+                    onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, ""))}
+                    placeholder="6-digit code"
+                    autoComplete="one-time-code"
+                    className="text-center text-lg tracking-widest"
+                  />
+                </div>
+                {codeError && (
+                  <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span>{codeError}</span>
+                  </div>
                 )}
-              </Button>
-            </form>
+                <Button
+                  type="submit"
+                  disabled={submitting || codeInput.length !== 6}
+                  className="w-full"
+                  size="lg"
+                >
+                  {submitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Verify code"
+                  )}
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => sendVerificationCode(confirmedEmail)}
+                  disabled={codeSending}
+                  className="w-full text-center text-xs text-muted-foreground hover:text-foreground"
+                >
+                  {codeSending ? "Sending…" : "Resend code"}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="authpill-email">Email</Label>
+                  <Input
+                    id="authpill-email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="authpill-password">Password</Label>
+                  <Input
+                    id="authpill-password"
+                    type="password"
+                    required
+                    minLength={6}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="At least 6 characters"
+                    autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full"
+                  size="lg"
+                >
+                  {submitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : mode === "signin" ? (
+                    "Sign in"
+                  ) : (
+                    "Create account"
+                  )}
+                </Button>
+              </form>
+            )}
 
             <div className="text-center text-sm text-muted-foreground">
               {mode === "signin" ? (
@@ -265,8 +395,8 @@ export function AuthPill() {
           type="button"
           title={
             isPro
-              ? "Premium verified — you can install the PWA on up to 3 devices"
-              : "Signed in — upgrade to Premium to install the PWA on up to 3 devices"
+              ? "Premium verified — install the PWA on 2 more devices"
+              : "Signed in — upgrade to Premium to install the PWA on 2 more devices"
           }
           className={cn(
             "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all hover:shadow-sm sm:px-3.5 sm:py-2 sm:text-sm",
@@ -301,6 +431,15 @@ export function AuthPill() {
           <LayoutGrid className="h-4 w-4" />
           Open the app
         </DropdownMenuItem>
+        {isPro && (
+          <DropdownMenuItem
+            onClick={() => navigate("/app/manage-devices")}
+            className="gap-2"
+          >
+            <Smartphone className="h-4 w-4" />
+            Manage devices
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={handleSignOut}

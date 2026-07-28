@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Camera,
   BookOpen,
@@ -21,7 +21,9 @@ import {
   Zap,
   Image as ImageIcon,
   Bone,
+  Crown,
 } from "lucide-react";
+import { useTier } from "@/hooks/useTier";
 
 interface Tile {
   to: string;
@@ -186,6 +188,28 @@ const TILES: Tile[] = [
 
 export default function Home() {
   const navigate = useNavigate();
+  const { isFree, isPremium } = useTier();
+
+  // Free users: hide social/camera/identify tiles, show Go Premium banner
+  const premiumOnlyRoutes = new Set([
+    "/app/identify",
+    "/app/captures",
+    "/app/saved-images",
+    "/app/journal",
+    "/app/trips",
+    "/app/trade",
+    "/app/community",
+    "/app/friends",
+    "/app/notifications",
+    "/app/achievements",
+    "/app/referral",
+  ]);
+  const visibleTiles = TILES.filter((tile) => {
+    if (isPremium) return true;
+    if (tile.onClick) return false; // Field Camera
+    if (premiumOnlyRoutes.has(tile.to)) return false;
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -198,8 +222,29 @@ export default function Home() {
         </p>
       </div>
 
+      {/* Go Premium banner for free users */}
+      {isFree && (
+        <Link
+          to="/app/paywall"
+          className="flex items-center gap-3 rounded-xl border border-amber-500/40 bg-gradient-to-br from-amber-500/10 to-primary/10 p-4 transition-all hover:border-amber-500/60 hover:shadow-sm"
+        >
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-amber-500/20">
+            <Crown className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-display text-base font-semibold text-foreground">
+              Go Premium
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Unlock AI identification, field camera, social, trade, and more.
+            </p>
+          </div>
+          <Zap className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+        </Link>
+      )}
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-        {TILES.map((tile, i) => (
+        {visibleTiles.map((tile, i) => (
           <button
             key={tile.label}
             onClick={() => {
@@ -207,15 +252,17 @@ export default function Home() {
               else navigate(tile.to);
             }}
             className={`group flex flex-col items-start gap-3 rounded-xl border border-border bg-card p-5 text-left transition-all hover:border-primary/40 hover:bg-card/80 ${
-              tile.featured
+              tile.featured && isPremium
                 ? "citrine-glow sm:col-span-2 lg:col-span-3"
-                : ""
+                : tile.featured && isFree
+                  ? "sm:col-span-2 lg:col-span-2"
+                  : ""
             }`}
             style={{ animationDelay: `${i * 30}ms` }}
           >
             <div
               className={`flex h-11 w-11 items-center justify-center rounded-lg transition-colors ${
-                tile.featured
+                tile.featured && isPremium
                   ? "bg-primary/20 text-primary"
                   : "bg-muted text-muted-foreground group-hover:bg-primary/15 group-hover:text-primary"
               }`}
@@ -230,7 +277,7 @@ export default function Home() {
                 {tile.description}
               </p>
             </div>
-            {tile.featured && (
+            {tile.featured && isPremium && (
               <div className="mt-1 flex items-center gap-1.5 text-sm font-medium text-primary">
                 <Star className="h-4 w-4" />
                 Start here

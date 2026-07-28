@@ -4,6 +4,7 @@ import { Menu, X } from "lucide-react";
 import { SITE } from "@/content/legal";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { AuthPill } from "@/components/AuthPill";
+import { FreeSignInButton } from "@/components/FreeSignInButton";
 
 type NavLink = { to: string; label: string };
 
@@ -60,6 +61,7 @@ export const Navbar = () => {
           ))}
         </div>
         <div className="flex items-center gap-2">
+          <FreeSignInButton />
           <AuthPill />
           {/* Mobile hamburger */}
           <button
@@ -89,8 +91,9 @@ export const Navbar = () => {
                   {l.label}
                 </Link>
               ))}
-              <div className="mt-2 flex justify-center">
+              <div className="mt-2 flex flex-col items-center gap-2">
                 <AuthPill />
+                <FreeSignInButton />
               </div>
             </div>
           </div>

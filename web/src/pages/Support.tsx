@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Mail, ChevronDown, Download, LifeBuoy, FileText, ShieldAlert, Users, ArrowUpRight } from "lucide-react";
+import { Mail, ChevronDown, Download, LifeBuoy, FileText, ShieldAlert, Users, ArrowUpRight, FileText as FileTextIcon } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { SITE } from "@/content/legal";
 
@@ -10,7 +10,7 @@ const FAQ = [
   },
   {
     q: "Is RockScout free?",
-    a: "Yes. Every user gets a 7-day full-access trial with 5 AI identification tokens. After the trial, these features stay free forever: (ad supported) rock identification, browsing the full specimen database & geology guides, the field camera (saves to your in-app Saved Images), NWS severe weather alerts, browsing dig sites & offline maps, and the glossary. AI identification tokens can also be earned free by watching a couple short videos — no weekly cap. Social features (Friends, Messenger, Community, Trade Board), My Rocks, Wishlist, Field Captures, Trip Planner, and Field Journal require Premium ($5.99/mo) or a donation. The free version does not have access to any of the social aspects, so it stays rated G for younger users. Pricing is shown in the app before any purchase.",
+    a: "Yes and No. Every user gets a 7-day full-access trial with 5 AI identification tokens. After the trial, the free tier includes (ad supported) rock identification, browsing the full specimen database & geology guides, the field camera (saves to your in-app Saved Images), NWS severe weather alerts, browsing dig sites & offline maps, and the glossary — but it's read-only plus field camera, not full access. AI identification tokens can also be earned free by watching a couple short videos — no weekly cap. Donations unlock social features (Friends, Messenger, Community, Trade Board), My Rocks, Wishlist, Field Captures, Trip Planner, and Field Journal for a limited time. Premium ($5.99/mo) is the only tier that is completely unrestricted — no ads, no token limits, no feature locks. On the web, a free read-only PWA is available for learners and kids — full database, educational guides, and map viewing with no camera, no ID, and no social. The free version does not have access to any of the social aspects, so it stays rated G for younger users. Pricing is shown in the app before any purchase.",
   },
   {
     q: "Can I use RockScout offline?",
@@ -42,7 +42,7 @@ const FAQ = [
   },
   {
     q: "What is the Artifacts & Stone Tools tile?",
-    a: "The Artifacts tile is a growing catalog of 100+ authentic prehistoric artifacts, each with its own generated reference image. Families include Arrowheads (20+ types), Spear Points & Dart Tips (12+), Hand Axes & Axe Heads (20+), Flaked Stone Tools (12+), Drill Bits (6+), Native Beads (13+), Stone Effigies (7+), Pipes & Medicine Tubes, Ornaments & Weights, Shell Tools, Bone Tools, Pottery, Game Discs, and Wooden Artifacts. The tile is linked to the Specimen Database via the ARTIFACTS category chip at the top of the specimen list — artifacts never appear inside the main specimen database, only through the Artifacts tile or the category chip. A NEW badge appears on any artifact added within the last 48 hours.",
+    a: "The Artifacts tile is a growing catalog of 100+ authentic prehistoric artifacts, each with its own generated reference image. Families include Arrowheads (20+ types), Spear Points & Dart Tips (12+), Hand Axes & Axe Heads (20+), Flaked Stone Tools (12+), Drill Bits (6+), Native Beads (13+), Stone Effigies (7+), Pipes & Medicine Tubes, Ornaments & Weights, Shell Tools, Bone Tools, Pottery, Game Discs, and Wooden Artifacts. The tile is linked to the Specimen Database via the ARTIFACTS category chip at the top of the specimen list — artifacts never appear inside the main specimen database, only through the Artifacts tile or the category chip. A NEW badge appears on any artifact added within the last 7 days.",
   },
   {
     q: "What are the Natural Wonders?",
@@ -50,7 +50,7 @@ const FAQ = [
   },
   {
     q: "What does the NEW badge mean?",
-    a: "A NEW badge automatically appears on any specimen or artifact card that was added to the catalog within the last 48 hours. It works across the Specimen Database, Artifacts tile, and any category-filtered view. After 48 hours the badge disappears automatically — the specimen stays in the catalog but is no longer flagged as new.",
+    a: "A NEW badge automatically appears on any specimen or artifact card that was added to the catalog within the last 7 days. It works across the Specimen Database, Artifacts tile, and any category-filtered view. After 7 days the badge disappears automatically — the specimen stays in the catalog but is no longer flagged as new.",
   },
   {
     q: "How do achievement progress bars work?",
@@ -87,6 +87,22 @@ const FAQ = [
   {
     q: "What are the Common Wildlife tiles?",
     a: "Every BLM state guide, trailhead, campground, dig site, state park, and beach detail screen includes a Common Wildlife tile showing the animals you might encounter in that area — mammals, birds, reptiles, and more, tailored to the region's biome.",
+  },
+  {
+    q: "What is Ask an Expert and the Museum Finder?",
+    a: "When an identification result has low confidence or you want a second opinion, tap the \"Ask an Expert\" button on the uncertainty card. RockScout searches for nearby museums and geological institutions using your current location (or your profile region as a fallback). Each result shows the museum name, distance, phone number, website, and directions. You can select multiple museums and compose an email to all of them at once — your captured photo and identification results are attached automatically. Email drafts auto-save, so if you close the app mid-composition, you'll get a prompt to restore your work next time.",
+  },
+  {
+    q: "What are PDF Identification Reports?",
+    a: "After running an identification, a small PDF document icon appears on each match card. Tap it to generate a printable 1-2 page report containing your captured photo, all match names with confidence scores and reasoning, the AI analysis summary, assemblage breakdown (if applicable), web references, and a field-capture note with the date and approximate location. The PDF opens in your device's share sheet — email it to a museum expert, save it to your files, or share it with fellow rockhounds.",
+  },
+  {
+    q: "Can I install RockScout on my desktop or laptop?",
+    a: "Yes — RockScout's web app is a PWA (Progressive Web App) for desktop, laptop, and tablet browsers. There are two tiers: a free read-only PWA for learning (full 900+ specimen database, educational guides, interactive map, and personal bookmarks — no camera, no AI ID, no social) and a Premium PWA with all features unlocked (AI identify, field camera, social, trade, and more) installable on up to 2 additional devices with email-code confirmation. A free account created on the web carries over to the Android/iOS app. If you upgrade to Premium on any platform, the same account unlocks everywhere.",
+  },
+  {
+    q: "What is the Search Near Me button?",
+    a: "On the home screen's Dig Sites & Rock Shops section, a \"Search Near Me\" button appears next to the nearby locations header. Tap it to run a web search for rock-related places — dig sites, rock shops, mineral collecting areas, museums, and metaphysical stores — near your current GPS location. It searches a 50-mile radius first, then automatically expands to 100 miles if nothing is found. Results appear inline right where the nearby locations normally show, each with a name, type badge, description, and an \"Open\" button to visit the source website. Results are also saved for review so approved spots can appear on the Dig Sites map in future updates. Requires Nearby Places to be turned on.",
   },
 ];
 

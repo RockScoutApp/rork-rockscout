@@ -53,6 +53,12 @@ import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Terrain
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Mail
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.Smartphone
+import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -468,7 +474,7 @@ private val howToSections: List<HowToSection> = listOf(
             "Families include Arrowheads (20+ types from Clovis and Folsom to Mississippian triangle points), Spear Points & Dart Tips (12+ Paleoindian and Archaic forms), Hand Axes & Axe Heads (20+ Acheulean and Neolithic bifaces), Flaked Stone Tools (12+ scrapers, knives, and gravers), Drill Bits (6+ awl and drill forms), Native Beads (13+ shell, stone, and copper beads), Stone Effigies (7+ animal and human effigies from the Woodland and Mississippian periods), Pipes & Medicine Tubes, Ornaments & Weights, Shell Tools, Bone Tools, Pottery, Game Discs, and Wooden Artifacts.",
             "Each artifact card shows a reference image, cultural period, material, and a detailed description of how it was made and used.",
             "The Artifacts tile is linked to the Specimen Database via the ARTIFACTS category chip at the top of the specimen list — tap the chip to filter the full database down to artifacts only. Artifacts never appear inside the main specimen database list; they are only accessible through the Artifacts tile or the category chip.",
-            "A NEW badge appears on any artifact added to the catalog within the last 48 hours, so you can spot the latest additions at a glance.",
+            "A NEW badge appears on any artifact added to the catalog within the last 7 days, so you can spot the latest additions at a glance.",
         ),
     ),
     HowToSection(
@@ -589,10 +595,10 @@ private val howToSections: List<HowToSection> = listOf(
         title = "NEW Badges & Recently Added Specimens",
         shortLabel = "NEW Badge",
         steps = listOf(
-            "A NEW badge automatically appears on any specimen or artifact card that was added to the catalog within the last 48 hours.",
+            "A NEW badge automatically appears on any specimen or artifact card that was added to the catalog within the last 7 days.",
             "Spot the latest database additions at a glance — no need to hunt through the full list to find what's new.",
             "The badge works across the Specimen Database, Artifacts tile, and any category-filtered view.",
-            "After 48 hours, the badge disappears automatically — the specimen stays in the catalog but is no longer flagged as new.",
+            "After 7 days, the badge disappears automatically — the specimen stays in the catalog but is no longer flagged as new.",
         ),
     ),
     HowToSection(
@@ -605,6 +611,90 @@ private val howToSections: List<HowToSection> = listOf(
             "After reinstalling the new version, just sign back in with your RockScout account. All your settings — hunter status, cache mode, notification preferences, aurora thresholds, and more — are restored from the cloud, exactly as they were before.",
             "A confirmation dialog appears when you tap the logout button in Settings, preventing accidental sign-outs.",
             "Your collections, captures, friends, and achievements are tied to your account, not your device — they carry over to any device when you sign back in.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Mail,
+        accent = Color(0xFF4A9FE0),
+        title = "Ask an Expert & Museum Finder",
+        shortLabel = "Ask an Expert",
+        steps = listOf(
+            "When an identification result has low confidence or you want a second opinion, tap the \"Ask an Expert\" button on the uncertainty card.",
+            "RockScout searches for nearby museums and geological institutions using your current location (or your profile region as a fallback). Each result shows the museum name, distance, phone number, website, and directions.",
+            "Tap a museum card to see its details, call them directly, visit their website, or get directions via your maps app.",
+            "When you're ready, compose an email to the museum directly from the app — your captured photo and identification results are attached automatically so the expert has everything they need.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Description,
+        accent = Color(0xFFE8C547),
+        title = "PDF Identification Reports",
+        shortLabel = "PDF Reports",
+        steps = listOf(
+            "After running an identification, a small PDF document icon appears on each match card. Tap it to generate a printable 1–2 page report.",
+            "The report includes your captured photo, all match names with confidence scores and reasoning, the AI analysis summary, assemblage breakdown (if applicable), web references, and a field-capture note with the date and approximate location.",
+            "The PDF opens in your device's share sheet — email it to a museum expert, save it to your files, or share it with fellow rockhounds.",
+            "Reports use the RockScout amber accent and color-coded confidence indicators (green = high, amber = medium, red = low) for quick visual scanning.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Group,
+        accent = Color(0xFF45B56A),
+        title = "Multi-Recipient Expert Email & Draft Persistence",
+        shortLabel = "Multi-Email",
+        steps = listOf(
+            "In the Museum Finder sheet, tap to select multiple museums at once — each selected museum gets a checkmark and Citrine highlight.",
+            "A \"Compose Email (N)\" button appears at the bottom showing how many recipients you've selected. Tap it to open the email composer with all selected museums as recipients.",
+            "Recipient chips at the top of the composer show each museum — tap the X on a chip to remove a recipient without leaving the composer.",
+            "Your email draft auto-saves as you type — if you close the app mid-composition, you'll get a \"Restore unsaved draft?\" prompt next time with your recipients, photos, and message body intact. Drafts expire after 7 days.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Schedule,
+        accent = Color(0xFF2EC4B6),
+        title = "Recently Added Filter",
+        shortLabel = "Recently Added",
+        steps = listOf(
+            "On both the Specimen Database and Artifacts screens, a \"Recently Added\" filter chip appears in the filter row.",
+            "Tap the chip to narrow the list to only items added within the last 7 days — the same window the NEW badge covers.",
+            "The filter composes with existing category, family, and search filters — all filters apply together (AND logic). Tap again to turn it off.",
+            "If no items were added in the last 7 days, a friendly empty state appears: \"No specimens added in the last 7 days. Check back soon!\"",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.CloudUpload,
+        accent = Color(0xFF4A9FE0),
+        title = "Settings Cloud Backup",
+        shortLabel = "Cloud Backup",
+        steps = listOf(
+            "RockScout automatically backs up your settings — hunter status, cache mode, notification preferences, aurora thresholds, and more — to the cloud every 12 hours when you're signed in and online.",
+            "For a manual backup, go to Profile → Data & Sync and tap \"Back Up Data Now.\" A progress bar shows the backup in progress, and a success message confirms when your data is synced.",
+            "If you ever need to reinstall the app (for example, during a signing-conflict update), your settings are restored automatically when you sign back in — everything comes back exactly as it was.",
+            "The backup also fires automatically when you background the app, debounced to once per hour to avoid redundant uploads.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Smartphone,
+        accent = Color(0xFF45B56A),
+        title = "Free Read-Only PWA & Premium PWA Install",
+        shortLabel = "Free & Premium PWA",
+        steps = listOf(
+            "RockScout's web app is available as a PWA (Progressive Web App) for desktop, laptop, and tablet browsers. There are two tiers.",
+            "Free tier: Install a read-only PWA on any device — browse the full 900+ specimen database, all educational guides, the interactive map, and your personal bookmarks (Collection, Wishlist, Favorite Spots). No camera, no AI identification, no social features. Perfect for kids and learners.",
+            "Premium tier: Install the full PWA with all features unlocked — AI identify, field camera, social, trade, messenger, field journal, trips, and more — on up to 2 additional devices with email-code confirmation. Manage your registered devices from the Manage Devices page.",
+            "A free account created on the web carries over to the Android/iOS app. If you upgrade to Premium on any platform, the same account unlocks everywhere — no new login needed.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.NearMe,
+        accent = Color(0xFFE8C547),
+        title = "Search Near Me — Web Search for Local Rock Spots",
+        shortLabel = "Search Near Me",
+        steps = listOf(
+            "On the home screen's Dig Sites & Rock Shops section, a \"Search Near Me\" button appears next to the nearby locations header.",
+            "Tap it to run a web search for rock-related places — dig sites, rock shops, mineral collecting areas, museums, and metaphysical stores — near your current GPS location.",
+            "The search starts with a 50-mile radius. If nothing is found, it automatically expands to 100 miles. Results appear inline right where the nearby locations normally show.",
+            "Each result shows the name, type badge (Dig Site, Rock Shop, Museum, etc.), description, and an \"Open\" button to visit the source website. Results are also saved for review so approved spots can appear on the Dig Sites map in future updates. Requires Nearby Places to be turned on.",
         ),
     ),
 )

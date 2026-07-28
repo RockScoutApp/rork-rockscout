@@ -22,7 +22,7 @@ const FACTS = [
   { label: "Tagline", value: SITE.tagline },
   { label: "Platform", value: "Android, iOS (Beta) & PC — all coming soon" },
   { label: "Category", value: "Lifestyle / Outdoor / Education" },
-  { label: "Pricing", value: "Free with ads, optional Pro subscription" },
+  { label: "Pricing", value: "Free trial, then limited free tier; donations unlock temporarily; Premium is fully unrestricted" },
   { label: "Founded", value: String(SITE.foundedYear) },
   { label: "Website", value: SITE.domain },
   { label: "Press contact", value: SITE.pressEmail },

@@ -119,7 +119,7 @@ fun ArtifactListItem(
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop,
                         )
-                        // NEW badge — shown for artifacts added to the catalog within the last 48 hours.
+                        // NEW badge — shown for artifacts added to the catalog within the last 7 days.
                         if (artifact.isNew()) {
                             Box(
                                 modifier = Modifier

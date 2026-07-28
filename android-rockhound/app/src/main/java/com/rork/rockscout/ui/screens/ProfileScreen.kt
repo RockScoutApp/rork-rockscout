@@ -60,6 +60,7 @@ import androidx.compose.material.icons.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Button
@@ -122,6 +123,11 @@ import com.rork.rockscout.data.RegionData
 import com.rork.rockscout.data.LevelTier
 import com.rork.rockscout.data.SocialRepository
 import com.rork.rockscout.data.WorkScheduler
+import com.rork.rockscout.data.SettingsBackupWorker
+import com.rork.rockscout.data.SettingsBackupApi
+import com.rork.rockscout.data.PersistenceManager
+import com.rork.rockscout.data.UserDateFormatter
+import androidx.compose.material3.LinearProgressIndicator
 import com.rork.rockscout.data.ProfanityFilter
 import com.rork.rockscout.data.ImageModerator
 import com.rork.rockscout.data.ModerationResult
@@ -225,6 +231,12 @@ fun ProfileScreen(
     var showArchivedPosts by remember { mutableStateOf(false) }
     val archivedPosts by postRepo.archivedPosts.collectAsStateWithLifecycle()
 
+    // ─── Settings backup state (Phase 4) ───
+    var isBackingUp by remember { mutableStateOf(false) }
+    var backupSuccess by remember { mutableStateOf<Boolean?>(null) }
+    var lastBackupMs by remember { mutableStateOf(0L) }
+    val backupScope = androidx.compose.runtime.rememberCoroutineScope()
+
     // Sync my collection, wishlist, and favorite spots to the local users table so other
     // hunters can see my public rock counts and lists.
     androidx.compose.runtime.LaunchedEffect(collection, wishlist, favorites) {
@@ -291,6 +303,12 @@ fun ProfileScreen(
     var showEditSheet by remember { mutableStateOf(false) }
     var statusCooldownToast by remember { mutableStateOf<String?>(null) }
     val context = androidx.compose.ui.platform.LocalContext.current
+    // Load last backup timestamp on screen entry (Phase 4)
+    LaunchedEffect(isSignedIn) {
+        if (isSignedIn) {
+            lastBackupMs = SettingsBackupWorker.lastBackupAt(context)
+        }
+    }
     androidx.compose.runtime.LaunchedEffect(statusCooldownToast) {
         if (statusCooldownToast != null) {
             android.widget.Toast.makeText(context, statusCooldownToast, android.widget.Toast.LENGTH_SHORT).show()
@@ -834,6 +852,140 @@ fun ProfileScreen(
                 }
             }
 
+
+            // ─── Settings cloud backup section (Phase 4) ───
+            if (isSignedIn) {
+                item { SectionLabel("Data & Sync") }
+                item {
+                    DarkCard(modifier = Modifier.fillMaxWidth(), accent = Citrine) {
+                        Column(modifier = Modifier.fillMaxWidth().padding(4.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
+                                        .background(Citrine.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.CloudUpload,
+                                        contentDescription = null,
+                                        tint = Citrine,
+                                        modifier = Modifier.size(22.dp),
+                                )
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Cloud Backup",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                    Text(
+                                        text = if (lastBackupMs > 0L) {
+                                            "Last backed up ${UserDateFormatter.formatDateTime(lastBackupMs)}"
+                                        } else {
+                                            "Your settings back up automatically every 12 hours."
+                                        },
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = DarkTextMid,
+                                    )
+                                }
+                            }
+
+                            Spacer(Modifier.height(12.dp))
+
+                            // Progress bar while backing up
+                            if (isBackingUp) {
+                                LinearProgressIndicator(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    color = Citrine,
+                                    trackColor = Citrine.copy(alpha = 0.2f),
+                                )
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    text = "Backing up your data to the cloud…",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Citrine,
+                                )
+                            } else {
+                                // Success / failure message
+                                backupSuccess?.let { success ->
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        text = if (success) {
+                                            "✓ Backup complete! Your data is synced to the cloud."
+                                        } else {
+                                            "✗ Backup failed. Check your connection and try again."
+                                        },
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = if (success) Success else Danger,
+                                    )
+                                    Spacer(Modifier.height(8.dp))
+                                }
+                            }
+
+                            Spacer(Modifier.height(8.dp))
+
+                            Button(
+                                onClick = {
+                                    if (!isBackingUp) {
+                                        backupSuccess = null
+                                        isBackingUp = true
+                                        backupScope.launch {
+                                            val userId = auth.currentUserId
+                                            if (userId.isNullOrBlank()) {
+                                                isBackingUp = false
+                                                backupSuccess = false
+                                                return@launch
+                                            }
+                                            try {
+                                                val settingsJson = PersistenceManager.exportAllSettingsAsJson()
+                                                val result = SettingsBackupApi.backupSettings(userId, settingsJson)
+                                                isBackingUp = false
+                                                if (result.isSuccess) {
+                                                    backupSuccess = true
+                                                    lastBackupMs = System.currentTimeMillis()
+                                                } else {
+                                                    backupSuccess = false
+                                                }
+                                            } catch (e: Exception) {
+                                                isBackingUp = false
+                                                backupSuccess = false
+                                            }
+                                        }
+                                    }
+                                },
+                                enabled = !isBackingUp,
+                                shape = RoundedCornerShape(50.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Citrine,
+                                    contentColor = Ink,
+                                    disabledContainerColor = Citrine.copy(alpha = 0.4f),
+                                    disabledContentColor = Ink.copy(alpha = 0.5f),
+                                ),
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Save,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    text = "Back Up Data Now",
+                                    fontWeight = FontWeight.SemiBold,
+                                    style = MaterialTheme.typography.labelLarge,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
 
         }
     }

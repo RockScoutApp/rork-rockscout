@@ -12,6 +12,7 @@ import {
   Keyboard,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTier } from "@/hooks/useTier";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import IosBetaBanner from "@/components/app/IosBetaBanner";
 import KeyboardHelpOverlay from "@/components/app/KeyboardHelpOverlay";
@@ -25,7 +26,16 @@ interface NavItem {
   end?: boolean;
 }
 
-const NAV_ITEMS: NavItem[] = [
+const NAV_ITEMS_FREE: NavItem[] = [
+  { to: "/app", icon: Home, label: "Home", end: true },
+  { to: "/app/specimens", icon: BookOpen, label: "Specimens" },
+  { to: "/app/collection", icon: Gem, label: "Collection" },
+  { to: "/app/map", icon: Map, label: "Map" },
+  { to: "/app/favorites", icon: MapPin, label: "Spots" },
+  { to: "/app/profile", icon: User, label: "Profile" },
+];
+
+const NAV_ITEMS_PREMIUM: NavItem[] = [
   { to: "/app", icon: Home, label: "Home", end: true },
   { to: "/app/identify", icon: Camera, label: "Identify" },
   { to: "/app/collection", icon: Gem, label: "Collection" },
@@ -36,18 +46,22 @@ const NAV_ITEMS: NavItem[] = [
 
 export default function AppLayout() {
   const { user, signOut } = useAuth();
+  const { isFree, isPremium } = useTier();
   const navigate = useNavigate();
   const [helpOpen, setHelpOpen] = useState(false);
   const [fieldCameraOpen, setFieldCameraOpen] = useState(false);
+  const navItems = isPremium ? NAV_ITEMS_PREMIUM : NAV_ITEMS_FREE;
 
   useKeyboardShortcuts({ onToggleHelp: () => setHelpOpen((v) => !v) });
 
-  // Listen for the "open-field-camera" custom event dispatched by the Home tile
+  // Listen for the "open-field-camera" custom event dispatched by the Home tile.
+  // Only enabled for premium users — free users don't have the field camera.
   useEffect(() => {
+    if (isFree) return;
     const handler = () => setFieldCameraOpen(true);
     window.addEventListener("open-field-camera", handler);
     return () => window.removeEventListener("open-field-camera", handler);
-  }, []);
+  }, [isFree]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -70,7 +84,7 @@ export default function AppLayout() {
         </div>
 
         <nav className="flex flex-1 flex-col gap-1 px-3">
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -127,7 +141,7 @@ export default function AppLayout() {
 
       {/* Mobile bottom tab bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-border bg-card/95 backdrop-blur-lg md:hidden">
-        {NAV_ITEMS.map((item) => (
+        {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}

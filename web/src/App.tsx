@@ -4,6 +4,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { TierProvider } from "@/hooks/useTier";
+import { PremiumGate } from "@/components/app/PremiumGate";
 
 import Landing from "./pages/Landing";
 import HowToUse from "./pages/HowToUse";
@@ -100,6 +102,7 @@ import Disclaimer from "./pages/app/Disclaimer";
 import DeveloperConsole from "./pages/app/DeveloperConsole";
 import Scan from "./pages/app/Scan";
 import Messenger from "./pages/app/Messenger";
+import ManageDevices from "./pages/app/ManageDevices";
 import type { ReactNode } from "react";
 
 const queryClient = new QueryClient();
@@ -116,7 +119,11 @@ function RequireAuth({ children }: { children: ReactNode }) {
     );
   }
   if (!user) return <SignIn />;
-  return <>{children}</>;
+  return (
+    <TierProvider>
+      <>{children}</>
+    </TierProvider>
+  );
 }
 
 const App = () => (
@@ -147,86 +154,87 @@ const App = () => (
                 </RequireAuth>
               }
             >
-              <Route index element={<Home />} />
-              <Route path="identify" element={<Identify />} />
-              <Route path="specimens" element={<Specimens />} />
-              <Route path="specimens/:id" element={<SpecimenDetail />} />
-              <Route path="collection" element={<Collection />} />
-              <Route path="map" element={<MapPage />} />
-              <Route path="locations/:id" element={<LocationDetail />} />
-              <Route path="favorites" element={<FavoriteSpots />} />
-              <Route path="journal" element={<FieldJournal />} />
-              <Route path="trips" element={<TripPlanner />} />
-              <Route path="trade" element={<TradeBoard />} />
-              <Route path="community" element={<Community />} />
-              <Route path="friends" element={<Friends />} />
-              <Route path="profile/:id" element={<UserProfile />} />
-              <Route path="achievements" element={<Achievements />} />
-              <Route path="reference" element={<ReferenceLibrary />} />
-              <Route path="gear" element={<GearGuide />} />
-              <Route path="gem-shows" element={<GemShows />} />
-              <Route path="paywall" element={<Paywall />} />
-              <Route path="notifications" element={<Notifications />} />
-              <Route path="referral" element={<Referral />} />
-              <Route path="glossary" element={<Glossary />} />
-              <Route path="mohs-scale" element={<MohsScale />} />
-              <Route path="crystal-systems" element={<CrystalSystems />} />
-              <Route path="geology" element={<GeologyReference />} />
-              <Route path="fluorescence" element={<Fluorescence />} />
-              <Route path="mineral-care" element={<MineralCare />} />
-              <Route path="lapidary" element={<LapidaryBasics />} />
-              <Route path="meteorite-hunting" element={<MeteoriteHunting />} />
-              <Route path="paleontology" element={<Paleontology />} />
-              <Route path="aurora" element={<AuroraTracker />} />
-              <Route path="stars" element={<StarsConstellations />} />
-              <Route path="severe-weather" element={<SevereWeather />} />
-              <Route path="natural-wonders" element={<NaturalWonders />} />
-              <Route path="blm-guide" element={<BlmGuide />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="offline" element={<OfflineDownloads />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="captures" element={<FieldCaptures />} />
-              <Route path="saved-images" element={<SavedImages />} />
-              <Route path="wishlist" element={<Wishlist />} />
-              <Route path="artifacts" element={<Artifacts />} />
-              <Route path="artifacts/:id" element={<ArtifactDetail />} />
-              <Route path="locations" element={<Locations />} />
-              <Route path="gem-shows/:id" element={<GemShowDetail />} />
-              <Route path="all-achievements" element={<AllAchievements />} />
-              <Route path="how-to-use" element={<InAppHowToUse />} />
-              <Route path="contact" element={<ContactUs />} />
-              <Route path="token-info" element={<TokenInfo />} />
+              <Route index element={<PremiumGate routePath=""><Home /></PremiumGate>} />
+              <Route path="identify" element={<PremiumGate routePath="identify"><Identify /></PremiumGate>} />
+              <Route path="specimens" element={<PremiumGate routePath="specimens"><Specimens /></PremiumGate>} />
+              <Route path="specimens/:id" element={<PremiumGate routePath="specimens/:id"><SpecimenDetail /></PremiumGate>} />
+              <Route path="collection" element={<PremiumGate routePath="collection"><Collection /></PremiumGate>} />
+              <Route path="map" element={<PremiumGate routePath="map"><MapPage /></PremiumGate>} />
+              <Route path="locations/:id" element={<PremiumGate routePath="locations/:id"><LocationDetail /></PremiumGate>} />
+              <Route path="favorites" element={<PremiumGate routePath="favorites"><FavoriteSpots /></PremiumGate>} />
+              <Route path="journal" element={<PremiumGate routePath="journal"><FieldJournal /></PremiumGate>} />
+              <Route path="trips" element={<PremiumGate routePath="trips"><TripPlanner /></PremiumGate>} />
+              <Route path="trade" element={<PremiumGate routePath="trade"><TradeBoard /></PremiumGate>} />
+              <Route path="community" element={<PremiumGate routePath="community"><Community /></PremiumGate>} />
+              <Route path="friends" element={<PremiumGate routePath="friends"><Friends /></PremiumGate>} />
+              <Route path="profile/:id" element={<PremiumGate routePath="profile/:id"><UserProfile /></PremiumGate>} />
+              <Route path="achievements" element={<PremiumGate routePath="achievements"><Achievements /></PremiumGate>} />
+              <Route path="reference" element={<PremiumGate routePath="reference"><ReferenceLibrary /></PremiumGate>} />
+              <Route path="gear" element={<PremiumGate routePath="gear"><GearGuide /></PremiumGate>} />
+              <Route path="gem-shows" element={<PremiumGate routePath="gem-shows"><GemShows /></PremiumGate>} />
+              <Route path="paywall" element={<PremiumGate routePath="paywall"><Paywall /></PremiumGate>} />
+              <Route path="notifications" element={<PremiumGate routePath="notifications"><Notifications /></PremiumGate>} />
+              <Route path="referral" element={<PremiumGate routePath="referral"><Referral /></PremiumGate>} />
+              <Route path="glossary" element={<PremiumGate routePath="glossary"><Glossary /></PremiumGate>} />
+              <Route path="mohs-scale" element={<PremiumGate routePath="mohs-scale"><MohsScale /></PremiumGate>} />
+              <Route path="crystal-systems" element={<PremiumGate routePath="crystal-systems"><CrystalSystems /></PremiumGate>} />
+              <Route path="geology" element={<PremiumGate routePath="geology"><GeologyReference /></PremiumGate>} />
+              <Route path="fluorescence" element={<PremiumGate routePath="fluorescence"><Fluorescence /></PremiumGate>} />
+              <Route path="mineral-care" element={<PremiumGate routePath="mineral-care"><MineralCare /></PremiumGate>} />
+              <Route path="lapidary" element={<PremiumGate routePath="lapidary"><LapidaryBasics /></PremiumGate>} />
+              <Route path="meteorite-hunting" element={<PremiumGate routePath="meteorite-hunting"><MeteoriteHunting /></PremiumGate>} />
+              <Route path="paleontology" element={<PremiumGate routePath="paleontology"><Paleontology /></PremiumGate>} />
+              <Route path="aurora" element={<PremiumGate routePath="aurora"><AuroraTracker /></PremiumGate>} />
+              <Route path="stars" element={<PremiumGate routePath="stars"><StarsConstellations /></PremiumGate>} />
+              <Route path="severe-weather" element={<PremiumGate routePath="severe-weather"><SevereWeather /></PremiumGate>} />
+              <Route path="natural-wonders" element={<PremiumGate routePath="natural-wonders"><NaturalWonders /></PremiumGate>} />
+              <Route path="blm-guide" element={<PremiumGate routePath="blm-guide"><BlmGuide /></PremiumGate>} />
+              <Route path="profile" element={<PremiumGate routePath="profile"><Profile /></PremiumGate>} />
+              <Route path="offline" element={<PremiumGate routePath="offline"><OfflineDownloads /></PremiumGate>} />
+              <Route path="settings" element={<PremiumGate routePath="settings"><Settings /></PremiumGate>} />
+              <Route path="captures" element={<PremiumGate routePath="captures"><FieldCaptures /></PremiumGate>} />
+              <Route path="saved-images" element={<PremiumGate routePath="saved-images"><SavedImages /></PremiumGate>} />
+              <Route path="wishlist" element={<PremiumGate routePath="wishlist"><Wishlist /></PremiumGate>} />
+              <Route path="artifacts" element={<PremiumGate routePath="artifacts"><Artifacts /></PremiumGate>} />
+              <Route path="artifacts/:id" element={<PremiumGate routePath="artifacts/:id"><ArtifactDetail /></PremiumGate>} />
+              <Route path="locations" element={<PremiumGate routePath="locations"><Locations /></PremiumGate>} />
+              <Route path="gem-shows/:id" element={<PremiumGate routePath="gem-shows/:id"><GemShowDetail /></PremiumGate>} />
+              <Route path="all-achievements" element={<PremiumGate routePath="all-achievements"><AllAchievements /></PremiumGate>} />
+              <Route path="how-to-use" element={<PremiumGate routePath="how-to-use"><InAppHowToUse /></PremiumGate>} />
+              <Route path="contact" element={<PremiumGate routePath="contact"><ContactUs /></PremiumGate>} />
+              <Route path="token-info" element={<PremiumGate routePath="token-info"><TokenInfo /></PremiumGate>} />
               <Route path="thank-you/:tokens/:days" element={<ThankYou />} />
-              <Route path="search" element={<Search />} />
-              <Route path="community/:postId" element={<CommunityPostDetail />} />
-              <Route path="prehistoric-organisms" element={<PrehistoricOrganisms />} />
-              <Route path="periodic-table" element={<PeriodicTable />} />
-              <Route path="tectonic-volcanic" element={<TectonicVolcanic />} />
-              <Route path="resource-links" element={<ResourceLinks />} />
-              <Route path="rocks-are-amazing" element={<RocksAreAmazing />} />
-              <Route path="rock-types" element={<RockTypes />} />
-              <Route path="mineral-id" element={<MineralId />} />
-              <Route path="crystal-hardness" element={<CrystalHardness />} />
-              <Route path="rock-cycle" element={<RockCycleTools />} />
-              <Route path="geo-time-scale" element={<GeoTimeScale />} />
-              <Route path="mass-extinctions" element={<MassExtinctions />} />
-              <Route path="fossil-types" element={<FossilTypes />} />
-              <Route path="geologic-periods" element={<GeologicPeriods />} />
-              <Route path="period/:id" element={<PeriodDetail />} />
-              <Route path="state-parks" element={<StateParks />} />
-              <Route path="state-park/:id" element={<StateParkDetail />} />
-              <Route path="trading-floor" element={<TradingFloor />} />
-              <Route path="my-trades" element={<MyTrades />} />
-              <Route path="social-settings" element={<SocialSettings />} />
-              <Route path="discover-hunters" element={<DiscoverHunters />} />
-              <Route path="rockscouts-map" element={<RockScoutsMap />} />
-              <Route path="archived-trips" element={<ArchivedTrips />} />
-              <Route path="profile/friends" element={<ProfileFriends />} />
-              <Route path="shared-spot/:lat/:lng" element={<SharedSpot />} />
-              <Route path="disclaimer" element={<Disclaimer />} />
+              <Route path="search" element={<PremiumGate routePath="search"><Search /></PremiumGate>} />
+              <Route path="community/:postId" element={<PremiumGate routePath="community/:postId"><CommunityPostDetail /></PremiumGate>} />
+              <Route path="prehistoric-organisms" element={<PremiumGate routePath="prehistoric-organisms"><PrehistoricOrganisms /></PremiumGate>} />
+              <Route path="periodic-table" element={<PremiumGate routePath="periodic-table"><PeriodicTable /></PremiumGate>} />
+              <Route path="tectonic-volcanic" element={<PremiumGate routePath="tectonic-volcanic"><TectonicVolcanic /></PremiumGate>} />
+              <Route path="resource-links" element={<PremiumGate routePath="resource-links"><ResourceLinks /></PremiumGate>} />
+              <Route path="rocks-are-amazing" element={<PremiumGate routePath="rocks-are-amazing"><RocksAreAmazing /></PremiumGate>} />
+              <Route path="rock-types" element={<PremiumGate routePath="rock-types"><RockTypes /></PremiumGate>} />
+              <Route path="mineral-id" element={<PremiumGate routePath="mineral-id"><MineralId /></PremiumGate>} />
+              <Route path="crystal-hardness" element={<PremiumGate routePath="crystal-hardness"><CrystalHardness /></PremiumGate>} />
+              <Route path="rock-cycle" element={<PremiumGate routePath="rock-cycle"><RockCycleTools /></PremiumGate>} />
+              <Route path="geo-time-scale" element={<PremiumGate routePath="geo-time-scale"><GeoTimeScale /></PremiumGate>} />
+              <Route path="mass-extinctions" element={<PremiumGate routePath="mass-extinctions"><MassExtinctions /></PremiumGate>} />
+              <Route path="fossil-types" element={<PremiumGate routePath="fossil-types"><FossilTypes /></PremiumGate>} />
+              <Route path="geologic-periods" element={<PremiumGate routePath="geologic-periods"><GeologicPeriods /></PremiumGate>} />
+              <Route path="period/:id" element={<PremiumGate routePath="period/:id"><PeriodDetail /></PremiumGate>} />
+              <Route path="state-parks" element={<PremiumGate routePath="state-parks"><StateParks /></PremiumGate>} />
+              <Route path="state-park/:id" element={<PremiumGate routePath="state-park/:id"><StateParkDetail /></PremiumGate>} />
+              <Route path="trading-floor" element={<PremiumGate routePath="trading-floor"><TradingFloor /></PremiumGate>} />
+              <Route path="my-trades" element={<PremiumGate routePath="my-trades"><MyTrades /></PremiumGate>} />
+              <Route path="social-settings" element={<PremiumGate routePath="social-settings"><SocialSettings /></PremiumGate>} />
+              <Route path="discover-hunters" element={<PremiumGate routePath="discover-hunters"><DiscoverHunters /></PremiumGate>} />
+              <Route path="rockscouts-map" element={<PremiumGate routePath="rockscouts-map"><RockScoutsMap /></PremiumGate>} />
+              <Route path="archived-trips" element={<PremiumGate routePath="archived-trips"><ArchivedTrips /></PremiumGate>} />
+              <Route path="profile/friends" element={<PremiumGate routePath="profile/friends"><ProfileFriends /></PremiumGate>} />
+              <Route path="shared-spot/:lat/:lng" element={<PremiumGate routePath="shared-spot/:lat/:lng"><SharedSpot /></PremiumGate>} />
+              <Route path="disclaimer" element={<PremiumGate routePath="disclaimer"><Disclaimer /></PremiumGate>} />
               <Route path="dev-console" element={<DeveloperConsole />} />
-              <Route path="scan" element={<Scan />} />
-              <Route path="messenger" element={<Messenger />} />
+              <Route path="scan" element={<PremiumGate routePath="scan"><Scan /></PremiumGate>} />
+              <Route path="messenger" element={<PremiumGate routePath="messenger"><Messenger /></PremiumGate>} />
+              <Route path="manage-devices" element={<PremiumGate routePath="manage-devices"><ManageDevices /></PremiumGate>} />
             </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

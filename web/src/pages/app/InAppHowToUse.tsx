@@ -16,6 +16,10 @@ import {
   Zap,
   ArrowLeft,
   HelpCircle,
+  Mail,
+  FileText,
+  Smartphone,
+  Locate,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -89,6 +93,26 @@ const SECTIONS: { title: string; icon: typeof Camera; body: string }[] = [
     title: "Go Premium",
     icon: Zap,
     body: "Upgrade to Premium for unlimited IDs, ad-free experience, and pro features. Your purchase works across the Android app and the web PWA — sign in with the same account.",
+  },
+  {
+    title: "Ask an Expert & Museum Finder",
+    icon: Mail,
+    body: "When an identification has low confidence, tap \"Ask an Expert\" to search for nearby museums and geological institutions. Select multiple museums and compose an email with your photo and ID results attached — drafts auto-save across app restarts.",
+  },
+  {
+    title: "PDF Identification Reports",
+    icon: FileText,
+    body: "Tap the PDF icon on any match card to generate a printable 1-2 page report with your photo, all matches, AI analysis, and web references. Share it via email or save it to your files.",
+  },
+  {
+    title: "Free & Premium PWA",
+    icon: Smartphone,
+    body: "Install RockScout as a PWA on desktop, laptop, or tablet. Free tier: read-only access to the full database, guides, and map. Premium tier: all features unlocked on up to 2 additional devices with email confirmation.",
+  },
+  {
+    title: "Search Near Me",
+    icon: Locate,
+    body: "Tap \"Search Near Me\" on the Dig Sites section to run a web search for rock-related places near your GPS location. Searches 50 miles first, then expands to 100 miles automatically. Results open in your browser.",
   },
 ];
 
