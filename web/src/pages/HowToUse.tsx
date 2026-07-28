@@ -106,7 +106,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
   },
   {
     icon: Repeat,
-    accent: "hsl(32 75% 42%)",
+    accent: "hsl(36 80% 58%)",
     title: "Trade Board",
     shortLabel: "Trade Board",
     steps: [
@@ -158,7 +158,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
   },
   {
     icon: MapIcon,
-    accent: "hsl(32 75% 42%)",
+    accent: "hsl(36 80% 58%)",
     title: "Trip Planner",
     shortLabel: "Trip Planner",
     steps: [

@@ -229,13 +229,13 @@ const Hero = () => {
   <section className="relative overflow-hidden grain">
     {/* Sparkle particles echoing the app's specimen-card motif */}
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-      <Sparkle top="12%" left="18%" delay="0s" duration="3.2s" color="hsl(32 75% 42%)" />
-      <Sparkle top="22%" left="72%" delay="0.6s" duration="4s" color="hsl(20 55% 48%)" />
-      <Sparkle top="44%" left="8%" delay="1.2s" duration="3.6s" color="hsl(172 35% 32%)" />
-      <Sparkle top="64%" left="82%" delay="0.3s" duration="4.4s" color="hsl(32 75% 42%)" />
-      <Sparkle top="76%" left="30%" delay="1.8s" duration="3s" color="hsl(20 55% 48%)" />
-      <Sparkle top="32%" left="48%" delay="2.1s" duration="5s" color="hsl(172 35% 32%)" />
-      <Sparkle top="58%" left="62%" delay="0.9s" duration="3.8s" color="hsl(32 75% 42%)" />
+      <Sparkle top="12%" left="18%" delay="0s" duration="3.2s" color="hsl(36 80% 58%)" />
+      <Sparkle top="22%" left="72%" delay="0.6s" duration="4s" color="hsl(20 62% 65%)" />
+      <Sparkle top="44%" left="8%" delay="1.2s" duration="3.6s" color="hsl(172 30% 28%)" />
+      <Sparkle top="64%" left="82%" delay="0.3s" duration="4.4s" color="hsl(36 80% 58%)" />
+      <Sparkle top="76%" left="30%" delay="1.8s" duration="3s" color="hsl(20 62% 65%)" />
+      <Sparkle top="32%" left="48%" delay="2.1s" duration="5s" color="hsl(172 30% 28%)" />
+      <Sparkle top="58%" left="62%" delay="0.9s" duration="3.8s" color="hsl(36 80% 58%)" />
       <Sparkle top="8%" left="88%" delay="2.4s" duration="4.2s" color="hsl(42 80% 50%)" />
     </div>
 
@@ -900,9 +900,9 @@ const CTA = () => (
       <div className="pointer-events-none absolute inset-0 geode-gradient opacity-70" aria-hidden />
       {/* Floating sparkles in CTA */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <Sparkle top="18%" left="12%" delay="0s" duration="3s" color="hsl(32 75% 42%)" />
-        <Sparkle top="70%" left="84%" delay="1s" duration="4s" color="hsl(20 55% 48%)" />
-        <Sparkle top="30%" left="78%" delay="2s" duration="3.5s" color="hsl(172 35% 32%)" />
+        <Sparkle top="18%" left="12%" delay="0s" duration="3s" color="hsl(36 80% 58%)" />
+        <Sparkle top="70%" left="84%" delay="1s" duration="4s" color="hsl(20 62% 65%)" />
+        <Sparkle top="30%" left="78%" delay="2s" duration="3.5s" color="hsl(172 30% 28%)" />
       </div>
       <div className="relative">
         <h2 className="text-balance font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">

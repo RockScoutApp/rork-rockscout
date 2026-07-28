@@ -271,7 +271,7 @@ export function AuthPill() {
           className={cn(
             "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all hover:shadow-sm sm:px-3.5 sm:py-2 sm:text-sm",
             isPro
-              ? "border-amber-500/50 bg-gradient-to-br from-amber-500/15 to-primary/15 text-amber-700"
+              ? "border-amber-500/50 bg-gradient-to-br from-amber-500/15 to-primary/15 text-amber-600 dark:text-amber-400"
               : "border-border bg-card/60 text-foreground",
           )}
         >
