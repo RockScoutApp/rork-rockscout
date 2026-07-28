@@ -18,6 +18,11 @@
       "name": "RockScout Website",
       "path": "web",
       "framework": "web"
+    },
+    {
+      "name": "RockScout",
+      "path": "ios-rockscout",
+      "framework": "swift"
     }
   ]
 }
