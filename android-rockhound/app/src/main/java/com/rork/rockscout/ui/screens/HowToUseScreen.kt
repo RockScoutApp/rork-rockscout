@@ -59,6 +59,12 @@ import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.NearMe
+import androidx.compose.material.icons.filled.CleaningServices
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Construction
+import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.Nature
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -364,7 +370,7 @@ private val howToSections: List<HowToSection> = listOf(
             "Tap your avatar on the home screen to open your Profile.",
             "Your Player Card shows your level, XP progress, hunter status, and earned badges.",
             "Set your hunter status: Off Grid, Hunting, Digging, or Trading — each shows a color-coded profile border.",
-            "Browse 102 achievements and 34 badges on the Achievements page.",
+            "Browse over 100 achievements and over 30 badges on the Achievements page.",
             "Each locked achievement on the All Achievements page now shows a visual progress bar indicating how close you are to earning it — so you always know what to do next to level up.",
             "Earn XP for every action — identifying rocks, adding to your collection, capturing field photos, trading, and more.",
             "Level up to unlock new tiers with unique emojis and brag-worthy celebration pop-ups.",
@@ -380,7 +386,7 @@ private val howToSections: List<HowToSection> = listOf(
         steps = listOf(
             "Tap the heart icon on any specimen card to add it to your Wishlist.",
             "View your Wishlist from the home screen — it's your dream-specimen shopping list.",
-            "Tap the bookmark icon on any dig site, state park, BLM location, campground, trailhead, or dig site detail screen to save it to Favorite Spots for quick access.",
+            "Tap the bookmark icon on any dig site, national or state park, BLM location, campground, trailhead, or dig site detail screen to save it to Favorite Spots for quick access.",
             "Favorite Spots appear on the home screen with a count of saved locations and are fully searchable from the global search.",
             "In the Aurora Forecaster, use the Saved Spots section to bookmark specific coordinates and track aurora visibility at those locations — drop a pin on the map, enter lat/lng manually, or tap \"Mark My Location\" to use your GPS.",
             "Each aurora saved spot shows the name, coordinates, and current visibility status (Aurora visible / unlikely) based on the spot's latitude and current Kp index.",
@@ -409,7 +415,7 @@ private val howToSections: List<HowToSection> = listOf(
             "Browse state-by-state rules for rockhounding on Bureau of Land Management land.",
             "Each state page shows trailheads, campgrounds, and dig sites with tappable detail pages.",
             "Check regulations before you hunt — rules vary by state and land type.",
-            "Each BLM state guide, trailhead, campground, dig site, and state park detail screen includes a \"Common Wildlife\" tile showing the animals you might encounter in that area — mammals, birds, reptiles, and more, tailored to the region's biome.",
+            "Each BLM state guide, trailhead, campground, dig site, and national or state park detail screen includes a \"Common Wildlife\" tile showing the animals you might encounter in that area — mammals, birds, reptiles, and more, tailored to the region's biome.",
             "Beach and coastal dig site detail screens show marine and shorebird wildlife specific to that coast.",
         ),
     ),
@@ -442,7 +448,7 @@ private val howToSections: List<HowToSection> = listOf(
         title = "Educational Guides",
         shortLabel = "Guides",
         steps = listOf(
-            "RockScout includes 10 built-in educational guides — all work fully offline once the bulk image download completes.",
+            "RockScout includes over 10 built-in educational guides — all work fully offline once the bulk image download completes.",
             "Exploring Geology: learn how rocks, minerals, and gems form across the rock cycle.",
             "Exploring Paleontology: fossils, geologic eras, and deep-time history.",
             "Exploring Prehistoric Organisms: dinosaurs, ancient birds, prehistoric flora, and more.",
@@ -483,7 +489,7 @@ private val howToSections: List<HowToSection> = listOf(
         title = "Natural Wonders of the World",
         shortLabel = "Natural Wonders",
         steps = listOf(
-            "Tap the \"Natural Wonders\" tile on the home screen to explore 36 world-famous geological sites and the rocks and minerals you can find at each one.",
+            "Tap the \"Natural Wonders\" tile on the home screen to explore over 35 world-famous geological sites and the rocks and minerals you can find at each one.",
             "Each wonder includes a stunning photo, location, geological formation story, rocks to find, and fun facts — from the Grand Canyon and Giant's Causeway to Mount Vesuvius, Salar de Uyuni, and the Zhangjiajie Pillars.",
             "Recent additions include the Naica Crystal Caves (Chihuahua, Mexico) — the Cave of the Crystals, where giant selenite crystals grow from floor to ceiling, some over 36 feet long — plus Sossusvlei Red Dunes, Þingvellir Rift Valley, Tongariro Volcanic Complex, and more.",
             "Each card opens a full detail page with the formation's geological history, what rocks and minerals are found there, and visitor tips for rockhounds.",
@@ -508,7 +514,7 @@ private val howToSections: List<HowToSection> = listOf(
         title = "Gear Guide",
         shortLabel = "Gear Guide",
         steps = listOf(
-            "Tap the \"Gear Guide\" banner (right below the Calendar tile) on the home screen to browse 48+ curated tools with Amazon links.",
+            "Tap the \"Gear Guide\" banner (right below the Calendar tile) on the home screen to browse over 45 curated tools with Amazon links.",
             "Kits are organized from beginner to advanced — from a first loupe and rock hammer to lapidary equipment and UV lights.",
             "Each item shows a price range and a quick link so you can stock up before your next dig.",
             "As an Amazon Associate, RockScout earns from qualifying purchases — at no extra cost to you.",
@@ -680,7 +686,7 @@ private val howToSections: List<HowToSection> = listOf(
         shortLabel = "Free & Premium PWA",
         steps = listOf(
             "RockScout's web app is available as a PWA (Progressive Web App) for desktop, laptop, and tablet browsers. There are two tiers.",
-            "Free tier: Install a read-only PWA on any device — browse the full 900+ specimen database, all educational guides, the interactive map, and your personal bookmarks (Collection, Wishlist, Favorite Spots). No camera, no AI identification, no social features. Perfect for kids and learners.",
+            "Free tier: Install a read-only PWA on any device — browse the full specimen database of over 900 entries, all educational guides, the interactive map, and your personal bookmarks (Collection, Wishlist, Favorite Spots). No camera, no AI identification, no social features. Perfect for kids and learners.",
             "Premium tier: Install the full PWA with all features unlocked — AI identify, field camera, social, trade, messenger, field journal, trips, and more — on up to 2 additional devices with email-code confirmation. Manage your registered devices from the Manage Devices page.",
             "A free account created on the web carries over to the Android/iOS app. If you upgrade to Premium on any platform, the same account unlocks everywhere — no new login needed.",
         ),
@@ -695,6 +701,198 @@ private val howToSections: List<HowToSection> = listOf(
             "Tap it to run a web search for rock-related places — dig sites, rock shops, mineral collecting areas, museums, and metaphysical stores — near your current GPS location.",
             "The search starts with a 50-mile radius. If nothing is found, it automatically expands to 100 miles. Results appear inline right where the nearby locations normally show.",
             "Each result shows the name, type badge (Dig Site, Rock Shop, Museum, etc.), description, and an \"Open\" button to visit the source website. Results are also saved for review so approved spots can appear on the Dig Sites map in future updates. Requires Nearby Places to be turned on.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.CleaningServices,
+        accent = Color(0xFF5CC98C),
+        title = "Mineral Care & Cleaning Guide",
+        shortLabel = "Mineral Care",
+        steps = listOf(
+            "Tap \"Mineral Care & Cleaning\" in the Explore & Learn section on the home screen.",
+            "Browse safe cleaning methods for every mineral type — water, mild soap, ultrasonic, or \"don't clean at all.\"",
+            "Each guide covers what solvents to avoid, how to store delicate specimens, and how to prevent damage.",
+            "Don't ruin your finds — a quick check here before cleaning can save a priceless specimen.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.MenuBook,
+        accent = Color(0xFF6FA8C7),
+        title = "Glossary",
+        shortLabel = "Glossary",
+        steps = listOf(
+            "Tap \"Glossary\" in the Field Kit section on the home screen.",
+            "Every rock, mineral, and space term used in the app is defined here in plain English.",
+            "Search for a term or browse alphabetically.",
+            "Tap any term to see its full definition with related terms.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Diamond,
+        accent = Color(0xFF6FA8C7),
+        title = "Crystal System Reference",
+        shortLabel = "Crystal Systems",
+        steps = listOf(
+            "Tap \"Crystal Systems\" in the Explore & Learn section on the home screen.",
+            "Learn the 7 crystal systems — cubic, tetragonal, orthorhombic, monoclinic, triclinic, and hexagonal/trigonal.",
+            "Each system includes visual examples of minerals that form in that shape.",
+            "Tap any crystal system for detailed info about its axes, angles, and representative minerals.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Lightbulb,
+        accent = Color(0xFF9B7BD8),
+        title = "Fluorescence & UV Reference",
+        shortLabel = "Fluorescence",
+        steps = listOf(
+            "Tap \"Fluorescence & UV\" in the Explore & Learn section on the home screen.",
+            "Discover which minerals glow under UV light and what colors they produce.",
+            "Browse by mineral name or by UV wavelength — shortwave, midwave, and longwave.",
+            "Essential for night collecting with a UV lamp — some minerals only reveal themselves in the dark.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Construction,
+        accent = Color(0xFFE8A33D),
+        title = "Lapidary Basics Guide",
+        shortLabel = "Lapidary",
+        steps = listOf(
+            "Tap \"Lapidary Basics\" in the Explore & Learn section on the home screen.",
+            "Learn the fundamentals of cutting, polishing, and cabbing your finds into jewelry.",
+            "Covers equipment basics — saws, grinders, polishers, and cabochon machines.",
+            "Step-by-step guidance from rough rock to finished cabochon.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.WaterDrop,
+        accent = Color(0xFF4FC3F7),
+        title = "Rock Cycle Tools",
+        shortLabel = "Rock Cycle",
+        steps = listOf(
+            "Tap \"Rock Cycle Tools\" from the Educational Guides section.",
+            "Explore the interactive rock cycle — see how igneous, sedimentary, and metamorphic rocks transform into each other.",
+            "Tap any stage of the cycle for detailed explanations and examples.",
+            "Understand how the rocks you collect got to be the way they are.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Terrain,
+        accent = Color(0xFFC97B4A),
+        title = "Rock Types Deep Dive",
+        shortLabel = "Rock Types",
+        steps = listOf(
+            "Tap \"Rock Types\" from the Educational Guides section.",
+            "Deep dive into the three main rock families: igneous, sedimentary, and metamorphic.",
+            "Each type includes formation processes, common examples, and where to find them.",
+            "Learn the differences between basalt and granite, shale and sandstone, marble and quartzite.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Search,
+        accent = Color(0xFF7CB5EC),
+        title = "Mineral ID Guide",
+        shortLabel = "Mineral ID",
+        steps = listOf(
+            "Tap \"Mineral ID Guide\" from the Educational Guides section.",
+            "Use the step-by-step identification key to narrow down any mineral.",
+            "Tests include hardness, streak, luster, cleavage, and specific gravity.",
+            "Each step narrows your options until you reach a positive ID.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Public,
+        accent = Color(0xFFE2574C),
+        title = "Mass Extinctions",
+        shortLabel = "Extinctions",
+        steps = listOf(
+            "Tap \"Mass Extinctions\" from the Educational Guides section.",
+            "Learn about the 5 big extinction events that reshaped life on Earth.",
+            "Each event includes the timeline, cause, and which species were lost.",
+            "Understand the deep-time context of the fossils you find.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Schedule,
+        accent = Color(0xFFD9B26A),
+        title = "Geo Time Scale",
+        shortLabel = "Geo Time Scale",
+        steps = listOf(
+            "Tap \"Geo Time Scale\" from the Educational Guides section.",
+            "Explore an interactive geologic timeline from the Hadean to the present.",
+            "Tap any era or period for details about the life, climate, and geology of that time.",
+            "See where your fossil finds fit into Earth's 4.6-billion-year story.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.CalendarMonth,
+        accent = Color(0xFF6FA8C7),
+        title = "Geologic Periods",
+        shortLabel = "Geologic Periods",
+        steps = listOf(
+            "Tap \"Geologic Periods\" from the Educational Guides section.",
+            "Browse period-by-period through the Paleozoic, Mesozoic, and Cenozoic eras.",
+            "Each period includes key events, dominant life forms, and major rock formations.",
+            "Tap any period for a detailed breakdown.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Nature,
+        accent = Color(0xFF8BBF6A),
+        title = "Fossil Types Guide",
+        shortLabel = "Fossil Types",
+        steps = listOf(
+            "Tap \"Fossil Types\" from the Educational Guides section.",
+            "Learn the different ways fossils form — permineralization, replacement, carbonization, molds and casts, and more.",
+            "Browse examples of each fossil type with photos and descriptions.",
+            "Essential for understanding what you're looking at when you find a fossil.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Map,
+        accent = Color(0xFFE8A33D),
+        title = "Trip Journal — Combined Trip Planner & Field Journal",
+        shortLabel = "Trip Journal",
+        steps = listOf(
+            "Tap the \"Trip Planner & Field Journal\" banner on the home screen to open the combined Trip Journal.",
+            "The Trip Journal combines your Trip Planner and Field Journal in one tabbed view — switch between trips and journal entries with the tab selector.",
+            "The trips tab shows all your planned and active trips; the journal tab shows your field journal entries.",
+            "This is the same data as the standalone Trip Planner and Field Journal — just combined for convenience.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Analytics,
+        accent = Color(0xFF7CB5EC),
+        title = "Collection Statistics Dashboard",
+        shortLabel = "Collection Stats",
+        steps = listOf(
+            "Open \"My Rocks\" on the home screen and tap the statistics icon to view your Collection Statistics Dashboard.",
+            "See charts and stats for your collection — breakdown by category, rarity, location, and more.",
+            "Track your collecting progress over time with visual graphs.",
+            "A fun way to see what you've been finding and where the gaps are.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Mail,
+        accent = Color(0xFF4A9FE0),
+        title = "Contact Us",
+        shortLabel = "Contact Us",
+        steps = listOf(
+            "Tap \"Contact Us\" from the home screen tagline section.",
+            "Send feedback, report issues, or suggest new features directly to the developer.",
+            "Your message goes straight to the RockScout team — no bots, no tickets.",
+            "Have a question about a feature or found a bug? This is the place.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Public,
+        accent = Color(0xFF2EC4B6),
+        title = "National & State Parks",
+        shortLabel = "Parks",
+        steps = listOf(
+            "Tap \"National & State Parks\" from the Field Kit section on the home screen.",
+            "Browse over 50 national and state parks that are dig-friendly or geologically significant.",
+            "Each park shows what rocks and minerals you can find there, plus visitor info and common wildlife.",
+            "Tap the bookmark icon on any park to save it to Favorite Spots for quick access.",
         ),
     ),
 )

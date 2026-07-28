@@ -1,0 +1,12 @@
+{
+  "images": [
+    {
+      "filename": "friends_messenger_screen.png",
+      "idiom": "universal"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}

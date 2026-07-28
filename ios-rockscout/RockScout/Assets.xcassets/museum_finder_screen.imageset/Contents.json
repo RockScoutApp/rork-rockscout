@@ -1,0 +1,12 @@
+{
+  "images": [
+    {
+      "filename": "museum_finder_screen.png",
+      "idiom": "universal"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}
