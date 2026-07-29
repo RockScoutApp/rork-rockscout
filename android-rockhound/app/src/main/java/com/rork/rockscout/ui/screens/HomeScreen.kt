@@ -57,6 +57,7 @@ import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Nature
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Diamond
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Group
@@ -228,6 +229,7 @@ import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.TextMid
 import com.rork.rockscout.ui.components.profileBorderColor
 import com.rork.rockscout.ui.components.statusAccent
+import com.rork.rockscout.ui.components.LocalVideoPlayerState
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.screens.AURORA_TILE_BG_URL
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -247,6 +249,7 @@ private data class HomeTile(
 
 @Composable
 fun HomeScreen(navController: NavController) {
+    val videoPlayerState = LocalVideoPlayerState.current
     val repo = AppRepository.instance
     val profile by repo.profile.collectAsStateWithLifecycle()
     val collection by repo.collection.collectAsStateWithLifecycle()
@@ -539,6 +542,9 @@ fun HomeScreen(navController: NavController) {
                     onNoteClick = { showFellowRockScoutsNote = true },
                     onHowToUseClick = { navController.navigate(Routes.HOW_TO_USE) },
                     onContactUsClick = { navController.navigate(Routes.CONTACT_US) },
+                    onTutorialClick = {
+                        videoPlayerState?.showFullscreen()
+                    },
                 )
             }
             item {
@@ -1268,6 +1274,7 @@ private fun HomeTagline(
     onNoteClick: () -> Unit,
     onHowToUseClick: () -> Unit = {},
     onContactUsClick: () -> Unit = {},
+    onTutorialClick: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -1293,6 +1300,11 @@ private fun HomeTagline(
         // Note to Fellow RockScouts button below the pills
         NoteToFellowRockScoutsButton(
             onClick = onNoteClick,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        // Tutorial Video button below the creator note
+        TutorialVideoPillButton(
+            onClick = onTutorialClick,
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -4268,6 +4280,44 @@ private fun HowToUsePillButton(
 }
 
 @Composable
+private fun TutorialVideoPillButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = modifier
+            .sculpted(
+                shape = RoundedCornerShape(16.dp),
+                accent = Citrine,
+                shadowElevation = 5.dp,
+                onClick = onClick,
+            )
+            .clip(RoundedCornerShape(16.dp))
+            .background(Slate900.copy(alpha = 0.75f))
+            .glowingBorder(2.dp, Citrine, RoundedCornerShape(16.dp))
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Filled.PlayCircle,
+            contentDescription = null,
+            tint = Citrine,
+            modifier = Modifier.size(20.dp),
+        )
+        Text(
+            text = "Watch Tutorial Video",
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontWeight = FontWeight.Bold,
+                color = Citrine,
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+@Composable
 private fun ContactUsPillButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -4353,7 +4403,7 @@ private val fellowRockScoutsFeatures: List<FeatureEntry> = listOf(
     FeatureEntry(
         2,
         "My Collection",
-        "build your ultimate personal museum! Catalog every specimen in My Rocks, log epic field captures with the dedicated Field Camera tile (snap a photo without running the ID tool, then save it anywhere — Field Captures, Saved Images, My Rocks, Wishlist, a Field Journal entry, your Profile feed, your Profile background, or even Submit a Specimen — all from one dropdown), curate a wishlist of dream specimens you're chasing, and bookmark your favorite dig spots for instant access — now with a favorite button on every State Park, BLM location, campground, trailhead, and dig site detail screen. Field Captures even has a second swipeable page — a full-page Specimen Map showing a pin for every capture with coordinates, so you can see every find spot on one map. Every specimen card features a glowing Yooperlite heart to like or wishlist at a glance, plus a quick-action dropdown to add to your collection, add to your wishlist, share to your profile feed, or share straight to social media",
+        "build your ultimate personal museum! Catalog every specimen in My Rocks, log epic field captures with the dedicated Field Camera tile (snap a photo without running the ID tool, then save it anywhere — Field Captures, Saved Images, My Rocks, Wishlist, a Field Journal entry, your Profile feed, your Profile background, or even Submit a Specimen — all from one dropdown), curate a wishlist of dream specimens you're chasing, and bookmark your favorite dig spots for instant access — now with a favorite button on every national and state park, BLM location, campground, trailhead, and dig site detail screen. Field Captures even has a second swipeable page — a full-page Specimen Map showing a pin for every capture with coordinates, so you can see every find spot on one map. Every specimen card features a glowing Yooperlite heart to like or wishlist at a glance, plus a quick-action dropdown to add to your collection, add to your wishlist, share to your profile feed, or share straight to social media",
     ),
     FeatureEntry(
         3,
@@ -4363,7 +4413,7 @@ private val fellowRockScoutsFeatures: List<FeatureEntry> = listOf(
     FeatureEntry(
         4,
         "Specimen Database",
-        "a massive 900+ entry encyclopedia with stunning photos, detailed properties, and where-to-find locations — your pocket field guide to the mineral kingdom. The AI identification pipeline actually sees these reference images alongside your photo for visual comparison. And it keeps growing: users can submit their own specimens for review and addition to the database!",
+        "a massive encyclopedia of over 900 specimens with stunning photos, detailed properties, and where-to-find locations — your pocket field guide to the mineral kingdom. The AI identification pipeline actually sees these reference images alongside your photo for visual comparison. And it keeps growing: users can submit their own specimens for review and addition to the database!",
     ),
     FeatureEntry(
         5,
@@ -4388,7 +4438,7 @@ private val fellowRockScoutsFeatures: List<FeatureEntry> = listOf(
     FeatureEntry(
         9,
         "Achievements, Badges, XP & Leveling",
-        "level up your rockhound game! Unlock 101 achievements and 31 badges, earn XP for every action, celebrate level-ups with confetti explosions, share brag-worthy level-up and badge cards, and watch milestone animations for referrals and donations",
+        "level up your rockhound game! Unlock over 100 achievements and over 30 badges, earn XP for every action, celebrate level-ups with confetti explosions, share brag-worthy level-up and badge cards, and watch milestone animations for referrals and donations",
     ),
     FeatureEntry(
         10,
@@ -4398,7 +4448,7 @@ private val fellowRockScoutsFeatures: List<FeatureEntry> = listOf(
     FeatureEntry(
         11,
         "Search, Location, Wildlife & Weather Alerts",
-        "find anything fast with global search across specimens, locations, guides, and now favorite spots (state parks, BLM locations, campgrounds, trailheads, and dig sites); discover nearby hot spots within 100 miles (or up to 250 miles with Premium); get proximity pings when you're close to a dig site; see Common Wildlife tiles on every BLM state guide, dig site, trailhead, campground, state park, and beach detail screen showing the animals you might encounter in that area; receive instant NWS severe weather alerts for your area (severe thunderstorm, tornado, flash flood, hurricane, tropical storm, tsunami, blizzard, winter storm, ice storm, extreme heat/cold, high wind, dust storm, dense fog, fire weather, red flag, smoke/air quality, dense smoke advisory); and tap deep links from notifications to jump straight to a specimen or location",
+        "find anything fast with global search across specimens, locations, guides, and now favorite spots (national and state parks, BLM locations, campgrounds, trailheads, and dig sites); discover nearby hot spots within 100 miles (or up to 250 miles with Premium); get proximity pings when you're close to a dig site; see Common Wildlife tiles on every BLM state guide, dig site, trailhead, campground, national and state park, and beach detail screen showing the animals you might encounter in that area; receive instant NWS severe weather alerts for your area (severe thunderstorm, tornado, flash flood, hurricane, tropical storm, tsunami, blizzard, winter storm, ice storm, extreme heat/cold, high wind, dust storm, dense fog, fire weather, red flag, smoke/air quality, dense smoke advisory); and tap deep links from notifications to jump straight to a specimen or location",
     ),
     FeatureEntry(
         12,
@@ -4418,12 +4468,12 @@ private val fellowRockScoutsFeatures: List<FeatureEntry> = listOf(
     FeatureEntry(
         15,
         "Tokens & Subscriptions",
-        "power your hunts with a token bank for identifications, try everything free for 7 days, unlock unlimited IDs and every feature with $5.99/mo Premium, and support the app with one-time donations that grant tokens and bonus access. Plus a Storage setting in Social Settings lets you choose Standard (150MB) or Maximum (2GB) cache size — Maximum stores all 3,500+ specimen images and every dig site map for offline use",
+        "power your hunts with a token bank for identifications, try everything free for 7 days, unlock unlimited IDs and every feature with $5.99/mo Premium, and support the app with one-time donations that grant tokens and bonus access. Plus a Storage setting in Social Settings lets you choose Standard (150MB) or Maximum (2GB) cache size — Maximum stores all over 3,500 specimen images and every dig site map for offline use",
     ),
     FeatureEntry(
         16,
         "Gear Guide",
-        "curated beginner, intermediate, and advanced gear kits plus 48+ curated rockhounding tools — loupes, rock hammers, hardness kits, UV flashlights, field notebooks, and more — with direct links to Amazon. Contextual gear recommendations appear on every specimen detail, dig site, and identification result so you always know what to bring",
+        "curated beginner, intermediate, and advanced gear kits plus over 45 curated rockhounding tools — loupes, rock hammers, hardness kits, UV flashlights, field notebooks, and more — with direct links to Amazon. Contextual gear recommendations appear on every specimen detail, dig site, and identification result so you always know what to bring",
     ),
     FeatureEntry(
         17,

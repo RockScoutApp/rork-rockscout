@@ -48,7 +48,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Share2, Brush, BookOpen, Lightbulb, Hammer, RefreshCw, Layers, FlaskConical, Skull, Bone, BarChart3, TreePine } from "lucide-react";
+import { Share2, Brush, BookOpen, Lightbulb, Hammer, RefreshCw, Layers, FlaskConical, Skull, Bone, BarChart3, TreePine, Compass } from "lucide-react";
 
 type HowToSection = {
   icon: React.ComponentType<{ className?: string }>;
@@ -685,6 +685,18 @@ const HOW_TO_SECTIONS: HowToSection[] = [
       `Every rock, mineral, and space term used in the app is defined here in plain English.`,
       `Search for a term or browse alphabetically.`,
       `Tap any term to see its full definition with related terms.`,
+    ],
+  },
+  {
+    icon: Compass,
+    accent: "hsl(22 70% 58%)",
+    title: "Exploring Geology — Rock Info Hub",
+    shortLabel: "Rock Info",
+    steps: [
+      `Tap "Exploring Geology" in the Explore & Learn section on the home screen to open the Rock Info hub.`,
+      `Four tiles lead to the core geology reference guides: Rock Types, Mineral ID, Crystal Systems, and Rock Cycle & Tools.`,
+      `This is the starting point for understanding how rocks form, how to identify minerals in the field, and how the rock cycle connects everything together.`,
+      `Each tile opens its own detailed guide — see the individual sections below for Rock Types, Mineral ID Guide, Crystal Systems, and Rock Cycle Tools.`,
     ],
   },
   {
