@@ -12,6 +12,8 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +22,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -61,7 +64,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -71,7 +76,10 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionParameters
+import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.ui.PlayerView
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.Slate800
@@ -79,6 +87,7 @@ import com.rork.rockscout.ui.theme.Slate900
 import com.rork.rockscout.ui.theme.TextHigh
 import com.rork.rockscout.ui.theme.TextMid
 import java.util.Locale
+import kotlin.math.roundToInt
 
 /** Full list of supported audio/subtitle languages in the MKV. */
 private val SUPPORTED_LANGUAGES: List<Pair<String, String>> = listOf(
@@ -113,11 +122,16 @@ fun FloatingVideoPlayer(
 
     val context = LocalContext.current
     val player = remember(state.videoUrl) {
-        ExoPlayer.Builder(context).build().apply {
-            setMediaItem(MediaItem.fromUri(state.videoUrl))
-            prepare()
-            playWhenReady = true
-            addListener(object : Player.Listener {
+        val cacheDataSourceFactory = VideoCacheManager.buildCacheDataSourceFactory(context)
+        val dataSourceFactory = DefaultDataSource.Factory(context, cacheDataSourceFactory)
+        val mediaSourceFactory: MediaSource.Factory = DefaultMediaSourceFactory(dataSourceFactory)
+        ExoPlayer.Builder(context)
+            .setMediaSourceFactory(mediaSourceFactory)
+            .build().apply {
+                setMediaItem(MediaItem.fromUri(state.videoUrl))
+                prepare()
+                playWhenReady = true
+                addListener(object : Player.Listener {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
                     state.updatePlaying(isPlaying)
                 }
@@ -146,6 +160,13 @@ fun FloatingVideoPlayer(
     DisposableEffect(player) {
         onDispose {
             player.release()
+        }
+    }
+
+    // Reset drag offset when entering fullscreen or hiding
+    LaunchedEffect(state.displayMode) {
+        if (state.displayMode != VideoDisplayMode.MINIMIZED) {
+            state.resetDragOffset()
         }
     }
 
@@ -450,14 +471,58 @@ private fun MinimizedPlayer(
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Track accumulated drag within the current gesture (added to the
+    // persisted offset from VideoPlayerState). On release the persisted
+    // offset is updated so the position survives recomposition.
+    var gestureOffsetX by remember { mutableFloatStateOf(0f) }
+    var gestureOffsetY by remember { mutableFloatStateOf(0f) }
+    var isDragging by remember { mutableStateOf(false) }
+
+    val totalOffsetX = state.dragOffsetX + gestureOffsetX
+    val totalOffsetY = state.dragOffsetY + gestureOffsetY
+
     Box(
         modifier = modifier
             .padding(8.dp)
+            .offset { IntOffset(totalOffsetX.roundToInt(), totalOffsetY.roundToInt()) }
             .size(width = 160.dp, height = 284.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(Color.Black)
-            .border(1.dp, Citrine.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
-            .clickable { onMaximize() },
+            .border(
+                1.dp,
+                if (isDragging) Citrine else Citrine.copy(alpha = 0.3f),
+                RoundedCornerShape(12.dp),
+            )
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = { onMaximize() },
+                )
+            }
+            .pointerInput(Unit) {
+                detectDragGesturesAfterLongPress(
+                    onDragStart = {
+                        isDragging = true
+                        gestureOffsetX = 0f
+                        gestureOffsetY = 0f
+                    },
+                    onDragEnd = {
+                        isDragging = false
+                        state.updateDragOffset(totalOffsetX, totalOffsetY)
+                        gestureOffsetX = 0f
+                        gestureOffsetY = 0f
+                    },
+                    onDragCancel = {
+                        isDragging = false
+                        gestureOffsetX = 0f
+                        gestureOffsetY = 0f
+                    },
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        gestureOffsetX += dragAmount.x
+                        gestureOffsetY += dragAmount.y
+                    },
+                )
+            },
     ) {
         // Video surface
         AndroidView(
@@ -470,6 +535,20 @@ private fun MinimizedPlayer(
             },
             modifier = Modifier.fillMaxSize(),
         )
+
+        // Drag hint when not dragging
+        if (!isDragging) {
+            Text(
+                text = "Hold to drag",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = Color.White.copy(alpha = 0.5f),
+                    fontSize = 10.sp,
+                ),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 4.dp),
+            )
+        }
 
         // Control buttons overlay at bottom
         Row(

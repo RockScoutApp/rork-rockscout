@@ -1,9 +1,12 @@
 package com.rork.rockscout.ui.components
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 
 /** Display mode for the floating tutorial video player. */
 enum class VideoDisplayMode {
@@ -30,6 +33,14 @@ class VideoPlayerState {
         private set
 
     var durationMs by mutableLongStateOf(0L)
+        private set
+
+    /** X offset (px) of the minimized player from its default bottom-end position. */
+    var dragOffsetX by mutableFloatStateOf(0f)
+        private set
+
+    /** Y offset (px) of the minimized player from its default bottom-end position. */
+    var dragOffsetY by mutableFloatStateOf(0f)
         private set
 
     /** The URL will be set once the MKV is uploaded. */
@@ -67,6 +78,16 @@ class VideoPlayerState {
 
     fun updateDuration(ms: Long) {
         durationMs = ms
+    }
+
+    fun updateDragOffset(x: Float, y: Float) {
+        dragOffsetX = x
+        dragOffsetY = y
+    }
+
+    fun resetDragOffset() {
+        dragOffsetX = 0f
+        dragOffsetY = 0f
     }
 
     /** Whether the player overlay should be visible at all. */
