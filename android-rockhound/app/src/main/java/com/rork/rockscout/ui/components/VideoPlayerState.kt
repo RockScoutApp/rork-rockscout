@@ -33,7 +33,7 @@ class VideoPlayerState {
         private set
 
     /** The URL will be set once the MKV is uploaded. */
-    var videoUrl: String = "https://h.uguu.se/jAmuzYRn.mkv"
+    var videoUrl: String = "https://litter.catbox.moe/fjgwde.mkv"
 
     fun showFullscreen() {
         displayMode = VideoDisplayMode.FULLSCREEN

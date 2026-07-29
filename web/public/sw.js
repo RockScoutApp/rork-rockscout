@@ -2,7 +2,7 @@
 // Caches the app shell so the site still loads with no connection.
 // Network-first for navigation requests (fresh content when online),
 // cache-first for static assets.
-const CACHE_NAME = "rockscout-v5";
+const CACHE_NAME = "rockscout-v6";
 const TILE_CACHE = "rockscout-tiles-v1";
 const SHELL_ASSETS = [
   "/",

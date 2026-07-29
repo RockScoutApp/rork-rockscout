@@ -90,6 +90,13 @@ private val SUPPORTED_LANGUAGES: List<Pair<String, String>> = listOf(
     "chi" to "中文",
     "ara" to "العربية",
     "hin" to "हिन्दी",
+    "ind" to "Bahasa Indonesia",
+    "jpn" to "日本語",
+    "fil" to "Filipino",
+    "vie" to "Tiếng Việt",
+    "rus" to "Русский",
+    "pol" to "Polski",
+    "ita" to "Italiano",
 )
 
 /**
@@ -589,7 +596,7 @@ private fun ChapterProgressBar(
 
 /** Select an audio track by language index using preferred language codes. */
 private fun setAudioTrack(player: ExoPlayer, langIndex: Int) {
-    val langCodes = listOf("eng", "spa", "fra", "deu", "por", "cmn", "ara", "hin")
+    val langCodes = listOf("eng", "spa", "fra", "deu", "por", "cmn", "ara", "hin", "ind", "jpn", "fil", "vie", "rus", "pol", "ita")
     if (langIndex < langCodes.size) {
         player.trackSelectionParameters = player.trackSelectionParameters
             .buildUpon()
@@ -600,7 +607,7 @@ private fun setAudioTrack(player: ExoPlayer, langIndex: Int) {
 
 /** Select a subtitle track by language index, or -1 to disable. */
 private fun setSubtitleTrack(player: ExoPlayer, langIndex: Int) {
-    val langCodes = listOf("eng", "spa", "fra", "deu", "por", "cmn", "ara", "hin")
+    val langCodes = listOf("eng", "spa", "fra", "deu", "por", "cmn", "ara", "hin", "ind", "jpn", "fil", "vie", "rus", "pol", "ita")
     val builder = player.trackSelectionParameters.buildUpon()
     if (langIndex < 0 || langIndex >= langCodes.size) {
         builder.setTrackTypeDisabled(
