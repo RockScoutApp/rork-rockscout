@@ -44,7 +44,7 @@ class VideoPlayerState {
         private set
 
     /** The URL will be set once the MKV is uploaded. */
-    var videoUrl: String = "https://litter.catbox.moe/s33dfo.mkv"
+    var videoUrl: String = "https://litter.catbox.moe/k6t1s8.mkv"
 
     fun showFullscreen() {
         displayMode = VideoDisplayMode.FULLSCREEN
@@ -108,19 +108,19 @@ val LocalVideoPlayerState = androidx.compose.runtime.staticCompositionLocalOf<Vi
  * Updated after ffmpeg compositing determines actual segment durations. */
 val TUTORIAL_CHAPTERS: List<TutorialChapter> = listOf(
     TutorialChapter("Welcome", 0L),
-    TutorialChapter("AI Rock ID", 27_611L),
-    TutorialChapter("Your Collection", 137_978L),
-    TutorialChapter("Field Tools", 193_044L),
-    TutorialChapter("Dig Sites & Gem Shows", 257_175L),
-    TutorialChapter("Trip Planning", 296_359L),
-    TutorialChapter("Trading & Community", 378_122L),
-    TutorialChapter("Social", 442_383L),
-    TutorialChapter("Aurora & Night Sky", 497_501L),
-    TutorialChapter("Your Profile", 568_685L),
-    TutorialChapter("Reference Library", 609_253L),
-    TutorialChapter("Artifacts & Wonders", 660_897L),
-    TutorialChapter("Field Kit", 715_049L),
-    TutorialChapter("Learn & Explore", 794_592L),
-    TutorialChapter("Premium & Free Tier", 880_352L),
-    TutorialChapter("Outro", 971_598L),
+    TutorialChapter("AI Rock ID", 32_862L),
+    TutorialChapter("Your Collection", 167_053L),
+    TutorialChapter("Field Tools", 235_912L),
+    TutorialChapter("Dig Sites & Gem Shows", 316_343L),
+    TutorialChapter("Trip Planning", 366_994L),
+    TutorialChapter("Trading & Community", 464_979L),
+    TutorialChapter("Social", 546_194L),
+    TutorialChapter("Aurora & Night Sky", 613_250L),
+    TutorialChapter("Your Profile", 695_301L),
+    TutorialChapter("Reference Library", 745_299L),
+    TutorialChapter("Artifacts & Wonders", 808_437L),
+    TutorialChapter("Field Kit", 871_444L),
+    TutorialChapter("Learn & Explore", 969_612L),
+    TutorialChapter("Premium & Free Tier", 1_075_434L),
+    TutorialChapter("Outro", 1_187_865L),
 )
