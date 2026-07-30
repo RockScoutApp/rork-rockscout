@@ -43,8 +43,11 @@ class VideoPlayerState {
     var dragOffsetY by mutableFloatStateOf(0f)
         private set
 
-    /** The URL will be set once the MKV is uploaded. */
-    var videoUrl: String = "https://litter.catbox.moe/k6t1s8.mkv"
+    /**
+     * Tutorial video: 720x1280, English narration, 15 selectable subtitle tracks.
+     * Hosted alongside the RockScout web app so the link never expires.
+     */
+    var videoUrl: String = "https://rockscout.app/tutorial/rockscout-tutorial.mkv"
 
     fun showFullscreen() {
         displayMode = VideoDisplayMode.FULLSCREEN
@@ -104,23 +107,23 @@ val LocalVideoPlayerState = androidx.compose.runtime.staticCompositionLocalOf<Vi
     null
 }
 
-/** Chapter timestamps for the tutorial video.
- * Updated after ffmpeg compositing determines actual segment durations. */
+/** Chapter timestamps for the tutorial video, measured from the narration itself
+ * (total runtime 20:15). */
 val TUTORIAL_CHAPTERS: List<TutorialChapter> = listOf(
     TutorialChapter("Welcome", 0L),
-    TutorialChapter("AI Rock ID", 32_862L),
-    TutorialChapter("Your Collection", 167_053L),
-    TutorialChapter("Field Tools", 235_912L),
-    TutorialChapter("Dig Sites & Gem Shows", 316_343L),
-    TutorialChapter("Trip Planning", 366_994L),
-    TutorialChapter("Trading & Community", 464_979L),
-    TutorialChapter("Social", 546_194L),
-    TutorialChapter("Aurora & Night Sky", 613_250L),
-    TutorialChapter("Your Profile", 695_301L),
-    TutorialChapter("Reference Library", 745_299L),
-    TutorialChapter("Artifacts & Wonders", 808_437L),
-    TutorialChapter("Field Kit", 871_444L),
-    TutorialChapter("Learn & Explore", 969_612L),
-    TutorialChapter("Premium & Free Tier", 1_075_434L),
-    TutorialChapter("Outro", 1_187_865L),
+    TutorialChapter("AI Rock ID", 33_802L),
+    TutorialChapter("Your Collection", 169_300L),
+    TutorialChapter("Field Tools", 233_378L),
+    TutorialChapter("Dig Sites & Gem Shows", 312_790L),
+    TutorialChapter("Trip Planning", 361_273L),
+    TutorialChapter("Trading & Community", 455_131L),
+    TutorialChapter("Social", 535_510L),
+    TutorialChapter("Aurora & Night Sky", 606_328L),
+    TutorialChapter("Your Profile", 691_357L),
+    TutorialChapter("Reference Library", 743_210L),
+    TutorialChapter("Artifacts & Wonders", 808_673L),
+    TutorialChapter("Field Kit", 874_371L),
+    TutorialChapter("Learn & Explore", 969_561L),
+    TutorialChapter("Premium & Free Tier", 1_072_980L),
+    TutorialChapter("Outro", 1_185_593L),
 )

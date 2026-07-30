@@ -13,3 +13,10 @@
 # Site images: 1 day.
 /images/*
   cache-control: public, max-age=86400
+
+# Tutorial video: immutable, served with the Matroska content type so mobile
+# players stream it instead of downloading it as a generic binary.
+/tutorial/*
+  cache-control: public, max-age=31536000, immutable
+  content-type: video/x-matroska
+  accept-ranges: bytes
