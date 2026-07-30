@@ -2,8 +2,12 @@
 // Caches the app shell so the site still loads with no connection.
 // Network-first for navigation requests (fresh content when online),
 // cache-first for static assets.
-const CACHE_NAME = "rockscout-v6";
+const CACHE_NAME = "rockscout-v7";
 const TILE_CACHE = "rockscout-tiles-v1";
+// Caches that must survive activation. TILE_CACHE is deliberately unversioned:
+// downloaded map tiles are expensive to refetch in the field, so a new shell
+// version must not wipe them.
+const KEEP_CACHES = [CACHE_NAME, TILE_CACHE];
 const SHELL_ASSETS = [
   "/",
   "/app",
@@ -23,14 +27,29 @@ const TILE_HOSTS = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_ASSETS)).then(() => self.skipWaiting())
+    caches
+      .open(CACHE_NAME)
+      .then((cache) =>
+        // Add assets one at a time. cache.addAll() is atomic — a single 404 or
+        // flaky response rejects the whole batch, the install fails, and the
+        // site is left with no service worker at all.
+        Promise.all(
+          SHELL_ASSETS.map((url) =>
+            cache.add(new Request(url, { cache: "reload" })).catch(() => undefined)
+          )
+        )
+      )
+      .then(() => self.skipWaiting())
+      .catch(() => self.skipWaiting())
   );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      Promise.all(
+        keys.filter((k) => KEEP_CACHES.indexOf(k) === -1).map((k) => caches.delete(k))
+      )
     ).then(() => self.clients.claim())
   );
 });
@@ -93,6 +112,10 @@ self.addEventListener("fetch", (event) => {
   var request = event.request;
   if (request.method !== "GET") return;
 
+  // Range requests (audio/video seeking) must go straight to the network.
+  // Answering a Range request with a cached 200 breaks media playback.
+  if (request.headers.has("range")) return;
+
   var url = new URL(request.url);
 
   // Map tiles: cache-first into a separate cache, with stale-while-revalidate.
@@ -115,6 +138,9 @@ self.addEventListener("fetch", (event) => {
 
   // Never touch cross-origin or API requests.
   if (url.origin !== self.location.origin) return;
+
+  // Never cache the service worker itself, so a broken SW can always be replaced.
+  if (url.pathname === "/sw.js") return;
 
   // Navigation requests: network-first, fall back to cached shell when offline.
   if (request.mode === "navigate") {

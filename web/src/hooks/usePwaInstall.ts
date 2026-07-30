@@ -5,7 +5,12 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-type Platform = "ios" | "android-chrome" | "desktop-chrome" | "desktop-edge" | "unsupported";
+export type Platform =
+  | "ios"
+  | "android-chrome"
+  | "desktop-chrome"
+  | "desktop-edge"
+  | "unsupported";
 
 /**
  * Detects whether the user is on a platform that can install the site as a PWA.
