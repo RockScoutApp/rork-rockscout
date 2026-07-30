@@ -1,6 +1,6 @@
 import createContextHook from "@nkzw/create-context-hook";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, SCREENSHOT_MODE } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 
 interface ProfileRow {
@@ -28,12 +28,14 @@ function useTierState(): TierState {
         .maybeSingle();
       return (data as ProfileRow) ?? { is_pro: false };
     },
-    enabled: !!user && !!session,
+    enabled: !SCREENSHOT_MODE && !!user && !!session,
     staleTime: 60_000,
   });
 
-  const isPremium = profile?.is_pro ?? false;
-  const isLoading = authLoading || (!!user && profileLoading);
+  const isPremium = SCREENSHOT_MODE ? true : (profile?.is_pro ?? false);
+  const isLoading = SCREENSHOT_MODE
+    ? false
+    : authLoading || (!!user && profileLoading);
 
   return {
     tier: isPremium ? "premium" : "free",

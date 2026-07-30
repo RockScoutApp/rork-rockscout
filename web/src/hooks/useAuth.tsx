@@ -4,6 +4,25 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { syncEntitlement } from "@/lib/entitlement";
 
+/**
+ * Local capture mode. Enabled ONLY by running the dev server with
+ * `VITE_SCREENSHOT_MODE=1` for tutorial-video screenshot capture. It is never
+ * set in production builds, where the flag inlines as `undefined`.
+ */
+export const SCREENSHOT_MODE: boolean =
+  import.meta.env.VITE_SCREENSHOT_MODE === "1";
+
+/** Stand-in user used only while capturing tutorial screenshots. */
+const CAPTURE_USER = {
+  id: "00000000-0000-4000-8000-000000000001",
+  aud: "authenticated",
+  role: "authenticated",
+  email: "field.demo@rockscout.app",
+  app_metadata: {},
+  user_metadata: { display_name: "Field Demo" },
+  created_at: new Date(0).toISOString(),
+} as unknown as User;
+
 interface AuthState {
   session: Session | null;
   user: User | null;
@@ -21,7 +40,7 @@ interface AuthState {
 
 function useAuthState() {
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!SCREENSHOT_MODE);
   const [error, setError] = useState<string | null>(null);
   const [premiumConfirmedAt, setPremiumConfirmedAt] = useState<number | null>(() => {
     try {
@@ -61,6 +80,7 @@ function useAuthState() {
   }, []);
 
   useEffect(() => {
+    if (SCREENSHOT_MODE) return;
     supabase.auth
       .getSession()
       .then(({ data }) => {
@@ -126,7 +146,7 @@ function useAuthState() {
 
   return {
     session,
-    user: session?.user ?? null,
+    user: SCREENSHOT_MODE ? CAPTURE_USER : (session?.user ?? null),
     isLoading,
     error,
     premiumConfirmedAt,

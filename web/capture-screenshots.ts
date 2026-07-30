@@ -133,11 +133,8 @@ async function main() {
         screenshotCount++;
         console.log(`  ✓ Screenshot saved: ${cap.name}.png`);
       } else {
-        // Record a short video clip
-        const filePath = join(CLIP_DIR, `${cap.name}.webm`);
-        const recorder = await page.video?.path();
-        // Playwright records video at context level, so we use a different approach
-        // For simplicity, capture a screenshot for now (video recording requires context-level setup)
+        // Motion for these screens is produced later by the Ken Burns renderer,
+        // so a still frame (plus an optional scrolled-back frame) is all we need.
         const shotPath = join(SHOT_DIR, `${cap.name}.png`);
         await page.screenshot({ path: shotPath, fullPage: false });
 
