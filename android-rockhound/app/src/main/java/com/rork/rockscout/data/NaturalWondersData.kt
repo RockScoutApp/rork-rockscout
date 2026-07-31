@@ -33,12 +33,14 @@ enum class WonderType(val label: String) {
     MOUNTAIN("Mountain"),
 }
 
-/** US Census region for filtering US-based wonders. */
+/** Region filter for natural wonders. The first four are US Census regions;
+ * WORLDWIDE covers all non-US (international) wonders. */
 enum class UsRegion(val label: String) {
     WEST("West"),
     MIDWEST("Midwest"),
     SOUTH("South"),
     NORTHEAST("Northeast"),
+    WORLDWIDE("Worldwide"),
 }
 
 /** Maps a US state name to its Census region. Returns null for non-US locations. */

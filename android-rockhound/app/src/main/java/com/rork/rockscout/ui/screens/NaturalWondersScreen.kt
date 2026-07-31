@@ -127,7 +127,11 @@ fun NaturalWondersScreen(navController: NavController) {
             list = list.filter { it.type == selectedType }
         }
         if (selectedRegion != null) {
-            list = list.filter { it.usRegion() == selectedRegion }
+            list = if (selectedRegion == UsRegion.WORLDWIDE) {
+                list.filter { it.usRegion() == null }
+            } else {
+                list.filter { it.usRegion() == selectedRegion }
+            }
         }
         if (searchQuery.isNotBlank()) {
             val q = searchQuery.lowercase().trim()
