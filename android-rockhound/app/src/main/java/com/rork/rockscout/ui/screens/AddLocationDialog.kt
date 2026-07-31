@@ -28,11 +28,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddLocation
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -88,6 +90,7 @@ import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.Danger
 import com.rork.rockscout.ui.theme.Slate800
+import com.rork.rockscout.ui.theme.Success
 import com.rork.rockscout.ui.theme.TextLow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -131,6 +134,17 @@ private val parkTypes = listOf(
     "State Natural Area" to LocationType.PUBLIC_DIG,
     "County / Regional Park" to LocationType.PUBLIC_DIG,
 )
+
+/**
+ * Returns true when [lat] / [lng] describe a real, mappable point on Earth.
+ * Rejects out-of-range values and the (0, 0) "Null Island" placeholder that
+ * pin-drop maps can emit when no genuine fix was captured.
+ */
+private fun isValidCoordinate(lat: Double, lng: Double): Boolean {
+    return lat in -90.0..90.0 &&
+        lng in -180.0..180.0 &&
+        !(lat == 0.0 && lng == 0.0)
+}
 
 private val wonderTypes = listOf(
     "Geological Wonder" to LocationType.PUBLIC_DIG,
@@ -362,6 +376,7 @@ fun AddLocationDialog(
                 Spacer(Modifier.height(6.dp))
                 if (pinLocation != null) {
                     val loc = pinLocation!!
+                    val coordsValid = isValidCoordinate(loc.first, loc.second)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Filled.LocationOn, contentDescription = null, tint = Aqua, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
@@ -377,6 +392,38 @@ fun AddLocationDialog(
                             style = MaterialTheme.typography.labelSmall,
                             color = TextLow,
                             modifier = Modifier.clickable { showPinPicker = true },
+                        )
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(
+                                if (coordsValid) Success.copy(alpha = 0.12f)
+                                else Danger.copy(alpha = 0.12f),
+                            )
+                            .border(
+                                1.dp,
+                                if (coordsValid) Success.copy(alpha = 0.45f)
+                                else Danger.copy(alpha = 0.45f),
+                                RoundedCornerShape(8.dp),
+                            )
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                    ) {
+                        Icon(
+                            if (coordsValid) Icons.Filled.CheckCircle else Icons.Filled.Warning,
+                            contentDescription = null,
+                            tint = if (coordsValid) Success else Danger,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            if (coordsValid) "Valid map location confirmed"
+                            else "These coordinates don't point to a real place — tap to adjust.",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (coordsValid) Success else Danger,
+                            fontWeight = FontWeight.Medium,
                         )
                     }
                 } else {
@@ -647,7 +694,9 @@ fun AddLocationDialog(
                     containerColor = Citrine,
                     textColor = Color.Black,
                     modifier = Modifier.weight(1.5f),
-                    enabled = !isSubmitting && name.isNotBlank() && pinLocation != null,
+                    enabled = !isSubmitting && name.isNotBlank() &&
+                        pinLocation != null &&
+                        isValidCoordinate(pinLocation!!.first, pinLocation!!.second),
                 )
             }
         }
