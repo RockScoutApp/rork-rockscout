@@ -20,6 +20,7 @@
  *
  * Optional env vars (SMS is a bonus channel, not a requirement):
  *   TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / TWILIO_PHONE_FROM
+ *   TWILIO_PHONE_TO (overrides the default developer destination number)
  */
 
 /** Seconds per code bucket. */
@@ -27,8 +28,8 @@ const BUCKET_SECONDS = 30;
 /** How many past buckets stay valid (10 * 30s = 5 minutes). */
 const CODE_WINDOW_BUCKETS = 10;
 
-/** Destination for the SMS channel. */
-const DEV_PHONE_TO = "+13134256511";
+/** Default destination for the SMS channel (developer's phone). */
+const DEFAULT_DEV_PHONE_TO = "+13134256511";
 
 /** Last-resort HMAC secret when no server key is configured. */
 const FALLBACK_SECRET = "rockscout-dev-2fa";
@@ -106,6 +107,7 @@ export async function handleDevSmsVerify(
     TWILIO_ACCOUNT_SID?: string;
     TWILIO_AUTH_TOKEN?: string;
     TWILIO_PHONE_FROM?: string;
+    TWILIO_PHONE_TO?: string;
     EXPO_PUBLIC_RORK_APP_KEY?: string;
     EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
   },
@@ -127,11 +129,12 @@ export async function handleDevSmsVerify(
       const sid = env.TWILIO_ACCOUNT_SID;
       const token = env.TWILIO_AUTH_TOKEN;
       const from = env.TWILIO_PHONE_FROM;
+      const to = env.TWILIO_PHONE_TO?.trim() || DEFAULT_DEV_PHONE_TO;
 
       let smsSent = false;
-      if (sid && token && from) {
+      if (sid && token && from && from.trim() !== to) {
         smsSent = await sendSms(
-          DEV_PHONE_TO,
+          to,
           from,
           `RockScout Developer Access — your verification code is: ${code}. It expires in 5 minutes.`,
           sid,

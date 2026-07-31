@@ -108,6 +108,7 @@ export default {
           TWILIO_ACCOUNT_SID?: string;
           TWILIO_AUTH_TOKEN?: string;
           TWILIO_PHONE_FROM?: string;
+          TWILIO_PHONE_TO?: string;
           EXPO_PUBLIC_RORK_APP_KEY?: string;
           EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
         },
@@ -271,6 +272,7 @@ type Env = {
   TWILIO_ACCOUNT_SID?: string;
   TWILIO_AUTH_TOKEN?: string;
   TWILIO_PHONE_FROM?: string;
+  TWILIO_PHONE_TO?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
   REVENUECAT_SECRET_API_KEY?: string;
   VAPID_PUBLIC_KEY?: string;
