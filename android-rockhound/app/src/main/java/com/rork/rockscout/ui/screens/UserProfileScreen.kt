@@ -661,6 +661,9 @@ fun UserProfileScreen(
                         onDeleteComment = { commentId ->
                             scope.launch { runCatching { postRepo.deleteComment(commentId) } }
                         },
+                        onEditComment = { commentId, newBody ->
+                            scope.launch { runCatching { postRepo.editComment(commentId, newBody) } }
+                        },
                     )
                 }
             }
@@ -756,6 +759,12 @@ fun UserProfileScreen(
             },
             onDeleteComment = { commentId ->
                 scope.launch { runCatching { postRepo.deleteComment(commentId) } }
+            },
+            onEditComment = { commentId, newBody ->
+                scope.launch { runCatching { postRepo.editComment(commentId, newBody) } }
+            },
+            onEditPost = { postId, newCaption ->
+                scope.launch { runCatching { postRepo.editPostCaption(postId, newCaption) } }
             },
             onReplyImagePicked = { uri ->
                 val key = replyingTo

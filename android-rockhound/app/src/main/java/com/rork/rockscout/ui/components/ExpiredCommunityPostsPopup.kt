@@ -67,6 +67,8 @@ fun ExpiredCommunityPostsPopup(
     onRestore: ((postId: String) -> Unit)? = null,
     onDelete: ((postId: String) -> Unit)? = null,
     onDeleteComment: ((commentId: String) -> Unit)? = null,
+    onEditComment: ((commentId: String, newBody: String) -> Unit)? = null,
+    onEditPost: ((postId: String, newDescription: String) -> Unit)? = null,
     onDismiss: () -> Unit,
 ) {
     Dialog(onDismissRequest = onDismiss) {
@@ -160,6 +162,8 @@ fun ExpiredCommunityPostsPopup(
                             onDelete = onDelete?.let { cb -> { cb(post.id) } },
                             onRestore = onRestore?.let { cb -> { cb(post.id) } },
                             onDeleteComment = onDeleteComment?.let { cb -> { id -> cb(id) } },
+                            onEditComment = onEditComment?.let { cb -> { id, body -> cb(id, body) } },
+                            onEditPost = onEditPost?.let { cb -> { body -> cb(post.id, body) } },
                         )
                     }
                 }

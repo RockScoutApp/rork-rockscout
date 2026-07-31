@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FilterList
@@ -63,6 +64,7 @@ import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.components.sculpted
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
+import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.Danger
 import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
@@ -159,6 +161,8 @@ fun CommunityPostDetailScreen(
     var repostTarget by remember { mutableStateOf<CommunityRepository.PostRow?>(null) }
     var commentSortMode by remember { mutableStateOf(DetailCommentSortMode.Popular) }
     var filterMenuExpanded by remember { mutableStateOf(false) }
+    var showPostEditDialog by remember { mutableStateOf(false) }
+    var postEditBody by remember { mutableStateOf(post.description) }
 
     // Pre-compute comment structure outside LazyListScope so remember{} is valid
     val topLevelComments = remember(comments) { comments.filter { it.parent_comment_id == null } }
@@ -261,7 +265,33 @@ fun CommunityPostDetailScreen(
         // Post title + tagline + description
         item {
             Column {
-                Text(post.title, style = MaterialTheme.typography.headlineSmall, color = DarkTextHigh, fontWeight = FontWeight.Bold)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Text(post.title, style = MaterialTheme.typography.headlineSmall, color = DarkTextHigh, fontWeight = FontWeight.Bold)
+                    if (isMe) {
+                        Box(
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF2A2820))
+                                .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), CircleShape)
+                                .clickable {
+                                    postEditBody = post.description
+                                    showPostEditDialog = true
+                                },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                androidx.compose.material.icons.Icons.Filled.Edit,
+                                contentDescription = "Edit post",
+                                tint = TextLow,
+                                modifier = Modifier.size(14.dp),
+                            )
+                        }
+                    }
+                }
                 if (post.tagline.isNotBlank()) {
                     Spacer(Modifier.height(4.dp))
                     Text(post.tagline, style = MaterialTheme.typography.bodyLarge, color = DarkTextMid)
@@ -432,6 +462,7 @@ fun CommunityPostDetailScreen(
                     authorName = authors[comment.user_id]?.displayName ?: "Unknown",
                     canDelete = isMe || comment.user_id == myUserId,
                     onDelete = { scope.launch { repo.deleteComment(comment.id) } },
+                    onEdit = { newBody -> scope.launch { repo.editComment(comment.id, newBody) } },
                     onImageClick = { url -> viewerImageUrl = url },
                 )
             }
@@ -454,6 +485,7 @@ fun CommunityPostDetailScreen(
                         authorName = authors[firstReply.user_id]?.displayName ?: "Unknown",
                         canDelete = isMe || firstReply.user_id == myUserId,
                         onDelete = { scope.launch { repo.deleteComment(firstReply.id) } },
+                        onEdit = { newBody -> scope.launch { repo.editComment(firstReply.id, newBody) } },
                         onImageClick = { url -> viewerImageUrl = url },
                     )
                     if (firstReplying) {
@@ -554,6 +586,7 @@ fun CommunityPostDetailScreen(
                                         authorName = authors[reply.user_id]?.displayName ?: "Unknown",
                                         canDelete = isMe || reply.user_id == myUserId,
                                         onDelete = { scope.launch { repo.deleteComment(reply.id) } },
+                                        onEdit = { newBody -> scope.launch { repo.editComment(reply.id, newBody) } },
                                         onImageClick = { url -> viewerImageUrl = url },
                                     )
                                     if (replyReplying) {
@@ -713,6 +746,56 @@ fun CommunityPostDetailScreen(
         )
     }
 
+    // Post description edit dialog (author only)
+    if (showPostEditDialog && isMe) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showPostEditDialog = false },
+            containerColor = Color(0xFF1E1C16),
+            titleContentColor = DarkTextHigh,
+            textContentColor = DarkTextMid,
+            title = { Text("Edit post", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = {
+                androidx.compose.material3.OutlinedTextField(
+                    value = postEditBody,
+                    onValueChange = { postEditBody = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2,
+                    maxLines = 6,
+                    colors = androidx.compose.material3.TextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFF3A3830),
+                        unfocusedContainerColor = Color(0xFF3A3830),
+                        focusedTextColor = DarkTextHigh,
+                        unfocusedTextColor = DarkTextHigh,
+                        focusedIndicatorColor = Citrine,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = Citrine,
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                )
+            },
+            confirmButton = {
+                SculptedTextButton(
+                    text = "Save",
+                    onClick = {
+                        scope.launch { repo.editPostDescription(post.id, postEditBody.trim()) }
+                        showPostEditDialog = false
+                    },
+                    accent = Citrine,
+                    textColor = Color.Black,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            dismissButton = {
+                SculptedTextButton(
+                    text = "Cancel",
+                    onClick = { showPostEditDialog = false },
+                    accent = Aqua,
+                    textColor = TextMid,
+                )
+            },
+        )
+    }
+
     // Repost composer
     repostTarget?.let { p ->
         val repAuthor = authors[p.user_id]
@@ -745,11 +828,15 @@ private fun DetailCommentRow(
     authorName: String = "Unknown",
     canDelete: Boolean = false,
     onDelete: (() -> Unit)? = null,
+    onEdit: ((newBody: String) -> Unit)? = null,
     onImageClick: ((String) -> Unit)? = null,
 ) {
     val accent = if (isMine) Citrine else Aqua
     val commentShape = RoundedCornerShape(10.dp)
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var editBody by remember { mutableStateOf(comment.body) }
+    val canEdit = isMine && onEdit != null
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -856,8 +943,69 @@ private fun DetailCommentRow(
                         modifier = Modifier.clickable { showDeleteConfirm = true },
                     )
                 }
+                if (canEdit) {
+                    Text(
+                        "Edit",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Citrine,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable {
+                            editBody = comment.body
+                            showEditDialog = true
+                        },
+                    )
+                }
             }
         }
+    }
+
+    if (showEditDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            containerColor = Color(0xFF1E1C16),
+            titleContentColor = DarkTextHigh,
+            textContentColor = DarkTextMid,
+            title = { Text("Edit comment", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = {
+                androidx.compose.material3.OutlinedTextField(
+                    value = editBody,
+                    onValueChange = { editBody = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2,
+                    maxLines = 5,
+                    colors = androidx.compose.material3.TextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFF3A3830),
+                        unfocusedContainerColor = Color(0xFF3A3830),
+                        focusedTextColor = DarkTextHigh,
+                        unfocusedTextColor = DarkTextHigh,
+                        focusedIndicatorColor = Citrine,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = Citrine,
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                )
+            },
+            confirmButton = {
+                SculptedTextButton(
+                    text = "Save",
+                    onClick = {
+                        if (editBody.isNotBlank()) onEdit?.invoke(editBody.trim())
+                        showEditDialog = false
+                    },
+                    accent = Citrine,
+                    textColor = Color.Black,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            dismissButton = {
+                SculptedTextButton(
+                    text = "Cancel",
+                    onClick = { showEditDialog = false },
+                    accent = Aqua,
+                    textColor = TextMid,
+                )
+            },
+        )
     }
 
     if (showDeleteConfirm) {

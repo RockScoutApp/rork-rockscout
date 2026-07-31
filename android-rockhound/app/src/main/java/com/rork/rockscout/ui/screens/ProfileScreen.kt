@@ -755,6 +755,12 @@ fun ProfileScreen(
                         onDeleteComment = { commentId ->
                             coroutineScope.launch { postRepo.deleteComment(commentId) }
                         },
+                        onEditComment = { commentId, newBody ->
+                            coroutineScope.launch { postRepo.editComment(commentId, newBody) }
+                        },
+                        onEditPost = { newCaption ->
+                            coroutineScope.launch { postRepo.editPostCaption(post.id, newCaption) }
+                        },
                     )
                 }
             }
@@ -1110,6 +1116,12 @@ fun ProfileScreen(
             },
             onDeleteComment = { commentId ->
                 coroutineScope.launch { postRepo.deleteComment(commentId) }
+            },
+            onEditComment = { commentId, newBody ->
+                coroutineScope.launch { postRepo.editComment(commentId, newBody) }
+            },
+            onEditPost = { postId, newCaption ->
+                coroutineScope.launch { postRepo.editPostCaption(postId, newCaption) }
             },
             onDismiss = { showArchivedPosts = false },
         )

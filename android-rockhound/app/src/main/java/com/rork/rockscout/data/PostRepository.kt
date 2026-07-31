@@ -384,6 +384,39 @@ class PostRepository private constructor() {
         }.onFailure { Log.w("PostRepository", "toggleCommentLike failed", it) }
     }
 
+    /** Edit the body of a comment or reply. Only the original author may edit.
+     *  Applies the same profanity filter used when creating comments. */
+    suspend fun editComment(commentId: String, newBody: String): Result<Unit> {
+        val me = currentUserId() ?: return Result.failure(IllegalStateException("Not signed in"))
+        return runCatching {
+            val filtered = ProfanityFilter.filter(newBody)
+            if (filtered.isBlank()) return@runCatching
+            val comments = LocalDataStore.getTable<LocalPostComment>(LocalDataStore.KEY_POST_COMMENTS).toMutableList()
+            val idx = comments.indexOfFirst { it.id == commentId && it.user_id == me }
+            if (idx < 0) return@runCatching
+            comments[idx] = comments[idx].copy(body = filtered)
+            LocalDataStore.setTable(LocalDataStore.KEY_POST_COMMENTS, comments)
+            loadLikesAndComments(_viewedPosts.value.ifEmpty { _myPosts.value })
+            Unit
+        }.onFailure { Log.w("PostRepository", "editComment failed", it) }
+    }
+
+    /** Edit a profile post's caption. Only the post author may edit. */
+    suspend fun editPostCaption(postId: String, newCaption: String): Result<Unit> {
+        val me = currentUserId() ?: return Result.failure(IllegalStateException("Not signed in"))
+        return runCatching {
+            val filtered = ProfanityFilter.filter(newCaption)
+            val posts = LocalDataStore.getTable<LocalPost>(LocalDataStore.KEY_POSTS).toMutableList()
+            val idx = posts.indexOfFirst { it.id == postId && it.user_id == me }
+            if (idx < 0) return@runCatching
+            posts[idx] = posts[idx].copy(caption = filtered)
+            LocalDataStore.setTable(LocalDataStore.KEY_POSTS, posts)
+            loadMyPosts()
+            loadLikesAndComments(_viewedPosts.value.ifEmpty { _myPosts.value })
+            Unit
+        }.onFailure { Log.w("PostRepository", "editPostCaption failed", it) }
+    }
+
     /** Delete a comment (and its child replies) by id. Only the comment author
      *  or the post owner may delete. Also removes associated comment likes. */
     suspend fun deleteComment(commentId: String): Result<Unit> {

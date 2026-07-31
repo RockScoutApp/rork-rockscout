@@ -444,6 +444,12 @@ fun CommunityScreen(navController: NavController) {
             onDeleteComment = { commentId ->
                 scope.launch { repo.deleteComment(commentId) }
             },
+            onEditComment = { commentId, newBody ->
+                scope.launch { repo.editComment(commentId, newBody) }
+            },
+            onEditPost = { postId, newDescription ->
+                scope.launch { repo.editPostDescription(postId, newDescription) }
+            },
             onDismiss = { showExpiredPopup = false },
         )
     }

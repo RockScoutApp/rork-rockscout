@@ -397,6 +397,39 @@ class CommunityRepository private constructor() {
         }.onFailure { Log.w("CommunityRepository", "toggleCommentLike failed", it) }
     }
 
+    /** Edit the body of a community comment or reply. Only the original
+     *  author may edit. Applies the same profanity filter used when creating. */
+    suspend fun editComment(commentId: String, newBody: String): Result<Unit> {
+        val me = currentUserId() ?: return Result.failure(IllegalStateException("Not signed in"))
+        return runCatching {
+            val filtered = ProfanityFilter.filter(newBody)
+            if (filtered.isBlank()) return@runCatching
+            val comments = LocalDataStore.getTable<LocalCommunityPostComment>(LocalDataStore.KEY_COMMUNITY_POST_COMMENTS).toMutableList()
+            val idx = comments.indexOfFirst { it.id == commentId && it.user_id == me }
+            if (idx < 0) return@runCatching
+            comments[idx] = comments[idx].copy(body = filtered)
+            LocalDataStore.setTable(LocalDataStore.KEY_COMMUNITY_POST_COMMENTS, comments)
+            loadLikesAndComments(_feedPosts.value.ifEmpty { _expiredPosts.value })
+            Unit
+        }.onFailure { Log.w("CommunityRepository", "editComment failed", it) }
+    }
+
+    /** Edit a community post's description. Only the post author may edit. */
+    suspend fun editPostDescription(postId: String, newDescription: String): Result<Unit> {
+        val me = currentUserId() ?: return Result.failure(IllegalStateException("Not signed in"))
+        return runCatching {
+            val filtered = ProfanityFilter.filter(newDescription)
+            val posts = LocalDataStore.getTable<LocalCommunityPost>(LocalDataStore.KEY_COMMUNITY_POSTS).toMutableList()
+            val idx = posts.indexOfFirst { it.id == postId && it.user_id == me }
+            if (idx < 0) return@runCatching
+            posts[idx] = posts[idx].copy(description = filtered)
+            LocalDataStore.setTable(LocalDataStore.KEY_COMMUNITY_POSTS, posts)
+            loadFeed()
+            loadExpiredPosts()
+            Unit
+        }.onFailure { Log.w("CommunityRepository", "editPostDescription failed", it) }
+    }
+
     /** Delete a comment (and its child replies) by id. Also removes associated comment likes. */
     suspend fun deleteComment(commentId: String): Result<Unit> {
         return runCatching {

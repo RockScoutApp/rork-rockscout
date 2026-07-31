@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FilterList
@@ -132,11 +133,15 @@ fun CommunityPostCard(
     onDelete: (() -> Unit)? = null,
     onRestore: (() -> Unit)? = null,
     onDeleteComment: ((commentId: String) -> Unit)? = null,
+    onEditComment: ((commentId: String, newBody: String) -> Unit)? = null,
+    onEditPost: ((newDescription: String) -> Unit)? = null,
     onImageClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     var viewerImageUrl by remember { mutableStateOf<String?>(null) }
     var isExpanded by remember(post.id) { mutableStateOf(false) }
+    var showPostEditDialog by remember(post.id) { mutableStateOf(false) }
+    var postEditBody by remember(post.id) { mutableStateOf(post.description) }
 
     DarkCard(
         modifier = modifier
@@ -189,6 +194,28 @@ fun CommunityPostCard(
                     icon = Icons.Filled.Unarchive,
                     contentPadding = PaddingValues(horizontal = 10.dp, vertical = 5.dp),
                 )
+                Spacer(Modifier.width(6.dp))
+            }
+            if (onEditPost != null && isMe) {
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF2A2820))
+                        .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), CircleShape)
+                        .clickable {
+                            postEditBody = post.description
+                            showPostEditDialog = true
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Filled.Edit,
+                        contentDescription = "Edit post",
+                        tint = TextLow,
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
                 Spacer(Modifier.width(6.dp))
             }
             if (onDelete != null) {
@@ -564,6 +591,7 @@ fun CommunityPostCard(
                     isReplying = replyingToCommentId == comment.id,
                     canDelete = isMe || comment.user_id == myUserId,
                     onDelete = onDeleteComment?.let { cb -> { cb(comment.id) } },
+                    onEdit = onEditComment?.let { cb -> { newBody -> cb(comment.id, newBody) } },
                     onImageClick = { url -> viewerImageUrl = url },
                 )
                 if (replyingToCommentId == comment.id) {
@@ -594,6 +622,7 @@ fun CommunityPostCard(
                             parentCommentBody = comment.body,
                             canDelete = isMe || reply.user_id == myUserId,
                             onDelete = onDeleteComment?.let { cb -> { cb(reply.id) } },
+                            onEdit = onEditComment?.let { cb -> { newBody -> cb(reply.id, newBody) } },
                             onImageClick = { url -> viewerImageUrl = url },
                         )
                         if (replyingToCommentId == reply.id) {
@@ -679,6 +708,56 @@ fun CommunityPostCard(
             onDismiss = { viewerImageUrl = null },
         )
     }
+
+    // Post description edit dialog (author only)
+    if (showPostEditDialog && onEditPost != null) {
+        AlertDialog(
+            onDismissRequest = { showPostEditDialog = false },
+            containerColor = Color(0xFF2A2820),
+            titleContentColor = DarkTextHigh,
+            textContentColor = TextLow,
+            title = { Text("Edit post", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = {
+                OutlinedTextField(
+                    value = postEditBody,
+                    onValueChange = { postEditBody = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2,
+                    maxLines = 6,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFF3A3830),
+                        unfocusedContainerColor = Color(0xFF3A3830),
+                        focusedTextColor = DarkTextHigh,
+                        unfocusedTextColor = DarkTextHigh,
+                        focusedIndicatorColor = Citrine,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = Citrine,
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                )
+            },
+            confirmButton = {
+                SculptedTextButton(
+                    text = "Save",
+                    onClick = {
+                        onEditPost.invoke(postEditBody.trim())
+                        showPostEditDialog = false
+                    },
+                    accent = Citrine,
+                    textColor = Color.Black,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            dismissButton = {
+                SculptedTextButton(
+                    text = "Cancel",
+                    onClick = { showPostEditDialog = false },
+                    accent = Aqua,
+                    textColor = TextLow,
+                )
+            },
+        )
+    }
 }
 
 @Composable
@@ -694,11 +773,15 @@ private fun CommunityCommentRow(
     parentCommentBody: String? = null,
     canDelete: Boolean = false,
     onDelete: (() -> Unit)? = null,
+    onEdit: ((newBody: String) -> Unit)? = null,
     onImageClick: ((String) -> Unit)? = null,
 ) {
     val accent = if (isMine) Citrine else Aqua
     val commentShape = RoundedCornerShape(10.dp)
     var showDeleteConfirm by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var editBody by remember { mutableStateOf(comment.body) }
+    val canEdit = isMine && onEdit != null
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -800,8 +883,70 @@ private fun CommunityCommentRow(
                         modifier = Modifier.clickable { showDeleteConfirm = true },
                     )
                 }
+                if (canEdit) {
+                    Text(
+                        "Edit",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Citrine,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable {
+                            editBody = comment.body
+                            showEditDialog = true
+                        },
+                    )
+                }
             }
         }
+    }
+
+    // Comment edit dialog
+    if (showEditDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            containerColor = Color(0xFF2A2820),
+            titleContentColor = DarkTextHigh,
+            textContentColor = TextLow,
+            title = { Text("Edit comment", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = {
+                OutlinedTextField(
+                    value = editBody,
+                    onValueChange = { editBody = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 2,
+                    maxLines = 5,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFF3A3830),
+                        unfocusedContainerColor = Color(0xFF3A3830),
+                        focusedTextColor = DarkTextHigh,
+                        unfocusedTextColor = DarkTextHigh,
+                        focusedIndicatorColor = Citrine,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = Citrine,
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                )
+            },
+            confirmButton = {
+                SculptedTextButton(
+                    text = "Save",
+                    onClick = {
+                        if (editBody.isNotBlank()) onEdit?.invoke(editBody.trim())
+                        showEditDialog = false
+                    },
+                    accent = Citrine,
+                    textColor = Color.Black,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            dismissButton = {
+                SculptedTextButton(
+                    text = "Cancel",
+                    onClick = { showEditDialog = false },
+                    accent = Aqua,
+                    textColor = TextLow,
+                )
+            },
+        )
     }
 
     // Comment deletion confirmation
