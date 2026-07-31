@@ -262,6 +262,13 @@ fun IdentifyScreen(navController: NavController) {
     var moderationReason by remember { mutableStateOf("") }
     var pendingSearchMode by remember { mutableStateOf("rocks") }
 
+    // Determinate staged progress for the identify flow — mirrors the cloud
+    // backup bar: a track that fills up with contextual stage text so the
+    // user sees tangible progress through moderation, AI analysis, and
+    // result-building phases.
+    var identifyProgress by remember { mutableFloatStateOf(0f) }
+    var identifyStage by remember { mutableStateOf("") }
+
     // Live network connectivity — the AI identifier requires a signal to reach
     // the Cloudflare Worker backend. When offline, show a notice so the user
     // knows the identifier is unavailable but they can still browse the on-device
@@ -299,6 +306,8 @@ fun IdentifyScreen(navController: NavController) {
         state = ScanState.SCANNING
         errorMessage = ""
         pendingSearchMode = searchMode
+        identifyProgress = 0.30f
+        identifyStage = "Analyzing with AI vision…"
 
         scope.launch {
             try {
@@ -310,6 +319,7 @@ fun IdentifyScreen(navController: NavController) {
                     android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
                 }
                 capturedBase64 = base64
+                identifyProgress = 0.40f
 
                 // On-device exact-image cache: if the user is re-identifying the
                 // exact same photo (accidental re-submit, re-upload after closing
@@ -324,12 +334,16 @@ fun IdentifyScreen(navController: NavController) {
                     isPremium -> "premium"
                     else -> "free"
                 }
+                identifyStage = "Comparing against ${SeedData.allSpecimens.size} known specimens…"
+                identifyProgress = 0.55f
                 val response = cached ?: IdentifyApi.identify(base64, "image/jpeg", entitlement, pendingSearchMode).also {
                     // Cache only successful, non-error first-pass results. Errors
                     // and clarification re-rank calls are never cached (re-rank
                     // depends on user answers, which are unique each time).
                     if (it.error == null) IdentifyCache.put(imageHash, it)
                 }
+                identifyProgress = 0.85f
+                identifyStage = "Building your results…"
                 if (cached != null) {
                     android.util.Log.d("IdentifyScreen", "Identify cache hit — saved an AI call")
                 }
@@ -433,6 +447,7 @@ fun IdentifyScreen(navController: NavController) {
                     preliminaryMatches = response.matches
                     preliminarySummary = response.summary
                     answers.clear()
+                    identifyProgress = 1f
                     state = ScanState.CLARIFY_QUESTIONS
                 } else {
                     // Confidence >= 85% or no questions — show results directly
@@ -440,6 +455,7 @@ fun IdentifyScreen(navController: NavController) {
                     aiSummary = response.summary
                     webReferences = response.webReferences
                     assemblageResult = response.assemblage
+                    identifyProgress = 1f
                     state = ScanState.RESULTS
                 }
             } catch (e: Exception) {
@@ -473,6 +489,8 @@ fun IdentifyScreen(navController: NavController) {
             return
         }
         state = ScanState.MODERATING
+        identifyProgress = 0.05f
+        identifyStage = "Checking photo…"
         scope.launch {
             try {
                 val base64 = withContext(Dispatchers.IO) {
@@ -482,6 +500,7 @@ fun IdentifyScreen(navController: NavController) {
                     android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP)
                 }
                 val verdict = ImageModerator.scan(base64, "image/jpeg")
+                identifyProgress = 0.15f
                 if (!verdict.allowed) {
                     moderationReason = verdict.reason.ifBlank {
                         "This photo can't be used because it contains content that violates our family-friendly policy."
@@ -499,13 +518,14 @@ fun IdentifyScreen(navController: NavController) {
                     android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP)
                 }
                 val detection = IdentifyApi.detectArtifact(detectBase64, "image/jpeg")
+                identifyProgress = 0.25f
                 if (detection.isArtifact && detection.confidence >= 70) {
                     // Suspected artifact — ask the user to confirm before routing
                     state = ScanState.ARTIFACT_CONFIRM
                 } else {
                     // Not an artifact (or detection failed) — normal rock-ID flow
                     startIdentification()
-                }
+               }
             } catch (e: Exception) {
                 // Moderation hiccup — fail open and proceed to identification.
                 startIdentification()
@@ -516,6 +536,8 @@ fun IdentifyScreen(navController: NavController) {
     fun submitClarification() {
         if (capturedBase64.isEmpty()) return
         state = ScanState.CLARIFYING
+        identifyProgress = 0.30f
+        identifyStage = "Refining identification…"
 
         scope.launch {
             try {
@@ -526,6 +548,8 @@ fun IdentifyScreen(navController: NavController) {
                         value
                     }
                 }
+                identifyProgress = 0.50f
+                identifyStage = "Cross-referencing your answers…"
                 val response = IdentifyApi.clarify(
                     imageBase64 = capturedBase64,
                     mimeType = "image/jpeg",
@@ -533,6 +557,8 @@ fun IdentifyScreen(navController: NavController) {
                     preliminaryMatches = preliminaryMatches,
                     summary = preliminarySummary,
                 )
+                identifyProgress = 0.85f
+                identifyStage = "Building your results…"
 
                 if (response.error != null) {
                     // If clarification fails, fall back to the preliminary results
@@ -571,9 +597,11 @@ fun IdentifyScreen(navController: NavController) {
                     )
                 )
 
+                identifyProgress = 1f
                 state = ScanState.RESULTS
             } catch (e: Exception) {
                 // Fall back to showing preliminary results
+                identifyProgress = 1f
                 state = ScanState.RESULTS
             }
         }
@@ -801,70 +829,92 @@ fun IdentifyScreen(navController: NavController) {
                             shape = RoundedCornerShape(14.dp),
                         )
                     }
-                    ScanState.SCANNING -> Row(
+                    ScanState.SCANNING -> Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        CircularProgressIndicator(color = Citrine, strokeWidth = 3.dp, modifier = Modifier.size(24.dp))
-                        Spacer(Modifier.width(14.dp))
-                        Column {
-                            Text(
-                                "Analyzing with AI vision…",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                            Text(
-                                "Comparing against ${SeedData.allSpecimens.size} known specimens",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextMid,
-                            )
-                            Spacer(Modifier.height(4.dp))
-                            Text(
-                                "This might take a minute. The search is extensive.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextLow,
-                            )
-                        }
+                        Text(
+                            identifyStage.ifBlank { "Analyzing with AI vision…" },
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        LinearProgressIndicator(
+                            progress = { identifyProgress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                            color = Citrine,
+                            trackColor = Citrine.copy(alpha = 0.2f),
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "Comparing against ${SeedData.allSpecimens.size} known specimens — this might take a minute.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextLow,
+                            textAlign = TextAlign.Center,
+                        )
                     }
-                    ScanState.MODERATING -> Row(
+                    ScanState.MODERATING -> Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        CircularProgressIndicator(color = Citrine, strokeWidth = 3.dp, modifier = Modifier.size(24.dp))
-                        Spacer(Modifier.width(14.dp))
-                        Column {
-                            Text(
-                                "Checking photo…",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                            Text(
-                                "Scanning for inappropriate content before identifying",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextMid,
-                            )
-                        }
+                        Text(
+                            identifyStage.ifBlank { "Checking photo…" },
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        LinearProgressIndicator(
+                            progress = { identifyProgress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                            color = Citrine,
+                            trackColor = Citrine.copy(alpha = 0.2f),
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "Scanning for inappropriate content before identifying",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextLow,
+                            textAlign = TextAlign.Center,
+                        )
                     }
-                    ScanState.CLARIFYING -> Row(
+                    ScanState.CLARIFYING -> Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        CircularProgressIndicator(color = Citrine, strokeWidth = 3.dp, modifier = Modifier.size(24.dp))
-                        Spacer(Modifier.width(14.dp))
-                        Column {
-                            Text(
-                                "Refining identification…",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
-                            Text(
-                                "Cross-referencing your answers with the database",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextMid,
-                            )
+                        Text(
+                            identifyStage.ifBlank { "Refining identification…" },
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        LinearProgressIndicator(
+                            progress = { identifyProgress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                            color = Citrine,
+                            trackColor = Citrine.copy(alpha = 0.2f),
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            "Cross-referencing your answers with the database",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextLow,
+                            textAlign = TextAlign.Center,
+                        )
                         }
                     }
                     ScanState.CLARIFY_QUESTIONS -> Row(
@@ -1492,13 +1542,32 @@ private fun PhotoPreview(bitmap: Bitmap?, state: ScanState, onRetake: () -> Unit
                         .background(Color.Black.copy(alpha = 0.40f)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator(color = Citrine, strokeWidth = 3.dp, modifier = Modifier.size(48.dp))
-                        Spacer(Modifier.height(16.dp))
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(horizontal = 32.dp),
+                    ) {
                         Text(
-                            "Checking photo…",
+                            identifyStage.ifBlank { "Checking photo…" },
                             style = MaterialTheme.typography.titleMedium,
                             color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        LinearProgressIndicator(
+                            progress = { identifyProgress },
+                            modifier = Modifier
+                                .fillMaxWidth(0.70f)
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                            color = Citrine,
+                            trackColor = Color(0x33FFFFFF),
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            "Scanning for inappropriate content before identifying",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.7f),
+                            textAlign = TextAlign.Center,
                         )
                     }
                 }
@@ -1534,13 +1603,32 @@ private fun PhotoPreview(bitmap: Bitmap?, state: ScanState, onRetake: () -> Unit
                         .background(Color.Black.copy(alpha = 0.35f)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator(color = Citrine, strokeWidth = 3.dp, modifier = Modifier.size(48.dp))
-                        Spacer(Modifier.height(16.dp))
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(horizontal = 32.dp),
+                    ) {
                         Text(
-                            "Scanning specimen…",
+                            identifyStage.ifBlank { "Scanning specimen…" },
                             style = MaterialTheme.typography.titleMedium,
                             color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        LinearProgressIndicator(
+                            progress = { identifyProgress },
+                            modifier = Modifier
+                                .fillMaxWidth(0.70f)
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                            color = Citrine,
+                            trackColor = Color(0x33FFFFFF),
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            "This might take a minute. The search is extensive.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.7f),
+                            textAlign = TextAlign.Center,
                         )
                     }
                 }
@@ -1553,13 +1641,32 @@ private fun PhotoPreview(bitmap: Bitmap?, state: ScanState, onRetake: () -> Unit
                         .background(Color.Black.copy(alpha = 0.35f)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator(color = Citrine, strokeWidth = 3.dp, modifier = Modifier.size(48.dp))
-                        Spacer(Modifier.height(16.dp))
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(horizontal = 32.dp),
+                    ) {
                         Text(
-                            "Refining results…",
+                            identifyStage.ifBlank { "Refining results…" },
                             style = MaterialTheme.typography.titleMedium,
                             color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(Modifier.height(16.dp))
+                        LinearProgressIndicator(
+                            progress = { identifyProgress },
+                            modifier = Modifier
+                                .fillMaxWidth(0.70f)
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
+                            color = Citrine,
+                            trackColor = Color(0x33FFFFFF),
+                        )
+                        Spacer(Modifier.height(10.dp))
+                        Text(
+                            "Cross-referencing your answers with the database",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White.copy(alpha = 0.7f),
+                            textAlign = TextAlign.Center,
                         )
                     }
                 }

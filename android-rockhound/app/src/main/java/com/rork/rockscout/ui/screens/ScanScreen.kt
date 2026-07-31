@@ -131,6 +131,13 @@ fun ScanScreen(navController: NavController) {
     val scanError by social.scanError.collectAsStateWithLifecycle()
     val connections by social.connections.collectAsStateWithLifecycle()
 
+    // Determinate staged progress for the scan operation — mirrors the cloud
+    // backup bar: an invisible progress track that fills up with contextual
+    // stage text, then populates the results list on completion.
+    var scanProgress by remember { mutableStateOf(0f) }
+    var scanStage by remember { mutableStateOf("") }
+    var foundCount by remember { mutableStateOf(0) }
+
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
     val rootView = androidx.compose.ui.platform.LocalView.current
@@ -237,6 +244,9 @@ fun ScanScreen(navController: NavController) {
                 ScanButton(
                     isScanning = isScanning,
                     radius = profile.scanRadiusMiles,
+                    scanProgress = scanProgress,
+                    scanStage = scanStage,
+                    foundCount = foundCount,
                     onScan = {
                         if (profile.locationMonitoring) {
                             val perms = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -245,12 +255,29 @@ fun ScanScreen(navController: NavController) {
                             }
                             permsLauncher.launch(perms.toTypedArray())
                         }
+                        scanProgress = 0f
+                        scanStage = "Locating nearby hunters…"
+                        foundCount = 0
                         scope.launch {
-                            social.scan(
+                            // Stage 1: locate
+                            scanStage = "Locating nearby hunters…"
+                            kotlinx.coroutines.delay(200)
+                            scanProgress = 0.25f
+                            // Stage 2: query (actual scan runs here)
+                            scanStage = "Searching the field…"
+                            val result = social.scan(
                                 myLat = current.first,
                                 myLng = current.second,
                                 radiusMiles = profile.scanRadiusMiles,
                             )
+                            scanProgress = 0.75f
+                            // Stage 3: tally results
+                            val count = result.getOrNull()?.size ?: 0
+                            foundCount = count
+                            scanStage = if (count > 0) "Found $count ${if (count == 1) "RockScout" else "RockScouts"} nearby!" else "No RockScouts found in range."
+                            kotlinx.coroutines.delay(200)
+                            scanProgress = 1f
+                            scanStage = ""
                         }
                     },
                 )
@@ -431,7 +458,14 @@ fun ScanScreen(navController: NavController) {
 }
 
 @Composable
-private fun ScanButton(isScanning: Boolean, radius: Int, onScan: () -> Unit) {
+private fun ScanButton(
+    isScanning: Boolean,
+    radius: Int,
+    scanProgress: Float,
+    scanStage: String,
+    foundCount: Int,
+    onScan: () -> Unit,
+) {
     val transition = rememberInfiniteTransition(label = "scanGlow")
     val glow by transition.animateFloat(
         initialValue = 0.30f,
@@ -442,7 +476,7 @@ private fun ScanButton(isScanning: Boolean, radius: Int, onScan: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(140.dp)
+            .height(160.dp)
             .sculpted(shape = RoundedCornerShape(22.dp), accent = Citrine, shadowElevation = 7.dp, enabled = !isScanning, onClick = onScan)
             .clip(RoundedCornerShape(22.dp))
             .background(
@@ -465,7 +499,10 @@ private fun ScanButton(isScanning: Boolean, radius: Int, onScan: () -> Unit) {
                 ),
         )
         if (isScanning) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(horizontal = 20.dp),
+            ) {
                 Text("Scanning the area", style = MaterialTheme.typography.titleLarge, color = DarkTextHigh, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(10.dp))
                 // Identification-scan-style circular scanning indicator around the target icon.
@@ -515,22 +552,25 @@ private fun ScanButton(isScanning: Boolean, radius: Int, onScan: () -> Unit) {
                     }
                 }
                 Spacer(Modifier.height(10.dp))
-                Text("Searching for nearby RockScouts…", style = MaterialTheme.typography.bodyMedium, color = DarkTextMid)
-                Spacer(Modifier.height(14.dp))
-                // Linear progress bar to show the scan is actively working.
-                Box(
+                // Determinate progress bar — fills up with the scan stages.
+                LinearProgressIndicator(
+                    progress = { scanProgress },
                     modifier = Modifier
                         .fillMaxWidth(0.82f)
                         .height(6.dp)
-                        .clip(RoundedCornerShape(3.dp))
-                        .background(Color(0x33FFFFFF)),
-                ) {
-                    LinearProgressIndicator(
-                        modifier = Modifier.fillMaxSize(),
-                        color = Citrine,
-                        trackColor = Color.Transparent,
-                    )
-                }
+                        .clip(RoundedCornerShape(3.dp)),
+                    color = Citrine,
+                    trackColor = Color(0x33FFFFFF),
+                )
+                Spacer(Modifier.height(8.dp))
+                // Contextual stage text — shows what's happening or the found count.
+                Text(
+                    text = scanStage.ifBlank { "Searching for nearby RockScouts…" },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (foundCount > 0 && scanProgress >= 1f) Success else DarkTextMid,
+                    fontWeight = if (foundCount > 0 && scanProgress >= 1f) FontWeight.Bold else FontWeight.Normal,
+                    textAlign = TextAlign.Center,
+                )
             }
         } else {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
