@@ -1,5 +1,10 @@
 package com.rork.rockscout.ui.screens
 
+import android.graphics.Bitmap
+import android.graphics.Canvas as AndroidCanvas
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.drawable.BitmapDrawable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,8 +29,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Share
@@ -37,6 +44,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -47,10 +55,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
@@ -63,20 +74,37 @@ import com.rork.rockscout.data.WonderType
 import com.rork.rockscout.data.usRegion
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.FullScreenImageViewer
+import com.rork.rockscout.ui.components.FullscreenMapOverlay
+import com.rork.rockscout.ui.components.MapExpandButton
+import com.rork.rockscout.ui.components.MapOfflineNotice
+import com.rork.rockscout.ui.components.MapViewLifecycleEffect
+import com.rork.rockscout.ui.components.MapZoomControls
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.ShareToProfileComposer
 import com.rork.rockscout.ui.components.TagChip
+import com.rork.rockscout.ui.components.createRockScoutMapView
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.components.sculpted
+import com.rork.rockscout.ui.components.toggleSatelliteView
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
+import com.rork.rockscout.ui.theme.Slate800
 import com.rork.rockscout.ui.theme.TextHigh
 import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.TextMid
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.osmdroid.util.BoundingBox
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.compass.CompassOverlay
+import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -87,6 +115,8 @@ fun NaturalWondersScreen(navController: NavController) {
     var viewerUrls by remember { mutableStateOf<List<String>>(emptyList()) }
     var viewerInitialPage by remember { mutableIntStateOf(0) }
     var shareWonder by remember { mutableStateOf<NaturalWonder?>(null) }
+    var isMapView by remember { mutableStateOf(false) }
+    var isFullscreenMap by remember { mutableStateOf(false) }
     val repo = AppRepository.instance
     val favorites by repo.favoriteSpots.collectAsStateWithLifecycle()
 
@@ -138,6 +168,18 @@ fun NaturalWondersScreen(navController: NavController) {
         containerColor = Color.Transparent,
     ) { innerPadding ->
         RockBackground {
+            if (isMapView) {
+                // ── Map view: all filtered wonders as pins ──
+                WonderMapView(
+                    wonders = filteredWonders,
+                    isFullscreen = false,
+                    onExpand = { isFullscreenMap = true },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = innerPadding.calculateTopPadding())
+                        .navigationBarsPadding(),
+                )
+            } else {
             LazyColumn(
                 modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
                 contentPadding = PaddingValues(
@@ -281,6 +323,7 @@ fun NaturalWondersScreen(navController: NavController) {
                     }
                 }
             }
+            } // end else (list view)
 
             if (viewerUrls.isNotEmpty()) {
                 FullScreenImageViewer(
@@ -290,6 +333,28 @@ fun NaturalWondersScreen(navController: NavController) {
                 )
             }
         }
+    }
+
+    // Full-screen map overlay
+    if (isFullscreenMap) {
+        FullscreenMapOverlay(
+            onDismiss = { isFullscreenMap = false },
+            initialCenter = GeoPoint(20.0, 0.0),
+            initialZoom = 2.0,
+            onMapReady = { fsMv ->
+                val points = filteredWonders.map { GeoPoint(it.latitude, it.longitude) }
+                if (points.isNotEmpty()) {
+                    val box = BoundingBox.fromGeoPoints(points)
+                    fsMv.zoomToBoundingBox(box, false, 48)
+                }
+                filteredWonders.forEach { wonder ->
+                    val marker = WonderMarker(fsMv, wonder)
+                    marker.id = "wonder_fs_${wonder.id}"
+                    fsMv.overlays.add(marker)
+                }
+                withContext(Dispatchers.Main) { fsMv.invalidate() }
+            },
+        )
     }
 
     shareWonder?.let { wonder ->
@@ -525,4 +590,180 @@ private fun WonderType.accentColor(): Color = when (this) {
     WonderType.COASTAL -> Color(0xFF44AACC)
     WonderType.DESERT -> Color(0xFFE8A33D)
     WonderType.MOUNTAIN -> Color(0xFF6FA8C7)
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Map view for Natural Wonders
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Interactive osmdroid map showing every wonder in [wonders] as a colored pin.
+ * Pins are tinted by [WonderType] so volcanic, sedimentary, karst, etc. are
+ * visually distinct. The map auto-fits to show all pins on load, with zoom
+ * controls, satellite toggle, compass, and an expand-to-fullscreen button.
+ * Tapping a pin shows an info bubble with the wonder name and location.
+ */
+@Composable
+private fun WonderMapView(
+    wonders: List<NaturalWonder>,
+    isFullscreen: Boolean,
+    onExpand: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    var mapView by remember { mutableStateOf<MapView?>(null) }
+
+    // Render / refresh pins whenever the filtered list changes.
+    LaunchedEffect(mapView, wonders) {
+        val mv = mapView ?: return@LaunchedEffect
+        mv.overlays.removeAll { it is Marker && it.id?.startsWith("wonder_pin_") == true }
+        wonders.forEach { wonder ->
+            val marker = WonderMarker(mv, wonder)
+            marker.id = "wonder_pin_${wonder.id}"
+            mv.overlays.add(marker)
+        }
+        // Auto-fit to all pins
+        val points = wonders.map { GeoPoint(it.latitude, it.longitude) }
+        if (points.isNotEmpty()) {
+            if (points.size == 1) {
+                mv.controller.animateTo(points.first())
+                mv.controller.setZoom(8.0)
+            } else {
+                val box = BoundingBox.fromGeoPoints(points)
+                mv.zoomToBoundingBox(box, false, 64)
+            }
+        }
+        mv.invalidate()
+    }
+
+    Box(modifier = modifier) {
+        AndroidView(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+                .clip(RoundedCornerShape(20.dp)),
+            factory = { ctx ->
+                createRockScoutMapView(ctx).apply {
+                    controller.setZoom(2.0)
+                    controller.setCenter(GeoPoint(20.0, 0.0))
+                    overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
+                    val compass = CompassOverlay(ctx, this).apply { enableCompass() }
+                    overlays.add(compass)
+                    post {
+                        val d = ctx.resources.displayMetrics.density
+                        compass.setCompassCenter(width - 56f * d, 40f * d)
+                    }
+                    mapView = this
+                }
+            },
+            update = { /* handled by LaunchedEffect */ },
+        )
+
+        // Zoom controls (bottom-right)
+        MapZoomControls(
+            onZoomIn = { mapView?.controller?.zoomIn() },
+            onZoomOut = { mapView?.controller?.zoomOut() },
+            onRecenter = {},
+            showUser = false,
+            onSatellite = { toggleSatelliteView(mapView) },
+            mapView = mapView,
+            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+        )
+
+        // Expand to fullscreen (top-right)
+        MapExpandButton(
+            onClick = onExpand,
+            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp),
+        )
+
+        // Offline notice (top-center)
+        MapOfflineNotice(
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 12.dp),
+        )
+
+        // Pin count badge (top-left)
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(16.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Slate800.copy(alpha = 0.92f))
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+        ) {
+            Text(
+                "${wonders.size} wonder${if (wonders.size != 1) "s" else ""} on map",
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold,
+            )
+        }
+    }
+
+    MapViewLifecycleEffect(mapView)
+}
+
+/**
+ * A map marker for a [NaturalWonder]. The pin is tinted with the wonder's
+ * type accent color. Tapping shows an info bubble with name + location.
+ */
+private class WonderMarker(
+    mapView: MapView,
+    private val wonder: NaturalWonder,
+) : Marker(mapView) {
+    init {
+        position = GeoPoint(wonder.latitude, wonder.longitude)
+        title = wonder.name
+        snippet = wonder.location
+        setAnchor(ANCHOR_CENTER, ANCHOR_BOTTOM)
+        icon = createWonderPinDrawable(mapView.context, wonder.type.accentColor())
+    }
+}
+
+/** Process-wide cache of wonder pin bitmaps keyed by color + density. */
+private val wonderPinCache = java.util.concurrent.ConcurrentHashMap<String, Bitmap>()
+
+/**
+ * Builds (or retrieves from cache) a teardrop pin [Drawable] in the given
+ * [color]. Cached so 73 pins don't allocate 73 separate bitmaps.
+ */
+private fun createWonderPinDrawable(
+    context: android.content.Context,
+    color: Color,
+): android.graphics.drawable.Drawable {
+    val density = context.resources.displayMetrics.density
+    val key = "wonder_pin_${density}_${color.toArgb()}"
+    val bmp = wonderPinCache.getOrPut(key) {
+        buildWonderPinBitmap(density, color)
+    }
+    return BitmapDrawable(context.resources, bmp)
+}
+
+/** Builds the teardrop pin bitmap with a white inner ring. */
+private fun buildWonderPinBitmap(density: Float, color: Color): Bitmap {
+    val sizePx = (28 * density).toInt().coerceAtLeast(28)
+    val bmp = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+    val canvas = AndroidCanvas(bmp)
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    val cx = sizePx / 2f
+    val cy = sizePx / 2f
+    val r = sizePx / 3f
+
+    paint.color = color.toArgb()
+    val path = Path().apply {
+        moveTo(cx, sizePx.toFloat())
+        lineTo(cx - r * 0.9f, cy + r * 0.4f)
+        lineTo(cx + r * 0.9f, cy + r * 0.4f)
+        close()
+    }
+    canvas.drawPath(path, paint)
+    canvas.drawCircle(cx, cy, r, paint)
+
+    paint.color = android.graphics.Color.WHITE
+    paint.style = Paint.Style.STROKE
+    paint.strokeWidth = 2.5f * density
+    canvas.drawCircle(cx, cy, r, paint)
+    paint.style = Paint.Style.FILL
+    canvas.drawCircle(cx, cy, r * 0.35f, paint)
+
+    return bmp
 }
