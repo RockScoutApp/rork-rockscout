@@ -125,6 +125,7 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.rork.rockscout.data.AchievementsRepository
 import com.rork.rockscout.data.AdditionalSpecimens
@@ -286,6 +287,9 @@ fun HomeScreen(navController: NavController) {
     var showPinPad by remember { mutableStateOf(false) }
     var showSmsVerify by remember { mutableStateOf(false) }
     var smsVerifying by remember { mutableStateOf(false) }
+    var isResending by remember { mutableStateOf(false) }
+    var resendSentAtMillis by remember { mutableStateOf(0L) }
+    var resendJustSent by remember { mutableStateOf(false) }
     var smsError by remember { mutableStateOf<String?>(null) }
     // Code returned directly by the backend when SMS delivery isn't available.
     // Shown inline only when notifications are blocked, so the developer is
@@ -1203,6 +1207,9 @@ fun HomeScreen(navController: NavController) {
         if (showSmsVerify) {
             DevSmsVerifyOverlay(
                 isVerifying = smsVerifying,
+                isResending = isResending,
+                resendSentAtMillis = resendSentAtMillis,
+                resendJustSent = resendJustSent,
                 error = smsError,
                 hintCode = if (com.rork.rockscout.data.NotificationHelper.hasNotificationPermission(context)) null else devHintCode,
                 onVerify = { code ->
@@ -1220,11 +1227,15 @@ fun HomeScreen(navController: NavController) {
                     }
                 },
                 onResend = {
-                    smsVerifying = true
+                    if (isResending) return@DevSmsVerifyOverlay
+                    isResending = true
                     smsError = null
+                    resendJustSent = false
                     scope.launch {
                         devHintCode = runCatching { sendDevVerificationCode(context) }.getOrNull()
-                        smsVerifying = false
+                        isResending = false
+                        resendSentAtMillis = System.currentTimeMillis()
+                        resendJustSent = true
                     }
                 },
                 onDismiss = { showSmsVerify = false },
@@ -4700,6 +4711,9 @@ private fun FellowRockScoutsNoteDialog(
 @Composable
 private fun DevSmsVerifyOverlay(
     isVerifying: Boolean,
+    isResending: Boolean,
+    resendSentAtMillis: Long,
+    resendJustSent: Boolean,
     error: String?,
     hintCode: String?,
     onVerify: (String) -> Unit,
@@ -4708,6 +4722,24 @@ private fun DevSmsVerifyOverlay(
 ) {
     var entered by remember { mutableStateOf("") }
     var localError by remember { mutableStateOf(false) }
+
+    // 30-second cooldown after a resend so the user can't spam the button.
+    val cooldownSeconds = 30
+    var nowMillis by remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(resendSentAtMillis) {
+        if (resendSentAtMillis > 0L) {
+            while (true) {
+                nowMillis = System.currentTimeMillis()
+                if (nowMillis - resendSentAtMillis >= cooldownSeconds * 1000L) break
+                delay(1000L)
+            }
+        }
+    }
+    val cooldownRemaining = remember(resendSentAtMillis, nowMillis) {
+        if (resendSentAtMillis == 0L) 0
+        else ((cooldownSeconds * 1000L - (nowMillis - resendSentAtMillis)) / 1000).coerceAtLeast(0).toInt()
+    }
+    val resendDisabled = isResending || cooldownRemaining > 0
 
     Box(
         modifier = Modifier
@@ -4865,12 +4897,34 @@ private fun DevSmsVerifyOverlay(
                 }
                 Spacer(Modifier.height(16.dp))
             }
+            // Resend button with cooldown + success confirmation
+            val resendLabel = when {
+                isResending -> "Sending…"
+                cooldownRemaining > 0 -> "Resend in ${cooldownRemaining}s"
+                resendJustSent -> "Resend code"
+                else -> "Resend code"
+            }
             SculptedTextButton(
-                text = "Resend code",
-                onClick = { entered = ""; localError = false; onResend() },
+                text = resendLabel,
+                onClick = {
+                    if (resendDisabled) return@SculptedTextButton
+                    entered = ""
+                    localError = false
+                    onResend()
+                },
                 accent = Aqua,
                 textColor = Aqua,
+                enabled = !resendDisabled,
             )
+            if (resendJustSent && !isResending && cooldownRemaining > 0) {
+                Text(
+                    text = "A new code was emailed.",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Aqua,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+            }
         }
     }
 }
