@@ -54,7 +54,9 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.rork.rockscout.data.NaturalWonder
 import com.rork.rockscout.data.NaturalWondersData
+import com.rork.rockscout.data.UsRegion
 import com.rork.rockscout.data.WonderType
+import com.rork.rockscout.data.usRegion
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.FullScreenImageViewer
 import com.rork.rockscout.ui.components.RockBackground
@@ -77,15 +79,19 @@ import com.rork.rockscout.ui.theme.TextMid
 fun NaturalWondersScreen(navController: NavController) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf<WonderType?>(null) }
+    var selectedRegion by remember { mutableStateOf<UsRegion?>(null) }
     var viewerUrls by remember { mutableStateOf<List<String>>(emptyList()) }
     var viewerInitialPage by remember { mutableIntStateOf(0) }
     var shareWonder by remember { mutableStateOf<NaturalWonder?>(null) }
 
     val allWonders = remember { NaturalWondersData.allWonders }
-    val filteredWonders = remember(allWonders, searchQuery, selectedType) {
+    val filteredWonders = remember(allWonders, searchQuery, selectedType, selectedRegion) {
         var list = allWonders
         if (selectedType != null) {
             list = list.filter { it.type == selectedType }
+        }
+        if (selectedRegion != null) {
+            list = list.filter { it.usRegion() == selectedRegion }
         }
         if (searchQuery.isNotBlank()) {
             val q = searchQuery.lowercase().trim()
@@ -202,16 +208,30 @@ fun NaturalWondersScreen(navController: NavController) {
                     }
                 }
 
-                // Filter chips
+                // Type filter chips
                 item {
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp),
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        FilterChip("All", selectedType == null) { selectedType = null }
+                        WonderFilterChip("All Types", selectedType == null) { selectedType = null }
                         WonderType.entries.forEach { type ->
-                            FilterChip(type.label, selectedType == type) { selectedType = type }
+                            WonderFilterChip(type.label, selectedType == type) { selectedType = type }
+                        }
+                    }
+                }
+
+                // US region filter chips
+                item {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        WonderFilterChip("All Regions", selectedRegion == null, selectedColor = Citrine) { selectedRegion = null }
+                        UsRegion.entries.forEach { region ->
+                            WonderFilterChip(region.label, selectedRegion == region, selectedColor = Citrine) { selectedRegion = region }
                         }
                     }
                 }
@@ -276,8 +296,13 @@ fun NaturalWondersScreen(navController: NavController) {
 }
 
 @Composable
-private fun FilterChip(label: String, isSelected: Boolean, onClick: () -> Unit) {
-    val accent = if (isSelected) Aqua else Color(0xFF2A2820)
+private fun WonderFilterChip(
+    label: String,
+    isSelected: Boolean,
+    selectedColor: Color = Aqua,
+    onClick: () -> Unit,
+) {
+    val accent = if (isSelected) selectedColor else Color(0xFF2A2820)
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))

@@ -33,6 +33,75 @@ enum class WonderType(val label: String) {
     MOUNTAIN("Mountain"),
 }
 
+/** US Census region for filtering US-based wonders. */
+enum class UsRegion(val label: String) {
+    WEST("West"),
+    MIDWEST("Midwest"),
+    SOUTH("South"),
+    NORTHEAST("Northeast"),
+}
+
+/** Maps a US state name to its Census region. Returns null for non-US locations. */
+fun stateToRegion(state: String): UsRegion? {
+    val s = state.lowercase().trim()
+    return when (s) {
+        // Northeast
+        "connecticut", "maine", "massachusetts", "new hampshire", "rhode island",
+        "vermont", "new jersey", "new york", "pennsylvania" -> UsRegion.NORTHEAST
+        // Midwest
+        "illinois", "indiana", "michigan", "ohio", "wisconsin", "iowa", "kansas",
+        "minnesota", "missouri", "nebraska", "north dakota", "south dakota" -> UsRegion.MIDWEST
+        // South
+        "delaware", "florida", "georgia", "maryland", "north carolina", "south carolina",
+        "virginia", "district of columbia", "washington d.c.", "washington dc", "west virginia",
+        "alabama", "kentucky", "mississippi", "tennessee", "arkansas", "louisiana",
+        "oklahoma", "texas" -> UsRegion.SOUTH
+        // West
+        "arizona", "colorado", "idaho", "montana", "nevada", "new mexico", "utah",
+        "wyoming", "alaska", "california", "hawaii", "oregon", "washington" -> UsRegion.WEST
+        else -> null
+    }
+}
+
+/**
+ * Determines the US region for a wonder based on its location string.
+ * Returns null for non-US wonders or locations that can't be mapped.
+ */
+fun NaturalWonder.usRegion(): UsRegion? {
+    val loc = location.lowercase().trim()
+    if (!loc.contains("usa") && !loc.contains("u.s.")) return null
+    // Strip common suffixes and border notation
+    val cleaned = loc
+        .replace("–usa", "")
+        .replace("-usa", "")
+        .replace(", usa", "")
+        .replace(" usa", "")
+        .replace("–", " ")
+        .replace("—", " ")
+        .replace("border", "")
+        .trim()
+        .trimEnd(',')
+        .trim()
+    // Check each known state — handle multi-state locations like "arizona–utah"
+    val states = listOf(
+        "arizona", "california", "colorado", "idaho", "montana", "nevada", "new mexico",
+        "utah", "wyoming", "alaska", "hawaii", "oregon", "washington",
+        "connecticut", "maine", "massachusetts", "new hampshire", "rhode island",
+        "vermont", "new jersey", "new york", "pennsylvania",
+        "illinois", "indiana", "michigan", "ohio", "wisconsin", "iowa", "kansas",
+        "minnesota", "missouri", "nebraska", "north dakota", "south dakota",
+        "delaware", "florida", "georgia", "maryland", "north carolina", "south carolina",
+        "virginia", "west virginia", "alabama", "kentucky", "mississippi",
+        "tennessee", "arkansas", "louisiana", "oklahoma", "texas",
+    )
+    for (state in states) {
+        if (cleaned.contains(state)) {
+            return stateToRegion(state)
+        }
+    }
+    return null
+}
+
 /** Curated list of worldwide natural wonders with geological context. */
 object NaturalWondersData {
 
