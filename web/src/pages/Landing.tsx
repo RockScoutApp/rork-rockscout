@@ -128,7 +128,7 @@ const STATS = [
   { value: "900+", label: "Specimens in the database" },
   { value: "50", label: "US states & territories mapped" },
   { value: "4.9★", label: "Early tester rating" },
-  { value: "Yes & No", label: "Free read-only PWA for learning · Pro unlocks IDs, camera & social" },
+  { value: "Free & Premium", label: "Free read-only PWA for learning · Premium unlocks IDs, camera & social" },
 ];
 
 // Specimen marquee — the "wow" strip that names real minerals
