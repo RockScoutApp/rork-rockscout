@@ -800,6 +800,7 @@ internal fun ListingEditorDialog(
     var showWishlistPicker by remember { mutableStateOf(false) }
     var showSavedImagePicker by remember { mutableStateOf(false) }
     var showDatabasePicker by remember { mutableStateOf(false) }
+    var pendingRemoveTag by remember { mutableStateOf<String?>(null) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -1132,7 +1133,7 @@ internal fun ListingEditorDialog(
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(Citrine.copy(alpha = 0.14f))
                                 .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
-                                .clickable { tags.remove(tag) }
+                                .clickable { pendingRemoveTag = tag }
                                 .padding(horizontal = 10.dp, vertical = 5.dp),
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -1192,6 +1193,23 @@ internal fun ListingEditorDialog(
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
     )
+
+    pendingRemoveTag?.let { tag ->
+        AlertDialog(
+            onDismissRequest = { pendingRemoveTag = null },
+            title = { Text("Remove tag?", fontWeight = FontWeight.Bold) },
+            text = { Text("Remove the tag \"$tag\" from this listing?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    tags.remove(tag)
+                    pendingRemoveTag = null
+                }) { Text("Remove", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingRemoveTag = null }) { Text("Cancel") }
+            },
+        )
+    }
 
     if (showCapturePicker) {
         CapturePickerSheet(

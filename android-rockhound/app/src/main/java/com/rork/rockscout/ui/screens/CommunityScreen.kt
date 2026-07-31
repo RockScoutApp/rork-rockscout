@@ -138,6 +138,10 @@ fun CommunityScreen(navController: NavController) {
     var reportSubmitted by remember { mutableStateOf(false) }
     var repostTarget by remember { mutableStateOf<CommunityRepository.PostRow?>(null) }
 
+    // Pending comment/reply image removal (requires confirmation)
+    var pendingCommentImageRemovePostId by remember { mutableStateOf<String?>(null) }
+    var pendingReplyImageRemove by remember { mutableStateOf(false) }
+
     // Per-post comment bodies (text being typed)
     val commentBodies = remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     // Reply bodies keyed by comment ID
@@ -421,14 +425,10 @@ fun CommunityScreen(navController: NavController) {
                 }
             },
             onCommentImageRemove = { postId ->
-                commentImageUris.value = commentImageUris.value - postId
-                commentImageErrors.value = commentImageErrors.value - postId
+                pendingCommentImageRemovePostId = postId
             },
             onReplyImageRemove = {
-                replyingTo?.let {
-                    replyImageUris.value = replyImageUris.value - it
-                    replyImageErrors.value = replyImageErrors.value - it
-                }
+                pendingReplyImageRemove = true
             },
             onRestore = { postId ->
                 scope.launch {
@@ -442,6 +442,86 @@ fun CommunityScreen(navController: NavController) {
                 showDeleteConfirm = true
             },
             onDismiss = { showExpiredPopup = false },
+        )
+    }
+
+    // ─── Comment image removal confirmation ───
+    pendingCommentImageRemovePostId?.let { postId ->
+        AlertDialog(
+            onDismissRequest = { pendingCommentImageRemovePostId = null },
+            containerColor = Color(0xFF1E1C16),
+            titleContentColor = DarkTextHigh,
+            textContentColor = DarkTextMid,
+            title = { Text("Remove photo?", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    "Remove this photo from your comment?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = DarkTextMid,
+                )
+            },
+            confirmButton = {
+                SculptedTextButton(
+                    text = "Remove",
+                    onClick = {
+                        commentImageUris.value = commentImageUris.value - postId
+                        commentImageErrors.value = commentImageErrors.value - postId
+                        pendingCommentImageRemovePostId = null
+                    },
+                    accent = Danger,
+                    textColor = Danger,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            dismissButton = {
+                SculptedTextButton(
+                    text = "Cancel",
+                    onClick = { pendingCommentImageRemovePostId = null },
+                    accent = Citrine,
+                    textColor = DarkTextMid,
+                )
+            },
+        )
+    }
+
+    // ─── Reply image removal confirmation ───
+    if (pendingReplyImageRemove) {
+        AlertDialog(
+            onDismissRequest = { pendingReplyImageRemove = false },
+            containerColor = Color(0xFF1E1C16),
+            titleContentColor = DarkTextHigh,
+            textContentColor = DarkTextMid,
+            title = { Text("Remove photo?", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    "Remove this photo from your reply?",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = DarkTextMid,
+                )
+            },
+            confirmButton = {
+                SculptedTextButton(
+                    text = "Remove",
+                    onClick = {
+                        replyingTo?.let {
+                            replyImageUris.value = replyImageUris.value - it
+                            replyImageErrors.value = replyImageErrors.value - it
+                        }
+                        pendingReplyImageRemove = false
+                    },
+                    accent = Danger,
+                    textColor = Danger,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            dismissButton = {
+                SculptedTextButton(
+                    text = "Cancel",
+                    onClick = { pendingReplyImageRemove = false },
+                    accent = Citrine,
+                    textColor = DarkTextMid,
+                )
+            },
         )
     }
 

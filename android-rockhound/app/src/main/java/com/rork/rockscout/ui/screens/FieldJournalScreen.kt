@@ -530,6 +530,7 @@ private fun JournalEditorScreen(
     var weatherSummary by remember { mutableStateOf(initial?.weatherSummary ?: "") }
     var pendingPhotoDeleteIdx by remember { mutableStateOf<Int?>(null) }
     var pendingDetachCaptureIdx by remember { mutableStateOf<Int?>(null) }
+    var pendingRemoveMarkerIdx by remember { mutableStateOf<Int?>(null) }
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -936,7 +937,7 @@ private fun JournalEditorScreen(
                             SculptedIconButton(
                                 icon = Icons.Filled.Delete,
                                 contentDescription = "Remove marker",
-                                onClick = { specimenMarkers.removeAt(idx) },
+                                onClick = { pendingRemoveMarkerIdx = idx },
                                 accent = Aqua,
                                 iconTint = TextLow,
                                 size = 32.dp,
@@ -1046,6 +1047,21 @@ private fun JournalEditorScreen(
                 showTripPicker = false
             },
         )
+    }
+    pendingRemoveMarkerIdx?.let { idx ->
+        if (idx in specimenMarkers.indices) {
+            DeleteConfirmDialog(
+                title = "Remove specimen pin?",
+                message = "Remove this specimen marker from the journal entry? You'll need to re-drop it on the map if you change your mind.",
+                onConfirm = {
+                    specimenMarkers.removeAt(idx)
+                    pendingRemoveMarkerIdx = null
+                },
+                onDismiss = { pendingRemoveMarkerIdx = null },
+            )
+        } else {
+            pendingRemoveMarkerIdx = null
+        }
     }
     pendingPhotoDeleteIdx?.let { idx ->
         if (idx in photoUris.indices) {

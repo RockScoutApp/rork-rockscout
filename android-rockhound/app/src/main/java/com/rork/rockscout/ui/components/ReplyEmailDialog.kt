@@ -150,6 +150,10 @@ fun ReplyEmailDialog(
     var showSavedImagePicker by remember { mutableStateOf(false) }
     var totalSizeError by remember { mutableStateOf<String?>(null) }
 
+    // --- Pending removal state for confirmation dialogs ---
+    var pendingRemoveCapturedPhoto by remember { mutableStateOf(false) }
+    var pendingRemoveAttachmentIdx by remember { mutableStateOf<Int?>(null) }
+
     val capturedCount = if (includeCapturedPhoto && capturedBitmap != null) 1 else 0
     val totalPhotos = capturedCount + extraAttachments.size
     val canAddMore = totalPhotos < maxImages
@@ -304,7 +308,7 @@ fun ReplyEmailDialog(
                     if (includeCapturedPhoto && capturedBitmap != null) {
                         AttachmentThumbnail(
                             modifier = Modifier.size(56.dp),
-                            onRemove = { includeCapturedPhoto = false },
+                            onRemove = { pendingRemoveCapturedPhoto = true },
                         ) {
                             Image(
                                 bitmap = capturedBitmap.asImageBitmap(),
@@ -319,7 +323,7 @@ fun ReplyEmailDialog(
                     extraAttachments.forEachIndexed { idx, attachment ->
                         AttachmentThumbnail(
                             modifier = Modifier.size(56.dp),
-                            onRemove = { extraAttachments.removeAt(idx) },
+                            onRemove = { pendingRemoveAttachmentIdx = idx },
                         ) {
                             AsyncImage(
                                 model = attachment.uri,
@@ -453,6 +457,68 @@ fun ReplyEmailDialog(
             )
         },
     )
+
+    // --- Photo-removal confirmation dialogs ---
+    if (pendingRemoveCapturedPhoto) {
+        AlertDialog(
+            onDismissRequest = { pendingRemoveCapturedPhoto = false },
+            containerColor = Color(0xFF1E1C16),
+            titleContentColor = DarkTextHigh,
+            textContentColor = DarkTextMid,
+            title = { Text("Remove photo?", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = { Text("Remove the original ID photo from the email attachments?", color = DarkTextMid) },
+            confirmButton = {
+                SculptedTextButton(
+                    text = "Remove",
+                    onClick = {
+                        includeCapturedPhoto = false
+                        pendingRemoveCapturedPhoto = false
+                    },
+                    accent = Danger,
+                    textColor = Danger,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            dismissButton = {
+                SculptedTextButton(
+                    text = "Cancel",
+                    onClick = { pendingRemoveCapturedPhoto = false },
+                    accent = Citrine,
+                    textColor = DarkTextMid,
+                )
+            },
+        )
+    }
+    pendingRemoveAttachmentIdx?.let { idx ->
+        AlertDialog(
+            onDismissRequest = { pendingRemoveAttachmentIdx = null },
+            containerColor = Color(0xFF1E1C16),
+            titleContentColor = DarkTextHigh,
+            textContentColor = DarkTextMid,
+            title = { Text("Remove photo?", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = { Text("Remove this photo from the email attachments?", color = DarkTextMid) },
+            confirmButton = {
+                SculptedTextButton(
+                    text = "Remove",
+                    onClick = {
+                        if (idx in extraAttachments.indices) extraAttachments.removeAt(idx)
+                        pendingRemoveAttachmentIdx = null
+                    },
+                    accent = Danger,
+                    textColor = Danger,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            dismissButton = {
+                SculptedTextButton(
+                    text = "Cancel",
+                    onClick = { pendingRemoveAttachmentIdx = null },
+                    accent = Citrine,
+                    textColor = DarkTextMid,
+                )
+            },
+        )
+    }
 }
 
 /**
