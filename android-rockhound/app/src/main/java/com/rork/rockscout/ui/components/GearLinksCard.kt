@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.rork.rockscout.data.AffiliateClickTracker
 import com.rork.rockscout.data.GearItem
 import com.rork.rockscout.data.SafeLinkOpener
 import com.rork.rockscout.ui.theme.Aqua
@@ -69,6 +70,7 @@ fun GearLinksCard(
         DarkCard(modifier = Modifier.fillMaxWidth(), accent = accent) {
             items.forEach { item ->
                 GearItemRow(item = item, accent = accent, onClick = {
+                    AffiliateClickTracker.recordClick(context, item.id, item.name)
                     SafeLinkOpener.openUrl(context, item.url)
                 })
                 if (item != items.last()) {

@@ -45,6 +45,7 @@ import {
   Landmark,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
+import { recordAffiliateClick } from "@/lib/affiliate-tracker";
 import { SITE } from "@/content/legal";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
@@ -876,6 +877,7 @@ const FieldStories = () => (
                           href={item.url}
                           target="_blank"
                           rel="noopener noreferrer"
+                          onClick={() => recordAffiliateClick(item.name.replace(/\s+/g, '_').toLowerCase(), item.name)}
                           className="flex items-center gap-2 rounded-xl border border-border/70 bg-card px-2.5 py-1.5 text-xs text-card-foreground transition-colors hover:border-primary/40 hover:bg-primary/5"
                         >
                           <span className="text-sm" aria-hidden>{item.emoji}</span>

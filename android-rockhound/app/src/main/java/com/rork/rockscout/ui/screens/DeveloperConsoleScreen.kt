@@ -100,6 +100,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import com.rork.rockscout.data.AdAnalyticsTracker
+import com.rork.rockscout.data.AffiliateClickTracker
 import com.rork.rockscout.data.BugLogger
 import com.rork.rockscout.data.CustomDigLocationStore
 import com.rork.rockscout.data.CustomGemShowStore
@@ -357,6 +358,178 @@ private fun AnalyticsTab() {
                         accent = Aqua,
                         modifier = Modifier.weight(1f),
                         large = true,
+                    )
+                }
+            }
+        }
+
+        // ── Affiliate Click Analytics ──
+        item { PageTitle("Affiliate Clicks", "Amazon gear guide click-through tracking") }
+
+        item {
+            val affState by AffiliateClickTracker.state.collectAsState()
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    StatCard(
+                        title = "Total Clicks",
+                        value = affState.totalClicks.toString(),
+                        accent = Citrine,
+                        modifier = Modifier.weight(1f),
+                        large = true,
+                    )
+                    StatCard(
+                        title = "Est. Revenue",
+                        value = AffiliateClickTracker.estimatedRevenueFormatted(),
+                        accent = Success,
+                        modifier = Modifier.weight(1f),
+                        large = true,
+                    )
+                }
+            }
+        }
+
+        // Daily clicks bar graph (last 14 days)
+        item {
+            val affState by AffiliateClickTracker.state.collectAsState()
+            DevCard(accent = Aqua) {
+                Column {
+                    Text(
+                        "Daily Click-Throughs (last 14 days)",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = DarkTextHigh,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    if (affState.perDay.isEmpty()) {
+                        Text(
+                            "No affiliate clicks recorded yet.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = DarkTextMid,
+                        )
+                    } else {
+                        val recentDays = affState.perDay.takeLast(14)
+                        val maxClicks = recentDays.maxOfOrNull { it.clicks }?.coerceAtLeast(1) ?: 1
+                        recentDays.forEach { day ->
+                            val barWidth = (day.clicks.toFloat() / maxClicks).coerceIn(0f, 1f)
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    day.date.substring(5),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = DarkTextMid,
+                                    modifier = Modifier.width(48.dp),
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(18.dp)
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(Color.White.copy(alpha = 0.06f)),
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth(barWidth)
+                                            .fillMaxHeight()
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(
+                                                Brush.horizontalGradient(
+                                                    listOf(Citrine.copy(alpha = 0.6f), Citrine)
+                                                )
+                                            ),
+                                    )
+                                }
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    day.clicks.toString(),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Citrine,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.width(28.dp),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Top items bar graph (top 10)
+        item {
+            val affState by AffiliateClickTracker.state.collectAsState()
+            DevCard(accent = Citrine) {
+                Column {
+                    Text(
+                        "Top Gear Items by Clicks",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = DarkTextHigh,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    if (affState.perItem.isEmpty()) {
+                        Text(
+                            "No item clicks recorded yet.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = DarkTextMid,
+                        )
+                    } else {
+                        val topItems = affState.perItem.take(10)
+                        val maxItem = topItems.maxOfOrNull { it.clicks }?.coerceAtLeast(1) ?: 1
+                        topItems.forEach { item ->
+                            val barWidth = (item.clicks.toFloat() / maxItem).coerceIn(0f, 1f)
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    item.name,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = DarkTextHigh,
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                    modifier = Modifier.width(100.dp),
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(18.dp)
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(Color.White.copy(alpha = 0.06f)),
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth(barWidth)
+                                            .fillMaxHeight()
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(
+                                                Brush.horizontalGradient(
+                                                    listOf(Aqua.copy(alpha = 0.6f), Aqua)
+                                                )
+                                            ),
+                                    )
+                                }
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    item.clicks.toString(),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Aqua,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.width(28.dp),
+                                )
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    SculptedOutlinedButton(
+                        text = "Reset Affiliate Stats",
+                        onClick = { AffiliateClickTracker.reset(context) },
+                        accent = Danger,
+                        textColor = Danger,
+                        icon = Icons.Filled.Delete,
+                        modifier = Modifier.fillMaxWidth(),
                     )
                 }
             }

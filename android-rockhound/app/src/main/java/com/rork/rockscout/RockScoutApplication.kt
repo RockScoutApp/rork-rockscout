@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit
 import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.AchievementsRepository
 import com.rork.rockscout.data.AdAnalyticsTracker
+import com.rork.rockscout.data.AffiliateClickTracker
 import com.rork.rockscout.data.BugLogger
 import com.rork.rockscout.data.IdentifyAccessManager
 import com.rork.rockscout.data.IdentifyCache
@@ -185,6 +186,10 @@ class RockScoutApplication : Application() {
 
         safeInit("ad-analytics") {
             AdAnalyticsTracker.initialize(this)
+        }
+
+        safeInit("affiliate-click-tracker") {
+            AffiliateClickTracker.initialize(this)
         }
 
         safeInit("bug-logger") {

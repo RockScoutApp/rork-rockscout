@@ -46,6 +46,7 @@ import androidx.navigation.NavController
 import com.rork.rockscout.data.GearItem
 import com.rork.rockscout.data.GearKit
 import com.rork.rockscout.data.GearGuide
+import com.rork.rockscout.data.AffiliateClickTracker
 import com.rork.rockscout.data.SafeLinkOpener
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.RockBackground
@@ -130,6 +131,7 @@ fun GearGuideScreen(navController: NavController) {
                     ) {
                         GearGuide.allItems.forEachIndexed { index, item ->
                             GearItemRow(item = item, accent = Aqua, onClick = {
+                                AffiliateClickTracker.recordClick(context, item.id, item.name)
                                 SafeLinkOpener.openUrl(context, item.url)
                             })
                             if (index != GearGuide.allItems.lastIndex) {
@@ -261,7 +263,10 @@ private fun GearKitCard(kit: GearKit) {
             GearItemRow(
                 item = item,
                 accent = Citrine,
-                onClick = { SafeLinkOpener.openUrl(context, item.url) },
+                onClick = {
+                    AffiliateClickTracker.recordClick(context, item.id, item.name)
+                    SafeLinkOpener.openUrl(context, item.url)
+                },
             )
             Spacer(Modifier.height(8.dp))
         }

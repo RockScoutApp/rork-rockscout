@@ -159,6 +159,7 @@ import com.rork.rockscout.data.GearGuide
 import com.rork.rockscout.data.GearItem
 import android.location.Geocoder
 import android.location.Address
+import com.rork.rockscout.data.AffiliateClickTracker
 import com.rork.rockscout.data.SafeLinkOpener
 import com.rork.rockscout.data.DigSiteSearchService
 import com.rork.rockscout.data.DigSiteDiscoveryStore
@@ -3359,7 +3360,10 @@ private fun HomeGearGuideTile(navController: NavController) {
             items(gearItems, key = { it.id }) { item ->
                 HomeGearItemRow(
                     item = item,
-                    onClick = { SafeLinkOpener.openUrl(context, item.url) },
+                    onClick = {
+                        AffiliateClickTracker.recordClick(context, item.id, item.name)
+                        SafeLinkOpener.openUrl(context, item.url)
+                    },
                 )
             }
         }

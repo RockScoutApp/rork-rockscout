@@ -3,6 +3,7 @@ import { ExternalLink, Search, X, Compass } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { gearItems, GEAR_CATEGORIES } from "@/data/gear";
+import { recordAffiliateClick } from "@/lib/affiliate-tracker";
 
 export default function GearGuide() {
   const [search, setSearch] = useState("");
@@ -78,6 +79,7 @@ export default function GearGuide() {
             href={item.url}
             target="_blank"
             rel="noopener noreferrer sponsored"
+            onClick={() => recordAffiliateClick(item.id, item.name)}
             className="group flex flex-col gap-2 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/40"
           >
             <div className="flex items-start gap-3">
