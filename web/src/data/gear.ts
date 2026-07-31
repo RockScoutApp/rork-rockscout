@@ -37,4 +37,14 @@ export const GEAR_CATEGORIES = [
   { id: "camping", label: "Camping", itemIds: ["tent", "sleeping_bag", "lantern", "noaa_radio", "hand_warmers"] },
   { id: "gold", label: "Gold Panning", itemIds: ["gold_pan", "portable_sluice", "fishing_magnets"] },
   { id: "display", label: "Display & Storage", itemIds: ["display_cases", "lapidary", "rock_starter_kit"] },
+  { id: "lapidary_gear", label: "Lapidary", itemIds: ["rock_tumbler", "trim_saw", "slab_saw", "cabbing_machine", "flat_lap", "dop_wax", "cab_templates", "digital_calipers", "cerium_oxide", "tin_oxide", "diamond_paste", "felt_polishing_pad", "silicone_wheels", "rough_agate", "tumbler_grit_kit", "p100_respirator", "face_shield", "lapidary_safety_glasses", "hearing_protection", "gfci_outlet"] },
 ] as const;
+
+/** Lapidary-specific gear items — shown on the Lapidary Basics guide page. */
+export const LAPIDARY_GEAR_IDS = [
+  "rock_tumbler", "trim_saw", "slab_saw", "cabbing_machine", "flat_lap",
+  "dop_wax", "cab_templates", "digital_calipers", "cerium_oxide", "tin_oxide",
+  "diamond_paste", "felt_polishing_pad", "silicone_wheels", "rough_agate",
+  "tumbler_grit_kit", "p100_respirator", "face_shield", "lapidary_safety_glasses",
+  "hearing_protection", "gfci_outlet",
+];

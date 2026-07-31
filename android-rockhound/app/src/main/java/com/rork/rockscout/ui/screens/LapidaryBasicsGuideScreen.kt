@@ -30,8 +30,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.GearLinksCard
 import com.rork.rockscout.ui.components.InterstitialAdTrigger
 import com.rork.rockscout.ui.components.ScreenScaffold
+import com.rork.rockscout.data.GearGuide
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
@@ -91,6 +93,14 @@ fun LapidaryBasicsGuideScreen(navController: NavController) {
 
             item { LapSectionHeader("SAFETY") }
             item { SafetyCard() }
+
+            item {
+                GearLinksCard(
+                    sectionTitle = "LAPIDARY GEAR & EQUIPMENT",
+                    items = GearGuide.lapidaryGear,
+                    accent = Citrine,
+                )
+            }
         }
     }
 }

@@ -419,6 +419,193 @@ object GearGuide {
         priceBand = "$100 – $500",
     )
 
+    // ── Lapidary-specific items (shown on the Lapidary Basics guide screen) ──
+
+    val GEAR_ROCK_TUMBLER = GearItem(
+        id = "rock_tumbler",
+        name = "Rotary Rock Tumbler (3 lb)",
+        description = "The cheapest way to start lapidary. A rotary tumbler with a 3 lb barrel and 4-stage grit kit — runs 3–4 weeks per batch to produce polished nuggets.",
+        emoji = "\uD83D\uDD04",
+        url = "https://www.amazon.com/s?k=rotary+rock+tumbler+3lb&tag=rockscout-20",
+        priceBand = "$80 – $150",
+        topPick = true,
+    )
+
+    val GEAR_TRIM_SAW = GearItem(
+        id = "trim_saw",
+        name = "6\" Trim Saw (Diamond Blade)",
+        description = "A small diamond-blade saw for cutting slabs and trimming preforms. Essential first step for cabbing — uses water as coolant.",
+        emoji = "\uD83E\uDE9A",
+        url = "https://www.amazon.com/s?k=trim+saw+diamond+blade+lapidary&tag=rockscout-20",
+        priceBand = "$150 – $300",
+        topPick = true,
+    )
+
+    val GEAR_SLAB_SAW = GearItem(
+        id = "slab_saw",
+        name = "Slab Saw (14\"+)",
+        description = "A larger saw with adjustable feed for cutting big rough into flat, even slabs. The step up from a trim saw for serious lapidary work.",
+        emoji = "\uD83E\uDE9A",
+        url = "https://www.amazon.com/s?k=slab+saw+lapidary+14+inch&tag=rockscout-20",
+        priceBand = "$400 – $1200",
+    )
+
+    val GEAR_CABBING_MACHINE = GearItem(
+        id = "cabbing_machine",
+        name = "Cabbing Machine (6–8 wheel)",
+        description = "The core tool for making cabochons — 6–8 grinding wheels of progressive grits (100 through polish). Cheaper kits use individual wheels on a single arbor.",
+        emoji = "\u2699\uFE0F",
+        url = "https://www.amazon.com/s?k=cabbing+machine+lapidary&tag=rockscout-20",
+        priceBand = "$400 – $1200",
+        topPick = true,
+    )
+
+    val GEAR_FLAT_LAP = GearItem(
+        id = "flat_lap",
+        name = "Flat Lap Grinder",
+        description = "A flat spinning disc for grinding flat backs on cabochons and pre-polishing slabs. Pairs with a cabbing machine for the flat-back step.",
+        emoji = "\uD83D\uDD29",
+        url = "https://www.amazon.com/s?k=flat+lap+grinder+lapidary&tag=rockscout-20",
+        priceBand = "$150 – $500",
+    )
+
+    val GEAR_DOP_WAX = GearItem(
+        id = "dop_wax",
+        name = "Dop Wax & Dop Sticks",
+        description = "Wax used to attach a stone to a dop stick for easier handling during fine grinding and polishing. Heat the stone, press into melted wax, pop off with heat after finishing.",
+        emoji = "\uD83D\uDD6C\uFE0F",
+        url = "https://www.amazon.com/s?k=dop+wax+sticks+lapidary&tag=rockscout-20",
+        priceBand = "$10 – $30",
+    )
+
+    val GEAR_CAB_TEMPLATES = GearItem(
+        id = "cab_templates",
+        name = "Cabochon Template Set",
+        description = "Metal or plastic stencils with standard cabochon shapes (oval, round, teardrop, square). Trace the outline on the slab before trimming.",
+        emoji = "\uD83D\uDCD0",
+        url = "https://www.amazon.com/s?k=cabochon+template+set&tag=rockscout-20",
+        priceBand = "$10 – $25",
+    )
+
+    val GEAR_DIGITAL_CALIPERS = GearItem(
+        id = "digital_calipers",
+        name = "Digital Calipers",
+        description = "For measuring finished cab thickness and ensuring consistency. Essential for calibrated cabs that fit standard jewelry settings.",
+        emoji = "\uD83D\uDCF0",
+        url = "https://www.amazon.com/s?k=digital+calipers+stainless&tag=rockscout-20",
+        priceBand = "$15 – $40",
+    )
+
+    val GEAR_CERIUM_OXIDE = GearItem(
+        id = "cerium_oxide",
+        name = "Cerium Oxide Polish",
+        description = "The gold-standard polishing compound for quartz, agate, and jasper. Produces a bright, glassy mirror finish on a felt or leather pad.",
+        emoji = "\u2728",
+        url = "https://www.amazon.com/s?k=cerium+oxide+polish+lapidary&tag=rockscout-20",
+        priceBand = "$10 – $30",
+        topPick = true,
+    )
+
+    val GEAR_TIN_OXIDE = GearItem(
+        id = "tin_oxide",
+        name = "Tin Oxide Polish",
+        description = "Gentler polish for softer stones — malachite, turquoise, lapis, opal. Won't scratch soft minerals the way cerium can.",
+        emoji = "\u2728",
+        url = "https://www.amazon.com/s?k=tin+oxide+polish+lapidary&tag=rockscout-20",
+        priceBand = "$10 – $25",
+    )
+
+    val GEAR_DIAMOND_PASTE = GearItem(
+        id = "diamond_paste",
+        name = "Diamond Polishing Paste (50k–100k)",
+        description = "Extremely fine diamond grit for the hardest stones — sapphire, ruby, diamond. A little goes a long way. The ultimate mirror finish.",
+        emoji = "\uD83D\uDC8E",
+        url = "https://www.amazon.com/s?k=diamond+paste+polishing+100k&tag=rockscout-20",
+        priceBand = "$20 – $60",
+    )
+
+    val GEAR_FELT_POLISHING_PAD = GearItem(
+        id = "felt_polishing_pad",
+        name = "Felt & Leather Polishing Pads",
+        description = "Soft pads for the final polishing stage — felt for hard stones, leather for softer ones. Hard pads re-scratch, so keep them soft.",
+        emoji = "\uD83E\uDDAB",
+        url = "https://www.amazon.com/s?k=felt+polishing+pad+lapidary&tag=rockscout-20",
+        priceBand = "$10 – $30",
+    )
+
+    val GEAR_SILICONE_WHEELS = GearItem(
+        id = "silicone_wheels",
+        name = "Silicon Carbide Grinding Wheels",
+        description = "Replacement grinding wheels for a cabbing machine — 80, 220, 400, 600 grit. Progress from coarse to fine, never skipping grits.",
+        emoji = "\u2699\uFE0F",
+        url = "https://www.amazon.com/s?k=silicon+carbide+grinding+wheel+lapidary&tag=rockscout-20",
+        priceBand = "$25 – $80",
+    )
+
+    val GEAR_P100_RESPIRATOR = GearItem(
+        id = "p100_respirator",
+        name = "P100 Respirator Mask",
+        description = "Mandatory for dry sanding or cleaning up sludge — silica dust causes silicosis, an irreversible lung disease. Cut wet, and wear this when dry work is unavoidable.",
+        emoji = "\uD83D\uDE37",
+        url = "https://www.amazon.com/s?k=p100+respirator+mask+dust&tag=rockscout-20",
+        priceBand = "$25 – $60",
+        topPick = true,
+    )
+
+    val GEAR_FACE_SHIELD = GearItem(
+        id = "face_shield",
+        name = "Safety Face Shield",
+        description = "Full face protection for slab saw and grinder work — stone fragments fly fast. Wear over safety glasses for maximum protection.",
+        emoji = "\uD83D\uDEB8",
+        url = "https://www.amazon.com/s?k=safety+face+shield+clear&tag=rockscout-20",
+        priceBand = "$15 – $40",
+    )
+
+    val GEAR_LAPIDARY_SAFETY_GLASSES = GearItem(
+        id = "lapidary_safety_glasses",
+        name = "ANSI Z87+ Safety Glasses",
+        description = "Impact-rated eye protection for saw and grinder work. Rock splinters fly fast — a chip in the eye ends a lapidary session permanently.",
+        emoji = "\uD83E\uDD7D",
+        url = "https://www.amazon.com/s?k=ansi+z87+safety+glasses&tag=rockscout-20",
+        priceBand = "$5 – $20",
+    )
+
+    val GEAR_ROUGH_AGATE = GearItem(
+        id = "rough_agate",
+        name = "Rough Agate for Cabbing",
+        description = "Practice material for beginners — agate is hard (H7), tough, takes a superb polish, and is inexpensive. Learn every fundamental on agate before risking expensive rough.",
+        emoji = "\uD83D\uDC8E",
+        url = "https://www.amazon.com/s?k=rough+agate+for+cabbing&tag=rockscout-20",
+        priceBand = "$15 – $50",
+    )
+
+    val GEAR_GRIT_KIT = GearItem(
+        id = "tumbler_grit_kit",
+        name = "Tumbler Grit & Polish Kit",
+        description = "4-stage abrasive kit for rock tumbling — coarse (60/90), medium (120/220), fine (500), and polish (aluminum oxide). Enough for several batches.",
+        emoji = "\uD83E\uDDF4",
+        url = "https://www.amazon.com/s?k=rock+tumbler+grit+kit+4+stage&tag=rockscout-20",
+        priceBand = "$15 – $40",
+    )
+
+    val GEAR_HEARING_PROTECTION = GearItem(
+        id = "hearing_protection",
+        name = "Earplugs / Earmuffs",
+        description = "Grinding wheels and slab saws are loud enough to cause hearing damage over time. Wear earplugs or earmuffs during extended cutting sessions.",
+        emoji = "\uD83C\uDF99\uFE0F",
+        url = "https://www.amazon.com/s?k=earplugs+hearing+protection+work&tag=rockscout-20",
+        priceBand = "$5 – $30",
+    )
+
+    val GEAR_GFCI_OUTLET = GearItem(
+        id = "gfci_outlet",
+        name = "GFCI Protected Power Strip",
+        description = "Cabbing machines use water — the motor and electrical connections must stay dry. A GFCI-protected outlet prevents shocks if water reaches wiring.",
+        emoji = "\uD83D\uDD0C",
+        url = "https://www.amazon.com/s?k=gfci+power+strip+water+resistant&tag=rockscout-20",
+        priceBand = "$20 – $50",
+    )
+
     val GEAR_CAMPING_BUNDLE = GearItem(
         id = "camping_bundle",
         name = "Camping Equipment",
@@ -589,6 +776,26 @@ object GearGuide {
         GEAR_ROCK_STARTER_KIT,
         GEAR_DISPLAY_CASES,
         GEAR_LAPIDARY,
+        GEAR_ROCK_TUMBLER,
+        GEAR_TRIM_SAW,
+        GEAR_SLAB_SAW,
+        GEAR_CABBING_MACHINE,
+        GEAR_FLAT_LAP,
+        GEAR_DOP_WAX,
+        GEAR_CAB_TEMPLATES,
+        GEAR_DIGITAL_CALIPERS,
+        GEAR_CERIUM_OXIDE,
+        GEAR_TIN_OXIDE,
+        GEAR_DIAMOND_PASTE,
+        GEAR_FELT_POLISHING_PAD,
+        GEAR_SILICONE_WHEELS,
+        GEAR_P100_RESPIRATOR,
+        GEAR_FACE_SHIELD,
+        GEAR_LAPIDARY_SAFETY_GLASSES,
+        GEAR_ROUGH_AGATE,
+        GEAR_GRIT_KIT,
+        GEAR_HEARING_PROTECTION,
+        GEAR_GFCI_OUTLET,
         GEAR_CAMPING_BUNDLE,
         GEAR_TENT,
         GEAR_SLEEPING_BAG,
@@ -625,6 +832,30 @@ object GearGuide {
         LocationType.METAPHYSICAL -> listOf(GEAR_LOUPE_10X)
         LocationType.LAPIDARY_CLUB -> listOf(GEAR_LOUPE_10X, GEAR_HARDNESS_KIT, GEAR_LAPIDARY, GEAR_DISPLAY_CASES)
     }
+
+    /** Lapidary-specific gear — shown on the Lapidary Basics guide screen. */
+    val lapidaryGear: List<GearItem> = listOf(
+        GEAR_ROCK_TUMBLER,
+        GEAR_TRIM_SAW,
+        GEAR_SLAB_SAW,
+        GEAR_CABBING_MACHINE,
+        GEAR_FLAT_LAP,
+        GEAR_DOP_WAX,
+        GEAR_CAB_TEMPLATES,
+        GEAR_DIGITAL_CALIPERS,
+        GEAR_CERIUM_OXIDE,
+        GEAR_TIN_OXIDE,
+        GEAR_DIAMOND_PASTE,
+        GEAR_FELT_POLISHING_PAD,
+        GEAR_SILICONE_WHEELS,
+        GEAR_ROUGH_AGATE,
+        GEAR_GRIT_KIT,
+        GEAR_P100_RESPIRATOR,
+        GEAR_FACE_SHIELD,
+        GEAR_LAPIDARY_SAFETY_GLASSES,
+        GEAR_HEARING_PROTECTION,
+        GEAR_GFCI_OUTLET,
+    )
 
     /** "Tools to confirm this ID at home" — shown on Identify results. */
     val confirmIdGear: List<GearItem> = listOf(
