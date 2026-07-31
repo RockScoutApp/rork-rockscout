@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -78,6 +79,7 @@ import coil3.compose.AsyncImage
 import com.rork.rockscout.data.AchievementsRepository
 import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.JournalEntry
+import com.rork.rockscout.data.JournalPdfExporter
 import com.rork.rockscout.data.ProfanityFilter
 import com.rork.rockscout.data.ImageModerator
 import com.rork.rockscout.data.ImageUtils
@@ -112,7 +114,9 @@ import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.TextLow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -350,6 +354,18 @@ fun FieldJournalScreen(navController: NavController, embedded: Boolean = false) 
                 }
             },
             onShareToProfile = { shareToProfileEntry = entry },
+            onExportPdf = {
+                scope.launch {
+                    withContext(Dispatchers.IO) {
+                        val captureNames = entry.attachedCaptureIds.mapNotNull { capId ->
+                            captures.find { it.id == capId }?.let { cap ->
+                                cap.displayName(SeedData.specimenById(cap.specimenId)?.name ?: "Unknown specimen")
+                            }
+                        }
+                        JournalPdfExporter.exportJournalPdf(context, entry, captureNames)
+                    }
+                }
+            },
         )
     }
 
@@ -394,6 +410,7 @@ private fun JournalCard(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onShare: () -> Unit,
+    onExportPdf: () -> Unit = {},
     onPhotoClick: (List<String>, Int) -> Unit = { _, _ -> },
 ) {
     val dateFormat = remember { SimpleDateFormat("EEE, MMM d, yyyy", Locale.getDefault()) }
@@ -452,6 +469,7 @@ private fun JournalCard(
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     SculptedIconButton(icon = Icons.Filled.Edit, contentDescription = "Edit", onClick = onEdit, accent = Aqua, iconTint = DarkTextMid, size = 36.dp, shadowElevation = 3.dp)
+                    SculptedIconButton(icon = Icons.Filled.PictureAsPdf, contentDescription = "Export PDF", onClick = onExportPdf, accent = Aqua, iconTint = DarkTextMid, size = 36.dp, shadowElevation = 3.dp)
                     SculptedIconButton(icon = Icons.Filled.Share, contentDescription = "Share", onClick = onShare, accent = Aqua, iconTint = DarkTextMid, size = 36.dp, shadowElevation = 3.dp)
                     SculptedIconButton(icon = Icons.Filled.Delete, contentDescription = "Delete", onClick = onDelete, accent = Aqua, iconTint = DarkTextMid, size = 36.dp, shadowElevation = 3.dp)
                 }
@@ -1287,6 +1305,7 @@ private fun JournalDetailSheet(
     onEdit: () -> Unit,
     onOpenCapture: (String) -> Unit,
     onShare: () -> Unit,
+    onExportPdf: () -> Unit = {},
     onShareToProfile: () -> Unit = {},
     onPhotoClick: (List<String>, Int) -> Unit = { _, _ -> },
 ) {
@@ -1382,6 +1401,27 @@ private fun JournalDetailSheet(
             }
         },
         confirmButton = {},
-        dismissButton = {},
+        dismissButton = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                SculptedTextButton(
+                    text = "Export PDF",
+                    onClick = onExportPdf,
+                    accent = Aqua,
+                    textColor = Aqua,
+                    modifier = Modifier.weight(1f),
+                )
+                SculptedTextButton(
+                    text = "Cancel",
+                    onClick = onDismiss,
+                    accent = Citrine,
+                    textColor = Citrine,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        },
     )
 }

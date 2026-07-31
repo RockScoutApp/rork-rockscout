@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
@@ -77,6 +78,7 @@ import com.rork.rockscout.data.ImageUtils
 import com.rork.rockscout.data.ImageReviewRepository
 import com.rork.rockscout.data.AuthRepository
 import com.rork.rockscout.data.AppRepository
+import com.rork.rockscout.data.FieldCapturePdfExporter
 import com.rork.rockscout.data.ProfanityFilter
 import com.rork.rockscout.ui.components.SavedImagesPickerDialog
 import com.rork.rockscout.ui.components.processSavedImage
@@ -87,7 +89,9 @@ import com.rork.rockscout.ui.theme.DarkTextLow
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Success
 import com.rork.rockscout.ui.theme.TextLow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -150,6 +154,7 @@ fun FieldCaptureCard(
 
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    var isExportingPdf by remember { mutableStateOf(false) }
     var imageModerating by remember { mutableStateOf(false) }
     var moderationRejected by remember { mutableStateOf<String?>(null) }
     var showSavedImagePicker by remember { mutableStateOf(false) }
@@ -430,6 +435,25 @@ fun FieldCaptureCard(
                     modifier = Modifier.size(36.dp),
                     accent = Citrine,
                     iconTint = if (isEditing) accent else DarkTextLow,
+                    size = 36.dp,
+                    shadowElevation = 3.dp,
+                )
+                SculptedIconButton(
+                    icon = Icons.Filled.PictureAsPdf,
+                    contentDescription = "Export PDF",
+                    onClick = {
+                        if (isExportingPdf) return@SculptedIconButton
+                        isExportingPdf = true
+                        coroutineScope.launch {
+                            withContext(Dispatchers.IO) {
+                                FieldCapturePdfExporter.exportCapturePdf(context, capture, specimenName)
+                            }
+                            isExportingPdf = false
+                        }
+                    },
+                    modifier = Modifier.size(36.dp),
+                    accent = Citrine,
+                    iconTint = if (isExportingPdf) Citrine else DarkTextLow,
                     size = 36.dp,
                     shadowElevation = 3.dp,
                 )
