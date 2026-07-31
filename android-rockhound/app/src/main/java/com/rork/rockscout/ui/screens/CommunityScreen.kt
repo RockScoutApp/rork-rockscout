@@ -441,6 +441,9 @@ fun CommunityScreen(navController: NavController) {
                 pendingDeletePostId = postId
                 showDeleteConfirm = true
             },
+            onDeleteComment = { commentId ->
+                scope.launch { repo.deleteComment(commentId) }
+            },
             onDismiss = { showExpiredPopup = false },
         )
     }

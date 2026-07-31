@@ -66,6 +66,7 @@ fun ExpiredCommunityPostsPopup(
     onReplyImageRemove: (() -> Unit)? = null,
     onRestore: ((postId: String) -> Unit)? = null,
     onDelete: ((postId: String) -> Unit)? = null,
+    onDeleteComment: ((commentId: String) -> Unit)? = null,
     onDismiss: () -> Unit,
 ) {
     Dialog(onDismissRequest = onDismiss) {
@@ -158,6 +159,7 @@ fun ExpiredCommunityPostsPopup(
                             onRepost = null,
                             onDelete = onDelete?.let { cb -> { cb(post.id) } },
                             onRestore = onRestore?.let { cb -> { cb(post.id) } },
+                            onDeleteComment = onDeleteComment?.let { cb -> { id -> cb(id) } },
                         )
                     }
                 }

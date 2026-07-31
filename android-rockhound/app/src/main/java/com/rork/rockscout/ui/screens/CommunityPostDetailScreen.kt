@@ -56,12 +56,14 @@ import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.FullScreenImageViewer
 import com.rork.rockscout.ui.components.SculptedButton
 import com.rork.rockscout.ui.components.SculptedIconButton
+import com.rork.rockscout.ui.components.SculptedTextButton
 import com.rork.rockscout.ui.components.ShareToProfileComposer
 import com.rork.rockscout.ui.components.YooperliteHeart
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.components.sculpted
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
+import com.rork.rockscout.ui.theme.Danger
 import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Ink
@@ -428,6 +430,8 @@ fun CommunityPostDetailScreen(
                     onReply = { replyingToCommentId = comment.id },
                     isReplying = replyingToCommentId == comment.id,
                     authorName = authors[comment.user_id]?.displayName ?: "Unknown",
+                    canDelete = isMe || comment.user_id == myUserId,
+                    onDelete = { scope.launch { repo.deleteComment(comment.id) } },
                     onImageClick = { url -> viewerImageUrl = url },
                 )
             }
@@ -448,6 +452,8 @@ fun CommunityPostDetailScreen(
                         isReply = true,
                         parentCommentBody = comment.body,
                         authorName = authors[firstReply.user_id]?.displayName ?: "Unknown",
+                        canDelete = isMe || firstReply.user_id == myUserId,
+                        onDelete = { scope.launch { repo.deleteComment(firstReply.id) } },
                         onImageClick = { url -> viewerImageUrl = url },
                     )
                     if (firstReplying) {
@@ -546,6 +552,8 @@ fun CommunityPostDetailScreen(
                                         isReply = true,
                                         parentCommentBody = comment.body,
                                         authorName = authors[reply.user_id]?.displayName ?: "Unknown",
+                                        canDelete = isMe || reply.user_id == myUserId,
+                                        onDelete = { scope.launch { repo.deleteComment(reply.id) } },
                                         onImageClick = { url -> viewerImageUrl = url },
                                     )
                                     if (replyReplying) {
@@ -735,10 +743,13 @@ private fun DetailCommentRow(
     isReply: Boolean = false,
     parentCommentBody: String? = null,
     authorName: String = "Unknown",
+    canDelete: Boolean = false,
+    onDelete: (() -> Unit)? = null,
     onImageClick: ((String) -> Unit)? = null,
 ) {
     val accent = if (isMine) Citrine else Aqua
     val commentShape = RoundedCornerShape(10.dp)
+    var showDeleteConfirm by remember { mutableStateOf(false) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -828,14 +839,60 @@ private fun DetailCommentRow(
                 }
             }
             Spacer(Modifier.height(4.dp))
-            Text(
-                "Reply",
-                style = MaterialTheme.typography.labelSmall,
-                color = if (isReplying) Citrine else TextMid,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.clickable { onReply() },
-            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    "Reply",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (isReplying) Citrine else TextMid,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable { onReply() },
+                )
+                if (canDelete && onDelete != null) {
+                    Text(
+                        "Delete",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Danger,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { showDeleteConfirm = true },
+                    )
+                }
+            }
         }
+    }
+
+    if (showDeleteConfirm) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            containerColor = Color(0xFF1E1C16),
+            titleContentColor = DarkTextHigh,
+            textContentColor = DarkTextMid,
+            title = { Text("Delete comment?", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    if (isReply) "Delete this reply? This action cannot be undone."
+                    else "Delete this comment and all replies to it? This action cannot be undone.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = DarkTextMid,
+                )
+            },
+            confirmButton = {
+                SculptedTextButton(
+                    text = "Delete",
+                    onClick = { showDeleteConfirm = false; onDelete?.invoke() },
+                    accent = Danger,
+                    textColor = Danger,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            dismissButton = {
+                SculptedTextButton(
+                    text = "Cancel",
+                    onClick = { showDeleteConfirm = false },
+                    accent = Aqua,
+                    textColor = TextMid,
+                )
+            },
+        )
     }
 }
 

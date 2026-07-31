@@ -397,6 +397,21 @@ class CommunityRepository private constructor() {
         }.onFailure { Log.w("CommunityRepository", "toggleCommentLike failed", it) }
     }
 
+    /** Delete a comment (and its child replies) by id. Also removes associated comment likes. */
+    suspend fun deleteComment(commentId: String): Result<Unit> {
+        return runCatching {
+            val comments = LocalDataStore.getTable<LocalCommunityPostComment>(LocalDataStore.KEY_COMMUNITY_POST_COMMENTS)
+            val idsToRemove = setOf(commentId) + comments.filter { it.parent_comment_id == commentId }.map { it.id }
+            val filtered = comments.filterNot { it.id in idsToRemove }
+            LocalDataStore.setTable(LocalDataStore.KEY_COMMUNITY_POST_COMMENTS, filtered)
+            val likes = LocalDataStore.getTable<LocalCommunityPostCommentLike>(LocalDataStore.KEY_COMMUNITY_POST_COMMENT_LIKES)
+                .filterNot { it.comment_id in idsToRemove }
+            LocalDataStore.setTable(LocalDataStore.KEY_COMMUNITY_POST_COMMENT_LIKES, likes)
+            loadLikesAndComments(_feedPosts.value.ifEmpty { _expiredPosts.value })
+            Unit
+        }.onFailure { Log.w("CommunityRepository", "deleteComment failed", it) }
+    }
+
     /** Sort the feed by the given mode, optionally filtered to a [category]. */
     fun sortedFeed(mode: SortMode, category: Category? = null): List<PostRow> {
         val posts = if (category == null) _feedPosts.value else _feedPosts.value.filter { it.category == category.id }

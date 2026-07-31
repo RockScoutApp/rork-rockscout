@@ -67,11 +67,13 @@ import com.rork.rockscout.data.NotificationRepository
 import com.rork.rockscout.data.SocialRepository
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.SculptedButton
+import com.rork.rockscout.ui.components.SculptedTextButton
 import com.rork.rockscout.ui.components.sculpted
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
+import com.rork.rockscout.ui.theme.Danger
 import com.rork.rockscout.ui.theme.Ink
 import com.rork.rockscout.ui.theme.Obsidian
 import com.rork.rockscout.ui.theme.TextHigh
@@ -123,6 +125,7 @@ fun NotificationsScreen(
     var selectionMode by remember { mutableStateOf(false) }
     val selectedIds = remember { mutableStateOf<Set<String>>(emptySet()) }
     var showUndoPill by remember { mutableStateOf(false) }
+    var showDeleteSelectedConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         notifRepo.loadNotifications()
@@ -259,11 +262,7 @@ fun NotificationsScreen(
                             text = "Delete Selected",
                             onClick = {
                                 if (hasSelection) {
-                                    scope.launch {
-                                        notifRepo.deleteNotifications(selectedIds.value)
-                                        selectedIds.value = emptySet()
-                                        selectionMode = false
-                                    }
+                                    showDeleteSelectedConfirm = true
                                 }
                             },
                             accent = if (hasSelection) Citrine else TextLow,
@@ -417,6 +416,49 @@ fun NotificationsScreen(
                 }
             }
         }
+    }
+
+    // Delete selected notifications confirmation
+    if (showDeleteSelectedConfirm) {
+        val count = selectedIds.value.size
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showDeleteSelectedConfirm = false },
+            containerColor = Color(0xFF1E1C16),
+            titleContentColor = TextHigh,
+            textContentColor = TextMid,
+            title = { Text("Delete $count notification${if (count != 1) "s" else ""}?", color = TextHigh, fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    "Are you sure you want to delete $count notification${if (count != 1) "s" else ""}? This cannot be undone.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextMid,
+                )
+            },
+            confirmButton = {
+                SculptedButton(
+                    text = "Delete",
+                    onClick = {
+                        showDeleteSelectedConfirm = false
+                        scope.launch {
+                            notifRepo.deleteNotifications(selectedIds.value)
+                            selectedIds.value = emptySet()
+                            selectionMode = false
+                        }
+                    },
+                    accent = Danger,
+                    containerColor = Danger,
+                    textColor = Color.White,
+                )
+            },
+            dismissButton = {
+                SculptedTextButton(
+                    text = "Cancel",
+                    onClick = { showDeleteSelectedConfirm = false },
+                    accent = Aqua,
+                    textColor = TextMid,
+                )
+            },
+        )
     }
 }
 

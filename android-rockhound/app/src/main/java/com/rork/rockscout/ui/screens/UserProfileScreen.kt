@@ -658,6 +658,9 @@ fun UserProfileScreen(
                             }
                         },
                         onImageClick = postImageNavigation(post, navController),
+                        onDeleteComment = { commentId ->
+                            scope.launch { runCatching { postRepo.deleteComment(commentId) } }
+                        },
                     )
                 }
             }
@@ -750,6 +753,9 @@ fun UserProfileScreen(
                     commentImageUris = commentImageUris + (postId to uri)
                     commentImageErrors = commentImageErrors - postId
                 }
+            },
+            onDeleteComment = { commentId ->
+                scope.launch { runCatching { postRepo.deleteComment(commentId) } }
             },
             onReplyImagePicked = { uri ->
                 val key = replyingTo

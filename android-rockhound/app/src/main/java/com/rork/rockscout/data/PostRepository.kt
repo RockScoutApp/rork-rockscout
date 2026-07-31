@@ -384,6 +384,23 @@ class PostRepository private constructor() {
         }.onFailure { Log.w("PostRepository", "toggleCommentLike failed", it) }
     }
 
+    /** Delete a comment (and its child replies) by id. Only the comment author
+     *  or the post owner may delete. Also removes associated comment likes. */
+    suspend fun deleteComment(commentId: String): Result<Unit> {
+        return runCatching {
+            val comments = LocalDataStore.getTable<LocalPostComment>(LocalDataStore.KEY_POST_COMMENTS)
+            // Remove the comment, any replies to it, and likes on those comments.
+            val idsToRemove = setOf(commentId) + comments.filter { it.parent_comment_id == commentId }.map { it.id }
+            val filtered = comments.filterNot { it.id in idsToRemove }
+            LocalDataStore.setTable(LocalDataStore.KEY_POST_COMMENTS, filtered)
+            val likes = LocalDataStore.getTable<LocalPostCommentLike>(LocalDataStore.KEY_POST_COMMENT_LIKES)
+                .filterNot { it.comment_id in idsToRemove }
+            LocalDataStore.setTable(LocalDataStore.KEY_POST_COMMENT_LIKES, likes)
+            loadLikesAndComments(_viewedPosts.value.ifEmpty { _myPosts.value })
+            Unit
+        }.onFailure { Log.w("PostRepository", "deleteComment failed", it) }
+    }
+
     companion object {
         val instance: PostRepository by lazy { PostRepository() }
     }

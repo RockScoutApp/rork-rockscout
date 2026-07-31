@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Unarchive
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -71,6 +72,7 @@ import com.rork.rockscout.ui.components.processSavedImage
 import kotlinx.coroutines.launch
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
+import com.rork.rockscout.ui.theme.Danger
 import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Ink
@@ -129,6 +131,7 @@ fun CommunityPostCard(
     onRepost: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
     onRestore: (() -> Unit)? = null,
+    onDeleteComment: ((commentId: String) -> Unit)? = null,
     onImageClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -559,6 +562,8 @@ fun CommunityPostCard(
                     onLike = { onCommentLike(comment.id) },
                     onReply = { onReplyStart(comment.id) },
                     isReplying = replyingToCommentId == comment.id,
+                    canDelete = isMe || post.user_id == myUserId,
+                    onDelete = onDeleteComment?.let { cb -> { cb(comment.id) } },
                     onImageClick = { url -> viewerImageUrl = url },
                 )
                 if (replyingToCommentId == comment.id) {
@@ -587,6 +592,8 @@ fun CommunityPostCard(
                             isReplying = replyingToCommentId == reply.id,
                             isReply = true,
                             parentCommentBody = comment.body,
+                            canDelete = isMe || post.user_id == myUserId,
+                            onDelete = onDeleteComment?.let { cb -> { cb(reply.id) } },
                             onImageClick = { url -> viewerImageUrl = url },
                         )
                         if (replyingToCommentId == reply.id) {
@@ -685,10 +692,13 @@ private fun CommunityCommentRow(
     isReplying: Boolean,
     isReply: Boolean = false,
     parentCommentBody: String? = null,
+    canDelete: Boolean = false,
+    onDelete: (() -> Unit)? = null,
     onImageClick: ((String) -> Unit)? = null,
 ) {
     val accent = if (isMine) Citrine else Aqua
     val commentShape = RoundedCornerShape(10.dp)
+    var showDeleteConfirm by remember { mutableStateOf(false) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -773,14 +783,61 @@ private fun CommunityCommentRow(
                 }
             }
             Spacer(Modifier.height(4.dp))
-            Text(
-                "Reply",
-                style = MaterialTheme.typography.labelSmall,
-                color = if (isReplying) Citrine else TextMid,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.clickable { onReply() },
-            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    "Reply",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (isReplying) Citrine else TextMid,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable { onReply() },
+                )
+                if (canDelete && onDelete != null) {
+                    Text(
+                        "Delete",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Danger,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { showDeleteConfirm = true },
+                    )
+                }
+            }
         }
+    }
+
+    // Comment deletion confirmation
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            containerColor = Color(0xFF2A2820),
+            titleContentColor = DarkTextHigh,
+            textContentColor = TextLow,
+            title = { Text("Delete comment?", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    if (isReply) "Delete this reply? This action cannot be undone."
+                    else "Delete this comment and all replies to it? This action cannot be undone.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextLow,
+                )
+            },
+            confirmButton = {
+                SculptedTextButton(
+                    text = "Delete",
+                    onClick = { showDeleteConfirm = false; onDelete?.invoke() },
+                    accent = Danger,
+                    textColor = Danger,
+                    fontWeight = FontWeight.Bold,
+                )
+            },
+            dismissButton = {
+                SculptedTextButton(
+                    text = "Cancel",
+                    onClick = { showDeleteConfirm = false },
+                    accent = Aqua,
+                    textColor = TextLow,
+                )
+            },
+        )
     }
 }
 

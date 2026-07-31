@@ -752,6 +752,9 @@ fun ProfileScreen(
                         onDelete = {
                             pendingDeletePostId = post.id
                         },
+                        onDeleteComment = { commentId ->
+                            coroutineScope.launch { postRepo.deleteComment(commentId) }
+                        },
                     )
                 }
             }
@@ -1104,6 +1107,9 @@ fun ProfileScreen(
                 coroutineScope.launch {
                     postRepo.restorePost(postId)
                 }
+            },
+            onDeleteComment = { commentId ->
+                coroutineScope.launch { postRepo.deleteComment(commentId) }
             },
             onDismiss = { showArchivedPosts = false },
         )
