@@ -38,6 +38,24 @@ export function usePushNotifications() {
     new Set(["social", "trade", "weather"]),
   );
 
+  /**
+   * The application-server key MUST be the same pair the backend signs pushes
+   * with, otherwise every send is rejected with 403 and nothing ever arrives.
+   * Ask the backend for its key and only fall back to the build-time env var.
+   */
+  const resolveServerKey = useCallback(async (): Promise<string> => {
+    try {
+      const resp = await fetch(`${BACKEND_URL}/push/key`);
+      if (resp.ok) {
+        const data = (await resp.json()) as { publicKey?: string };
+        if (data.publicKey) return data.publicKey;
+      }
+    } catch {
+      // Fall through to the build-time key.
+    }
+    return VAPID_PUBLIC_KEY;
+  }, []);
+
   useEffect(() => {
     if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
       setState((s) => ({ ...s, supported: false, permission: "unsupported" }));
@@ -65,13 +83,14 @@ export function usePushNotifications() {
       toast.error("Push notifications aren't supported on this browser.");
       return false;
     }
-    if (!VAPID_PUBLIC_KEY) {
-      toast.error("Push notifications aren't configured yet.");
-      return false;
-    }
-
     setState((s) => ({ ...s, loading: true }));
     try {
+      const serverKey = await resolveServerKey();
+      if (!serverKey) {
+        setState((s) => ({ ...s, loading: false }));
+        toast.error("Push notifications aren't configured yet.");
+        return false;
+      }
       // Request permission first.
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
@@ -81,10 +100,23 @@ export function usePushNotifications() {
       }
 
       const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY).buffer as ArrayBuffer,
-      });
+
+      // A subscription created with an older/different key can never receive a
+      // push from this backend — drop it and re-subscribe with the live key.
+      const existing = await reg.pushManager.getSubscription();
+      if (existing) {
+        const existingKey = arrayBufferToBase64Url(existing.options.applicationServerKey ?? null);
+        if (existingKey !== serverKey) {
+          await existing.unsubscribe().catch(() => undefined);
+        }
+      }
+
+      const sub =
+        (await reg.pushManager.getSubscription()) ??
+        (await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(serverKey).buffer as ArrayBuffer,
+        }));
 
       // Get the Supabase session token.
       const { data } = await supabase.auth.getSession();
@@ -126,7 +158,44 @@ export function usePushNotifications() {
       toast.error(err instanceof Error ? err.message : "Could not enable push");
       return false;
     }
-  }, [state.supported, selectedCategories]);
+  }, [state.supported, selectedCategories, resolveServerKey]);
+
+  /** Sends a real push to this account so delivery can be verified instantly. */
+  const sendTest = useCallback(async (): Promise<void> => {
+    setState((s) => ({ ...s, loading: true }));
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        toast.error("Sign in to send a test notification.");
+        return;
+      }
+      const resp = await fetch(`${BACKEND_URL}/push/test`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-App-Key": APP_KEY,
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({}),
+      });
+      const result = (await resp.json().catch(() => ({}))) as {
+        sent?: number;
+        failed?: number;
+        error?: string;
+      };
+      if (!resp.ok) throw new Error(result.error ?? "Test push failed");
+      if ((result.sent ?? 0) > 0) {
+        toast.success("Test notification sent — check your device.");
+      } else {
+        toast.error("No device is subscribed yet. Enable push first.");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not send a test push");
+    } finally {
+      setState((s) => ({ ...s, loading: false }));
+    }
+  }, []);
 
   const unsubscribe = useCallback(async (): Promise<void> => {
     setState((s) => ({ ...s, loading: true }));
@@ -170,6 +239,7 @@ export function usePushNotifications() {
     selectedCategories,
     subscribe,
     unsubscribe,
+    sendTest,
     toggleCategory,
   };
 }

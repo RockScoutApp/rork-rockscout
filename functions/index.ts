@@ -108,6 +108,8 @@ export default {
           TWILIO_ACCOUNT_SID?: string;
           TWILIO_AUTH_TOKEN?: string;
           TWILIO_PHONE_FROM?: string;
+          EXPO_PUBLIC_RORK_APP_KEY?: string;
+          EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
         },
         cors,
       );
@@ -138,11 +140,15 @@ export default {
       );
     }
 
-    // Web Push subscribe / unsubscribe / send.
-    if (url.pathname.startsWith("/push/") && request.method === "POST") {
-      const rateLimitPath = url.pathname === "/push/send" ? "/push/send" : "/push/subscribe";
-      const guard = guardEndpoint(request, env, rateLimitPath, cors, env.RATE_LIMIT_KV);
-      if (guard) return guard;
+    // Web Push subscribe / unsubscribe / test / notify / send.
+    // GET /push/key is public — clients need the application-server key before
+    // they can subscribe, and it is not a secret.
+    if (url.pathname.startsWith("/push/") && (request.method === "POST" || request.method === "GET")) {
+      if (!(url.pathname === "/push/key" && request.method === "GET")) {
+        const rateLimitPath = url.pathname === "/push/send" ? "/push/send" : "/push/subscribe";
+        const guard = guardEndpoint(request, env, rateLimitPath, cors, env.RATE_LIMIT_KV);
+        if (guard) return guard;
+      }
       return handlePush(
         request,
         env as unknown as {

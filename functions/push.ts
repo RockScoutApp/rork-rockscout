@@ -11,24 +11,62 @@
  *   → { ok: boolean }
  *   Removes the subscription.
  *
+ * GET /push/key
+ *   → { publicKey }
+ *   The VAPID application-server key the worker signs with. Clients MUST
+ *   subscribe with this exact key — a client/server key mismatch makes every
+ *   push endpoint reject the send with 403.
+ *
+ * POST /push/test
+ *   {} → { sent, failed }
+ *   User-auth. Sends a test push to the caller's own subscriptions.
+ *
+ * POST /push/notify
+ *   { userId, category, title, body, url? } → { sent, failed }
+ *   User-auth (app key + Supabase JWT). Lets an in-app event (message, trade
+ *   interest, friend request…) push another user immediately.
+ *
  * POST /push/send
  *   { userId, category, title, body, url? }
  *   → { sent: number, failed: number }
  *   Admin-only (toolkit-secret guarded). Sends a push to every subscription
  *   for the user that has `category` in its enabled list.
  *
- * Web Push encryption uses the `web-push` HMAC + AES-GCM scheme hand-rolled
- * against Web Crypto (no SDK — Workers don't bundle Node-only modules).
+ * Payload encryption is aes128gcm per RFC 8188 with the key derivation from
+ * RFC 8291, hand-rolled against Web Crypto (Workers can't bundle `web-push`).
  * VAPID keys come from VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY env vars.
  */
 
 // VAPID keys for Web Push (RFC 8292). Generated P-256 ECDSA pair.
-// Env vars VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY take precedence if set;
-// these fallbacks ensure push works without additional env configuration.
+// Env vars VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY take precedence, but ONLY as a
+// matched pair — a public key from env combined with a fallback private key (or
+// vice versa) produces a signature the push service rejects.
 const FALLBACK_VAPID_PUBLIC_KEY =
   "BLtKfWHPcWrMDASWRB7jSqALMwG-w9x3Io8Ehux72XWXZ4_n3BcYSGaQnfldDMb82DdbQXZVSdHMfO67tGkEMC4";
 const FALLBACK_VAPID_PRIVATE_KEY =
   "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgtAJ-WhJyRELf1j5LcUaCwaZLwrLUKuBqNVe1B2lSMuOhRANCAAS7Sn1hz3FqzAwElkQe40qgCzMBvsPcdyKPBIbse9l1l2eP59wXGEhmkJ35XQzG_Ng3W0F2VUnRzHzuu7RpBDAu";
+
+/** Resolve the VAPID key pair, keeping public/private consistent. */
+function resolveVapidKeys(env: {
+  VAPID_PUBLIC_KEY?: string;
+  VAPID_PRIVATE_KEY?: string;
+}): { publicKey: string; privateKey: string } {
+  if (env.VAPID_PUBLIC_KEY && env.VAPID_PRIVATE_KEY) {
+    return { publicKey: env.VAPID_PUBLIC_KEY, privateKey: env.VAPID_PRIVATE_KEY };
+  }
+  return { publicKey: FALLBACK_VAPID_PUBLIC_KEY, privateKey: FALLBACK_VAPID_PRIVATE_KEY };
+}
+
+/** Env bindings the push handlers need. */
+interface PushEnv {
+  EXPO_PUBLIC_RORK_APP_KEY?: string;
+  EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
+  EXPO_PUBLIC_SUPABASE_URL?: string;
+  EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
+  SUPABASE_SERVICE_ROLE_KEY?: string;
+  VAPID_PUBLIC_KEY?: string;
+  VAPID_PRIVATE_KEY?: string;
+}
 
 const CORS_JSON = {
   "Access-Control-Allow-Origin": "*",
@@ -40,15 +78,7 @@ const CORS_JSON = {
 
 export async function handlePush(
   request: Request,
-  env: {
-    EXPO_PUBLIC_RORK_APP_KEY?: string;
-    EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
-    EXPO_PUBLIC_SUPABASE_URL?: string;
-    EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
-    SUPABASE_SERVICE_ROLE_KEY?: string;
-    VAPID_PUBLIC_KEY?: string;
-    VAPID_PRIVATE_KEY?: string;
-  },
+  env: PushEnv,
   corsHeaders: Record<string, string>,
 ): Promise<Response> {
   if (request.method === "OPTIONS") {
@@ -57,12 +87,23 @@ export async function handlePush(
   const headers = { ...corsHeaders, ...CORS_JSON };
   const url = new URL(request.url);
 
+  // Public: the application-server key clients must subscribe with.
+  if (url.pathname === "/push/key" && request.method === "GET") {
+    return Response.json({ publicKey: resolveVapidKeys(env).publicKey }, { headers });
+  }
+
   // /push/subscribe and /push/unsubscribe are user-auth (app-key + Supabase JWT).
   if (url.pathname === "/push/subscribe" && request.method === "POST") {
     return handleSubscribe(request, env, headers);
   }
   if (url.pathname === "/push/unsubscribe" && request.method === "POST") {
     return handleUnsubscribe(request, env, headers);
+  }
+  if (url.pathname === "/push/test" && request.method === "POST") {
+    return handleTest(request, env, headers);
+  }
+  if (url.pathname === "/push/notify" && request.method === "POST") {
+    return handleNotify(request, env, headers);
   }
   if (url.pathname === "/push/send" && request.method === "POST") {
     return handleSend(request, env, headers);
@@ -75,11 +116,7 @@ export async function handlePush(
 
 async function handleSubscribe(
   request: Request,
-  env: {
-    EXPO_PUBLIC_RORK_APP_KEY?: string;
-    EXPO_PUBLIC_SUPABASE_URL?: string;
-    EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
-  },
+  env: PushEnv,
   headers: Record<string, string>,
 ): Promise<Response> {
   const authCheck = checkAppKey(request, env);
@@ -147,11 +184,7 @@ async function handleSubscribe(
 
 async function handleUnsubscribe(
   request: Request,
-  env: {
-    EXPO_PUBLIC_RORK_APP_KEY?: string;
-    EXPO_PUBLIC_SUPABASE_URL?: string;
-    EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
-  },
+  env: PushEnv,
   headers: Record<string, string>,
 ): Promise<Response> {
   const authCheck = checkAppKey(request, env);
@@ -197,18 +230,146 @@ async function handleUnsubscribe(
   return Response.json({ ok: true }, { headers });
 }
 
+// ─── Test / notify (user-authenticated) ──────────────────────────────────────
+
+/** Sends a test push to the caller's own subscriptions — instant delivery check. */
+async function handleTest(
+  request: Request,
+  env: PushEnv,
+  headers: Record<string, string>,
+): Promise<Response> {
+  const authCheck = checkAppKey(request, env);
+  if (authCheck) return authCheck;
+  const userId = resolveUserId(request);
+  if (!userId) {
+    return Response.json({ error: "Not authenticated." }, { status: 401, headers });
+  }
+  return deliver(env, headers, {
+    userId,
+    category: null,
+    title: "RockScout push is working",
+    body: "Notifications are set up on this device.",
+    url: "/app/notifications",
+  });
+}
+
+/**
+ * Sends a push to another user on behalf of a signed-in user. Used for instant
+ * social/trade notifications (messages, friend requests, trade interest) that
+ * previously only ever fired as local notifications on the sender's device.
+ */
+async function handleNotify(
+  request: Request,
+  env: PushEnv,
+  headers: Record<string, string>,
+): Promise<Response> {
+  const authCheck = checkAppKey(request, env);
+  if (authCheck) return authCheck;
+  const senderId = resolveUserId(request);
+  if (!senderId) {
+    return Response.json({ error: "Not authenticated." }, { status: 401, headers });
+  }
+
+  let body: { userId?: string; category?: string; title?: string; body?: string; url?: string };
+  try {
+    body = (await request.json()) as typeof body;
+  } catch {
+    return Response.json({ error: "Invalid JSON." }, { status: 400, headers });
+  }
+  if (!body.userId || !body.title || !body.body) {
+    return Response.json({ error: "Missing userId, title, or body." }, { status: 400, headers });
+  }
+
+  return deliver(env, headers, {
+    userId: body.userId,
+    category: body.category ?? null,
+    title: body.title.slice(0, 120),
+    body: body.body.slice(0, 400),
+    url: body.url ?? "/app/notifications",
+  });
+}
+
+/** Shared fan-out: look up the target's subscriptions and encrypt+POST to each. */
+async function deliver(
+  env: PushEnv,
+  headers: Record<string, string>,
+  msg: { userId: string; category: string | null; title: string; body: string; url: string },
+): Promise<Response> {
+  const { publicKey: vapidPublic, privateKey: vapidPrivate } = resolveVapidKeys(env);
+
+  const supabaseUrl = env.EXPO_PUBLIC_SUPABASE_URL;
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY ?? env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !serviceKey) {
+    return Response.json({ error: "Supabase not configured." }, { status: 503, headers });
+  }
+
+  const resp = await fetch(
+    `${supabaseUrl}/rest/v1/rockscout_push_subscriptions?user_id=eq.${encodeURIComponent(msg.userId)}&select=endpoint,p256dh_key,auth_key,categories`,
+    { headers: { "apikey": serviceKey, "Authorization": `Bearer ${serviceKey}` } },
+  );
+  if (!resp.ok) {
+    console.error("push deliver: subscription lookup failed", resp.status);
+    return Response.json({ error: "Could not fetch subscriptions." }, { status: 502, headers });
+  }
+  const subs = (await resp.json()) as Array<{
+    endpoint: string;
+    p256dh_key: string;
+    auth_key: string;
+    categories: string[] | null;
+  }>;
+
+  // Empty/absent category list means "all categories".
+  const eligible = subs.filter((s) => {
+    if (!msg.category) return true;
+    const cats = s.categories ?? [];
+    return cats.length === 0 || cats.includes(msg.category);
+  });
+
+  let sent = 0;
+  let failed = 0;
+  const expired: string[] = [];
+  for (const sub of eligible) {
+    try {
+      const result = await sendWebPush(
+        sub.endpoint,
+        sub.p256dh_key,
+        sub.auth_key,
+        msg.title,
+        msg.body,
+        msg.url,
+        vapidPublic,
+        vapidPrivate,
+      );
+      if (result.ok) sent++;
+      else {
+        failed++;
+        if (result.gone) expired.push(sub.endpoint);
+      }
+    } catch {
+      failed++;
+    }
+  }
+
+  // Prune endpoints the push service says are permanently gone so a stale
+  // subscription can't keep a user looking "subscribed" while nothing arrives.
+  for (const endpoint of expired) {
+    await fetch(
+      `${supabaseUrl}/rest/v1/rockscout_push_subscriptions?endpoint=eq.${encodeURIComponent(endpoint)}`,
+      {
+        method: "DELETE",
+        headers: { "apikey": serviceKey, "Authorization": `Bearer ${serviceKey}` },
+      },
+    ).catch(() => undefined);
+  }
+
+  return Response.json({ sent, failed, subscriptions: eligible.length }, { headers });
+}
+
 // ─── Send (admin-triggered) ──────────────────────────────────────────────────
 
 async function handleSend(
   request: Request,
-  env: {
-    EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
-    EXPO_PUBLIC_SUPABASE_URL?: string;
-    SUPABASE_SERVICE_ROLE_KEY?: string;
-    EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
-    VAPID_PUBLIC_KEY?: string;
-    VAPID_PRIVATE_KEY?: string;
-  },
+  env: PushEnv,
   headers: Record<string, string>,
 ): Promise<Response> {
   // Toolkit-secret guarded (admin only).
@@ -221,12 +382,6 @@ async function handleSend(
     return Response.json({ error: "Unauthorized." }, { status: 401, headers });
   }
 
-  const vapidPublic = env.VAPID_PUBLIC_KEY ?? FALLBACK_VAPID_PUBLIC_KEY;
-  const vapidPrivate = env.VAPID_PRIVATE_KEY ?? FALLBACK_VAPID_PRIVATE_KEY;
-  if (!vapidPublic || !vapidPrivate) {
-    return Response.json({ error: "VAPID keys not configured." }, { status: 503, headers });
-  }
-
   let body: { userId?: string; category?: string; title?: string; body?: string; url?: string };
   try {
     body = (await request.json()) as typeof body;
@@ -237,57 +392,13 @@ async function handleSend(
     return Response.json({ error: "Missing userId, category, title, or body." }, { status: 400, headers });
   }
 
-  const supabaseUrl = env.EXPO_PUBLIC_SUPABASE_URL;
-  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY ?? env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-  if (!supabaseUrl || !serviceKey) {
-    return Response.json({ error: "Supabase not configured." }, { status: 503, headers });
-  }
-
-  // Fetch the user's subscriptions (service-role bypasses RLS).
-  const resp = await fetch(
-    `${supabaseUrl}/rest/v1/rockscout_push_subscriptions?user_id=eq.${encodeURIComponent(body.userId)}&select=endpoint,p256dh_key,auth_key,categories`,
-    {
-      headers: {
-        "apikey": serviceKey,
-        "Authorization": `Bearer ${serviceKey}`,
-      },
-    },
-  );
-  if (!resp.ok) {
-    return Response.json({ error: "Could not fetch subscriptions." }, { status: 502, headers });
-  }
-  const subs = (await resp.json()) as Array<{
-    endpoint: string;
-    p256dh_key: string;
-    auth_key: string;
-    categories: string[];
-  }>;
-
-  // Filter to subscriptions that have the target category enabled (empty list = all).
-  const eligible = subs.filter((s) => s.categories.length === 0 || s.categories.includes(body.category!));
-
-  let sent = 0;
-  let failed = 0;
-  for (const sub of eligible) {
-    try {
-      const ok = await sendWebPush(
-        sub.endpoint,
-        sub.p256dh_key,
-        sub.auth_key,
-        body.title!,
-        body.body!,
-        body.url ?? "/app/notifications",
-        vapidPublic,
-        vapidPrivate,
-      );
-      if (ok) sent++;
-      else failed++;
-    } catch {
-      failed++;
-    }
-  }
-
-  return Response.json({ sent, failed }, { headers });
+  return deliver(env, headers, {
+    userId: body.userId,
+    category: body.category,
+    title: body.title,
+    body: body.body,
+    url: body.url ?? "/app/notifications",
+  });
 }
 
 // ─── Web Push encryption + send (RFC 8291 + VAPID RFC 8292) ──────────────────
@@ -301,24 +412,27 @@ async function sendWebPush(
   url: string,
   vapidPublicKey: string,
   vapidPrivateKey: string,
-): Promise<boolean> {
-  // 1. Generate the payload (JSON Notification).
-  const payload = JSON.stringify({ title, body, url, icon: "/pwa-192.png", badge: "/pwa-192.png" });
+): Promise<{ ok: boolean; gone: boolean }> {
   const encoder = new TextEncoder();
-  const payloadBytes = encoder.encode(payload);
 
-  // 2. Generate local ECDH P-256 key pair (server ephemeral).
-  const serverKeys = await crypto.subtle.generateKey(
+  // 1. Notification payload consumed by the service worker's "push" listener.
+  const payloadBytes = encoder.encode(
+    JSON.stringify({ title, body, url, icon: "/pwa-192.png", badge: "/pwa-192.png" }),
+  );
+
+  // 2. Ephemeral server ECDH key pair (the "application server" keys in RFC 8291).
+  const serverKeys = (await crypto.subtle.generateKey(
     { name: "ECDH", namedCurve: "P-256" },
     true,
     ["deriveBits"],
-  );
+  )) as CryptoKeyPair;
   const serverPubRaw = new Uint8Array(
-    await crypto.subtle.exportKey("raw", serverKeys.publicKey as CryptoKey),
+    await crypto.subtle.exportKey("raw", serverKeys.publicKey),
   );
 
-  // 3. Import the subscriber's public key (p256dh, base64url → raw → P-256).
+  // 3. Subscriber public key + auth secret.
   const userPubRaw = base64UrlToBytes(p256dh);
+  const authSecret = base64UrlToBytes(auth);
   const userPubKey = await crypto.subtle.importKey(
     "raw",
     userPubRaw,
@@ -328,70 +442,93 @@ async function sendWebPush(
   );
 
   // 4. ECDH shared secret.
-  const sharedSecret = await crypto.subtle.deriveBits(
-    { name: "ECDH", public: userPubKey },
-    serverKeys.privateKey as CryptoKey,
-    256,
+  const sharedSecret = new Uint8Array(
+    await crypto.subtle.deriveBits({ name: "ECDH", public: userPubKey }, serverKeys.privateKey, 256),
   );
 
-  // 5. IKM = concat(sharedSecret, authSecret).
-  const authSecret = base64UrlToBytes(auth);
-  const ikm = new Uint8Array(sharedSecret.byteLength + authSecret.byteLength);
-  ikm.set(new Uint8Array(sharedSecret), 0);
-  ikm.set(authSecret, sharedSecret.byteLength);
-
-  // 6. HKDF to derive content encryption key (16 bytes) + nonce (12 bytes).
-  const info = new Uint8Array([...encoder.encode("Content-Encoding: aes128gcm"), 0]);
-  const cek = await hkdf(ikm, 16, info);
-  const nonceInfo = new Uint8Array([...encoder.encode("Content-Encoding: nonce"), 0]);
-  const nonce = await hkdf(ikm, 12, nonceInfo);
-
-  // 7. Encrypt the payload with AES-GCM (RFC 8188 content coding).
-  // Build the aes128gcm encoded body: header + ciphertext.
-  const encrypted = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv: nonce },
-    await crypto.subtle.importKey("raw", cek, { name: "AES-GCM" }, false, ["encrypt"]),
-    payloadBytes,
+  // 5. RFC 8291 key derivation. The auth secret is the HKDF *salt* here, and the
+  //    info string binds both public keys into the derived key:
+  //      PRK = HKDF(salt=auth, ikm=ecdh, info="WebPush: info\0"||ua_pub||as_pub)
+  const keyInfo = concatBytes(
+    encoder.encode("WebPush: info"),
+    new Uint8Array([0]),
+    userPubRaw,
+    serverPubRaw,
   );
+  const prk = await hkdf(authSecret, sharedSecret, keyInfo, 32);
 
-  // RFC 8188 record header.
-  const maxPad = 0;
-  const header = new Uint8Array(21 + 65 + 1 + 4 + 1);
-  let offset = 0;
-  header.set(serverPubRaw, offset + 1); // skip the salt (16 bytes) — we use zeros for simplicity
-  // Actually build it properly: salt(16) + rs(4) + idlen(1) + keyid(65) + pad(1)
+  // 6. Content encryption key + nonce, salted with the record salt.
   const salt = crypto.getRandomValues(new Uint8Array(16));
-  const rs = 4096;
-  const fullHeader = new Uint8Array(16 + 4 + 1 + 65 + 1);
-  fullHeader.set(salt, 0);
-  fullHeader.set(new Uint8Array([0, 0, 0, 0]), 16); // rs as big-endian uint32 — filled below
-  new DataView(fullHeader.buffer).setUint32(16, rs);
-  fullHeader[20] = 65; // idlen
-  fullHeader.set(serverPubRaw, 21);
-  fullHeader[fullHeader.length - 1] = maxPad | 0x80; // last record marker
+  const cek = await hkdf(
+    salt,
+    prk,
+    concatBytes(encoder.encode("Content-Encoding: aes128gcm"), new Uint8Array([0])),
+    16,
+  );
+  const nonce = await hkdf(
+    salt,
+    prk,
+    concatBytes(encoder.encode("Content-Encoding: nonce"), new Uint8Array([0])),
+    12,
+  );
 
-  const record = new Uint8Array(fullHeader.length + encrypted.byteLength);
-  record.set(fullHeader, 0);
-  record.set(new Uint8Array(encrypted), fullHeader.length);
+  // 7. Encrypt. A single record, so the plaintext ends with the 0x02 padding
+  //    delimiter (0x02 = last record) before the AES-GCM pass.
+  const plaintext = concatBytes(payloadBytes, new Uint8Array([0x02]));
+  const ciphertext = new Uint8Array(
+    await crypto.subtle.encrypt(
+      { name: "AES-GCM", iv: nonce },
+      await crypto.subtle.importKey("raw", cek, { name: "AES-GCM" }, false, ["encrypt"]),
+      plaintext,
+    ),
+  );
 
-  // 8. Build the VAPID JWT (ES256).
+  // 8. RFC 8188 header: salt(16) || rs(4, big-endian) || idlen(1) || keyid(65).
+  const recordSize = Math.max(ciphertext.length + 1, 4096);
+  const header = new Uint8Array(16 + 4 + 1 + serverPubRaw.length);
+  header.set(salt, 0);
+  new DataView(header.buffer).setUint32(16, recordSize);
+  header[20] = serverPubRaw.length;
+  header.set(serverPubRaw, 21);
+
+  const record = concatBytes(header, ciphertext);
+
+  // 9. VAPID (RFC 8292) — "vapid t=<JWT>,k=<public key>".
   const jwt = await buildVapidJwt(endpoint, vapidPrivateKey);
-  // VAPID Authorization header: "vapid t=JWT,k=PUBLICKEY".
   const vapidAuth = `vapid t=${jwt},k=${vapidPublicKey}`;
 
-  // 9. POST to the push endpoint.
   const pushResp = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/octet-stream",
       "Content-Encoding": "aes128gcm",
       "TTL": "2419200",
+      "Urgency": "high",
       "Authorization": vapidAuth,
     },
     body: record,
   });
 
-  return pushResp.ok || pushResp.status === 201;
+  if (!pushResp.ok) {
+    console.error("web push rejected", pushResp.status, await pushResp.text().catch(() => ""));
+  }
+  // 404/410 mean the subscription is permanently dead and should be pruned.
+  return {
+    ok: pushResp.ok,
+    gone: pushResp.status === 404 || pushResp.status === 410,
+  };
+}
+
+/** Concatenate byte arrays. */
+function concatBytes(...parts: Uint8Array[]): Uint8Array {
+  const total = parts.reduce((n, p) => n + p.length, 0);
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const p of parts) {
+    out.set(p, offset);
+    offset += p.length;
+  }
+  return out;
 }
 
 async function buildVapidJwt(endpoint: string, privateKey: string): Promise<string> {
@@ -440,12 +577,17 @@ function base64UrlEncode(bytes: Uint8Array): string {
   return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-async function hkdf(ikm: Uint8Array, length: number, info: Uint8Array): Promise<Uint8Array> {
-  // HKDF-Extract: PRK = HMAC-SHA256(salt=0, IKM)
-  const salt = new Uint8Array(32);
+/** HKDF-SHA256 (extract + expand) per RFC 5869. */
+async function hkdf(
+  salt: Uint8Array,
+  ikm: Uint8Array,
+  info: Uint8Array,
+  length: number,
+): Promise<Uint8Array> {
+  // HKDF-Extract: PRK = HMAC-SHA256(salt, IKM)
   const prkKey = await crypto.subtle.importKey(
     "raw",
-    salt,
+    salt.length > 0 ? salt : new Uint8Array(32),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"],

@@ -205,6 +205,15 @@ export default function Notifications() {
                 Category changes apply to the next notification. To update this
                 device's categories now, disable and re-enable push.
               </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2 w-full"
+                disabled={push.loading}
+                onClick={() => void push.sendTest()}
+              >
+                Send a test notification
+              </Button>
             </div>
           )}
         </div>

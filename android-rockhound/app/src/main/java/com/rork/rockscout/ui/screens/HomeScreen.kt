@@ -287,6 +287,10 @@ fun HomeScreen(navController: NavController) {
     var showSmsVerify by remember { mutableStateOf(false) }
     var smsVerifying by remember { mutableStateOf(false) }
     var smsError by remember { mutableStateOf<String?>(null) }
+    // Code returned directly by the backend when SMS delivery isn't available.
+    // Shown inline only when notifications are blocked, so the developer is
+    // never locked out waiting on a text that can't arrive.
+    var devHintCode by remember { mutableStateOf<String?>(null) }
     var showFellowRockScoutsNote by remember { mutableStateOf(false) }
     var showFieldCamera by remember { mutableStateOf(false) }
 
@@ -1187,7 +1191,7 @@ fun HomeScreen(navController: NavController) {
                     smsVerifying = true
                     smsError = null
                     scope.launch {
-                        val result = runCatching { sendDevVerificationCode(context) }.getOrDefault(false)
+                        devHintCode = runCatching { sendDevVerificationCode(context) }.getOrNull()
                         smsVerifying = false
                         showSmsVerify = true
                     }
@@ -1200,6 +1204,7 @@ fun HomeScreen(navController: NavController) {
             DevSmsVerifyOverlay(
                 isVerifying = smsVerifying,
                 error = smsError,
+                hintCode = if (com.rork.rockscout.data.NotificationHelper.hasNotificationPermission(context)) null else devHintCode,
                 onVerify = { code ->
                     smsVerifying = true
                     smsError = null
@@ -1218,7 +1223,7 @@ fun HomeScreen(navController: NavController) {
                     smsVerifying = true
                     smsError = null
                     scope.launch {
-                        runCatching { sendDevVerificationCode(context) }
+                        devHintCode = runCatching { sendDevVerificationCode(context) }.getOrNull()
                         smsVerifying = false
                     }
                 },
@@ -4696,6 +4701,7 @@ private fun FellowRockScoutsNoteDialog(
 private fun DevSmsVerifyOverlay(
     isVerifying: Boolean,
     error: String?,
+    hintCode: String?,
     onVerify: (String) -> Unit,
     onResend: () -> Unit,
     onDismiss: () -> Unit,
@@ -4869,14 +4875,25 @@ private fun DevSmsVerifyOverlay(
     }
 }
 
-/** Sends the dev verification code and posts an instant local push notification with the PIN. */
-private suspend fun sendDevVerificationCode(context: android.content.Context): Boolean {
+/**
+ * Requests a developer verification code.
+ *
+ * The backend returns the code directly (`devCode`) whenever SMS delivery isn't
+ * possible, so the code is available immediately instead of waiting on a
+ * carrier. We post it as a high-priority local notification and also hand it
+ * back to the caller so the verify overlay can show it inline when the user
+ * hasn't granted notification permission.
+ *
+ * @return the 6-digit code when the backend returned one, or null when the code
+ *         was delivered by SMS only / the request failed.
+ */
+private suspend fun sendDevVerificationCode(context: android.content.Context): String? {
     return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         runCatching {
             val functionsUrl = com.rork.rockscout.data.BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", com.rork.rockscout.data.BuildSecrets.RORK_FUNCTIONS_URL)
             if (functionsUrl.isBlank()) {
                 // No backend — cannot send verification code
-                return@withContext false
+                return@withContext null
             }
             val payload = """{"action":"send"}"""
             val url = java.net.URL("$functionsUrl/dev-sms-verify")
@@ -4885,21 +4902,32 @@ private suspend fun sendDevVerificationCode(context: android.content.Context): B
                 connectTimeout = 10_000
                 readTimeout = 15_000
                 setRequestProperty("Content-Type", "application/json")
+                // Required — the endpoint is app-key guarded and rejects the
+                // request with 401 without this header.
+                setRequestProperty(
+                    "X-App-Key",
+                    com.rork.rockscout.data.BuildSecrets.resolve(
+                        "EXPO_PUBLIC_RORK_APP_KEY",
+                        com.rork.rockscout.data.BuildSecrets.RORK_APP_KEY,
+                    ),
+                )
                 doOutput = true
             }
             conn.outputStream.use { it.write(payload.toByteArray()) }
             val ok = conn.responseCode in 200..299
             val code = if (ok) {
                 val body = conn.inputStream.bufferedReader().use { it.readText() }
-                val match = Regex("\"devCode\":\"([0-9]{6})\"").find(body)
-                match?.groupValues?.get(1)
-            } else null
+                Regex("\"devCode\":\"([0-9]{6})\"").find(body)?.groupValues?.get(1)
+            } else {
+                android.util.Log.w("DevVerify", "Code request failed: ${conn.responseCode}")
+                null
+            }
             conn.disconnect()
             if (code != null) {
                 com.rork.rockscout.data.NotificationHelper.showDeveloperPinNotification(context, code)
             }
-            code != null
-        }.getOrDefault(false)
+            code
+        }.getOrNull()
     }
 }
 
@@ -4919,6 +4947,13 @@ private suspend fun verifyDevSmsCode(code: String): Boolean {
                 connectTimeout = 10_000
                 readTimeout = 15_000
                 setRequestProperty("Content-Type", "application/json")
+                setRequestProperty(
+                    "X-App-Key",
+                    com.rork.rockscout.data.BuildSecrets.resolve(
+                        "EXPO_PUBLIC_RORK_APP_KEY",
+                        com.rork.rockscout.data.BuildSecrets.RORK_APP_KEY,
+                    ),
+                )
                 doOutput = true
             }
             conn.outputStream.use { it.write(payload.toByteArray()) }

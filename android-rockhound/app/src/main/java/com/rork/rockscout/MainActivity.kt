@@ -1,12 +1,17 @@
 // RockScout entry point
 package com.rork.rockscout
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,9 +32,20 @@ class MainActivity : ComponentActivity() {
 
     private val deepLinkState = mutableStateOf<Uri?>(null)
 
+    /**
+     * Android 13+ drops every notification the app posts until POST_NOTIFICATIONS
+     * is granted. It used to only be requested from a handful of feature screens,
+     * so update, proximity, social, trade, moderation and developer notifications
+     * were silently discarded for anyone who never opened those screens. Ask once
+     * at launch so every notification channel can actually deliver.
+     */
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ -> }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        requestNotificationPermissionIfNeeded()
         deepLinkState.value = intent?.data
         setContent {
             AppTheme {
@@ -51,6 +67,17 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        val granted = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.POST_NOTIFICATIONS,
+        ) == PackageManager.PERMISSION_GRANTED
+        if (!granted) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 
