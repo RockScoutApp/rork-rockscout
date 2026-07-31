@@ -362,7 +362,7 @@ object NaturalWondersData {
         ),
         NaturalWonder(
             id = "mt_rushmore",
-            name = "Mount Rushmore Granite",
+            name = "Mount Rushmore",
             location = "South Dakota, USA",
             latitude = 43.88,
             longitude = -103.46,
@@ -396,7 +396,7 @@ object NaturalWondersData {
         ),
         NaturalWonder(
             id = "great_barrier_reef",
-            name = "Great Barrier Reef Limestone",
+            name = "Great Barrier Reef",
             location = "Queensland, Australia",
             latitude = -18.29,
             longitude = 147.70,
