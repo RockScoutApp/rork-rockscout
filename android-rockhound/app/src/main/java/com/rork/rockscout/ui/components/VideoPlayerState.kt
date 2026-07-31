@@ -29,6 +29,14 @@ class VideoPlayerState {
     var isPlaying by mutableStateOf(false)
         private set
 
+    /** Non-null when the player hit an error; shown as an overlay with a Retry button. */
+    var errorMessage by mutableStateOf<String?>(null)
+        private set
+
+    /** True while ExoPlayer is buffering (STATE_BUFFERING). */
+    var isBuffering by mutableStateOf(false)
+        private set
+
     var positionMs by mutableLongStateOf(0L)
         private set
 
@@ -43,11 +51,11 @@ class VideoPlayerState {
     var dragOffsetY by mutableFloatStateOf(0f)
         private set
 
-    /**
+/**
      * Tutorial video: 720x1280, English narration, 15 selectable subtitle tracks.
-     * Hosted alongside the RockScout web app so the link never expires.
+     * Hosted on the project's R2-backed web deployment so the link is stable.
      */
-    var videoUrl: String = "https://rockscout.app/tutorial/rockscout-tutorial.mkv"
+    var videoUrl: String = "https://jvns5dfy7fpytx79a2tb3-web.rork.live/tutorial/rockscout-tutorial.mkv"
 
     fun showFullscreen() {
         displayMode = VideoDisplayMode.FULLSCREEN
@@ -69,10 +77,24 @@ class VideoPlayerState {
         displayMode = VideoDisplayMode.HIDDEN
         isPlaying = false
         positionMs = 0L
+        errorMessage = null
+        isBuffering = false
     }
 
     fun updatePlaying(playing: Boolean) {
         isPlaying = playing
+    }
+
+    fun updateError(message: String?) {
+        errorMessage = message
+    }
+
+    fun updateBuffering(buffering: Boolean) {
+        isBuffering = buffering
+    }
+
+    fun clearError() {
+        errorMessage = null
     }
 
     fun updatePosition(ms: Long) {

@@ -47,6 +47,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -74,6 +75,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionParameters
 import androidx.media3.datasource.DefaultDataSource
@@ -122,6 +124,7 @@ fun FloatingVideoPlayer(
 
     val context = LocalContext.current
     val player = remember(state.videoUrl) {
+        state.clearError()
         val cacheDataSourceFactory = VideoCacheManager.buildCacheDataSourceFactory(context)
         val dataSourceFactory = DefaultDataSource.Factory(context, cacheDataSourceFactory)
         val mediaSourceFactory: MediaSource.Factory = DefaultMediaSourceFactory(dataSourceFactory)
@@ -134,6 +137,15 @@ fun FloatingVideoPlayer(
                 addListener(object : Player.Listener {
                 override fun onIsPlayingChanged(isPlaying: Boolean) {
                     state.updatePlaying(isPlaying)
+                }
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    state.updateBuffering(playbackState == Player.STATE_BUFFERING)
+                    if (playbackState == Player.STATE_READY) {
+                        state.clearError()
+                    }
+                }
+                override fun onPlayerError(error: PlaybackException) {
+                    state.updateError(error.localizedMessage ?: "Unable to load the tutorial video.")
                 }
                 override fun onPositionDiscontinuity(
                     oldPosition: Player.PositionInfo,
@@ -250,6 +262,51 @@ private fun FullscreenPlayer(
                 .fillMaxSize()
                 .clickable { showControls = !showControls },
         )
+
+        // Buffering spinner
+        if (state.isBuffering && state.errorMessage == null) {
+            CircularProgressIndicator(
+                color = Citrine,
+                strokeWidth = 3.dp,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(48.dp),
+            )
+        }
+
+        // Error overlay with retry button
+        if (state.errorMessage != null) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = state.errorMessage!!,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Surface(
+                    onClick = {
+                        state.clearError()
+                        player.prepare()
+                        player.playWhenReady = true
+                    },
+                    color = Citrine,
+                    shape = RoundedCornerShape(8.dp),
+                ) {
+                    Text(
+                        text = "Retry",
+                        color = Slate900,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 10.dp),
+                    )
+                }
+            }
+        }
 
         // Controls overlay
         AnimatedVisibility(
@@ -535,6 +592,38 @@ private fun MinimizedPlayer(
             },
             modifier = Modifier.fillMaxSize(),
         )
+
+        // Buffering spinner (minimized)
+        if (state.isBuffering && state.errorMessage == null) {
+            CircularProgressIndicator(
+                color = Citrine,
+                strokeWidth = 2.dp,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(24.dp),
+            )
+        }
+
+        // Error overlay (minimized)
+        if (state.errorMessage != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.8f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "Tap to retry",
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    modifier = Modifier.clickable {
+                        state.clearError()
+                        player.prepare()
+                        player.playWhenReady = true
+                    },
+                )
+            }
+        }
 
         // Drag hint when not dragging
         if (!isDragging) {
