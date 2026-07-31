@@ -235,6 +235,8 @@ fun ProfileScreen(
     var isBackingUp by remember { mutableStateOf(false) }
     var backupSuccess by remember { mutableStateOf<Boolean?>(null) }
     var lastBackupMs by remember { mutableStateOf(0L) }
+    var backupProgress by remember { mutableStateOf(0f) }
+    var backupStage by remember { mutableStateOf("") }
     val backupScope = androidx.compose.runtime.rememberCoroutineScope()
 
     // Sync my collection, wishlist, and favorite spots to the local users table so other
@@ -908,16 +910,17 @@ fun ProfileScreen(
 
                             Spacer(Modifier.height(12.dp))
 
-                            // Progress bar while backing up
+                            // Determinate progress bar while backing up
                             if (isBackingUp) {
                                 LinearProgressIndicator(
+                                    progress = { backupProgress },
                                     modifier = Modifier.fillMaxWidth(),
                                     color = Citrine,
                                     trackColor = Citrine.copy(alpha = 0.2f),
                                 )
                                 Spacer(Modifier.height(8.dp))
                                 Text(
-                                    text = "Backing up your data to the cloud…",
+                                    text = backupStage.ifBlank { "Backing up your data to the cloud…" },
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Citrine,
                                 )
@@ -945,16 +948,31 @@ fun ProfileScreen(
                                     if (!isBackingUp) {
                                         backupSuccess = null
                                         isBackingUp = true
+                                        backupProgress = 0f
+                                        backupStage = "Preparing your data…"
                                         backupScope.launch {
                                             val userId = auth.currentUserId
                                             if (userId.isNullOrBlank()) {
                                                 isBackingUp = false
                                                 backupSuccess = false
+                                                backupProgress = 0f
                                                 return@launch
                                             }
                                             try {
+                                                // Stage 1: Export settings to JSON
+                                                backupStage = "Exporting your collection & settings…"
+                                                kotlinx.coroutines.delay(150)
                                                 val settingsJson = PersistenceManager.exportAllSettingsAsJson()
+                                                backupProgress = 0.45f
+                                                // Stage 2: Upload to cloud
+                                                backupStage = "Uploading to cloud backup…"
+                                                kotlinx.coroutines.delay(150)
                                                 val result = SettingsBackupApi.backupSettings(userId, settingsJson)
+                                                backupProgress = 0.90f
+                                                // Stage 3: Finalize
+                                                backupStage = "Finalizing backup…"
+                                                kotlinx.coroutines.delay(200)
+                                                backupProgress = 1f
                                                 isBackingUp = false
                                                 if (result.isSuccess) {
                                                     backupSuccess = true
@@ -965,6 +983,7 @@ fun ProfileScreen(
                                             } catch (e: Exception) {
                                                 isBackingUp = false
                                                 backupSuccess = false
+                                                backupProgress = 0f
                                             }
                                         }
                                     }
