@@ -197,7 +197,7 @@ fun BlmCampgroundsScreen(navController: NavController) {
 }
 
 @Composable
-private fun TrailheadCard(trailhead: BlmTrailhead, onClick: () -> Unit) {
+fun TrailheadCard(trailhead: BlmTrailhead, onClick: () -> Unit) {
     val accent = Success
     val shape = RoundedCornerShape(20.dp)
     Box(
@@ -226,7 +226,7 @@ private fun TrailheadCard(trailhead: BlmTrailhead, onClick: () -> Unit) {
 }
 
 @Composable
-private fun CampgroundCard(campground: BlmCampground, onClick: () -> Unit) {
+fun CampgroundCard(campground: BlmCampground, onClick: () -> Unit) {
     val accent = Citrine
     val shape = RoundedCornerShape(20.dp)
     Box(

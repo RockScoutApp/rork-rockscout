@@ -284,6 +284,18 @@ const val PALEO_TILE_PERIODS =
 const val BLM_HOME_TILE_NATURE =
     "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/7f95720c-5737-487c-975f-fa5b1dbedf0a.png"
 
+/** Generated tile background for the National / State Parks field kit tile. */
+const val FIELD_KIT_TILE_PARKS =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/6d05636d-7ae8-4886-9789-ae62aecd18a2.png"
+
+/** Generated tile background for the Campgrounds & Trailheads field kit tile. */
+const val FIELD_KIT_TILE_TRAIL_CAMP =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/3224f2e2-4cb7-463e-8ba6-f0563b917f8f.png"
+
+/** The Wave sandstone formation — used as the Natural Wonders tile background. */
+const val NATURAL_WONDERS_TILE_WAVE =
+    "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/5eafcf10-07b7-47ec-acd2-bd068858b712.png"
+
 /** Data for a navigation tile on a landing page (BLM guide, Geology, Paleontology).
  *  Mirrors the home screen's HomeTile but is public so any screen can use it. */
 data class LandingTileData(

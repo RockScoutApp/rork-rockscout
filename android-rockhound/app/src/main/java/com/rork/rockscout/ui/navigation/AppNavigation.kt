@@ -112,6 +112,7 @@ import com.rork.rockscout.ui.screens.BlmLandScreen
 import com.rork.rockscout.ui.screens.StateParksScreen
 import com.rork.rockscout.ui.screens.BlmTrailheadsScreen
 import com.rork.rockscout.ui.screens.BlmCampgroundsScreen
+import com.rork.rockscout.ui.screens.CampgroundsTrailheadsScreen
 import com.rork.rockscout.ui.screens.StateParkDetailScreen
 import com.rork.rockscout.ui.screens.RockTypesScreen
 import com.rork.rockscout.ui.screens.MineralIdScreen
@@ -217,6 +218,7 @@ object Routes {
     const val STATE_PARKS = "state_parks"
     const val BLM_TRAILHEADS = "blm_trailheads"
     const val BLM_CAMPGROUNDS = "blm_campgrounds"
+    const val CAMPGROUNDS_TRAILHEADS = "campgrounds_trailheads"
     const val STATE_PARK_DETAIL = "state_park/{parkId}"
 
     // Geology sub-screens
@@ -814,6 +816,7 @@ fun AppNavigation(
         composable(Routes.STATE_PARKS) { StateParksScreen(navController) }
         composable(Routes.BLM_TRAILHEADS) { BlmTrailheadsScreen(navController) }
         composable(Routes.BLM_CAMPGROUNDS) { BlmCampgroundsScreen(navController) }
+        composable(Routes.CAMPGROUNDS_TRAILHEADS) { CampgroundsTrailheadsScreen(navController) }
         composable(
             Routes.STATE_PARK_DETAIL,
             arguments = listOf(navArgument("parkId") { type = NavType.StringType }),

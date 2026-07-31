@@ -118,65 +118,20 @@ fun BlmGuideScreen(navController: NavController) {
                     modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp),
                 )
             }
-            // 2x2 tile grid
+            // BLM Land tile (trailheads & campgrounds now have their own homepage tiles)
             item {
-                Column(
-                    modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        LandingTile(
-                            tile = LandingTileData(
-                                label = "BLM Land",
-                                subtitle = "State rules, dig sites & info",
-                                icon = Icons.Filled.Terrain,
-                                accent = Color(0xFFC97B4A),
-                                route = Routes.BLM_LAND,
-                                imageUrl = BLM_TILE_LAND,
-                            ),
-                            modifier = Modifier.weight(1f),
-                            onClick = { navController.navigate(Routes.BLM_LAND) },
-                        )
-                        LandingTile(
-                            tile = LandingTileData(
-                                label = "State Parks",
-                                subtitle = "Parks with geological interest",
-                                icon = Icons.Filled.Park,
-                                accent = Color(0xFF7BA868),
-                                route = Routes.STATE_PARKS,
-                                imageUrl = BLM_TILE_PARKS,
-                            ),
-                            modifier = Modifier.weight(1f),
-                            onClick = { navController.navigate(Routes.STATE_PARKS) },
-                        )
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        LandingTile(
-                            tile = LandingTileData(
-                                label = "Trailheads",
-                                subtitle = "Access points to collecting areas",
-                                icon = Icons.Filled.Hiking,
-                                accent = Success,
-                                route = Routes.BLM_TRAILHEADS,
-                                imageUrl = BLM_TILE_TRAILHEADS,
-                            ),
-                            modifier = Modifier.weight(1f),
-                            onClick = { navController.navigate(Routes.BLM_TRAILHEADS) },
-                        )
-                        LandingTile(
-                            tile = LandingTileData(
-                                label = "Campgrounds",
-                                subtitle = "Camp near rockhounding sites",
-                                icon = Icons.Filled.HolidayVillage,
-                                accent = Citrine,
-                                route = Routes.BLM_CAMPGROUNDS,
-                                imageUrl = BLM_TILE_CAMPGROUNDS,
-                            ),
-                            modifier = Modifier.weight(1f),
-                            onClick = { navController.navigate(Routes.BLM_CAMPGROUNDS) },
-                        )
-                    }
-                }
+                LandingTile(
+                    tile = LandingTileData(
+                        label = "BLM Land",
+                        subtitle = "State rules, dig sites & info",
+                        icon = Icons.Filled.Terrain,
+                        accent = Color(0xFFC97B4A),
+                        route = Routes.BLM_LAND,
+                        imageUrl = BLM_TILE_LAND,
+                    ),
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp).fillMaxWidth(),
+                    onClick = { navController.navigate(Routes.BLM_LAND) },
+                )
             }
         }
     }

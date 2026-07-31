@@ -56,6 +56,8 @@ import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Nature
+import androidx.compose.material.icons.filled.Park
+import androidx.compose.material.icons.filled.HolidayVillage
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Diamond
@@ -167,6 +169,9 @@ import com.rork.rockscout.ui.components.PinPadOverlay
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.FullScreenImageViewer
 import com.rork.rockscout.ui.components.BLM_HOME_TILE_NATURE
+import com.rork.rockscout.ui.components.FIELD_KIT_TILE_PARKS
+import com.rork.rockscout.ui.components.FIELD_KIT_TILE_TRAIL_CAMP
+import com.rork.rockscout.ui.components.NATURAL_WONDERS_TILE_WAVE
 import com.rork.rockscout.ui.components.GEM_MINERAL_HERO_URL
 import com.rork.rockscout.ui.components.HunterStatusDropdown
 import com.rork.rockscout.ui.components.HunterStatusIcon
@@ -469,14 +474,18 @@ fun HomeScreen(navController: NavController) {
         HomeTile("Artifacts", "Arrowheads, hand axes, beads & stone tools", Icons.Filled.AccountBalance, Color(0xFFB87333), Routes.ARTIFACTS,
             "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/ca44cafb-2e4f-4d3b-9334-174ceedf713b.png"),
         HomeTile("Natural Wonders", "World-famous geological sites & what to find there", Icons.Filled.Public, Color(0xFF1B3A4B), Routes.NATURAL_WONDERS,
-            "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/057bdf45-4a43-426e-bc68-7b48842d4acf.png"),
+            NATURAL_WONDERS_TILE_WAVE),
     )
 
     // Field-guide tiles live in the field kit grid (same square format as the
     // kit tiles) instead of the Explore & learn carousel.
     val fieldGuideTiles = listOf(
-        HomeTile("BLM Public Lands", "State rules, dig sites, trailheads & campgrounds", Icons.Filled.Terrain, Color(0xFFC97B4A), Routes.BLM_GUIDE,
+        HomeTile("BLM Public Lands", "State rules, dig sites & info", Icons.Filled.Terrain, Color(0xFFC97B4A), Routes.BLM_GUIDE,
             BLM_HOME_TILE_NATURE),
+        HomeTile("National / State Parks", "Parks with geological interest", Icons.Filled.Park, Color(0xFF7BA868), Routes.STATE_PARKS,
+            FIELD_KIT_TILE_PARKS),
+        HomeTile("Campgrounds & Trailheads", "Camp & hike near dig sites", Icons.Filled.HolidayVillage, Color(0xFFE8A33D), Routes.CAMPGROUNDS_TRAILHEADS,
+            FIELD_KIT_TILE_TRAIL_CAMP),
         HomeTile("Finding Meteorites", "How to hunt and identify space rocks", Icons.Filled.Public, Color(0xFFC0C0C0), Routes.METEORITE_HUNTING,
             SpecimenImages.urls["amazing-meteorite-hunting"]?.firstOrNull()),
         HomeTile("Rock & Gem Resources", "Trusted geology, gem & fossil websites", Icons.Filled.Public, Color(0xFF7CB5EC), Routes.RESOURCE_LINKS,

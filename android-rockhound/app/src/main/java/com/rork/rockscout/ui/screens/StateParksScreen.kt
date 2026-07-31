@@ -101,7 +101,7 @@ fun StateParksScreen(navController: NavController) {
     }
 
     ScreenScaffold(
-        title = "National & State Parks",
+        title = "National / State Parks",
         onBack = { navController.popBackStack() },
         actions = {
             StatePickerPill(
