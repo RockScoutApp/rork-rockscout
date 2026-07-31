@@ -17,6 +17,7 @@ import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.AchievementsRepository
 import com.rork.rockscout.data.AdAnalyticsTracker
 import com.rork.rockscout.data.AffiliateClickTracker
+import com.rork.rockscout.data.TopPickManager
 import com.rork.rockscout.data.BugLogger
 import com.rork.rockscout.data.IdentifyAccessManager
 import com.rork.rockscout.data.IdentifyCache
@@ -190,6 +191,10 @@ class RockScoutApplication : Application() {
 
         safeInit("affiliate-click-tracker") {
             AffiliateClickTracker.initialize(this)
+        }
+
+        safeInit("top-pick-manager") {
+            TopPickManager.initialize()
         }
 
         safeInit("bug-logger") {

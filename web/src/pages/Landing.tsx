@@ -46,9 +46,10 @@ import {
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { recordAffiliateClick } from "@/lib/affiliate-tracker";
+import { getTopPickNames } from "@/lib/top-picks";
 import { SITE } from "@/content/legal";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 const SHOTS = [
   { src: "/images/screenshots/01_home_dashboard.webp", alt: "Home dashboard with AI rock identification, level progress, and Trade Board" },
@@ -871,7 +872,9 @@ const GEAR_ITEMS: GearItem[] = [
   { emoji: "👀", name: "Underwater Viewing Bucket", price: "$25 – $60", url: "https://www.amazon.com/s?k=underwater+viewing+bucket&tag=rockscout-20" },
 ];
 
-const FieldStories = () => (
+const FieldStories = () => {
+  const topPickNames = useMemo(() => getTopPickNames(), []);
+  return (
   <section className="relative py-16 scroll-mt-20 sm:py-24" id="supplies">
     <div className="mx-auto max-w-6xl px-4 sm:px-6">
       <div className="mb-10 flex flex-col gap-4 sm:mb-14 md:flex-row md:items-end md:justify-between">
@@ -916,12 +919,12 @@ const FieldStories = () => (
                           rel="noopener noreferrer"
                           onClick={() => recordAffiliateClick(item.name.replace(/\s+/g, '_').toLowerCase(), item.name)}
                           className={`flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-xs text-card-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 ${
-                            item.topPick ? "border-amber-500/50 bg-amber-500/5" : "border-border/70 bg-card"
+                            topPickNames.has(item.name) ? "border-amber-500/50 bg-amber-500/5" : "border-border/70 bg-card"
                           }`}
                         >
                           <span className="text-sm" aria-hidden>{item.emoji}</span>
                           <span className="flex-1 truncate font-medium">{item.name}</span>
-                          {item.topPick && (
+                          {topPickNames.has(item.name) && (
                             <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-amber-500/15 px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-500 ring-1 ring-amber-500/40">
                               <Star className="h-2 w-2 fill-amber-500 text-amber-500" />
                               Top
@@ -959,7 +962,8 @@ const FieldStories = () => (
       </div>
     </div>
   </section>
-);
+  );
+};
 
 const CTA = () => (
   <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">

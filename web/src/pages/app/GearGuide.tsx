@@ -4,10 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { gearItems, GEAR_CATEGORIES } from "@/data/gear";
 import { recordAffiliateClick } from "@/lib/affiliate-tracker";
+import { getTopPickIds } from "@/lib/top-picks";
 
 export default function GearGuide() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState<string>("all");
+
+  const topPickIds = useMemo(() => getTopPickIds(), []);
 
   const filtered = useMemo(() => {
     let items = gearItems;
@@ -81,7 +84,7 @@ export default function GearGuide() {
             rel="noopener noreferrer sponsored"
             onClick={() => recordAffiliateClick(item.id, item.name)}
             className={`group flex flex-col gap-2 rounded-xl border bg-card p-4 transition-all hover:border-primary/40 ${
-              item.topPick ? "border-amber-500/40 ring-1 ring-amber-500/20" : "border-border"
+              topPickIds.has(item.id) ? "border-amber-500/40 ring-1 ring-amber-500/20" : "border-border"
             }`}
           >
             <div className="flex items-start gap-3">
@@ -91,7 +94,7 @@ export default function GearGuide() {
                   <h3 className="font-display text-sm font-semibold text-foreground">
                     {item.name}
                   </h3>
-                  {item.topPick && (
+                  {topPickIds.has(item.id) && (
                     <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-500 ring-1 ring-amber-500/40">
                       <Star className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
                       Top Pick

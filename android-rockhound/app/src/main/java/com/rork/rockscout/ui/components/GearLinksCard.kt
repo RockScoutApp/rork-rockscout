@@ -24,6 +24,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import com.rork.rockscout.data.AffiliateClickTracker
 import com.rork.rockscout.data.GearItem
 import com.rork.rockscout.data.SafeLinkOpener
+import com.rork.rockscout.data.TopPickManager
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.DarkTextMid
@@ -92,15 +95,17 @@ fun GearLinksCard(
 
 @Composable
 private fun GearItemRow(item: GearItem, accent: Color, onClick: () -> Unit) {
+    val topPickIds by TopPickManager.topPickIds.collectAsState()
+    val isTopPick = topPickIds.contains(item.id)
     val rowShape = RoundedCornerShape(12.dp)
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(rowShape)
-            .background(if (item.topPick) Color(0xFF3D3826) else Color(0xFF3A3830))
+            .background(if (isTopPick) Color(0xFF3D3826) else Color(0xFF3A3830))
             .glowingBorder(
                 1.dp,
-                if (item.topPick) Citrine.copy(alpha = 0.6f) else accent.copy(alpha = 0.35f),
+                if (isTopPick) Citrine.copy(alpha = 0.6f) else accent.copy(alpha = 0.35f),
                 rowShape,
             )
             .clickable(onClick = onClick)
@@ -126,7 +131,7 @@ private fun GearItemRow(item: GearItem, accent: Color, onClick: () -> Unit) {
                     color = Color.White,
                     fontWeight = FontWeight.SemiBold,
                 )
-                if (item.topPick) {
+                if (isTopPick) {
                     Spacer(Modifier.width(6.dp))
                     Row(
                         modifier = Modifier
