@@ -430,7 +430,7 @@ fun CommunityPostDetailScreen(
                     onReply = { replyingToCommentId = comment.id },
                     isReplying = replyingToCommentId == comment.id,
                     authorName = authors[comment.user_id]?.displayName ?: "Unknown",
-                    canDelete = isMe || comment.user_id == myUserId,
+                    canDelete = comment.user_id == myUserId,
                     onDelete = { scope.launch { repo.deleteComment(comment.id) } },
                     onImageClick = { url -> viewerImageUrl = url },
                 )
@@ -452,7 +452,7 @@ fun CommunityPostDetailScreen(
                         isReply = true,
                         parentCommentBody = comment.body,
                         authorName = authors[firstReply.user_id]?.displayName ?: "Unknown",
-                        canDelete = isMe || firstReply.user_id == myUserId,
+                        canDelete = firstReply.user_id == myUserId,
                         onDelete = { scope.launch { repo.deleteComment(firstReply.id) } },
                         onImageClick = { url -> viewerImageUrl = url },
                     )
@@ -552,7 +552,7 @@ fun CommunityPostDetailScreen(
                                         isReply = true,
                                         parentCommentBody = comment.body,
                                         authorName = authors[reply.user_id]?.displayName ?: "Unknown",
-                                        canDelete = isMe || reply.user_id == myUserId,
+                                        canDelete = reply.user_id == myUserId,
                                         onDelete = { scope.launch { repo.deleteComment(reply.id) } },
                                         onImageClick = { url -> viewerImageUrl = url },
                                     )

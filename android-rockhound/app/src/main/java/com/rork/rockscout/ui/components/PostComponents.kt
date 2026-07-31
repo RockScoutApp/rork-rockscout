@@ -558,7 +558,7 @@ fun PostCard(
                     onLike = { onCommentLike(comment.id) },
                     onReply = { onReplyStart(comment.id) },
                     isReplying = replyingToCommentId == comment.id,
-                    canDelete = isMe || post.user_id == myUserId,
+                    canDelete = isMe || comment.user_id == myUserId,
                     onDelete = onDeleteComment?.let { cb -> { cb(comment.id) } },
                 )
                 if (replyingToCommentId == comment.id) {
@@ -587,7 +587,7 @@ fun PostCard(
                             isReplying = replyingToCommentId == reply.id,
                             isReply = true,
                             parentCommentBody = comment.body,
-                            canDelete = isMe || post.user_id == myUserId,
+                            canDelete = isMe || reply.user_id == myUserId,
                             onDelete = onDeleteComment?.let { cb -> { cb(reply.id) } },
                         )
                         if (replyingToCommentId == reply.id) {

@@ -562,7 +562,7 @@ fun CommunityPostCard(
                     onLike = { onCommentLike(comment.id) },
                     onReply = { onReplyStart(comment.id) },
                     isReplying = replyingToCommentId == comment.id,
-                    canDelete = isMe || post.user_id == myUserId,
+                    canDelete = comment.user_id == myUserId,
                     onDelete = onDeleteComment?.let { cb -> { cb(comment.id) } },
                     onImageClick = { url -> viewerImageUrl = url },
                 )
@@ -592,7 +592,7 @@ fun CommunityPostCard(
                             isReplying = replyingToCommentId == reply.id,
                             isReply = true,
                             parentCommentBody = comment.body,
-                            canDelete = isMe || post.user_id == myUserId,
+                            canDelete = reply.user_id == myUserId,
                             onDelete = onDeleteComment?.let { cb -> { cb(reply.id) } },
                             onImageClick = { url -> viewerImageUrl = url },
                         )
