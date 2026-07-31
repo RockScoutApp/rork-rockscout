@@ -782,7 +782,7 @@ const FIELD_STORIES: FieldStory[] = [
   },
 ];
 
-type GearItem = { emoji: string; name: string; price: string; url: string };
+type GearItem = { emoji: string; name: string; price: string; url: string; topPick?: boolean };
 
 const GEAR_ITEMS: GearItem[] = [
   { emoji: "🔍", name: "10x Jeweler's Loupe", price: "$8 – $15", url: "https://www.amazon.com/s?k=10x+jewelers+loupe&tag=rockscout-20" },
@@ -878,10 +878,18 @@ const FieldStories = () => (
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => recordAffiliateClick(item.name.replace(/\s+/g, '_').toLowerCase(), item.name)}
-                          className="flex items-center gap-2 rounded-xl border border-border/70 bg-card px-2.5 py-1.5 text-xs text-card-foreground transition-colors hover:border-primary/40 hover:bg-primary/5"
+                          className={`flex items-center gap-2 rounded-xl border px-2.5 py-1.5 text-xs text-card-foreground transition-colors hover:border-primary/40 hover:bg-primary/5 ${
+                            item.topPick ? "border-amber-500/50 bg-amber-500/5" : "border-border/70 bg-card"
+                          }`}
                         >
                           <span className="text-sm" aria-hidden>{item.emoji}</span>
-                          <span className="flex-1 truncate">{item.name}</span>
+                          <span className="flex-1 truncate font-medium">{item.name}</span>
+                          {item.topPick && (
+                            <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-amber-500/15 px-1 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-500 ring-1 ring-amber-500/40">
+                              <Star className="h-2 w-2 fill-amber-500 text-amber-500" />
+                              Top
+                            </span>
+                          )}
                           <span className="shrink-0 text-muted-foreground">{item.price}</span>
                           <ExternalLink className="h-3 w-3 shrink-0 opacity-60" />
                         </a>

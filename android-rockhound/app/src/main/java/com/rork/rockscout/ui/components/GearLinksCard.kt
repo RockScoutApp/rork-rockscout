@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -96,8 +97,12 @@ private fun GearItemRow(item: GearItem, accent: Color, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(rowShape)
-            .background(Color(0xFF3A3830))
-            .glowingBorder(1.dp, accent.copy(alpha = 0.35f), rowShape)
+            .background(if (item.topPick) Color(0xFF3D3826) else Color(0xFF3A3830))
+            .glowingBorder(
+                1.dp,
+                if (item.topPick) Citrine.copy(alpha = 0.6f) else accent.copy(alpha = 0.35f),
+                rowShape,
+            )
             .clickable(onClick = onClick)
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -114,12 +119,39 @@ private fun GearItemRow(item: GearItem, accent: Color, onClick: () -> Unit) {
         }
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                item.name,
-                style = MaterialTheme.typography.titleSmall,
-                color = Color.White,
-                fontWeight = FontWeight.SemiBold,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    item.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                if (item.topPick) {
+                    Spacer(Modifier.width(6.dp))
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Citrine.copy(alpha = 0.25f))
+                            .glowingBorder(1.dp, Citrine.copy(alpha = 0.5f), RoundedCornerShape(6.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.Filled.Star,
+                            contentDescription = null,
+                            tint = Citrine,
+                            modifier = Modifier.size(10.dp),
+                        )
+                        Spacer(Modifier.width(3.dp))
+                        Text(
+                            "Top Pick",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Citrine,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
             Text(
                 item.priceBand,
                 style = MaterialTheme.typography.labelSmall,

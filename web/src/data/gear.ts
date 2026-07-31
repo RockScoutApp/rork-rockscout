@@ -18,6 +18,7 @@ export interface GearItem {
   emoji: string;
   url: string;
   priceBand: string;
+  topPick?: boolean;
 }
 
 export const gearItems: GearItem[] = (gearData as GearItem[]).map((item) => ({

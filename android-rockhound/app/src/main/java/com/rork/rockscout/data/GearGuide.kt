@@ -23,6 +23,8 @@ data class GearItem(
     val url: String,
     /** Approximate price band for display. */
     val priceBand: String,
+    /** Whether this item is a "Top Pick" — drives a highlight badge to boost engagement. */
+    val topPick: Boolean = false,
 )
 
 /** A themed gear kit — beginner / intermediate / advanced or per-specimen-type. */
@@ -45,6 +47,7 @@ object GearGuide {
         emoji = "\uD83D\uDD0D",
         url = "https://www.amazon.com/s?k=10x+jewelers+loupe&tag=rockscout-20",
         priceBand = "$8 – $15",
+        topPick = true,
     )
 
     val GEAR_LOUPE_30X = GearItem(
@@ -72,6 +75,7 @@ object GearGuide {
         emoji = "\uD83D\uDD73\uFE0F",
         url = "https://www.amazon.com/s?k=mohs+hardness+kit&tag=rockscout-20",
         priceBand = "$25 – $60",
+        topPick = true,
     )
 
     val GEAR_STREAK_PLATE = GearItem(
@@ -81,6 +85,7 @@ object GearGuide {
         emoji = "\uD83D\uDDA8\uFE0F",
         url = "https://www.amazon.com/s?k=streak+plate+unglazed+porcelain&tag=rockscout-20",
         priceBand = "$5 – $10",
+        topPick = true,
     )
 
     val GEAR_ROCK_HAMMER = GearItem(
@@ -90,6 +95,7 @@ object GearGuide {
         emoji = "\uD83D\uDD28",
         url = "https://www.amazon.com/s?k=rock+pick+hammer+geology&tag=rockscout-20",
         priceBand = "$25 – $50",
+        topPick = true,
     )
 
     val GEAR_ROCK_HAMMER_PRO = GearItem(
@@ -99,6 +105,7 @@ object GearGuide {
         emoji = "\uD83D\uDD28",
         url = "https://www.amazon.com/s?k=estwing+rock+pick&tag=rockscout-20",
         priceBand = "$45 – $80",
+        topPick = true,
     )
 
     val GEAR_CHISEL_SET = GearItem(
@@ -144,6 +151,7 @@ object GearGuide {
         emoji = "\uD83C\uDF92",
         url = "https://www.amazon.com/s?k=rockhound+field+bag&tag=rockscout-20",
         priceBand = "$20 – $45",
+        topPick = true,
     )
 
     val GEAR_WATERPROOF_FIELD_BAG = GearItem(
@@ -162,6 +170,7 @@ object GearGuide {
         emoji = "\uD83D\uDD26",
         url = "https://www.amazon.com/s?k=365nm+uv+flashlight&tag=rockscout-20",
         priceBand = "$15 – $40",
+        topPick = true,
     )
 
     val GEAR_UV_LIGHT_SW = GearItem(
@@ -180,6 +189,7 @@ object GearGuide {
         emoji = "\uD83D\uDCD3",
         url = "https://www.amazon.com/s?k=rite+in+the+rain+notebook&tag=rockscout-20",
         priceBand = "$10 – $25",
+        topPick = true,
     )
 
     val GEAR_SPRAY_BOTTLE = GearItem(
@@ -225,6 +235,7 @@ object GearGuide {
         emoji = "\uD83E\uDD7E",
         url = "https://www.amazon.com/s?k=waterproof+hiking+boots+ankle&tag=rockscout-20",
         priceBand = "$80 – $200",
+        topPick = true,
     )
 
     val GEAR_SCOOP_TELE = GearItem(
@@ -279,6 +290,7 @@ object GearGuide {
         emoji = "\uD83E\uDD7D",
         url = "https://www.amazon.com/s?k=safety+glasses+impact&tag=rockscout-20",
         priceBand = "$5 – $20",
+        topPick = true,
     )
 
     val GEAR_GLOVES_WATERPROOF = GearItem(

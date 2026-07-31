@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { ExternalLink, Search, X, Compass } from "lucide-react";
+import { ExternalLink, Search, X, Compass, Star } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { gearItems, GEAR_CATEGORIES } from "@/data/gear";
@@ -80,14 +80,24 @@ export default function GearGuide() {
             target="_blank"
             rel="noopener noreferrer sponsored"
             onClick={() => recordAffiliateClick(item.id, item.name)}
-            className="group flex flex-col gap-2 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/40"
+            className={`group flex flex-col gap-2 rounded-xl border bg-card p-4 transition-all hover:border-primary/40 ${
+              item.topPick ? "border-amber-500/40 ring-1 ring-amber-500/20" : "border-border"
+            }`}
           >
             <div className="flex items-start gap-3">
               <span className="text-2xl">{item.emoji}</span>
               <div className="min-w-0 flex-1">
-                <h3 className="font-display text-sm font-semibold text-foreground">
-                  {item.name}
-                </h3>
+                <div className="flex items-center gap-1.5">
+                  <h3 className="font-display text-sm font-semibold text-foreground">
+                    {item.name}
+                  </h3>
+                  {item.topPick && (
+                    <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-500 ring-1 ring-amber-500/40">
+                      <Star className="h-2.5 w-2.5 fill-amber-500 text-amber-500" />
+                      Top Pick
+                    </span>
+                  )}
+                </div>
                 <p className="mt-0.5 text-xs text-primary">{item.priceBand}</p>
               </div>
               <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
