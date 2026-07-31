@@ -49,6 +49,7 @@ import com.rork.rockscout.data.GLOSSARY_ENTRIES
 import com.rork.rockscout.data.GLOSSARY_LETTERS
 import com.rork.rockscout.data.GlossaryCategory
 import com.rork.rockscout.data.GlossaryEntry
+import com.rork.rockscout.ui.components.AlphabetIndex
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.InterstitialAdTrigger
 import com.rork.rockscout.ui.components.ScreenScaffold
@@ -183,82 +184,16 @@ fun GlossaryScreen(navController: NavController) {
                 }
             }
 
-            // A–Z letter jump index — horizontally scrollable so all 26 letters fit on any screen.
-            androidx.compose.foundation.lazy.LazyRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                items(GLOSSARY_LETTERS) { letter ->
-                    val hasSection = grouped.containsKey(letter)
-                    Box(
-                        modifier = Modifier
-                            .size(26.dp)
-                            .clip(CircleShape)
-                            .background(
-                                if (hasSection) GlossaryAccent.copy(alpha = 0.18f)
-                                else Color(0xFF1A180F)
-                            )
-                            .glowingBorder(
-                                1.dp,
-                                if (hasSection) GlossaryAccent.copy(alpha = 0.5f)
-                                else Color.White.copy(alpha = 0.08f),
-                                CircleShape,
-                            )
-                            .let { mod ->
-                                if (hasSection) {
-                                    mod.sculpted(
-                                        shape = CircleShape,
-                                        accent = GlossaryAccent,
-                                        shadowElevation = 2.dp,
-                                        circular = true,
-                                        onClick = {
-                                            val index = grouped.keys.indexOf(letter)
-                                            if (index >= 0) {
-                                                // Offset: 1 for intro + accumulated items up to this letter.
-                                                var offset = 1
-                                                grouped.keys.take(index).forEach { key ->
-                                                    offset += 1 + (grouped[key]?.size ?: 0)
-                                                }
-                                                scope.launch {
-                                                    listState.animateScrollToItem(offset)
-                                                }
-                                            }
-                                        },
-                                    )
-                                } else {
-                                    mod
-                                }
-                            },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            letter.toString(),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (hasSection) GlossaryAccent else DarkTextMid,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                }
-            }
-
-            // Results count.
-            Text(
-                text = "${filtered.size} ${if (filtered.size == 1) "term" else "terms"}" +
-                    if (query.isNotBlank()) " matching \"$query\"" else "",
-                style = MaterialTheme.typography.labelMedium,
-                color = DarkTextMid,
-                modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
-            )
-
-            // Entries list.
-            LazyColumn(
-                state = listState,
+            // Results count + entries list with a vertical A–Z jump index on the right edge.
+            Row(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 40.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(start = 20.dp, end = 8.dp, bottom = 40.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
                 // Intro card.
                 item {
                     Box(
@@ -313,6 +248,17 @@ fun GlossaryScreen(navController: NavController) {
                     }
                 }
 
+                // Results count (inline at top of the list).
+                item {
+                    Text(
+                        text = "${filtered.size} ${if (filtered.size == 1) "term" else "terms"}" +
+                            if (query.isNotBlank()) " matching \"$query\"" else "",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = DarkTextMid,
+                        modifier = Modifier.padding(vertical = 4.dp),
+                    )
+                }
+
                 grouped.forEach { (letter, entries) ->
                     item(key = "header_$letter") {
                         Text(
@@ -327,9 +273,29 @@ fun GlossaryScreen(navController: NavController) {
                         GlossaryEntryCard(entry)
                     }
                 }
-            }
-        }
-    }
+                } // close LazyColumn
+
+                // Vertical A–Z jump index on the right edge.
+                AlphabetIndex(
+                    names = filtered.map { it.term },
+                    onLetterClick = { letter ->
+                        val index = grouped.keys.indexOf(letter)
+                        if (index >= 0) {
+                            // Offset: 1 (results count) + accumulated items up to this letter.
+                            var offset = 1
+                            grouped.keys.take(index).forEach { key ->
+                                offset += 1 + (grouped[key]?.size ?: 0)
+                            }
+                            scope.launch {
+                                listState.animateScrollToItem(offset)
+                            }
+                        }
+                    },
+                    modifier = Modifier,
+                )
+            } // close Row
+        } // close Column
+    } // close ScreenScaffold
 }
 
 @Composable

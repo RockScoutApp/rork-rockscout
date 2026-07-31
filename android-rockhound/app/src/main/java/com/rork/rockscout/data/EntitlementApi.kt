@@ -46,12 +46,13 @@ object EntitlementApi {
     /**
      * Sync the user's RevenueCat entitlement to Supabase.
      * Silently fails on network errors — this is a best-effort sync.
+     * Returns true if the sync succeeded, false otherwise.
      */
-    suspend fun syncEntitlement(userId: String) {
-        if (userId.isBlank()) return
-        try {
+    suspend fun syncEntitlement(userId: String): Boolean {
+        if (userId.isBlank()) return false
+        return try {
             val baseUrl = BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", BuildSecrets.RORK_FUNCTIONS_URL)
-                .ifBlank { null } ?: return
+                .ifBlank { null } ?: return false
             val appKey = BuildSecrets.resolve("EXPO_PUBLIC_RORK_APP_KEY", BuildSecrets.RORK_APP_KEY)
 
             val response = client.post("$baseUrl/entitlement") {
@@ -64,11 +65,14 @@ object EntitlementApi {
             val parsed = json.decodeFromString(EntitlementResponse.serializer(), body)
             if (parsed.ok) {
                 Log.i(TAG, "Entitlement synced for user=$userId: isPremium=${parsed.isPremium}, supabaseUpdated=${parsed.supabaseUpdated}")
+                true
             } else {
                 Log.w(TAG, "Entitlement sync returned ok=false for user=$userId")
+                false
             }
         } catch (e: Exception) {
             Log.w(TAG, "Entitlement sync failed: ${e.message}")
+            false
         }
     }
 }

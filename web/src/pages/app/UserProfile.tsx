@@ -13,6 +13,7 @@ import {
   Heart,
   Award,
   MapPin,
+  Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -254,7 +255,8 @@ export default function UserProfile() {
               {profile.display_name || "Anonymous Rockhound"}
             </h1>
             {profile.is_pro && (
-              <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">
+              <span className="pro-badge-gold inline-flex items-center gap-1 rounded-md bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-600 px-2 py-0.5 text-xs font-black tracking-wide text-amber-950 shadow-[0_0_8px_rgba(251,191,36,0.5)]">
+                <Crown className="h-3 w-3" />
                 PRO
               </span>
             )}

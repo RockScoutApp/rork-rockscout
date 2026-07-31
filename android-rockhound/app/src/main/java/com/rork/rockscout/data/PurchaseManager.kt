@@ -66,6 +66,15 @@ class PurchaseManager {
     private val _purchaseMessage = MutableStateFlow<String?>(null)
     val purchaseMessage: StateFlow<String?> = _purchaseMessage.asStateFlow()
 
+    /** Tracks the lifecycle of the entitlement sync to the backend. */
+    enum class SyncStatus { IDLE, SYNCING, SYNCED, FAILED }
+
+    private val _syncStatus = MutableStateFlow(SyncStatus.IDLE)
+    val syncStatus: StateFlow<SyncStatus> = _syncStatus.asStateFlow()
+
+    private val _entitlementSynced = MutableStateFlow(false)
+    val entitlementSynced: StateFlow<Boolean> = _entitlementSynced.asStateFlow()
+
     /** Monthly Premium subscription package from the current offering. */
     val monthlyPackage: Package?
         get() = _currentOffering.value?.availablePackages?.find {
@@ -524,10 +533,21 @@ class PurchaseManager {
      * [linkRevenueCatUser], so the backend can look up the entitlement by ID.
      */
     private fun syncEntitlementToBackend() {
-        if (com.rork.rockscout.BuildConfig.FORCE_PREMIUM) return
+        if (com.rork.rockscout.BuildConfig.FORCE_PREMIUM) {
+            _syncStatus.value = SyncStatus.SYNCED
+            _entitlementSynced.value = true
+            return
+        }
         val userId = AuthRepository.instance.currentUserId ?: return
+        _syncStatus.value = SyncStatus.SYNCING
         scope.launch {
-            EntitlementApi.syncEntitlement(userId)
+            val ok = EntitlementApi.syncEntitlement(userId)
+            if (ok) {
+                _syncStatus.value = SyncStatus.SYNCED
+                _entitlementSynced.value = true
+            } else {
+                _syncStatus.value = SyncStatus.FAILED
+            }
         }
     }
 

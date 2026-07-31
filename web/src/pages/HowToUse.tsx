@@ -68,10 +68,10 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     steps: [
       `Tap the big "Identify a Rock" hero banner on the home screen.`,
       `Choose a photo from your gallery or snap one with your camera.`,
-      `Hit "Identify" — three AI models (Claude Haiku, Claude Sonnet, and Gemini 2.5 Pro) will tag-team the analysis.`,
-      `The AI then performs a visual reference comparison — it actually SEES the database reference images alongside your photo and ranks the top matches visually (not just from text descriptions).`,
+      `The 5-source pipeline starts: first the database visual reference comparison — your photo is compared side by side against reference images in the specimen database and ranked by visual similarity (not just from text descriptions).`,
+      `Then three AI models tag-team the analysis — Claude Haiku, Claude Sonnet, and Gemini 2.5 Pro — all looking at the reference images alongside your photo.`,
       `If the visual match is highly confident (92%+), results return instantly — no need for the full pipeline.`,
-      `Otherwise, the app runs a web search cross-check for maximum accuracy.`,
+      `Otherwise, the fifth source runs: a web search cross-check for maximum accuracy.`,
       `If the AI needs more information to narrow down the ID, it asks you a few clarification questions (e.g. hardness, streak color, or environment) — answer them and the final result re-ranks the candidates for higher accuracy.`,
       `If your rock has multiple minerals, the AI auto-detects the assemblage and breaks down each component.`,
       `Results show the specimen name, confidence level, properties, and where to find more — the AI has already visually compared your photo against the database reference images to reach that ranking.`,
@@ -228,7 +228,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
       `Customize your aurora notification threshold in Social Settings — set a minimum Kp level (0.0–9.0) and you'll get an instant push notification the moment that Kp is reached, alerting you that aurora may be within viewing radius.`,
       `When an aurora alert fires, tap the "Share Kp Status" button on the notification to send your current Kp reading and visibility status to social media.`,
       `Use the Saved Spots section to bookmark specific coordinates and track aurora visibility at those locations — drop a pin on the aurora map, enter coordinates manually, or tap "Mark My Location" to use your GPS.`,
-      `Every page in the Aurora tab features colorful northern lights backgrounds, bright themed text, and an animated twinkling-stars background that doesn't overlap any text, images, or buttons.`,
+
     ],
   },
   {
@@ -243,7 +243,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
       `Important Stars: explore ~30 notable stars — Sirius, Betelgeuse, Vega, Polaris, Rigel, and more. Tap any star for its spectral class, temperature, luminosity, distance, and visibility info. The 6 most iconic stars include hero images.`,
       `Planets: all 8 planets plus dwarf planets (Pluto, Ceres) with diameter, distance from Sun, orbital period, moons, and detail cards showing physical properties, visibility, and notable features. Each planet has a generated image.`,
       `Deep Sky Objects: ~40 galaxies, nebulae, and star clusters (Andromeda Galaxy, Orion Nebula, Pleiades, Crab Nebula, and more) with catalog numbers, distances, magnitudes, and observing info. The 8 most famous DSOs include hero images.`,
-      `Every page in the Night Sky Guide features animated twinkling white stars in the background — purely decorative, they never overlap text, images, or clickable items.`,
+
     ],
   },
   {
@@ -337,6 +337,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
       `Favorite Spots appear on the home screen with a count of saved locations and are fully searchable from the global search.`,
       `In the Aurora Forecaster, use the Saved Spots section to bookmark specific coordinates and track aurora visibility at those locations — drop a pin on the map, enter lat/lng manually, or tap "Mark My Location" to use your GPS.`,
       `Each aurora saved spot shows the name, coordinates, and current visibility status (Aurora visible / unlikely) based on the spot's latitude and current Kp index.`,
+      `The free tier is recommended for everyone — kids, adults, beginners, experts. Premium is recommended for users 18+ because it unlocks the social layer (friends, messaging, trade, community). Safety is the first, second, and third rule.`,
     ],
   },
   {
@@ -537,7 +538,8 @@ const HOW_TO_SECTIONS: HowToSection[] = [
       `After the trial, these stay FREE forever: browsing the full specimen database & geology guides, the Field Camera (saves to Saved Images), NWS severe weather alerts, and browsing dig sites & offline maps.`,
       `After the trial, these require Premium or a donation: AI identification & ID tokens, RockScout Friends/Messenger/Community, Trade Board & Discover Hunters, My Rocks/Wishlist/Field Captures/Favorite Spots, and Trip Planner/Field Journal/specimen submissions.`,
       `Two ways to keep identifying free: watch 2 short rock-related videos to earn 1 ID token (no weekly cap), or make a donation of any amount for tokens plus a temporary full-feature unlock (2 days up to 1 month).`,
-      `Premium ($5.99/mo) unlocks everything: unlimited AI identifies with all 3 models (Haiku + Sonnet + Gemini 2.5 Pro tie-breaker), ad-free, 250-mile nearby radius, 24-hour pings, premium gem badge, and early access to new features.`,
+      `The free tier is recommended for everyone. Premium is recommended for users 18+ because it unlocks the social layer (friends, messaging, trade, community). Safety is the first, second, and third rule.`,
+      `Premium ($5.99/mo) unlocks everything: unlimited AI identifies with all 5 sources (database comparison + Haiku + Sonnet + Gemini 2.5 Pro + web cross-check), ad-free, 250-mile nearby radius, 24-hour pings, premium gem badge, and early access to new features.`,
       `Check your token balance anytime via the Token Bank icon in the home header.`,
       `Tap the Token Bank to open the Token Info screen for details and purchasing options.`,
     ],
@@ -851,8 +853,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     steps: [
       `Tap "Contact Us" from the home screen tagline section.`,
       `Send feedback, report issues, or suggest new features directly to the developer.`,
-      `Your message goes straight to the RockScout team — no bots, no tickets.`,
-      `Have a question about a feature or found a bug? This is the place.`,
+      `We reply within 36 hours — no bots, no tickets.`,
     ],
   },
   {
@@ -884,7 +885,7 @@ const HowToUse = () => {
         {/* Geode backdrop */}
         <div className="geode-gradient absolute inset-x-0 top-0 -z-10 h-72" aria-hidden />
 
-        <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12 md:py-16">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 md:py-16">
           {/* Header row with close button */}
           <div className="flex items-start justify-between gap-4">
             <div className="fade-rise">
@@ -916,7 +917,7 @@ const HowToUse = () => {
           </div>
 
           {/* Section pills grid */}
-          <div className="mt-8 grid grid-cols-2 gap-2.5 sm:mt-10 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
+          <div className="mt-8 grid grid-cols-2 gap-2.5 sm:mt-10 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5">
             {HOW_TO_SECTIONS.map((section, idx) => (
               <button
                 key={section.title}
@@ -942,7 +943,7 @@ const HowToUse = () => {
                   <span className="text-[10px] font-bold tabular-nums text-muted-foreground/60">
                     {String(idx + 1).padStart(2, "0")}
                   </span>
-                  <span className="truncate text-xs font-semibold text-foreground sm:text-sm">
+                  <span className="text-xs font-semibold text-foreground sm:text-sm">
                     {section.shortLabel}
                   </span>
                 </span>

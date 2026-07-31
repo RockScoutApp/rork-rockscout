@@ -110,6 +110,7 @@ import com.rork.rockscout.data.PostRepository
 import com.rork.rockscout.data.ReferralRepository
 import com.rork.rockscout.ui.components.AnimatedAvatarIcon
 import com.rork.rockscout.ui.components.BadgeIconButton
+import com.rork.rockscout.ui.components.ProBadge
 import com.rork.rockscout.ui.components.postImageNavigation
 import com.rork.rockscout.data.SeedData
 import androidx.compose.material3.DropdownMenu
@@ -511,13 +512,21 @@ fun ProfileScreen(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalArrangement = Arrangement.Center,
                                 ) {
-                                    Text(
-                                        profile.name,
-                                        style = MaterialTheme.typography.headlineMedium,
-                                        color = Color.White,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    ) {
+                                        Text(
+                                            profile.name,
+                                            style = MaterialTheme.typography.headlineMedium,
+                                            color = Color.White,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                        if (isPremium) {
+                                            ProBadge()
+                                        }
+                                    }
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
                                             imageVector = Icons.Filled.LocationOn,

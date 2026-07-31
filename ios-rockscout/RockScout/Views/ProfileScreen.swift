@@ -63,9 +63,14 @@ struct ProfileScreen: View {
             }
 
             VStack(spacing: 4) {
-                Text(auth.currentUserEmail ?? "Rockhound")
-                    .font(.headline)
-                    .foregroundStyle(.rsText)
+                HStack(spacing: 8) {
+                    Text(auth.currentUserEmail ?? "Rockhound")
+                        .font(.headline)
+                        .foregroundStyle(.rsText)
+                    if entitlement.isPremium {
+                        ProBadgeView()
+                    }
+                }
                 Text(auth.currentUserId?.uuidString.prefix(8) ?? "")
                     .font(.caption)
                     .foregroundStyle(.rsTextMuted)
@@ -150,6 +155,12 @@ struct ProfileScreen: View {
             }
             Divider().background(RockScoutColors.stoneLine.opacity(0.3))
             SettingsRow(icon: "info.circle.fill", title: "Version", value: "1.0.0")
+            Divider().background(RockScoutColors.stoneLine.opacity(0.3))
+            NavigationLink {
+                NarratorScreen()
+            } label: {
+                SettingsRow(icon: "play.circle.fill", title: "Narrator Tutorial", value: nil, isLink: true)
+            }
         }
         .padding(16)
         .rsCard()

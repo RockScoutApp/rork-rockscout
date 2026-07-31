@@ -44,6 +44,9 @@ import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.Science
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Star
@@ -179,11 +182,39 @@ fun PaywallScreen(navController: NavController) {
             // Subtitle — Flintstones vs Star Trek tier comparison
             item {
                 Text(
-                    text = "Free tier is the Flintstones car with a map carved on a stone tablet — 1 AI model — you'll get there eventually. Premium is the transporter from Star Trek — 3 AI models, web search, and database cross checks — you'll get where you want to go faster than you can say “Beam me up Scotty.”",
+                    text = "Free tier is the Flintstones car with a map carved on a stone tablet — 1 AI source — you'll get there eventually. Premium is the transporter from Star Trek — 5 sources (database + 3 AI models + web search) — you'll get where you want to go faster than you can say “Beam me up Scotty.”",
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextMid,
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
                 )
+            }
+
+            // Age recommendation & safety banner
+            item {
+                DarkCard(modifier = Modifier.fillMaxWidth(), accent = Success) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Filled.Shield,
+                            contentDescription = null,
+                            tint = Success,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "Free is recommended for everyone.",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = DarkTextHigh,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = "Premium is recommended for users 18+ because it unlocks the social layer (friends, messaging, trade, community). Safety is the 1st, 2nd, and 3rd rule.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = DarkTextMid,
+                            )
+                        }
+                    }
+                }
             }
 
             // Signed-in reassurance banner
@@ -708,7 +739,7 @@ private fun PremiumTierCard(
                             fontWeight = FontWeight.Bold,
                         )
                         Text(
-                            text = "Three AI models vote on the hardest IDs.",
+                            text = "Five sources vote on the hardest IDs.",
                             style = MaterialTheme.typography.bodySmall,
                             color = DarkTextMid,
                         )
@@ -725,12 +756,12 @@ private fun PremiumTierCard(
             )
             Spacer(Modifier.height(6.dp))
             AccuracyLadder(
-                models = listOf("Haiku" to Citrine, "+ Sonnet" to CitrineSoft, "+ Gemini" to Amethyst),
+                models = listOf("DB" to Citrine, "+ Haiku" to CitrineSoft, "+ Sonnet" to Aqua, "+ Gemini" to Amethyst, "+ Web" to Success),
                 accent = Citrine,
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                text = "Haiku + Sonnet work every call. When both disagree or return low confidence (the hardest ~5%), Gemini 2.5 Pro casts the deciding vote. Three independent models agreeing is the strongest ID signal available.",
+                text = "Database visual comparison runs first, then Haiku + Sonnet work every call. When both disagree or return low confidence (the hardest ~5%), Gemini 2.5 Pro casts the deciding vote. A web search cross-check adds a fifth source for maximum accuracy.",
                 style = MaterialTheme.typography.bodySmall,
                 color = DarkTextLow,
             )
@@ -744,7 +775,11 @@ private fun PremiumTierCard(
                 fontWeight = FontWeight.Bold,
             )
             Spacer(Modifier.height(8.dp))
-            FeatureRow(Icons.Filled.Check, "Unlimited AI identifies — no tokens, no caps", Citrine)
+            FeatureRow(Icons.Filled.Check, "Unlimited 5-source AI identifies — no tokens, no caps", Citrine)
+            Spacer(Modifier.height(8.dp))
+            FeatureRow(Icons.Filled.Search, "Ultra-advanced search filters across the full database", Citrine)
+            Spacer(Modifier.height(8.dp))
+            FeatureRow(Icons.Filled.Storage, "Unlimited storage & 2 GB offline cache for the full catalog", Citrine)
             Spacer(Modifier.height(8.dp))
             FeatureRow(Icons.Filled.Block, "Ad-free — banner & interstitial ads removed", Citrine)
             Spacer(Modifier.height(8.dp))

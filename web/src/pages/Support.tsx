@@ -6,11 +6,11 @@ import { SITE } from "@/content/legal";
 const FAQ = [
   {
     q: "How does the AI rock identification work?",
-    a: "Snap a photo of the specimen in good light and RockScout sends it to our identification service, which returns a best-effort suggestion based on visual features. It's a starting point — for high-value or hazardous specimens, confirm with a qualified expert.",
+    a: "Snap a photo of the specimen in good light and RockScout runs it through a 5-source identification pipeline. First, the database visual reference comparison — your photo is compared side by side against reference images in the specimen database and ranked by visual similarity. Then three AI models — Claude Haiku, Claude Sonnet, and Gemini 2.5 Pro — tag-team the analysis, actually looking at the reference images alongside your photo. If the match isn't confident enough, it runs a web search cross-check for extra accuracy. It's a starting point — for high-value or hazardous specimens, confirm with a qualified expert.",
   },
   {
     q: "Is RockScout free?",
-    a: "Yes and No. Every user gets a 7-day full-access trial with 5 AI identification tokens. After the trial, the free tier includes (ad supported) rock identification, browsing the full specimen database & geology guides, the field camera (saves to your in-app Saved Images), NWS severe weather alerts, browsing dig sites & offline maps, and the glossary — but it's read-only plus field camera, not full access. AI identification tokens can also be earned free by watching a couple short videos — no weekly cap. Donations unlock social features (Friends, Messenger, Community, Trade Board), My Rocks, Wishlist, Field Captures, Trip Planner, and Field Journal for a limited time. Premium ($5.99/mo) is the only tier that is completely unrestricted — no ads, no token limits, no feature locks. On the web, a free read-only PWA is available for learners and kids — full database, educational guides, and map viewing with no camera, no ID, and no social. The free version does not have access to any of the social aspects, so it stays rated G for younger users. Pricing is shown in the app before any purchase.",
+    a: "Yes and No. The free tier is recommended for everyone — kids, adults, beginners, experts. Every user gets a 7-day full-access trial with 5 AI identification tokens. After the trial, the free tier includes (ad supported) rock identification, browsing the full specimen database & geology guides, the field camera (saves to your in-app Saved Images), NWS severe weather alerts, browsing dig sites & offline maps, and the glossary. AI identification tokens can also be earned free by watching a couple short videos — no weekly cap. Donations unlock social features (Friends, Messenger, Community, Trade Board), My Rocks, Wishlist, Field Captures, Trip Planner, and Field Journal for a limited time. Premium ($5.99/mo) is recommended for users 18+ because it unlocks the social layer — friends, messaging, trade, and community. Safety is the first, second, and third rule. Premium is the only tier that is completely unrestricted — no ads, no token limits, no feature locks. On the web, a free read-only PWA is available for learners and kids — full database, educational guides, and map viewing with no camera, no ID, and no social. The free version does not have access to any of the social aspects, so it stays rated G for younger users. Pricing is shown in the app before any purchase.",
   },
   {
     q: "Can I use RockScout offline?",
@@ -137,15 +137,14 @@ const Support = () => (
           <div>
             <p className="text-sm font-semibold">Email our team</p>
             <p className="mt-1 text-sm text-muted-foreground">{SITE.supportEmail}</p>
-            <p className="mt-2 text-xs text-muted-foreground">Replies within 5 business days.</p>
+            <p className="mt-2 text-xs text-muted-foreground">Replies within 36 hours.</p>
           </div>
           <Mail className="h-5 w-5 text-primary transition-transform group-hover:-translate-y-0.5" />
         </a>
         <div className="group flex items-center justify-between rounded-2xl border border-border bg-card/50 p-5">
           <div>
-            <p className="text-sm font-semibold">Coming soon to Android, iOS (Beta) &amp; PC</p>
-            <p className="mt-1 text-sm text-muted-foreground">Not available to download yet</p>
-            <p className="mt-2 text-xs text-muted-foreground">Native iOS app coming soon to the App Store.</p>
+            <p className="text-sm font-semibold">Available on Android, iOS &amp; web</p>
+            <p className="mt-1 text-sm text-muted-foreground">Download the app or use the web PWA</p>
           </div>
           <Download className="h-5 w-5 text-primary/70" />
         </div>

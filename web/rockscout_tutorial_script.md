@@ -16,13 +16,13 @@ Let me show you around.
 
 ---
 
-## Chapter 2 — AI Rock Identification (~75s)
+## Chapter 2 — 5-Source AI Rock Identification (~75s)
 
 This is the big one. Tap "Identify a Rock" right on the home screen — can't miss it, it's the biggest button up there. Pick a photo from your gallery or snap one with your camera, then hit Identify.
 
-Now here's where it gets serious. Most rock apps use one AI model. RockScout uses three — Claude Haiku, Claude Sonnet, and Gemini 2.5 Pro — all tag-teaming your rock at the same time. The AI actually looks at the database reference images alongside your photo and ranks the best matches visually. It's not just reading a text description and guessing — it sees the rocks.
+Now here's where it gets serious. Most rock apps use one AI model. RockScout uses five sources working together. First, the database visual reference comparison — your photo is compared side by side against the reference images in the specimen database and ranked by visual similarity. That's source one. Then sources two, three, and four: three AI models — Claude Haiku, Claude Sonnet, and Gemini 2.5 Pro — all tag-teaming your rock at the same time, actually looking at the reference images alongside your photo. It's not just reading a text description and guessing — it sees the rocks. Then source five: if the match isn't confident enough, it runs a web search cross-check for extra accuracy.
 
-If the visual match is really confident — ninety-two percent or higher — you get your answer right then. No waiting. Otherwise, it runs a web search cross-check for extra accuracy. And if your rock is being extra stubborn, the AI will ask you a few questions — stuff like hardness, streak color, what kind of environment you found it in. Answer those, and it re-ranks the candidates with even more precision.
+If the visual match is really confident — ninety-two percent or higher — you get your answer right then. No waiting. Otherwise, it runs the web search cross-check — that fifth source. And if your rock is being extra stubborn, the AI will ask you a few questions — stuff like hardness, streak color, what kind of environment you found it in. Answer those, and it re-ranks the candidates with even more precision.
 
 Got a rock with multiple minerals in it? It catches that too — breaks down each component so you know exactly what you're holding.
 
@@ -156,11 +156,13 @@ The Mohs Hardness Scale card walks you through scratch testing with infographics
 
 Alright, let's talk about the money side of things — and I'm gonna be straight with you here.
 
-You get a seven-day free trial when you sign up. Full access — AI identification with five tokens, all the social features, the Trade Board, your collections, trip planning, everything. After that trial ends, here's what stays free forever: browsing the entire specimen database of over nine hundred entries, all the educational guides, the Field Camera saving to Saved Images, severe weather alerts, and browsing dig sites and offline maps. That's a lot of free content.
+First thing to know — the free tier is recommended for everyone. Kids, adults, beginners, experts — the free tier has the entire specimen database, all the educational guides, the Field Camera, weather alerts, and dig site maps. That's a lot of free content. The premium tier is recommended for users eighteen and up, because it unlocks the social layer — friends, messaging, the Trade Board, the community board. Safety is the first, second, and third rule around here. We've got profanity filters, screenshot-based reporting, and the whole system is built to keep the community family-friendly.
+
+You get a seven-day free trial when you sign up. Full access — AI identification with five tokens, all the social features, the Trade Board, your collections, trip planning, everything. After that trial ends, here's what stays free forever: browsing the entire specimen database of over nine hundred entries, all the educational guides, the Field Camera saving to Saved Images, severe weather alerts, and browsing dig sites and offline maps.
 
 After the trial, the premium features need a subscription or a donation. That includes AI identification, the social network, Trade Board, collections, trip planning, and specimen submissions. But here's the thing — you don't necessarily need a subscription to get your money's worth. You can watch two short rock-related videos to earn one identification token — no weekly cap on that. Or make a donation of any amount and you get tokens plus a temporary full-feature unlock, from two days up to a month.
 
-Premium is five ninety-nine a month and it unlocks everything. Unlimited AI identifies with all three models, ad-free, two hundred fifty-mile nearby radius, twenty-four-hour pings, a premium gem badge, and early access to new features.
+Premium is five ninety-nine a month and it unlocks everything. Unlimited AI identifies with all five sources, ad-free, two hundred fifty-mile nearby radius, twenty-four-hour pings, a premium gem badge, and early access to new features.
 
 And the best part? Premium costs less than what you'd pay for any streaming service, and its gonna be a lot more fun than bingeing the same show for the 6th time.
 

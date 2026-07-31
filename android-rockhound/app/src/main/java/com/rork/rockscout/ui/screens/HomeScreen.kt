@@ -37,6 +37,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.CloudDone
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CollectionsBookmark
@@ -209,6 +213,10 @@ import com.rork.rockscout.data.ReferralRepository
 import com.rork.rockscout.data.HunterStatus
 import com.rork.rockscout.data.ReviewManager
 import com.rork.rockscout.data.PurchaseManager
+import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import com.rork.rockscout.data.PurchaseResult
 import com.rork.rockscout.data.IdentifyAccessManager
 import com.rork.rockscout.data.UpdateManager
@@ -1403,10 +1411,23 @@ private fun HomeHeader(
     val unreadCount by notificationRepo.unreadCount.collectAsStateWithLifecycle()
     val socialRepo = remember { SocialRepository.instance }
     val messagingCount by socialRepo.totalMessagingCount.collectAsStateWithLifecycle()
+    val purchaseManager = remember { PurchaseManager.instance }
+    val syncStatus by purchaseManager.syncStatus.collectAsStateWithLifecycle()
+    val entitlementSynced by purchaseManager.entitlementSynced.collectAsStateWithLifecycle()
+
     androidx.compose.runtime.LaunchedEffect(Unit) {
         notificationRepo.loadNotifications()
         socialRepo.loadRequests()
         socialRepo.loadThreads()
+    }
+
+    // Entitlement sync confirmation toast — shown once per session when sync succeeds
+    var syncToastShown by remember { mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(entitlementSynced) {
+        if (entitlementSynced && !syncToastShown) {
+            syncToastShown = true
+            Toast.makeText(context, "Premium entitlement synced across devices", Toast.LENGTH_SHORT).show()
+        }
     }
     var statusCooldownToast by remember { mutableStateOf<String?>(null) }
     androidx.compose.runtime.LaunchedEffect(statusCooldownToast) {
@@ -1514,6 +1535,12 @@ private fun HomeHeader(
                 onClick = onTokenBankClick,
                 isUnlocked = isTokenUnlocked,
             )
+
+            // 6. Sync-status pill — shows entitlement sync state for premium users.
+            if (isPremium) {
+                Spacer(Modifier.width(4.dp))
+                SyncStatusPill(syncStatus = syncStatus)
+            }
         }
 
         // RockScout Social button + full status dropdown — only for signed-in users.
@@ -1634,6 +1661,37 @@ private fun MiniSearchBar(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun SyncStatusPill(syncStatus: PurchaseManager.SyncStatus) {
+    val (color, label, icon) = when (syncStatus) {
+        PurchaseManager.SyncStatus.SYNCED -> Triple(Color(0xFF5CC98C), "Synced", Icons.Filled.CloudDone)
+        PurchaseManager.SyncStatus.SYNCING -> Triple(Citrine, "Syncing…", Icons.Filled.CloudUpload)
+        PurchaseManager.SyncStatus.FAILED -> Triple(Color(0xFFE2574C), "Not synced", Icons.Filled.CloudOff)
+        PurchaseManager.SyncStatus.IDLE -> Triple(Color(0xFF8A8270), "—", Icons.Filled.Cloud)
+    }
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .sculpted(
+                shape = CircleShape,
+                accent = color,
+                shadowElevation = 4.dp,
+                circular = true,
+            )
+            .clip(CircleShape)
+            .background(color.copy(alpha = 0.15f))
+            .glowingBorder(2.dp, color.copy(alpha = 0.5f), CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = "Entitlement sync: $label",
+            tint = color,
+            modifier = Modifier.size(20.dp),
         )
     }
 }
@@ -4489,7 +4547,7 @@ private val fellowRockScoutsFeatures: List<FeatureEntry> = listOf(
     FeatureEntry(
         5,
         "Submit Specimens & Add Locations",
-        "found something special that isn't in the database? Use the Submit Specimen button on specimen detail pages or the database screen to send up to 4 photos plus any info you have, and after review it gets added to the Specimen Database or Rocks Are Amazing collection for every RockScout user to discover. Found a dig site, rock shop, or show that isn't on the map? Use the Add Location form on the map screens to add it — after review it appears on the Dig Sites map for every RockScout user to find. Help build the most thorough rock database and the most complete hunting map on the app market!",
+        "found something special that isn't in the database? Use the Submit Specimen button on specimen detail pages or the database screen to send up to 10 photos plus any info you have, and after review it gets added to the Specimen Database or Rocks Are Amazing collection for every RockScout user to discover. Found a dig site, rock shop, or show that isn't on the map? Use the Add Location form on the map screens to add it — after review it appears on the Dig Sites map for every RockScout user to find. Help build the most thorough rock database and the most complete hunting map on the app market!",
     ),
     FeatureEntry(
         6,

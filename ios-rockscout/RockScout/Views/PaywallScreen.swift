@@ -23,6 +23,8 @@ struct PaywallScreen: View {
 
                     premiumFeaturesSection
 
+                    ageSafetyBanner
+
                     pricingCards
 
                     restoreButton
@@ -63,7 +65,7 @@ struct PaywallScreen: View {
                 .font(.title.bold())
                 .foregroundStyle(.rsText)
 
-            Text("Unlock the full rockhounding experience")
+            Text("5-source AI Rock ID · unlimited everything")
                 .font(.subheadline)
                 .foregroundStyle(.rsTextSecondary)
                 .multilineTextAlignment(.center)
@@ -78,8 +80,9 @@ struct PaywallScreen: View {
             SectionHeader(title: "Premium Features")
 
             VStack(spacing: 10) {
-                FeatureRow(icon: "camera.viewfinder", text: "Unlimited AI rock identification")
-                FeatureRow(icon: "sparkles", text: "Premium AI models for higher accuracy")
+                FeatureRow(icon: "camera.viewfinder", text: "Unlimited 5-source AI rock identification")
+                FeatureRow(icon: "magnifyingglass", text: "Ultra-advanced search filters")
+                FeatureRow(icon: "internaldrive", text: "Unlimited storage & 2GB offline cache")
                 FeatureRow(icon: "square.stack.fill", text: "Unlimited collection & wishlist")
                 FeatureRow(icon: "heart.fill", text: "Ad-free experience")
                 FeatureRow(icon: "doc.text.fill", text: "PDF specimen reports")
@@ -166,6 +169,23 @@ struct PaywallScreen: View {
     }
 
     // MARK: - Terms
+
+    private var ageSafetyBanner: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "shield.fill")
+                .foregroundStyle(.rsSuccess)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Free is recommended for everyone.")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(.rsText)
+                Text("Premium is recommended for users 18+ because it unlocks the social layer (friends, messaging, trade, community). Safety is the first, second, and third rule.")
+                    .font(.caption)
+                    .foregroundStyle(.rsTextSecondary)
+            }
+        }
+        .padding(16)
+        .rsCard()
+    }
 
     private var termsSection: some View {
         VStack(spacing: 4) {

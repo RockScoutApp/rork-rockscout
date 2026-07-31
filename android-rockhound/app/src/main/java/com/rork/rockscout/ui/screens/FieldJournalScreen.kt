@@ -536,6 +536,7 @@ private fun JournalEditorScreen(
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
     ) { uri -> if (uri != null) {
+        if (photoUris.size >= 50) return@rememberLauncherForActivityResult
         // Reject files larger than 5 MB before any pipeline work.
         if (ImageUtils.isOverUploadLimit(context, uri)) {
             android.widget.Toast.makeText(

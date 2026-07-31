@@ -88,7 +88,7 @@ import java.util.UUID
 
 /**
  * Full-screen dialog for submitting a specimen to the developer for review.
- * Users can upload up to 4 images, enter info text, and select a location.
+ * Users can upload up to 10 images, enter info text, and select a location.
  * The submission is saved to [SpecimenSubmissionStore] for dev review.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -117,7 +117,7 @@ fun SubmitSpecimenDialog(
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
     ) { uri ->
-        if (uri == null || imageUris.size >= 4) return@rememberLauncherForActivityResult
+        if (uri == null || imageUris.size >= 10) return@rememberLauncherForActivityResult
 
         // Reject files larger than 5 MB before any pipeline work to prevent
         // base64-encoding OOMs and failed uploads on slow connections.
@@ -248,7 +248,7 @@ fun SubmitSpecimenDialog(
 
                 // Upload area
                 Text(
-                    text = "Photos (up to 4)",
+                    text = "Photos (up to 10)",
                     style = MaterialTheme.typography.titleSmall,
                     color = DarkTextHigh,
                     fontWeight = FontWeight.Bold,
@@ -282,7 +282,7 @@ fun SubmitSpecimenDialog(
                             }
                         }
                     }
-                    if (imageUris.size < 4) {
+                    if (imageUris.size < 10) {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Box(
                                 modifier = Modifier

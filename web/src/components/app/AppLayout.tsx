@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import {
   Home,
@@ -10,10 +10,14 @@ import {
   Gem,
   MapPin,
   Keyboard,
+  CloudCheck,
+  CloudUpload,
+  CloudOff,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTier } from "@/hooks/useTier";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { syncEntitlement } from "@/lib/entitlement";
 import IosBetaBanner from "@/components/app/IosBetaBanner";
 import KeyboardHelpOverlay from "@/components/app/KeyboardHelpOverlay";
 import FieldCameraDialog from "@/components/app/FieldCameraDialog";
@@ -52,6 +56,36 @@ export default function AppLayout() {
   const [fieldCameraOpen, setFieldCameraOpen] = useState(false);
   const navItems = isPremium ? NAV_ITEMS_PREMIUM : NAV_ITEMS_FREE;
 
+  // ── Entitlement sync status pill ──
+  type SyncState = "idle" | "syncing" | "synced" | "failed";
+  const [syncState, setSyncState] = useState<SyncState>("idle");
+  const [showSyncToast, setShowSyncToast] = useState(false);
+  const syncToastShown = useRef(false);
+
+  useEffect(() => {
+    if (!user?.id || !isPremium) return;
+    let cancelled = false;
+    setSyncState("syncing");
+    syncEntitlement(user.id).then((ok) => {
+      if (cancelled) return;
+      setSyncState(ok ? "synced" : "failed");
+      if (ok && !syncToastShown.current) {
+        syncToastShown.current = true;
+        setShowSyncToast(true);
+        setTimeout(() => setShowSyncToast(false), 4000);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [user?.id, isPremium]);
+
+  const syncConfig = {
+    synced: { icon: CloudCheck, color: "text-emerald-500", label: "Synced" },
+    syncing: { icon: CloudUpload, color: "text-amber-500", label: "Syncing…" },
+    failed: { icon: CloudOff, color: "text-red-500", label: "Not synced" },
+    idle: { icon: CloudUpload, color: "text-muted-foreground", label: "—" },
+  } as const;
+  const SyncIcon = syncConfig[syncState].icon;
+
   useKeyboardShortcuts({ onToggleHelp: () => setHelpOpen((v) => !v) });
 
   // Listen for the "open-field-camera" custom event dispatched by the Home tile.
@@ -81,6 +115,17 @@ export default function AppLayout() {
           <span className="font-display text-lg font-bold text-foreground">
             RockScout
           </span>
+          {isPremium && (
+            <span
+              title={`Entitlement sync: ${syncConfig[syncState].label}`}
+              className="ml-auto inline-flex items-center gap-1 rounded-full border border-border bg-card/40 px-2 py-0.5 text-[10px] font-semibold"
+            >
+              <SyncIcon className={cn("h-3 w-3", syncConfig[syncState].color)} />
+              <span className={cn("hidden lg:inline", syncConfig[syncState].color)}>
+                {syncConfig[syncState].label}
+              </span>
+            </span>
+          )}
         </div>
 
         <nav className="flex flex-1 flex-col gap-1 px-3">
@@ -164,6 +209,16 @@ export default function AppLayout() {
         open={fieldCameraOpen}
         onDismiss={() => setFieldCameraOpen(false)}
       />
+
+      {/* Entitlement sync confirmation toast */}
+      {showSyncToast && (
+        <div className="fixed bottom-4 left-1/2 z-[60] -translate-x-1/2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-2.5 text-sm font-medium text-emerald-600 shadow-lg backdrop-blur-md dark:text-emerald-400">
+          <span className="flex items-center gap-2">
+            <CloudCheck className="h-4 w-4" />
+            Premium entitlement synced across devices
+          </span>
+        </div>
+      )}
     </div>
   );
 }

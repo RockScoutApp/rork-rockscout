@@ -177,6 +177,49 @@ val GLOSSARY_ENTRIES: List<GlossaryEntry> = listOf(
     GlossaryEntry("Subduction", GlossaryCategory.GEOLOGY, "Where one tectonic plate dives beneath another into the mantle. Produces volcanoes and earthquakes."),
     GlossaryEntry("Tuff", GlossaryCategory.GEOLOGY, "A rock made of consolidated volcanic ash. Light, soft, and easy to cut — used as building stone since antiquity."),
     GlossaryEntry("Weathering", GlossaryCategory.GEOLOGY, "The breakdown of rock at or near Earth's surface — by water, ice, wind, chemicals, or living things."),
+
+    // ── Expanded Mineralogy ───────────────────────────────────────────────
+    GlossaryEntry("Acicular", GlossaryCategory.MINERALOGY, "Needle-like crystal habit — slender, pointed crystals. Tourmaline and rutile often grow this way."),
+    GlossaryEntry("Amorphous", GlossaryCategory.MINERALOGY, "Lacking a regular crystal structure — no ordered atomic lattice. Opal and obsidian are amorphous."),
+    GlossaryEntry("Conchoidal fracture", GlossaryCategory.MINERALOGY, "Smooth, curved break surfaces like the inside of a seashell. Quartz, obsidian, and glass all show it."),
+    GlossaryEntry("Crystal system", GlossaryCategory.MINERALOGY, "One of 7 categories classifying crystals by symmetry: cubic, tetragonal, orthorhombic, monoclinic, triclinic, hexagonal, trigonal."),
+    GlossaryEntry("Feldspar group", GlossaryCategory.MINERALOGY, "The most abundant mineral family in Earth's crust — plagioclase and orthoclase. Includes moonstone, labradorite, and amazonite."),
+    GlossaryEntry("Gangue", GlossaryCategory.MINERALOGY, "The worthless minerals mixed in with valuable ore in a deposit — quartz and calcite are common gangue."),
+    GlossaryEntry("Hackly fracture", GlossaryCategory.MINERALOGY, "A rough, jagged break with sharp edges — characteristic of native copper and silver."),
+    GlossaryEntry("Mafic", GlossaryCategory.MINERALOGY, "Rich in magnesium and iron — describes dark igneous rocks like basalt and peridotite."),
+    GlossaryEntry("Matrix", GlossaryCategory.MINERALOGY, "The host rock or surrounding material in which crystals or fossils are embedded."),
+    GlossaryEntry("Octahedrite", GlossaryCategory.MINERALOGY, "An octahedral crystal habit — diamond and fluorite often crystallize as octahedrons."),
+    GlossaryEntry("Vug", GlossaryCategory.MINERALOGY, "A small cavity in rock lined with crystals — essentially a miniature geode. Often found in volcanic basalts."),
+    GlossaryEntry("Zeolite", GlossaryCategory.MINERALOGY, "A group of hydrated framework silicates that form in volcanic cavities. Includes stilbite, heulandite, and natrolite."),
+
+    // ── Expanded Geology ──────────────────────────────────────────────────
+    GlossaryEntry("Lithification", GlossaryCategory.GEOLOGY, "The process of turning loose sediment into solid rock — compaction, cementation, and hardening over time."),
+    GlossaryEntry("Placer deposit", GlossaryCategory.GEOLOGY, "A concentration of heavy minerals (gold, garnet, magnetite) accumulated by water sorting in a stream or beach."),
+    GlossaryEntry("Schistosity", GlossaryCategory.GEOLOGY, "The planar foliation in schist caused by aligned mica or chlorite flakes — gives the rock its characteristic layered look."),
+    GlossaryEntry("Stratification", GlossaryCategory.GEOLOGY, "The layering of sedimentary rocks — each layer (stratum) represents a different episode of deposition."),
+    GlossaryEntry("Unconformity", GlossaryCategory.GEOLOGY, "A gap in the geologic record where erosion removed layers before younger ones were deposited — a missing chapter in time."),
+    GlossaryEntry("Vein (mineral)", GlossaryCategory.GEOLOGY, "A fracture filled with minerals deposited by hot water — quartz veins, gold veins, calcite veins."),
+    GlossaryEntry("Xenolith", GlossaryCategory.GEOLOGY, "A fragment of older rock trapped inside igneous rock — a 'foreign stone' carried up by magma."),
+
+    // ── Expanded Paleontology ─────────────────────────────────────────────
+    GlossaryEntry("Coprolite", GlossaryCategory.PALEONTOLOGY, "Fossilized dung — yes, fossil poop. Contains clues about what ancient animals ate. Found worldwide."),
+    GlossaryEntry("Petrified wood", GlossaryCategory.PALEONTOLOGY, "Wood replaced mineral by mineral (usually silica) so it's literally stone — but still shows every ring and grain."),
+
+    // ── Expanded Lapidary ─────────────────────────────────────────────────
+    GlossaryEntry("Cabochon (cab)", GlossaryCategory.LAPIDARY, "A gem cut with a smooth domed top and flat bottom — no facets. Best for opaque, chatoyant, or translucent stones."),
+    GlossaryEntry("Diamond saw", GlossaryCategory.LAPIDARY, "A circular saw blade with diamond-impregnated edges used to slice rocks and slabs. The workhorse of any lapidary shop."),
+    GlossaryEntry("Fire", GlossaryCategory.LAPIDARY, "The rainbow flashes of color in a faceted gem caused by dispersion — diamond and zircon show strong fire."),
+    GlossaryEntry("Hardness tester", GlossaryCategory.LAPIDARY, "A set of known reference minerals or picks used to determine a stone's Mohs hardness by scratch testing."),
+
+    // ── Expanded Aurora & Space ───────────────────────────────────────────
+    GlossaryEntry("Auroral oval", GlossaryCategory.AURORA_SPACE, "The ring-shaped zone around each magnetic pole where aurora most often appears. Expands equatorward during storms."),
+    GlossaryEntry("Proton flare", GlossaryCategory.AURORA_SPACE, "A powerful solar flare that accelerates protons toward Earth — can cause radio blackouts and enhanced aurora."),
+    GlossaryEntry("Sudden impulse", GlossaryCategory.AURORA_SPACE, "A sharp, sudden jump in Earth's magnetic field when a solar shock front arrives — often precedes a geomagnetic storm."),
+
+    // ── Expanded Weather ──────────────────────────────────────────────────
+    GlossaryEntry("Advection fog", GlossaryCategory.WEATHER, "Fog formed when warm, moist air blows over a colder surface — common on coastlines and over cold ocean currents."),
+    GlossaryEntry("Microburst", GlossaryCategory.WEATHER, "A small, intense downdraft from a thunderstorm that slams the ground and spreads outward — can cause damage like a tornado."),
+    GlossaryEntry("Tornado alley", GlossaryCategory.WEATHER, "The central US region (TX, OK, KS, NE) where conditions produce more tornadoes than anywhere on Earth."),
 ).sortedBy { it.term.lowercase() }
 
 /** All unique first letters present in the glossary, in A–Z order. */

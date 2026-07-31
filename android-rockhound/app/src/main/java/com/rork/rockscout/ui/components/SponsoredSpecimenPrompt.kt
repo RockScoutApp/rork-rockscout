@@ -115,7 +115,7 @@ private fun findSponsoredSpecimens(
     val usedSpecimens = mutableSetOf<String>()
 
     for (entry in sorted) {
-        if (result.size >= 4) break
+        if (result.size >= 10) break
         val shop = entry.shop
         if (usedShops.contains(shop.id)) continue
 

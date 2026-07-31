@@ -228,7 +228,7 @@ fun AddLocationDialog(
     ) { success ->
         if (success && cameraUri != null) {
             val uri = cameraUri
-            if (uri != null && photoUris.size < 4) {
+            if (uri != null && photoUris.size < 10) {
                 photoUris.add(uri)
             }
         }
@@ -239,7 +239,7 @@ fun AddLocationDialog(
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
     ) { uri: Uri? ->
-        if (uri != null && photoUris.size < 4) {
+        if (uri != null && photoUris.size < 10) {
             // Reject files larger than 5 MB before adding to the upload set.
             if (com.rork.rockscout.data.ImageUtils.isOverUploadLimit(context, uri)) {
                 android.widget.Toast.makeText(
@@ -439,7 +439,7 @@ fun AddLocationDialog(
                 Spacer(Modifier.height(12.dp))
 
                 // ── Photos ──
-                Text("Photos (up to 4)", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                Text("Photos (up to 10)", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(6.dp))
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -473,7 +473,7 @@ fun AddLocationDialog(
                             }
                         }
                     }
-                    if (photoUris.size < 4) {
+                    if (photoUris.size < 10) {
                         item {
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Column(

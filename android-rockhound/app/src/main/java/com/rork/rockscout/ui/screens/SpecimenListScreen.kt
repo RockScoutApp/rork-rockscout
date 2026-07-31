@@ -126,8 +126,16 @@ fun SpecimenListScreen(navController: NavController) {
         (SeedData.allSpecimens + customSpecimens).distinctBy { it.id }.sortedBy { it.name.lowercase() }
     }
     var query by remember { mutableStateOf("") }
+    var debouncedQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf<ListCategoryFilter?>(null) }
     var showRecentlyAddedOnly by remember { mutableStateOf(false) }
+
+    // Debounce search input — wait 250ms after the last keystroke before filtering.
+    // Keeps the list responsive while typing fast on a large 900+ specimen database.
+    LaunchedEffect(query) {
+        kotlinx.coroutines.delay(250)
+        debouncedQuery = query
+    }
 
     // Full-screen viewer state
     var viewerUrls by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -154,19 +162,19 @@ fun SpecimenListScreen(navController: NavController) {
     }
 
     val selected = selectedFilter
-    val filtered = remember(allSpecimens, query, selectedFilter, showRecentlyAddedOnly) {
+    val filtered = remember(allSpecimens, debouncedQuery, selectedFilter, showRecentlyAddedOnly) {
         val byCategory = filterSpecimensByCategory(allSpecimens, selected)
         val byRecent = if (showRecentlyAddedOnly) byCategory.filter { it.isNew() } else byCategory
 
-        if (query.isBlank()) byRecent
+        if (debouncedQuery.isBlank()) byRecent
         else byRecent.filter { spec ->
-            spec.name.contains(query, ignoreCase = true) ||
-            spec.category.contains(query, ignoreCase = true) ||
-            spec.chemicalFormula.contains(query, ignoreCase = true) ||
-            spec.whereFound.any { it.contains(query, ignoreCase = true) } ||
-            spec.commonColors.any { it.contains(query, ignoreCase = true) } ||
-            spec.tagline.contains(query, ignoreCase = true) ||
-            spec.rockClass.label.contains(query, ignoreCase = true)
+            spec.name.contains(debouncedQuery, ignoreCase = true) ||
+            spec.category.contains(debouncedQuery, ignoreCase = true) ||
+            spec.chemicalFormula.contains(debouncedQuery, ignoreCase = true) ||
+            spec.whereFound.any { it.contains(debouncedQuery, ignoreCase = true) } ||
+            spec.commonColors.any { it.contains(debouncedQuery, ignoreCase = true) } ||
+            spec.tagline.contains(debouncedQuery, ignoreCase = true) ||
+            spec.rockClass.label.contains(debouncedQuery, ignoreCase = true)
         }
     }
 

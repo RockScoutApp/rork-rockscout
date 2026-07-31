@@ -116,7 +116,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
   {
     heading: "Contact",
     body: [
-      "Questions about this policy? Email support@rockscout.net. We aim to respond within 5 business days.",
+      "Questions about this policy? Email support@rockscout.net. We aim to respond within 36 hours.",
     ],
   },
 ];
@@ -261,7 +261,7 @@ export const COMMUNITY_SECTIONS: LegalSection[] = [
   {
     heading: "Appeals",
     body: [
-      "If you believe a moderation action against you was wrong, use the Contact Us screen in the app (or email support@rockscout.net) to appeal. Include what happened and why you think the action was incorrect. We review appeals and respond within 5 business days.",
+      "If you believe a moderation action against you was wrong, use the Contact Us screen in the app (or email support@rockscout.net) to appeal. Include what happened and why you think the action was incorrect. We review appeals and respond within 36 hours.",
     ],
   },
   {
@@ -351,8 +351,9 @@ export const SAFETY_SECTIONS: LegalSection[] = [
     ],
   },
   {
-    heading: "Minors",
+    heading: "Age recommendation and minors",
     body: [
+      "The free tier is recommended for everyone — kids, adults, beginners, and experts alike. The Premium tier is recommended for users 18 and older because it unlocks the social layer (friends, messaging, trade, and community). Safety is the first, second, and third rule at RockScout.",
       "RockScout is for users 13 and older, but minors should not arrange in-person meetups without a parent or guardian's permission and presence. If you are a minor, do not agree to meet a stranger from RockScout without your parent or guardian involved.",
       "Adults: never arrange to meet a minor one-on-one. If you discover the other user is a minor, end the conversation and do not proceed with a meetup.",
     ],

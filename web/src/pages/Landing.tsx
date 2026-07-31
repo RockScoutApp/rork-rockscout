@@ -66,8 +66,8 @@ const FEATURES = [
   {
     icon: Camera,
     title: "AI rock & mineral ID",
-    body: "Snap a photo and get a best-effort ID in seconds. RockScout cross-checks five sources — visual AI, 900+ specimen profiles, locality data, physical properties, and community consensus — so you get a confident match.",
-    tag: "5 ways to identify",
+    body: "Snap a photo and get a best-effort ID in seconds. RockScout runs a 5-source pipeline: database visual comparison, three AI models (Claude Haiku, Sonnet, Gemini 2.5 Pro), and a web search cross-check — so you get a confident match.",
+    tag: "5-source AI Rock ID",
     image: "/images/rock-id-collection.webp",
     imageAlt: "A collection of colorful rocks and minerals with a magnifying glass",
   },
@@ -108,7 +108,7 @@ const STEPS = [
     n: "02",
     icon: Atom,
     title: "Get a 5-source ID",
-    body: "Visual AI, 900+ specimen profiles, locality data, physical properties, and community consensus all weigh in to give you a best-effort match in seconds."
+    body: "The 5-source pipeline — database visual comparison, Claude Haiku, Claude Sonnet, Gemini 2.5 Pro, and web cross-check — all weigh in to give you a best-effort match in seconds."
   },
   {
     n: "03",
@@ -216,7 +216,7 @@ const SpecimenMarquee = ({ reverse = false }: { reverse?: boolean }) => {
 // Creator note paragraphs — mirror the Android app's "A Note to My Fellow RockScouts" dialog.
 const CREATOR_NOTE_PARAGRAPHS: string[] = [
   "First of all, I'd like to say this is the actual creator typing this. Although I did use AI in the creation of this app, this is not AI writing this note. I assure you, I'm a real, live boy.",
-  "I've been a rockhounder for 30+ years, and as every single rockhounder knows, identification can be a bit of a struggle from time to time. If you're picking up your first rock that you're going to keep forever and ever, or you've got 132,649 specimens because you keep every rock you get your hands on (like me), there's always a use for a phenomenal rock ID app. Normally, I wouldn't say phenomenal when describing much of anything (except maybe food). But if you're a rock hound, or even just the outdoorsy type, considering how much hiking and camping info there is in here as well, then that's really the only appropriate word for this. I packed as much accurate ID power and info into this thing as I could. No joke. It uses 3 different AI models, when most other rock apps only use 1. It also cross-checks with the app database images (which I put quite a bit of time into), runs a web search cross-check, and even asks you clarifying questions when a rock is tough to get a solid identification on. Basically, it does everything in its power to provide the highest accuracy possible. Plus I included a whole ton of other informational sections, and created a whole social network just for rockhounds. You can build a friends list, chat on an in-app Messenger, post questions and photos to a community-wide Q&A board, show off specimens in a postable Profile feed, haggle on a Trade Board (a marketplace for trading, selling, or buying rocks), snap quick field photos with the field kit camera, and loads more. and yes, there's image moderation, and a fairly forgiving profanity filter. The free version does not have access to any of the social aspects, so it keeps it rated G for the littles, but still gives them a ton of content to explore. And just to be clear — you don't necessarily need a subscription to get you 'money's worth' out of this thing. The free version alone gives you access to the (ad supported) rock identification engine, the entire mineral and specimen database with detailed info pages, the interactive map with dig sites and rock shops, the Field Camera, the glossary, the daily streak challenges, and plenty more to dig in to. (See what I did there?). The free tier is ad supported, but all the ads are the most family-friendly rating I can make them. Free users can watch a couple short videos to receive a free identification token as well. No limit. The free version is still useful, but the premium version completely unlocks the highest levels of ID and everything else in the app. Literally something for all ages and levels of expertise. I do however, have to recommend 18+ due to the social aspect (which users can toggle on or off in their social settings). Gotta keep the kids safe. The adults too, for that matter, so be smart and use your own discretion if you plan on meeting up with other rockhounders. Safety always comes first.",
+  "I've been a rockhounder for 30+ years, and as every single rockhounder knows, identification can be a bit of a struggle from time to time. If you're picking up your first rock that you're going to keep forever and ever, or you've got 132,649 specimens because you keep every rock you get your hands on (like me), there's always a use for a phenomenal rock ID app. Normally, I wouldn't say phenomenal when describing much of anything (except maybe food). But if you're a rock hound, or even just the outdoorsy type, considering how much hiking and camping info there is in here as well, then that's really the only appropriate word for this. I packed as much accurate ID power and info into this thing as I could. No joke. It uses a 5-source identification pipeline: first the database visual reference comparison (which I put quite a bit of time into), then three AI models tag-teaming at the same time (Claude Haiku, Claude Sonnet, and Gemini 2.5 Pro), and finally a web search cross-check. It even asks you clarifying questions when a rock is tough to get a solid identification on. Basically, it does everything in its power to provide the highest accuracy possible. Plus I included a whole ton of other informational sections, and created a whole social network just for rockhounds. You can build a friends list, chat on an in-app Messenger, post questions and photos to a community-wide Q&A board, show off specimens in a postable Profile feed, haggle on a Trade Board (a marketplace for trading, selling, or buying rocks), snap quick field photos with the field kit camera, and loads more. and yes, there's image moderation, and a fairly forgiving profanity filter. The free version does not have access to any of the social aspects, so it keeps it rated G for the littles, but still gives them a ton of content to explore. And just to be clear — you don't necessarily need a subscription to get you 'money's worth' out of this thing. The free version alone gives you access to the (ad supported) rock identification engine, the entire mineral and specimen database with detailed info pages, the interactive map with dig sites and rock shops, the Field Camera, the glossary, the daily streak challenges, and plenty more to dig in to. (See what I did there?). The free tier is ad supported, but all the ads are the most family-friendly rating I can make them. Free users can watch a couple short videos to receive a free identification token as well. No limit. The free version is still useful, but the premium version completely unlocks the highest levels of ID and everything else in the app. Literally something for all ages and levels of expertise. I do however, have to recommend 18+ due to the social aspect (which users can toggle on or off in their social settings). Gotta keep the kids safe. The adults too, for that matter, so be smart and use your own discretion if you plan on meeting up with other rockhounders. Safety always comes first.",
   "Seeing as how rockhounding is a mostly social hobby, I've added both a \"Submit Specimen\" button and an \"Add Location\" option so users can send in special or unique specimens they've found (that aren't in the current database) and dig sites, rock shops, or shows that aren't on the map yet. After review, both get added to the database and map for every RockScout user to discover. Also, if you find something in RockScout that needs to be added, fixed, made more legible, etc, please take a screenshot and email me with it (through the Contact Us tab) so I can promptly fix the issue. The OCD in me wants this app perfect, so don't hesitate to reach out with issues or suggestions.",
   "So in closing, I'd like to give a huge thank you for helping to support this app. I'll do my best to keep adding things, and tweaking other things, to make this app every rockhounders best friend. Every subscription and donation helps make this one of the most, if not THE most, accurate and thorough rock app you can find. And don't forget, the more people that join, the larger RockScouts social network becomes, so tell all your rockhounding friends to get the app!",
   "Now I'll go ahead and let AI take back over and break down everything this bad boy can do. I know it's a bit of a long read, but bear with it. You'll be happy you did. It's pretty awesome. Happy Hunting!",
@@ -406,6 +406,35 @@ const Hero = () => {
   );
 };
 
+/** Standalone tutorial video player section — plays the composite 16-chapter narration video. */
+const TutorialVideoSection = () => (
+  <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-20">
+    <div className="max-w-2xl">
+      <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+        <span className="h-px w-8 bg-primary/50" /> Watch the tour
+      </span>
+      <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+        See every feature in action
+      </h2>
+      <p className="mt-3 text-balance text-base text-muted-foreground sm:text-lg">
+        A 16-chapter narrated walkthrough — the same tutorial that lives inside the app.
+      </p>
+    </div>
+    <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-card shadow-xl sm:rounded-3xl">
+      <video
+        controls
+        preload="metadata"
+        playsInline
+        className="aspect-[9/16] w-full max-h-[80vh] bg-black object-contain sm:aspect-[3/4]"
+        poster="/images/screenshots/01_home_dashboard.webp"
+      >
+        <source src="/rockscout-tutorial.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+    </div>
+  </section>
+);
+
 const Features = () => (
   <section className="mx-auto max-w-6xl px-4 py-24 sm:px-6">
     <div className="max-w-2xl">
@@ -469,7 +498,7 @@ const FEATURES_LIST = [
   {
     icon: Camera,
     title: "AI rock & mineral ID",
-    desc: "Snap a photo and three models (Claude Haiku, Sonnet, Gemini Pro) cross-check five sources — visual AI, 900+ specimen profiles, locality data, physical properties, and community consensus — to give you a confident match in seconds. Free 7-day trial with 5 tokens; after that, Premium or a donation keeps it going.",
+    desc: "Snap a photo and RockScout runs a 5-source identification pipeline: (1) database visual reference comparison, (2) Claude Haiku, (3) Claude Sonnet, (4) Gemini 2.5 Pro, and (5) web search cross-check. Free 7-day trial with 5 tokens; after that, Premium or a donation keeps it going.",
     items: ["Visual reference compare", "Assemblage detection", "Clarifying questions", "Auto web cross-check"],
   },
   {
@@ -871,10 +900,10 @@ const FieldStories = () => (
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
                 </div>
                 <figcaption className="absolute bottom-0 left-0 w-full p-3 sm:p-4">
-                  <p className="font-display text-sm font-semibold leading-snug text-primary drop-shadow">{story.caption}</p>
+                  <p className="font-display text-sm font-semibold leading-snug text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">{story.caption}</p>
                 </figcaption>
               </>
             )}
@@ -929,10 +958,10 @@ const CTA = () => (
           </Link>
         </div>
         <ul className="mx-auto mt-9 flex max-w-md flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
-          <li className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-primary" /> Free tier: limited use, but still plenty of useful resources</li>
-          <li className="inline-flex items-center gap-1.5"><BadgeCheck className="h-3.5 w-3.5 text-primary" /> Premium: app fully unlocked with Unlimited IDs</li>
-          <li className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-primary" /> Account needed to try</li>
-          <li className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-primary" /> Moderated community</li>
+          <li className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-primary" /> Free tier recommended for everyone</li>
+          <li className="inline-flex items-center gap-1.5"><BadgeCheck className="h-3.5 w-3.5 text-primary" /> Premium (18+): unlimited 5-source IDs + social</li>
+          <li className="inline-flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-primary" /> Safety is the 1st, 2nd & 3rd rule</li>
+          <li className="inline-flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-primary" /> Moderated, family-friendly community</li>
         </ul>
       </div>
     </div>
@@ -966,6 +995,7 @@ const Landing = () => {
     <Layout title={`${SITE.name} — ${SITE.tagline}`} description={SITE.description} ogImage="/images/og-share-card.webp">
       <Hero />
       <SpecimenMarquee />
+      <TutorialVideoSection />
       <Features />
       <SpecimenMarquee reverse />
       <HowItWorks />
