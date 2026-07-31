@@ -99,6 +99,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -284,6 +285,8 @@ fun HomeScreen(navController: NavController) {
     var nearMeSearchRadius by remember { mutableIntStateOf(50) }
     var nearMeSearchArea by remember { mutableStateOf("") }
     var nearMeError by remember { mutableStateOf(false) }
+    var nearMeProgress by remember { mutableFloatStateOf(0f) }
+    var nearMeStage by remember { mutableStateOf("") }
     var showNearMePermissionDialog by remember { mutableStateOf(false) }
 
     // Developer Console entry — 5 quick taps on the version text reveal the PIN pad
@@ -727,20 +730,28 @@ fun HomeScreen(navController: NavController) {
                                     nearMeError = false
                                     nearMeResults = emptyList()
                                     nearMeSearchRadius = 50
+                                    nearMeProgress = 0f
+                                    nearMeStage = "Locating your position…"
                                     scope.launch {
                                         val lat = current.first
                                         val lng = current.second
+                                        nearMeProgress = 0.20f
                                         // Reverse geocode: try Android Geocoder, fall back to profile homeRegion
+                                        nearMeStage = "Searching for nearby dig sites…"
                                         val searchArea = reverseGeocode(context, lat, lng, profile.homeRegion)
                                         nearMeSearchArea = searchArea
+                                        nearMeProgress = 0.40f
                                         // 50-mile search
                                         var results = DigSiteSearchService.searchNearLocation(lat, lng, searchArea, 50)
                                         if (results.isEmpty()) {
                                             // 100-mile retry
                                             nearMeSearchRadius = 100
+                                            nearMeStage = "Widening search to 100 miles…"
+                                            nearMeProgress = 0.65f
                                             val broaderArea = searchArea.substringAfter(", ").ifBlank { searchArea }
                                             results = DigSiteSearchService.searchNearLocation(lat, lng, broaderArea, 100)
                                         }
+                                        nearMeProgress = 0.90f
                                         if (results.isEmpty() && nearMeSearchRadius == 100) {
                                             // Both searches returned nothing — check if it was an error vs genuinely empty
                                             // For now treat empty as success (show empty state)
@@ -749,7 +760,11 @@ fun HomeScreen(navController: NavController) {
                                         if (results.isNotEmpty()) {
                                             DigSiteDiscoveryStore.addAll(results)
                                         }
+                                        nearMeProgress = 1f
+                                        nearMeStage = if (results.isNotEmpty()) "Found ${results.size} spot(s) near you!" else "No dig sites found nearby."
+                                        kotlinx.coroutines.delay(300)
                                         isSearchingNearMe = false
+                                        nearMeStage = ""
                                     }
                                 }
                             }
@@ -789,9 +804,28 @@ fun HomeScreen(navController: NavController) {
                             modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                CircularProgressIndicator(color = Citrine)
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                            ) {
+                                Text(
+                                    text = nearMeStage.ifBlank { "Searching nearby…" },
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = DarkTextHigh,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center,
+                                )
                                 Spacer(Modifier.height(12.dp))
+                                LinearProgressIndicator(
+                                    progress = { nearMeProgress },
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.85f)
+                                        .height(6.dp)
+                                        .clip(RoundedCornerShape(3.dp)),
+                                    color = Citrine,
+                                    trackColor = Citrine.copy(alpha = 0.2f),
+                                )
+                                Spacer(Modifier.height(8.dp))
                                 Text(
                                     text = "Searching within ${nearMeSearchRadius} miles of ${nearMeSearchArea}…",
                                     style = MaterialTheme.typography.bodySmall,
@@ -819,22 +853,34 @@ fun HomeScreen(navController: NavController) {
                                     isSearchingNearMe = true
                                     nearMeResults = emptyList()
                                     nearMeSearchRadius = 50
+                                    nearMeProgress = 0f
+                                    nearMeStage = "Locating your position…"
                                     scope.launch {
                                         val lat = current.first
                                         val lng = current.second
+                                        nearMeProgress = 0.20f
+                                        nearMeStage = "Searching for nearby dig sites…"
                                         val searchArea = reverseGeocode(context, lat, lng, profile.homeRegion)
                                         nearMeSearchArea = searchArea
+                                        nearMeProgress = 0.40f
                                         var results = DigSiteSearchService.searchNearLocation(lat, lng, searchArea, 50)
                                         if (results.isEmpty()) {
                                             nearMeSearchRadius = 100
+                                            nearMeStage = "Widening search to 100 miles…"
+                                            nearMeProgress = 0.65f
                                             val broaderArea = searchArea.substringAfter(", ").ifBlank { searchArea }
                                             results = DigSiteSearchService.searchNearLocation(lat, lng, broaderArea, 100)
                                         }
+                                        nearMeProgress = 0.90f
                                         nearMeResults = results
                                         if (results.isNotEmpty()) {
                                             DigSiteDiscoveryStore.addAll(results)
                                         }
+                                        nearMeProgress = 1f
+                                        nearMeStage = if (results.isNotEmpty()) "Found ${results.size} spot(s) near you!" else "No dig sites found nearby."
+                                        kotlinx.coroutines.delay(300)
                                         isSearchingNearMe = false
+                                        nearMeStage = ""
                                     }
                                 },
                                 accent = Citrine,

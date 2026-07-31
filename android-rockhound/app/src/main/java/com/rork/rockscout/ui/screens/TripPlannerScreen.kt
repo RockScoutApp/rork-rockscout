@@ -2792,8 +2792,18 @@ internal fun TripDetailSheet(
                         Spacer(Modifier.height(6.dp))
                         androidx.compose.material3.LinearProgressIndicator(
                             progress = { downloadProgress / 100f },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(3.dp)),
                             color = Citrine,
+                            trackColor = Citrine.copy(alpha = 0.2f),
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            text = "Downloading stop ${downloadStopIndex} of ${trip.stops.size} — ${downloadProgress}% cached",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = DarkTextMid,
                         )
                     }
                     Spacer(Modifier.height(6.dp))

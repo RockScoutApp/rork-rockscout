@@ -64,6 +64,7 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -786,6 +787,8 @@ fun IdentifyScreen(navController: NavController) {
                 PhotoPreview(
                     bitmap = capturedBitmap,
                     state = state,
+                    identifyProgress = identifyProgress,
+                    identifyStage = identifyStage,
                     onRetake = { resetAll() },
                     onCamera = { startCamera() },
                 )
@@ -915,7 +918,6 @@ fun IdentifyScreen(navController: NavController) {
                             color = TextLow,
                             textAlign = TextAlign.Center,
                         )
-                        }
                     }
                     ScanState.CLARIFY_QUESTIONS -> Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -1480,7 +1482,14 @@ fun IdentifyScreen(navController: NavController) {
 }
 
 @Composable
-private fun PhotoPreview(bitmap: Bitmap?, state: ScanState, onRetake: () -> Unit, onCamera: () -> Unit) {
+private fun PhotoPreview(
+    bitmap: Bitmap?,
+    state: ScanState,
+    identifyProgress: Float,
+    identifyStage: String,
+    onRetake: () -> Unit,
+    onCamera: () -> Unit,
+) {
     val showBitmap = state == ScanState.CAPTURED ||
         state == ScanState.MODERATING ||
         state == ScanState.ARTIFACT_CONFIRM ||
