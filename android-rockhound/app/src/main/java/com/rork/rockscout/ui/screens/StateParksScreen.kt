@@ -25,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Park
+import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -52,6 +53,7 @@ import com.rork.rockscout.ui.components.TagChip
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.components.sculpted
 import com.rork.rockscout.ui.navigation.Routes
+import com.rork.rockscout.ui.theme.Amethyst
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
@@ -63,7 +65,13 @@ import kotlinx.coroutines.launch
 @Composable
 fun StateParksScreen(navController: NavController) {
     val parks = remember { StateParkData.allParks }
-    val grouped = remember(parks) { parks.groupBy { it.state } }
+    val grouped = remember(parks) {
+        parks.groupBy { it.state }.mapValues { (_, stateParks) ->
+            // National parks first, then state parks — preserve existing order within each group
+            val (national, state) = stateParks.partition { it.isNationalPark }
+            national + state
+        }
+    }
     val allStates = remember { BlmData.allStates }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -86,7 +94,7 @@ fun StateParksScreen(navController: NavController) {
     }
 
     ScreenScaffold(
-        title = "State Parks",
+        title = "National & State Parks",
         onBack = { navController.popBackStack() },
         actions = {
             StatePickerPill(
@@ -107,6 +115,7 @@ fun StateParksScreen(navController: NavController) {
         ) {
             statesWithParks.forEach { state ->
                 val stateParks = grouped[state.code].orEmpty()
+                val nationalCount = stateParks.count { it.isNationalPark }
                 item(key = "park_header_${state.code}") {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Filled.Park, contentDescription = null, tint = Success, modifier = Modifier.size(18.dp))
@@ -114,6 +123,14 @@ fun StateParksScreen(navController: NavController) {
                         Text(state.name, style = MaterialTheme.typography.titleMedium, color = TextHigh, fontWeight = FontWeight.Bold)
                         Spacer(Modifier.width(8.dp))
                         Text("(${stateParks.size})", style = MaterialTheme.typography.labelSmall, color = TextLow)
+                        if (nationalCount > 0) {
+                            Spacer(Modifier.width(6.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Filled.Stars, contentDescription = null, tint = Amethyst, modifier = Modifier.size(12.dp))
+                                Spacer(Modifier.width(2.dp))
+                                Text("$nationalCount National Park${if (nationalCount == 1) "" else "s"}", style = MaterialTheme.typography.labelSmall, color = Amethyst, fontWeight = FontWeight.Medium)
+                            }
+                        }
                     }
                 }
                 items(stateParks, key = { it.id }) { park ->
@@ -128,7 +145,7 @@ fun StateParksScreen(navController: NavController) {
 
 @Composable
 private fun StateParkCard(park: StatePark, onClick: () -> Unit) {
-    val accent = Success
+    val accent = if (park.isNationalPark) Amethyst else Success
     val shape = RoundedCornerShape(20.dp)
     Box(
         modifier = Modifier.fillMaxWidth().sculpted(shape = shape, accent = accent, shadowElevation = 6.dp, onClick = onClick).clip(shape)
@@ -141,16 +158,26 @@ private fun StateParkCard(park: StatePark, onClick: () -> Unit) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.Top) {
                 Box(modifier = Modifier.size(42.dp).clip(CircleShape).background(accent.copy(alpha = 0.16f)).glowingBorder(1.dp, accent.copy(alpha = 0.35f), CircleShape), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Filled.Park, contentDescription = null, tint = accent, modifier = Modifier.size(22.dp))
+                    Icon(
+                        if (park.isNationalPark) Icons.Filled.Stars else Icons.Filled.Park,
+                        contentDescription = null,
+                        tint = accent,
+                        modifier = Modifier.size(22.dp),
+                    )
                 }
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(park.name, style = MaterialTheme.typography.titleMedium, color = DarkTextHigh, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(park.name, style = MaterialTheme.typography.titleMedium, color = DarkTextHigh, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    }
                     Text(park.region, style = MaterialTheme.typography.bodySmall, color = DarkTextMid)
                     Spacer(Modifier.height(6.dp))
                     Text(park.description, style = MaterialTheme.typography.bodySmall, color = DarkTextMid, maxLines = 3, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.height(8.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (park.isNationalPark) {
+                            TagChip(text = "National Park", color = accent)
+                        }
                         if (park.hasCamping) TagChip(text = "Camping", color = accent)
                         TagChip(text = park.feeInfo, color = accent)
                     }

@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Park
+import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -53,6 +54,7 @@ import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.TagChip
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.components.sculpted
+import com.rork.rockscout.ui.theme.Amethyst
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
@@ -79,7 +81,7 @@ fun StateParkDetailScreen(
         return
     }
 
-    val accent = Success
+    val accent = if (park.isNationalPark) Amethyst else Success
     val context = LocalContext.current
     val repo = AppRepository.instance
     val favorites by repo.favoriteSpots.collectAsStateWithLifecycle()
@@ -103,7 +105,12 @@ fun StateParkDetailScreen(
                     Column(modifier = Modifier.padding(20.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(modifier = Modifier.size(56.dp).clip(CircleShape).background(accent.copy(alpha = 0.16f)).glowingBorder(1.dp, accent.copy(alpha = 0.35f), CircleShape), contentAlignment = Alignment.Center) {
-                                Icon(Icons.Filled.Park, contentDescription = null, tint = accent, modifier = Modifier.size(28.dp))
+                                Icon(
+                                    if (park.isNationalPark) Icons.Filled.Stars else Icons.Filled.Park,
+                                    contentDescription = null,
+                                    tint = accent,
+                                    modifier = Modifier.size(28.dp),
+                                )
                             }
                             Spacer(Modifier.width(14.dp))
                             Column {
@@ -115,6 +122,9 @@ fun StateParkDetailScreen(
                         Text(park.description, style = MaterialTheme.typography.bodyMedium, color = DarkTextMid)
                         Spacer(Modifier.height(12.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (park.isNationalPark) {
+                                TagChip(text = "National Park", color = accent)
+                            }
                             TagChip(text = if (park.hasCamping) "Camping Available" else "Day Use", color = accent)
                             TagChip(text = park.feeInfo, color = accent)
                         }

@@ -905,7 +905,7 @@ private val howToSections: List<HowToSection> = listOf(
         shortLabel = "Parks",
         steps = listOf(
             "Tap \"National & State Parks\" from the Field Kit section on the home screen.",
-            "Browse over 50 national and state parks that are dig-friendly or geologically significant.",
+            "Browse over 250 national and state parks — including all 62 US National Parks — that are dig-friendly or geologically significant.",
             "Each park shows what rocks and minerals you can find there, plus visitor info and common wildlife.",
             "Tap the bookmark icon on any park to save it to Favorite Spots for quick access.",
         ),

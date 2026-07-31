@@ -1335,7 +1335,7 @@ Planned with RockScout""".trimIndent()
                             text = { Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Filled.Park, contentDescription = null, tint = Success, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(10.dp))
-                                Text("State Parks")
+                                Text("National & State Parks")
                             } },
                             onClick = { addStopMenuExpanded = false; showStateParkPicker = true },
                         )
@@ -2585,7 +2585,7 @@ private fun StateParkPickerSheet(
         onDismissRequest = onDismiss,
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         containerColor = MaterialTheme.colorScheme.surface,
-        title = { Text("Add a state park", style = MaterialTheme.typography.headlineSmall) },
+        title = { Text("Add a national or state park", style = MaterialTheme.typography.headlineSmall) },
         text = {
             Column(modifier = Modifier.fillMaxWidth().height(460.dp)) {
                 OutlinedTextField(
@@ -2597,7 +2597,7 @@ private fun StateParkPickerSheet(
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "${filtered.size} state park${if (filtered.size == 1) "" else "s"}",
+                    "${filtered.size} park${if (filtered.size == 1) "" else "s"}",
                     style = MaterialTheme.typography.labelSmall,
                     color = TextLow,
                 )
