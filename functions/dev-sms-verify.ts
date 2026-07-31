@@ -2,25 +2,25 @@
  * Developer 2-step verification endpoint.
  *
  * POST /dev-sms-verify { action: "send" }
- *   Derives the current 6-digit code, sends it via Twilio SMS when Twilio is
- *   configured, and returns { ok, sent, smsSent, devCode? }. `devCode` is only
- *   returned when SMS delivery did not happen (no Twilio config or a Twilio
+ *   Derives the current 6-digit code, emails it to the developer address via
+ *   Resend, and returns { ok, sent, emailSent, devCode? }. `devCode` is only
+ *   returned when the email could not be delivered (no Resend key or a Resend
  *   failure) so the app can post an instant local notification with the code —
- *   the developer never has to wait for a carrier round-trip.
+ *   the developer is never locked out.
  *
  * POST /dev-sms-verify { action: "verify", code: "123456" }
  *   → { ok: true, verified: true } | { ok: false, error }
  *
  * Codes are STATELESS: they're an HMAC-SHA256 of a 30-second time bucket keyed
- * by the server-side app key. Cloudflare Workers run many isolates, so the old
- * module-level `storedCode` variable meant "send" and "verify" frequently hit
- * different isolates and verification failed at random. Deriving the code
+ * by the server-side app key. Cloudflare Workers run many isolates, so a
+ * module-level `storedCode` variable would mean "send" and "verify" frequently
+ * hit different isolates and verification fails at random. Deriving the code
  * instead makes verification work on any isolate, instantly, with no KV round
  * trip. Codes stay valid for CODE_WINDOW_BUCKETS * 30s (5 minutes).
  *
- * Optional env vars (SMS is a bonus channel, not a requirement):
- *   TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / TWILIO_PHONE_FROM
- *   TWILIO_PHONE_TO (overrides the default developer destination number)
+ * Env vars:
+ *   RESEND_API_KEY (required for email delivery)
+ *   DEV_2FA_EMAIL_TO (optional — overrides the default developer address)
  */
 
 /** Seconds per code bucket. */
@@ -28,8 +28,11 @@ const BUCKET_SECONDS = 30;
 /** How many past buckets stay valid (10 * 30s = 5 minutes). */
 const CODE_WINDOW_BUCKETS = 10;
 
-/** Default destination for the SMS channel (developer's phone). */
-const DEFAULT_DEV_PHONE_TO = "+13134256511";
+/** Default destination for the developer 2-step code. */
+const DEFAULT_DEV_EMAIL_TO = "Aaron_James_Martin@yahoo.com";
+
+/** Verified Resend sender for this project. */
+const FROM = "RockScout <welcome@rockscout.app>";
 
 /** Last-resort HMAC secret when no server key is configured. */
 const FALLBACK_SECRET = "rockscout-dev-2fa";
@@ -68,35 +71,64 @@ function safeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
-async function sendSms(
-  to: string,
-  from: string,
-  body: string,
-  accountSid: string,
-  authToken: string,
-): Promise<boolean> {
-  try {
-    const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
-    const auth = btoa(`${accountSid}:${authToken}`);
-    const params = new URLSearchParams();
-    params.append("To", to);
-    params.append("From", from);
-    params.append("Body", body);
+function buildEmail(code: string): { html: string; text: string } {
+  const html = `<!DOCTYPE html>
+<html><body style="margin:0;padding:0;background:#0B0F10;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">
+  <div style="max-width:520px;margin:0 auto;padding:32px 24px;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:38px;">&#128274;</div>
+      <h1 style="color:#EAF6F6;margin:8px 0 0;font-size:22px;">Developer Console access</h1>
+    </div>
+    <div style="background:#121A1C;border:1px solid #1F3A3D;border-radius:16px;padding:24px;">
+      <p style="color:#B9CBCB;font-size:15px;line-height:1.5;margin-top:0;">
+        Enter this code in RockScout to open the Developer Console:
+      </p>
+      <div style="text-align:center;margin:22px 0;">
+        <span style="font-size:36px;font-weight:800;letter-spacing:10px;color:#4FD1C5;
+                     background:#0B0F10;border-radius:12px;padding:12px 22px;display:inline-block;">
+          ${code}
+        </span>
+      </div>
+      <p style="color:#7E9494;font-size:13px;line-height:1.5;margin-bottom:0;">
+        This code expires in 5 minutes. If you didn't request it, someone entered
+        the developer PIN — no action was taken.
+      </p>
+    </div>
+  </div>
+</body></html>`;
 
-    const resp = await fetch(url, {
+  const text = `RockScout — Developer Console access
+
+Your verification code is: ${code}
+
+It expires in 5 minutes. If you didn't request it, someone entered the developer PIN — no action was taken.`;
+
+  return { html, text };
+}
+
+async function sendEmail(apiKey: string, to: string, code: string): Promise<boolean> {
+  try {
+    const { html, text } = buildEmail(code);
+    const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        Authorization: `Basic ${auth}`,
-        "Content-Type": "application/x-www-form-urlencoded",
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
       },
-      body: params.toString(),
+      body: JSON.stringify({
+        from: FROM,
+        to: [to],
+        subject: `RockScout developer code: ${code}`,
+        html,
+        text,
+      }),
     });
-    if (!resp.ok) {
-      console.error("dev-sms-verify: Twilio send failed", resp.status);
+    if (!res.ok) {
+      console.error("dev-2fa: Resend send failed", res.status, await res.text());
     }
-    return resp.ok;
+    return res.ok;
   } catch {
-    console.error("dev-sms-verify: Twilio request threw");
+    console.error("dev-2fa: Resend request threw");
     return false;
   }
 }
@@ -104,10 +136,8 @@ async function sendSms(
 export async function handleDevSmsVerify(
   request: Request,
   env: {
-    TWILIO_ACCOUNT_SID?: string;
-    TWILIO_AUTH_TOKEN?: string;
-    TWILIO_PHONE_FROM?: string;
-    TWILIO_PHONE_TO?: string;
+    RESEND_API_KEY?: string;
+    DEV_2FA_EMAIL_TO?: string;
     EXPO_PUBLIC_RORK_APP_KEY?: string;
     EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
   },
@@ -125,29 +155,26 @@ export async function handleDevSmsVerify(
 
     if (action === "send") {
       const code = await deriveCode(secret, currentBucket());
+      const to = env.DEV_2FA_EMAIL_TO?.trim() || DEFAULT_DEV_EMAIL_TO;
 
-      const sid = env.TWILIO_ACCOUNT_SID;
-      const token = env.TWILIO_AUTH_TOKEN;
-      const from = env.TWILIO_PHONE_FROM;
-      const to = env.TWILIO_PHONE_TO?.trim() || DEFAULT_DEV_PHONE_TO;
-
-      let smsSent = false;
-      if (sid && token && from && from.trim() !== to) {
-        smsSent = await sendSms(
-          to,
-          from,
-          `RockScout Developer Access — your verification code is: ${code}. It expires in 5 minutes.`,
-          sid,
-          token,
-        );
+      let emailSent = false;
+      if (env.RESEND_API_KEY) {
+        emailSent = await sendEmail(env.RESEND_API_KEY, to, code);
       }
 
-      // When SMS can't be delivered, hand the code back so the app can post an
-      // instant local notification. The endpoint is already app-key guarded and
-      // only reachable after the developer PIN, so this stays a developer-only
+      // When email can't be delivered, hand the code back so the app can post
+      // an instant local notification. The endpoint is app-key guarded and only
+      // reachable after the developer PIN, so this stays a developer-only
       // channel.
       return Response.json(
-        { ok: true, sent: true, smsSent, ...(smsSent ? {} : { devCode: code }) },
+        {
+          ok: true,
+          sent: true,
+          emailSent,
+          // Masked destination for the UI ("a***n@yahoo.com").
+          emailTo: emailSent ? to : undefined,
+          ...(emailSent ? {} : { devCode: code }),
+        },
         { headers },
       );
     }

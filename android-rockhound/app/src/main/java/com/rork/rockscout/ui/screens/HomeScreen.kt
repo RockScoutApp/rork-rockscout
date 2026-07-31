@@ -1187,7 +1187,7 @@ fun HomeScreen(navController: NavController) {
                 correctPin = "081311",
                 onUnlock = {
                     showPinPad = false
-                    // After correct PIN, send SMS verification code
+                    // After correct PIN, email the verification code
                     smsVerifying = true
                     smsError = null
                     scope.launch {
@@ -4765,7 +4765,7 @@ private fun DevSmsVerifyOverlay(
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                text = "A 6-digit code was sent via push notification and SMS.",
+                text = "A 6-digit code was emailed to Aaron_James_Martin@yahoo.com.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = DarkTextMid,
                 textAlign = TextAlign.Center,
@@ -4878,14 +4878,14 @@ private fun DevSmsVerifyOverlay(
 /**
  * Requests a developer verification code.
  *
- * The backend returns the code directly (`devCode`) whenever SMS delivery isn't
- * possible, so the code is available immediately instead of waiting on a
- * carrier. We post it as a high-priority local notification and also hand it
- * back to the caller so the verify overlay can show it inline when the user
- * hasn't granted notification permission.
+ * The backend emails the code to the developer address. If email delivery isn't
+ * possible it returns the code directly (`devCode`) so the developer is never
+ * locked out — we then post it as a high-priority local notification and hand
+ * it back to the caller so the verify overlay can show it inline when
+ * notification permission hasn't been granted.
  *
  * @return the 6-digit code when the backend returned one, or null when the code
- *         was delivered by SMS only / the request failed.
+ *         was delivered by email only / the request failed.
  */
 private suspend fun sendDevVerificationCode(context: android.content.Context): String? {
     return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
@@ -4931,13 +4931,13 @@ private suspend fun sendDevVerificationCode(context: android.content.Context): S
     }
 }
 
-/** Verifies the dev SMS code by calling the Cloudflare function. */
+/** Verifies the developer 2-step code by calling the Cloudflare function. */
 private suspend fun verifyDevSmsCode(code: String): Boolean {
     return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         runCatching {
             val functionsUrl = com.rork.rockscout.data.BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", com.rork.rockscout.data.BuildSecrets.RORK_FUNCTIONS_URL)
             if (functionsUrl.isBlank()) {
-                // No backend — cannot verify SMS code
+                // No backend — cannot verify the code
                 return@withContext false
             }
             val payload = """{"action":"verify","code":"$code"}"""

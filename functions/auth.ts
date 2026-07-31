@@ -178,9 +178,7 @@ type Env = {
   TRIAL_KV?: KVNamespace;
   RATE_LIMIT_KV?: KVNamespace;
   RESEND_API_KEY?: string;
-  TWILIO_ACCOUNT_SID?: string;
-  TWILIO_AUTH_TOKEN?: string;
-  TWILIO_PHONE_FROM?: string;
+  DEV_2FA_EMAIL_TO?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
   REVENUECAT_SECRET_API_KEY?: string;
   VAPID_PUBLIC_KEY?: string;
