@@ -331,6 +331,26 @@ fun NotificationsScreen(
                             }
                         }
 
+                        // ── Select All row (only in selection mode) ──
+                        if (selectionMode && notifications.isNotEmpty()) {
+                            item {
+                                val allSelected = selectedIds.value.size == notifications.size
+                                SelectAllRow(
+                                    allSelected = allSelected,
+                                    selectedCount = selectedIds.value.size,
+                                    totalCount = notifications.size,
+                                    onToggle = {
+                                        selectedIds.value = if (allSelected) {
+                                            emptySet()
+                                        } else {
+                                            notifications.map { it.id }.toSet()
+                                        }
+                                    },
+                                )
+                                Spacer(Modifier.height(4.dp))
+                            }
+                        }
+
                         // ── Regular notifications ──
                         items(notifications) { notif ->
                             SwipeableNotificationRow(
@@ -458,6 +478,63 @@ fun NotificationsScreen(
                     textColor = TextMid,
                 )
             },
+        )
+    }
+}
+
+/* ── Select All row ──────────────────────────────────────────────────────── */
+
+@Composable
+private fun SelectAllRow(
+    allSelected: Boolean,
+    selectedCount: Int,
+    totalCount: Int,
+    onToggle: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Obsidian.copy(alpha = 0.55f))
+            .glowingBorder(1.dp, Citrine.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
+            .clickable { onToggle() }
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(22.dp)
+                .clip(RoundedCornerShape(5.dp))
+                .background(if (allSelected) Citrine else Color.Transparent)
+                .glowingBorder(
+                    2.dp,
+                    if (allSelected) Citrine else TextLow.copy(alpha = 0.5f),
+                    RoundedCornerShape(5.dp),
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (allSelected) {
+                Icon(
+                    Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = Ink,
+                    modifier = Modifier.size(14.dp),
+                )
+            }
+        }
+        Spacer(Modifier.width(10.dp))
+        Text(
+            text = "Select All",
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextHigh,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = "$selectedCount / $totalCount",
+            style = MaterialTheme.typography.labelMedium,
+            color = if (selectedCount > 0) Citrine else TextLow,
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }
