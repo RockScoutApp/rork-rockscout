@@ -243,14 +243,17 @@ fun NotificationsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
+                        val canMarkAllRead = unreadCount > 0
                         SculptedButton(
-                            text = "Clear",
+                            text = "Mark All as Read",
                             onClick = {
-                                scope.launch { notifRepo.markAllRead() }
+                                if (canMarkAllRead) {
+                                    scope.launch { notifRepo.markAllRead() }
+                                }
                             },
-                            accent = Aqua,
-                            containerColor = Obsidian.copy(alpha = 0.88f),
-                            textColor = Aqua,
+                            accent = if (canMarkAllRead) Aqua else TextLow,
+                            containerColor = if (canMarkAllRead) Obsidian.copy(alpha = 0.88f) else Obsidian.copy(alpha = 0.5f),
+                            textColor = if (canMarkAllRead) Aqua else TextLow.copy(alpha = 0.5f),
                             shape = RoundedCornerShape(20.dp),
                             contentPadding = androidx.compose.foundation.layout.PaddingValues(
                                 horizontal = 14.dp, vertical = 6.dp,
