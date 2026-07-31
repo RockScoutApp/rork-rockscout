@@ -72,6 +72,7 @@ import com.rork.rockscout.data.NaturalWonder
 import com.rork.rockscout.data.NaturalWondersData
 import com.rork.rockscout.data.UsRegion
 import com.rork.rockscout.data.WonderType
+import com.rork.rockscout.data.stateName
 import com.rork.rockscout.data.usRegion
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.FullScreenImageViewer
@@ -138,11 +139,9 @@ fun NaturalWondersScreen(navController: NavController) {
         }
         if (searchQuery.isNotBlank()) {
             val q = searchQuery.lowercase().trim()
-            list = list.filter {
-                it.name.lowercase().contains(q) ||
-                    it.location.lowercase().contains(q) ||
-                    it.description.lowercase().contains(q) ||
-                    it.rocksToFind.any { rock -> rock.lowercase().contains(q) }
+            list = list.filter { wonder ->
+                wonder.name.lowercase().contains(q) ||
+                    wonder.stateName().lowercase().contains(q)
             }
         }
         list
@@ -258,7 +257,7 @@ fun NaturalWondersScreen(navController: NavController) {
                         androidx.compose.material3.OutlinedTextField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
-                            placeholder = { Text("Search wonders, locations, rocks…", style = MaterialTheme.typography.bodyMedium, color = TextLow) },
+                            placeholder = { Text("Search by name or state…", style = MaterialTheme.typography.bodyMedium, color = TextLow) },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
                             colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(

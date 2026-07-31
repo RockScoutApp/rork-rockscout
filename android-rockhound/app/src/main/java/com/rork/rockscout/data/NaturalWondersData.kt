@@ -104,6 +104,24 @@ fun NaturalWonder.usRegion(): UsRegion? {
     return null
 }
 
+/**
+ * Returns the US state name (or country for non-US locations) extracted from
+ * the [location] string, for use in name-or-state search filtering.
+ *
+ * Examples: "Arizona, USA" → "Arizona", "Northern Ireland, UK" → "Northern Ireland",
+ * "Iceland" → "Iceland", "Arizona–Utah, USA" → "Arizona–Utah".
+ */
+fun NaturalWonder.stateName(): String {
+    val loc = location.trim()
+    // If it contains "USA", take the part before the comma/dash separator
+    if (loc.contains("USA", ignoreCase = true)) {
+        val beforeUsa = loc.substringBefore("USA", loc).trim().trimEnd(',', '–', '-').trim()
+        return beforeUsa.ifBlank { loc }
+    }
+    // Non-US: take the first comma-separated segment (country or region)
+    return loc.substringBefore(',').trim().ifBlank { loc }
+}
+
 /** Curated list of worldwide natural wonders with geological context. */
 object NaturalWondersData {
 
