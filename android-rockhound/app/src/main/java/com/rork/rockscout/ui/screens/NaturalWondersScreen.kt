@@ -26,6 +26,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -52,6 +54,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.rork.rockscout.data.AppRepository
+import com.rork.rockscout.data.FavoriteSpotResolver
 import com.rork.rockscout.data.NaturalWonder
 import com.rork.rockscout.data.NaturalWondersData
 import com.rork.rockscout.data.UsRegion
@@ -83,6 +87,8 @@ fun NaturalWondersScreen(navController: NavController) {
     var viewerUrls by remember { mutableStateOf<List<String>>(emptyList()) }
     var viewerInitialPage by remember { mutableIntStateOf(0) }
     var shareWonder by remember { mutableStateOf<NaturalWonder?>(null) }
+    val repo = AppRepository.instance
+    val favorites by repo.favoriteSpots.collectAsStateWithLifecycle()
 
     val allWonders = remember { NaturalWondersData.allWonders }
     val filteredWonders = remember(allWonders, searchQuery, selectedType, selectedRegion) {
@@ -247,8 +253,11 @@ fun NaturalWondersScreen(navController: NavController) {
 
                 // Wonder cards
                 items(filteredWonders, key = { it.id }) { wonder ->
+                    val favId = FavoriteSpotResolver.wonderId(wonder.id)
                     WonderCard(
                         wonder = wonder,
+                        isFavorited = favorites.contains(favId),
+                        onToggleFavorite = { repo.toggleFavoriteSpot(favId) },
                         onPhotoClick = { urls, page ->
                             viewerUrls = urls
                             viewerInitialPage = page
@@ -322,6 +331,8 @@ private fun WonderFilterChip(
 @Composable
 private fun WonderCard(
     wonder: NaturalWonder,
+    isFavorited: Boolean,
+    onToggleFavorite: () -> Unit,
     onPhotoClick: (List<String>, Int) -> Unit,
     onShare: () -> Unit,
 ) {
@@ -389,21 +400,44 @@ private fun WonderCard(
                     fontWeight = FontWeight.SemiBold,
                 )
             }
-            // Share button
-            Box(
+            // Favorite + Share buttons
+            Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(8.dp)
-                    .size(32.dp)
-                    .sculpted(
-                        shape = RoundedCornerShape(8.dp),
-                        accent = typeColor,
-                        shadowElevation = 2.dp,
-                        onClick = onShare,
-                    ),
-                contentAlignment = Alignment.Center,
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                Icon(Icons.Filled.Share, contentDescription = "Share", tint = Color.White, modifier = Modifier.size(16.dp))
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .sculpted(
+                            shape = RoundedCornerShape(8.dp),
+                            accent = if (isFavorited) Citrine else typeColor,
+                            shadowElevation = 2.dp,
+                            onClick = onToggleFavorite,
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        if (isFavorited) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
+                        contentDescription = if (isFavorited) "Remove from Favorite Spots" else "Add to Favorite Spots",
+                        tint = if (isFavorited) Citrine else Color.White,
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .sculpted(
+                            shape = RoundedCornerShape(8.dp),
+                            accent = typeColor,
+                            shadowElevation = 2.dp,
+                            onClick = onShare,
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Filled.Share, contentDescription = "Share", tint = Color.White, modifier = Modifier.size(16.dp))
+                }
             }
         }
 

@@ -35,6 +35,7 @@ data class FavoriteSpotEntry(
  *  - BLM states:                     "blmstate:{stateCode}"
  *  - Specimen markers / custom pins:  "pin:{lat}:{lng}:{name}"
  *  - Searched / inputted locations:   "search:{lat}:{lng}:{name}"
+ *  - Natural wonders:                  "wonder:{wonderId}"
  */
 object FavoriteSpotResolver {
 
@@ -45,6 +46,7 @@ object FavoriteSpotResolver {
     private const val BLM_STATE_PREFIX = "blmstate:"
     private const val PIN_PREFIX = "pin:"
     private const val SEARCH_PREFIX = "search:"
+    private const val WONDER_PREFIX = "wonder:"
 
     // ── ID generators (used by detail screens when toggling favorites) ──
 
@@ -53,6 +55,7 @@ object FavoriteSpotResolver {
     fun campgroundId(name: String): String = "$CAMPGROUND_PREFIX$name"
     fun blmSiteId(stateCode: String, siteName: String): String = "$BLM_SITE_PREFIX$stateCode:$siteName"
     fun blmStateId(stateCode: String): String = "$BLM_STATE_PREFIX$stateCode"
+    fun wonderId(wonderId: String): String = "$WONDER_PREFIX$wonderId"
 
     // ── Specimen marker / custom pin / search location IDs ──
 
@@ -79,6 +82,7 @@ object FavoriteSpotResolver {
             id.startsWith(BLM_STATE_PREFIX) -> resolveBlmState(id.removePrefix(BLM_STATE_PREFIX))
             id.startsWith(PIN_PREFIX) -> resolveCoordinatePin(id.removePrefix(PIN_PREFIX), "Specimen Pin")
             id.startsWith(SEARCH_PREFIX) -> resolveCoordinatePin(id.removePrefix(SEARCH_PREFIX), "Searched Location")
+            id.startsWith(WONDER_PREFIX) -> resolveWonder(id.removePrefix(WONDER_PREFIX))
             else -> resolveDigLocation(id)
         }
     }
@@ -186,6 +190,21 @@ object FavoriteSpotResolver {
             emoji = state.silhouetteEmoji,
             accent = Color(state.accentHex),
             route = "blm_state/${state.code}",
+        )
+    }
+
+    private fun resolveWonder(wonderId: String): FavoriteSpotEntry? {
+        val wonder = NaturalWondersData.allWonders.firstOrNull { it.id == wonderId } ?: return null
+        return FavoriteSpotEntry(
+            id = wonderId(wonder.id),
+            name = wonder.name,
+            region = wonder.location,
+            latitude = wonder.latitude,
+            longitude = wonder.longitude,
+            typeLabel = "Natural Wonder",
+            emoji = "🌍",
+            accent = Aqua,
+            route = "natural_wonders",
         )
     }
 
