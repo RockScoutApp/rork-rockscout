@@ -28,6 +28,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AddLocation
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Public
@@ -117,6 +118,8 @@ fun NaturalWondersScreen(navController: NavController) {
     var shareWonder by remember { mutableStateOf<NaturalWonder?>(null) }
     var isMapView by remember { mutableStateOf(false) }
     var isFullscreenMap by remember { mutableStateOf(false) }
+    var showAddLocation by remember { mutableStateOf(false) }
+    var addLocationMessage by remember { mutableStateOf<String?>(null) }
     val repo = AppRepository.instance
     val favorites by repo.favoriteSpots.collectAsStateWithLifecycle()
 
@@ -162,6 +165,17 @@ fun NaturalWondersScreen(navController: NavController) {
                         onClick = { navController.popBackStack() },
                         accent = Citrine,
                         iconTint = Citrine,
+                    )
+                },
+                actions = {
+                    SculptedIconButton(
+                        icon = Icons.Filled.AddLocation,
+                        contentDescription = "Suggest a Natural Wonder",
+                        onClick = { showAddLocation = true },
+                        accent = Citrine,
+                        iconTint = Citrine,
+                        size = 40.dp,
+                        shadowElevation = 4.dp,
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -369,6 +383,32 @@ fun NaturalWondersScreen(navController: NavController) {
             imageUri = wonder.imageUrl,
             locationText = wonder.location,
             onDismiss = { shareWonder = null },
+        )
+    }
+
+    if (showAddLocation) {
+        AddLocationDialog(
+            onDismiss = { showAddLocation = false },
+            onSubmitted = { approved ->
+                addLocationMessage = if (approved) {
+                    "Natural wonder web-verified and submitted!"
+                } else {
+                    "Natural wonder submitted for review!"
+                }
+                showAddLocation = false
+            },
+            submissionMode = "wonder",
+        )
+    }
+
+    addLocationMessage?.let { msg ->
+        androidx.compose.material3.SnackbarHost(
+            hostState = remember { androidx.compose.material3.SnackbarHostState() }.also {
+                androidx.compose.runtime.LaunchedEffect(msg) {
+                    it.showSnackbar(msg)
+                    addLocationMessage = null
+                }
+            },
         )
     }
 }

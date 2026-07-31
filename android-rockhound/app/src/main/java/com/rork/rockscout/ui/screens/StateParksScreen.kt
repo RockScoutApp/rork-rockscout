@@ -22,6 +22,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddLocation
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Park
@@ -30,8 +31,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,6 +51,7 @@ import com.rork.rockscout.data.SafeLinkOpener
 import com.rork.rockscout.data.StatePark
 import com.rork.rockscout.data.StateParkData
 import com.rork.rockscout.ui.components.ScreenScaffold
+import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.StatePickerPill
 import com.rork.rockscout.ui.components.NewBadge
 import com.rork.rockscout.ui.components.TagChip
@@ -75,6 +80,8 @@ fun StateParksScreen(navController: NavController) {
     val allStates = remember { BlmData.allStates }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    var showAddLocation by remember { mutableStateOf(false) }
+    var addLocationMessage by remember { mutableStateOf<String?>(null) }
 
     // Build list of states that actually have parks, in the order they appear
     val statesWithParks = remember(allStates, grouped) {
@@ -104,6 +111,16 @@ fun StateParksScreen(navController: NavController) {
                         scope.launch { listState.animateScrollToItem(targetIndex) }
                     }
                 },
+            )
+            Spacer(Modifier.width(8.dp))
+            SculptedIconButton(
+                icon = Icons.Filled.AddLocation,
+                contentDescription = "Upload New Park",
+                onClick = { showAddLocation = true },
+                accent = Success,
+                iconTint = Success,
+                size = 40.dp,
+                shadowElevation = 4.dp,
             )
         },
     ) {
@@ -140,6 +157,32 @@ fun StateParksScreen(navController: NavController) {
                 }
             }
         }
+    }
+
+    if (showAddLocation) {
+        AddLocationDialog(
+            onDismiss = { showAddLocation = false },
+            onSubmitted = { approved ->
+                addLocationMessage = if (approved) {
+                    "Park web-verified and submitted!"
+                } else {
+                    "Park submitted for review!"
+                }
+                showAddLocation = false
+            },
+            submissionMode = "park",
+        )
+    }
+
+    addLocationMessage?.let { msg ->
+        androidx.compose.material3.SnackbarHost(
+            hostState = remember { androidx.compose.material3.SnackbarHostState() }.also {
+                androidx.compose.runtime.LaunchedEffect(msg) {
+                    it.showSnackbar(msg)
+                    addLocationMessage = null
+                }
+            },
+        )
     }
 }
 

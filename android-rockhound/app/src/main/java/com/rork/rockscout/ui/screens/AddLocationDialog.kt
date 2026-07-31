@@ -123,6 +123,26 @@ private val trailheadTypes = listOf(
     "Other Access Point" to LocationType.PUBLIC_DIG,
 )
 
+private val parkTypes = listOf(
+    "State Park" to LocationType.PUBLIC_DIG,
+    "National Park" to LocationType.PUBLIC_DIG,
+    "National Monument" to LocationType.PUBLIC_DIG,
+    "State Recreation Area" to LocationType.PUBLIC_DIG,
+    "State Natural Area" to LocationType.PUBLIC_DIG,
+    "County / Regional Park" to LocationType.PUBLIC_DIG,
+)
+
+private val wonderTypes = listOf(
+    "Geological Wonder" to LocationType.PUBLIC_DIG,
+    "Volcanic Feature" to LocationType.PUBLIC_DIG,
+    "Cave / Karst" to LocationType.PUBLIC_DIG,
+    "Canyon / Gorge" to LocationType.PUBLIC_DIG,
+    "Waterfall / Lake" to LocationType.PUBLIC_DIG,
+    "Coastal / Cliff Formation" to LocationType.PUBLIC_DIG,
+    "Desert / Dune Field" to LocationType.PUBLIC_DIG,
+    "Mountain / Peak" to LocationType.PUBLIC_DIG,
+)
+
 /**
  * Full-screen location submission form with photo capture, type dropdown,
  * address, comments, map pin-drop, web verification, and auto-approval.
@@ -153,16 +173,22 @@ fun AddLocationDialog(
     val effectiveTypes = when (submissionMode) {
         "campground" -> campgroundTypes
         "trailhead" -> trailheadTypes
+        "park" -> parkTypes
+        "wonder" -> wonderTypes
         else -> locationTypes
     }
     val dialogTitle = when (submissionMode) {
         "campground" -> "Upload New Campground"
         "trailhead" -> "Upload New Trailhead"
+        "park" -> "Upload New Park"
+        "wonder" -> "Suggest a Natural Wonder"
         else -> "Upload New Location"
     }
     val dialogSubtitle = when (submissionMode) {
         "campground" -> "Upload a campground for the community trip planner."
         "trailhead" -> "Upload a trailhead or access point for the community trip planner."
+        "park" -> "Add a state or national park for the community to explore."
+        "wonder" -> "Suggest a geological wonder or natural landmark worth visiting."
         else -> "Upload a dig site, mine, quarry, or rock shop for the community."
     }
 
@@ -562,6 +588,10 @@ fun AddLocationDialog(
                                             webUrl = url
                                         }
                                         "trailhead" -> DigSiteSearchService.verifyTrailhead(name, coords.first, coords.second) { snippet, url ->
+                                            webSnippet = snippet
+                                            webUrl = url
+                                        }
+                                        "park", "wonder" -> DigSiteSearchService.verifyLocation(name, coords.first, coords.second) { snippet, url ->
                                             webSnippet = snippet
                                             webUrl = url
                                         }
