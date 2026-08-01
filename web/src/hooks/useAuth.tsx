@@ -1,7 +1,7 @@
 import createContextHook from "@nkzw/create-context-hook";
 import { useEffect, useState, useCallback } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import { supabase, supabaseUrl } from "@/lib/supabase";
 import { syncEntitlement } from "@/lib/entitlement";
 
 /**
@@ -12,7 +12,7 @@ import { syncEntitlement } from "@/lib/entitlement";
 export const SCREENSHOT_MODE: boolean =
   import.meta.env.VITE_SCREENSHOT_MODE === "1";
 
-/** Stand-in user used only while capturing tutorial screenshots. */
+/** Stand-in user used only while capturing app screenshots. */
 const CAPTURE_USER = {
   id: "00000000-0000-4000-8000-000000000001",
   aud: "authenticated",
@@ -105,7 +105,55 @@ function useAuthState() {
   const signUp = useCallback(
     async (email: string, password: string) => {
       setError(null);
-      const { data, error: err } = await supabase.auth.signUp({
+
+      if (!supabaseUrl || supabaseUrl === "https://placeholder.supabase.co") {
+        setError(
+          "This PWA build is missing its backend configuration. Please reload the page or reinstall the app.",
+        );
+        throw new Error("Supabase URL not configured");
+      }
+
+      try {
+        const { data, error: err } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+        if (err) {
+          setError(err.message);
+          throw err;
+        }
+        // If no session returned, email verification is required.
+        return { needsVerification: !data.session };
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "";
+        if (message === "Failed to fetch" || message.includes("NetworkError")) {
+          setError(
+            "Network error. Check your connection, disable any ad blockers, and try again. If this keeps happening, clear the app cache or reinstall the PWA.",
+          );
+        } else if (!error) {
+          setError(message || "Sign up failed. Please try again.");
+        }
+        throw err;
+      }
+    },
+    [error],
+  );
+
+  const signIn = useCallback(async (email: string, password: string) => {
+    setError(null);
+
+    // Guard against a build that was deployed without Supabase env vars.
+    // Without this, the browser throws the generic "Failed to fetch" and the
+    // user has no idea the app is misconfigured.
+    if (!supabaseUrl || supabaseUrl === "https://placeholder.supabase.co") {
+      setError(
+        "This PWA build is missing its backend configuration. Please reload the page or reinstall the app.",
+      );
+      throw new Error("Supabase URL not configured");
+    }
+
+    try {
+      const { data, error: err } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -113,28 +161,25 @@ function useAuthState() {
         setError(err.message);
         throw err;
       }
-      // If no session returned, email verification is required.
-      return { needsVerification: !data.session };
-    },
-    [],
-  );
-
-  const signIn = useCallback(async (email: string, password: string) => {
-    setError(null);
-    const { data, error: err } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (err) {
-      setError(err.message);
+      // Sync RevenueCat entitlement to Supabase is_pro so the web sees
+      // Premium status immediately if the user bought on Android/iOS.
+      if (data.user?.id) {
+        void syncEntitlement(data.user.id);
+      }
+    } catch (err) {
+      // Translate the browser's generic "Failed to fetch" into something
+      // actionable, while preserving more specific Supabase errors.
+      const message = err instanceof Error ? err.message : "";
+      if (message === "Failed to fetch" || message.includes("NetworkError")) {
+        setError(
+          "Network error. Check your connection, disable any ad blockers, and try again. If this keeps happening, clear the app cache or reinstall the PWA.",
+        );
+      } else if (!error) {
+        setError(message || "Sign in failed. Please try again.");
+      }
       throw err;
     }
-    // Sync RevenueCat entitlement to Supabase is_pro so the web sees
-    // Premium status immediately if the user bought on Android/iOS.
-    if (data.user?.id) {
-      void syncEntitlement(data.user.id);
-    }
-  }, []);
+  }, [error]);
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();

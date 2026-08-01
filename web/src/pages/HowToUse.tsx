@@ -636,7 +636,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
       `RockScout's web app is a full PWA that works on desktop browsers — wider multi-column layouts, split views for the map and location list, and grids that use your screen space efficiently.`,
       `On large screens, the Home, Reference Library, Specimens, Collection, Trade Board, Achievements, Gear Guide, and Gem Shows grids expand to 4–6 columns so you can browse more at once.`,
       `The Dig Sites map page features a desktop split view — a scrollable, selectable location list sits beside the map so you can browse and navigate without switching tabs.`,
-      `Keyboard shortcuts: press \"?\" to toggle the keyboard shortcuts overlay, \"/\" to focus the search bar, and \"g\" followed by a letter to jump to a section (g h for Home, g m for Map, g s for Specimens, g c for Collection, g r for Reference Library, g t for Trade Board, g a for Achievements, g g for Gear Guide). Press Esc to close overlays or blur the search.`,
+      `Keyboard shortcuts: press "?" to toggle the keyboard shortcuts overlay, "/" to focus the search bar, and "g" followed by a letter to jump to a section (g h for Home, g m for Map, g s for Specimens, g c for Collection, g r for Reference Library, g t for Trade Board, g a for Achievements, g g for Gear Guide). Press Esc to close overlays or blur the search.`,
       `Install the PWA to your desktop from your browser's install prompt for a standalone app window with its own icon.`,
     ],
   },

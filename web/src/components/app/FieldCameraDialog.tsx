@@ -658,9 +658,6 @@ export default function FieldCameraDialog({
                         className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-foreground transition-colors hover:bg-muted/50"
                       >
                         <span className="flex-1">{dest.label}</span>
-                        {isPaidDestination && false && (
-                          <Lock className="h-3.5 w-3.5 text-muted-foreground" />
-                        )}
                       </button>
                     );
                   })}

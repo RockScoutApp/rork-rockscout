@@ -108,7 +108,7 @@ async function main() {
   });
 
   let screenshotCount = 0;
-  let clipCount = 0;
+  const clipCount = 0;
   const errors: string[] = [];
 
   for (const cap of captures) {

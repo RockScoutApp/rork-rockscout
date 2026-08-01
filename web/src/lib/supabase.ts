@@ -1,11 +1,11 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.EXPO_PUBLIC_SUPABASE_URL as string;
-const supabaseAnonKey = import.meta.env.EXPO_PUBLIC_SUPABASE_ANON_KEY as string;
+export const supabaseUrl = import.meta.env.EXPO_PUBLIC_SUPABASE_URL as string;
+export const supabaseAnonKey = import.meta.env.EXPO_PUBLIC_SUPABASE_ANON_KEY as string;
 
-const hasConfig = Boolean(supabaseUrl && supabaseAnonKey);
+export const hasSupabaseConfig = Boolean(supabaseUrl && supabaseAnonKey);
 
-if (!hasConfig) {
+if (!hasSupabaseConfig) {
   console.warn(
     "Supabase env vars missing — PWA auth and data features will not work. " +
       "Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in your build environment.",
