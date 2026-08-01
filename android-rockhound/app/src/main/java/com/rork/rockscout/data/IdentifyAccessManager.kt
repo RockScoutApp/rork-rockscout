@@ -77,7 +77,30 @@ class IdentifyAccessManager private constructor() {
     private val _hasAdFreeUnlock = MutableStateFlow(false)
     val hasAdFreeUnlock: StateFlow<Boolean> = _hasAdFreeUnlock.asStateFlow()
 
+    /**
+     * Mirror of the active Premium entitlement, pushed in by [PurchaseManager]
+     * whenever the entitlement changes. Used so trial state can be presented as
+     * "ended" for Premium subscribers without destroying the persisted trial
+     * counters (a user who cancels later keeps whatever trial they had left).
+     */
+    private val _premiumActive = MutableStateFlow(false)
+
     private lateinit var prefs: SharedPreferences
+
+    /**
+     * Push the current Premium entitlement into the access manager.
+     * Premium subscribers get a true premium experience: the free trial is
+     * reported as inactive/ended, the first-launch trial popup never shows,
+     * and ads are suppressed.
+     */
+    fun setPremiumActive(active: Boolean) {
+        if (_premiumActive.value == active) return
+        _premiumActive.value = active
+        if (active) {
+            _shouldShowTrialInfo.value = false
+        }
+        recomputeState()
+    }
 
     /**
      * Initialize from Application context. Reads persisted trial/token state,
@@ -188,6 +211,7 @@ class IdentifyAccessManager private constructor() {
                 _trialExpired.value = true
             }
             _tokenBalance.value = prefs.getInt(KEY_TOKEN_BALANCE, 0)
+            applyPremiumOverride()
             return
         }
 
@@ -226,6 +250,21 @@ class IdentifyAccessManager private constructor() {
         val adFreeExpiry = prefs.getLong(KEY_ADFREE_UNLOCK_EXPIRY, 0L)
         _adFreeUnlockExpiry.value = adFreeExpiry
         _hasAdFreeUnlock.value = adFreeExpiry > now
+
+        applyPremiumOverride()
+    }
+
+    /**
+     * For Premium subscribers, collapse all trial state so no trial banners,
+     * counters, or "trial expired" upsells can ever surface. Persisted prefs are
+     * left untouched so the real trial state returns if the subscription lapses.
+     */
+    private fun applyPremiumOverride() {
+        if (!_premiumActive.value) return
+        _trialActive.value = false
+        _trialExpired.value = false
+        _trialUsesRemaining.value = 0
+        _shouldShowTrialInfo.value = false
     }
 
     /**

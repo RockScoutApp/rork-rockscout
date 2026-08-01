@@ -128,7 +128,7 @@ class PurchaseManager {
         // This bypasses RevenueCat entirely — the user gets all Premium features
         // without any purchase or server check.
         if (com.rork.rockscout.BuildConfig.FORCE_PREMIUM) {
-            _isPremium.value = true
+            setPremium(true)
             Log.i("PurchaseManager", "FORCE_PREMIUM build — Premium entitlement permanently unlocked")
         }
 
@@ -160,7 +160,17 @@ class PurchaseManager {
     private fun updatePremiumStatus(info: CustomerInfo) {
         val premiumActive = info.entitlements[IapConfig.ENTITLEMENT_ID]?.isActive == true
         val legacyProActive = info.entitlements[IapConfig.PRO_ENTITLEMENT_ID]?.isActive == true
-        _isPremium.value = premiumActive || legacyProActive
+        setPremium(premiumActive || legacyProActive)
+    }
+
+    /**
+     * Single write path for the Premium entitlement. Keeps [IdentifyAccessManager]
+     * in sync so trial state collapses (and ads disappear) the moment Premium
+     * becomes active, and returns to the real trial state if it lapses.
+     */
+    private fun setPremium(active: Boolean) {
+        _isPremium.value = active
+        IdentifyAccessManager.instance.setPremiumActive(active)
     }
 
     /**
@@ -512,7 +522,7 @@ class PurchaseManager {
         if (com.rork.rockscout.BuildConfig.FORCE_PREMIUM) return
         try {
             Purchases.sharedInstance.awaitLogOut()
-            _isPremium.value = false
+            setPremium(false)
             Log.i("PurchaseManager", "RevenueCat user logged out")
         } catch (e: Exception) {
             Log.w("PurchaseManager", "Failed to log out RevenueCat user: ${e.message}")
@@ -558,7 +568,7 @@ class PurchaseManager {
      * cancels or renews a subscription for the *signed-in* user.
      */
     fun refreshAdminOverride(isPremium: Boolean) {
-        _isPremium.value = isPremium
+        setPremium(isPremium)
     }
 
     /**

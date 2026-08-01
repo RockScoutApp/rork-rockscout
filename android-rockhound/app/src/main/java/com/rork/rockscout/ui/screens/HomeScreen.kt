@@ -341,10 +341,12 @@ fun HomeScreen(navController: NavController) {
     val hasLocationUnlock by accessManager.hasLocationUnlock.collectAsStateWithLifecycle()
     val hasAdFreeUnlock by accessManager.hasAdFreeUnlock.collectAsStateWithLifecycle()
     val isTokenUnlocked = isPremium || hasLocationUnlock || hasAdFreeUnlock
-    val locationLocked = remember(isPremium, trialExpired) {
+    val locationLocked = remember(isPremium, trialExpired, hasLocationUnlock) {
         accessManager.isLocationLocked(isPremium)
     }
-    val socialLocked = remember(isPremium) { accessManager.isSocialLocked(isPremium) }
+    val socialLocked = remember(isPremium, trialExpired, hasLocationUnlock) {
+        accessManager.isSocialLocked(isPremium)
+    }
 
     // Referral reward popups — shown when a new user's code is confirmed or
     // when the sender has pending referral completions credited.

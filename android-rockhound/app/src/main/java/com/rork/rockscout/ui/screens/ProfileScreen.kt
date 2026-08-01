@@ -258,10 +258,13 @@ fun ProfileScreen(
 
     val accessManager = IdentifyAccessManager.instance
     val trialExpired by accessManager.trialExpired.collectAsStateWithLifecycle()
-    val locationLocked = remember(isPremium, trialExpired) {
+    val hasLocationUnlock by accessManager.hasLocationUnlock.collectAsStateWithLifecycle()
+    val locationLocked = remember(isPremium, trialExpired, hasLocationUnlock) {
         accessManager.isLocationLocked(isPremium)
     }
-    val socialLocked = remember(isPremium) { accessManager.isSocialLocked(isPremium) }
+    val socialLocked = remember(isPremium, trialExpired, hasLocationUnlock) {
+        accessManager.isSocialLocked(isPremium)
+    }
 
     val nearby = remember(current, profile.locationMonitoring, locationRefresh) {
         SeedData.allLocations

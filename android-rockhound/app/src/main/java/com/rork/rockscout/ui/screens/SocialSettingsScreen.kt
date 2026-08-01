@@ -121,7 +121,8 @@ fun SocialSettingsScreen(
 
     val accessManager = IdentifyAccessManager.instance
     val trialExpired by accessManager.trialExpired.collectAsStateWithLifecycle()
-    val locationLocked = remember(isPremium, trialExpired) {
+    val hasLocationUnlock by accessManager.hasLocationUnlock.collectAsStateWithLifecycle()
+    val locationLocked = remember(isPremium, trialExpired, hasLocationUnlock) {
         accessManager.isLocationLocked(isPremium)
     }
 
