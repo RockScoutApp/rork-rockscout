@@ -837,12 +837,29 @@ object PersistenceManager {
     }
 
     /**
-     * Returns true when the local SharedPreferences appear to be empty (fresh
-     * install). Used to decide whether to restore a cloud backup on sign-in.
+     * Returns true when the local SharedPreferences appear to be a fresh install
+     * with no user-generated data. Used to decide whether to restore a cloud
+     * backup on sign-in.
+     *
+     * We check for the *user data* keys (profile, collection, wishlist, etc.)
+     * rather than `prefs.all.isEmpty()` because [loadInto] writes ~15 default
+     * boolean/int toggle values to SharedPreferences on every launch — even on
+     * a brand-new install — which would make `isEmpty()` always return false.
+     *
+     * On a fresh install, none of the user-data keys (profile, collection,
+     * wishlist, captures, trips, journal, etc.) will exist. On a returning
+     * install — even one that hasn't been used much — the profile key will
+     * exist from the first sign-in.
      */
     fun isLocalDataEmpty(): Boolean {
         ensureInitialized()
-        return prefs.all.isEmpty()
+        return prefs.getString(KEY_PROFILE, null) == null &&
+            prefs.getString(KEY_COLLECTION, null) == null &&
+            prefs.getString(KEY_WISHLIST, null) == null &&
+            prefs.getString(KEY_FAVORITE_SPOTS, null) == null &&
+            prefs.getString(KEY_CAPTURES, null) == null &&
+            prefs.getString(KEY_TRIPS, null) == null &&
+            prefs.getString(KEY_JOURNAL_ENTRIES, null) == null
     }
 
     /**

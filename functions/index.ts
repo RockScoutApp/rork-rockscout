@@ -331,6 +331,7 @@ type Env = {
   EXPO_PUBLIC_TOOLKIT_URL: string;
   EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY: string;
   EXPO_PUBLIC_RORK_APP_KEY?: string;
+  EXPO_PUBLIC_SUPABASE_URL?: string;
   REFERRAL_KV?: KVNamespace;
   TRIAL_KV?: KVNamespace;
   RATE_LIMIT_KV?: KVNamespace;

@@ -136,6 +136,9 @@ class AuthRepository private constructor() {
             scope.launch { PurchaseManager.instance.linkRevenueCatUser(user.id) }
             SupabaseDataSync.syncInBackground()
             Log.i("AuthRepository", "Session restored for user=${user.id}")
+            // Cloud-restore settings if this is a fresh install (re-install on
+            // a new device, or after the signing-conflict uninstall flow).
+            restoreSettingsFromCloudIfNeeded(user.id)
             return
         }
 
@@ -154,6 +157,8 @@ class AuthRepository private constructor() {
                 scope.launch { PurchaseManager.instance.linkRevenueCatUser(auth.user?.id ?: "") }
                 SupabaseDataSync.syncInBackground()
                 Log.i("AuthRepository", "Session refreshed for user=${auth.user?.id}")
+                // Cloud-restore settings if this is a fresh install.
+                restoreSettingsFromCloudIfNeeded(auth.user?.id ?: "")
                 return
             }
         }
@@ -250,21 +255,7 @@ class AuthRepository private constructor() {
         SupabaseDataSync.syncInBackground()
 
         // Cloud-restore settings if this is a fresh install.
-        if (PersistenceManager.isLocalDataEmpty()) {
-            scope.launch {
-                SettingsBackupApi.restoreSettings(userId)
-                    .onSuccess { settingsJson ->
-                        if (settingsJson != null) {
-                            val restored = PersistenceManager.restoreAllSettingsFromJson(settingsJson)
-                            if (restored) {
-                                Log.d("AuthRepository", "Restored settings from cloud backup for user $userId")
-                                PersistenceManager.reloadIntoRepository()
-                            }
-                        }
-                    }
-                    .onFailure { Log.w("AuthRepository", "Settings restore failed: ${it.message}") }
-            }
-        }
+        restoreSettingsFromCloudIfNeeded(userId)
     }
 
     /** Sign up with email + password via Supabase. */
@@ -396,6 +387,8 @@ class AuthRepository private constructor() {
                         )
                         scope.launch { PurchaseManager.instance.linkRevenueCatUser(userId) }
                         SupabaseDataSync.syncInBackground()
+                        // Cloud-restore settings if this is a fresh install.
+                        restoreSettingsFromCloudIfNeeded(userId)
                     } else {
                         val cause = signInResult.exceptionOrNull()?.message.orEmpty()
                         Log.w("AuthRepository", "Post-verification sign-in failed: $cause")
@@ -563,6 +556,8 @@ class AuthRepository private constructor() {
                 )
                 scope.launch { PurchaseManager.instance.linkRevenueCatUser(userId) }
                 SupabaseDataSync.syncInBackground()
+                // Cloud-restore settings if this is a fresh install.
+                restoreSettingsFromCloudIfNeeded(userId)
                 clearPendingVerifyPersistence()
                 true
             } else {
@@ -648,21 +643,7 @@ class AuthRepository private constructor() {
             SupabaseDataSync.syncInBackground()
 
             // Cloud-restore settings on fresh install.
-            if (PersistenceManager.isLocalDataEmpty()) {
-                scope.launch {
-                    SettingsBackupApi.restoreSettings(userId)
-                        .onSuccess { settingsJson ->
-                            if (settingsJson != null) {
-                                val restored = PersistenceManager.restoreAllSettingsFromJson(settingsJson)
-                                if (restored) {
-                                    Log.d("AuthRepository", "Restored settings from cloud backup for user $userId")
-                                    PersistenceManager.reloadIntoRepository()
-                                }
-                            }
-                        }
-                        .onFailure { Log.w("AuthRepository", "Settings restore failed: ${it.message}") }
-                }
-            }
+            restoreSettingsFromCloudIfNeeded(userId)
             Unit
         }.onFailure {
             _error.value = it.message ?: "Sign-in failed"
@@ -850,6 +831,52 @@ class AuthRepository private constructor() {
             "blocked_emails",
             LocalDataStore.json.encodeToString(emails.toList()),
         )
+    }
+
+    // ─── Cloud settings restore (re-install / new device) ──────────────────
+
+    /**
+     * Fetches the user's backed-up settings from the backend and restores them
+     * to local SharedPreferences, but ONLY when the local data appears empty
+     * (fresh install, re-install on a new device, or after the signing-conflict
+     * uninstall flow).
+     *
+     * This is called from every path that establishes an authenticated session:
+     * - [restoreSupabaseSession] (auto-login from stored tokens)
+     * - [signIn] (manual sign-in)
+     * - [completeMigration] (local-to-Supabase migration)
+     * - [completeVerification] (6-digit code verification)
+     * - [completeVerificationFromLink] (click-to-verify deep link)
+     *
+     * If local data already exists (returning user on the same device), the
+     * restore is skipped — the user already has their data.
+     *
+     * Fire-and-forget: runs on a background coroutine so it never blocks the
+     * auth flow. Failures are logged but never surface to the user.
+     */
+    private fun restoreSettingsFromCloudIfNeeded(userId: String) {
+        if (userId.isBlank()) return
+        if (!PersistenceManager.isLocalDataEmpty()) {
+            Log.d("AuthRepository", "Skipping cloud restore — local data already exists")
+            return
+        }
+        scope.launch {
+            SettingsBackupApi.restoreSettings(userId)
+                .onSuccess { settingsJson ->
+                    if (settingsJson != null) {
+                        val restored = PersistenceManager.restoreAllSettingsFromJson(settingsJson)
+                        if (restored) {
+                            Log.d("AuthRepository", "Restored settings from cloud backup for user $userId")
+                            PersistenceManager.reloadIntoRepository()
+                        } else {
+                            Log.d("AuthRepository", "Cloud backup was empty or invalid for user $userId")
+                        }
+                    } else {
+                        Log.d("AuthRepository", "No cloud backup found for user $userId")
+                    }
+                }
+                .onFailure { Log.w("AuthRepository", "Settings restore failed: ${it.message}") }
+        }
     }
 
     companion object {
