@@ -125,6 +125,7 @@ import com.rork.rockscout.data.LevelTier
 import com.rork.rockscout.data.SocialRepository
 import com.rork.rockscout.data.WorkScheduler
 import com.rork.rockscout.data.SettingsBackupWorker
+import com.rork.rockscout.data.LocalDataStore
 import com.rork.rockscout.data.SettingsBackupApi
 import com.rork.rockscout.data.PersistenceManager
 import com.rork.rockscout.data.UserDateFormatter
@@ -964,7 +965,8 @@ fun ProfileScreen(
                                         backupStage = "Preparing your data…"
                                         backupScope.launch {
                                             val userId = auth.currentUserId
-                                            if (userId.isNullOrBlank()) {
+                                            val accessToken = LocalDataStore.getString(LocalDataStore.KEY_SUPABASE_ACCESS_TOKEN)
+                                            if (userId.isNullOrBlank() || accessToken.isNullOrBlank()) {
                                                 isBackingUp = false
                                                 backupSuccess = false
                                                 backupProgress = 0f
@@ -979,7 +981,7 @@ fun ProfileScreen(
                                                 // Stage 2: Upload to cloud
                                                 backupStage = "Uploading to cloud backup…"
                                                 kotlinx.coroutines.delay(150)
-                                                val result = SettingsBackupApi.backupSettings(userId, settingsJson)
+                                                val result = SettingsBackupApi.backupSettings(userId, settingsJson, accessToken)
                                                 backupProgress = 0.90f
                                                 // Stage 3: Finalize
                                                 backupStage = "Finalizing backup…"

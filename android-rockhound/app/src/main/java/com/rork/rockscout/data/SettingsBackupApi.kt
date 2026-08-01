@@ -16,13 +16,18 @@ import kotlinx.serialization.json.put
 
 /**
  * Calls the /settings/backup and /settings/restore backend endpoints
- * to preserve user data across the signing-conflict uninstall flow.
+ * to preserve user data across re-installs and new-device setups.
  *
  * Before the uninstall: [backupSettings] pushes the full SharedPreferences
- * JSON blob to Cloudflare KV keyed by the user's ID.
+ * JSON blob to Supabase keyed by the user's ID.
  *
  * After reinstall + sign-in: [restoreSettings] fetches the blob so
  * [PersistenceManager] can write it back to SharedPreferences.
+ *
+ * Both endpoints require the user's Supabase access token (Bearer header)
+ * so RLS can enforce that users only read/write their own backup row.
+ * No service-role key is needed — this is more secure and doesn't break
+ * when the service key rotates.
  */
 object SettingsBackupApi {
 
@@ -49,8 +54,18 @@ object SettingsBackupApi {
         }
     }
 
-    /** Push the settings JSON blob to the backend for cloud backup. */
-    suspend fun backupSettings(userId: String, settingsJson: String): Result<Unit> {
+    /**
+     * Push the settings JSON blob to the backend for cloud backup.
+     *
+     * @param userId The Supabase user ID (must match the token's auth.uid()).
+     * @param settingsJson The full SharedPreferences export.
+     * @param accessToken The user's Supabase access token (Bearer).
+     */
+    suspend fun backupSettings(
+        userId: String,
+        settingsJson: String,
+        accessToken: String,
+    ): Result<Unit> {
         return try {
             val requestBody = buildJsonObject {
                 put("userId", userId)
@@ -60,6 +75,7 @@ object SettingsBackupApi {
             val response = client.put("$BASE_URL/settings/backup") {
                 contentType(ContentType.Application.Json)
                 if (APP_KEY.isNotBlank()) header("X-App-Key", APP_KEY)
+                header("Authorization", "Bearer $accessToken")
                 setBody(requestBody)
             }
 
@@ -74,11 +90,20 @@ object SettingsBackupApi {
         }
     }
 
-    /** Fetch the settings JSON blob from the backend, or null if no backup exists. */
-    suspend fun restoreSettings(userId: String): Result<String?> {
+    /**
+     * Fetch the settings JSON blob from the backend, or null if no backup exists.
+     *
+     * @param userId The Supabase user ID (must match the token's auth.uid()).
+     * @param accessToken The user's Supabase access token (Bearer).
+     */
+    suspend fun restoreSettings(
+        userId: String,
+        accessToken: String,
+    ): Result<String?> {
         return try {
             val response = client.get("$BASE_URL/settings/restore?userId=$userId") {
                 if (APP_KEY.isNotBlank()) header("X-App-Key", APP_KEY)
+                header("Authorization", "Bearer $accessToken")
             }
 
             if (response.status.value.toString().startsWith("2")) {

@@ -7,13 +7,17 @@
  * and before the signing-conflict uninstall flow.
  *
  * Routes:
- *   PUT  /settings/backup   — { userId, settingsJson } → upserts to Supabase
- *   GET  /settings/restore  — ?userId=... → returns { settingsJson } or 404
+ *   PUT  /settings/backup   — { userId, settingsJson } + Bearer token → upserts to Supabase
+ *   GET  /settings/restore  — ?userId=... + Bearer token → returns { settingsJson } or null
  *
- * Storage: Supabase `rockscout_settings_backup` table (service-role key bypasses RLS).
- * Previously used Cloudflare KV, but the Rork platform does not bind KV namespaces.
+ * Storage: Supabase `rockscout_settings_backup` table.
  *
- * Auth: X-App-Key header (same as other endpoints).
+ * Auth: The caller MUST include `Authorization: Bearer <supabase_access_token>`.
+ * The token is forwarded to Supabase, and RLS ensures users can only read/write
+ * their own row (user_id = auth.uid()). No service-role key needed — this is
+ * more secure and doesn't break when the service key rotates.
+ *
+ * Also requires X-App-Key header (same as other endpoints).
  * Rate-limited to prevent abuse.
  */
 
@@ -27,17 +31,18 @@ interface RestoreResponse {
 }
 
 interface SettingsBackupEnv {
-  SUPABASE_SERVICE_ROLE_KEY?: string;
   EXPO_PUBLIC_SUPABASE_URL?: string;
+  SUPABASE_SERVICE_ROLE_KEY?: string;
 }
 
 /**
- * Upsert the settings blob into Supabase using the service-role key.
+ * Upsert the settings blob into Supabase using the user's own JWT.
+ * RLS policy allows INSERT/UPDATE where user_id = auth.uid().
  * Uses Prefer: resolution=merge-duplicates for upsert behavior.
  */
 async function upsertSettings(
   supabaseUrl: string,
-  serviceKey: string,
+  accessToken: string,
   userId: string,
   settingsJson: string,
 ): Promise<boolean> {
@@ -47,8 +52,8 @@ async function upsertSettings(
       {
         method: "POST",
         headers: {
-          apikey: serviceKey,
-          Authorization: `Bearer ${serviceKey}`,
+          apikey: accessToken,
+          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
           Prefer: "resolution=merge-duplicates,return=minimal",
         },
@@ -75,12 +80,13 @@ async function upsertSettings(
 }
 
 /**
- * Fetch the settings blob from Supabase using the service-role key.
+ * Fetch the settings blob from Supabase using the user's own JWT.
+ * RLS policy allows SELECT where user_id = auth.uid().
  * Returns the JSON string or null if no backup exists.
  */
 async function fetchSettings(
   supabaseUrl: string,
-  serviceKey: string,
+  accessToken: string,
   userId: string,
 ): Promise<string | null> {
   try {
@@ -89,8 +95,8 @@ async function fetchSettings(
       {
         method: "GET",
         headers: {
-          apikey: serviceKey,
-          Authorization: `Bearer ${serviceKey}`,
+          apikey: accessToken,
+          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
       },
@@ -113,6 +119,16 @@ async function fetchSettings(
   }
 }
 
+/** Extract the Supabase access token from the Authorization header. */
+function getAccessToken(request: Request): string | null {
+  const auth = request.headers.get("Authorization") ?? "";
+  if (auth.startsWith("Bearer ")) {
+    const token = auth.slice(7).trim();
+    return token.length > 0 ? token : null;
+  }
+  return null;
+}
+
 /** Handle /settings/backup (PUT) and /settings/restore (GET). */
 export async function handleSettingsBackup(
   request: Request,
@@ -121,11 +137,20 @@ export async function handleSettingsBackup(
 ): Promise<Response> {
   const url = new URL(request.url);
 
-  // Validate required env vars.
-  if (!env.SUPABASE_SERVICE_ROLE_KEY || !env.EXPO_PUBLIC_SUPABASE_URL) {
+  if (!env.EXPO_PUBLIC_SUPABASE_URL) {
     return Response.json(
-      { error: "Backup storage not configured — missing Supabase credentials" },
+      { error: "Backup storage not configured — missing Supabase URL" },
       { status: 503, headers: cors },
+    );
+  }
+
+  // The caller must include their Supabase access token. RLS enforces
+  // that they can only read/write their own row.
+  const accessToken = getAccessToken(request);
+  if (!accessToken) {
+    return Response.json(
+      { error: "Authorization required — include Bearer access token" },
+      { status: 401, headers: cors },
     );
   }
 
@@ -150,7 +175,7 @@ export async function handleSettingsBackup(
 
     const success = await upsertSettings(
       env.EXPO_PUBLIC_SUPABASE_URL,
-      env.SUPABASE_SERVICE_ROLE_KEY,
+      accessToken,
       body.userId,
       body.settingsJson,
     );
@@ -177,7 +202,7 @@ export async function handleSettingsBackup(
 
     const settingsJson = await fetchSettings(
       env.EXPO_PUBLIC_SUPABASE_URL,
-      env.SUPABASE_SERVICE_ROLE_KEY,
+      accessToken,
       userId,
     );
 

@@ -197,11 +197,12 @@ object ApkInstaller {
      *  The backup is fire-and-forget — if it fails, the uninstall still proceeds. */
     fun launchUninstall(context: Context) {
         val userId = AuthRepository.instance.currentUserId
-        if (userId != null) {
+        val accessToken = LocalDataStore.getString(LocalDataStore.KEY_SUPABASE_ACCESS_TOKEN)
+        if (userId != null && !accessToken.isNullOrBlank()) {
             try {
                 val settingsJson = PersistenceManager.exportAllSettingsAsJson()
                 scope.launch {
-                    SettingsBackupApi.backupSettings(userId, settingsJson)
+                    SettingsBackupApi.backupSettings(userId, settingsJson, accessToken)
                         .onFailure { Log.w(TAG, "Settings cloud backup failed: ${it.message}") }
                         .onSuccess { Log.d(TAG, "Settings cloud backup saved for user $userId") }
                 }

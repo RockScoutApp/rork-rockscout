@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Periodic worker that backs up the user's full SharedPreferences blob to
- * Cloudflare KV via [SettingsBackupApi]. Runs every 12 hours when the device
+ * Supabase via [SettingsBackupApi]. Runs every 12 hours when the device
  * has network connectivity. Skips silently if the user is not signed in.
  *
  * A manual one-shot backup can also be enqueued via [enqueueNow] from the
@@ -95,6 +95,13 @@ class SettingsBackupWorker(
             return Result.success()
         }
 
+        // Need the user's Supabase access token for RLS-authenticated writes.
+        val accessToken = LocalDataStore.getString(LocalDataStore.KEY_SUPABASE_ACCESS_TOKEN)
+        if (accessToken.isNullOrBlank()) {
+            Log.d(TAG, "Skipping backup — no access token available")
+            return Result.success()
+        }
+
         // Debounce check
         val prefs = applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val lastBackup = prefs.getLong(KEY_LAST_BACKUP_AT, 0L)
@@ -105,7 +112,7 @@ class SettingsBackupWorker(
 
         return try {
             val settingsJson = PersistenceManager.exportAllSettingsAsJson()
-            val result = SettingsBackupApi.backupSettings(userId, settingsJson)
+            val result = SettingsBackupApi.backupSettings(userId, settingsJson, accessToken)
             if (result.isSuccess) {
                 prefs.edit().putLong(KEY_LAST_BACKUP_AT, System.currentTimeMillis()).apply()
                 Log.d(TAG, "Settings backup complete (${settingsJson.length} chars)")

@@ -650,6 +650,24 @@ export type Database = {
         }
         Relationships: []
       }
+      rockscout_settings_backup: {
+        Row: {
+          settings_json: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          settings_json: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          settings_json?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       rockscout_threads: {
         Row: {
           created_at: string

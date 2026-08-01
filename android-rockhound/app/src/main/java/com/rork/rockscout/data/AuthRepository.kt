@@ -860,8 +860,14 @@ class AuthRepository private constructor() {
             Log.d("AuthRepository", "Skipping cloud restore — local data already exists")
             return
         }
+        // Need the user's Supabase access token for RLS-authenticated reads.
+        val accessToken = LocalDataStore.getString(LocalDataStore.KEY_SUPABASE_ACCESS_TOKEN)
+        if (accessToken.isNullOrBlank()) {
+            Log.d("AuthRepository", "Skipping cloud restore — no access token available")
+            return
+        }
         scope.launch {
-            SettingsBackupApi.restoreSettings(userId)
+            SettingsBackupApi.restoreSettings(userId, accessToken)
                 .onSuccess { settingsJson ->
                     if (settingsJson != null) {
                         val restored = PersistenceManager.restoreAllSettingsFromJson(settingsJson)
