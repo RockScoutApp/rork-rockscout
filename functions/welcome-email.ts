@@ -21,7 +21,7 @@ const CORS = {
   "Content-Type": "application/json",
 };
 
-const FROM = "RockScout <welcome@rockscout.app>";
+const FROM = "RockScout <welcome@rockscout.net>";
 const TAGLINE = "Made by a rockhounder, for rockhounders";
 
 export async function handleWelcomeEmail(

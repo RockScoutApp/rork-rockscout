@@ -15,7 +15,7 @@ const CORS = {
   "Content-Type": "application/json",
 };
 
-const FROM = "RockScout <noreply@rockscout.app>";
+const FROM = "RockScout <noreply@rockscout.net>";
 const TAGLINE = "Made by a rockhounder, for rockhounders";
 
 export async function handleImageRejectionEmail(

@@ -42,7 +42,7 @@ const CORS = {
   "Content-Type": "application/json",
 };
 
-const FROM = "RockScout <referrals@rockscout.app>";
+const FROM = "RockScout <referrals@rockscout.net>";
 const TAGLINE = "Made by a rockhounder, for rockhounders";
 
 // In-memory fallback when REFERRAL_KV is not bound.

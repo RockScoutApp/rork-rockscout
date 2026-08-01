@@ -32,7 +32,7 @@ const CODE_WINDOW_BUCKETS = 10;
 const DEFAULT_DEV_EMAIL_TO = "Aaron_James_Martin@yahoo.com";
 
 /** Verified Resend sender for this project. */
-const FROM = "RockScout <welcome@rockscout.app>";
+const FROM = "RockScout <noreply@rockscout.net>";
 
 /** Last-resort HMAC secret when no server key is configured. */
 const FALLBACK_SECRET = "rockscout-dev-2fa";

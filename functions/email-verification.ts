@@ -29,7 +29,7 @@
  *   EXPO_PUBLIC_SUPABASE_URL
  */
 
-const FROM = "RockScout <welcome@rockscout.app>";
+const FROM = "RockScout <welcome@rockscout.net>";
 const TAGLINE = "Made by a rockhounder, for rockhounders";
 
 /** Seconds per code bucket. */
