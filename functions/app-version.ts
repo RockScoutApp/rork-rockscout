@@ -18,8 +18,8 @@
  * / APP_CHANGELOG in the Worker settings.
  */
 
-const LATEST_VERSION_CODE = 7;
-const LATEST_VERSION_NAME = "1.1.5";
+const LATEST_VERSION_CODE = 8;
+const LATEST_VERSION_NAME = "1.1.6";
 const STORE_URL = "https://play.google.com/store/apps/details?id=com.rork.rockscout";
 const IOS_STORE_URL = "https://apps.apple.com/app/rockscout/id0000000000";
 /**
@@ -30,7 +30,7 @@ const IOS_STORE_URL = "https://apps.apple.com/app/rockscout/id0000000000";
  */
 const APK_URL = "";
 const CHANGELOG =
-  "1.1.5: Reliable one-tap updates — the in-app updater now asks for the install permission up front, streams the download without eating memory, verifies the package, and reports the real reason if anything goes wrong. Google Play in-app updates added. Plus the Dinosaur Dictionary pronunciation player and refreshed artwork.";
+  "1.1.6: Fixed a critical issue where updates could fail with 'App not installed' on some devices. All builds now use a consistent signing key so updates install seamlessly over existing installs. Improved install error reporting and reliability.";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
