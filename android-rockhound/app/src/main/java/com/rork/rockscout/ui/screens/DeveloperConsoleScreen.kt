@@ -95,6 +95,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -1363,6 +1364,11 @@ private suspend fun sendImageRejectionEmail(email: String, type: String, userNam
             }
             client.post("$functionsUrl/image-rejection-email") {
                 contentType(io.ktor.http.ContentType.Application.Json)
+                val appKey = com.rork.rockscout.data.BuildSecrets.resolve(
+                    "EXPO_PUBLIC_RORK_APP_KEY",
+                    com.rork.rockscout.data.BuildSecrets.RORK_APP_KEY,
+                )
+                if (appKey.isNotBlank()) header("X-App-Key", appKey)
                 setBody(payload)
             }
             client.close()
