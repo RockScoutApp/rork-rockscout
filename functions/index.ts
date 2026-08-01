@@ -269,7 +269,10 @@ export default {
       if (guard) return guard;
       return handleSettingsBackup(
         request,
-        env as unknown as { SETTINGS_KV?: KVNamespace },
+        env as unknown as {
+          SUPABASE_SERVICE_ROLE_KEY?: string;
+          EXPO_PUBLIC_SUPABASE_URL?: string;
+        },
         cors,
       );
     }

@@ -1,16 +1,17 @@
 /**
- * Settings backup/restore endpoints for the signing-conflict flow.
+ * Settings backup/restore endpoints — Cloudflare Worker.
  *
- * When a signing conflict is detected during an APK update, the user must
- * uninstall the old app before installing the new one. Uninstalling wipes
- * all local data (SharedPreferences). To honor the dialog's promise that
- * "your data will be restored when you sign back in", we back up the full
- * SharedPreferences JSON blob to Cloudflare KV keyed by the user's ID
- * before launching the uninstall, and restore it on the next sign-in.
+ * When the app detects a fresh install (empty SharedPreferences) and the user
+ * signs in, it calls these endpoints to fetch the user's previously backed-up
+ * settings from Supabase. The backup is also pushed periodically (every 12h)
+ * and before the signing-conflict uninstall flow.
  *
  * Routes:
- *   PUT  /settings/backup   — { userId, settingsJson } → stores in KV
+ *   PUT  /settings/backup   — { userId, settingsJson } → upserts to Supabase
  *   GET  /settings/restore  — ?userId=... → returns { settingsJson } or 404
+ *
+ * Storage: Supabase `rockscout_settings_backup` table (service-role key bypasses RLS).
+ * Previously used Cloudflare KV, but the Rork platform does not bind KV namespaces.
  *
  * Auth: X-App-Key header (same as other endpoints).
  * Rate-limited to prevent abuse.
@@ -25,15 +26,108 @@ interface RestoreResponse {
   settingsJson: string | null;
 }
 
-const KV_KEY_PREFIX = "settings_backup:";
+interface SettingsBackupEnv {
+  SUPABASE_SERVICE_ROLE_KEY?: string;
+  EXPO_PUBLIC_SUPABASE_URL?: string;
+}
+
+/**
+ * Upsert the settings blob into Supabase using the service-role key.
+ * Uses Prefer: resolution=merge-duplicates for upsert behavior.
+ */
+async function upsertSettings(
+  supabaseUrl: string,
+  serviceKey: string,
+  userId: string,
+  settingsJson: string,
+): Promise<boolean> {
+  try {
+    const resp = await fetch(
+      `${supabaseUrl}/rest/v1/rockscout_settings_backup`,
+      {
+        method: "POST",
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+          "Content-Type": "application/json",
+          Prefer: "resolution=merge-duplicates,return=minimal",
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          settings_json: settingsJson,
+          updated_at: new Date().toISOString(),
+        }),
+      },
+    );
+
+    if (!resp.ok) {
+      console.error(
+        `Supabase settings upsert failed: ${resp.status}`,
+        await resp.text(),
+      );
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("Supabase settings upsert error:", err);
+    return false;
+  }
+}
+
+/**
+ * Fetch the settings blob from Supabase using the service-role key.
+ * Returns the JSON string or null if no backup exists.
+ */
+async function fetchSettings(
+  supabaseUrl: string,
+  serviceKey: string,
+  userId: string,
+): Promise<string | null> {
+  try {
+    const resp = await fetch(
+      `${supabaseUrl}/rest/v1/rockscout_settings_backup?select=settings_json&user_id=eq.${encodeURIComponent(userId)}`,
+      {
+        method: "GET",
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    if (!resp.ok) {
+      console.error(
+        `Supabase settings fetch failed: ${resp.status}`,
+        await resp.text(),
+      );
+      return null;
+    }
+
+    const rows = (await resp.json()) as Array<{ settings_json: string }>;
+    if (!rows || rows.length === 0) return null;
+    return rows[0].settings_json;
+  } catch (err) {
+    console.error("Supabase settings fetch error:", err);
+    return null;
+  }
+}
 
 /** Handle /settings/backup (PUT) and /settings/restore (GET). */
 export async function handleSettingsBackup(
   request: Request,
-  env: { SETTINGS_KV?: KVNamespace },
+  env: SettingsBackupEnv,
   cors: Record<string, string>,
 ): Promise<Response> {
   const url = new URL(request.url);
+
+  // Validate required env vars.
+  if (!env.SUPABASE_SERVICE_ROLE_KEY || !env.EXPO_PUBLIC_SUPABASE_URL) {
+    return Response.json(
+      { error: "Backup storage not configured — missing Supabase credentials" },
+      { status: 503, headers: cors },
+    );
+  }
 
   // PUT /settings/backup — store the settings blob
   if (url.pathname === "/settings/backup" && request.method === "PUT") {
@@ -54,19 +148,19 @@ export async function handleSettingsBackup(
       );
     }
 
-    if (!env.SETTINGS_KV) {
+    const success = await upsertSettings(
+      env.EXPO_PUBLIC_SUPABASE_URL,
+      env.SUPABASE_SERVICE_ROLE_KEY,
+      body.userId,
+      body.settingsJson,
+    );
+
+    if (!success) {
       return Response.json(
-        { error: "Backup storage not configured" },
-        { status: 503, headers: cors },
+        { error: "Failed to store settings backup" },
+        { status: 500, headers: cors },
       );
     }
-
-    const key = `${KV_KEY_PREFIX}${body.userId}`;
-    // Store with a 30-day TTL — if the user doesn't reinstall within 30 days,
-    // the backup expires. This prevents unbounded KV growth.
-    await env.SETTINGS_KV.put(key, body.settingsJson, {
-      expirationTtl: 30 * 24 * 60 * 60,
-    });
 
     return Response.json({ ok: true }, { headers: cors });
   }
@@ -81,17 +175,13 @@ export async function handleSettingsBackup(
       );
     }
 
-    if (!env.SETTINGS_KV) {
-      return Response.json(
-        { error: "Backup storage not configured" },
-        { status: 503, headers: cors },
-      );
-    }
+    const settingsJson = await fetchSettings(
+      env.EXPO_PUBLIC_SUPABASE_URL,
+      env.SUPABASE_SERVICE_ROLE_KEY,
+      userId,
+    );
 
-    const key = `${KV_KEY_PREFIX}${userId}`;
-    const settingsJson = await env.SETTINGS_KV.get(key);
-
-    const response: RestoreResponse = { settingsJson: settingsJson ?? null };
+    const response: RestoreResponse = { settingsJson };
     return Response.json(response, { headers: cors });
   }
 
