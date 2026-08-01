@@ -468,6 +468,7 @@ const Features = () => (
 );
 
 const FEATURES_LIST = [
+  // ── Identification & Database ──
   {
     icon: Camera,
     title: "AI rock & mineral ID",
@@ -481,6 +482,20 @@ const FEATURES_LIST = [
     items: ["900+ profiles", "Community submissions"],
   },
   {
+    icon: Upload,
+    title: "Submit specimens & add locations",
+    desc: "Found a specimen that isn't in the database? Use the Upload Specimen pill on the Specimen Database screen, Field Captures screen, or specimen detail pages. Submit up to 4 photos plus a name, date found, location, and description — images are automatically checked against a 5 MB size limit to prevent upload failures. If the specimen already exists and your location is a common find spot for it, you'll get a small pop-up letting you know it's already included; if the location is unusual for that specimen, it goes to developer review. Approved entries get added to the Specimen Database or Rocks Are Amazing for every RockScout user to discover. Found a great dig site, rock shop, or gem show not on the map? Use the Upload New Location form to add it, reviewed before going live for everyone.",
+    items: ["Submit specimens", "5 MB image check", "Submit locations", "Reviewed by RockScout", "Community-built database"],
+  },
+  {
+    icon: Sparkles,
+    title: "NEW badges & recently added specimens",
+    desc: "A NEW badge automatically appears on any specimen or artifact card added to the catalog within the last 7 days. Spot the latest database additions at a glance across the Specimen Database, Artifacts tile, and any category-filtered view — the badge disappears automatically after 7 days.",
+    items: ["7-day NEW badge", "Specimen Database", "Artifacts tile", "Category-filtered views"],
+  },
+
+  // ── Collection & Field Tools ──
+  {
     icon: Gem,
     title: "Collection, wishlist & favorite spots",
     desc: "Catalog every specimen you bring home with photos, notes, and rarity. Keep a separate wishlist of dream specimens you're hunting next. Heart any specimen to mark it as a personal favorite — liking is independent from your wishlist. Bookmark state parks, BLM locations, campgrounds, trailheads, and dig sites to your Favorite Spots list — all searchable from global search.",
@@ -493,6 +508,14 @@ const FEATURES_LIST = [
     items: ["Auto-weather entries", "Quick field captures", "Free after trial"],
   },
   {
+    icon: MapPin,
+    title: "Share-a-Spot deep links",
+    desc: "Tap a specimen marker on the specimen marker map to open its detail view, then hit Share a Spot to generate a rockscout:// deep link encoding the spot's coordinates and name. Send the link to friends — when they open it, RockScout jumps straight to a Shared Spot screen showing the location on a map with a close button. The easiest way to point fellow rockhounds at an exact find spot.",
+    items: ["Tap a specimen marker", "Share a Spot button", "rockscout:// deep link", "Opens on friend's device"],
+  },
+
+  // ── Maps & Trip Planning ──
+  {
     icon: MapIcon,
     title: "Dig sites, wildlife & offline maps",
     desc: "Free, public, and pay-to-dig sites, plus rock, gem & metaphysical shops and gem shows by month. Every BLM state guide, trailhead, campground, dig site, state park, and beach detail screen includes a Common Wildlife tile showing the animals you might encounter. Tap-to-drop-pin tile downloads on every map, with 3-state satellite zoom (16 → 19) for the detail you need.",
@@ -504,6 +527,8 @@ const FEATURES_LIST = [
     desc: "Build multi-stop routes with gear checklists and custom map pins, so the whole crew knows where to meet and what to bring. Long-press and drag stops to reorder them — the stop swaps to the position under your finger, with a dashed polyline connecting all stops on the map and estimated travel time between each stop. Move up buttons are also available for quick single-step reordering. Export planned trips to a standalone month-grid Calendar screen — drag and drop trip cards to reschedule, create and edit trips, and archive completed trips.",
     items: ["Multi-stop routes", "Drag-and-drop reorder", "Route polyline", "Est. travel time", "Gear checklists", "Custom pins", "Trip Calendar", "Archived trips"],
   },
+
+  // ── Community & Social ──
   {
     icon: Users,
     title: "RockScout Social",
@@ -523,58 +548,10 @@ const FEATURES_LIST = [
     items: ["HAVE/WANT listings", "In-app chat", "Pick from wishlist"],
   },
   {
-    icon: Trophy,
-    title: "Achievements, XP & badges",
-    desc: "101 achievements and 31 badges with confetti level-ups. Earn XP for every action, track your progress on each locked achievement with a visual progress bar, and share brag-worthy level-up cards.",
-    items: ["102 achievements", "34 badges", "Progress bars on locked achievements", "XP & leveling"],
-  },
-  {
-    icon: Zap,
-    title: "Aurora Forecaster & Space Weather",
-    desc: "Real-time space weather with Kp index, Bz, solar wind speed, and visibility status. View 24-hour Kp and 7-day F10.7 trend charts, a 3-day forecast, and active sunspot regions with tappable detail views showing magnetic evolution history. Save custom coordinates to track aurora visibility, set a custom Kp notification threshold for instant push alerts the moment your Kp is reached, and share your Kp status to social media.",
-    items: ["Real-time Kp index", "24h Kp trend chart", "7-day F10.7 chart", "3-day forecast", "Sunspot evolution", "Saved spots map", "Custom Kp alerts", "Share to social"],
-  },
-  {
-    icon: Star,
-    title: "Stars & Constellations",
-    desc: "A complete night sky guide — all 88 IAU constellations with programmatic star charts, 30+ important stars with spectral data, all 8 planets plus dwarf planets, and 40+ deep sky objects (galaxies, nebulae, star clusters). Every page features animated twinkling white stars in the background and generated hero images for the most famous objects.",
-    items: ["88 constellations", "Star charts", "30+ stars", "10 planets", "40+ deep sky objects", "Twinkling stars bg"],
-  },
-  {
-    icon: GraduationCap,
-    title: "Educational guides",
-    desc: "11 built-in guides: BLM lands, the periodic table, paleontology, and more — no internet required. Plus the Aurora Forecaster, Stars & Constellations guide, and a full rock & mineral Glossary for space weather, astronomy, and quick term lookups.",
-    items: ["11 guides", "Aurora forecaster", "Night sky guide", "Glossary", "Offline-ready"],
-  },
-  {
-    icon: Bell,
-    title: "Search, alerts & notifications",
-    desc: "Global search across specimens, locations, and guides. A dedicated notification center with deep links, a separate mail icon with unread count, instant NWS severe weather alerts the moment they're issued, instant Kp/aurora alerts when your threshold is reached, and proximity pings when you're near a dig site.",
-    items: ["Global search", "Notification center", "Message icon", "NWS weather alerts", "Proximity pings"],
-  },
-  {
-    icon: Backpack,
-    title: "Gear, tokens & design",
-    desc: "Beginner-to-advanced Gear Guide with 48+ tools and Amazon links. 7-day free trial, $5.99/mo Premium, or one-time donations for tokens. Immersive 3D design with an optional 2GB offline cache mode plus a one-tap bulk download that caches every specimen photo, guide illustration, and hero image (~3.5 GB) so the whole app works fully offline.",
-    items: ["Gear Guide", "Tokens & Premium", "3D design", "2GB cache mode", "Bulk offline download (~3.5 GB)"],
-  },
-  {
     icon: HelpCircle,
     title: "Community Q&A board",
     desc: "An app-wide feed where rockhounds post questions, photos, and rock stories. Sort by Newest, Most Loved, or Most Commented. Full threaded replies, image attachments, reposts, and a 14-day auto-expire that keeps the feed fresh — expired posts can be browsed and restored from the Archived Posts popup before they're removed permanently.",
     items: ["Sort feeds", "Threaded replies", "Image attachments", "Repost & report", "Archived posts", "14-day auto-expire"],
-  },
-  {
-    icon: Upload,
-    title: "Submit specimens & add locations",
-    desc: "Found a specimen that isn't in the database? Use the Upload Specimen pill on the Specimen Database screen, Field Captures screen, or specimen detail pages. Submit up to 4 photos plus a name, date found, location, and description — images are automatically checked against a 5 MB size limit to prevent upload failures. If the specimen already exists and your location is a common find spot for it, you'll get a small pop-up letting you know it's already included; if the location is unusual for that specimen, it goes to developer review. Approved entries get added to the Specimen Database or Rocks Are Amazing for every RockScout user to discover. Found a great dig site, rock shop, or gem show not on the map? Use the Upload New Location form to add it, reviewed before going live for everyone.",
-    items: ["Submit specimens", "5 MB image check", "Submit locations", "Reviewed by RockScout", "Community-built database"],
-  },
-  {
-    icon: MapPin,
-    title: "Share-a-Spot deep links",
-    desc: "Tap a specimen marker on the specimen marker map to open its detail view, then hit Share a Spot to generate a rockscout:// deep link encoding the spot's coordinates and name. Send the link to friends — when they open it, RockScout jumps straight to a Shared Spot screen showing the location on a map with a close button. The easiest way to point fellow rockhounds at an exact find spot.",
-    items: ["Tap a specimen marker", "Share a Spot button", "rockscout:// deep link", "Opens on friend's device"],
   },
   {
     icon: Share2,
@@ -582,11 +559,27 @@ const FEATURES_LIST = [
     desc: "Share your unique referral link from the Profile screen — when friends sign up, you both earn tokens and XP, with celebration pop-ups when they complete sign-up. A built-in profanity filter and screenshot-based reporting keep the community family-friendly, and the Report button on any message or profile flags inappropriate content for review.",
     items: ["Unique referral link", "Both users earn rewards", "Celebration pop-ups", "Profanity filter", "Screenshot reporting"],
   },
+
+  // ── Gamification ──
   {
-    icon: Database,
-    title: "Storage, cache & bulk offline download",
-    desc: "Choose Standard (150MB) or Maximum (2GB) cache mode in Storage settings — available to all users, it's your own device storage. The cache covers both specimen photos and map tiles. Want the whole catalog offline? Tap \"Download all images (~3.5 GB)\" to cache every specimen photo plus all educational/guide illustrations and hero art, so every read-only screen (specimen details, geology guides, BLM guide, periodic table) loads instantly with zero signal. A live progress bar with resume and an offline-ready badge keep you informed.",
-    items: ["Standard 150MB", "Maximum 2GB", "~3.5 GB bulk download", "Resume on restart", "Offline-ready badge", "Map tile caching"],
+    icon: Trophy,
+    title: "Achievements, XP & badges",
+    desc: "101 achievements and 31 badges with confetti level-ups. Earn XP for every action, track your progress on each locked achievement with a visual progress bar, and share brag-worthy level-up cards.",
+    items: ["102 achievements", "34 badges", "Progress bars on locked achievements", "XP & leveling"],
+  },
+
+  // ── Educational Content & Catalogs ──
+  {
+    icon: GraduationCap,
+    title: "Educational guides",
+    desc: "11 built-in guides: BLM lands, the periodic table, paleontology, and more — no internet required. Plus the Aurora Forecaster, Stars & Constellations guide, and a full rock & mineral Glossary for space weather, astronomy, and quick term lookups.",
+    items: ["11 guides", "Aurora forecaster", "Night sky guide", "Glossary", "Offline-ready"],
+  },
+  {
+    icon: BookOpen,
+    title: "Glossary",
+    desc: "A full rock & mineral glossary built right into the field kit. Look up hundreds of geological terms, crystal habits, and mineral properties on the spot — no internet required. Perfect for beginners and experts alike.",
+    items: ["Hundreds of terms", "Crystal habits", "Mineral properties", "Offline-ready"],
   },
   {
     icon: Diamond,
@@ -612,29 +605,55 @@ const FEATURES_LIST = [
     desc: "A curated set of trusted external geology, gem, and fossil websites — museums, university mineralogy departments, and reputable reference sites. Links open in your device's browser so you can dig deeper into any topic, making it a perfect research companion alongside the in-app Specimen Database.",
     items: ["Trusted external links", "Museums & universities", "Research companion"],
   },
+
+  // ── Sky & Space ──
   {
-    icon: BookOpen,
-    title: "Glossary",
-    desc: "A full rock & mineral glossary built right into the field kit. Look up hundreds of geological terms, crystal habits, and mineral properties on the spot — no internet required. Perfect for beginners and experts alike.",
-    items: ["Hundreds of terms", "Crystal habits", "Mineral properties", "Offline-ready"],
+    icon: Zap,
+    title: "Aurora Forecaster & Space Weather",
+    desc: "Real-time space weather with Kp index, Bz, solar wind speed, and visibility status. View 24-hour Kp and 7-day F10.7 trend charts, a 3-day forecast, and active sunspot regions with tappable detail views showing magnetic evolution history. Save custom coordinates to track aurora visibility, set a custom Kp notification threshold for instant push alerts the moment your Kp is reached, and share your Kp status to social media.",
+    items: ["Real-time Kp index", "24h Kp trend chart", "7-day F10.7 chart", "3-day forecast", "Sunspot evolution", "Saved spots map", "Custom Kp alerts", "Share to social"],
   },
   {
-    icon: Sparkles,
-    title: "NEW badges & recently added specimens",
-    desc: "A NEW badge automatically appears on any specimen or artifact card added to the catalog within the last 7 days. Spot the latest database additions at a glance across the Specimen Database, Artifacts tile, and any category-filtered view — the badge disappears automatically after 7 days.",
-    items: ["7-day NEW badge", "Specimen Database", "Artifacts tile", "Category-filtered views"],
+    icon: Star,
+    title: "Stars & Constellations",
+    desc: "A complete night sky guide — all 88 IAU constellations with programmatic star charts, 30+ important stars with spectral data, all 8 planets plus dwarf planets, and 40+ deep sky objects (galaxies, nebulae, star clusters). Every page features animated twinkling white stars in the background and generated hero images for the most famous objects.",
+    items: ["88 constellations", "Star charts", "30+ stars", "10 planets", "40+ deep sky objects", "Twinkling stars bg"],
+  },
+
+  // ── Search, Alerts & Notifications ──
+  {
+    icon: Bell,
+    title: "Search, alerts & notifications",
+    desc: "Global search across specimens, locations, and guides. A dedicated notification center with deep links, a separate mail icon with unread count, instant NWS severe weather alerts the moment they're issued, instant Kp/aurora alerts when your threshold is reached, and proximity pings when you're near a dig site.",
+    items: ["Global search", "Notification center", "Message icon", "NWS weather alerts", "Proximity pings"],
+  },
+
+  // ── Gear, Storage & Technical ──
+  {
+    icon: Backpack,
+    title: "Gear, tokens & design",
+    desc: "Beginner-to-advanced Gear Guide with 48+ tools and Amazon links. 7-day free trial, $5.99/mo Premium, or one-time donations for tokens. Immersive 3D design with an optional 2GB offline cache mode plus a one-tap bulk download that caches every specimen photo, guide illustration, and hero image (~3.5 GB) so the whole app works fully offline.",
+    items: ["Gear Guide", "Tokens & Premium", "3D design", "2GB cache mode", "Bulk offline download (~3.5 GB)"],
   },
   {
-    icon: ShieldCheck,
-    title: "App updates, sign-in & safety",
-    desc: "When a signing conflict is detected during an update, a friendly dialog explains that the old version must be uninstalled and offers a button to trigger the system uninstall flow. After reinstalling and signing back in, all your settings are restored from the cloud exactly as they were. A confirmation dialog on the logout button prevents accidental sign-outs, and your collections, captures, friends, and achievements are tied to your account — not your device.",
-    items: ["Signing conflict dialog", "Settings restored after reinstall", "Logout confirmation", "Account-tied data"],
+    icon: Database,
+    title: "Storage, cache & bulk offline download",
+    desc: "Choose Standard (150MB) or Maximum (2GB) cache mode in Storage settings — available to all users, it's your own device storage. The cache covers both specimen photos and map tiles. Want the whole catalog offline? Tap \"Download all images (~3.5 GB)\" to cache every specimen photo plus all educational/guide illustrations and hero art, so every read-only screen (specimen details, geology guides, BLM guide, periodic table) loads instantly with zero signal. A live progress bar with resume and an offline-ready badge keep you informed.",
+    items: ["Standard 150MB", "Maximum 2GB", "~3.5 GB bulk download", "Resume on restart", "Offline-ready badge", "Map tile caching"],
   },
   {
     icon: Monitor,
     title: "Desktop web app & keyboard shortcuts",
     desc: "The RockScout web app is a full PWA with desktop-optimized layouts — wider multi-column grids, a split map + location list view, and vim-style keyboard shortcuts. Press \"?\" for the shortcuts overlay, \"/\" to focus search, and \"g\" followed by a letter to jump to any section. Install the PWA to your desktop for a standalone app window.",
     items: ["Desktop multi-column grids", "Map + list split view", "Keyboard shortcuts", "Installable PWA"],
+  },
+
+  // ── Safety & Account ──
+  {
+    icon: ShieldCheck,
+    title: "App updates, sign-in & safety",
+    desc: "When a signing conflict is detected during an update, a friendly dialog explains that the old version must be uninstalled and offers a button to trigger the system uninstall flow. After reinstalling and signing back in, all your settings are restored from the cloud exactly as they were. A confirmation dialog on the logout button prevents accidental sign-outs, and your collections, captures, friends, and achievements are tied to your account — not your device.",
+    items: ["Signing conflict dialog", "Settings restored after reinstall", "Logout confirmation", "Account-tied data"],
   },
 ];
 
