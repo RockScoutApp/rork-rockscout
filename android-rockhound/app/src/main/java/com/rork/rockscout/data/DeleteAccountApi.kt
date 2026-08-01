@@ -2,6 +2,7 @@ package com.rork.rockscout.data
 
 import android.util.Log
 import io.ktor.client.call.body
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -28,6 +29,9 @@ object DeleteAccountApi {
     }
 
     private val client = NetworkClient.client
+
+    private val APP_KEY: String =
+        BuildSecrets.resolve("EXPO_PUBLIC_RORK_APP_KEY", BuildSecrets.RORK_APP_KEY)
 
     @Serializable
     private data class DeleteAccountRequest(
@@ -59,6 +63,7 @@ object DeleteAccountApi {
                 .ifBlank { null } ?: return
             val response = client.post("$baseUrl/delete-account") {
                 contentType(ContentType.Application.Json)
+                if (APP_KEY.isNotBlank()) header("X-App-Key", APP_KEY)
                 setBody(
                     json.encodeToString(
                         DeleteAccountRequest.serializer(),
