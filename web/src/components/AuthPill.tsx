@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
+import { sendVerificationCode, verifyEmailCode } from "@/lib/emailVerification";
 import {
   Dialog,
   DialogContent,
@@ -65,6 +66,8 @@ export function AuthPill() {
   const [codeError, setCodeError] = useState<string | null>(null);
   const [codeSending, setCodeSending] = useState(false);
   const [confirmedEmail, setConfirmedEmail] = useState("");
+  const [codePurpose, setCodePurpose] = useState<"signup" | "premium">("premium");
+  const [pendingPassword, setPendingPassword] = useState("");
 
   // Only query premium status when we have a session (avoids unnecessary
   // requests on the marketing site for anonymous visitors).
@@ -92,64 +95,73 @@ export function AuthPill() {
     setAwaitingCode(false);
     setCodeInput("");
     setCodeError(null);
+    setPendingPassword("");
     clearError();
   };
 
-  const sendVerificationCode = async (emailToSend: string) => {
+  /**
+   * Sends a 6-digit code. `purpose` decides what happens once it's verified:
+   * `signup` activates a brand-new account and signs it in, `premium` unlocks
+   * the PWA device confirmation for an existing Premium account.
+   */
+  const requestCode = async (
+    emailToSend: string,
+    purpose: "signup" | "premium",
+  ) => {
     setCodeSending(true);
     setCodeError(null);
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_RORK_FUNCTIONS_URL}/email-verification`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "send", email: emailToSend }),
-        },
-      );
-      if (!res.ok) throw new Error("Failed to send code");
-      setAwaitingCode(true);
-      setVerificationMsg(
-        "Premium account detected! Enter the 6-digit code sent to your email to confirm.",
-      );
-    } catch {
-      setCodeError("Could not send verification code. Please try again.");
-    } finally {
-      setCodeSending(false);
+    const outcome = await sendVerificationCode(emailToSend);
+    setCodeSending(false);
+
+    if (!outcome.ok) {
+      setCodeError(outcome.error ?? "Could not send verification code.");
+      return false;
     }
+
+    setCodePurpose(purpose);
+    setConfirmedEmail(emailToSend);
+    setAwaitingCode(true);
+    setVerificationMsg(
+      purpose === "signup"
+        ? `We sent a 6-digit code to ${emailToSend}. Enter it to activate your account.`
+        : "Premium account detected! Enter the 6-digit code sent to your email to confirm.",
+    );
+    return true;
   };
 
   const verifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setCodeError(null);
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_RORK_FUNCTIONS_URL}/email-verification`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "verify",
-            email: confirmedEmail,
-            code: codeInput.trim(),
-          }),
-        },
-      );
-      const data = await res.json();
-      if (res.ok && data.verified) {
-        setPremiumConfirmed(Date.now());
-        setAwaitingCode(false);
-        setDialogOpen(false);
-        resetForm();
-      } else {
-        setCodeError(data.error ?? "Invalid code. Try again.");
-      }
-    } catch {
-      setCodeError("Verification failed. Check your connection.");
-    } finally {
+
+    const outcome = await verifyEmailCode(confirmedEmail, codeInput);
+
+    if (!outcome.ok || !outcome.verified) {
+      setCodeError(outcome.error ?? "Invalid code. Try again.");
       setSubmitting(false);
+      return;
     }
+
+    if (codePurpose === "signup") {
+      // The backend just confirmed the Supabase email, so the account can
+      // sign in immediately — no confirmation link to chase.
+      try {
+        await signIn(confirmedEmail, pendingPassword);
+      } catch {
+        setCodeError(
+          "Email verified. Please sign in with your new password to continue.",
+        );
+        setSubmitting(false);
+        return;
+      }
+    } else {
+      setPremiumConfirmed(Date.now());
+    }
+
+    setAwaitingCode(false);
+    setDialogOpen(false);
+    resetForm();
+    setSubmitting(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -159,12 +171,12 @@ export function AuthPill() {
     clearError();
     try {
       if (mode === "signup") {
-        const result = await signUp(email, password);
-        if (result.needsVerification) {
-          setVerificationMsg(
-            "Check your email for a confirmation link to finish creating your account.",
-          );
-        }
+        await signUp(email, password);
+        // Always run the 6-digit code flow — it's instant, works on every
+        // platform, and activates the Supabase account server-side so there is
+        // no confirmation link for the user to hunt down.
+        setPendingPassword(password);
+        await requestCode(email, "signup");
       } else {
         await signIn(email, password);
         // After sign-in, check if the user is premium — if so, require email-code confirmation
@@ -180,7 +192,7 @@ export function AuthPill() {
             .maybeSingle();
           // If we can't determine yet, skip confirmation (fail open)
           if (profileData?.is_pro === true) {
-            await sendVerificationCode(email);
+            await requestCode(email, "premium");
           } else {
             setDialogOpen(false);
             resetForm();
@@ -299,7 +311,7 @@ export function AuthPill() {
                 </Button>
                 <button
                   type="button"
-                  onClick={() => sendVerificationCode(confirmedEmail)}
+                  onClick={() => requestCode(confirmedEmail, codePurpose)}
                   disabled={codeSending}
                   className="w-full text-center text-xs text-muted-foreground hover:text-foreground"
                 >

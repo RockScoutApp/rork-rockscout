@@ -291,12 +291,20 @@ class AuthRepository private constructor() {
                 userId = userId,
             )
 
-            // Send the 6-digit verification code via the backend.
-            val sendResult = EmailVerificationApi.sendCode(trimmed)
-            if (sendResult is EmailVerificationApi.VerificationResult.Failed) {
-                Log.w("AuthRepository", "Initial verification code send failed: ${sendResult.message}")
-            } else if (sendResult is EmailVerificationApi.VerificationResult.NetworkError) {
-                Log.w("AuthRepository", "Verification code send network error — user can resend")
+            // Send the 6-digit verification code via the backend. If delivery
+            // fails we stay on the verification screen (the user can retry with
+            // Resend) but surface the reason instead of leaving them staring at
+            // a code entry box for an email that will never arrive.
+            when (val sendResult = EmailVerificationApi.sendCode(trimmed)) {
+                is EmailVerificationApi.VerificationResult.Success -> Unit
+                is EmailVerificationApi.VerificationResult.Failed -> {
+                    Log.w("AuthRepository", "Initial verification code send failed: ${sendResult.message}")
+                    _error.value = sendResult.message
+                }
+                is EmailVerificationApi.VerificationResult.NetworkError -> {
+                    Log.w("AuthRepository", "Verification code send network error — user can resend")
+                    _error.value = "Couldn't send the code. Check your connection and tap Resend."
+                }
             }
 
             // Send personalized welcome email (fire-and-forget).
@@ -333,9 +341,15 @@ class AuthRepository private constructor() {
 
             when (result) {
                 is EmailVerificationApi.VerificationResult.Success -> {
-                    // Sign in with Supabase to get a fresh session.
+                    if (!result.emailConfirmed) {
+                        Log.w("AuthRepository", "Backend could not confirm the Supabase email")
+                    }
+                    // Sign in with Supabase to get a fresh session. The admin
+                    // confirmation we just triggered can take a moment to become
+                    // visible to the auth API, so retry briefly instead of
+                    // failing the user on the first attempt.
                     val password = pendingPassword ?: error("Session expired. Please sign in again.")
-                    val signInResult = SupabaseAuthClient.signInWithPassword(pending.email, password)
+                    val signInResult = signInWithRetry(pending.email, password)
                     if (signInResult.isSuccess) {
                         val auth = signInResult.getOrThrow()
                         saveSupabaseTokens(auth.access_token, auth.refresh_token)
@@ -359,10 +373,13 @@ class AuthRepository private constructor() {
                         scope.launch { PurchaseManager.instance.linkRevenueCatUser(userId) }
                         SupabaseDataSync.syncInBackground()
                     } else {
-                        // Sign-in might fail if Supabase email confirmation hasn't
-                        // propagated yet. In that case, save what we have.
-                        Log.w("AuthRepository", "Post-verification sign-in failed: ${signInResult.exceptionOrNull()?.message}")
-                        error("Email verified, but couldn't sign in. Please try signing in manually.")
+                        val cause = signInResult.exceptionOrNull()?.message.orEmpty()
+                        Log.w("AuthRepository", "Post-verification sign-in failed: $cause")
+                        if (cause.contains("not confirmed", ignoreCase = true)) {
+                            error("Your code was correct, but the account couldn't be activated. Please tap Resend and try once more.")
+                        } else {
+                            error("Email verified, but couldn't sign in. Please try signing in manually.")
+                        }
                     }
                     Unit
                 }
@@ -379,6 +396,28 @@ class AuthRepository private constructor() {
         }.also {
             _isLoading.value = false
         }
+    }
+
+    /**
+     * Sign in, retrying briefly while Supabase propagates the admin email
+     * confirmation that was just applied by the verification endpoint.
+     */
+    private suspend fun signInWithRetry(
+        email: String,
+        password: String,
+    ): Result<SupabaseAuthClient.AuthResponse> {
+        var last: Result<SupabaseAuthClient.AuthResponse> =
+            SupabaseAuthClient.signInWithPassword(email, password)
+        var delayMs = 400L
+        repeat(3) {
+            if (last.isSuccess) return last
+            val message = last.exceptionOrNull()?.message.orEmpty()
+            if (!message.contains("not confirmed", ignoreCase = true)) return last
+            kotlinx.coroutines.delay(delayMs)
+            delayMs *= 2
+            last = SupabaseAuthClient.signInWithPassword(email, password)
+        }
+        return last
     }
 
     /** Resend the verification code to the pending email address. */

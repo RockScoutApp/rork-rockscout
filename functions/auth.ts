@@ -36,8 +36,18 @@ const RATE_LIMITS: Record<string, RateLimitConfig> = {
   "/image-rejection-email": { rpm: 10, burst: 3 },
   "/referral/send": { rpm: 10, burst: 3 },
   "/referral/register": { rpm: 10, burst: 3 },
-  "/email-verification": { rpm: 5, burst: 2 },
-  "/dev-sms-verify": { rpm: 3, burst: 1 },
+  // Verification endpoints are split per action. Sending an email is the
+  // expensive/abusable half; checking a code is cheap and MUST never be
+  // throttled, otherwise the user gets a 429 on the very next tap after the
+  // code arrives (the old shared bucket had burst 1-2, so "send" drained it
+  // and "verify" was rejected).
+  "/email-verification:send": { rpm: 6, burst: 3 },
+  "/email-verification:verify": { rpm: 60, burst: 15 },
+  "/dev-sms-verify:send": { rpm: 6, burst: 3 },
+  "/dev-sms-verify:verify": { rpm: 60, burst: 15 },
+  // Legacy keys (kept so an un-actioned request still has a sane limit).
+  "/email-verification": { rpm: 30, burst: 10 },
+  "/dev-sms-verify": { rpm: 30, burst: 10 },
   "/trial": { rpm: 5, burst: 2 },
   "/delete-account": { rpm: 3, burst: 1 },
   // Admin-triggered embedding backfill — low rpm, large payload.

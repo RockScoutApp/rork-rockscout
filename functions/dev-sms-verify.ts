@@ -106,7 +106,12 @@ It expires in 5 minutes. If you didn't request it, someone entered the developer
   return { html, text };
 }
 
-async function sendEmail(apiKey: string, to: string, code: string): Promise<boolean> {
+interface SendOutcome {
+  sent: boolean;
+  reason?: string;
+}
+
+async function sendEmail(apiKey: string, to: string, code: string): Promise<SendOutcome> {
   try {
     const { html, text } = buildEmail(code);
     const res = await fetch("https://api.resend.com/emails", {
@@ -125,12 +130,22 @@ async function sendEmail(apiKey: string, to: string, code: string): Promise<bool
     });
     if (!res.ok) {
       console.error("dev-2fa: Resend send failed", res.status, await res.text());
+      return { sent: false, reason: `resend_${res.status}` };
     }
-    return res.ok;
+    return { sent: true };
   } catch {
     console.error("dev-2fa: Resend request threw");
-    return false;
+    return { sent: false, reason: "resend_exception" };
   }
+}
+
+/** Masks an address for display: "aaron@yahoo.com" → "a***n@yahoo.com". */
+function maskEmail(address: string): string {
+  const [local, domain] = address.split("@");
+  if (!domain || local.length < 2) return address;
+  const head = local[0];
+  const tail = local[local.length - 1];
+  return `${head}***${tail}@${domain}`;
 }
 
 export async function handleDevSmsVerify(
@@ -157,23 +172,24 @@ export async function handleDevSmsVerify(
       const code = await deriveCode(secret, currentBucket());
       const to = env.DEV_2FA_EMAIL_TO?.trim() || DEFAULT_DEV_EMAIL_TO;
 
-      let emailSent = false;
+      let outcome: SendOutcome = { sent: false, reason: "resend_not_configured" };
       if (env.RESEND_API_KEY) {
-        emailSent = await sendEmail(env.RESEND_API_KEY, to, code);
+        outcome = await sendEmail(env.RESEND_API_KEY, to, code);
+      } else {
+        console.error("dev-2fa: RESEND_API_KEY is not configured");
       }
 
       // When email can't be delivered, hand the code back so the app can post
       // an instant local notification. The endpoint is app-key guarded and only
       // reachable after the developer PIN, so this stays a developer-only
-      // channel.
+      // channel — the developer is never locked out of the console.
       return Response.json(
         {
           ok: true,
           sent: true,
-          emailSent,
-          // Masked destination for the UI ("a***n@yahoo.com").
-          emailTo: emailSent ? to : undefined,
-          ...(emailSent ? {} : { devCode: code }),
+          emailSent: outcome.sent,
+          emailTo: outcome.sent ? maskEmail(to) : undefined,
+          ...(outcome.sent ? {} : { devCode: code, emailError: outcome.reason }),
         },
         { headers },
       );

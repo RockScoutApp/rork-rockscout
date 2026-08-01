@@ -100,10 +100,17 @@ export default {
     }
 
     if (url.pathname === "/dev-sms-verify" && request.method === "POST") {
-      const guard = guardEndpoint(request, env, "/dev-sms-verify", cors, env.RATE_LIMIT_KV);
+      const { action, replay } = await readActionAndReplay(request);
+      const guard = guardEndpoint(
+        request,
+        env,
+        `/dev-sms-verify:${action}`,
+        cors,
+        env.RATE_LIMIT_KV,
+      );
       if (guard) return guard;
       return handleDevSmsVerify(
-        request,
+        replay,
         env as unknown as {
           RESEND_API_KEY?: string;
           DEV_2FA_EMAIL_TO?: string;
@@ -115,11 +122,24 @@ export default {
     }
 
     if (url.pathname === "/email-verification" && request.method === "POST") {
-      const guard = guardEndpoint(request, env, "/email-verification", cors, env.RATE_LIMIT_KV);
+      const { action, replay } = await readActionAndReplay(request);
+      const guard = guardEndpoint(
+        request,
+        env,
+        `/email-verification:${action}`,
+        cors,
+        env.RATE_LIMIT_KV,
+      );
       if (guard) return guard;
       return handleEmailVerification(
-        request,
-        env as unknown as { RESEND_API_KEY?: string; VERIFICATION_KV?: KVNamespace; SUPABASE_SERVICE_ROLE_KEY?: string; EXPO_PUBLIC_SUPABASE_URL?: string },
+        replay,
+        env as unknown as {
+          RESEND_API_KEY?: string;
+          EXPO_PUBLIC_RORK_APP_KEY?: string;
+          EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
+          SUPABASE_SERVICE_ROLE_KEY?: string;
+          EXPO_PUBLIC_SUPABASE_URL?: string;
+        },
         cors,
       );
     }
@@ -258,6 +278,35 @@ export default {
     return new Response("not found", { status: 404, headers: cors });
   },
 };
+
+/**
+ * Reads the JSON body once to learn which `action` a verification request is
+ * performing, and returns a replayable Request carrying the same body.
+ *
+ * Rate limits are applied per action: sending an email is throttled, checking
+ * a code is not. Without this, "send" drained the shared per-endpoint bucket
+ * and the immediately-following "verify" was rejected with 429.
+ */
+async function readActionAndReplay(
+  request: Request,
+): Promise<{ action: "send" | "verify" | "unknown"; replay: Request }> {
+  const bodyText = await request.text();
+  let action: "send" | "verify" | "unknown" = "unknown";
+  try {
+    const parsed = JSON.parse(bodyText) as { action?: string };
+    if (parsed.action === "send" || parsed.action === "verify") {
+      action = parsed.action;
+    }
+  } catch {
+    // Malformed body — the handler will return the proper 400.
+  }
+  const replay = new Request(request.url, {
+    method: request.method,
+    headers: request.headers,
+    body: bodyText,
+  });
+  return { action, replay };
+}
 
 type Env = {
   EXPO_PUBLIC_TOOLKIT_URL: string;

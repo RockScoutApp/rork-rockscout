@@ -14,6 +14,10 @@ struct SignInView: View {
     @State private var resetSent: Bool = false
     @State private var isSubmitting: Bool = false
     @State private var localError: String?
+    @State private var awaitingCode: Bool = false
+    @State private var codeInput: String = ""
+    @State private var codeNotice: String?
+    @State private var isResending: Bool = false
     @FocusState private var focusedField: Field?
 
     private enum AuthMode {
@@ -25,6 +29,7 @@ struct SignInView: View {
         case email
         case password
         case confirmPassword
+        case code
     }
 
     var body: some View {
@@ -35,17 +40,29 @@ struct SignInView: View {
                 VStack(spacing: 32) {
                     headerSection
 
-                    authForm
+                    if awaitingCode {
+                        verificationForm
+                    } else {
+                        authForm
+                    }
+
+                    if let notice = codeNotice {
+                        noticeBanner(notice)
+                    }
 
                     if let error = localError ?? auth.error {
                         errorBanner(error)
                     }
 
-                    submitButton
-
-                    switchModeButton
-
-                    resetPasswordButton
+                    if awaitingCode {
+                        verifyButton
+                        resendButton
+                        cancelVerificationButton
+                    } else {
+                        submitButton
+                        switchModeButton
+                        resetPasswordButton
+                    }
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 40)
@@ -117,6 +134,82 @@ struct SignInView: View {
                     }
             }
         }
+    }
+
+    // MARK: - Verification
+
+    private var verificationForm: some View {
+        VStack(spacing: 16) {
+            Text("Enter the 6-digit code we emailed to \(email).")
+                .font(.subheadline)
+                .foregroundStyle(.rsTextSecondary)
+                .multilineTextAlignment(.center)
+
+            TextField("6-digit code", text: $codeInput)
+                .textFieldStyle(.rockScout)
+                .keyboardType(.numberPad)
+                .textContentType(.oneTimeCode)
+                .multilineTextAlignment(.center)
+                .font(.system(.title2, design: .monospaced, weight: .bold))
+                .focused($focusedField, equals: .code)
+                .onChange(of: codeInput) { _, newValue in
+                    let digits = newValue.filter(\.isNumber)
+                    codeInput = String(digits.prefix(6))
+                }
+        }
+    }
+
+    private var verifyButton: some View {
+        Button {
+            Task { await submitCode() }
+        } label: {
+            HStack {
+                if isSubmitting {
+                    ProgressView().tint(.ink)
+                }
+                Text("Verify & Continue")
+                    .fontWeight(.semibold)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+        }
+        .buttonStyle(.rockScoutPrimary)
+        .disabled(isSubmitting || codeInput.count != 6)
+    }
+
+    private var resendButton: some View {
+        Button {
+            Task { await resendCode() }
+        } label: {
+            Text(isResending ? "Sending\u{2026}" : "Resend code")
+                .font(.subheadline)
+                .foregroundStyle(.rsAccent)
+        }
+        .disabled(isResending || isSubmitting)
+    }
+
+    private var cancelVerificationButton: some View {
+        Button("Use a different email") {
+            awaitingCode = false
+            codeInput = ""
+            codeNotice = nil
+            localError = nil
+        }
+        .font(.footnote)
+        .foregroundStyle(.rsTextMuted)
+    }
+
+    private func noticeBanner(_ message: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "envelope.badge.fill")
+                .foregroundStyle(.rsAccent)
+            Text(message)
+                .font(.footnote)
+                .foregroundStyle(.rsTextSecondary)
+            Spacer()
+        }
+        .padding(12)
+        .background(RockScoutColors.accent.opacity(0.12), in: .rect(cornerRadius: 10))
     }
 
     // MARK: - Error Banner
@@ -260,12 +353,79 @@ struct SignInView: View {
             if mode == .signIn {
                 try await auth.signIn(email: email, password: password)
                 await EntitlementManager.shared.login(userId: auth.currentUserId?.uuidString ?? "")
-            } else {
-                try await auth.signUp(email: email, password: password)
+                return
+            }
+
+            try await auth.signUp(email: email, password: password)
+            if auth.isAuthenticated {
+                // Confirmation is disabled on the project — nothing to verify.
                 await EntitlementManager.shared.login(userId: auth.currentUserId?.uuidString ?? "")
+                return
+            }
+
+            // Supabase requires confirmation. Send our own 6-digit code, which
+            // the backend uses to confirm the account server-side so the user
+            // never has to chase a link in their inbox.
+            switch await EmailVerificationService.sendCode(to: email) {
+            case .sent:
+                awaitingCode = true
+                codeNotice = "We emailed you a 6-digit code. It expires in 10 minutes."
+                focusedField = .code
+            case .failed(let message):
+                awaitingCode = true
+                localError = message
+            case .verified:
+                break
             }
         } catch {
             // error is set on auth.error
+        }
+    }
+
+    private func submitCode() async {
+        isSubmitting = true
+        localError = nil
+        codeNotice = nil
+        defer { isSubmitting = false }
+
+        let outcome = await EmailVerificationService.verify(
+            email: email,
+            code: codeInput,
+            userId: auth.currentUserId?.uuidString
+        )
+
+        switch outcome {
+        case .verified:
+            do {
+                try await auth.signIn(email: email, password: password)
+                await EntitlementManager.shared.login(userId: auth.currentUserId?.uuidString ?? "")
+                awaitingCode = false
+                codeInput = ""
+            } catch {
+                localError = "Email verified. Please sign in to continue."
+                awaitingCode = false
+                mode = .signIn
+            }
+        case .failed(let message):
+            localError = message
+        case .sent:
+            break
+        }
+    }
+
+    private func resendCode() async {
+        isResending = true
+        localError = nil
+        codeNotice = nil
+        defer { isResending = false }
+
+        switch await EmailVerificationService.sendCode(to: email) {
+        case .sent:
+            codeNotice = "New code sent. Check your inbox."
+        case .failed(let message):
+            localError = message
+        case .verified:
+            break
         }
     }
 

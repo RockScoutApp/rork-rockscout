@@ -45,14 +45,30 @@ object EmailVerificationApi {
     private data class VerificationResponse(
         val ok: Boolean = false,
         val verified: Boolean = false,
+        val emailConfirmed: Boolean = false,
+        val confirmReason: String? = null,
+        val reason: String? = null,
         val error: String? = null,
     )
 
     /** Result of a verification API call. */
     sealed class VerificationResult {
-        data object Success : VerificationResult()
+        /**
+         * The call succeeded. [emailConfirmed] is true when the backend also
+         * marked the Supabase email as confirmed, which is what allows the
+         * immediate sign-in that follows verification.
+         */
+        data class Success(val emailConfirmed: Boolean = true) : VerificationResult()
         data class Failed(val message: String) : VerificationResult()
         data object NetworkError : VerificationResult()
+    }
+
+    /** Turns a backend response into a message that is safe and useful to show. */
+    private fun messageFor(parsed: VerificationResponse): String = when {
+        !parsed.error.isNullOrBlank() -> parsed.error
+        parsed.reason == "email_verification_not_configured" ->
+            "Verification email service is temporarily unavailable. Please try again shortly."
+        else -> "Verification failed. Please try again."
     }
 
     private fun baseUrl(): String? =
@@ -78,11 +94,11 @@ object EmailVerificationApi {
             val body = response.body<String>()
             val parsed = json.decodeFromString(VerificationResponse.serializer(), body)
             if (parsed.ok) {
-                Log.i(TAG, "Verification code sent to $email")
-                VerificationResult.Success
+                Log.i(TAG, "Verification code sent")
+                VerificationResult.Success()
             } else {
-                Log.w(TAG, "Send code failed: ${parsed.error}")
-                VerificationResult.Failed(parsed.error ?: "Failed to send code")
+                Log.w(TAG, "Send code failed: ${parsed.reason ?: parsed.error}")
+                VerificationResult.Failed(messageFor(parsed))
             }
         } catch (e: Exception) {
             Log.w(TAG, "Send code network error: ${e.message}")
@@ -119,14 +135,12 @@ object EmailVerificationApi {
             val body = response.body<String>()
             val parsed = json.decodeFromString(VerificationResponse.serializer(), body)
             if (parsed.ok && parsed.verified) {
-                Log.i(TAG, "Email verified: $email")
-                VerificationResult.Success
-            } else if (!parsed.ok && parsed.error?.contains("expired") == true) {
-                VerificationResult.Failed(parsed.error)
-            } else if (!parsed.ok) {
-                VerificationResult.Failed(parsed.error ?: "Invalid code")
+                if (!parsed.emailConfirmed) {
+                    Log.w(TAG, "Code correct but Supabase confirm skipped: ${parsed.confirmReason}")
+                }
+                VerificationResult.Success(emailConfirmed = parsed.emailConfirmed)
             } else {
-                VerificationResult.Failed("Verification failed")
+                VerificationResult.Failed(messageFor(parsed))
             }
         } catch (e: Exception) {
             Log.w(TAG, "Verify code network error: ${e.message}")
@@ -134,37 +148,7 @@ object EmailVerificationApi {
         }
     }
 
-    /**
-     * Verifies the [code] for [email] against the backend.
-     * Returns true if the code matched.
-     */
-    suspend fun verifyCode(email: String, code: String): VerificationResult {
-        val url = baseUrl() ?: return VerificationResult.NetworkError
-        return try {
-            val response = client.post("$url/email-verification") {
-                contentType(ContentType.Application.Json)
-                setBody(
-                    json.encodeToString(
-                        VerifyCodeRequest.serializer(),
-                        VerifyCodeRequest(action = "verify", email = email, code = code),
-                    ),
-                )
-            }
-            val body = response.body<String>()
-            val parsed = json.decodeFromString(VerificationResponse.serializer(), body)
-            if (parsed.ok && parsed.verified) {
-                Log.i(TAG, "Email verified: $email")
-                VerificationResult.Success
-            } else if (!parsed.ok && parsed.error?.contains("expired") == true) {
-                VerificationResult.Failed(parsed.error)
-            } else if (!parsed.ok) {
-                VerificationResult.Failed(parsed.error ?: "Invalid code")
-            } else {
-                VerificationResult.Failed("Verification failed")
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Verify code network error: ${e.message}")
-            VerificationResult.NetworkError
-        }
-    }
+    /** Verifies the [code] for [email] without touching the Supabase account. */
+    suspend fun verifyCode(email: String, code: String): VerificationResult =
+        verifyCodeWithEmailConfirm(email = email, code = code, supabaseUserId = null)
 }
