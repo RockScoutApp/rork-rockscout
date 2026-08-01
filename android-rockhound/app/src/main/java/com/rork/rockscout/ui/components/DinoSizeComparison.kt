@@ -41,7 +41,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 import com.rork.rockscout.data.DinoEntry
-import com.rork.rockscout.data.DinoImageMap
+import com.rork.rockscout.data.DinoLifeImageMap
 import kotlin.math.sqrt
 
 /**
@@ -102,7 +102,8 @@ fun DinoSizeComparison(
         label = "accentColor",
     )
 
-    val imageUrl = DinoImageMap.imageUri(entry)
+    // Prefer the life reconstruction so the scale chart shows a living animal.
+    val imageUrl = DinoLifeImageMap.imageUri(entry)
 
     Box(
         modifier = modifier

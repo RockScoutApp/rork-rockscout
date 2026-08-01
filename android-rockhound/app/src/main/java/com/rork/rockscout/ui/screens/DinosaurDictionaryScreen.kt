@@ -66,6 +66,7 @@ import com.rork.rockscout.data.DinoDiet
 import com.rork.rockscout.data.DinoEntry
 import com.rork.rockscout.data.DinoEra
 import com.rork.rockscout.data.DinoImageMap
+import com.rork.rockscout.data.DinoLifeImageMap
 import com.rork.rockscout.data.ScreenPdfExporter
 import com.rork.rockscout.data.ScreenPdfItem
 import com.rork.rockscout.ui.components.DarkCard
@@ -818,7 +819,8 @@ private fun DinoCard(
 ) {
     val silhouetteColor = Color(entry.accentColor)
     val dietColor = dietColors[entry.diet] ?: eraColor
-    val imageUrl = DinoImageMap.imageUri(entry)
+    // Show the animal as it looked alive; fall back to the drawn silhouette.
+    val imageUrl = DinoLifeImageMap.imageUri(entry)
 
     DarkCard(
         accent = eraColor,
@@ -844,8 +846,11 @@ private fun DinoCard(
                     AsyncImage(
                         model = imageUrl,
                         contentDescription = "${entry.name} illustration",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
+                        // Fit so no part of the animal is cut off by the card edges.
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 10.dp, vertical = 8.dp),
                     )
                 } else {
                     DinoSilhouette(
@@ -856,18 +861,6 @@ private fun DinoCard(
                             .aspectRatio(1.8f),
                     )
                 }
-                // Gradient overlay for text readability at bottom
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                0f to Color.Transparent,
-                                0.6f to Color.Transparent,
-                                1f to Color.Black.copy(alpha = 0.4f),
-                            )
-                        )
-                )
                 // Diet badge in corner
                 Box(
                     modifier = Modifier
