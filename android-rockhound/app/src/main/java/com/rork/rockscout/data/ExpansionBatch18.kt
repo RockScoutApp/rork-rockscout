@@ -60,7 +60,7 @@ object ExpansionBatch18 {
             funFacts = listOf(
                 "Ignimbrites form from pyroclastic flows — the most destructive volcanic phenomenon.",
                 "The Bandelier Tuff in New Mexico was formed by a massive eruption 1.25 million years ago.",
-                "Ignimbrite deposits can cover hundreds of square kilometers from a single eruption.",
+                "Ignimbrite deposits can cover hundreds of square miles from a single eruption.",
                 "The word 'ignimbrite' means 'fire rain stone' in Latin."
             ),
             uses = "Building stone, geological research, collector specimens.",
@@ -318,7 +318,7 @@ object ExpansionBatch18 {
             tagline = "Solidified lava projectile — molten rock thrown from a volcano that cooled in flight.",
             emoji = "💣",
             colorHex = 0xFF3D3D3D,
-            description = "Volcanic bombs are masses of molten lava ejected from a volcano that solidify in flight or upon landing. They range from a few centimeters to over a meter in diameter and often have aerodynamic shapes like spindle, ribbon, or bread-crust forms. Volcanic bombs are important pyroclastic deposits that record eruption dynamics.",
+            description = "Volcanic bombs are masses of molten lava ejected from a volcano that solidify in flight or upon landing. They range from an inch to over 3 feet in diameter and often have aerodynamic shapes like spindle, ribbon, or bread-crust forms. Volcanic bombs are important pyroclastic deposits that record eruption dynamics.",
             formation = "Forms when molten lava is ejected from a volcanic vent and cools as it flies through the air. The spinning motion creates aerodynamic shapes, and the outer surface often cracks into a 'bread-crust' texture as it cools.",
             hardness = "5–6",
             luster = "Dull to vitreous",
@@ -328,7 +328,7 @@ object ExpansionBatch18 {
             commonColors = listOf("Black", "Dark red", "Gray", "Brown"),
             whereFound = listOf("Stromboli, Italy", "Hawaii, USA", "Iceland", "Mount Etna, Italy", "Nicaragua"),
             funFacts = listOf(
-                "Volcanic bombs can travel hundreds of meters through the air.",
+                "Volcanic bombs can travel hundreds of feet through the air.",
                 "The 'bread-crust' texture forms when the outer surface cools and cracks as the interior continues to expand.",
                 "Spindle bombs form when the lava spins during flight, creating a streamlined shape.",
                 "Volcanic bombs can still be molten inside when they land, creating splash patterns."
@@ -743,7 +743,7 @@ object ExpansionBatch18 {
             funFacts = listOf(
                 "Cataclasite forms by brittle crushing — the rock is literally shattered by fault movement.",
                 "It is distinguished from mylonite (which forms by ductile flow) by its angular, fractured texture.",
-                "Cataclasite zones can be hundreds of meters thick along major faults.",
+                "Cataclasite zones can be hundreds of feet thick along major faults.",
                 "The crushed rock fragments are 'clasts' floating in a finer-grained matrix."
             ),
             uses = "Geological research, fault studies, collector specimens.",
@@ -759,7 +759,7 @@ object ExpansionBatch18 {
             emoji = "🟢",
             colorHex = 0xFF4A8B5C,
             description = "Jadeitite is a rare metamorphic rock composed almost entirely of jadeite, a pyroxene mineral. It is the source of 'jadeite jade' — the most valuable form of jade. Jadeitite forms under extremely high-pressure, low-temperature conditions associated with subduction zones. The finest jadeitite comes from Burma (Myanmar).",
-            formation = "Forms in subduction zone environments under extremely high pressures and relatively low temperatures. The specific conditions are found at depths of 20-60 km in subduction zones.",
+            formation = "Forms in subduction zone environments under extremely high pressures and relatively low temperatures. The specific conditions are found at depths of 12-37 miles in subduction zones.",
             hardness = "6–7",
             luster = "Vitreous to greasy",
             streak = "White",

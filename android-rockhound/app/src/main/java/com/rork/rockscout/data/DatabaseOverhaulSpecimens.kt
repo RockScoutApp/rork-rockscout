@@ -884,7 +884,7 @@ object DatabaseOverhaulSpecimens {
             tagline = "Glassy impact melt from the Popigai crater — born from a meteorite strike.",
             emoji = "\u2604\uFE0F",
             colorHex = 0xFF3A3030,
-            description = "Tagamite is a glassy to crystalline impact melt rock formed by the extreme heat and pressure of a meteorite impact. It is named after the Tagam Terrane at the Popigai impact crater in Siberia, Russia — one of the largest impact structures on Earth (100 km diameter). The rock forms when the impact melts the target rock, which then cools into a distinctive glassy or finely crystalline material.",
+            description = "Tagamite is a glassy to crystalline impact melt rock formed by the extreme heat and pressure of a meteorite impact. It is named after the Tagam Terrane at the Popigai impact crater in Siberia, Russia — one of the largest impact structures on Earth (60-mile diameter). The rock forms when the impact melts the target rock, which then cools into a distinctive glassy or finely crystalline material.",
             formation = "Forms when a meteorite impact melts the target rock at temperatures exceeding 2,000°C. The melt cools rapidly, forming glassy to fine-grained crystalline rock.",
             hardness = "5–6",
             luster = "Vitreous to dull",
@@ -895,7 +895,7 @@ object DatabaseOverhaulSpecimens {
             whereFound = listOf("Popigai Crater, Siberia, Russia", "Other impact structures worldwide"),
             funFacts = listOf(
                 "Tagamite is proof of a catastrophic meteorite impact.",
-                "The Popigai crater is 100 km across — one of Earth's largest.",
+                "The Popigai crater is 60 miles across — one of Earth's largest.",
                 "The impact created diamonds from graphite in the target rock.",
             ),
             uses = "Scientific research, impact crater studies.",

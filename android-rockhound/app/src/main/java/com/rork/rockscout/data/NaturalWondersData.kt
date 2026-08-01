@@ -513,7 +513,7 @@ object NaturalWondersData {
             funFacts = listOf(
                 "There are 1,969 limestone islands, most uninhabited.",
                 "Many islands contain caves with spectacular stalactites and stalagmites.",
-                "The limestone is up to 500 meters thick in places.",
+                "The limestone is up to 1,640 feet thick in places.",
             ),
             imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/e690464a-a4a6-4c45-9837-2fa980591433.png",
         ),
@@ -678,7 +678,7 @@ object NaturalWondersData {
             longitude = -21.13,
             type = WonderType.MOUNTAIN,
             description = "A dramatic rift valley where you can walk between two continents — the North American and Eurasian plates are visibly pulling apart.",
-            formation = "Þingvellir sits on the Mid-Atlantic Ridge — the boundary where the North American and Eurasian plates diverge at about 2 cm per year. As the plates pull apart, the crust stretches and thins, forming a graben (down-dropped valley) bounded by normal faults. The valley floor is literally sinking between the two plates. Fissures and cracks in the basalt are visible everywhere — the Earth is tearing apart in real time.",
+            formation = "Þingvellir sits on the Mid-Atlantic Ridge — the boundary where the North American and Eurasian plates diverge at about 0.8 inches per year. As the plates pull apart, the crust stretches and thins, forming a graben (down-dropped valley) bounded by normal faults. The valley floor is literally sinking between the two plates. Fissures and cracks in the basalt are visible everywhere — the Earth is tearing apart in real time.",
             rocksToFind = listOf("Basalt (flood basalt)", "Pillow Basalt (ancient underwater)", "Columnar Basalt", "Olivine", "Obsidian"),
             funFacts = listOf(
                 "It's the only place where you can walk between two continental plates above sea level.",
@@ -747,7 +747,7 @@ object NaturalWondersData {
             longitude = -105.53,
             type = WonderType.KARST,
             description = "A cave 1,000 feet underground holding the largest natural crystals ever found — giant translucent selenite gypsum beams up to 39 feet long and 4 feet thick, jutting from floor to ceiling.",
-            formation = "The Cave of Crystals (Cueva de los Cristales) sits 300 meters below Naica's silver-and-lead mine. An underground magma chamber heated the cave's groundwater to ~58°C for over 500,000 years, keeping the water just below the anhydrite-to-gypsum transition. Under these stable, hot, mineral-rich conditions, gypsum (selenite) crystals grew extraordinarily slowly — about 1.4 mm per century — reaching sizes found nowhere else on Earth.",
+            formation = "The Cave of Crystals (Cueva de los Cristales) sits 1,000 feet below Naica's silver-and-lead mine. An underground magma chamber heated the cave's groundwater to ~58°C for over 500,000 years, keeping the water just below the anhydrite-to-gypsum transition. Under these stable, hot, mineral-rich conditions, gypsum (selenite) crystals grew extraordinarily slowly — about 0.06 inches per century — reaching sizes found nowhere else on Earth.",
             rocksToFind = listOf("Selenite Gypsum", "Anhydrite", "Galena", "Sphalerite", "Chalcopyrite"),
             funFacts = listOf(
                 "The largest crystal is 39 feet long and weighs ~55 tons.",
@@ -780,7 +780,7 @@ object NaturalWondersData {
             longitude = -87.46,
             type = WonderType.KARST,
             description = "A deep sinkhole cave dive with a surreal hydrogen-sulfide cloud at ~100 feet depth — appearing like an underwater river flowing through the cave.",
-            formation = "The Yucatán Peninsula sits on porous limestone. Cenotes form when the limestone ceiling of a cave collapses, exposing the freshwater below. At Angelita, decaying vegetation at the cave floor releases hydrogen sulfide, which collects as a dense cloudy layer at ~30 meters, separating the fresh upper water from saltwater below — creating the visual illusion of an underwater river.",
+            formation = "The Yucatán Peninsula sits on porous limestone. Cenotes form when the limestone ceiling of a cave collapses, exposing the freshwater below. At Angelita, decaying vegetation at the cave floor releases hydrogen sulfide, which collects as a dense cloudy layer at ~100 feet, separating the fresh upper water from saltwater below — creating the visual illusion of an underwater river.",
             rocksToFind = listOf("Limestone", "Speleothems", "Coral fossils (Pleistocene)"),
             funFacts = listOf(
                 "The 'underwater river' is actually a hydrogen-sulfide cloud.",
@@ -855,7 +855,7 @@ object NaturalWondersData {
             longitude = 74.16,
             type = WonderType.VOLCANIC,
             description = "A vast, stepped plateau of flood basalt covering 200,000 square miles — one of the largest volcanic provinces on Earth, contemporaneous with the dinosaur extinction.",
-            formation = "The Deccan Traps erupted ~66 million years ago from the Réunion hotspot as the Indian Plate raced north over it. Massive fissure eruptions poured out layer after layer of basaltic lava, building a sequence up to 2,000 meters thick. The eruption's vast CO₂ and sulfur emissions likely contributed to the Cretaceous–Paleogene mass extinction alongside the Chicxulub impact.",
+            formation = "The Deccan Traps erupted ~66 million years ago from the Réunion hotspot as the Indian Plate raced north over it. Massive fissure eruptions poured out layer after layer of basaltic lava, building a sequence up to 6,560 feet thick. The eruption's vast CO₂ and sulfur emissions likely contributed to the Cretaceous–Paleogene mass extinction alongside the Chicxulub impact.",
             rocksToFind = listOf("Flood Basalt", "Zeolite-filled Amygdales", "Calcite, Apophyllite, Stilbite", "Quartz geodes"),
             funFacts = listOf(
                 "The Deccan Traps were erupting when the asteroid hit Chicxulub — both may have killed the dinosaurs.",
@@ -884,8 +884,8 @@ object NaturalWondersData {
             latitude = -10.96,
             longitude = -76.34,
             type = WonderType.VOLCANIC,
-            description = "A 'stone forest' of hundreds of towering volcanic rock formations sculpted by wind and frost into surreal silhouettes at 4,000 meters elevation.",
-            formation = "The Huayllay stone forest is carved from volcanic tuff and ignimbrite erupted during the Cenozoic. Volcanic ash and pumice consolidated into soft, easily eroded rock, which wind, water, and freeze-thaw cycles have carved into hundreds of pillars, arches, and animal-like shapes. The high-altitude climate (4,000 m) accelerates erosion through intense freeze-thaw weathering.",
+            description = "A 'stone forest' of hundreds of towering volcanic rock formations sculpted by wind and frost into surreal silhouettes at 13,120 feet elevation.",
+            formation = "The Huayllay stone forest is carved from volcanic tuff and ignimbrite erupted during the Cenozoic. Volcanic ash and pumice consolidated into soft, easily eroded rock, which wind, water, and freeze-thaw cycles have carved into hundreds of pillars, arches, and animal-like shapes. The high-altitude climate (13,120 ft) accelerates erosion through intense freeze-thaw weathering.",
             rocksToFind = listOf("Volcanic Tuff", "Ignimbrite", "Rhyolite", "Obsidian fragments"),
             funFacts = listOf(
                 "Local culture holds that the stones are petrified shepherds punished by the gods.",
@@ -918,7 +918,7 @@ object NaturalWondersData {
             formation = "The Trotternish landslip formed when a massive section of Tertiary basalt (from the North Atlantic Igneous Province ~60 million years ago) slid downslope over weaker Jurassic sedimentary shales beneath. The movement created a 6-mile-long escarpment of crumbling cliffs, pinnacles, and hummocks that continues to creep today. The Quiraing is the most dramatic section.",
             rocksToFind = listOf("Tertiary Basalt", "Paleocene Lava", "Jurassic Shale", "Sandstone", "Volcanic Ash"),
             funFacts = listOf(
-                "The landslip still moves a few millimeters each year.",
+                "The landslip still moves a fraction of an inch each year.",
             ),
             imageUrl = "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/05e7e12d-eec3-4a8f-acf1-1eb088e0a170.png",
         ),

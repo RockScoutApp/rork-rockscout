@@ -727,7 +727,7 @@ object ExpansionBatch17 {
                 "Llanite is found in only one place on Earth: Llano County, Texas.",
                 "The distinctive blue quartz is caused by microscopic ilmenite inclusions.",
                 "It is the official rock of Llano County, Texas.",
-                "The blue quartz phenocrysts can be up to 2 cm across."
+                "The blue quartz phenocrysts can be up to 0.8 inches across."
             ),
             uses = "Decorative stone, collector specimens, cabochons, architectural stone.",
             rarity = "Rare"
@@ -907,7 +907,7 @@ object ExpansionBatch17 {
             tagline = "Golden volcanic glass threads — named after the Hawaiian goddess of volcanoes.",
             emoji = "💛",
             colorHex = 0xFFDAA520,
-            description = "Pele's Hair is a form of volcanic glass that consists of thin, golden, hair-like strands of basaltic glass. It forms when lava is thrown into the air and wind stretches the molten material into fine threads. Named after Pele, the Hawaiian goddess of volcanoes. The strands can be up to 2 meters long and are extremely delicate.",
+            description = "Pele's Hair is a form of volcanic glass that consists of thin, golden, hair-like strands of basaltic glass. It forms when lava is thrown into the air and wind stretches the molten material into fine threads. Named after Pele, the Hawaiian goddess of volcanoes. The strands can be up to 6.5 feet long and are extremely delicate.",
             formation = "Forms when molten lava is ejected into the air and strong winds stretch the droplets into fine, hair-like threads of glass. Common at lava fountains and ocean entries.",
             hardness = "5–5.5",
             luster = "Vitreous (glassy)",
@@ -918,7 +918,7 @@ object ExpansionBatch17 {
             whereFound = listOf("Hawaii, USA", "Iceland", "Ethiopia", "Italy (Etna)", "Nicaragua"),
             funFacts = listOf(
                 "Named after Pele, the Hawaiian goddess of fire, lightning, and volcanoes.",
-                "The hair-like strands can be up to 2 meters (6 feet) long.",
+                "The hair-like strands can be up to 6 feet long.",
                 "It forms when wind stretches molten lava droplets into fine glass threads.",
                 "Pele's Hair is extremely fragile and can be harmful if inhaled or touched.",
                 "It is the volcanic equivalent of fiberglass."

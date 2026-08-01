@@ -37,7 +37,7 @@ object ImpactGlassSpecimens {
             emoji = "\uD83D\uDFE2",
             colorHex = 0xFF4A6B3A,
             description = "Moldavite is a forest-green to olive-green natural glass formed when a massive meteorite struck southern Germany 15 million years ago, melting the local rock and blasting molten glass across central Europe. Its deeply etched, sculpted surface texture is unmistakable — no two pieces are alike. Moldavite is the only tektite used as a gemstone. Rarity: Rare (finite resource).",
-            formation = "About 15 million years ago, a meteorite struck the Ries crater in Bavaria, Germany. The impact was so violent that it melted the local sandstone, blasting molten silica glass hundreds of kilometers across what is now the Czech Republic, Germany, and Austria. The glass cooled while flying through the air, acquiring its characteristic deeply etched, sculpted form.",
+            formation = "About 15 million years ago, a meteorite struck the Ries crater in Bavaria, Germany. The impact was so violent that it melted the local sandstone, blasting molten silica glass hundreds of miles across what is now the Czech Republic, Germany, and Austria. The glass cooled while flying through the air, acquiring its characteristic deeply etched, sculpted form.",
             hardness = "5.5–6",
             luster = "Vitreous",
             streak = "White",

@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.rork.rockscout.data.PlanetData
+import kotlin.math.roundToInt
 import com.rork.rockscout.data.PlanetEntry
 import com.rork.rockscout.ui.components.TwinklingStars
 import com.rork.rockscout.ui.components.ScreenScaffold
@@ -205,12 +206,12 @@ private fun PlanetDetailDialog(planet: PlanetEntry, onDismiss: () -> Unit) {
                 )
                 Spacer(Modifier.height(12.dp))
 
-                PlanetProperty("Diameter", "${"%,d".format(planet.diameterKm)} km")
+                PlanetProperty("Diameter", "${"%,d".format((planet.diameterKm * 0.621371).roundToInt())} miles")
                 PlanetProperty("Distance from Sun", "${planet.distanceFromSunAu} AU")
                 PlanetProperty("Orbital Period", "${String.format("%.1f", planet.orbitalPeriodDays)} days")
                 PlanetProperty("Moons", planet.moons.toString())
                 PlanetProperty("Mass", "${planet.massEarth}× Earth")
-                PlanetProperty("Gravity", "${planet.gravityMs2} m/s²")
+                PlanetProperty("Gravity", "${"%.1f".format(planet.gravityMs2 * 3.28084)} ft/s²")
                 PlanetProperty("Temperature", planet.tempRangeC + " °C")
                 PlanetProperty("Atmosphere", planet.atmosphere)
                 PlanetProperty("Best Viewing", planet.bestViewing)

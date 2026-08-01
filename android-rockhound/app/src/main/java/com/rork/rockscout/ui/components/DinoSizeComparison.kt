@@ -25,16 +25,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import com.rork.rockscout.data.DinoEntry
+import com.rork.rockscout.data.DinoImageMap
 import kotlin.math.sqrt
 
 /**
- * Size comparison visualization showing the dinosaur silhouette next to a 1.7m (5'7") human.
- * Silhouettes are scaled relative to each other using sqrt scaling so huge animals
+ * Size comparison visualization showing the dinosaur paleoart image next to a 5'7" human.
+ * The image is scaled relative to the human using sqrt scaling so huge animals
  * don't completely dwarf small ones.
  *
  * @param entry The dinosaur entry to compare
- * @param accentColor The accent color for the dinosaur silhouette
+ * @param accentColor The accent color for labels
  * @param modifier Layout modifier
  */
 @Composable
@@ -43,11 +46,12 @@ fun DinoSizeComparison(
     accentColor: Color,
     modifier: Modifier = Modifier,
 ) {
-    val dinoMeters = estimateLengthMeters(entry.length)
-    val humanMeters = 1.7f
-    val dinoVisual = scaleForDisplay(dinoMeters)
-    val humanVisual = scaleForDisplay(humanMeters)
+    val dinoFeet = estimateLengthFeet(entry.length)
+    val humanFeet = 5.6f
+    val dinoVisual = scaleForDisplay(dinoFeet)
+    val humanVisual = scaleForDisplay(humanFeet)
     val maxVisual = maxOf(dinoVisual, humanVisual)
+    val imageUrl = DinoImageMap.imageUrl(entry)
 
     Box(
         modifier = modifier
@@ -57,7 +61,7 @@ fun DinoSizeComparison(
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp),
+                .height(220.dp),
         ) {
             val w = size.width
             val h = size.height
@@ -71,7 +75,7 @@ fun DinoSizeComparison(
                 strokeWidth = 2f,
             )
 
-            // --- Human silhouette (left, ~20% width) ---
+            // --- Human silhouette (left, ~22% width) ---
             val humanPixelHeight = (humanVisual / maxVisual) * (h * 0.72f)
             drawHumanFigure(
                 centerX = w * 0.18f,
@@ -80,7 +84,7 @@ fun DinoSizeComparison(
                 color = Color(0xFF8899AA),
             )
 
-            // --- Dinosaur silhouette (right, ~60% area) ---
+            // --- Dinosaur silhouette outline (right, behind the image) ---
             val dinoPixelHeight = (dinoVisual / maxVisual) * (h * 0.78f)
             val dinoScale = dinoPixelHeight / 100f
             val dinoPath = Path().apply { fillType = PathFillType.EvenOdd }
@@ -94,10 +98,24 @@ fun DinoSizeComparison(
                 scale(dinoScale, dinoScale, pivot = Offset.Zero) {
                     drawPath(
                         path = dinoPath,
-                        color = accentColor.copy(alpha = 0.72f),
+                        color = accentColor.copy(alpha = 0.3f),
                     )
                 }
             }
+        }
+
+        // Paleoart image overlaid on the right side, clipped to the dino area
+        if (imageUrl != null) {
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = "${entry.name} size comparison",
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .fillMaxWidth(0.62f)
+                    .height(220.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Fit,
+            )
         }
 
         // Labels at the bottom
@@ -109,7 +127,7 @@ fun DinoSizeComparison(
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = "Human\n1.7 m",
+                text = "Human\n5'7\"",
                 color = Color(0xFF8899AA),
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Medium,
@@ -205,19 +223,22 @@ private fun buildDinoPath(bodyPlan: DinoBodyPlan, p: Path) {
     }
 }
 
-private fun estimateLengthMeters(length: String): Float {
-    val meterMatch = Regex("""\(([\d.]+)\s*m""").find(length)
-    if (meterMatch != null) {
-        return meterMatch.groupValues[1].toFloatOrNull() ?: 5f
-    }
+/**
+ * Extract the length in feet from strings like "40 ft", "10–20 ft", "23 ft wingspan".
+ */
+private fun estimateLengthFeet(length: String): Float {
     val feetMatch = Regex("""([\d.]+)\s*ft""").find(length)
     if (feetMatch != null) {
-        val feet = feetMatch.groupValues[1].toFloatOrNull() ?: 16f
-        return feet * 0.3048f
+        return feetMatch.groupValues[1].toFloatOrNull() ?: 16f
     }
-    return 5f
+    val inchMatch = Regex("""([\d.]+)\s*in""").find(length)
+    if (inchMatch != null) {
+        val inches = inchMatch.groupValues[1].toFloatOrNull() ?: 200f
+        return inches / 12f
+    }
+    return 16f
 }
 
-private fun scaleForDisplay(meters: Float): Float {
-    return sqrt(meters.coerceIn(0.5f, 50f))
+private fun scaleForDisplay(feet: Float): Float {
+    return sqrt(feet.coerceIn(0.5f, 200f))
 }

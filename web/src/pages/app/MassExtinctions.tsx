@@ -27,7 +27,7 @@ const EXTINCTIONS = [
     name: "Cretaceous-Paleogene",
     date: "~66 Mya",
     severity: "76% of species",
-    desc: "The asteroid impact that killed the non-avian dinosaurs. A 10 km asteroid struck the Yucatán Peninsula, causing global wildfires, a 'nuclear winter', and ocean acidification. The Chicxulub crater is the evidence.",
+    desc: "The asteroid impact that killed the non-avian dinosaurs. A 6-mile asteroid struck the Yucatán Peninsula, causing global wildfires, a 'nuclear winter', and ocean acidification. The Chicxulub crater is the evidence.",
   },
   {
     name: "Holocene (Ongoing)",

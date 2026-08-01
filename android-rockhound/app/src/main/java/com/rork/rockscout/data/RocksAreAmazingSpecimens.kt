@@ -772,7 +772,7 @@ object RocksAreAmazingSpecimens {
             commonColors = listOf("Pale yellow, orange, gray by day", "Brilliant sky-blue under SW UV", "Soft white-blue under LW UV"),
             whereFound = listOf("China (largest producer)", "South Korea", "Bolivia", "California, USA (Pine Creek Mine)", "Australia (King Island)"),
             funFacts = listOf(
-                "Scheelite fluorescence under shortwave UV is so bright it can be seen from meters away in the dark.",
+                "Scheelite fluorescence under shortwave UV is so bright it can be seen from several feet away in the dark.",
                 "Night prospecting with UV lamps for scheelite discovered tungsten deposits that supplied two World Wars.",
                 "Named after Carl Wilhelm Scheele, who discovered tungstic acid — the element tungsten itself comes from Swedish 'heavy stone'."
             ),
@@ -1260,7 +1260,7 @@ object RocksAreAmazingSpecimens {
             whereFound = listOf("Sahara Desert, Africa", "Florida, USA (sand beaches)", "Australia", "Michigan, USA"),
             funFacts = listOf(
                 "The word fulgurite comes from Latin 'fulgur' meaning lightning.",
-                "Some fulgurites can be several meters long — tracing the lightning deep into the ground.",
+                "Some fulgurites can be several feet long — tracing the lightning deep into the ground.",
                 "They are extremely fragile — most break during excavation."
             ),
             uses = "Scientific study, museum displays, unique collector specimens.",
@@ -1274,7 +1274,7 @@ object RocksAreAmazingSpecimens {
             tagline = "Delicate white needles radiating like frozen fireworks — zeolite crystals as fine as spun glass.",
             emoji = "\u2744\uFE0F",
             colorHex = 0xFFFFF8F0,
-            description = "Natrolite is a zeolite mineral that forms delicate, radiating sprays of needle-like white crystals — often resembling frozen fireworks, cotton puffs, or spun glass. The crystals can be several centimeters long but are hair-thin, making specimens incredibly fragile and visually breathtaking. Rarity: Uncommon (fine specimens rare).",
+            description = "Natrolite is a zeolite mineral that forms delicate, radiating sprays of needle-like white crystals — often resembling frozen fireworks, cotton puffs, or spun glass. The crystals can be several inches long but are hair-thin, making specimens incredibly fragile and visually breathtaking. Rarity: Uncommon (fine specimens rare).",
             formation = "Natrolite crystallizes in cavities within volcanic rocks (basalt), often associated with other zeolites. It's one of the last minerals to crystallize from hydrothermal fluids, growing as the solution chemistry and temperature change in the final stages of cavity filling.",
             hardness = "5–5.5",
             luster = "Vitreous to silky",
@@ -1284,7 +1284,7 @@ object RocksAreAmazingSpecimens {
             commonColors = listOf("White", "Colorless", "Pale yellow", "Pink"),
             whereFound = listOf("India (Maharashtra — world's finest)", "Oregon, USA", "Iceland", "Germany"),
             funFacts = listOf(
-                "The finest natrolite sprays from India have needles 10+ cm long — impossibly delicate.",
+                "The finest natrolite sprays from India have needles 4+ inches long — impossibly delicate.",
                 "It's a zeolite — a microporous mineral used industrially as molecular sieves.",
                 "Some specimens are so fragile they can't be touched — the needles shatter at contact."
             ),
@@ -1833,7 +1833,7 @@ object RocksAreAmazingSpecimens {
             tagline = "Chalcedony banding laced with thin sheets of metallic native copper — the legendary agate of Michigan's Keweenaw Peninsula.",
             emoji = "\uD83E\uDDF1",
             colorHex = 0xFFB87333,
-            description = "Copper-banded agates are among the rarest and most visually striking agates on Earth. Found exclusively along the Kearsarge copper-bearing amygdaloidal lode in Houghton County, Michigan, these small agates (typically 1–4 cm) display classic chalcedony banding in white, gray, and translucent layers — interrupted by thin, bright metallic bands of native copper running parallel to the agate layers. The copper was deposited from the same hydrothermal fluids that formed the famous Keweenaw native copper deposits, creating a natural marriage of silica and metal in a single stone.",
+            description = "Copper-banded agates are among the rarest and most visually striking agates on Earth. Found exclusively along the Kearsarge copper-bearing amygdaloidal lode in Houghton County, Michigan, these small agates (typically 0.4–1.6 inches) display classic chalcedony banding in white, gray, and translucent layers — interrupted by thin, bright metallic bands of native copper running parallel to the agate layers. The copper was deposited from the same hydrothermal fluids that formed the famous Keweenaw native copper deposits, creating a natural marriage of silica and metal in a single stone.",
             formation = "During the Mid-Proterozoic (~1.1 billion years ago), the Midcontinent Rift filled with thick sequences of flood basalts known as the Portage Lake Volcanics. Gas bubbles (amygdules) in the Kearsarge lava flow created cavities that were later filled by silica-rich groundwater, forming banded chalcedony agates. Simultaneously, copper-rich hydrothermal fluids — the same fluids that produced the world's largest native copper deposits — infiltrated some of these agates, depositing thin metallic copper bands between the chalcedony layers.",
             hardness = "7 (chalcedony), 2.5–3 (copper bands)",
             luster = "Vitreous (chalcedony), metallic (copper bands)",
@@ -1932,7 +1932,7 @@ object RocksAreAmazingSpecimens {
             tagline = "A practical field guide to finding your own space rocks.",
             emoji = "🔍", colorHex = 0xFF7A6B5A,
             description = "Meteorite hunting combines science, patience, and a good magnet. The best places to search are old, stable surfaces where meteorites can accumulate over thousands of years — deserts, dry lake beds, and Antarctic ice fields. A strong rare-earth magnet on a stick is your best field tool: iron and stony-iron meteorites will stick to it strongly, and even many chondrites are weakly magnetic.",
-            formation = "Meteorites fall everywhere on Earth at an equal rate — about 1 per square kilometer per thousand years. They accumulate where erosion is slow and surfaces are ancient and undisturbed.",
+            formation = "Meteorites fall everywhere on Earth at an equal rate — about 1 per square mile per thousand years. They accumulate where erosion is slow and surfaces are ancient and undisturbed.",
             hardness = "—", luster = "—", streak = "—", crystalSystem = "—",
             chemicalFormula = "—",
             commonColors = listOf("Black to brown fusion crust", "Rusty exterior (old falls)"),
@@ -1984,7 +1984,7 @@ object RocksAreAmazingSpecimens {
             commonColors = listOf("Brown", "Gray", "Reddish-brown", "Tan", "Black", "Rust orange"),
             whereFound = listOf("Sedimentary rocks worldwide", "Beaches and riverbeds", "Deserts", "Shale and sandstone formations", "Glacial lake clays", "Coal measures"),
             funFacts = listOf(
-                "The largest known concretions are several meters across — some cannonball concretions in North Dakota are bigger than a person.",
+                "The largest known concretions are several feet across — some cannonball concretions in North Dakota are bigger than a person.",
                 "Mazon Creek concretions in Illinois preserve some of the world's finest fossils, including soft-bodied organisms rarely found elsewhere.",
                 "Moqui marbles are iron concretions found in Utah's Navajo Sandstone — some have a hollow core filled with loose sand.",
                 "Septarian nodules are called 'lightning stones' because their crack-filled calcite veins look like frozen lightning bolts.",

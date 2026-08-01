@@ -503,7 +503,7 @@ fun AuroraScreen(navController: NavController) {
                             Column {
                                 Text("Wind Speed", style = MaterialTheme.typography.labelMedium, color = TextLow)
                                 Text(
-                                    text = "${w.speedKms.roundToInt()} km/s",
+                                    text = "${(w.speedKms * 0.621371).roundToInt()} mi/s",
                                     style = MaterialTheme.typography.titleLarge,
                                     color = speedColor(w.speedKms),
                                     fontWeight = FontWeight.Bold,
@@ -512,7 +512,7 @@ fun AuroraScreen(navController: NavController) {
                             Column(horizontalAlignment = Alignment.End) {
                                 Text("Density", style = MaterialTheme.typography.labelMedium, color = TextLow)
                                 Text(
-                                    text = "${w.density.roundToInt()} p/cm³",
+                                    text = "${w.density.roundToInt()} p/in³",
                                     style = MaterialTheme.typography.titleLarge,
                                     color = TextHigh,
                                     fontWeight = FontWeight.Bold,

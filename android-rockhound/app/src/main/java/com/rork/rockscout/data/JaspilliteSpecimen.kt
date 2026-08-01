@@ -29,7 +29,7 @@ object JaspilliteSpecimen {
                 "Jaspillite is essentially a BIF that decided to be beautiful — its red jasper bands make it a favorite lapidary and decorative stone.",
                 "The famous Jasper Hill locality in Ishpeming, Michigan, is where many collectors first encounter jaspillite in the field.",
                 "BIFs are the world's most important iron ore source, but jaspillite is often valued as much for its appearance as for its iron content.",
-                "The alternating red and dark bands can be millimeters to centimeters thick and are usually continuous across large outcrops.",
+                "The alternating red and dark bands can be fractions of an inch to inches thick and are usually continuous across large outcrops.",
                 "Polished jaspillite slabs are used for bookends, display pieces, and jewelry because of their striking contrast."
             ),
             uses = "Iron ore, decorative stone, lapidary slabs, bookends, geological research into early Earth's oxygen history.",

@@ -27,7 +27,7 @@ object ExpansionBatch21 {
             chemicalFormula = "CaCO₃",
             commonColors = listOf("Cream", "Tan", "Gray", "White"),
             whereFound = listOf("Texas, USA", "Oklahoma, USA", "Mexico", "France"),
-            funFacts = listOf("Foraminifera fossils are used as index fossils to date Cretaceous rocks.", "Orbitolina discs can be several millimeters across — giant for a single-celled organism.", "Petroleum geologists study these to locate oil-bearing limestone reservoirs."),
+            funFacts = listOf("Foraminifera fossils are used as index fossils to date Cretaceous rocks.", "Orbitolina discs can be a fraction of an inch across — giant for a single-celled organism.", "Petroleum geologists study these to locate oil-bearing limestone reservoirs."),
             uses = "Biostratigraphy, geological dating, oil exploration markers.",
             rarity = "Common",
             geologicalPeriod = "Cretaceous",

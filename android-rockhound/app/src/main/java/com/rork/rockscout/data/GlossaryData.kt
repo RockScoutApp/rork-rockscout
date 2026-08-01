@@ -65,7 +65,7 @@ val GLOSSARY_ENTRIES: List<GlossaryEntry> = listOf(
     GlossaryEntry("Bz", GlossaryCategory.AURORA_SPACE, "The north–south component of the interplanetary magnetic field. When Bz points south (negative), it connects with Earth's field and lets solar energy in — triggering aurora."),
     GlossaryEntry("CME (Coronal Mass Ejection)", GlossaryCategory.AURORA_SPACE, "A massive burst of solar plasma and magnetic field hurled from the Sun. When one hits Earth, it can trigger a geomagnetic storm and widespread aurora."),
     GlossaryEntry("Coronal hole", GlossaryCategory.AURORA_SPACE, "A dark patch on the Sun where the magnetic field opens into space, letting high-speed solar wind escape. A common, steady source of aurora activity."),
-    GlossaryEntry("F10.7", GlossaryCategory.AURORA_SPACE, "A measure of solar radio flux at 10.7 cm wavelength — a proxy for overall solar activity. Higher values mean more energy available for aurora."),
+    GlossaryEntry("F10.7", GlossaryCategory.AURORA_SPACE, "A measure of solar radio flux at 10.7-centimeter wavelength — a proxy for overall solar activity. Higher values mean more energy available for aurora."),
     GlossaryEntry("Flare class (A/B/C/M/X)", GlossaryCategory.AURORA_SPACE, "Solar flare strength categories, weakest to strongest: A, B, C, M, X. Each class is 10× the one before it. M and X flares can drive major aurora."),
     GlossaryEntry("Geomagnetic storm (G1–G5)", GlossaryCategory.AURORA_SPACE, "NOAA's 5-level storm scale: G1 minor, G2 moderate, G3 strong, G4 severe, G5 extreme. Higher levels push the aurora oval farther south."),
     GlossaryEntry("Ionosphere", GlossaryCategory.AURORA_SPACE, "The upper layer of Earth's atmosphere where solar particles excite atoms and create the glowing aurora."),

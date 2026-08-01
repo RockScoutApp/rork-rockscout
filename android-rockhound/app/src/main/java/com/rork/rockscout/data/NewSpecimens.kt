@@ -35,7 +35,7 @@ object NewSpecimens {
             crystalSystem = "Microcrystalline", chemicalFormula = "SiO₂ (with Fe, Mn)",
             commonColors = listOf("Tan and brown", "Amber and cream", "Warm earth tones", "Translucent honey"),
             whereFound = listOf("Dead Sea region, Israel/Jordan", "Judean Desert", "Jordan Rift Valley"),
-            funFacts = listOf("Found near the lowest point on Earth — over 430 meters below sea level.", "The Dead Sea rift is one of Earth's most active geological features.", "The warm colors reflect the iron-rich desert geology of the region."),
+            funFacts = listOf("Found near the lowest point on Earth — over 1,410 feet below sea level.", "The Dead Sea rift is one of Earth's most active geological features.", "The warm colors reflect the iron-rich desert geology of the region."),
             uses = "Jewelry, cabochons, collector specimens, desert lapidary art.",
             rarity = "Rare",
         ),

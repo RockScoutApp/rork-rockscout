@@ -62,7 +62,7 @@ object MeteoriteSpecimens {
             category = "Meteorite — Stony (Chondrite)",
             tagline = "The most common meteorite — contains the oldest solids in the solar system.",
             emoji = "\uD83E\uDE90", colorHex = 0xFF6B6B63,
-            description = "Chondrites are stony meteorites containing chondrules — millimeter-sized spherical droplets that formed in the solar nebula 4.56 billion years ago. These are the most primitive objects in the solar system, essentially unchanged since they first condensed from the primordial dust cloud. Rarity: Uncommon (most abundant meteorite type).",
+            description = "Chondrites are stony meteorites containing chondrules — tiny spherical droplets that formed in the solar nebula 4.56 billion years ago. These are the most primitive objects in the solar system, essentially unchanged since they first condensed from the primordial dust cloud. Rarity: Uncommon (most abundant meteorite type).",
             formation = "Formed from the accretion of dust and chondrules in the early solar nebula. Never melted or differentiated — they preserve the solar system's original building blocks.",
             hardness = "Varies (silicate minerals)",
             luster = "Dull to submetallic (metal flecks visible on cut face)",

@@ -290,7 +290,7 @@ object ArtifactSpecimens {
             description = "The Palmer point is a small, finely serrated Early Archaic corner-notched point. Often less than an inch long, it is one of the smallest recognized point types — possibly used for small game or as an arrow tip in the earliest days of bow use.",
             howMade = "Knapped from caramel-colored chert on a tiny flake. The serrations and notches were created with fine pressure flaking — working at this scale required a steady hand and a sharp antler tine.",
             funFacts = listOf(
-                "Some Palmer points are barely 1.5 cm long — true micro-artifacts.",
+                "Some Palmer points are barely 0.6 inches long — true micro-artifacts.",
                 "They may represent the transition from atlatl darts to arrows.",
                 "Their small size makes them easy to miss in excavation — many are found in screened dirt.",
             ),
@@ -437,7 +437,7 @@ object ArtifactSpecimens {
             description = "The atlatl dart point is a broad, heavy lanceolate point mounted on a long dart thrown with an atlatl (spear-thrower). The atlatl acted as a lever, doubling the dart's range and force — these points hit with enough energy to penetrate deep into large game.",
             howMade = "Knapped from mottled gray chert with cream inclusions using collateral percussion flaking. The broad blade provided a wide cutting surface, and the concave base was ground for a secure haft onto the dart foreshaft.",
             funFacts = listOf(
-                "An atlatl dart can fly over 100 meters — further than most bows.",
+                "An atlatl dart can fly over 330 feet — further than most bows.",
                 "The dart's flexibility stored energy on release, adding speed.",
                 "These points are found embedded in bison and deer bones at kill sites.",
             ),
@@ -1270,7 +1270,7 @@ object ArtifactSpecimens {
             howMade = "Made on a small flake with a projecting spur created by notch-and-flake technique. The spur was the engraving point — sharp enough to scribe hair-thin lines.",
             funFacts = listOf(
                 "Gravers were used to engrave the decoration on Mississippian shell gorgets.",
-                "Some graver spalls are barely 1 cm long — true micro-tools.",
+                "Some graver spalls are barely 0.4 inches long — true micro-tools.",
                 "The spur is fragile — most gravers are found with broken tips.",
             ),
             tribe = "Paleoindian / Woodland / Various",
@@ -2198,7 +2198,7 @@ object ArtifactSpecimens {
             funFacts = listOf(
                 "The atlatl predates the bow and arrow by thousands of years.",
                 "Some atlatls had stone or shell weights attached — possibly for balance or ceremony.",
-                "Atlatl darts could fly over 100 meters — further than most bows.",
+                "Atlatl darts could fly over 330 feet — further than most bows.",
             ),
             tribe = "Archaic / Great Basin (various)",
             timePeriod = "Paleoindian–Archaic · 10,000 BCE onward",

@@ -726,7 +726,7 @@ object InternationalLocations {
             website = null,
             phone = null,
             difficulty = "Moderate", publicAccess = false,
-            tips = "The Jeffrey Mine produced some of the world's largest quartz crystals — over 1 meter long. The old mine dumps still yield transparent quartz and occasional pink spodumene.",
+            tips = "The Jeffrey Mine produced some of the world's largest quartz crystals — over 3 feet long. The old mine dumps still yield transparent quartz and occasional pink spodumene.",
         ),
         DigLocation(
             id = "int-vancouver-island-quartz",
