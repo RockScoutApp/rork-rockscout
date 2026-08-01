@@ -14,6 +14,18 @@ interface TierState {
   isLoading: boolean;
 }
 
+/**
+ * Safe fallback returned when useTier() is called outside TierProvider.
+ * Without this, useContext returns undefined and any destructure like
+ * `const { isPremium } = useTier()` crashes the entire React tree.
+ */
+const DEFAULT_TIER_STATE: TierState = {
+  tier: "free",
+  isPremium: false,
+  isFree: true,
+  isLoading: false,
+};
+
 function useTierState(): TierState {
   const { user, session, isLoading: authLoading } = useAuth();
 
@@ -45,4 +57,4 @@ function useTierState(): TierState {
   };
 }
 
-export const [TierProvider, useTier] = createContextHook(useTierState);
+export const [TierProvider, useTier] = createContextHook(useTierState, DEFAULT_TIER_STATE);

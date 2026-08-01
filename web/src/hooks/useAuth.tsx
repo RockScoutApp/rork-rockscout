@@ -38,6 +38,26 @@ interface AuthState {
   clearError: () => void;
 }
 
+/**
+ * Safe fallback returned when useAuth() is called outside AuthProvider.
+ * Without this, useContext returns undefined and destructuring properties
+ * from it crashes the React tree with a TypeError.
+ */
+const DEFAULT_AUTH_STATE: AuthState = {
+  session: null,
+  user: null,
+  isLoading: true,
+  error: null,
+  premiumConfirmedAt: null,
+  isPremiumConfirmed: false,
+  setPremiumConfirmed: () => {},
+  clearPremiumConfirmation: () => {},
+  signUp: async () => { throw new Error("AuthProvider not mounted"); },
+  signIn: async () => { throw new Error("AuthProvider not mounted"); },
+  signOut: async () => {},
+  clearError: () => {},
+};
+
 function useAuthState() {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(!SCREENSHOT_MODE);
