@@ -237,7 +237,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     title: "Stars & Constellations — Night Sky Guide",
     shortLabel: "Night Sky",
     steps: [
-      `From the Aurora Forecaster, tap the "Night Sky Guide" card to open the Stars & Constellations landing page.`,
+      `Tap the "Explore the Stars" tile on the home screen to open the Stars & Constellations landing page.`,
       `Four clickable tiles lead to detailed astronomical info: Constellations, Important Stars, Planets, and Deep Sky Objects.`,
       `Constellations: browse all 88 IAU constellations organized by hemisphere. Tap any constellation for a programmatic star chart drawn with Canvas, mythology/lore, best viewing season, and its major stars with magnitudes. The 12 most famous constellations include hero images.`,
       `Important Stars: explore ~30 notable stars — Sirius, Betelgeuse, Vega, Polaris, Rigel, and more. Tap any star for its spectral class, temperature, luminosity, distance, and visibility info. The 6 most iconic stars include hero images.`,

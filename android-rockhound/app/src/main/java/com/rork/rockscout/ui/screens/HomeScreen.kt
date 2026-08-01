@@ -496,6 +496,8 @@ fun HomeScreen(navController: NavController) {
             "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/ca44cafb-2e4f-4d3b-9334-174ceedf713b.png"),
         HomeTile("Natural Wonders", "World-famous geological sites & what to find there", Icons.Filled.Public, Color(0xFF1B3A4B), Routes.NATURAL_WONDERS,
             NATURAL_WONDERS_TILE_WAVE),
+        HomeTile("Explore the Stars", "88 constellations, stars, planets & deep sky objects", Icons.Filled.Star, Color(0xFF00E5C9), Routes.STARS_LANDING,
+            "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/923312d6-4c0c-4855-8e00-827426991a2f.png"),
     )
 
     // Field-guide tiles live in the field kit grid (same square format as the
@@ -4584,8 +4586,8 @@ private val fellowRockScoutsFeatures: List<FeatureEntry> = listOf(
     ),
     FeatureEntry(
         10,
-        "Aurora Forecaster & Stars & Constellations",
-        "your personal space weather station and night sky guide! The Aurora Forecaster shows real-time Kp index, Bz value, solar wind speed, and visibility status with colorful northern lights theming. View 24-hour Kp and 7-day F10.7 trend charts, a 3-day forecast, and active sunspot regions with tappable detail views showing magnetic evolution history and educational content. Save custom coordinates as aurora watching spots and track visibility at each one on a pin-drop map. Set a custom Kp notification threshold and get push alerts when aurora may be visible — then share your Kp status straight to social media. Plus a Stars & Constellations guide with clickable tiles for all 88 constellations (with programmatic star charts), 30+ important stars, all 8 planets plus dwarf planets, and 40+ deep sky objects — each with hero images, detailed data, and animated twinkling white stars in every page background",
+        "Aurora Forecaster & Explore the Stars",
+        "your personal space weather station and night sky guide! The Aurora Forecaster shows real-time Kp index, Bz value, solar wind speed, and visibility status with colorful northern lights theming. View 24-hour Kp and 7-day F10.7 trend charts, a 3-day forecast, and active sunspot regions with tappable detail views showing magnetic evolution history and educational content. Save custom coordinates as aurora watching spots and track visibility at each one on a pin-drop map. Set a custom Kp notification threshold and get push alerts when aurora may be visible — then share your Kp status straight to social media. The Explore the Stars tile in the Explore & Learn section is a standalone night sky guide with clickable tiles for all 88 constellations (with programmatic star charts), 30+ important stars, all 8 planets plus dwarf planets, and 40+ deep sky objects — each with hero images, detailed data, and animated twinkling white stars in every page background",
     ),
     FeatureEntry(
         11,

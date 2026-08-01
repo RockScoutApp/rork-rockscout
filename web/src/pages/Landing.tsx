@@ -603,7 +603,7 @@ const FEATURES_LIST = [
   {
     icon: Star,
     title: "Stars & Constellations",
-    desc: "A complete night sky guide inside the Aurora tab — all 88 IAU constellations with programmatic star charts, 30+ important stars with spectral data, all 8 planets plus dwarf planets, and 40+ deep sky objects (galaxies, nebulae, star clusters). Every page features animated twinkling white stars in the background and generated hero images for the most famous objects.",
+    desc: "A complete night sky guide — all 88 IAU constellations with programmatic star charts, 30+ important stars with spectral data, all 8 planets plus dwarf planets, and 40+ deep sky objects (galaxies, nebulae, star clusters). Every page features animated twinkling white stars in the background and generated hero images for the most famous objects.",
     items: ["88 constellations", "Star charts", "30+ stars", "10 planets", "40+ deep sky objects", "Twinkling stars bg"],
   },
   {

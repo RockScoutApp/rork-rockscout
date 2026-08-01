@@ -1127,33 +1127,6 @@ fun AuroraScreen(navController: NavController) {
                 onHeaderClick = { /* Opens the full-screen Saved Spots map from inside the component. */ },
             )
 
-            // ─── Night Sky Guide Card ───
-            AuroraCard(title = "Night Sky Guide", accent = AuroraGreen) {
-                Text(
-                    text = "Explore the wonders above — constellations, important stars, planets, and deep sky objects.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextMid,
-                )
-                Spacer(Modifier.height(12.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(AuroraGreen.copy(alpha = 0.15f))
-                        .border(1.dp, AuroraGreen.copy(alpha = 0.4f), RoundedCornerShape(12.dp))
-                        .clickable { navController.navigate(Routes.STARS_LANDING) }
-                        .padding(14.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "✨ Explore Stars & Constellations",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = AuroraGreen,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            }
-
             Spacer(Modifier.height(40.dp))
         }
     }

@@ -78,7 +78,7 @@ const FAQ = [
   },
   {
     q: "What is the Stars & Constellations guide?",
-    a: "Accessible from the Aurora Forecaster's Night Sky Guide card, this is a complete astronomy reference with all 88 IAU constellations (including programmatic star charts), 30+ important stars with spectral data, all 8 planets plus dwarf planets, and 40+ deep sky objects (galaxies, nebulae, star clusters). Every page features animated twinkling white stars in the background.",
+    a: "Accessible from the Explore the Stars tile on the home screen, this is a complete astronomy reference with all 88 IAU constellations (including programmatic star charts), 30+ important stars with spectral data, all 8 planets plus dwarf planets, and 40+ deep sky objects (galaxies, nebulae, star clusters). Every page features animated twinkling white stars in the background.",
   },
   {
     q: "Can I plan trips with the Trip Planner and Calendar?",
