@@ -71,7 +71,6 @@ import AllAchievements from "./pages/app/AllAchievements";
 import InAppHowToUse from "./pages/app/InAppHowToUse";
 import ContactUs from "./pages/app/ContactUs";
 import TokenInfo from "./pages/app/TokenInfo";
-import Narrator from "./pages/app/Narrator";
 import ThankYou from "./pages/app/ThankYou";
 import Search from "./pages/app/Search";
 import CommunityPostDetail from "./pages/app/CommunityPostDetail";
@@ -221,7 +220,6 @@ const App = () => (
           <Route path="how-to-use" element={<PremiumGate routePath="how-to-use"><InAppHowToUse /></PremiumGate>} />
           <Route path="contact" element={<PremiumGate routePath="contact"><ContactUs /></PremiumGate>} />
           <Route path="token-info" element={<PremiumGate routePath="token-info"><TokenInfo /></PremiumGate>} />
-          <Route path="narrator" element={<PremiumGate routePath="narrator"><Narrator /></PremiumGate>} />
           <Route path="thank-you/:tokens/:days" element={<ThankYou />} />
           <Route path="search" element={<PremiumGate routePath="search"><Search /></PremiumGate>} />
           <Route path="community/:postId" element={<PremiumGate routePath="community/:postId"><CommunityPostDetail /></PremiumGate>} />

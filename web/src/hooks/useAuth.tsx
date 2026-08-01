@@ -6,7 +6,7 @@ import { syncEntitlement } from "@/lib/entitlement";
 
 /**
  * Local capture mode. Enabled ONLY by running the dev server with
- * `VITE_SCREENSHOT_MODE=1` for tutorial-video screenshot capture. It is never
+ * `VITE_SCREENSHOT_MODE=1` for automated screenshot capture. It is never
  * set in production builds, where the flag inlines as `undefined`.
  */
 export const SCREENSHOT_MODE: boolean =

@@ -19,13 +19,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import com.rork.rockscout.data.LocationRefresher
 import com.rork.rockscout.data.UpdateManager
 import com.rork.rockscout.data.WorkScheduler
-import com.rork.rockscout.ui.components.FloatingVideoPlayer
-import com.rork.rockscout.ui.components.LocalVideoPlayerState
-import com.rork.rockscout.ui.components.VideoPlayerState
 import com.rork.rockscout.ui.navigation.AppNavigation
 import com.rork.rockscout.ui.screens.SplashScreen
 import com.rork.rockscout.ui.theme.AppTheme
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 
 class MainActivity : ComponentActivity() {
@@ -55,16 +51,10 @@ class MainActivity : ComponentActivity() {
                         onFinished = { showSplash.value = false },
                     )
                 } else {
-                    val videoPlayerState = remember { VideoPlayerState() }
-                    CompositionLocalProvider(LocalVideoPlayerState provides videoPlayerState) {
-                        Box {
-                            AppNavigation(
-                                deepLinkUri = deepLinkState.value,
-                                onDeepLinkConsumed = { deepLinkState.value = null },
-                            )
-                            FloatingVideoPlayer(state = videoPlayerState)
-                        }
-                    }
+                    AppNavigation(
+                        deepLinkUri = deepLinkState.value,
+                        onDeepLinkConsumed = { deepLinkState.value = null },
+                    )
                 }
             }
         }

@@ -247,7 +247,6 @@ import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.TextMid
 import com.rork.rockscout.ui.components.profileBorderColor
 import com.rork.rockscout.ui.components.statusAccent
-import com.rork.rockscout.ui.components.LocalVideoPlayerState
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.screens.AURORA_TILE_BG_URL
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -267,7 +266,6 @@ private data class HomeTile(
 
 @Composable
 fun HomeScreen(navController: NavController) {
-    val videoPlayerState = LocalVideoPlayerState.current
     val repo = AppRepository.instance
     val profile by repo.profile.collectAsStateWithLifecycle()
     val collection by repo.collection.collectAsStateWithLifecycle()
@@ -583,9 +581,6 @@ fun HomeScreen(navController: NavController) {
                     onNoteClick = { showFellowRockScoutsNote = true },
                     onHowToUseClick = { navController.navigate(Routes.HOW_TO_USE) },
                     onContactUsClick = { navController.navigate(Routes.CONTACT_US) },
-                    onTutorialClick = {
-                        videoPlayerState?.showFullscreen()
-                    },
                 )
             }
             item {
@@ -1366,7 +1361,6 @@ private fun HomeTagline(
     onNoteClick: () -> Unit,
     onHowToUseClick: () -> Unit = {},
     onContactUsClick: () -> Unit = {},
-    onTutorialClick: () -> Unit = {},
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -1392,11 +1386,6 @@ private fun HomeTagline(
         // Note to Fellow RockScouts button below the pills
         NoteToFellowRockScoutsButton(
             onClick = onNoteClick,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        // Tutorial Video button below the creator note
-        TutorialVideoPillButton(
-            onClick = onTutorialClick,
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -4414,44 +4403,6 @@ private fun HowToUsePillButton(
         )
         Text(
             text = "How to Use",
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = FontWeight.Bold,
-                color = Citrine,
-            ),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    }
-}
-
-@Composable
-private fun TutorialVideoPillButton(
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = modifier
-            .sculpted(
-                shape = RoundedCornerShape(16.dp),
-                accent = Citrine,
-                shadowElevation = 5.dp,
-                onClick = onClick,
-            )
-            .clip(RoundedCornerShape(16.dp))
-            .background(Slate900.copy(alpha = 0.75f))
-            .glowingBorder(2.dp, Citrine, RoundedCornerShape(16.dp))
-            .padding(horizontal = 14.dp, vertical = 8.dp),
-    ) {
-        Icon(
-            imageVector = Icons.Filled.PlayCircle,
-            contentDescription = null,
-            tint = Citrine,
-            modifier = Modifier.size(20.dp),
-        )
-        Text(
-            text = "Watch Tutorial Video",
             style = MaterialTheme.typography.labelLarge.copy(
                 fontWeight = FontWeight.Bold,
                 color = Citrine,

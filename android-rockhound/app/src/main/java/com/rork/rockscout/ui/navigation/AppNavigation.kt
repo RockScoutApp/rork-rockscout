@@ -96,7 +96,6 @@ import com.rork.rockscout.ui.screens.BlmCampgroundDetailScreen
 import com.rork.rockscout.ui.screens.SocialSettingsScreen
 import com.rork.rockscout.ui.screens.NotificationsScreen
 import com.rork.rockscout.ui.screens.HowToUseScreen
-import com.rork.rockscout.ui.screens.NarratorScreen
 import com.rork.rockscout.ui.screens.ThankYouScreen
 import com.rork.rockscout.ui.screens.DisclaimerScreen
 import com.rork.rockscout.ui.screens.MineralCareGuideScreen
@@ -206,8 +205,6 @@ object Routes {
     const val ARTIFACTS = "artifacts"
     const val ARTIFACT_DETAIL = "artifact/{artifactId}"
     const val NATURAL_WONDERS = "natural_wonders"
-    const val NARRATOR = "narrator"
-
     // Stars & Constellations sub-screens
     const val STARS_LANDING = "stars_landing"
     const val CONSTELLATIONS = "constellations"
@@ -615,7 +612,6 @@ fun AppNavigation(
         composable(Routes.SOCIAL_SETTINGS) { SocialSettingsScreen(navController) }
         composable(Routes.NOTIFICATIONS) { NotificationsScreen(navController) }
         composable(Routes.HOW_TO_USE) { HowToUseScreen(navController) }
-        composable(Routes.NARRATOR) { NarratorScreen(navController) }
         composable(
             Routes.DISCLAIMER,
             arguments = listOf(navArgument("isGate") { type = NavType.BoolType }),

@@ -92,7 +92,6 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.NavController
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.SculptedIconButton
-import com.rork.rockscout.ui.components.LocalVideoPlayerState
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.theme.Amethyst
 import com.rork.rockscout.ui.theme.Aqua
@@ -990,7 +989,6 @@ fun HowToUseScreen(navController: NavController) {
     BackHandler { navController.popBackStack() }
 
     var selectedSectionIndex by remember { mutableIntStateOf(-1) }
-    val videoPlayerState = LocalVideoPlayerState.current
 
     // Pre-compute grouped sections by category
     val groupedSections = remember {
@@ -1007,34 +1005,6 @@ fun HowToUseScreen(navController: NavController) {
             ),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // Tutorial Video pill button at the very top
-            item {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Slate900.copy(alpha = 0.85f))
-                        .glowingBorder(2.dp, Citrine, RoundedCornerShape(16.dp))
-                        .clickable { videoPlayerState?.showFullscreen() }
-                        .padding(horizontal = 14.dp, vertical = 10.dp),
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.PlayCircle,
-                        contentDescription = null,
-                        tint = Citrine,
-                        modifier = Modifier.size(20.dp),
-                    )
-                    Text(
-                        text = "Watch Tutorial Video",
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = Citrine,
-                        ),
-                    )
-                }
-            }
             item {
                 // Header row with back button and title
                 Row(
