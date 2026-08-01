@@ -1,11 +1,6 @@
 package com.rork.rockscout.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -50,15 +44,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil3.compose.AsyncImage
 import com.rork.rockscout.data.DinoDictionary
 import com.rork.rockscout.data.DinoDiet
 import com.rork.rockscout.data.DinoEntry
 import com.rork.rockscout.data.DinoEra
+import com.rork.rockscout.data.DinoImageMap
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.DinoSilhouette
 import com.rork.rockscout.ui.components.ScreenScaffold
@@ -104,6 +101,7 @@ fun DinosaurDictionaryScreen(navController: NavController) {
     var debouncedQuery by remember { mutableStateOf("") }
     var selectedDiet by remember { mutableStateOf<DinoDiet?>(null) }
     var expandedEras by remember { mutableStateOf(setOf<DinoEra>()) }
+    var selectedEntry by remember { mutableStateOf<DinoEntry?>(null) }
 
     // Debounce search — wait 200ms after last keystroke
     LaunchedEffect(searchQuery) {
@@ -252,12 +250,7 @@ fun DinosaurDictionaryScreen(navController: NavController) {
                         DinoCard(
                             entry = entry,
                             eraColor = eraColor,
-                            onClick = {
-                                // Navigate to specimen detail if it exists in the catalog
-                                navController.navigate(
-                                    com.rork.rockscout.ui.navigation.Routes.specimen(entry.id)
-                                )
-                            },
+                            onClick = { selectedEntry = entry },
                         )
                     }
                 }
@@ -294,6 +287,14 @@ fun DinosaurDictionaryScreen(navController: NavController) {
                 }
             }
         }
+    }
+
+    // Full-page detail popup
+    selectedEntry?.let { entry ->
+        DinoDetailSheet(
+            entry = entry,
+            onDismiss = { selectedEntry = null },
+        )
     }
 }
 
@@ -383,14 +384,17 @@ private fun DinoCard(
 ) {
     val silhouetteColor = Color(entry.accentColor)
     val dietColor = dietColors[entry.diet] ?: eraColor
+    val imageUrl = DinoImageMap.imageUrl(entry)
 
     DarkCard(
         accent = eraColor,
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(0.dp),
     ) {
-        Column {
-            // Silhouette hero area
+        Column(
+            modifier = Modifier.clickable(onClick = onClick),
+        ) {
+            // Paleoart image hero area
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -399,16 +403,37 @@ private fun DinoCard(
                         Brush.radialGradient(
                             listOf(silhouetteColor.copy(alpha = 0.22f), Color(0xFF1A1812)),
                         )
-                    )
-                    .clickable(onClick = onClick),
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
-                DinoSilhouette(
-                    bodyPlan = entry.bodyPlan,
-                    color = silhouetteColor.copy(alpha = 0.85f),
+                if (imageUrl != null) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = "${entry.name} illustration",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                } else {
+                    // Fallback to silhouette if no image
+                    DinoSilhouette(
+                        bodyPlan = entry.bodyPlan,
+                        color = silhouetteColor.copy(alpha = 0.85f),
+                        modifier = Modifier
+                            .fillMaxWidth(0.75f)
+                            .aspectRatio(1.8f),
+                    )
+                }
+                // Gradient overlay for text readability at bottom
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.75f)
-                        .aspectRatio(1.8f),
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                0f to Color.Transparent,
+                                0.6f to Color.Transparent,
+                                1f to Color.Black.copy(alpha = 0.4f),
+                            )
+                        )
                 )
                 // Diet badge in corner
                 Box(
@@ -416,7 +441,7 @@ private fun DinoCard(
                         .align(Alignment.TopEnd)
                         .padding(8.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(dietColor.copy(alpha = 0.7f))
+                        .background(dietColor.copy(alpha = 0.75f))
                         .padding(horizontal = 8.dp, vertical = 3.dp),
                 ) {
                     Text(

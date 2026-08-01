@@ -118,7 +118,7 @@ fun DinoSilhouette(
 // All paths in 100x100 coordinate space, side profile facing right.
 
 /** T. rex, Giganotosaurus, Allosaurus — massive bipedal carnivore */
-private fun buildTheropodLarge(p: Path) {
+internal fun buildTheropodLarge(p: Path) {
     p.moveTo(8f, 52f)   // tail tip
     p.cubicTo(20f, 46f, 30f, 42f, 38f, 40f)   // tail top
     p.cubicTo(42f, 30f, 50f, 26f, 58f, 25f)   // back rising
@@ -150,7 +150,7 @@ private fun buildTheropodLarge(p: Path) {
 }
 
 /** Velociraptor, Compsognathus — slim running predator */
-private fun buildTheropodSmall(p: Path) {
+internal fun buildTheropodSmall(p: Path) {
     p.moveTo(6f, 48f)   // tail tip
     p.cubicTo(18f, 44f, 30f, 40f, 38f, 38f)   // tail
     p.cubicTo(44f, 32f, 50f, 28f, 56f, 26f)   // back
@@ -180,7 +180,7 @@ private fun buildTheropodSmall(p: Path) {
 }
 
 /** Brachiosaurus, Diplodocus — long-necked giant */
-private fun buildSauropod(p: Path) {
+internal fun buildSauropod(p: Path) {
     // tail
     p.moveTo(4f, 55f)
     p.cubicTo(12f, 52f, 20f, 50f, 26f, 48f)
@@ -222,7 +222,7 @@ private fun buildSauropod(p: Path) {
 }
 
 /** Triceratops, Styracosaurus — horned frilled quadruped */
-private fun buildCeratopsian(p: Path) {
+internal fun buildCeratopsian(p: Path) {
     // tail
     p.moveTo(8f, 55f)
     p.cubicTo(16f, 52f, 22f, 50f, 28f, 48f)
@@ -267,7 +267,7 @@ private fun buildCeratopsian(p: Path) {
 }
 
 /** Stegosaurus — plates along back, spiked tail */
-private fun buildStegosaur(p: Path) {
+internal fun buildStegosaur(p: Path) {
     // tail with spikes (thagomizer)
     p.moveTo(4f, 50f)
     p.lineTo(8f, 44f)   // tail spike
@@ -322,7 +322,7 @@ private fun buildStegosaur(p: Path) {
 }
 
 /** Ankylosaurus — armored low body, tail club */
-private fun buildAnkylosaur(p: Path) {
+internal fun buildAnkylosaur(p: Path) {
     // tail club
     p.moveTo(4f, 55f)
     p.cubicTo(8f, 50f, 14f, 48f, 16f, 52f)   // club
@@ -365,7 +365,7 @@ private fun buildAnkylosaur(p: Path) {
 }
 
 /** Parasaurolophus, Iguanodon — bipedal herbivore */
-private fun buildOrnithopod(p: Path) {
+internal fun buildOrnithopod(p: Path) {
     p.moveTo(6f, 52f)   // tail
     p.cubicTo(18f, 46f, 28f, 42f, 36f, 40f)
     p.cubicTo(42f, 34f, 48f, 30f, 54f, 28f)   // back
@@ -399,7 +399,7 @@ private fun buildOrnithopod(p: Path) {
 }
 
 /** Pteranodon, Quetzalcoatlus — flying reptile */
-private fun buildPterosaur(p: Path) {
+internal fun buildPterosaur(p: Path) {
     // wings spread (facing right)
     p.moveTo(50f, 45f)   // body center
     // left wing
@@ -432,7 +432,7 @@ private fun buildPterosaur(p: Path) {
 }
 
 /** Plesiosaurus — long-necked marine reptile */
-private fun buildPlesiosaur(p: Path) {
+internal fun buildPlesiosaur(p: Path) {
     // body (flattened oval)
     p.moveTo(20f, 50f)
     p.cubicTo(24f, 40f, 32f, 36f, 40f, 36f)   // back
@@ -464,7 +464,7 @@ private fun buildPlesiosaur(p: Path) {
 }
 
 /** Elasmosaur — extreme long-necked plesiosaur */
-private fun buildElasmosaur(p: Path) {
+internal fun buildElasmosaur(p: Path) {
     p.moveTo(16f, 52f)
     p.cubicTo(22f, 44f, 30f, 40f, 38f, 38f)   // back
     // very long neck curving
@@ -494,7 +494,7 @@ private fun buildElasmosaur(p: Path) {
 }
 
 /** Ichthyosaur — dolphin-like marine reptile */
-private fun buildIchthyosaur(p: Path) {
+internal fun buildIchthyosaur(p: Path) {
     // body (torpedo shape)
     p.moveTo(6f, 50f)   // tail
     p.lineTo(10f, 42f)  // tail fin top
@@ -523,7 +523,7 @@ private fun buildIchthyosaur(p: Path) {
 }
 
 /** Mosasaur — elongated sea lizard */
-private fun buildMosasaur(p: Path) {
+internal fun buildMosasaur(p: Path) {
     p.moveTo(4f, 48f)   // tail tip
     p.cubicTo(10f, 42f, 16f, 40f, 20f, 42f)   // tail
     p.lineTo(24f, 36f)  // tail fin
@@ -548,7 +548,7 @@ private fun buildMosasaur(p: Path) {
 }
 
 /** Therizinosaurus — pot belly, long neck, huge claws */
-private fun buildTherizinosaur(p: Path) {
+internal fun buildTherizinosaur(p: Path) {
     p.moveTo(8f, 54f)   // tail
     p.cubicTo(16f, 50f, 24f, 48f, 30f, 46f)
     // pot belly body
@@ -593,7 +593,7 @@ private fun buildTherizinosaur(p: Path) {
 }
 
 /** Dimetrodon — sail-backed synapsid */
-private fun buildSynapsid(p: Path) {
+internal fun buildSynapsid(p: Path) {
     p.moveTo(8f, 52f)   // tail
     p.cubicTo(18f, 48f, 26f, 46f, 32f, 44f)
     // sail
@@ -631,7 +631,7 @@ private fun buildSynapsid(p: Path) {
 }
 
 /** Woolly Mammoth — trunk, tusks, domed head */
-private fun buildMammoth(p: Path) {
+internal fun buildMammoth(p: Path) {
     // body
     p.moveTo(20f, 50f)
     p.cubicTo(24f, 38f, 32f, 32f, 42f, 30f)   // back
@@ -675,7 +675,7 @@ private fun buildMammoth(p: Path) {
 }
 
 /** Smilodon — saber-toothed cat */
-private fun buildSaberTooth(p: Path) {
+internal fun buildSaberTooth(p: Path) {
     // body (cat silhouette)
     p.moveTo(20f, 50f)
     p.cubicTo(24f, 40f, 30f, 34f, 38f, 32f)   // back
@@ -716,7 +716,7 @@ private fun buildSaberTooth(p: Path) {
 }
 
 /** Paraceratherium — giant hornless rhinoceros */
-private fun buildRhinoGiant(p: Path) {
+internal fun buildRhinoGiant(p: Path) {
     p.moveTo(12f, 52f)   // tail
     p.cubicTo(20f, 46f, 28f, 42f, 36f, 40f)   // back
     p.cubicTo(44f, 36f, 52f, 34f, 58f, 34f)   // neck/chest
@@ -750,7 +750,7 @@ private fun buildRhinoGiant(p: Path) {
 }
 
 /** Archaeopteryx — feathered bird with teeth and bony tail */
-private fun buildBirdPrehistoric(p: Path) {
+internal fun buildBirdPrehistoric(p: Path) {
     // body
     p.moveTo(40f, 48f)
     p.cubicTo(44f, 40f, 48f, 36f, 52f, 34f)   // back
@@ -791,7 +791,7 @@ private fun buildBirdPrehistoric(p: Path) {
 }
 
 /** Sarcosuchus, Deinosuchus — giant crocodilian */
-private fun buildCrocodilian(p: Path) {
+internal fun buildCrocodilian(p: Path) {
     // long low body
     p.moveTo(4f, 52f)   // tail tip
     p.cubicTo(12f, 46f, 20f, 44f, 28f, 42f)   // tail top
@@ -826,7 +826,7 @@ private fun buildCrocodilian(p: Path) {
 }
 
 /** Megalodon — giant shark */
-private fun buildSharkGiant(p: Path) {
+internal fun buildSharkGiant(p: Path) {
     p.moveTo(4f, 50f)   // tail
     p.lineTo(8f, 38f)   // tail fin top
     p.lineTo(14f, 44f)
@@ -852,7 +852,7 @@ private fun buildSharkGiant(p: Path) {
 }
 
 /** Giant Ground Sloth — large round body, long claws */
-private fun buildSlothGiant(p: Path) {
+internal fun buildSlothGiant(p: Path) {
     // round body
     p.moveTo(20f, 50f)
     p.cubicTo(24f, 36f, 34f, 28f, 46f, 26f)   // back (domed)
@@ -894,7 +894,7 @@ private fun buildSlothGiant(p: Path) {
 }
 
 /** Giant Short-Faced Bear — large bear silhouette */
-private fun buildBearGiant(p: Path) {
+internal fun buildBearGiant(p: Path) {
     // body
     p.moveTo(18f, 50f)
     p.cubicTo(22f, 38f, 30f, 32f, 40f, 30f)   // back
@@ -931,7 +931,7 @@ private fun buildBearGiant(p: Path) {
 }
 
 /** Dire Wolf — large wolf silhouette */
-private fun buildWolfPrehistoric(p: Path) {
+internal fun buildWolfPrehistoric(p: Path) {
     // body
     p.moveTo(14f, 48f)
     p.cubicTo(20f, 38f, 28f, 32f, 36f, 30f)   // back
