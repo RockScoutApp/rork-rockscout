@@ -17,6 +17,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useTier } from "@/hooks/useTier";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useBackGuard } from "@/hooks/useBackGuard";
 import { syncEntitlement } from "@/lib/entitlement";
 import IosBetaBanner from "@/components/app/IosBetaBanner";
 import KeyboardHelpOverlay from "@/components/app/KeyboardHelpOverlay";
@@ -55,6 +56,10 @@ export default function AppLayout() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [fieldCameraOpen, setFieldCameraOpen] = useState(false);
   const navItems = isPremium ? NAV_ITEMS_PREMIUM : NAV_ITEMS_FREE;
+
+  // Prevent browser back button from leaving the app shell or closing
+  // the tab at the root route. Also closes dialogs/sheets on back press.
+  useBackGuard();
 
   // ── Entitlement sync status pill ──
   type SyncState = "idle" | "syncing" | "synced" | "failed";

@@ -395,7 +395,13 @@ fun HomeScreen(navController: NavController) {
             shareToProfileFieldCapture != null -> shareToProfileFieldCapture = null
             pendingNewUserReward != null -> ReferralRepository.clearPendingNewUserReward()
             pendingSenderReward != null -> ReferralRepository.clearPendingSenderReward()
-            else -> navController.popBackStack()
+            else -> {
+                // Never exit the app via back button — only pop if
+                // there's a previous screen. At root, consume and stay.
+                if (navController.previousBackStackEntry != null) {
+                    navController.popBackStack()
+                }
+            }
         }
     }
 

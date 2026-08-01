@@ -18,10 +18,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.activity.compose.BackHandler
 import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.rork.rockscout.ui.screens.AchievementsScreen
@@ -502,6 +504,17 @@ fun AppNavigation(
             handleDeepLink(deepLinkUri, navController)
             onDeepLinkConsumed()
         }
+    }
+
+    // Safety net: prevent the hardware/OS back button from exiting the
+    // app when at the root (HOME) destination. Individual screens handle
+    // their own back logic (dismiss overlays, pop to previous screen).
+    // This only fires if the HomeScreen's own BackHandler is not active
+    // (e.g. during screen transitions) — it consumes the press as a no-op.
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val isAtRoot = currentBackStackEntry?.destination?.route == Routes.HOME
+    BackHandler(enabled = isAtRoot) {
+        // Consume — never exit the app via back button at root
     }
 
     Box(
