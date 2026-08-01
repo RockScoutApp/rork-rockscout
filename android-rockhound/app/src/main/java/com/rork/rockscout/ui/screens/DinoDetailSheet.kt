@@ -84,7 +84,7 @@ fun DinoDetailSheet(
     val eraColor = eraColors[entry.era] ?: Color(0xFF7CB5EC)
     val dietColor = dietColors[entry.diet] ?: eraColor
     val silhouetteColor = Color(entry.accentColor)
-    val imageUrl = DinoImageMap.imageUrl(entry)
+    val imageUrl = DinoImageMap.imageUri(entry)
 
     Box(
         modifier = Modifier

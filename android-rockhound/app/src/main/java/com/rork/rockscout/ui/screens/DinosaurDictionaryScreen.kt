@@ -384,7 +384,7 @@ private fun DinoCard(
 ) {
     val silhouetteColor = Color(entry.accentColor)
     val dietColor = dietColors[entry.diet] ?: eraColor
-    val imageUrl = DinoImageMap.imageUrl(entry)
+    val imageUrl = DinoImageMap.imageUri(entry)
 
     DarkCard(
         accent = eraColor,

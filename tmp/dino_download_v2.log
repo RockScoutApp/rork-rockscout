@@ -1,0 +1,108 @@
+[1/101] OK   stegosaurus -> stegosaurus.jpg
+[2/101] OK   ceratosaurus -> ceratosaurus.jpg
+[3/101] OK   compsognathus -> compsognathus.jpg
+[4/101] OK   archaeopteryx -> archaeopteryx.jpg
+[5/101] OK   torvosaurus -> torvosaurus.jpg
+[6/101] OK   saurophaganax -> saurophaganax.png
+[7/101] OK   tyrannosaurus -> tyrannosaurus.jpg
+[8/101] OK   triceratops -> triceratops.jpg
+[9/101] OK   spinosaurus -> spinosaurus.jpg
+[10/101] OK   ankylosaurus -> ankylosaurus.jpg
+[11/101] OK   giganotosaurus -> giganotosaurus.jpg
+[12/101] OK   carcharodontosaurus -> carcharodontosaurus.jpg
+[13/101] OK   argentinosaurus -> argentinosaurus.png
+[14/101] OK   parasaurolophus -> parasaurolophus.jpg
+[15/101] OK   iguanodon -> iguanodon.jpg
+[16/101] OK   baryonyx -> baryonyx.jpg
+[17/101] OK   utahraptor -> utahraptor.jpg
+[18/101] OK   microraptor -> microraptor.png
+[19/101] OK   protoceratops -> protoceratops.jpg
+[20/101] OK   oviraptor -> oviraptor.jpg
+[21/101] FAIL therizinosaurus (Therizinosaurus)
+[22/101] OK   carnotaurus -> carnotaurus.jpg
+[23/101] FAIL maiasaura (Maiasaura)
+[24/101] OK   edmontosaurus -> edmontosaurus.png
+[25/101] OK   lambeosaurus -> lambeosaurus.jpg
+[26/101] FAIL styracosaurus (Styracosaurus)
+[27/101] FAIL centrosaurus (Centrosaurus)
+[28/101] FAIL euoplocephalus (Euoplocephalus)
+[29/101] FAIL nodosaurus (Nodosaurus)
+[30/101] FAIL troodon (Troodon)
+[31/101] FAIL ornithomimus (Ornithomimus)
+[32/101] FAIL gallimimus (Gallimimus)
+[33/101] OK   tarbosaurus -> tarbosaurus.jpg
+[34/101] FAIL albertosaurus (Albertosaurus)
+[35/101] FAIL daspletosaurus (Daspletosaurus)
+[36/101] FAIL suchomimus (Suchomimus)
+[37/101] FAIL concavenator (Concavenator)
+[38/101] FAIL sinoceratops (Sinoceratops)
+[39/101] FAIL kosmoceratops (Kosmoceratops)
+[40/101] OK   pentaceratops -> pentaceratops.jpg
+[41/101] OK   achelousaurus -> achelousaurus.jpg
+[42/101] FAIL einiosaurus (Einiosaurus)
+[43/101] FAIL achillobator (Achillobator)
+[44/101] FAIL citipati (Citipati)
+[45/101] FAIL pinacosaurus (Pinacosaurus)
+[46/101] OK   saichania -> saichania.jpg
+[47/101] OK   tarchia -> tarchia.jpg
+[48/101] OK   shantungosaurus -> shantungosaurus.jpg
+[49/101] FAIL yutyrannus (Yutyrannus)
+[50/101] FAIL beipiaosaurus (Beipiaosaurus)
+[51/101] OK   psittacosaurus -> psittacosaurus.jpg
+[52/101] FAIL pelecanimimus (Pelecanimimus)
+[53/101] FAIL polacanthus (Polacanthus)
+[54/101] FAIL hypsilophodon (Hypsilophodon)
+[55/101] FAIL ouranosaurus (Ouranosaurus)
+[56/101] FAIL rebbachisaurus (Rebbachisaurus)
+[57/101] FAIL dreadnoughtus (Dreadnoughtus)
+[58/101] FAIL patagotitan (Patagotitan)
+[59/101] FAIL puertasaurus (Puertasaurus)
+[60/101] OK   saltasaurus -> saltasaurus.png
+[61/101] FAIL amargasaurus (Amargasaurus)
+[62/101] FAIL dakotaraptor (Dakotaraptor)
+[63/101] FAIL abelisaurus (Abelisaurus)
+[64/101] FAIL rajasaurus (Rajasaurus)
+[65/101] FAIL muttaburrasaurus (Muttaburrasaurus)
+[66/101] FAIL minmi (Minmi)
+[67/101] FAIL leaellynasaura (Leaellynasaura)
+[68/101] FAIL monoclonius (Monoclonius)
+[69/101] FAIL leptoceratops (Leptoceratops)
+[70/101] FAIL austroraptor (Austroraptor)
+[71/101] FAIL megaraptor (Megaraptor)
+[72/101] FAIL rapetosaurus (Rapetosaurus)
+[73/101] FAIL noasaurus (Noasaurus)
+[74/101] FAIL masiakasaurus (Masiakasaurus)
+[75/101] FAIL zanabazar (Zanabazar)
+[76/101] FAIL byronosaurus (Byronosaurus)
+[77/101] FAIL quetzalcoatlus (Quetzalcoatlus)
+[78/101] FAIL dimorphodon (Dimorphodon)
+[79/101] FAIL tapejara (Tapejara)
+[80/101] FAIL liopleurodon (Liopleurodon)
+[81/101] FAIL tylosaurus (Tylosaurus)
+[82/101] FAIL plotosaurus (Plotosaurus)
+[83/101] OK   synthetoceras -> synthetoceras.jpg
+[84/101] OK   woolly-mammoth -> woolly-mammoth.jpg
+[85/101] OK   columbian-mammoth -> columbian-mammoth.jpg
+[86/101] OK   smilodon-populator -> smilodon-populator.jpg
+[87/101] OK   dire-wolf -> dire-wolf.jpg
+[88/101] OK   elasmotherium -> elasmotherium.jpg
+[89/101] OK   cave-lion -> cave-lion.jpg
+[90/101] FAIL giant-horse (Equus giganteus)
+[91/101] OK   eremotherium -> eremotherium.jpg
+[92/101] OK   moa -> moa.jpg
+[93/101] OK   dimetrodon -> dimetrodon.jpg
+[94/101] OK   edaphosaurus -> edaphosaurus.jpg
+[95/101] OK   diplocaulus -> diplocaulus.jpg
+[96/101] OK   eryops -> eryops.jpg
+[97/101] OK   anomalocaris -> anomalocaris.jpg
+[98/101] OK   dunkleosteus -> dunkleosteus.jpg
+[99/101] OK   acanthostega -> acanthostega.jpg
+[100/101] OK   meganeura -> meganeura.jpg
+[101/101] OK   pulmonoscorpius -> pulmonoscorpius.png
+
+=== RESULTS ===
+Attempted: 101
+Succeeded: 49
+Still failed: 52
+Failed: ['therizinosaurus', 'maiasaura', 'styracosaurus', 'centrosaurus', 'euoplocephalus', 'nodosaurus', 'troodon', 'ornithomimus', 'gallimimus', 'albertosaurus', 'daspletosaurus', 'suchomimus', 'concavenator', 'sinoceratops', 'kosmoceratops', 'einiosaurus', 'achillobator', 'citipati', 'pinacosaurus', 'yutyrannus', 'beipiaosaurus', 'pelecanimimus', 'polacanthus', 'hypsilophodon', 'ouranosaurus', 'rebbachisaurus', 'dreadnoughtus', 'patagotitan', 'puertasaurus', 'amargasaurus', 'dakotaraptor', 'abelisaurus', 'rajasaurus', 'muttaburrasaurus', 'minmi', 'leaellynasaura', 'monoclonius', 'leptoceratops', 'austroraptor', 'megaraptor', 'rapetosaurus', 'noasaurus', 'masiakasaurus', 'zanabazar', 'byronosaurus', 'quetzalcoatlus', 'dimorphodon', 'tapejara', 'liopleurodon', 'tylosaurus', 'plotosaurus', 'giant-horse']
+Total mapped: 150

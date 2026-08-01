@@ -51,7 +51,7 @@ fun DinoSizeComparison(
     val dinoVisual = scaleForDisplay(dinoFeet)
     val humanVisual = scaleForDisplay(humanFeet)
     val maxVisual = maxOf(dinoVisual, humanVisual)
-    val imageUrl = DinoImageMap.imageUrl(entry)
+    val imageUrl = DinoImageMap.imageUri(entry)
 
     Box(
         modifier = modifier

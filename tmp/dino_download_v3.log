@@ -1,0 +1,61 @@
+Fetching thumbnails for 56 unique titles via batch API...
+Got 45 thumbnail URLs
+OK   therizinosaurus -> therizinosaurus.jpg
+OK   maiasaura -> maiasaura.jpg
+OK   styracosaurus -> styracosaurus.jpg
+OK   centrosaurus -> centrosaurus.jpg
+OK   euoplocephalus -> euoplocephalus.jpg
+OK   nodosaurus -> nodosaurus.jpg
+OK   troodon -> troodon.png
+OK   ornithomimus -> ornithomimus.jpg
+OK   gallimimus -> gallimimus.jpg
+OK   albertosaurus -> albertosaurus.jpg
+OK   daspletosaurus -> daspletosaurus.jpg
+OK   suchomimus -> suchomimus.jpg
+OK   concavenator -> concavenator.jpg
+OK   sinoceratops -> sinoceratops.jpg
+OK   kosmoceratops -> kosmoceratops.jpg
+OK   einiosaurus -> einiosaurus.jpg
+OK   achillobator -> achillobator.jpg
+OK   citipati -> citipati.jpg
+FAIL pinacosaurus (Pinacosaurus)
+OK   yutyrannus -> yutyrannus.jpg
+OK   beipiaosaurus -> beipiaosaurus.png
+OK   pelecanimimus -> pelecanimimus.jpg
+OK   polacanthus -> polacanthus.jpg
+OK   hypsilophodon -> hypsilophodon.jpg
+OK   ouranosaurus -> ouranosaurus.png
+FAIL rebbachisaurus (Rebbachisaurus)
+FAIL dreadnoughtus (Dreadnoughtus)
+FAIL patagotitan (Patagotitan)
+FAIL puertasaurus (Puertasaurus)
+OK   amargasaurus -> amargasaurus.jpg
+FAIL dakotaraptor (Dakotaraptor)
+FAIL abelisaurus (Abelisaurus)
+OK   rajasaurus -> rajasaurus.jpg
+OK   muttaburrasaurus -> muttaburrasaurus.jpg
+FAIL minmi (Minmi)
+OK   leaellynasaura -> leaellynasaura.jpg
+OK   monoclonius -> monoclonius.jpg
+FAIL leptoceratops (Leptoceratops)
+FAIL austroraptor (Austroraptor)
+FAIL megaraptor (Megaraptor)
+OK   rapetosaurus -> rapetosaurus.jpg
+OK   noasaurus -> noasaurus.png
+FAIL masiakasaurus (Masiakasaurus)
+OK   zanabazar -> zanabazar.jpg
+OK   byronosaurus -> byronosaurus.jpg
+OK   quetzalcoatlus -> quetzalcoatlus.jpg
+OK   dimorphodon -> dimorphodon.png
+FAIL tapejara (Tapejara)
+FAIL liopleurodon (Liopleurodon)
+FAIL tylosaurus (Tylosaurus)
+FAIL plotosaurus (Plotosaurus)
+FAIL giant-horse (Equus giganteus)
+
+=== RESULTS ===
+Attempted: 52
+Succeeded: 35
+Still failed: 17
+Total mapped: 185
+Failed IDs: ['pinacosaurus', 'rebbachisaurus', 'dreadnoughtus', 'patagotitan', 'puertasaurus', 'dakotaraptor', 'abelisaurus', 'minmi', 'leptoceratops', 'austroraptor', 'megaraptor', 'masiakasaurus', 'tapejara', 'liopleurodon', 'tylosaurus', 'plotosaurus', 'giant-horse']
