@@ -28,6 +28,8 @@ import {
   type Campground,
   type StatePark,
 } from "@/data/locations";
+import { CAMPING_GEAR_IDS, HIKING_GEAR_IDS } from "@/data/gear";
+import AffiliateGearBox from "@/components/AffiliateGearBox";
 
 type AnyLocation = DigSite | BlmDigSite | Trailhead | Campground | StatePark;
 
@@ -392,6 +394,24 @@ export default function LocationDetail() {
             {digSite.tips}
           </p>
         </div>
+      )}
+
+      {/* Camping gear for campgrounds */}
+      {(location as { type: string }).type === "CAMPGROUND" && (
+        <AffiliateGearBox
+          title="Camping Gear"
+          itemIds={CAMPING_GEAR_IDS}
+          accent="#E0A040"
+        />
+      )}
+
+      {/* Hiking gear for trailheads */}
+      {(location as { type: string }).type === "TRAILHEAD" && (
+        <AffiliateGearBox
+          title="Hiking Gear"
+          itemIds={HIKING_GEAR_IDS}
+          accent="#6B9E7E"
+        />
       )}
     </div>
   );

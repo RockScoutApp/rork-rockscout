@@ -50,9 +50,11 @@ import com.rork.rockscout.data.BlmData
 import com.rork.rockscout.data.BlmTrailhead
 import com.rork.rockscout.data.FavoriteSpotResolver
 import com.rork.rockscout.data.SafeLinkOpener
+import com.rork.rockscout.data.GearGuide
 import com.rork.rockscout.data.WildlifeData
 import com.rork.rockscout.ui.components.CampingHikingTipsSheet
 import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.ScrollingGearBox
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.TagChip
 import com.rork.rockscout.ui.components.TipsPillButton
@@ -276,6 +278,15 @@ fun BlmTrailheadDetailScreen(
                         color = DarkTextMid,
                     )
                 }
+            }
+
+            // Hiking gear affiliate box
+            item {
+                ScrollingGearBox(
+                    sectionTitle = "Hiking Gear",
+                    items = GearGuide.hikingGear,
+                    accent = accent,
+                )
             }
         }
     }
@@ -501,6 +512,15 @@ fun BlmCampgroundDetailScreen(
                         color = DarkTextMid,
                     )
                 }
+            }
+
+            // Camping gear affiliate box
+            item {
+                ScrollingGearBox(
+                    sectionTitle = "Camping Gear",
+                    items = GearGuide.campingGear,
+                    accent = Citrine,
+                )
             }
         }
     }

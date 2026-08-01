@@ -48,3 +48,30 @@ export const LAPIDARY_GEAR_IDS = [
   "tumbler_grit_kit", "p100_respirator", "face_shield", "lapidary_safety_glasses",
   "hearing_protection", "gfci_outlet",
 ];
+
+/** Camping gear — shown on campground detail and state/national park detail screens. */
+export const CAMPING_GEAR_IDS = [
+  "tent", "sleeping_bag", "camp_stove", "lantern", "camp_chair",
+  "water_filter", "headlamp", "cookware_set", "noaa_radio",
+  "first_aid_kit", "bug_spray", "hand_warmers",
+];
+
+/** Hiking gear — shown on trailhead detail and state/national park detail screens. */
+export const HIKING_GEAR_IDS = [
+  "hiking_boots", "hiking_backpack", "trekking_poles", "hydration_bladder",
+  "trail_map", "sun_hat", "sunscreen", "rain_gear", "headlamp",
+  "first_aid_kit", "gps_handheld", "bug_spray",
+];
+
+/** Camping + hiking combined — shown on state/national park detail screens. */
+export const CAMPING_HIKING_GEAR_IDS = [
+  "hiking_boots", "hiking_backpack", "tent", "sleeping_bag", "camp_stove",
+  "trekking_poles", "hydration_bladder", "lantern", "headlamp",
+  "water_filter", "trail_map", "sunscreen", "first_aid_kit", "noaa_radio",
+];
+
+/** Get gear items by a list of IDs, preserving order. */
+export const getGearByIds = (ids: string[]): GearItem[] =>
+  ids
+    .map((id) => gearItems.find((g) => g.id === id))
+    .filter((g): g is GearItem => g !== undefined);

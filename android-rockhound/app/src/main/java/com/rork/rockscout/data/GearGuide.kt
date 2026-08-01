@@ -660,6 +660,101 @@ object GearGuide {
         priceBand = "$25 – $60",
     )
 
+    // ── Camping-specific items (shown on campground & park detail screens) ──
+
+    val GEAR_CAMP_STOVE = GearItem(
+        id = "camp_stove",
+        name = "Portable Camp Stove",
+        description = "A compact propane or butane camp stove for cooking meals at remote dig sites — boils water fast and packs small. Essential for multi-day trips far from town.",
+        emoji = "\uD83D\uDD25",
+        url = "https://www.amazon.com/s?k=portable+camp+stove+propane&tag=rockscout-20",
+        priceBand = "$25 – $80",
+    )
+
+    val GEAR_CAMP_CHAIR = GearItem(
+        id = "camp_chair",
+        name = "Lightweight Camp Chair",
+        description = "A compact folding camp chair for comfortable evenings at camp — after a long day on the gravel bar, a real seat beats a rock. Packs small and weighs under 2 lbs.",
+        emoji = "\uD83E\uDE91",
+        url = "https://www.amazon.com/s?k=lightweight+camping+chair+portable&tag=rockscout-20",
+        priceBand = "$20 – $60",
+    )
+
+    val GEAR_WATER_FILTER = GearItem(
+        id = "water_filter",
+        name = "Portable Water Filter",
+        description = "A squeeze or pump water filter for refilling from creeks and springs on remote digs — many collecting spots have no potable water. A safety essential for multi-day trips.",
+        emoji = "\uD83D\uDEB0",
+        url = "https://www.amazon.com/s?k=portable+water+filter+hiking&tag=rockscout-20",
+        priceBand = "$20 – $50",
+    )
+
+    val GEAR_HEADLAMP = GearItem(
+        id = "headlamp",
+        name = "Rechargeable Headlamp",
+        description = "Hands-free illumination for night UV hunts, pre-dawn hikes to dig sites, and camp tasks after dark. Red-light mode preserves night vision for UV collecting.",
+        emoji = "\uD83D\uDDA5\uFE0F",
+        url = "https://www.amazon.com/s?k=rechargeable+headlamp+red+light&tag=rockscout-20",
+        priceBand = "$15 – $50",
+    )
+
+    val GEAR_FIRST_AID_KIT = GearItem(
+        id = "first_aid_kit",
+        name = "Compact First Aid Kit",
+        description = "A trail first aid kit with bandages, antiseptic, tweezers, and blister pads — rock splinters, cuts, and scrapes are the most common field injuries. Don't leave the trailhead without one.",
+        emoji = "\u2695\uFE0F",
+        url = "https://www.amazon.com/s?k=compact+first+aid+kit+hiking&tag=rockscout-20",
+        priceBand = "$15 – $40",
+    )
+
+    val GEAR_COOKWARE_SET = GearItem(
+        id = "cookware_set",
+        name = "Camping Cookware Set",
+        description = "A nesting pot, pan, and utensil set for camp cooking — aluminum or titanium keeps weight down. Pairs with a camp stove for hot meals on multi-day digs.",
+        emoji = "\uD83C\uDF72",
+        url = "https://www.amazon.com/s?k=camping+cookware+set+lightweight&tag=rockscout-20",
+        priceBand = "$25 – $70",
+    )
+
+    // ── Hiking-specific items (shown on trailhead & park detail screens) ──
+
+    val GEAR_TREKKING_POLES = GearItem(
+        id = "trekking_poles",
+        name = "Trekking Poles",
+        description = "Telescoping trekking poles for stability on steep, loose terrain and creek crossings — reduce knee impact on long descents and help balance with a heavy pack of specimens.",
+        emoji = "\uD83E\uDDF5",
+        url = "https://www.amazon.com/s?k=trekking+poles+adjustable+hiking&tag=rockscout-20",
+        priceBand = "$30 – $100",
+    )
+
+    val GEAR_HYDRATION_BLADDER = GearItem(
+        id = "hydration_bladder",
+        name = "Hydration Bladder (3L)",
+        description = "A 3-liter hydration bladder that slips into a daypack — sip on the trail without stopping or removing your pack. Essential for desert and summer digs where dehydration is a real risk.",
+        emoji = "\uD83D\uDEB0",
+        url = "https://www.amazon.com/s?k=hydration+bladder+3l+hiking&tag=rockscout-20",
+        priceBand = "$15 – $40",
+    )
+
+    val GEAR_TRAIL_MAP = GearItem(
+        id = "trail_map",
+        name = "Trail Map & Compass",
+        description = "A topographic map and baseplate compass for navigating to remote dig sites where cell service is nonexistent — a GPS can fail, dead batteries don't. Know how to use both.",
+        emoji = "\uD83E\uDDED",
+        url = "https://www.amazon.com/s?k=topographic+map+compass+hiking&tag=rockscout-20",
+        priceBand = "$10 – $30",
+        topPick = true,
+    )
+
+    val GEAR_SUNSCREEN = GearItem(
+        id = "sunscreen",
+        name = "Sunscreen SPF 50+",
+        description = "High-SPF sunscreen for all-day exposure on open quarries, beaches, and desert flats — rockhounds spend hours in full sun with no shade. Reapply every 2 hours.",
+        emoji = "\uD83E\uDDF4",
+        url = "https://www.amazon.com/s?k=sunscreen+spf+50+sport&tag=rockscout-20",
+        priceBand = "$8 – $20",
+    )
+
     // ── Curated kits + lists (reference the items above) ────────────────────────
 
     /** Curated kits shown on the dedicated Gear Guide section under "Rocks Are Amazing". */
@@ -802,6 +897,16 @@ object GearGuide {
         GEAR_LANTERN,
         GEAR_NOAA_RADIO,
         GEAR_VIEWING_BUCKET,
+        GEAR_CAMP_STOVE,
+        GEAR_CAMP_CHAIR,
+        GEAR_WATER_FILTER,
+        GEAR_HEADLAMP,
+        GEAR_FIRST_AID_KIT,
+        GEAR_COOKWARE_SET,
+        GEAR_TREKKING_POLES,
+        GEAR_HYDRATION_BLADDER,
+        GEAR_TRAIL_MAP,
+        GEAR_SUNSCREEN,
     )
 
     /**
@@ -832,6 +937,56 @@ object GearGuide {
         LocationType.METAPHYSICAL -> listOf(GEAR_LOUPE_10X)
         LocationType.LAPIDARY_CLUB -> listOf(GEAR_LOUPE_10X, GEAR_HARDNESS_KIT, GEAR_LAPIDARY, GEAR_DISPLAY_CASES)
     }
+
+    /** Camping gear — shown on campground detail and state/national park detail screens. */
+    val campingGear: List<GearItem> = listOf(
+        GEAR_TENT,
+        GEAR_SLEEPING_BAG,
+        GEAR_CAMP_STOVE,
+        GEAR_LANTERN,
+        GEAR_CAMP_CHAIR,
+        GEAR_WATER_FILTER,
+        GEAR_HEADLAMP,
+        GEAR_COOKWARE_SET,
+        GEAR_NOAA_RADIO,
+        GEAR_FIRST_AID_KIT,
+        GEAR_BUG_SPRAY,
+        GEAR_HAND_WARMERS,
+    )
+
+    /** Hiking gear — shown on trailhead detail and state/national park detail screens. */
+    val hikingGear: List<GearItem> = listOf(
+        GEAR_HIKING_BOOTS,
+        GEAR_HIKING_BACKPACK,
+        GEAR_TREKKING_POLES,
+        GEAR_HYDRATION_BLADDER,
+        GEAR_TRAIL_MAP,
+        GEAR_SUN_HAT,
+        GEAR_SUNSCREEN,
+        GEAR_RAIN_GEAR,
+        GEAR_HEADLAMP,
+        GEAR_FIRST_AID_KIT,
+        GEAR_GPS_HANDHELD,
+        GEAR_BUG_SPRAY,
+    )
+
+    /** Camping + hiking combined — shown on state/national park detail screens. */
+    val campingHikingGear: List<GearItem> = listOf(
+        GEAR_HIKING_BOOTS,
+        GEAR_HIKING_BACKPACK,
+        GEAR_TENT,
+        GEAR_SLEEPING_BAG,
+        GEAR_CAMP_STOVE,
+        GEAR_TREKKING_POLES,
+        GEAR_HYDRATION_BLADDER,
+        GEAR_LANTERN,
+        GEAR_HEADLAMP,
+        GEAR_WATER_FILTER,
+        GEAR_TRAIL_MAP,
+        GEAR_SUNSCREEN,
+        GEAR_FIRST_AID_KIT,
+        GEAR_NOAA_RADIO,
+    )
 
     /** Lapidary-specific gear — shown on the Lapidary Basics guide screen. */
     val lapidaryGear: List<GearItem> = listOf(

@@ -47,7 +47,9 @@ import com.rork.rockscout.data.FavoriteSpotResolver
 import com.rork.rockscout.data.SafeLinkOpener
 import com.rork.rockscout.data.StatePark
 import com.rork.rockscout.data.StateParkData
+import com.rork.rockscout.data.GearGuide
 import com.rork.rockscout.data.WildlifeData
+import com.rork.rockscout.ui.components.ScrollingGearBox
 import com.rork.rockscout.ui.components.WildlifeCard
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.SculptedIconButton
@@ -212,6 +214,15 @@ fun StateParkDetailScreen(
                         }
                     }
                 }
+            }
+
+            // Camping + Hiking gear affiliate box
+            item {
+                ScrollingGearBox(
+                    sectionTitle = "Camping & Hiking Gear",
+                    items = GearGuide.campingHikingGear,
+                    accent = accent,
+                )
             }
         }
     }

@@ -2,6 +2,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, ExternalLink, Tent, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { stateParks, findLocationByMarkerId } from "@/data/locations";
+import { CAMPING_HIKING_GEAR_IDS } from "@/data/gear";
+import AffiliateGearBox from "@/components/AffiliateGearBox";
 import NotFound from "@/pages/NotFound";
 
 export default function StateParkDetail() {
@@ -59,6 +61,12 @@ export default function StateParkDetail() {
         <MapPin className="h-4 w-4" />
         View on Map
       </Button>
+
+      <AffiliateGearBox
+        title="Camping & Hiking Gear"
+        itemIds={CAMPING_HIKING_GEAR_IDS}
+        accent="#6B9E7E"
+      />
     </div>
   );
 }
