@@ -2,7 +2,7 @@
 // Caches the app shell so the site still loads with no connection.
 // Network-first for navigation requests (fresh content when online),
 // cache-first for static assets.
-const CACHE_NAME = "rockscout-v9";
+const CACHE_NAME = "rockscout-v10";
 const TILE_CACHE = "rockscout-tiles-v1";
 // Caches that must survive activation. TILE_CACHE is deliberately unversioned:
 // downloaded map tiles are expensive to refetch in the field, so a new shell

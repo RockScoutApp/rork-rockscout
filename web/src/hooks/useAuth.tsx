@@ -225,4 +225,4 @@ function useAuthState() {
   };
 }
 
-export const [AuthProvider, useAuth] = createContextHook(useAuthState);
+export const [AuthProvider, useAuth] = createContextHook(useAuthState, DEFAULT_AUTH_STATE);
