@@ -61,6 +61,7 @@ import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Nature
 import androidx.compose.material.icons.filled.Park
+import androidx.compose.material.icons.filled.Pets
 import androidx.compose.material.icons.filled.HolidayVillage
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.PlayCircle
@@ -470,6 +471,8 @@ fun HomeScreen(navController: NavController) {
         HomeTile("Exploring Paleontology", "Fossils, eras & deep-time history", Icons.Filled.Nature, Color(0xFFC9A87C), Routes.PALEONTOLOGY,
             SpecimenImages.urls["ammonite"]?.firstOrNull()),
         HomeTile("Exploring Prehistoric Organisms", "Dinosaurs, birds, ancient flora & more", Icons.Filled.Nature, Color(0xFF8BBF6A), Routes.PREHISTORIC_ORGANISMS,
+            SpecimenImages.urls["dinosaur-bone"]?.firstOrNull()),
+        HomeTile("Dinosaur Dictionary", "200+ dinosaurs & Ice Age animals with silhouettes", Icons.Filled.Pets, Color(0xFF6FBF8A), Routes.DINOSAUR_DICTIONARY,
             SpecimenImages.urls["dinosaur-bone"]?.firstOrNull()),
         HomeTile("Tectonics & Volcanoes", "Plate movement, magma & where rocks form", Icons.Filled.LocalFireDepartment, Color(0xFFE2574C), Routes.TECTONIC_VOLCANIC,
             "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/13d72c22-f574-47c4-a23c-a6a9ae6b65bb.png"),

@@ -123,6 +123,7 @@ import com.rork.rockscout.ui.screens.GeoTimeScaleScreen
 import com.rork.rockscout.ui.screens.MassExtinctionsScreen
 import com.rork.rockscout.ui.screens.FossilTypesScreen
 import com.rork.rockscout.ui.screens.GeologicPeriodsScreen
+import com.rork.rockscout.ui.screens.DinosaurDictionaryScreen
 import com.rork.rockscout.ui.screens.isDisclaimerAccepted
 
 object Routes {
@@ -234,6 +235,7 @@ object Routes {
     const val MASS_EXTINCTIONS = "mass_extinctions"
     const val FOSSIL_TYPES_SCREEN = "fossil_types"
     const val GEOLOGIC_PERIODS = "geologic_periods"
+    const val DINOSAUR_DICTIONARY = "dinosaur_dictionary"
 
     fun gemShowDetail(id: String) = "gem_show/$id"
     fun communityPostDetail(id: String) = "community_post/$id"
@@ -839,6 +841,7 @@ fun AppNavigation(
         composable(Routes.MASS_EXTINCTIONS) { MassExtinctionsScreen(navController) }
         composable(Routes.FOSSIL_TYPES_SCREEN) { FossilTypesScreen(navController) }
         composable(Routes.GEOLOGIC_PERIODS) { GeologicPeriodsScreen(navController) }
+        composable(Routes.DINOSAUR_DICTIONARY) { DinosaurDictionaryScreen(navController) }
     }
         // Night-mode red overlay sits on top of the entire NavHost so it
         // covers every screen, sheet, and dialog when the toggle is on.
