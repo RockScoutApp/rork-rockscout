@@ -2,7 +2,7 @@
 // Caches the app shell so the site still loads with no connection.
 // Network-first for navigation requests (fresh content when online),
 // cache-first for static assets.
-const CACHE_NAME = "rockscout-v7";
+const CACHE_NAME = "rockscout-v8";
 const TILE_CACHE = "rockscout-tiles-v1";
 // Caches that must survive activation. TILE_CACHE is deliberately unversioned:
 // downloaded map tiles are expensive to refetch in the field, so a new shell
@@ -39,9 +39,18 @@ self.addEventListener("install", (event) => {
           )
         )
       )
-      .then(() => self.skipWaiting())
-      .catch(() => self.skipWaiting())
   );
+  // NOTE: deliberately no skipWaiting() here. The new worker parks in the
+  // "waiting" state so the page can tell the user an update is ready and then
+  // activate it on demand (see the SKIP_WAITING message below). Activating
+  // silently mid-session would swap the asset cache underneath running code.
+});
+
+// The page asks us to activate immediately once the user accepts the update.
+self.addEventListener("message", (event) => {
+  if (event.data === "SKIP_WAITING" || (event.data && event.data.type === "SKIP_WAITING")) {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("activate", (event) => {
@@ -156,16 +165,38 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Static assets: cache-first.
+  // Build output under /assets/ is content-hashed — the filename changes every
+  // deploy, so cache-first is both safe and optimal.
+  if (url.pathname.startsWith("/assets/")) {
+    event.respondWith(
+      caches.match(request).then(
+        (cached) =>
+          cached ||
+          fetch(request).then((response) => {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+            return response;
+          })
+      )
+    );
+    return;
+  }
+
+  // Everything else same-origin (icons, images, audio, manifest, …) keeps a
+  // stable filename across deploys. Serve the cached copy instantly but always
+  // refresh it in the background, so a new build's assets land on the very next
+  // visit instead of being pinned forever.
   event.respondWith(
-    caches.match(request).then(
-      (cached) =>
-        cached ||
-        fetch(request).then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          return response;
-        })
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.match(request).then((cached) => {
+        const network = fetch(request)
+          .then((response) => {
+            if (response && response.ok) cache.put(request, response.clone());
+            return response;
+          })
+          .catch(() => cached);
+        return cached || network;
+      })
     )
   );
 });

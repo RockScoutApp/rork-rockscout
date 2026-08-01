@@ -13,8 +13,13 @@ android {
         applicationId = "com.rork.rockscout"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "1.1.4"
+        // IMPORTANT: bump versionCode on EVERY release build (Play + sideloaded
+        // APK). Android refuses to install an APK whose versionCode is lower
+        // than the installed one, and the in-app updater only offers an update
+        // when the server-reported code is higher. Keep this in lockstep with
+        // LATEST_VERSION_CODE in functions/app-version.ts.
+        versionCode = 7
+        versionName = "1.1.5"
 
         multiDexEnabled = true
     }
@@ -109,6 +114,8 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.play.review)
     implementation(libs.play.review.ktx)
+    implementation(libs.play.app.update)
+    implementation(libs.play.app.update.ktx)
     implementation(libs.osmdroid.android)
     implementation(libs.play.services.ads)
     implementation(libs.zxing.core)

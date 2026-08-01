@@ -6,6 +6,7 @@ struct HomeScreen: View {
     @Environment(EntitlementManager.self) private var entitlement
     @State private var specimens: [Specimen] = []
     @State private var isLoading: Bool = true
+    @State private var updateService = AppUpdateService.shared
 
     var body: some View {
         ZStack {
@@ -13,6 +14,10 @@ struct HomeScreen: View {
 
             ScrollView {
                 VStack(spacing: 24) {
+                    if updateService.isUpdateAvailable {
+                        updateBanner
+                    }
+
                     heroSection
 
                     statsRow
@@ -28,7 +33,48 @@ struct HomeScreen: View {
         }
         .navigationTitle("RockScout")
         .navigationBarTitleDisplayMode(.large)
+        .animation(.snappy, value: updateService.isUpdateAvailable)
         .task { await loadData() }
+        .task { await updateService.checkForUpdate() }
+    }
+
+    // MARK: - Update banner
+
+    /// Surfaces a newer App Store release so users with automatic updates off
+    /// still land on the current build with a single tap.
+    private var updateBanner: some View {
+        Button {
+            updateService.openAppStore()
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "arrow.down.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(.rsAccent)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Version \(updateService.availableVersion ?? "") available")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.rsText)
+                    Text("Tap to update in the App Store")
+                        .font(.caption)
+                        .foregroundStyle(.rsTextMuted)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.rsTextMuted)
+            }
+            .padding(14)
+            .background(Color.rsAccent.opacity(0.12), in: .rect(cornerRadius: 14))
+            .overlay {
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(Color.rsAccent.opacity(0.35), lineWidth: 1)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Update available. Tap to open the App Store.")
     }
 
     // MARK: - Hero

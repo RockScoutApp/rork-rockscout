@@ -224,6 +224,7 @@ import com.rork.rockscout.data.PurchaseResult
 import com.rork.rockscout.data.IdentifyAccessManager
 import com.rork.rockscout.data.UpdateManager
 import com.rork.rockscout.data.ApkInstaller
+import com.rork.rockscout.data.PlayUpdateManager
 import com.rork.rockscout.ui.components.TokenBank
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.theme.Amethyst
@@ -1705,22 +1706,59 @@ private fun HomeGreeting(name: String) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val updateInfo by UpdateManager.updateInfo.collectAsStateWithLifecycle()
     val apkStatus by ApkInstaller.status.collectAsStateWithLifecycle()
+    val apkProgress by ApkInstaller.progress.collectAsStateWithLifecycle()
+    val apkSize by ApkInstaller.downloadSize.collectAsStateWithLifecycle()
+    val apkError by ApkInstaller.error.collectAsStateWithLifecycle()
+    val playReady by PlayUpdateManager.readyToInstall.collectAsStateWithLifecycle()
 
-    // Friendly signing-conflict dialog — shown when a downloaded update APK
-    // is signed with a different key than the installed build. Instead of the
-    // system "App not installed" dialog, we apologize and offer to uninstall
-    // the old version so the new one can install cleanly.
-    if (apkStatus == ApkInstaller.Status.SIGNING_CONFLICT) {
-        SigningConflictDialog(
+    when (apkStatus) {
+        // Android 8+ requires explicit consent before an app can install another
+        // APK. Without this prompt the update silently never installs — so send
+        // the user straight to the right Settings screen; MainActivity.onResume
+        // resumes the download automatically once it's granted.
+        ApkInstaller.Status.NEEDS_INSTALL_PERMISSION -> InstallPermissionDialog(
+            onAllow = { ApkInstaller.openInstallPermissionSettings(context) },
+            onDismiss = { ApkInstaller.reset() },
+        )
+
+        ApkInstaller.Status.DOWNLOADING,
+        ApkInstaller.Status.VERIFYING,
+        ApkInstaller.Status.INSTALLING,
+        -> UpdateProgressDialog(
+            status = apkStatus,
+            progress = apkProgress,
+            sizeLabel = apkSize,
+        )
+
+        // Friendly signing-conflict dialog — shown when a downloaded update APK
+        // is signed with a different key than the installed build. Instead of the
+        // system "App not installed" dialog, we apologize and offer to uninstall
+        // the old version so the new one can install cleanly.
+        ApkInstaller.Status.SIGNING_CONFLICT -> SigningConflictDialog(
             onUninstall = {
                 ApkInstaller.launchUninstall(context)
                 ApkInstaller.reset()
             },
             onDismiss = {
-                // Fall back to the Play Store listing as a courtesy.
                 ApkInstaller.reset()
                 UpdateManager.openStore(context)
             },
+        )
+
+        ApkInstaller.Status.FAILED -> UpdateFailedDialog(
+            message = apkError ?: "The update couldn't be installed.",
+            onRetry = { ApkInstaller.retry(context) },
+            onDismiss = { ApkInstaller.reset() },
+        )
+
+        ApkInstaller.Status.DONE, ApkInstaller.Status.IDLE -> Unit
+    }
+
+    // Google Play finished downloading an update in the background — one tap
+    // restarts the app into the new version.
+    if (playReady) {
+        UpdateReadyDialog(
+            onRestart = { PlayUpdateManager.completeUpdate() },
         )
     }
 
@@ -1757,7 +1795,7 @@ private fun HomeGreeting(name: String) {
             )
             // Inline "Update Now" button — tries an in-app self-update when a
             // direct APK URL is available, otherwise opens the Play Store listing.
-            if (updateInfo != null) {
+            if (updateInfo != null && apkStatus == ApkInstaller.Status.IDLE) {
                 Spacer(Modifier.width(8.dp))
                 Box(
                     modifier = Modifier
@@ -1840,6 +1878,177 @@ private fun SigningConflictDialog(
     )
 }
 
+/**
+ * Shown when the app hasn't been granted permission to install packages.
+ * Android silently blocks the install without this, which is the single most
+ * common reason a sideloaded update "just doesn't install".
+ */
+@Composable
+private fun InstallPermissionDialog(
+    onAllow: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "One quick permission",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = TextHigh,
+            )
+        },
+        text = {
+            Text(
+                "To install this update, Android needs your permission for RockScout " +
+                    "to install app updates.\n\n" +
+                    "Tap Open Settings, switch on \u201CAllow from this source\u201D, then come " +
+                    "back \u2014 the update will continue on its own.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextMid,
+            )
+        },
+        confirmButton = {
+            SculptedTextButton(
+                text = "Open Settings",
+                onClick = onAllow,
+                accent = Success,
+            )
+        },
+        dismissButton = {
+            SculptedTextButton(
+                text = "Not now",
+                onClick = onDismiss,
+                accent = Citrine,
+            )
+        },
+    )
+}
+
+/** Live download / verify / install progress for the in-app update. */
+@Composable
+private fun UpdateProgressDialog(
+    status: ApkInstaller.Status,
+    progress: Int,
+    sizeLabel: String,
+) {
+    val heading = when (status) {
+        ApkInstaller.Status.DOWNLOADING -> "Downloading update"
+        ApkInstaller.Status.VERIFYING -> "Checking the update"
+        else -> "Installing update"
+    }
+    val detail = when (status) {
+        ApkInstaller.Status.DOWNLOADING ->
+            if (sizeLabel.isNotEmpty()) "$progress% of $sizeLabel" else "$progress%"
+        ApkInstaller.Status.VERIFYING -> "Making sure the download is complete and genuine\u2026"
+        else -> "Confirm the install when Android asks \u2014 your data stays exactly where it is."
+    }
+    AlertDialog(
+        onDismissRequest = {},
+        title = {
+            Text(
+                heading,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = TextHigh,
+            )
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (status == ApkInstaller.Status.DOWNLOADING) {
+                    LinearProgressIndicator(
+                        progress = { progress / 100f },
+                        modifier = Modifier.fillMaxWidth(),
+                        color = Success,
+                    )
+                } else {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = Success,
+                    )
+                }
+                Text(
+                    detail,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextMid,
+                )
+            }
+        },
+        confirmButton = {},
+    )
+}
+
+/** Update failed for a recoverable reason — offer a one-tap retry. */
+@Composable
+private fun UpdateFailedDialog(
+    message: String,
+    onRetry: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "Update didn't finish",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = TextHigh,
+            )
+        },
+        text = {
+            Text(
+                message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextMid,
+            )
+        },
+        confirmButton = {
+            SculptedTextButton(
+                text = "Try again",
+                onClick = onRetry,
+                accent = Success,
+            )
+        },
+        dismissButton = {
+            SculptedTextButton(
+                text = "Later",
+                onClick = onDismiss,
+                accent = Citrine,
+            )
+        },
+    )
+}
+
+/** Google Play downloaded an update in the background — restart to apply it. */
+@Composable
+private fun UpdateReadyDialog(onRestart: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = {},
+        title = {
+            Text(
+                "Update ready",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = TextHigh,
+            )
+        },
+        text = {
+            Text(
+                "A new version of RockScout has finished downloading. Restart now to " +
+                    "start using it \u2014 your collection and settings are untouched.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextMid,
+            )
+        },
+        confirmButton = {
+            SculptedTextButton(
+                text = "Restart & install",
+                onClick = onRestart,
+                accent = Success,
+            )
+        },
+    )
+}
 
 @Composable
 private fun IdentifyHero(onClick: () -> Unit) {

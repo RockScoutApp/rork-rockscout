@@ -16,7 +16,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.activity.result.IntentSenderRequest
+import com.rork.rockscout.data.ApkInstaller
 import com.rork.rockscout.data.LocationRefresher
+import com.rork.rockscout.data.PlayUpdateManager
 import com.rork.rockscout.data.UpdateManager
 import com.rork.rockscout.data.WorkScheduler
 import com.rork.rockscout.ui.navigation.AppNavigation
@@ -37,6 +40,21 @@ class MainActivity : ComponentActivity() {
      */
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ -> }
+
+    /**
+     * Result channel for Google Play's in-app update flow. Play hands back a
+     * confirmation UI through an IntentSender; a cancelled or failed flow just
+     * leaves the app on the current version, and the direct-APK path stays
+     * available as a fallback.
+     */
+    private val playUpdateLauncher =
+        registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+            if (result.resultCode != RESULT_OK) {
+                // User declined or Play failed — make sure the in-app
+                // "Update Now" button still has fresh info to act on.
+                UpdateManager.checkForUpdate(this)
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,7 +100,23 @@ class MainActivity : ComponentActivity() {
         if (now - lastOnResumeMs < 4000L) return
         lastOnResumeMs = now
         LocationRefresher.refresh(this)
-        UpdateManager.checkForUpdate(this)
+
+        // If the user just came back from granting "install unknown apps",
+        // pick the interrupted APK update back up automatically.
+        ApkInstaller.resumeIfReady(this)
+
+        // Play-installed builds get Google's seamless in-app update flow;
+        // everything else falls back to the direct-APK / store check.
+        PlayUpdateManager.checkAndStart(
+            activity = this,
+            launcher = playUpdateLauncher,
+            onUnavailable = { UpdateManager.checkForUpdate(this) },
+        )
+    }
+
+    override fun onDestroy() {
+        PlayUpdateManager.release()
+        super.onDestroy()
     }
 
     override fun onNewIntent(intent: Intent) {

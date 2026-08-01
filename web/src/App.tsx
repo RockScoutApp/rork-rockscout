@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { TierProvider } from "@/hooks/useTier";
 import { PremiumGate } from "@/components/app/PremiumGate";
+import { UpdateBanner } from "@/components/UpdateBanner";
 
 import Landing from "./pages/Landing";
 import HowToUse from "./pages/HowToUse";
@@ -148,6 +149,9 @@ function RequireAuth({ children }: { children: ReactNode }) {
 const App = () => (
   <Providers>
     <Toaster />
+    {/* Surfaces a one-tap refresh whenever a newer build has been deployed,
+        so installed PWAs never get stuck on an old service-worker cache. */}
+    <UpdateBanner />
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         {/* Marketing site routes — unchanged */}

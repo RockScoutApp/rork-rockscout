@@ -41,6 +41,16 @@
             android:name="androidx.work.impl.background.systemalarm.RescheduleReceiver"
             android:exported="false" />
 
+        <!-- Receives the outcome of in-app update installs (PackageInstaller
+             sessions) so real failure reasons can be shown to the user. -->
+        <receiver
+            android:name=".data.InstallResultReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.rork.rockscout.action.INSTALL_RESULT" />
+            </intent-filter>
+        </receiver>
+
         <!-- Google AdMob — uses test ad unit ID for development.
              Replace with real AdMob app ID in production. -->
         <meta-data

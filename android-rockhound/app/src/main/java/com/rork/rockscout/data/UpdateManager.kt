@@ -97,35 +97,41 @@ object UpdateManager {
     }
 
     /**
-     * Attempts an in-app self-update when a direct APK URL is available from the
-     * backend; otherwise falls back to the app store listing.
+     * Routes the user down the right update path for how they installed the app.
      *
-     * When [AppUpdateInfo.apkUrl] is non-empty, the APK is downloaded and the
-     * system package installer is launched. ApkInstaller fully validates the
-     * download first (magic bytes, package name, version code, signing
-     * certificate) so a corrupted or mismatched APK never reaches the installer.
+     * - **Installed from Google Play** → open the Play listing (the Play in-app
+     *   update flow is started separately from the Activity on resume, so by the
+     *   time this button is tapped the store page is the reliable action).
+     * - **Sideloaded APK** → download the direct APK from [AppUpdateInfo.apkUrl]
+     *   and install it over the existing app via [ApkInstaller], which validates
+     *   the package and reports real failure reasons instead of the system's
+     *   generic "App not installed" dialog.
+     * - **No direct APK configured** → fall back to the store listing.
      *
-     * If a signing conflict is detected (the downloaded APK is signed with a
-     * different key than the installed build), ApkInstaller surfaces a
-     * [ApkInstaller.Status.SIGNING_CONFLICT] state instead of triggering the
-     * system "App not installed" dialog. The UI observes this and shows a
-     * friendly dialog offering to uninstall the old version first.
-     *
-     * Returns true when an update flow was started (direct APK or store).
+     * Returns true when an update flow was started.
      */
     fun downloadAndInstall(context: Context): Boolean {
         val info = _updateInfo.value
+        val storeUrl = info?.storeUrl?.ifBlank { DEFAULT_PLAY_STORE_URL } ?: DEFAULT_PLAY_STORE_URL
         val apkUrl = info?.apkUrl?.ifBlank { null }
+
+        // Play installs must update through Play — sideloading over a Play
+        // build fails on signature mismatch (Play re-signs with its own key).
+        if (PlayUpdateManager.isPlayInstall(context)) {
+            openStore(context)
+            return true
+        }
+
         if (apkUrl != null) {
-            val storeUrl = info?.storeUrl?.ifBlank { DEFAULT_PLAY_STORE_URL } ?: DEFAULT_PLAY_STORE_URL
-            scope.launch {
-                ApkInstaller.downloadAndInstall(context, apkUrl, fallbackStoreUrl = storeUrl)
-            }
+            ApkInstaller.start(context, apkUrl, fallbackStoreUrl = storeUrl)
             return true
         }
         openStore(context)
         return true
     }
+
+    /** True when the backend published a direct APK for this release. */
+    fun hasDirectApk(): Boolean = _updateInfo.value?.apkUrl?.isNotBlank() == true
 
     private fun installedVersionCode(context: Context): Int {
         return context.packageManager

@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 
 import App from "./App.tsx";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { registerServiceWorker } from "./lib/swUpdate";
 import "./index.css";
 
 const root = createRoot(document.getElementById("root")!);
@@ -24,14 +25,13 @@ if (typeof (window as unknown as { requestIdleCallback?: (cb: () => void) => voi
   setTimeout(clearBoot, 0);
 }
 
-// Register the service worker for offline support. This only enables the PWA
-// shell cache — it does NOT trigger an install prompt. The install prompt is
-// suppressed in usePwaInstall and only shown when the user taps "Install app".
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch((err) => {
-      // Swallow errors — the site works fine without offline support.
-      console.warn("SW registration failed:", err);
-    });
-  });
-}
+// Register the service worker for offline support and keep it up to date.
+// This only enables the PWA shell cache — it does NOT trigger an install
+// prompt. The install prompt is suppressed in usePwaInstall and only shown
+// when the user taps "Install app".
+//
+// registerServiceWorker also polls for new builds and raises the
+// "rockscout:update-ready" event that <UpdateBanner /> listens for, so a
+// deployed update reaches installed PWAs instead of being pinned to whatever
+// build the user first loaded.
+window.addEventListener("load", registerServiceWorker);

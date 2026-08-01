@@ -8,13 +8,15 @@ import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import androidx.core.content.FileProvider
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.onDownload
 import io.ktor.client.request.get
-import io.ktor.client.statement.readBytes
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.contentLength
 import io.ktor.http.isSuccess
+import io.ktor.utils.io.readRemaining
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -24,24 +26,48 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
+import kotlinx.io.readByteArray
 import java.io.File
 
 /**
- * Downloads an update APK and launches the system package installer so the new
- * build installs over the existing one — no uninstall required, as long as the
- * signing key matches.
+ * Downloads an update APK and installs it over the existing app.
  *
- * Progress is published to [progress] (0–100) and the high-level status to
- * [status] so the UI can show a download + install dialog. Cancelling the
- * collecting coroutine cancels the download.
+ * The install path is the [PackageInstaller] session API, which reports the
+ * *real* failure reason (incompatible signature, insufficient storage, aborted
+ * by the user, …) through [InstallResultReceiver] instead of leaving the user
+ * staring at the system's generic "App not installed" dialog. If the session
+ * API is unavailable for any reason, it falls back to the classic
+ * `ACTION_VIEW` + FileProvider sideload intent.
+ *
+ * The full pipeline, in order:
+ * 1. Ensure "install unknown apps" is granted — if not, park in
+ *    [Status.NEEDS_INSTALL_PERMISSION] and resume automatically once the user
+ *    comes back from Settings ([resumeIfReady]).
+ * 2. Stream the APK to `cache/updates/` (never buffered whole in memory, so a
+ *    60 MB+ APK can't OOM a low-memory device).
+ * 3. Validate it: magic bytes, parseable package, matching package name, not a
+ *    downgrade, matching signing certificate.
+ * 4. Commit a PackageInstaller session and report the outcome.
+ *
+ * Every stage publishes to [status] / [progress] / [error] so the UI can show
+ * exactly where things are, and [retry] re-runs the last attempt.
  */
 object ApkInstaller {
 
     private const val TAG = "ApkInstaller"
     private const val INSTALLER_REQUEST_CODE = 77001
-    private const val SESSION_ID_KEY = "com.rork.rockscout.update.session_id"
+    private const val DOWNLOAD_BUFFER = 64L * 1024L
 
-    enum class Status { IDLE, DOWNLOADING, INSTALLING, DONE, FAILED, SIGNING_CONFLICT }
+    enum class Status {
+        IDLE,
+        NEEDS_INSTALL_PERMISSION,
+        DOWNLOADING,
+        VERIFYING,
+        INSTALLING,
+        DONE,
+        FAILED,
+        SIGNING_CONFLICT,
+    }
 
     /** Thrown when the downloaded APK is signed with a different key than the
      *  installed app. Surfaced to the UI as a friendly dialog offering to
@@ -57,30 +83,124 @@ object ApkInstaller {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    private val backupScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    /** Human-readable size of the download, e.g. "52.4 MB" — empty while unknown. */
+    private val _downloadSize = MutableStateFlow("")
+    val downloadSize: StateFlow<String> = _downloadSize.asStateFlow()
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    /** Remembered so the flow can be resumed after the user grants the
+     *  "install unknown apps" permission, or retried after a failure. */
+    @Volatile private var pendingApkUrl: String? = null
+    @Volatile private var pendingStoreUrl: String = ""
 
     /** Reset back to IDLE so the dialog can be dismissed cleanly. */
     fun reset() {
         _status.value = Status.IDLE
         _progress.value = 0
         _error.value = null
+        _downloadSize.value = ""
+    }
+
+    /**
+     * Entry point. Downloads [apkUrl] and installs it.
+     *
+     * Safe to call repeatedly — a run already in flight is ignored so a
+     * double-tap can't kick off two downloads.
+     */
+    fun start(context: Context, apkUrl: String, fallbackStoreUrl: String = "") {
+        val current = _status.value
+        if (current == Status.DOWNLOADING || current == Status.VERIFYING || current == Status.INSTALLING) {
+            Log.d(TAG, "Update already in progress (status=$current) — ignoring duplicate start")
+            return
+        }
+        pendingApkUrl = apkUrl
+        pendingStoreUrl = fallbackStoreUrl
+        val appContext = context.applicationContext
+        scope.launch { run(appContext) }
+    }
+
+    /** Legacy suspend entry point kept for existing callers. */
+    suspend fun downloadAndInstall(context: Context, apkUrl: String, fallbackStoreUrl: String = "") {
+        pendingApkUrl = apkUrl
+        pendingStoreUrl = fallbackStoreUrl
+        run(context.applicationContext)
+    }
+
+    /** Re-runs the last attempt (after a failure, or after granting permission). */
+    fun retry(context: Context) {
+        val url = pendingApkUrl ?: return
+        reset()
+        start(context, url, pendingStoreUrl)
+    }
+
+    /**
+     * Called from the Activity's `onResume`. If we were waiting on the
+     * "install unknown apps" permission and the user has now granted it, the
+     * update resumes on its own — no second tap required.
+     */
+    fun resumeIfReady(context: Context) {
+        if (_status.value != Status.NEEDS_INSTALL_PERMISSION) return
+        if (!canInstallPackages(context)) return
+        Log.d(TAG, "Install permission granted — resuming update")
+        retry(context)
+    }
+
+    /** True when the OS will let this app install an APK. */
+    fun canInstallPackages(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return true
+        return runCatching { context.packageManager.canRequestPackageInstalls() }.getOrDefault(false)
+    }
+
+    /**
+     * Opens the system screen where the user enables "Install unknown apps"
+     * for RockScout. Falls back to the app's own settings page, then to the
+     * global security settings, so this always lands somewhere useful.
+     */
+    fun openInstallPermissionSettings(context: Context) {
+        val intents = buildList {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                add(
+                    Intent(
+                        Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                        Uri.parse("package:${context.packageName}"),
+                    ),
+                )
+                add(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES))
+            }
+            add(
+                Intent(
+                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.parse("package:${context.packageName}"),
+                ),
+            )
+        }
+        for (intent in intents) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            if (SafeLinkOpener.canHandle(context, intent)) {
+                SafeLinkOpener.launch(context, intent, "Unable to open the install permission screen.")
+                return
+            }
+        }
+        SafeLinkOpener.launch(
+            context,
+            Intent(Settings.ACTION_SECURITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            "Unable to open Settings. Please enable 'Install unknown apps' for RockScout manually.",
+        )
     }
 
     /** Launch the system uninstall flow for RockScout so the user can remove
      *  the old (differently-signed) build before installing the new one.
-     *  Uses a safe launch so a missing handler never crashes the app.
      *
      *  Before launching the uninstall, backs up the user's full SharedPreferences
      *  to the cloud (keyed by their user ID) so it can be restored after reinstall.
-     *  The backup is fire-and-forget — if it fails, the uninstall still proceeds
-     *  (the user just won't get the automatic restore). */
+     *  The backup is fire-and-forget — if it fails, the uninstall still proceeds. */
     fun launchUninstall(context: Context) {
-        // Cloud-backup the user's settings before uninstalling so they survive.
         val userId = AuthRepository.instance.currentUserId
         if (userId != null) {
             try {
                 val settingsJson = PersistenceManager.exportAllSettingsAsJson()
-                backupScope.launch {
+                scope.launch {
                     SettingsBackupApi.backupSettings(userId, settingsJson)
                         .onFailure { Log.w(TAG, "Settings cloud backup failed: ${it.message}") }
                         .onSuccess { Log.d(TAG, "Settings cloud backup saved for user $userId") }
@@ -96,27 +216,30 @@ object ApkInstaller {
         SafeLinkOpener.launch(context, intent, "Unable to open the uninstall screen.")
     }
 
-    /**
-     * Downloads [apkUrl] into the app cache, then triggers the system installer.
-     * Throws on failure so callers can surface a message; also publishes to [error].
-     *
-     * @param fallbackStoreUrl  When the APK cannot be installed (e.g. the file
-     *        is corrupt, signatures differ, or no package installer is available),
-     *        the user is redirected to this store URL instead of seeing the system
-     *        "App not installed" dialog.
-     */
-    suspend fun downloadAndInstall(context: Context, apkUrl: String, fallbackStoreUrl: String = "") {
+    // ---------------------------------------------------------------- pipeline
+
+    private suspend fun run(context: Context) {
+        val apkUrl = pendingApkUrl ?: return
         _error.value = null
         _progress.value = 0
+
+        // Ask for the install permission BEFORE downloading anything. Nothing
+        // is more frustrating than waiting for a 60 MB download only to be told
+        // the app isn't allowed to install it.
+        if (!canInstallPackages(context)) {
+            Log.d(TAG, "Missing REQUEST_INSTALL_PACKAGES consent — prompting user")
+            _status.value = Status.NEEDS_INSTALL_PERMISSION
+            return
+        }
+
         _status.value = Status.DOWNLOADING
         try {
             val apkFile = downloadApk(context, apkUrl)
+            _status.value = Status.VERIFYING
+            validateApk(context, apkFile)
             _status.value = Status.INSTALLING
-            launchSystemInstaller(context, apkFile, fallbackStoreUrl)
-            _status.value = Status.DONE
+            install(context, apkFile)
         } catch (e: SigningConflictException) {
-            // Signing conflict — do NOT auto-redirect to the store. Surface the
-            // friendly dialog so the user can uninstall the old build first.
             Log.w(TAG, "Signing conflict: ${e.message}")
             _error.value = e.message
             _status.value = Status.SIGNING_CONFLICT
@@ -125,45 +248,69 @@ object ApkInstaller {
             throw e
         } catch (e: Exception) {
             Log.e(TAG, "Self-update failed", e)
-            _error.value = e.message ?: "Download failed"
+            _error.value = e.message ?: "The update could not be downloaded. Please check your connection and try again."
             _status.value = Status.FAILED
-            if (fallbackStoreUrl.isNotBlank()) {
-                SafeLinkOpener.openUrl(context, fallbackStoreUrl)
-            }
         }
     }
 
     /** Streams the APK to cache/updates/rockscout-update.apk with progress updates. */
     private suspend fun downloadApk(context: Context, apkUrl: String): File = withContext(Dispatchers.IO) {
         val updatesDir = File(context.cacheDir, "updates").apply { mkdirs() }
+        // Clear stale downloads so a half-finished file can never be installed.
+        updatesDir.listFiles()?.forEach { runCatching { it.delete() } }
         val apkFile = File(updatesDir, "rockscout-update.apk")
-        if (apkFile.exists()) apkFile.delete()
 
-        // Dedicated client with a long socket timeout for large APK downloads.
         val client = HttpClient {
             install(io.ktor.client.plugins.HttpTimeout) {
-                connectTimeoutMillis = 15_000
-                requestTimeoutMillis = 10 * 60_000
-                socketTimeoutMillis = 60_000
+                connectTimeoutMillis = 20_000
+                requestTimeoutMillis = 15 * 60_000
+                socketTimeoutMillis = 90_000
             }
+            followRedirects = true
         }
 
         try {
-            val response = client.get(apkUrl) {
-                onDownload { bytesSentTotal, contentLength ->
-                    if (contentLength != null && contentLength > 0) {
-                        val pct = ((bytesSentTotal * 100) / contentLength).toInt().coerceIn(0, 100)
-                        _progress.value = pct
-                    }
+            val response = client.get(apkUrl)
+            if (!response.status.isSuccess()) {
+                throw RuntimeException("Download failed (HTTP ${response.status.value}). The update file may have moved.")
+            }
+            val total = response.contentLength() ?: -1L
+            _downloadSize.value = if (total > 0) formatBytes(total) else ""
+
+            // Fail fast when there isn't enough free space — otherwise the
+            // install aborts halfway with an opaque error.
+            if (total > 0) {
+                val free = updatesDir.usableSpace
+                // Need room for the download AND the installed copy.
+                if (free in 1 until (total * 2)) {
+                    throw RuntimeException(
+                        "Not enough free space to install the update. Please free up about ${formatBytes(total * 2)} and try again.",
+                    )
                 }
             }
-            if (!response.status.isSuccess()) {
-                throw RuntimeException("Download failed: HTTP ${response.status.value}")
+
+            var written = 0L
+            val channel = response.bodyAsChannel()
+            apkFile.outputStream().buffered().use { out ->
+                while (!channel.isClosedForRead) {
+                    val packet = channel.readRemaining(DOWNLOAD_BUFFER)
+                    while (!packet.exhausted()) {
+                        val bytes = packet.readByteArray()
+                        out.write(bytes)
+                        written += bytes.size
+                        if (total > 0) {
+                            _progress.value = ((written * 100) / total).toInt().coerceIn(0, 100)
+                        }
+                    }
+                }
+                out.flush()
             }
-            val bytes = response.readBytes()
-            apkFile.writeBytes(bytes)
             _progress.value = 100
-            Log.d(TAG, "Downloaded ${bytes.size} bytes to ${apkFile.absolutePath}")
+            Log.d(TAG, "Downloaded $written bytes to ${apkFile.absolutePath}")
+
+            if (total > 0 && written < total) {
+                throw RuntimeException("The download was interrupted. Please try again.")
+            }
             apkFile
         } finally {
             client.close()
@@ -171,20 +318,66 @@ object ApkInstaller {
     }
 
     /**
-     * Fires the system "Install APK" intent via FileProvider. The user still has
-     * to tap Install in the system dialog — Android never lets apps silently
-     * install another APK.
-     *
-     * Guards against the system "App not installed" dialog by fully validating the
-     * APK before launch: it must be a non-empty ZIP/APK, parseable by the package
-     * manager, match the current package name, have a higher version code, and be
-     * signed with the same certificate as the installed app. If anything is wrong,
-     * it falls back to the Play Store listing instead of asking the system to
-     * install a broken or incompatible APK.
+     * Installs [apkFile] using the PackageInstaller session API, falling back
+     * to the FileProvider sideload intent if the session can't be created.
      */
-    private fun launchSystemInstaller(context: Context, apkFile: File, fallbackStoreUrl: String) {
-        validateApk(context, apkFile)
+    private fun install(context: Context, apkFile: File) {
+        val sessionResult = runCatching { installViaSession(context, apkFile) }
+        if (sessionResult.isSuccess) return
 
+        Log.w(TAG, "Session install failed, falling back to intent", sessionResult.exceptionOrNull())
+        installViaIntent(context, apkFile)
+    }
+
+    private fun installViaSession(context: Context, apkFile: File) {
+        val installer = context.packageManager.packageInstaller
+        val params = PackageInstaller.SessionParams(
+            PackageInstaller.SessionParams.MODE_FULL_INSTALL,
+        ).apply {
+            setAppPackageName(context.packageName)
+            runCatching { setSize(apkFile.length()) }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                runCatching { setInstallReason(PackageManager.INSTALL_REASON_USER) }
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                runCatching {
+                    setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
+                }
+            }
+        }
+
+        val sessionId = installer.createSession(params)
+        installer.openSession(sessionId).use { session ->
+            session.openWrite("rockscout_update", 0, apkFile.length()).use { out ->
+                apkFile.inputStream().use { input -> input.copyTo(out, 128 * 1024) }
+                session.fsync(out)
+            }
+
+            val intent = Intent(context, InstallResultReceiver::class.java).apply {
+                action = InstallResultReceiver.ACTION_INSTALL_RESULT
+                setPackage(context.packageName)
+            }
+            var flags = PendingIntent.FLAG_UPDATE_CURRENT
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                // Must be mutable: the system fills in EXTRA_STATUS / EXTRA_INTENT.
+                flags = flags or PendingIntent.FLAG_MUTABLE
+            }
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                INSTALLER_REQUEST_CODE,
+                intent,
+                flags,
+            )
+            session.commit(pendingIntent.intentSender)
+        }
+        Log.d(TAG, "Install session $sessionId committed")
+    }
+
+    /**
+     * Classic sideload path — fires the system "Install APK" intent via
+     * FileProvider. Used only when the session API isn't usable.
+     */
+    private fun installViaIntent(context: Context, apkFile: File) {
         val uri = FileProvider.getUriForFile(
             context,
             "${context.packageName}.fileprovider",
@@ -194,55 +387,70 @@ object ApkInstaller {
             setDataAndType(uri, "application/vnd.android.package-archive")
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            // Clear any prior dec-extras so old grants don't trip up the installer.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
         }
 
         if (!SafeLinkOpener.canHandle(context, intent)) {
-            Log.w(TAG, "No package installer available for APK; falling back to store")
-            if (fallbackStoreUrl.isNotBlank()) {
-                SafeLinkOpener.openUrl(context, fallbackStoreUrl)
-            }
-            throw IllegalStateException("No package installer available for this APK.")
+            throw IllegalStateException("No package installer is available on this device.")
         }
-
-        runCatching { context.startActivity(intent) }
-            .onFailure { e ->
-                Log.e(TAG, "Could not launch installer", e)
-                if (fallbackStoreUrl.isNotBlank()) {
-                    SafeLinkOpener.openUrl(context, fallbackStoreUrl)
-                }
-                throw e
-            }
+        context.startActivity(intent)
+        // The intent path gives no completion callback — treat launching the
+        // system installer as done from our side.
+        _status.value = Status.DONE
     }
 
+    // -------------------------------------------------------------- callbacks
+
+    /** Called by [InstallResultReceiver] when the session finishes cleanly. */
+    fun onInstallSucceeded() {
+        _status.value = Status.DONE
+        _error.value = null
+        pendingApkUrl = null
+    }
+
+    /** Called by [InstallResultReceiver] with the real failure reason. */
+    fun onInstallFailed(status: Int, message: String?) {
+        val incompatible = status == PackageInstaller.STATUS_FAILURE_CONFLICT ||
+            message?.contains("INSTALL_FAILED_UPDATE_INCOMPATIBLE", ignoreCase = true) == true ||
+            message?.contains("signatures do not match", ignoreCase = true) == true
+        if (incompatible) {
+            _error.value = "This update is signed with a different key than the version installed on your device."
+            _status.value = Status.SIGNING_CONFLICT
+            return
+        }
+        _error.value = friendlyInstallError(status, message)
+        _status.value = if (status == PackageInstaller.STATUS_FAILURE_ABORTED) Status.IDLE else Status.FAILED
+    }
+
+    private fun friendlyInstallError(status: Int, message: String?): String = when (status) {
+        PackageInstaller.STATUS_FAILURE_ABORTED ->
+            "Install cancelled."
+        PackageInstaller.STATUS_FAILURE_BLOCKED ->
+            "The install was blocked by your device. Check Play Protect or your security settings, then try again."
+        PackageInstaller.STATUS_FAILURE_INCOMPATIBLE ->
+            "This update isn't compatible with your device."
+        PackageInstaller.STATUS_FAILURE_INVALID ->
+            "The update file was damaged in transit. Please try again."
+        PackageInstaller.STATUS_FAILURE_STORAGE ->
+            "There isn't enough free space to install the update. Free up some space and try again."
+        else -> message?.takeIf { it.isNotBlank() } ?: "The update couldn't be installed. Please try again."
+    }
+
+    // ------------------------------------------------------------- validation
+
     /**
-     * Validates the downloaded APK before the system installer is ever asked to
-     * handle it. This prevents the system "App not installed" dialog that appears
-     * when the installer receives a corrupted, mismatched, or downgraded APK.
-     *
-     * Checks, in order:
-     * 1. File exists and is non-empty.
-     * 2. File starts with the ZIP/APK magic bytes ("PK").
-     * 3. PackageManager can parse the archive and read its package info.
-     * 4. APK package name matches the currently installed app.
-     * 5. APK version code is strictly greater than the installed version code.
-     * 6. APK signing certificate(s) match the installed app.
-     * 7. On Android 8+, the app is allowed to request package installs.
-     *
-     * Throws [IllegalStateException] with a human-readable message if any check fails.
+     * Validates the downloaded APK before the installer is ever asked to handle
+     * it. Checks, in order: non-empty file, ZIP magic bytes, parseable package,
+     * matching package name, not a downgrade, matching signing certificate.
      */
     private fun validateApk(context: Context, apkFile: File) {
         if (!apkFile.exists() || apkFile.length() <= 0) {
-            throw IllegalStateException("Downloaded update is missing or empty.")
+            throw IllegalStateException("The downloaded update is missing or empty.")
         }
 
         // APKs are ZIP archives — the first two bytes must be "PK".
         val magic = apkFile.inputStream().use { it.readNBytes(2) }
         if (magic.size < 2 || magic[0] != 'P'.code.toByte() || magic[1] != 'K'.code.toByte()) {
-            throw IllegalStateException("Downloaded update is not a valid APK file.")
+            throw IllegalStateException("The downloaded file isn't a valid app package. The download link may be broken.")
         }
 
         val packageManager = context.packageManager
@@ -254,7 +462,7 @@ object ApkInstaller {
         }
 
         val archiveInfo = packageManager.getPackageArchiveInfo(apkFile.absolutePath, flags)
-            ?: throw IllegalStateException("Downloaded update is not a valid Android package.")
+            ?: throw IllegalStateException("The downloaded update couldn't be read as an Android app.")
 
         val installedInfo = runCatching {
             packageManager.getPackageInfo(context.packageName, flags)
@@ -262,49 +470,38 @@ object ApkInstaller {
             ?: throw IllegalStateException("Could not read the installed app information.")
 
         if (archiveInfo.packageName != context.packageName) {
-            throw IllegalStateException(
-                "Downloaded update does not match RockScout (package mismatch).",
-            )
+            throw IllegalStateException("The downloaded update isn't RockScout (package mismatch).")
         }
 
-        val installedVersion = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            installedInfo.longVersionCode.toInt()
-        } else {
-            @Suppress("DEPRECATION")
-            installedInfo.versionCode
-        }
-        val apkVersion = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            archiveInfo.longVersionCode.toInt()
-        } else {
-            @Suppress("DEPRECATION")
-            archiveInfo.versionCode
-        }
-        if (apkVersion <= installedVersion) {
+        val installedVersion = versionCodeOf(installedInfo)
+        val apkVersion = versionCodeOf(archiveInfo)
+        // Only a genuine downgrade is rejected — Android refuses those outright.
+        // An equal version is allowed so a user can always repair/reinstall.
+        if (apkVersion < installedVersion) {
             throw IllegalStateException(
-                "Downloaded update is not newer than the installed version.",
+                "The downloaded update is older than the version you already have installed.",
             )
         }
 
         if (!signaturesMatch(installedInfo, archiveInfo)) {
             throw SigningConflictException(
-                "Downloaded update was signed with a different key. Please install from the Play Store instead.",
-            )
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
-            !packageManager.canRequestPackageInstalls()
-        ) {
-            throw IllegalStateException(
-                "This app isn't allowed to install updates. Please enable 'Install unknown apps' for RockScout in Settings, or update from the Play Store.",
+                "This update is signed with a different key than the version installed on your device.",
             )
         }
     }
 
+    private fun versionCodeOf(info: PackageInfo): Long =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            info.longVersionCode
+        } else {
+            @Suppress("DEPRECATION")
+            info.versionCode.toLong()
+        }
+
     /**
-     * Compares the signing certificate(s) of the installed app and the downloaded
-     * APK. Android requires the certificates to match exactly when installing an
-     * update over an existing app; otherwise the install fails with the system
-     * "App not installed" dialog.
+     * Compares the signing certificate(s) of the installed app and the
+     * downloaded APK. Android requires them to match when installing an update
+     * over an existing app.
      */
     private fun signaturesMatch(installedInfo: PackageInfo, archiveInfo: PackageInfo): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -328,5 +525,10 @@ object ApkInstaller {
                     a.toByteArray().contentEquals(b.toByteArray())
                 }
         }
+    }
+
+    private fun formatBytes(bytes: Long): String {
+        val mb = bytes / (1024.0 * 1024.0)
+        return if (mb >= 1) String.format("%.1f MB", mb) else "${bytes / 1024} KB"
     }
 }
