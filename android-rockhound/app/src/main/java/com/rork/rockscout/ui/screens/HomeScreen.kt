@@ -167,6 +167,7 @@ import com.rork.rockscout.data.DigSiteDiscoveryStore
 import com.rork.rockscout.data.LocationFetcher
 import com.rork.rockscout.data.Specimen
 import com.rork.rockscout.data.SpecimenImages
+import com.rork.rockscout.data.DinoImageMap
 import com.rork.rockscout.R
 import com.rork.rockscout.ui.components.AdBanner
 import com.rork.rockscout.ui.components.AnimatedAvatarIcon
@@ -479,7 +480,7 @@ fun HomeScreen(navController: NavController) {
         HomeTile("Exploring Prehistoric Organisms", "Dinosaurs, birds, ancient flora & more", Icons.Filled.Nature, Color(0xFF8BBF6A), Routes.PREHISTORIC_ORGANISMS,
             SpecimenImages.urls["dinosaur-bone"]?.firstOrNull()),
         HomeTile("Dinosaur Dictionary", "200+ dinosaurs & Ice Age animals with silhouettes", Icons.Filled.Pets, Color(0xFF6FBF8A), Routes.DINOSAUR_DICTIONARY,
-            SpecimenImages.urls["dinosaur-bone"]?.firstOrNull()),
+            DinoImageMap.imageUri("tyrannosaurus")),
         HomeTile("Tectonics & Volcanoes", "Plate movement, magma & where rocks form", Icons.Filled.LocalFireDepartment, Color(0xFFE2574C), Routes.TECTONIC_VOLCANIC,
             "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/13d72c22-f574-47c4-a23c-a6a9ae6b65bb.png"),
         HomeTile("Periodic Table", "118 elements · Where each element appears in rocks & gems", Icons.Filled.Science, Color(0xFF7CB5EC), Routes.PERIODIC_TABLE,
