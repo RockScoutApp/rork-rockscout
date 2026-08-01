@@ -6,7 +6,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +29,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.changedToUp
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
@@ -34,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.math.roundToInt
 
 /**
@@ -149,11 +155,13 @@ private fun formatMetric(value: Float): String {
 
 /**
  * A text label that shows an imperial measurement and reveals the metric equivalent
- * in a small popup when long-pressed. If no metric conversion is available, the
- * long-press does nothing.
+ * in a small popup **while the finger is held down** (press-and-hold peek).
  *
- * The popup appears as a small bubble below the text with a dark background,
- * showing the metric value prefixed with "≈". Tapping anywhere outside dismisses it.
+ * The popup appears once the long-press threshold is reached and disappears the
+ * moment the finger is lifted. It does not switch any global unit setting — it's
+ * purely a temporary peek at the metric conversion.
+ *
+ * If no metric conversion is available, long-press does nothing.
  *
  * @param text The imperial measurement text to display
  * @param color Text color
@@ -185,14 +193,28 @@ fun MetricText(
             textAlign = textAlign,
             lineHeight = if (lineHeight != null) lineHeight.sp else fontSize.sp,
             modifier = Modifier
-                .combinedClickable(
-                    onClick = {},
-                    onLongClick = {
-                        if (metricConversion != null) {
-                            showPopup = true
+                .pointerInput(metricConversion) {
+                    if (metricConversion == null) return@pointerInput
+                    awaitEachGesture {
+                        awaitFirstDown()
+                        val longPressTimeout = viewConfiguration.longPressTimeoutMillis
+                        val up = withTimeoutOrNull(longPressTimeout) {
+                            waitForUpOrCancellation()
                         }
-                    },
-                ),
+                        if (up == null) {
+                            // Long-press threshold reached — finger still down
+                            showPopup = true
+                            // Wait for finger release, then hide popup
+                            while (true) {
+                                val event = awaitPointerEvent(PointerEventPass.Main)
+                                if (event.changes.any { it.changedToUp() }) {
+                                    showPopup = false
+                                    break
+                                }
+                            }
+                        }
+                    }
+                },
         )
     }
 
@@ -202,9 +224,9 @@ fun MetricText(
             offset = IntOffset(0, 40),
             onDismissRequest = { showPopup = false },
             properties = PopupProperties(
-                focusable = true,
-                dismissOnBackPress = true,
-                dismissOnClickOutside = true,
+                focusable = false,
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false,
             ),
         ) {
             AnimatedVisibility(

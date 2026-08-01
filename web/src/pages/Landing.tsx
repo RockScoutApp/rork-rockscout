@@ -49,7 +49,7 @@ import { recordAffiliateClick } from "@/lib/affiliate-tracker";
 import { getTopPickNames } from "@/lib/top-picks";
 import { SITE } from "@/content/legal";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 
 const SHOTS = [
   { src: "/images/screenshots/01_home_dashboard.webp", alt: "Home dashboard with AI rock identification, level progress, and Trade Board" },
@@ -405,72 +405,6 @@ const Hero = () => {
     </DialogContent>
   </Dialog>
   </>
-  );
-};
-
-const VIDEO_BG_IMAGES = [
-  "/images/screenshots/01_home_dashboard.webp",
-  "/images/screenshots/02_specimen_detail.webp",
-  "/images/screenshots/03_specimen_database.webp",
-  "/images/screenshots/04_explore_learn.webp",
-  "/images/screenshots/05_home_features.webp",
-  "/images/screenshots/06_trade_board.webp",
-  "/images/screenshots/07_field_kit.webp",
-  "/images/screenshots/08_specimen_detail_photos.webp",
-  "/images/screenshots/09_profile.webp",
-  "/images/screenshots/10_social_friends.webp",
-];
-
-/** Standalone tutorial video player section — plays the composite 16-chapter narration video. */
-const TutorialVideoSection = () => {
-  const [bgIndex, setBgIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setBgIndex((i) => (i + 1) % VIDEO_BG_IMAGES.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-20">
-      <div className="max-w-2xl">
-        <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-          <span className="h-px w-8 bg-primary/50" /> Watch the tour
-        </span>
-        <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-          See every feature in action
-        </h2>
-        <p className="mt-3 text-balance text-base text-muted-foreground sm:text-lg">
-          A 16-chapter narrated walkthrough — the same tutorial that lives inside the app.
-        </p>
-      </div>
-      <div className="relative mt-8 overflow-hidden rounded-2xl border border-border bg-card shadow-xl sm:rounded-3xl">
-        {/* Cycling background slideshow behind the video */}
-        {VIDEO_BG_IMAGES.map((src, i) => (
-          <div
-            key={src}
-            className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out"
-            style={{
-              backgroundImage: `url(${src})`,
-              opacity: i === bgIndex ? 1 : 0,
-            }}
-            aria-hidden="true"
-          />
-        ))}
-        <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
-        <video
-          controls
-          preload="metadata"
-          playsInline
-          className="relative z-10 aspect-[9/16] w-full max-h-[80vh] object-contain sm:aspect-[3/4]"
-          poster="/images/screenshots/01_home_dashboard.webp"
-        >
-          <source src="/rockscout-tutorial.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-      </div>
-    </section>
   );
 };
 
@@ -1046,7 +980,6 @@ const Landing = () => {
     <Layout title={`${SITE.name} — ${SITE.tagline}`} description={SITE.description} ogImage="/images/og-share-card.webp">
       <Hero />
       <SpecimenMarquee />
-      <TutorialVideoSection />
       <Features />
       <SpecimenMarquee reverse />
       <HowItWorks />
