@@ -50,13 +50,37 @@ import {
 } from "@/components/ui/dialog";
 import { Share2, Brush, BookOpen, Lightbulb, Hammer, RefreshCw, Layers, FlaskConical, Skull, Bone, BarChart3, TreePine, Compass } from "lucide-react";
 
+type HowToCategory =
+  | "identify-collect"
+  | "social-trade"
+  | "trip-planning"
+  | "maps-locations"
+  | "explore-learn"
+  | "geology-guides"
+  | "account-premium"
+  | "expert-reports"
+  | "tools-misc";
+
 type HowToSection = {
   icon: React.ComponentType<{ className?: string }>;
   accent: string;
   title: string;
   shortLabel: string;
+  category: HowToCategory;
   steps: string[];
 };
+
+const CATEGORY_LABELS: { key: HowToCategory; label: string; accent: string }[] = [
+  { key: "identify-collect", label: "Identify & Collect", accent: "hsl(48 86% 70%)" },
+  { key: "social-trade", label: "Social & Trade", accent: "hsl(270 50% 70%)" },
+  { key: "trip-planning", label: "Trip Planning", accent: "hsl(36 80% 58%)" },
+  { key: "maps-locations", label: "Maps & Locations", accent: "hsl(142 52% 54%)" },
+  { key: "explore-learn", label: "Explore & Learn", accent: "hsl(190 90% 55%)" },
+  { key: "geology-guides", label: "Geology Guides", accent: "hsl(205 45% 61%)" },
+  { key: "account-premium", label: "Account & Premium", accent: "hsl(176 80% 60%)" },
+  { key: "expert-reports", label: "Expert & Reports", accent: "hsl(40 62% 64%)" },
+  { key: "tools-misc", label: "Tools & More", accent: "hsl(210 76% 71%)" },
+];
 
 // Mirrors the app's howToSections list (HowToUseScreen.kt) section-for-section.
 const HOW_TO_SECTIONS: HowToSection[] = [
@@ -65,6 +89,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(48 86% 70%)",
     title: "AI Rock Identification",
     shortLabel: "AI Rock ID",
+    category: "identify-collect",
     steps: [
       `Tap the big "Identify a Rock" hero banner on the home screen.`,
       `Choose a photo from your gallery or snap one with your camera.`,
@@ -83,6 +108,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(205 45% 61%)",
     title: "My Collection & Specimen Cards",
     shortLabel: "Collection",
+    category: "identify-collect",
     steps: [
       `Tap "My Rocks" on the home screen to view your collected specimens.`,
       `Each specimen card shows a photo, name, tagline, rarity, and location.`,
@@ -97,6 +123,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(144 44% 58%)",
     title: "Field Captures & Field Camera (Free)",
     shortLabel: "Field Camera",
+    category: "identify-collect",
     steps: [
       `Tap "Field Captures" on the home screen.`,
       `Log photos of rocks you find in the field — no identification needed, just a visual record.`,
@@ -115,6 +142,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(36 80% 58%)",
     title: "Trade Board",
     shortLabel: "Trade Board",
+    category: "social-trade",
     steps: [
       `Tap the "Trade Board" banner on the home screen.`,
       `Post a specimen you want to swap or sell — add photos, a description, and your trade preferences.`,
@@ -129,6 +157,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(270 50% 70%)",
     title: "Community Q&A Board",
     shortLabel: "Community",
+    category: "social-trade",
     steps: [
       `Tap the "Community" banner on the home screen to open the app-wide Q&A feed.`,
       `Post a question, photo, or rock story for the whole RockScout community to see — posts auto-expire after 14 days to keep the feed fresh.`,
@@ -144,6 +173,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(270 50% 70%)",
     title: "RockScout Social — Pings, Friends & Messenger",
     shortLabel: "Social",
+    category: "social-trade",
     steps: [
       `Your RockScout account is required to use the app — it's free and your collections, captures, and friends carry over to any device.`,
       `Open the RockScouts Map to see live pings from other hunters. Drop your own ping to share your location.`,
@@ -167,6 +197,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(36 80% 58%)",
     title: "Trip Planner",
     shortLabel: "Trip Planner",
+    category: "trip-planning",
     steps: [
       `Tap the "Trip Planner" banner on the home screen.`,
       `Create a multi-stop hunt route by adding dig sites, rock shops, or custom pins.`,
@@ -191,6 +222,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(205 45% 61%)",
     title: "Trip Calendar",
     shortLabel: "Calendar",
+    category: "trip-planning",
     steps: [
       `Tap the "Calendar" tile on the home screen to open the standalone Trip Calendar.`,
       `View all planned trips in a month grid — each trip appears inside its scheduled date box with the trip name and first few stop names.`,
@@ -206,6 +238,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(142 52% 54%)",
     title: "Archived Trips",
     shortLabel: "Archived",
+    category: "trip-planning",
     steps: [
       `Mark any trip as complete with the checkmark button on its card in the Trip Planner.`,
       `Completed trips can be archived — tap the "Archived" pill button in the Trip Planner header to view them.`,
@@ -219,6 +252,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(190 90% 55%)",
     title: "Aurora Forecaster & Space Weather",
     shortLabel: "Aurora",
+    category: "explore-learn",
     steps: [
       `Tap the "Aurora Forecaster" tile on the home screen to check real-time space weather conditions.`,
       `The main card shows the current Kp index, Bz value, solar wind speed, and visibility status for your latitude — color-coded with bright aurora-green and purple theming.`,
@@ -236,6 +270,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(190 90% 55%)",
     title: "Stars & Constellations — Night Sky Guide",
     shortLabel: "Night Sky",
+    category: "explore-learn",
     steps: [
       `Tap the "Explore the Stars" tile on the home screen to open the Stars & Constellations landing page.`,
       `Four clickable tiles lead to detailed astronomical info: Constellations, Important Stars, Planets, and Deep Sky Objects.`,
@@ -251,6 +286,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(205 45% 61%)",
     title: "Field Journal",
     shortLabel: "Field Journal",
+    category: "trip-planning",
     steps: [
       `Tap the "Field Journal" banner on the home screen.`,
       `Create a new entry for each day in the field — auto-weather, photos, and field notes.`,
@@ -263,6 +299,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(142 52% 54%)",
     title: "Dig Sites, Rock Shops & Locations",
     shortLabel: "Dig Sites",
+    category: "maps-locations",
     steps: [
       `Tap "Dig Sites & Rock Shops" on the home screen to browse the full map.`,
       `Filter by type: free dig sites, pay-to-dig mines, rock shops, metaphysical shops, and gem & mineral shows.`,
@@ -285,6 +322,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(190 90% 55%)",
     title: "Search & Discovery",
     shortLabel: "Search",
+    category: "tools-misc",
     steps: [
       `Tap the search icon in the home header.`,
       `Search across the entire database — specimens, locations, and educational guides.`,
@@ -297,6 +335,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(4 70% 62%)",
     title: "Notifications, Weather Alerts & Message Requests",
     shortLabel: "Alerts",
+    category: "account-premium",
     steps: [
       `The notification bell icon (home screen and profile header) shows your unread count for friend requests and other non-message notifications.`,
       `Tap the bell to open the Notification Center. If you have pending friend requests, a summary tile appears at the top — tap it to jump straight to the RockScout Friends screen.`,
@@ -313,6 +352,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(176 80% 60%)",
     title: "Profile, Achievements & Badges",
     shortLabel: "Profile",
+    category: "account-premium",
     steps: [
       `Tap your avatar on the home screen to open your Profile.`,
       `Your Player Card shows your level, XP progress, hunter status, and earned badges.`,
@@ -330,6 +370,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(270 47% 72%)",
     title: "Wishlist, Favorite Spots & Aurora Saved Spots",
     shortLabel: "Wishlist",
+    category: "account-premium",
     steps: [
       `Tap the heart icon on any specimen card to add it to your Wishlist.`,
       `View your Wishlist from the home screen — it's your dream-specimen shopping list.`,
@@ -345,6 +386,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(195 60% 53%)",
     title: "Saved Images & Photo Interactions (Free)",
     shortLabel: "Saved Images",
+    category: "identify-collect",
     steps: [
       `Tap any photo in the app to view it full-screen.`,
       `Long-press any photo to save it to your personal Saved Images folder.`,
@@ -358,6 +400,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(22 52% 61%)",
     title: "BLM Public Lands Guide",
     shortLabel: "BLM Lands",
+    category: "maps-locations",
     steps: [
       `Tap "BLM Public Lands" in the Field Kit section on the home screen.`,
       `Browse state-by-state rules for rockhounding on Bureau of Land Management land.`,
@@ -372,6 +415,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(0 0% 75%)",
     title: "Meteorite Hunting",
     shortLabel: "Meteorites",
+    category: "tools-misc",
     steps: [
       `Tap "Finding Meteorites" in the Field Kit section on the home screen.`,
       `Learn how to identify space rocks — fusion crust, magnetic properties, and key visual cues.`,
@@ -384,6 +428,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(210 76% 71%)",
     title: "Periodic Table of Elements",
     shortLabel: "Periodic Table",
+    category: "explore-learn",
     steps: [
       `Tap "Periodic Table" in the Explore & Learn section to explore all 118 elements.`,
       `Each element card shows where it appears in rocks and gems and its role in mineral formation.`,
@@ -395,6 +440,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(40 62% 64%)",
     title: "Educational Guides",
     shortLabel: "Guides",
+    category: "explore-learn",
     steps: [
       `RockScout includes over 10 built-in educational guides — all work fully offline once the bulk image download completes.`,
       `Exploring Geology: learn how rocks, minerals, and gems form across the rock cycle.`,
@@ -411,6 +457,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(195 60% 53%)",
     title: "Rocks Are Amazing",
     shortLabel: "Rocks Are Amazing",
+    category: "explore-learn",
     steps: [
       `Tap "Rocks Are Amazing" in the Explore & Learn section to open a curated gallery of Earth's most stunning formations.`,
       `Swipe through categorized card collections: enhydros, pseudomorphs, petroleum inclusions, fluorescent minerals, optical phenomena, coprolites, copper-inclusion agates, mineral assemblages, and more.`,
@@ -423,6 +470,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(30 52% 51%)",
     title: "Artifacts & Stone Tools",
     shortLabel: "Artifacts",
+    category: "explore-learn",
     steps: [
       `Tap the "Artifacts" tile on the home screen to browse a growing catalog of over 100 authentic prehistoric artifacts, each with its own generated reference image on a unique background.`,
       `Families include Arrowheads (20+ types from Clovis and Folsom to Mississippian triangle points), Spear Points & Dart Tips (12+ Paleoindian and Archaic forms), Hand Axes & Axe Heads (20+ Acheulean and Neolithic bifaces), Flaked Stone Tools (12+ scrapers, knives, and gravers), Drill Bits (6+ awl and drill forms), Native Beads (13+ shell, stone, and copper beads), Stone Effigies (7+ animal and human effigies from the Woodland and Mississippian periods), Pipes & Medicine Tubes, Ornaments & Weights, Shell Tools, Bone Tools, Pottery, Game Discs, and Wooden Artifacts.`,
@@ -436,6 +484,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(176 80% 45%)",
     title: "Natural Wonders of the World",
     shortLabel: "Natural Wonders",
+    category: "explore-learn",
     steps: [
       `Tap the "Natural Wonders" tile on the home screen to explore over 35 world-famous geological sites and the rocks and minerals you can find at each one.`,
       `Each wonder includes a stunning photo, location, geological formation story, rocks to find, and fun facts — from the Grand Canyon and Giant's Causeway to Mount Vesuvius, Salar de Uyuni, and the Zhangjiajie Pillars.`,
@@ -449,6 +498,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(210 76% 71%)",
     title: "Rock & Gem Resources",
     shortLabel: "Resources",
+    category: "tools-misc",
     steps: [
       `Tap "Rock & Gem Resources" in the Field Kit section on the home screen to browse trusted external geology, gem, and fossil websites.`,
       `Links open in your device's browser so you can dig deeper into any topic.`,
@@ -461,6 +511,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(48 86% 70%)",
     title: "Gear Guide",
     shortLabel: "Gear Guide",
+    category: "tools-misc",
     steps: [
       `Tap the "Gear Guide" banner (right below the Calendar tile) on the home screen to browse over 45 curated tools with Amazon links.`,
       `Kits are organized from beginner to advanced — from a first loupe and rock hammer to lapidary equipment and UV lights.`,
@@ -473,6 +524,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(142 52% 54%)",
     title: "Referrals & Community",
     shortLabel: "Referrals",
+    category: "social-trade",
     steps: [
       `Open the Referral screen from your Profile to get your unique referral link.`,
       `Share the link with friends — when they sign up, you both earn tokens and XP.`,
@@ -487,6 +539,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(195 60% 53%)",
     title: "Submit Specimens & Add Locations",
     shortLabel: "Submit",
+    category: "identify-collect",
     steps: [
       `Found a specimen that isn't in the database? Use the Upload Specimen pill (found on the Specimen Database screen, the Field Captures screen, and specimen detail pages).`,
       `Submit up to 4 photos plus a name, date found, location, and description. Images are automatically checked against a 5 MB size limit — if a photo is too large, you'll get a friendly notification to pick a smaller file, preventing upload failures before they happen.`,
@@ -501,6 +554,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(190 90% 55%)",
     title: "Share-a-Spot Deep Links",
     shortLabel: "Share a Spot",
+    category: "maps-locations",
     steps: [
       `Open the Field Captures Specimen Map (the swipeable second page of Field Captures) or the Trip Planner specimen marker map.`,
       `Tap any specimen marker pin on the map to open that specimen's detail view.`,
@@ -515,6 +569,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(210 76% 71%)",
     title: "Storage, Cache & Bulk Offline Download",
     shortLabel: "Storage",
+    category: "account-premium",
     steps: [
       `Open Social Settings and scroll to the Storage section to choose your cache size.`,
       `Standard (150MB) stores recently viewed specimen photos and map tiles — automatically manages itself by removing older items as new ones come in.`,
@@ -533,6 +588,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(40 62% 64%)",
     title: "Tokens, Premium & Donations — What's Free vs Paid",
     shortLabel: "Premium",
+    category: "account-premium",
     steps: [
       `Free for 7 days: full app access including AI identification (5 tokens to spend at your own pace), RockScout Friends, Trade Board, My Rocks, Wishlist, Field Captures, Trip Planner, and Field Journal.`,
       `After the trial, these stay FREE forever: browsing the full specimen database & geology guides, the Field Camera (saves to Saved Images), NWS severe weather alerts, and browsing dig sites & offline maps.`,
@@ -549,6 +605,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(48 86% 65%)",
     title: "NEW Badges & Recently Added Specimens",
     shortLabel: "NEW Badge",
+    category: "tools-misc",
     steps: [
       `A NEW badge automatically appears on any specimen or artifact card that was added to the catalog within the last 7 days.`,
       `Spot the latest database additions at a glance — no need to hunt through the full list to find what's new.`,
@@ -561,6 +618,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(142 52% 50%)",
     title: "App Updates, Sign-in & Safety",
     shortLabel: "Updates & Safety",
+    category: "account-premium",
     steps: [
       `When the app detects a signing conflict during an update (the installed APK was signed with a different key than the new version), a friendly dialog explains that the old version must be uninstalled to update — and offers a button to trigger the system uninstall flow directly.`,
       `After reinstalling the new version, just sign back in with your RockScout account. All your settings — hunter status, cache mode, notification preferences, aurora thresholds, and more — are restored from the cloud, exactly as they were before.`,
@@ -573,6 +631,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(210 76% 65%)",
     title: "Desktop Web App & Keyboard Shortcuts",
     shortLabel: "Desktop & Keys",
+    category: "tools-misc",
     steps: [
       `RockScout's web app is a full PWA that works on desktop browsers — wider multi-column layouts, split views for the map and location list, and grids that use your screen space efficiently.`,
       `On large screens, the Home, Reference Library, Specimens, Collection, Trade Board, Achievements, Gear Guide, and Gem Shows grids expand to 4–6 columns so you can browse more at once.`,
@@ -586,6 +645,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(210 76% 65%)",
     title: "Ask an Expert & Museum Finder",
     shortLabel: "Ask an Expert",
+    category: "expert-reports",
     steps: [
       `When an identification result has low confidence or you want a second opinion, tap the "Ask an Expert" button on the uncertainty card.`,
       `RockScout searches for nearby museums and geological institutions using your current location (or your profile region as a fallback). Each result shows the museum name, distance, phone number, website, and directions.`,
@@ -598,6 +658,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(48 86% 65%)",
     title: "PDF Identification Reports",
     shortLabel: "PDF Reports",
+    category: "expert-reports",
     steps: [
       `After running an identification, a small PDF document icon appears on each match card. Tap it to generate a printable 1–2 page report.`,
       `The report includes your captured photo, all match names with confidence scores and reasoning, the AI analysis summary, assemblage breakdown (if applicable), web references, and a field-capture note with the date and approximate location.`,
@@ -610,6 +671,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(142 52% 50%)",
     title: "Multi-Recipient Expert Email & Draft Persistence",
     shortLabel: "Multi-Email",
+    category: "expert-reports",
     steps: [
       `In the Museum Finder sheet, tap to select multiple museums at once — each selected museum gets a checkmark and Citrine highlight.`,
       `A "Compose Email (N)" button appears at the bottom showing how many recipients you've selected. Tap it to open the email composer with all selected museums as recipients.`,
@@ -622,6 +684,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(176 80% 45%)",
     title: "Recently Added Filter",
     shortLabel: "Recently Added",
+    category: "tools-misc",
     steps: [
       `On both the Specimen Database and Artifacts screens, a "Recently Added" filter chip appears in the filter row.`,
       `Tap the chip to narrow the list to only items added within the last 7 days — the same window the NEW badge covers.`,
@@ -634,6 +697,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(210 76% 65%)",
     title: "Settings Cloud Backup",
     shortLabel: "Cloud Backup",
+    category: "account-premium",
     steps: [
       `RockScout automatically backs up your settings — hunter status, cache mode, notification preferences, aurora thresholds, and more — to the cloud every 12 hours when you're signed in and online.`,
       `For a manual backup, go to Profile → Data & Sync and tap "Back Up Data Now." A progress bar shows the backup in progress, and a success message confirms when your data is synced.`,
@@ -646,6 +710,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(142 52% 50%)",
     title: "Free Read-Only PWA & Premium PWA Install",
     shortLabel: "Free & Premium PWA",
+    category: "account-premium",
     steps: [
       `RockScout's web app is available as a PWA (Progressive Web App) for desktop, laptop, and tablet browsers. There are two tiers.`,
       `Free tier: Install a read-only PWA on any device — browse the full specimen database of over 900 entries, all educational guides, the interactive map, and your personal bookmarks (Collection, Wishlist, Favorite Spots). No camera, no AI identification, no social features. Perfect for kids and learners.`,
@@ -658,6 +723,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(48 86% 65%)",
     title: "Search Near Me — Web Search for Local Rock Spots",
     shortLabel: "Search Near Me",
+    category: "maps-locations",
     steps: [
       `On the home screen's Dig Sites & Rock Shops section, a "Search Near Me" button appears next to the nearby locations header.`,
       `Tap it to run a web search for rock-related places — dig sites, rock shops, mineral collecting areas, museums, and metaphysical stores — near your current GPS location.`,
@@ -670,6 +736,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(144 44% 58%)",
     title: "Mineral Care & Cleaning Guide",
     shortLabel: "Mineral Care",
+    category: "tools-misc",
     steps: [
       `Tap "Mineral Care & Cleaning" in the Explore & Learn section on the home screen.`,
       `Browse safe cleaning methods for every mineral type — water, mild soap, ultrasonic, or "don't clean at all."`,
@@ -682,6 +749,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(205 45% 61%)",
     title: "Glossary",
     shortLabel: "Glossary",
+    category: "tools-misc",
     steps: [
       `Tap "Glossary" in the Field Kit section on the home screen.`,
       `Every rock, mineral, and space term used in the app is defined here in plain English.`,
@@ -694,6 +762,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(22 70% 58%)",
     title: "Exploring Geology — Rock Info Hub",
     shortLabel: "Rock Info",
+    category: "geology-guides",
     steps: [
       `Tap "Exploring Geology" in the Explore & Learn section on the home screen to open the Rock Info hub.`,
       `Four tiles lead to the core geology reference guides: Rock Types, Mineral ID, Crystal Systems, and Rock Cycle & Tools.`,
@@ -706,6 +775,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(205 45% 61%)",
     title: "Crystal System Reference",
     shortLabel: "Crystal Systems",
+    category: "geology-guides",
     steps: [
       `Tap "Crystal Systems" in the Explore & Learn section on the home screen.`,
       `Learn the 7 crystal systems — cubic, tetragonal, orthorhombic, monoclinic, triclinic, and hexagonal/trigonal.`,
@@ -718,6 +788,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(270 47% 72%)",
     title: "Fluorescence & UV Reference",
     shortLabel: "Fluorescence",
+    category: "geology-guides",
     steps: [
       `Tap "Fluorescence & UV" in the Explore & Learn section on the home screen.`,
       `Discover which minerals glow under UV light and what colors they produce.`,
@@ -730,6 +801,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(36 80% 58%)",
     title: "Lapidary Basics Guide",
     shortLabel: "Lapidary",
+    category: "geology-guides",
     steps: [
       `Tap "Lapidary Basics" in the Explore & Learn section on the home screen.`,
       `Learn the fundamentals of cutting, polishing, and cabbing your finds into jewelry.`,
@@ -742,6 +814,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(190 90% 55%)",
     title: "Rock Cycle Tools",
     shortLabel: "Rock Cycle",
+    category: "geology-guides",
     steps: [
       `Tap "Rock Cycle Tools" from the Educational Guides section.`,
       `Explore the interactive rock cycle — see how igneous, sedimentary, and metamorphic rocks transform into each other.`,
@@ -754,6 +827,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(22 52% 61%)",
     title: "Rock Types Deep Dive",
     shortLabel: "Rock Types",
+    category: "geology-guides",
     steps: [
       `Tap "Rock Types" from the Educational Guides section.`,
       `Deep dive into the three main rock families: igneous, sedimentary, and metamorphic.`,
@@ -766,6 +840,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(210 76% 71%)",
     title: "Mineral ID Guide",
     shortLabel: "Mineral ID",
+    category: "geology-guides",
     steps: [
       `Tap "Mineral ID Guide" from the Educational Guides section.`,
       `Use the step-by-step identification key to narrow down any mineral.`,
@@ -778,6 +853,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(4 70% 62%)",
     title: "Mass Extinctions",
     shortLabel: "Extinctions",
+    category: "geology-guides",
     steps: [
       `Tap "Mass Extinctions" from the Educational Guides section.`,
       `Learn about the 5 big extinction events that reshaped life on Earth.`,
@@ -790,6 +866,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(40 62% 64%)",
     title: "Geo Time Scale",
     shortLabel: "Geo Time Scale",
+    category: "geology-guides",
     steps: [
       `Tap "Geo Time Scale" from the Educational Guides section.`,
       `Explore an interactive geologic timeline from the Hadean to the present.`,
@@ -802,6 +879,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(205 45% 61%)",
     title: "Geologic Periods",
     shortLabel: "Geologic Periods",
+    category: "geology-guides",
     steps: [
       `Tap "Geologic Periods" from the Educational Guides section.`,
       `Browse period-by-period through the Paleozoic, Mesozoic, and Cenozoic eras.`,
@@ -814,6 +892,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(120 40% 58%)",
     title: "Fossil Types Guide",
     shortLabel: "Fossil Types",
+    category: "geology-guides",
     steps: [
       `Tap "Fossil Types" from the Educational Guides section.`,
       `Learn the different ways fossils form — permineralization, replacement, carbonization, molds and casts, and more.`,
@@ -826,6 +905,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(36 80% 58%)",
     title: "Trip Journal — Combined Trip Planner & Field Journal",
     shortLabel: "Trip Journal",
+    category: "trip-planning",
     steps: [
       `Tap the "Trip Planner & Field Journal" banner on the home screen to open the combined Trip Journal.`,
       `The Trip Journal combines your Trip Planner and Field Journal in one tabbed view — switch between trips and journal entries with the tab selector.`,
@@ -838,6 +918,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(210 76% 71%)",
     title: "Collection Statistics Dashboard",
     shortLabel: "Collection Stats",
+    category: "expert-reports",
     steps: [
       `Open "My Rocks" on the home screen and tap the statistics icon to view your Collection Statistics Dashboard.`,
       `See charts and stats for your collection — breakdown by category, rarity, location, and more.`,
@@ -850,6 +931,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(210 76% 65%)",
     title: "Contact Us",
     shortLabel: "Contact Us",
+    category: "tools-misc",
     steps: [
       `Tap "Contact Us" from the home screen tagline section.`,
       `Send feedback, report issues, or suggest new features directly to the developer.`,
@@ -861,6 +943,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     accent: "hsl(176 80% 45%)",
     title: "National & State Parks",
     shortLabel: "Parks",
+    category: "maps-locations",
     steps: [
       `Tap "National & State Parks" from the Field Kit section on the home screen.`,
       `Browse over 50 national and state parks that are dig-friendly or geologically significant.`,
@@ -874,6 +957,14 @@ const HowToUse = () => {
   const navigate = useNavigate();
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const selected = selectedIdx !== null ? HOW_TO_SECTIONS[selectedIdx] : null;
+
+  // Group sections by category for clean organization
+  const groupedSections = CATEGORY_LABELS.map(({ key, label, accent }) => ({
+    key,
+    label,
+    accent,
+    sections: HOW_TO_SECTIONS.filter((s) => s.category === key),
+  })).filter((g) => g.sections.length > 0);
 
   return (
     <Layout
@@ -916,40 +1007,129 @@ const HowToUse = () => {
             </p>
           </div>
 
-          {/* Section pills grid */}
-          <div className="mt-8 grid grid-cols-2 gap-2.5 sm:mt-10 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5">
-            {HOW_TO_SECTIONS.map((section, idx) => (
-              <button
-                key={section.title}
-                type="button"
-                onClick={() => setSelectedIdx(idx)}
-                className="group flex items-center gap-2.5 rounded-xl border px-3 py-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md sm:px-4"
+          {/* ── Icon Index at the top ── */}
+          <h2 className="mt-8 font-display text-lg font-bold text-foreground sm:mt-10">
+            Icon Index
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Every icon in the app, grouped by category. Tap any entry to jump to its guide.
+          </p>
+
+          {groupedSections.map(({ key, label, accent, sections }) => (
+            <div key={`index-${key}`} className="mt-5">
+              {/* Category header */}
+              <div className="flex items-center gap-2">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: accent }}
+                />
+                <span
+                  className="text-sm font-bold"
+                  style={{ color: accent }}
+                >
+                  {label}
+                </span>
+              </div>
+              {/* Icon index entries grid */}
+              <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                {sections.map((section) => {
+                  const idx = HOW_TO_SECTIONS.indexOf(section);
+                  return (
+                    <button
+                      key={`idx-${section.title}`}
+                      type="button"
+                      onClick={() => setSelectedIdx(idx)}
+                      className="group flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-all hover:-translate-y-0.5 hover:shadow-sm"
+                      style={{
+                        borderColor: `color-mix(in srgb, ${section.accent} 25%, transparent)`,
+                        backgroundColor: `color-mix(in srgb, ${section.accent} 6%, transparent)`,
+                      }}
+                    >
+                      <span
+                        className="grid h-6 w-6 shrink-0 place-items-center rounded-md ring-1"
+                        style={{
+                          backgroundColor: `color-mix(in srgb, ${section.accent} 15%, transparent)`,
+                          color: section.accent,
+                          boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${section.accent} 30%, transparent)`,
+                        }}
+                      >
+                        <section.icon className="h-3.5 w-3.5" />
+                      </span>
+                      <span className="text-xs font-medium text-foreground">
+                        {section.shortLabel}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+
+          {/* Divider */}
+          <hr className="mt-10 border-border/40" />
+
+          {/* ── Detailed sections grouped by category ── */}
+          {groupedSections.map(({ key, label, accent, sections }) => (
+            <div key={`detail-${key}`} className="mt-8">
+              {/* Category header */}
+              <div
+                className="flex items-center gap-2 rounded-xl border px-3 py-2"
                 style={{
-                  borderColor: `color-mix(in srgb, ${section.accent} 30%, transparent)`,
-                  backgroundColor: `color-mix(in srgb, ${section.accent} 8%, transparent)`,
+                  borderColor: `color-mix(in srgb, ${accent} 25%, transparent)`,
+                  backgroundColor: `color-mix(in srgb, ${accent} 6%, transparent)`,
                 }}
               >
                 <span
-                  className="grid h-8 w-8 shrink-0 place-items-center rounded-lg ring-1 transition-transform group-hover:scale-110 sm:h-9 sm:w-9"
-                  style={{
-                    backgroundColor: `color-mix(in srgb, ${section.accent} 15%, transparent)`,
-                    color: section.accent,
-                    boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${section.accent} 30%, transparent)`,
-                  }}
+                  className="h-3 w-3 rounded-full"
+                  style={{ backgroundColor: accent }}
+                />
+                <span
+                  className="text-sm font-bold"
+                  style={{ color: accent }}
                 >
-                  <section.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                  {label}
                 </span>
-                <span className="flex flex-col gap-0.5 min-w-0">
-                  <span className="text-[10px] font-bold tabular-nums text-muted-foreground/60">
-                    {String(idx + 1).padStart(2, "0")}
-                  </span>
-                  <span className="text-xs font-semibold text-foreground sm:text-sm">
-                    {section.shortLabel}
-                  </span>
-                </span>
-              </button>
-            ))}
-          </div>
+              </div>
+
+              {/* Section pills grid */}
+              <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 md:grid-cols-4 lg:grid-cols-5">
+                {sections.map((section) => {
+                  const idx = HOW_TO_SECTIONS.indexOf(section);
+                  return (
+                    <button
+                      key={section.title}
+                      type="button"
+                      onClick={() => setSelectedIdx(idx)}
+                      className="group flex items-center gap-2.5 rounded-xl border px-3 py-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md sm:px-4"
+                      style={{
+                        borderColor: `color-mix(in srgb, ${section.accent} 30%, transparent)`,
+                        backgroundColor: `color-mix(in srgb, ${section.accent} 8%, transparent)`,
+                      }}
+                    >
+                      <span
+                        className="grid h-8 w-8 shrink-0 place-items-center rounded-lg ring-1 transition-transform group-hover:scale-110 sm:h-9 sm:w-9"
+                        style={{
+                          backgroundColor: `color-mix(in srgb, ${section.accent} 15%, transparent)`,
+                          color: section.accent,
+                          boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${section.accent} 30%, transparent)`,
+                        }}
+                      >
+                        <section.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                      </span>
+                      <span className="flex flex-col gap-0.5 min-w-0">
+                        <span className="text-[10px] font-bold tabular-nums text-muted-foreground/60">
+                          {String(idx + 1).padStart(2, "0")}
+                        </span>
+                        <span className="text-xs font-semibold text-foreground sm:text-sm">
+                          {section.shortLabel}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
 
           {/* Sign-off */}
           <div className="mt-10 text-center sm:mt-14">

@@ -105,14 +105,28 @@ import com.rork.rockscout.ui.theme.TextHigh
 import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.TextMid
 
-/** A single how-to section with icon, title, short label, and step-by-step instructions. */
+/** A single how-to section with icon, title, short label, category, and step-by-step instructions. */
 private data class HowToSection(
     val icon: ImageVector,
     val accent: Color,
     val title: String,
     val shortLabel: String,
+    val category: HowToCategory,
     val steps: List<String>,
 )
+
+/** Categories for organizing the how-to sections into clean groups. */
+enum class HowToCategory(val label: String, val accent: Color) {
+    IDENTIFY_COLLECT("Identify & Collect", Citrine),
+    SOCIAL_TRADE("Social & Trade", Amethyst),
+    TRIP_PLANNING("Trip Planning", Color(0xFFE8A33D)),
+    MAPS_LOCATIONS("Maps & Locations", Success),
+    EXPLORE_LEARN("Explore & Learn", Color(0xFF4FC3F7)),
+    GEOLOGY_GUIDES("Geology Guides", Color(0xFF6FA8C7)),
+    ACCOUNT_PREMIUM("Account & Premium", Aqua),
+    EXPERT_REPORTS("Expert & Reports", Color(0xFFE8C547)),
+    TOOLS_MISC("Tools & More", Color(0xFF7CB5EC)),
+}
 
 /** All how-to sections — covers every major feature in RockScout. */
 private val howToSections: List<HowToSection> = listOf(
@@ -121,6 +135,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Citrine,
         title = "AI Rock Identification",
         shortLabel = "AI Rock ID",
+        category = HowToCategory.IDENTIFY_COLLECT,
         steps = listOf(
             "Tap the big \"Identify a Rock\" hero banner on the home screen.",
             "Choose a photo from your gallery or snap one with your camera.",
@@ -139,6 +154,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF6FA8C7),
         title = "My Collection & Specimen Cards",
         shortLabel = "Collection",
+        category = HowToCategory.IDENTIFY_COLLECT,
         steps = listOf(
             "Tap \"My Rocks\" on the home screen to view your collected specimens.",
             "Each specimen card shows a photo, name, tagline, rarity, and location.",
@@ -153,6 +169,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF5CC98C),
         title = "Field Captures & Field Camera (Free)",
         shortLabel = "Field Camera",
+        category = HowToCategory.IDENTIFY_COLLECT,
         steps = listOf(
             "Tap \"Field Captures\" on the home screen.",
             "Log photos of rocks you find in the field — no identification needed, just a visual record.",
@@ -171,6 +188,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFFE8A33D),
         title = "Trade Board",
         shortLabel = "Trade Board",
+        category = HowToCategory.SOCIAL_TRADE,
         steps = listOf(
             "Tap the \"Trade Board\" banner on the home screen.",
             "Post a specimen you want to swap or sell — add photos, a description, and your trade preferences.",
@@ -185,6 +203,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Amethyst,
         title = "Community Q&A Board",
         shortLabel = "Community",
+        category = HowToCategory.SOCIAL_TRADE,
         steps = listOf(
             "Tap the \"Community\" banner on the home screen to open the app-wide Q&A feed.",
             "Post a question, photo, or rock story for the whole RockScout community to see — posts auto-expire after 14 days to keep the feed fresh.",
@@ -200,6 +219,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Amethyst,
         title = "RockScout Social — Pings, Friends & Messenger",
         shortLabel = "Social",
+        category = HowToCategory.SOCIAL_TRADE,
         steps = listOf(
             "Your RockScout account is required to use the app — it's free and your collections, captures, and friends carry over to any device.",
             "Open the RockScouts Map to see live pings from other hunters. Drop your own ping to share your location.",
@@ -223,6 +243,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFFE8A33D),
         title = "Trip Planner",
         shortLabel = "Trip Planner",
+        category = HowToCategory.TRIP_PLANNING,
         steps = listOf(
             "Tap the \"Trip Planner\" banner on the home screen.",
             "Create a multi-stop hunt route by adding dig sites, rock shops, or custom pins.",
@@ -247,6 +268,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF6FA8C7),
         title = "Trip Calendar",
         shortLabel = "Calendar",
+        category = HowToCategory.TRIP_PLANNING,
         steps = listOf(
             "Tap the \"Calendar\" tile on the home screen to open the standalone Trip Calendar.",
             "View all planned trips in a month grid — each trip appears inside its scheduled date box with the trip name and first few stop names.",
@@ -262,6 +284,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Success,
         title = "Archived Trips",
         shortLabel = "Archived",
+        category = HowToCategory.TRIP_PLANNING,
         steps = listOf(
             "Mark any trip as complete with the checkmark button on its card in the Trip Planner.",
             "Completed trips can be archived — tap the \"Archived\" pill button in the Trip Planner header to view them.",
@@ -275,6 +298,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF4FC3F7),
         title = "Aurora Forecaster & Space Weather",
         shortLabel = "Aurora",
+        category = HowToCategory.EXPLORE_LEARN,
         steps = listOf(
             "Tap the \"Aurora Forecaster\" tile on the home screen to check real-time space weather conditions.",
             "The main card shows the current Kp index, Bz value, solar wind speed, and visibility status for your latitude — color-coded with bright aurora-green and purple theming.",
@@ -292,6 +316,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF4FC3F7),
         title = "Stars & Constellations — Night Sky Guide",
         shortLabel = "Night Sky",
+        category = HowToCategory.EXPLORE_LEARN,
         steps = listOf(
             "Tap the \"Explore the Stars\" tile in the Explore & Learn section on the home screen to open the Stars & Constellations landing page.",
             "Four clickable tiles lead to detailed astronomical info: Constellations, Important Stars, Planets, and Deep Sky Objects.",
@@ -307,6 +332,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF6FA8C7),
         title = "Field Journal",
         shortLabel = "Field Journal",
+        category = HowToCategory.TRIP_PLANNING,
         steps = listOf(
             "Tap the \"Field Journal\" banner on the home screen.",
             "Create a new entry for each day in the field — auto-weather, photos, and field notes.",
@@ -319,6 +345,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Success,
         title = "Dig Sites, Rock Shops & Locations",
         shortLabel = "Dig Sites",
+        category = HowToCategory.MAPS_LOCATIONS,
         steps = listOf(
             "Tap \"Dig Sites & Rock Shops\" on the home screen to browse the full map.",
             "Filter by type: free dig sites, pay-to-dig mines, rock shops, metaphysical shops, and gem & mineral shows.",
@@ -341,6 +368,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Cyan,
         title = "Search & Discovery",
         shortLabel = "Search",
+        category = HowToCategory.TOOLS_MISC,
         steps = listOf(
             "Tap the search icon in the home header.",
             "Search across the entire database — specimens, locations, and educational guides.",
@@ -353,6 +381,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFFE2574C),
         title = "Notifications, Weather Alerts & Message Requests",
         shortLabel = "Alerts",
+        category = HowToCategory.ACCOUNT_PREMIUM,
         steps = listOf(
             "The notification bell icon (home screen and profile header) shows your unread count for friend requests and other non-message notifications.",
             "Tap the bell to open the Notification Center. If you have pending friend requests, a summary tile appears at the top — tap it to jump straight to the RockScout Friends screen.",
@@ -369,6 +398,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Aqua,
         title = "Profile, Achievements & Badges",
         shortLabel = "Profile",
+        category = HowToCategory.ACCOUNT_PREMIUM,
         steps = listOf(
             "Tap your avatar on the home screen to open your Profile.",
             "Your Player Card shows your level, XP progress, hunter status, and earned badges.",
@@ -386,6 +416,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF9B7BD8),
         title = "Wishlist, Favorite Spots & Aurora Saved Spots",
         shortLabel = "Wishlist",
+        category = HowToCategory.ACCOUNT_PREMIUM,
         steps = listOf(
             "Tap the heart icon on any specimen card to add it to your Wishlist.",
             "View your Wishlist from the home screen — it's your dream-specimen shopping list.",
@@ -400,6 +431,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF44AACC),
         title = "Saved Images & Photo Interactions (Free)",
         shortLabel = "Saved Images",
+        category = HowToCategory.IDENTIFY_COLLECT,
         steps = listOf(
             "Tap any photo in the app to view it full-screen.",
             "Long-press any photo to save it to your personal Saved Images folder.",
@@ -413,6 +445,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFFC97B4A),
         title = "BLM Public Lands Guide",
         shortLabel = "BLM Lands",
+        category = HowToCategory.MAPS_LOCATIONS,
         steps = listOf(
             "Tap \"BLM Public Lands\" in the Field Kit section on the home screen.",
             "Browse state-by-state rules for rockhounding on Bureau of Land Management land.",
@@ -427,6 +460,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFFC0C0C0),
         title = "Meteorite Hunting",
         shortLabel = "Meteorites",
+        category = HowToCategory.TOOLS_MISC,
         steps = listOf(
             "Tap \"Finding Meteorites\" in the Field Kit section on the home screen.",
             "Learn how to identify space rocks — fusion crust, magnetic properties, and key visual cues.",
@@ -439,6 +473,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF7CB5EC),
         title = "Periodic Table of Elements",
         shortLabel = "Periodic Table",
+        category = HowToCategory.EXPLORE_LEARN,
         steps = listOf(
             "Tap \"Periodic Table\" in the Explore & Learn section to explore all 118 elements.",
             "Each element card shows where it appears in rocks and gems and its role in mineral formation.",
@@ -450,6 +485,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFFD9B26A),
         title = "Educational Guides",
         shortLabel = "Guides",
+        category = HowToCategory.EXPLORE_LEARN,
         steps = listOf(
             "RockScout includes over 10 built-in educational guides — all work fully offline once the bulk image download completes.",
             "Exploring Geology: learn how rocks, minerals, and gems form across the rock cycle.",
@@ -466,6 +502,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF44AACC),
         title = "Rocks Are Amazing",
         shortLabel = "Rocks Are Amazing",
+        category = HowToCategory.EXPLORE_LEARN,
         steps = listOf(
             "Tap \"Rocks Are Amazing\" in the Explore & Learn section to open a curated gallery of Earth's most stunning formations.",
             "Swipe through categorized card collections: enhydros, pseudomorphs, petroleum inclusions, fluorescent minerals, optical phenomena, coprolites, copper-inclusion agates, mineral assemblages, and more.",
@@ -478,6 +515,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFFC97B4A),
         title = "Artifacts & Stone Tools",
         shortLabel = "Artifacts",
+        category = HowToCategory.EXPLORE_LEARN,
         steps = listOf(
             "Tap the \"Artifacts\" tile on the home screen to browse a growing catalog of over 100 authentic prehistoric artifacts, each with its own generated reference image on a unique background.",
             "Families include Arrowheads (20+ types from Clovis and Folsom to Mississippian triangle points), Spear Points & Dart Tips (12+ Paleoindian and Archaic forms), Hand Axes & Axe Heads (20+ Acheulean and Neolithic bifaces), Flaked Stone Tools (12+ scrapers, knives, and gravers), Drill Bits (6+ awl and drill forms), Native Beads (13+ shell, stone, and copper beads), Stone Effigies (7+ animal and human effigies from the Woodland and Mississippian periods), Pipes & Medicine Tubes, Ornaments & Weights, Shell Tools, Bone Tools, Pottery, Game Discs, and Wooden Artifacts.",
@@ -491,6 +529,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF2EC4B6),
         title = "Natural Wonders of the World",
         shortLabel = "Natural Wonders",
+        category = HowToCategory.EXPLORE_LEARN,
         steps = listOf(
             "Tap the \"Natural Wonders\" tile on the home screen to explore over 35 world-famous geological sites and the rocks and minerals you can find at each one.",
             "Each wonder includes a stunning photo, location, geological formation story, rocks to find, and fun facts — from the Grand Canyon and Giant's Causeway to Mount Vesuvius, Salar de Uyuni, and the Zhangjiajie Pillars.",
@@ -504,6 +543,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF7CB5EC),
         title = "Rock & Gem Resources",
         shortLabel = "Resources",
+        category = HowToCategory.TOOLS_MISC,
         steps = listOf(
             "Tap \"Rock & Gem Resources\" in the Field Kit section on the home screen to browse trusted external geology, gem, and fossil websites.",
             "Links open in your device's browser so you can dig deeper into any topic.",
@@ -516,6 +556,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Citrine,
         title = "Gear Guide",
         shortLabel = "Gear Guide",
+        category = HowToCategory.TOOLS_MISC,
         steps = listOf(
             "Tap the \"Gear Guide\" banner (right below the Calendar tile) on the home screen to browse over 45 curated tools with Amazon links.",
             "Kits are organized from beginner to advanced — from a first loupe and rock hammer to lapidary equipment and UV lights.",
@@ -528,6 +569,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Success,
         title = "Referrals & Community",
         shortLabel = "Referrals",
+        category = HowToCategory.SOCIAL_TRADE,
         steps = listOf(
             "Open the Referral screen from your Profile to get your unique referral link.",
             "Share the link with friends — when they sign up, you both earn tokens and XP.",
@@ -542,6 +584,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF44AACC),
         title = "Submit Specimens & Add Locations",
         shortLabel = "Submit",
+        category = HowToCategory.IDENTIFY_COLLECT,
         steps = listOf(
             "Found a specimen that isn't in the database? Use the Upload Specimen pill (found on the Specimen Database screen, the Field Captures screen, and specimen detail pages).",
             "Submit up to 10 photos plus a name, date found, location, and description. Images are automatically checked against a 5 MB size limit — if a photo is too large, you'll get a friendly notification to pick a smaller file, preventing upload failures before they happen.",
@@ -556,6 +599,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Aqua,
         title = "Share-a-Spot Deep Links",
         shortLabel = "Share a Spot",
+        category = HowToCategory.MAPS_LOCATIONS,
         steps = listOf(
             "Open the Field Captures Specimen Map (the swipeable second page of Field Captures) or the Trip Planner specimen marker map.",
             "Tap any specimen marker pin on the map to open that specimen's detail view.",
@@ -570,6 +614,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF7CB5EC),
         title = "Storage, Cache & Bulk Offline Download",
         shortLabel = "Storage",
+        category = HowToCategory.ACCOUNT_PREMIUM,
         steps = listOf(
             "Open Social Settings and scroll to the Storage section to choose your cache size.",
             "Standard (150MB) stores recently viewed specimen photos and map tiles — automatically manages itself by removing older items as new ones come in.",
@@ -588,6 +633,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFFD9B26A),
         title = "Tokens, Premium & Donations — What's Free vs Paid",
         shortLabel = "Premium",
+        category = HowToCategory.ACCOUNT_PREMIUM,
         steps = listOf(
             "Free for 7 days: full app access including AI identification (5 tokens to spend at your own pace), RockScout Friends, Trade Board, My Rocks, Wishlist, Field Captures, Trip Planner, and Field Journal.",
             "After the trial, these stay FREE forever: browsing the full specimen database & geology guides, the Field Camera (saves to Saved Images), NWS severe weather alerts, and browsing dig sites & offline maps.",
@@ -604,6 +650,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFFE8C547),
         title = "NEW Badges & Recently Added Specimens",
         shortLabel = "NEW Badge",
+        category = HowToCategory.TOOLS_MISC,
         steps = listOf(
             "A NEW badge automatically appears on any specimen or artifact card that was added to the catalog within the last 7 days.",
             "Spot the latest database additions at a glance — no need to hunt through the full list to find what's new.",
@@ -616,6 +663,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF45B56A),
         title = "App Updates, Sign-in & Safety",
         shortLabel = "Updates & Safety",
+        category = HowToCategory.ACCOUNT_PREMIUM,
         steps = listOf(
             "When the app detects a signing conflict during an update (the installed APK was signed with a different key than the new version), a friendly dialog explains that the old version must be uninstalled to update — and offers a button to trigger the system uninstall flow directly.",
             "After reinstalling the new version, just sign back in with your RockScout account. All your settings — hunter status, cache mode, notification preferences, aurora thresholds, and more — are restored from the cloud, exactly as they were before.",
@@ -628,6 +676,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF4A9FE0),
         title = "Ask an Expert & Museum Finder",
         shortLabel = "Ask an Expert",
+        category = HowToCategory.EXPERT_REPORTS,
         steps = listOf(
             "When an identification result has low confidence or you want a second opinion, tap the \"Ask an Expert\" button on the uncertainty card.",
             "RockScout searches for nearby museums and geological institutions using your current location (or your profile region as a fallback). Each result shows the museum name, distance, phone number, website, and directions.",
@@ -640,6 +689,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFFE8C547),
         title = "PDF Identification Reports",
         shortLabel = "PDF Reports",
+        category = HowToCategory.EXPERT_REPORTS,
         steps = listOf(
             "After running an identification, a small PDF document icon appears on each match card. Tap it to generate a printable 1–2 page report.",
             "The report includes your captured photo, all match names with confidence scores and reasoning, the AI analysis summary, assemblage breakdown (if applicable), web references, and a field-capture note with the date and approximate location.",
@@ -652,6 +702,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF45B56A),
         title = "Multi-Recipient Expert Email & Draft Persistence",
         shortLabel = "Multi-Email",
+        category = HowToCategory.EXPERT_REPORTS,
         steps = listOf(
             "In the Museum Finder sheet, tap to select multiple museums at once — each selected museum gets a checkmark and Citrine highlight.",
             "A \"Compose Email (N)\" button appears at the bottom showing how many recipients you've selected. Tap it to open the email composer with all selected museums as recipients.",
@@ -664,6 +715,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF2EC4B6),
         title = "Recently Added Filter",
         shortLabel = "Recently Added",
+        category = HowToCategory.TOOLS_MISC,
         steps = listOf(
             "On both the Specimen Database and Artifacts screens, a \"Recently Added\" filter chip appears in the filter row.",
             "Tap the chip to narrow the list to only items added within the last 7 days — the same window the NEW badge covers.",
@@ -676,6 +728,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF4A9FE0),
         title = "Settings Cloud Backup",
         shortLabel = "Cloud Backup",
+        category = HowToCategory.ACCOUNT_PREMIUM,
         steps = listOf(
             "RockScout automatically backs up your settings — hunter status, cache mode, notification preferences, aurora thresholds, and more — to the cloud every 12 hours when you're signed in and online.",
             "For a manual backup, go to Profile → Data & Sync and tap \"Back Up Data Now.\" A progress bar shows the backup in progress, and a success message confirms when your data is synced.",
@@ -688,6 +741,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF45B56A),
         title = "Free Read-Only PWA & Premium PWA Install",
         shortLabel = "Free & Premium PWA",
+        category = HowToCategory.ACCOUNT_PREMIUM,
         steps = listOf(
             "RockScout's web app is available as a PWA (Progressive Web App) for desktop, laptop, and tablet browsers. There are two tiers.",
             "Free tier: Install a read-only PWA on any device — browse the full specimen database of over 900 entries, all educational guides, the interactive map, and your personal bookmarks (Collection, Wishlist, Favorite Spots). No camera, no AI identification, no social features. Perfect for kids and learners.",
@@ -700,6 +754,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFFE8C547),
         title = "Search Near Me — Web Search for Local Rock Spots",
         shortLabel = "Search Near Me",
+        category = HowToCategory.MAPS_LOCATIONS,
         steps = listOf(
             "On the home screen's Dig Sites & Rock Shops section, a \"Search Near Me\" button appears next to the nearby locations header.",
             "Tap it to run a web search for rock-related places — dig sites, rock shops, mineral collecting areas, museums, and metaphysical stores — near your current GPS location.",
@@ -712,6 +767,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF5CC98C),
         title = "Mineral Care & Cleaning Guide",
         shortLabel = "Mineral Care",
+        category = HowToCategory.TOOLS_MISC,
         steps = listOf(
             "Tap \"Mineral Care & Cleaning\" in the Explore & Learn section on the home screen.",
             "Browse safe cleaning methods for every mineral type — water, mild soap, ultrasonic, or \"don't clean at all.\"",
@@ -724,6 +780,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF6FA8C7),
         title = "Glossary",
         shortLabel = "Glossary",
+        category = HowToCategory.TOOLS_MISC,
         steps = listOf(
             "Tap \"Glossary\" in the Field Kit section on the home screen.",
             "Every rock, mineral, and space term used in the app is defined here in plain English.",
@@ -736,6 +793,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFFE5683C),
         title = "Exploring Geology — Rock Info Hub",
         shortLabel = "Rock Info",
+        category = HowToCategory.GEOLOGY_GUIDES,
         steps = listOf(
             "Tap \"Exploring Geology\" in the Explore & Learn section on the home screen to open the Rock Info hub.",
             "Four tiles lead to the core geology reference guides: Rock Types, Mineral ID, Crystal Systems, and Rock Cycle & Tools.",
@@ -748,6 +806,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF6FA8C7),
         title = "Crystal System Reference",
         shortLabel = "Crystal Systems",
+        category = HowToCategory.GEOLOGY_GUIDES,
         steps = listOf(
             "Tap \"Crystal Systems\" in the Explore & Learn section on the home screen.",
             "Learn the 7 crystal systems — cubic, tetragonal, orthorhombic, monoclinic, triclinic, and hexagonal/trigonal.",
@@ -760,6 +819,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF9B7BD8),
         title = "Fluorescence & UV Reference",
         shortLabel = "Fluorescence",
+        category = HowToCategory.GEOLOGY_GUIDES,
         steps = listOf(
             "Tap \"Fluorescence & UV\" in the Explore & Learn section on the home screen.",
             "Discover which minerals glow under UV light and what colors they produce.",
@@ -772,6 +832,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFFE8A33D),
         title = "Lapidary Basics Guide",
         shortLabel = "Lapidary",
+        category = HowToCategory.GEOLOGY_GUIDES,
         steps = listOf(
             "Tap \"Lapidary Basics\" in the Explore & Learn section on the home screen.",
             "Learn the fundamentals of cutting, polishing, and cabbing your finds into jewelry.",
@@ -784,6 +845,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF4FC3F7),
         title = "Rock Cycle Tools",
         shortLabel = "Rock Cycle",
+        category = HowToCategory.GEOLOGY_GUIDES,
         steps = listOf(
             "Tap \"Rock Cycle Tools\" from the Educational Guides section.",
             "Explore the interactive rock cycle — see how igneous, sedimentary, and metamorphic rocks transform into each other.",
@@ -796,6 +858,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFFC97B4A),
         title = "Rock Types Deep Dive",
         shortLabel = "Rock Types",
+        category = HowToCategory.GEOLOGY_GUIDES,
         steps = listOf(
             "Tap \"Rock Types\" from the Educational Guides section.",
             "Deep dive into the three main rock families: igneous, sedimentary, and metamorphic.",
@@ -808,6 +871,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF7CB5EC),
         title = "Mineral ID Guide",
         shortLabel = "Mineral ID",
+        category = HowToCategory.GEOLOGY_GUIDES,
         steps = listOf(
             "Tap \"Mineral ID Guide\" from the Educational Guides section.",
             "Use the step-by-step identification key to narrow down any mineral.",
@@ -820,6 +884,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFFE2574C),
         title = "Mass Extinctions",
         shortLabel = "Extinctions",
+        category = HowToCategory.GEOLOGY_GUIDES,
         steps = listOf(
             "Tap \"Mass Extinctions\" from the Educational Guides section.",
             "Learn about the 5 big extinction events that reshaped life on Earth.",
@@ -832,6 +897,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFFD9B26A),
         title = "Geo Time Scale",
         shortLabel = "Geo Time Scale",
+        category = HowToCategory.GEOLOGY_GUIDES,
         steps = listOf(
             "Tap \"Geo Time Scale\" from the Educational Guides section.",
             "Explore an interactive geologic timeline from the Hadean to the present.",
@@ -844,6 +910,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF6FA8C7),
         title = "Geologic Periods",
         shortLabel = "Geologic Periods",
+        category = HowToCategory.GEOLOGY_GUIDES,
         steps = listOf(
             "Tap \"Geologic Periods\" from the Educational Guides section.",
             "Browse period-by-period through the Paleozoic, Mesozoic, and Cenozoic eras.",
@@ -856,6 +923,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF8BBF6A),
         title = "Fossil Types Guide",
         shortLabel = "Fossil Types",
+        category = HowToCategory.GEOLOGY_GUIDES,
         steps = listOf(
             "Tap \"Fossil Types\" from the Educational Guides section.",
             "Learn the different ways fossils form — permineralization, replacement, carbonization, molds and casts, and more.",
@@ -868,6 +936,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFFE8A33D),
         title = "Trip Journal — Combined Trip Planner & Field Journal",
         shortLabel = "Trip Journal",
+        category = HowToCategory.TRIP_PLANNING,
         steps = listOf(
             "Tap the \"Trip Planner & Field Journal\" banner on the home screen to open the combined Trip Journal.",
             "The Trip Journal combines your Trip Planner and Field Journal in one tabbed view — switch between trips and journal entries with the tab selector.",
@@ -880,6 +949,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF7CB5EC),
         title = "Collection Statistics Dashboard",
         shortLabel = "Collection Stats",
+        category = HowToCategory.EXPERT_REPORTS,
         steps = listOf(
             "Open \"My Rocks\" on the home screen and tap the statistics icon to view your Collection Statistics Dashboard.",
             "See charts and stats for your collection — breakdown by category, rarity, location, and more.",
@@ -892,6 +962,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF4A9FE0),
         title = "Contact Us",
         shortLabel = "Contact Us",
+        category = HowToCategory.TOOLS_MISC,
         steps = listOf(
             "Tap \"Contact Us\" from the home screen tagline section.",
             "Send feedback, report issues, or suggest new features directly to the developer.",
@@ -904,6 +975,7 @@ private val howToSections: List<HowToSection> = listOf(
         accent = Color(0xFF2EC4B6),
         title = "National & State Parks",
         shortLabel = "Parks",
+        category = HowToCategory.MAPS_LOCATIONS,
         steps = listOf(
             "Tap \"National & State Parks\" from the Field Kit section on the home screen.",
             "Browse over 250 national and state parks — including all 62 US National Parks — that are dig-friendly or geologically significant.",
@@ -919,6 +991,13 @@ fun HowToUseScreen(navController: NavController) {
 
     var selectedSectionIndex by remember { mutableIntStateOf(-1) }
     val videoPlayerState = LocalVideoPlayerState.current
+
+    // Pre-compute grouped sections by category
+    val groupedSections = remember {
+        HowToCategory.entries.associateWith { cat ->
+            howToSections.filter { it.category == cat }
+        }
+    }
 
     RockBackground {
         LazyColumn(
@@ -1005,26 +1084,124 @@ fun HowToUseScreen(navController: NavController) {
                     )
                 }
             }
-            // Section pills grid — manual rows to avoid nesting lazy composables
-            val chunked = howToSections.chunked(2)
-            chunked.forEach { rowSections ->
+            // ── Icon Index at the top ──
+            item {
+                Text(
+                    text = "Icon Index",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = TextHigh,
+                    ),
+                    modifier = Modifier.padding(bottom = 2.dp),
+                )
+            }
+            // Render each category's icons as a horizontal-flow grid
+            groupedSections.forEach { (category, sections) ->
                 item {
+                    // Category header
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(top = 4.dp, bottom = 6.dp),
                     ) {
-                        rowSections.forEachIndexed { colIdx, section ->
-                            val globalIdx = howToSections.indexOf(section)
-                            HowToPillButton(
-                                section = section,
-                                index = globalIdx,
-                                onClick = { selectedSectionIndex = globalIdx },
-                                modifier = Modifier.weight(1f),
-                            )
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(category.accent),
+                        )
+                        Text(
+                            text = category.label,
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = category.accent,
+                            ),
+                        )
+                    }
+                }
+                // Icon index entries — 3 per row
+                val indexChunked = sections.chunked(3)
+                indexChunked.forEach { rowSections ->
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            rowSections.forEach { section ->
+                                val globalIdx = howToSections.indexOf(section)
+                                IconIndexEntry(
+                                    section = section,
+                                    onClick = { selectedSectionIndex = globalIdx },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                            repeat(3 - rowSections.size) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
                         }
-                        // Fill empty slot if odd number in last row
-                        if (rowSections.size == 1) {
-                            Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+            // ── Divider between icon index and detailed sections ──
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(TextLow.copy(alpha = 0.2f)),
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            // ── Detailed sections grouped by category ──
+            groupedSections.forEach { (category, sections) ->
+                item {
+                    // Category header for the detailed section
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Slate800.copy(alpha = 0.6f))
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .clip(CircleShape)
+                                .background(category.accent),
+                        )
+                        Text(
+                            text = category.label,
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = category.accent,
+                            ),
+                        )
+                    }
+                }
+                // Section pills — 2 per row
+                val chunked = sections.chunked(2)
+                chunked.forEach { rowSections ->
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            rowSections.forEach { section ->
+                                val globalIdx = howToSections.indexOf(section)
+                                HowToPillButton(
+                                    section = section,
+                                    index = globalIdx,
+                                    onClick = { selectedSectionIndex = globalIdx },
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                            // Fill empty slot if odd number in last row
+                            if (rowSections.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
                         }
                     }
                 }
@@ -1059,6 +1236,50 @@ fun HowToUseScreen(navController: NavController) {
                 onDismiss = { selectedSectionIndex = -1 },
             )
         }
+    }
+}
+
+/** A compact icon-index entry showing the icon image and a one-line text explanation. */
+@Composable
+private fun IconIndexEntry(
+    section: HowToSection,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(10.dp))
+            .background(Slate800.copy(alpha = 0.75f))
+            .glowingBorder(1.dp, section.accent.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .clip(CircleShape)
+                .background(section.accent.copy(alpha = 0.15f))
+                .glowingBorder(0.5.dp, section.accent.copy(alpha = 0.4f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = section.icon,
+                contentDescription = section.shortLabel,
+                tint = section.accent,
+                modifier = Modifier.size(14.dp),
+            )
+        }
+        Text(
+            text = section.shortLabel,
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontWeight = FontWeight.Medium,
+                color = TextHigh,
+            ),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
