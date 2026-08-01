@@ -1,6 +1,12 @@
 package com.rork.rockscout.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +32,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -57,12 +64,13 @@ import com.rork.rockscout.data.DinoEntry
 import com.rork.rockscout.data.DinoEra
 import com.rork.rockscout.data.DinoImageMap
 import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.DinoBodyPlan
 import com.rork.rockscout.ui.components.DinoSilhouette
+import com.rork.rockscout.ui.components.MetricText
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.TagChip
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.theme.Aqua
-import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.DarkTextLow
 import com.rork.rockscout.ui.theme.TextMid
@@ -95,11 +103,99 @@ private val eraOrder = listOf(
     DinoEra.PALEOGENE, DinoEra.NEOGENE, DinoEra.QUATERNARY, DinoEra.OTHER,
 )
 
+/** Body plan filter group labels — group related body plans for easier filtering. */
+private data class BodyTypeFilter(
+    val label: String,
+    val color: Color,
+    val bodyPlans: Set<DinoBodyPlan>,
+)
+
+private val bodyTypeFilters: List<BodyTypeFilter> = listOf(
+    BodyTypeFilter("Theropods", Color(0xFFE2574C), setOf(
+        DinoBodyPlan.THEROPOD_LARGE, DinoBodyPlan.THEROPOD_SMALL,
+    )),
+    BodyTypeFilter("Sauropods", Color(0xFF8BBF6A), setOf(
+        DinoBodyPlan.SAUROPOD,
+    )),
+    BodyTypeFilter("Ceratopsians", Color(0xFF6FBF8A), setOf(
+        DinoBodyPlan.CERATOPSIAN,
+    )),
+    BodyTypeFilter("Armored", Color(0xFF9B7BD8), setOf(
+        DinoBodyPlan.STEGOSAUR, DinoBodyPlan.ANKYLOSAUR,
+    )),
+    BodyTypeFilter("Ornithopods", Color(0xFFE8A33D), setOf(
+        DinoBodyPlan.ORNITHOPOD, DinoBodyPlan.THERIZINOSAUR,
+    )),
+    BodyTypeFilter("Marine Reptiles", Color(0xFF5090B0), setOf(
+        DinoBodyPlan.PLESIOSAUR, DinoBodyPlan.ICHTHYOSAUR,
+        DinoBodyPlan.MOSASAUR, DinoBodyPlan.ELASMOSAUR,
+        DinoBodyPlan.SHARK_GIANT, DinoBodyPlan.CROCODILIAN,
+    )),
+    BodyTypeFilter("Flyers", Color(0xFF7CB5EC), setOf(
+        DinoBodyPlan.PTEROSAUR, DinoBodyPlan.BIRD_PREHISTORIC,
+    )),
+    BodyTypeFilter("Ice Age Mammals", Color(0xFFB0D0E0), setOf(
+        DinoBodyPlan.MAMMOTH, DinoBodyPlan.SABERTOOTH, DinoBodyPlan.RHINO_GIANT,
+        DinoBodyPlan.SLOTH_GIANT, DinoBodyPlan.BEAR_GIANT,
+        DinoBodyPlan.WOLF_PREHISTORIC, DinoBodyPlan.SYNAPSID,
+    )),
+)
+
+/** Height range filter buckets in feet. */
+private data class HeightRange(
+    val label: String,
+    val minFeet: Float,
+    val maxFeet: Float,
+    val color: Color,
+)
+
+private val heightRanges: List<HeightRange> = listOf(
+    HeightRange("Tiny (< 3 ft)", 0f, 3f, Color(0xFF6FBF8A)),
+    HeightRange("Small (3–10 ft)", 3f, 10f, Color(0xFFE8A33D)),
+    HeightRange("Medium (10–25 ft)", 10f, 25f, Color(0xFF9B7BD8)),
+    HeightRange("Large (25–50 ft)", 25f, 50f, Color(0xFF5090B0)),
+    HeightRange("Giant (50+ ft)", 50f, Float.MAX_VALUE, Color(0xFFE2574C)),
+)
+
+/** Sort options for the dictionary. */
+private enum class SortMode(val label: String) {
+    BY_ERA("By Era"),
+    BY_SIZE("Largest First"),
+    BY_NAME("A–Z"),
+    BY_NAME_DESC("Z–A"),
+}
+
+/**
+ * Extract the length in feet from strings like "40 ft", "10–20 ft", "23 ft wingspan".
+ * Returns the max value for ranges.
+ */
+private fun estimateLengthFeet(length: String): Float {
+    val rangeMatch = Regex("""([\d.]+)\s*[–-]\s*([\d.]+)\s*ft""").find(length)
+    if (rangeMatch != null) {
+        return rangeMatch.groupValues[2].toFloatOrNull() ?: 16f
+    }
+    val feetMatch = Regex("""([\d.]+)\s*ft""").find(length)
+    if (feetMatch != null) {
+        return feetMatch.groupValues[1].toFloatOrNull() ?: 16f
+    }
+    val inchMatch = Regex("""([\d.]+)\s*in""").find(length)
+    if (inchMatch != null) {
+        val inches = inchMatch.groupValues[1].toFloatOrNull() ?: 200f
+        return inches / 12f
+    }
+    return 16f
+}
+
 @Composable
 fun DinosaurDictionaryScreen(navController: NavController) {
     var searchQuery by remember { mutableStateOf("") }
     var debouncedQuery by remember { mutableStateOf("") }
     var selectedDiet by remember { mutableStateOf<DinoDiet?>(null) }
+    var selectedEra by remember { mutableStateOf<DinoEra?>(null) }
+    var selectedBodyType by remember { mutableStateOf<BodyTypeFilter?>(null) }
+    var selectedHeightRange by remember { mutableStateOf<HeightRange?>(null) }
+    var sortMode by remember { mutableStateOf(SortMode.BY_ERA) }
+    var showFilters by remember { mutableStateOf(false) }
     var expandedEras by remember { mutableStateOf(setOf<DinoEra>()) }
     var selectedEntry by remember { mutableStateOf<DinoEntry?>(null) }
 
@@ -112,21 +208,52 @@ fun DinosaurDictionaryScreen(navController: NavController) {
             }
     }
 
-    val filtered = remember(debouncedQuery, selectedDiet) {
-        DinoDictionary.all.filter { entry ->
-            val matchesSearch = debouncedQuery.isBlank() ||
-                entry.name.lowercase().contains(debouncedQuery) ||
-                entry.period.lowercase().contains(debouncedQuery) ||
-                entry.description.lowercase().contains(debouncedQuery) ||
-                entry.habitat.lowercase().contains(debouncedQuery) ||
-                entry.foundIn.any { it.lowercase().contains(debouncedQuery) }
-            val matchesDiet = selectedDiet == null || entry.diet == selectedDiet
-            matchesSearch && matchesDiet
-        }
+    // Check if any filters are active
+    val hasActiveFilters = selectedDiet != null || selectedEra != null ||
+        selectedBodyType != null || selectedHeightRange != null ||
+        sortMode != SortMode.BY_ERA
+
+    val filtered = remember(
+        debouncedQuery, selectedDiet, selectedEra,
+        selectedBodyType, selectedHeightRange, sortMode,
+    ) {
+        DinoDictionary.all
+            .filter { entry ->
+                val matchesSearch = debouncedQuery.isBlank() ||
+                    entry.name.lowercase().contains(debouncedQuery) ||
+                    entry.period.lowercase().contains(debouncedQuery) ||
+                    entry.description.lowercase().contains(debouncedQuery) ||
+                    entry.habitat.lowercase().contains(debouncedQuery) ||
+                    entry.foundIn.any { it.lowercase().contains(debouncedQuery) }
+                val matchesDiet = selectedDiet == null || entry.diet == selectedDiet
+                val matchesEra = selectedEra == null || entry.era == selectedEra
+                val matchesBodyType = selectedBodyType == null ||
+                    entry.bodyPlan in selectedBodyType!!.bodyPlans
+                val matchesHeight = selectedHeightRange == null || run {
+                    val range = selectedHeightRange!!
+                    val feet = estimateLengthFeet(entry.length)
+                    feet >= range.minFeet && feet < range.maxFeet
+                }
+                matchesSearch && matchesDiet && matchesEra &&
+                    matchesBodyType && matchesHeight
+            }
+            .let { list ->
+                when (sortMode) {
+                    SortMode.BY_ERA -> list
+                    SortMode.BY_SIZE -> list.sortedByDescending { estimateLengthFeet(it.length) }
+                    SortMode.BY_NAME -> list.sortedBy { it.name.lowercase() }
+                    SortMode.BY_NAME_DESC -> list.sortedByDescending { it.name.lowercase() }
+                }
+            }
     }
 
-    val groupedByEra = remember(filtered) {
-        filtered.groupBy { it.era }
+    // Group by era only when sorting by era; otherwise flat list
+    val groupedByEra = remember(filtered, sortMode) {
+        if (sortMode == SortMode.BY_ERA) {
+            filtered.groupBy { it.era }
+        } else {
+            emptyMap()
+        }
     }
 
     ScreenScaffold(title = "Dinosaur Dictionary", onBack = { navController.popBackStack() }) {
@@ -164,58 +291,74 @@ fun DinosaurDictionaryScreen(navController: NavController) {
                 }
             }
 
-            // Search bar
+            // Search bar with filter toggle
             item {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text("Search dinosaurs, eras, locations…", color = DarkTextLow) },
-                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = Aqua) },
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { searchQuery = "" }) {
-                                Icon(Icons.Filled.Close, contentDescription = "Clear", tint = Aqua)
-                            }
-                        }
-                    },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions.Default,
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                )
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text("Search dinosaurs, eras, locations…", color = DarkTextLow) },
+                        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = Aqua) },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(Icons.Filled.Close, contentDescription = "Clear", tint = Aqua)
+                                }
+                            }
+                        },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions.Default,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(16.dp),
+                    )
+                    FilterToggleButton(
+                        active = showFilters || hasActiveFilters,
+                        onClick = { showFilters = !showFilters },
+                    )
+                }
             }
 
-            // Diet filter chips
+            // Expandable filter panel
             item {
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    item {
-                        DietFilterChip(
-                            label = "All",
-                            selected = selectedDiet == null,
-                            color = Aqua,
-                            onClick = { selectedDiet = null },
-                        )
-                    }
-                    items(DinoDiet.entries.toList()) { diet ->
-                        DietFilterChip(
-                            label = diet.label,
-                            selected = selectedDiet == diet,
-                            color = dietColors[diet] ?: Aqua,
-                            onClick = {
-                                selectedDiet = if (selectedDiet == diet) null else diet
-                            },
-                        )
-                    }
+                AnimatedVisibility(
+                    visible = showFilters,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                ) {
+                    FilterPanel(
+                        selectedDiet = selectedDiet,
+                        onDietChange = { selectedDiet = it },
+                        selectedEra = selectedEra,
+                        onEraChange = { selectedEra = it },
+                        selectedBodyType = selectedBodyType,
+                        onBodyTypeChange = { selectedBodyType = it },
+                        selectedHeightRange = selectedHeightRange,
+                        onHeightRangeChange = { selectedHeightRange = it },
+                        sortMode = sortMode,
+                        onSortModeChange = { sortMode = it },
+                        onClearAll = {
+                            selectedDiet = null
+                            selectedEra = null
+                            selectedBodyType = null
+                            selectedHeightRange = null
+                            sortMode = SortMode.BY_ERA
+                        },
+                    )
                 }
             }
 
             // Results count
             item {
                 Text(
-                    text = if (debouncedQuery.isBlank() && selectedDiet == null) {
+                    text = if (!hasActiveFilters && debouncedQuery.isBlank()) {
                         "Browse all ${filtered.size} animals by era"
                     } else {
-                        "${filtered.size} result${if (filtered.size != 1) "s" else ""}"
+                        "${filtered.size} result${if (filtered.size != 1) "s" else ""}" +
+                            if (hasActiveFilters) " • tap filter icon to adjust" else ""
                     },
                     style = MaterialTheme.typography.labelMedium,
                     color = TextMid,
@@ -223,36 +366,49 @@ fun DinosaurDictionaryScreen(navController: NavController) {
                 )
             }
 
-            // Era sections
-            eraOrder.forEach { era ->
-                val entries = groupedByEra[era] ?: return@forEach
-                val eraColor = eraColors[era] ?: Aqua
-                val isExpanded = expandedEras.contains(era) || debouncedQuery.isNotBlank()
+            if (sortMode == SortMode.BY_ERA) {
+                // Era sections
+                eraOrder.forEach { era ->
+                    val entries = groupedByEra[era] ?: return@forEach
+                    val eraColor = eraColors[era] ?: Aqua
+                    val isExpanded = expandedEras.contains(era) ||
+                        debouncedQuery.isNotBlank() || hasActiveFilters
 
-                item {
-                    EraSectionHeader(
-                        era = era,
-                        count = entries.size,
-                        accent = eraColor,
-                        isExpanded = isExpanded,
-                        onToggle = {
-                            expandedEras = if (isExpanded) {
-                                expandedEras - era
-                            } else {
-                                expandedEras + era
-                            }
-                        },
-                    )
-                }
-
-                if (isExpanded) {
-                    items(entries, key = { it.id }) { entry ->
-                        DinoCard(
-                            entry = entry,
-                            eraColor = eraColor,
-                            onClick = { selectedEntry = entry },
+                    item {
+                        EraSectionHeader(
+                            era = era,
+                            count = entries.size,
+                            accent = eraColor,
+                            isExpanded = isExpanded,
+                            onToggle = {
+                                expandedEras = if (isExpanded) {
+                                    expandedEras - era
+                                } else {
+                                    expandedEras + era
+                                }
+                            },
                         )
                     }
+
+                    if (isExpanded) {
+                        items(entries, key = { it.id }) { entry ->
+                            DinoCard(
+                                entry = entry,
+                                eraColor = eraColor,
+                                onClick = { selectedEntry = entry },
+                            )
+                        }
+                    }
+                }
+            } else {
+                // Flat list when sorted by size/name
+                items(filtered, key = { it.id }) { entry ->
+                    val eraColor = eraColors[entry.era] ?: Aqua
+                    DinoCard(
+                        entry = entry,
+                        eraColor = eraColor,
+                        onClick = { selectedEntry = entry },
+                    )
                 }
             }
 
@@ -267,7 +423,7 @@ fun DinosaurDictionaryScreen(navController: NavController) {
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             DinoSilhouette(
-                                bodyPlan = com.rork.rockscout.ui.components.DinoBodyPlan.THEROPOD_LARGE,
+                                bodyPlan = DinoBodyPlan.THEROPOD_LARGE,
                                 color = DarkTextLow,
                                 modifier = Modifier.size(80.dp),
                             )
@@ -294,6 +450,228 @@ fun DinosaurDictionaryScreen(navController: NavController) {
         DinoDetailSheet(
             entry = entry,
             onDismiss = { selectedEntry = null },
+        )
+    }
+}
+
+/**
+ * Filter toggle button — circular icon button that highlights when filters are active.
+ */
+@Composable
+private fun FilterToggleButton(
+    active: Boolean,
+    onClick: () -> Unit,
+) {
+    val bgColor by animateColorAsState(
+        if (active) Aqua.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.08f),
+        label = "filterBg",
+    )
+    val iconColor by animateColorAsState(
+        if (active) Aqua else DarkTextMid,
+        label = "filterIcon",
+    )
+    Box(
+        modifier = Modifier
+            .size(52.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(bgColor)
+            .glowingBorder(
+                1.dp,
+                if (active) Aqua.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.1f),
+                RoundedCornerShape(16.dp),
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = Icons.Filled.FilterList,
+            contentDescription = "Filters",
+            tint = iconColor,
+        )
+    }
+}
+
+/**
+ * Full filter panel with diet, era, body type, height range, and sort options.
+ */
+@Composable
+private fun FilterPanel(
+    selectedDiet: DinoDiet?,
+    onDietChange: (DinoDiet?) -> Unit,
+    selectedEra: DinoEra?,
+    onEraChange: (DinoEra?) -> Unit,
+    selectedBodyType: BodyTypeFilter?,
+    onBodyTypeChange: (BodyTypeFilter?) -> Unit,
+    selectedHeightRange: HeightRange?,
+    onHeightRangeChange: (HeightRange?) -> Unit,
+    sortMode: SortMode,
+    onSortModeChange: (SortMode) -> Unit,
+    onClearAll: () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color(0xFF142012))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        // Header row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "Filters & Sort",
+                style = MaterialTheme.typography.titleMedium,
+                color = Aqua,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                "Clear all",
+                style = MaterialTheme.typography.labelMedium,
+                color = Color(0xFFE2574C),
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.clickable(onClick = onClearAll),
+            )
+        }
+
+        // Sort mode
+        FilterSectionLabel("Sort By")
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(SortMode.entries.toList()) { mode ->
+                FilterChip(
+                    label = mode.label,
+                    selected = sortMode == mode,
+                    color = Aqua,
+                    onClick = { onSortModeChange(mode) },
+                )
+            }
+        }
+
+        // Era filter
+        FilterSectionLabel("Era")
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            item {
+                FilterChip(
+                    label = "All Eras",
+                    selected = selectedEra == null,
+                    color = Aqua,
+                    onClick = { onEraChange(null) },
+                )
+            }
+            items(eraOrder) { era ->
+                FilterChip(
+                    label = era.label,
+                    selected = selectedEra == era,
+                    color = eraColors[era] ?: Aqua,
+                    onClick = { onEraChange(if (selectedEra == era) null else era) },
+                )
+            }
+        }
+
+        // Diet filter
+        FilterSectionLabel("Diet")
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            item {
+                FilterChip(
+                    label = "All Diets",
+                    selected = selectedDiet == null,
+                    color = Aqua,
+                    onClick = { onDietChange(null) },
+                )
+            }
+            items(DinoDiet.entries.toList()) { diet ->
+                FilterChip(
+                    label = diet.label,
+                    selected = selectedDiet == diet,
+                    color = dietColors[diet] ?: Aqua,
+                    onClick = { onDietChange(if (selectedDiet == diet) null else diet) },
+                )
+            }
+        }
+
+        // Body type filter
+        FilterSectionLabel("Body Type")
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            item {
+                FilterChip(
+                    label = "All Types",
+                    selected = selectedBodyType == null,
+                    color = Aqua,
+                    onClick = { onBodyTypeChange(null) },
+                )
+            }
+            items(bodyTypeFilters) { bodyType ->
+                FilterChip(
+                    label = bodyType.label,
+                    selected = selectedBodyType == bodyType,
+                    color = bodyType.color,
+                    onClick = {
+                        onBodyTypeChange(if (selectedBodyType == bodyType) null else bodyType)
+                    },
+                )
+            }
+        }
+
+        // Height range filter
+        FilterSectionLabel("Size Range")
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            item {
+                FilterChip(
+                    label = "Any Size",
+                    selected = selectedHeightRange == null,
+                    color = Aqua,
+                    onClick = { onHeightRangeChange(null) },
+                )
+            }
+            items(heightRanges) { range ->
+                FilterChip(
+                    label = range.label,
+                    selected = selectedHeightRange == range,
+                    color = range.color,
+                    onClick = {
+                        onHeightRangeChange(if (selectedHeightRange == range) null else range)
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FilterSectionLabel(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium,
+        color = DarkTextMid,
+        fontWeight = FontWeight.Bold,
+        fontSize = 12.sp,
+    )
+}
+
+@Composable
+private fun FilterChip(
+    label: String,
+    selected: Boolean,
+    color: Color,
+    onClick: () -> Unit,
+) {
+    val bgAlpha by animateFloatAsState(if (selected) 0.25f else 0.08f, label = "fchip")
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(color.copy(alpha = bgAlpha))
+            .glowingBorder(1.dp, color.copy(alpha = if (selected) 0.5f else 0.2f), RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = if (selected) color else DarkTextMid,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
         )
     }
 }
@@ -414,7 +792,6 @@ private fun DinoCard(
                         contentScale = ContentScale.Crop,
                     )
                 } else {
-                    // Fallback to silhouette if no image
                     DinoSilhouette(
                         bodyPlan = entry.bodyPlan,
                         color = silhouetteColor.copy(alpha = 0.85f),
@@ -478,7 +855,14 @@ private fun DinoCard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     TagChip(entry.period, color = eraColor)
-                    TagChip(entry.length, color = silhouetteColor)
+                    // MetricText for the length tag — long-press to see metric
+                    MetricText(
+                        text = entry.length,
+                        color = silhouetteColor,
+                        fontSize = 11,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier,
+                    )
                 }
             }
         }

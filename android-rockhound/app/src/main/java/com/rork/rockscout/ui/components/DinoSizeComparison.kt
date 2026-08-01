@@ -1,15 +1,28 @@
 package com.rork.rockscout.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +49,10 @@ import kotlin.math.sqrt
  * The image is scaled relative to the human using sqrt scaling so huge animals
  * don't completely dwarf small ones.
  *
+ * When the [entry] changes, the silhouette and labels smoothly animate — the dino
+ * figure grows or shrinks with a spring transition, the image cross-fades, and the
+ * label slides in from the side, making scale changes feel dynamic.
+ *
  * @param entry The dinosaur entry to compare
  * @param accentColor The accent color for labels
  * @param modifier Layout modifier
@@ -51,6 +68,40 @@ fun DinoSizeComparison(
     val dinoVisual = scaleForDisplay(dinoFeet)
     val humanVisual = scaleForDisplay(humanFeet)
     val maxVisual = maxOf(dinoVisual, humanVisual)
+
+    // Animate the visual scale smoothly when switching dinos
+    val animatedDinoVisual by animateFloatAsState(
+        targetValue = dinoVisual,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow,
+        ),
+        label = "dinoScale",
+    )
+    val animatedHumanVisual by animateFloatAsState(
+        targetValue = humanVisual,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessMediumLow,
+        ),
+        label = "humanScale",
+    )
+    val animatedMaxVisual by animateFloatAsState(
+        targetValue = maxVisual,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMedium,
+        ),
+        label = "maxScale",
+    )
+
+    // Animate the accent color transition
+    val animatedAccent by animateColorAsState(
+        targetValue = accentColor,
+        animationSpec = tween(durationMillis = 400),
+        label = "accentColor",
+    )
+
     val imageUrl = DinoImageMap.imageUri(entry)
 
     Box(
@@ -76,7 +127,7 @@ fun DinoSizeComparison(
             )
 
             // --- Human silhouette (left, ~22% width) ---
-            val humanPixelHeight = (humanVisual / maxVisual) * (h * 0.72f)
+            val humanPixelHeight = (animatedHumanVisual / animatedMaxVisual) * (h * 0.72f)
             drawHumanFigure(
                 centerX = w * 0.18f,
                 groundY = groundY,
@@ -85,7 +136,7 @@ fun DinoSizeComparison(
             )
 
             // --- Dinosaur silhouette outline (right, behind the image) ---
-            val dinoPixelHeight = (dinoVisual / maxVisual) * (h * 0.78f)
+            val dinoPixelHeight = (animatedDinoVisual / animatedMaxVisual) * (h * 0.78f)
             val dinoScale = dinoPixelHeight / 100f
             val dinoPath = Path().apply { fillType = PathFillType.EvenOdd }
             buildDinoPath(entry.bodyPlan, dinoPath)
@@ -98,27 +149,39 @@ fun DinoSizeComparison(
                 scale(dinoScale, dinoScale, pivot = Offset.Zero) {
                     drawPath(
                         path = dinoPath,
-                        color = accentColor.copy(alpha = 0.3f),
+                        color = animatedAccent.copy(alpha = 0.3f),
                     )
                 }
             }
         }
 
-        // Paleoart image overlaid on the right side, clipped to the dino area
-        if (imageUrl != null) {
-            AsyncImage(
-                model = imageUrl,
-                contentDescription = "${entry.name} size comparison",
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .fillMaxWidth(0.62f)
-                    .height(220.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Fit,
-            )
+        // Paleoart image overlaid on the right side with cross-fade transition
+        AnimatedContent(
+            targetState = imageUrl,
+            transitionSpec = {
+                (fadeIn(animationSpec = tween(400)) +
+                    slideInHorizontally(animationSpec = tween(400)) { it / 4 }) togetherWith
+                    (fadeOut(animationSpec = tween(300)) +
+                    slideOutHorizontally(animationSpec = tween(300)) { -it / 4 })
+            },
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .fillMaxWidth(0.62f)
+                .height(220.dp)
+                .clip(RoundedCornerShape(12.dp)),
+            label = "dinoImage",
+        ) { currentImageUrl ->
+            if (currentImageUrl != null) {
+                AsyncImage(
+                    model = currentImageUrl,
+                    contentDescription = "${entry.name} size comparison",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit,
+                )
+            }
         }
 
-        // Labels at the bottom
+        // Labels at the bottom with slide-in animation on dino change
         Row(
             modifier = Modifier
                 .align(Alignment.BottomStart)
@@ -133,14 +196,24 @@ fun DinoSizeComparison(
                 fontWeight = FontWeight.Medium,
                 lineHeight = 12.sp,
             )
-            Text(
-                text = "${entry.name}\n${entry.length}",
-                color = accentColor,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                lineHeight = 12.sp,
-                textAlign = TextAlign.End,
-            )
+            AnimatedContent(
+                targetState = entry to animatedAccent,
+                transitionSpec = {
+                    (fadeIn(tween(300)) + slideInHorizontally(tween(300)) { it / 3 }) togetherWith
+                        (fadeOut(tween(200)) + slideOutHorizontally(tween(200)) { -it / 3 })
+                },
+                modifier = Modifier,
+                label = "dinoLabel",
+            ) { (currentEntry, color) ->
+                Text(
+                    text = "${currentEntry.name}\n${currentEntry.length}",
+                    color = color,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 12.sp,
+                    textAlign = TextAlign.End,
+                )
+            }
         }
     }
 }

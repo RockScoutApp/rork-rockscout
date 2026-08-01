@@ -42,6 +42,7 @@ import com.rork.rockscout.data.DinoEntry
 import com.rork.rockscout.data.DinoEra
 import com.rork.rockscout.data.DinoImageMap
 import com.rork.rockscout.ui.components.DinoSizeComparison
+import com.rork.rockscout.ui.components.MetricText
 import com.rork.rockscout.ui.components.TagChip
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.theme.DarkTextLow
@@ -176,8 +177,8 @@ fun DinoDetailSheet(
                         .padding(horizontal = 20.dp, vertical = 16.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    StatBlock("Length", entry.length, eraColor)
-                    StatBlock("Weight", entry.weight, silhouetteColor)
+                    MetricStatBlock("Length", entry.length, eraColor)
+                    MetricStatBlock("Weight", entry.weight, silhouetteColor)
                     StatBlock("Lived", entry.age, dietColor)
                 }
             }
@@ -343,6 +344,29 @@ private fun StatBlock(label: String, value: String, color: Color) {
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
             maxLines = 2,
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = DarkTextLow,
+        )
+    }
+}
+
+/**
+ * Stat block that shows an imperial measurement with long-press metric conversion popup.
+ * Long-press the value to see the metric equivalent (meters, tonnes, kg, etc.).
+ */
+@Composable
+private fun MetricStatBlock(label: String, value: String, color: Color) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        MetricText(
+            text = value,
+            color = color,
+            fontSize = 16,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
         )
         Text(
             text = label,
