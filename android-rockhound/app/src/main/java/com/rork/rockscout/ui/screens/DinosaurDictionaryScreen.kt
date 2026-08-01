@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,11 +45,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -63,11 +66,14 @@ import com.rork.rockscout.data.DinoDiet
 import com.rork.rockscout.data.DinoEntry
 import com.rork.rockscout.data.DinoEra
 import com.rork.rockscout.data.DinoImageMap
+import com.rork.rockscout.data.ScreenPdfExporter
+import com.rork.rockscout.data.ScreenPdfItem
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.DinoBodyPlan
 import com.rork.rockscout.ui.components.DinoSilhouette
 import com.rork.rockscout.ui.components.MetricText
 import com.rork.rockscout.ui.components.ScreenScaffold
+import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.TagChip
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.theme.Aqua
@@ -75,6 +81,7 @@ import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.DarkTextLow
 import com.rork.rockscout.ui.theme.TextMid
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /** Era accent colors — each era gets a vibrant, distinct color theme. */
 private val eraColors: Map<DinoEra, Color> = mapOf(
@@ -198,6 +205,9 @@ fun DinosaurDictionaryScreen(navController: NavController) {
     var showFilters by remember { mutableStateOf(false) }
     var expandedEras by remember { mutableStateOf(setOf<DinoEra>()) }
     var selectedEntry by remember { mutableStateOf<DinoEntry?>(null) }
+    var isExportingPdf by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val pdfScope = rememberCoroutineScope()
 
     // Debounce search — wait 200ms after last keystroke
     LaunchedEffect(searchQuery) {
@@ -256,7 +266,53 @@ fun DinosaurDictionaryScreen(navController: NavController) {
         }
     }
 
-    ScreenScaffold(title = "Dinosaur Dictionary", onBack = { navController.popBackStack() }) {
+    ScreenScaffold(
+        title = "Dinosaur Dictionary",
+        onBack = { navController.popBackStack() },
+        actions = {
+            SculptedIconButton(
+                icon = Icons.Filled.PictureAsPdf,
+                contentDescription = "Export PDF",
+                onClick = {
+                    if (isExportingPdf) return@SculptedIconButton
+                    isExportingPdf = true
+                    pdfScope.launch {
+                        val items = filtered.map { entry ->
+                            ScreenPdfItem(
+                                title = entry.name,
+                                subtitle = "${entry.era.label}  •  ${entry.diet.label}  •  ${entry.period}",
+                                accentRgb = entry.accentColor.toInt(),
+                                imageUrl = DinoImageMap.imageUri(entry.id),
+                                fields = listOf(
+                                    "Era" to entry.era.label,
+                                    "Period" to entry.period,
+                                    "Age" to entry.age,
+                                    "Diet" to entry.diet.label,
+                                    "Length" to entry.length,
+                                    "Weight" to entry.weight,
+                                    "Habitat" to entry.habitat,
+                                    "Found In" to entry.foundIn.joinToString(", "),
+                                ).filter { it.second.isNotBlank() },
+                                description = entry.description,
+                            )
+                        }
+                        ScreenPdfExporter.export(
+                            context = context,
+                            docTitle = "Dinosaur Dictionary",
+                            fileName = "RockScout_DinoDictionary",
+                            items = items,
+                        )
+                        isExportingPdf = false
+                    }
+                },
+                accent = Aqua,
+                iconTint = DarkTextMid,
+                size = 36.dp,
+                shadowElevation = 3.dp,
+                enabled = !isExportingPdf && filtered.isNotEmpty(),
+            )
+        },
+    ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 40.dp),

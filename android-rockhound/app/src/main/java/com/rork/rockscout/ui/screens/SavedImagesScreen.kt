@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -51,6 +52,8 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.SavedImage
+import com.rork.rockscout.data.ScreenPdfExporter
+import com.rork.rockscout.data.ScreenPdfItem
 import com.rork.rockscout.ui.components.FullScreenImageViewer
 import com.rork.rockscout.ui.components.LongPressableImage
 import com.rork.rockscout.ui.components.RockBackground
@@ -81,6 +84,7 @@ fun SavedImagesScreen(navController: NavController) {
     var viewerUrls by remember { mutableStateOf<List<String>>(emptyList()) }
     var viewerInitialPage by remember { mutableIntStateOf(0) }
     var pendingDeleteImage by remember { mutableStateOf<SavedImage?>(null) }
+    var isExportingPdf by remember { mutableStateOf(false) }
 
     RockBackground {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -109,6 +113,42 @@ fun SavedImagesScreen(navController: NavController) {
                     style = MaterialTheme.typography.titleLarge,
                     color = Citrine,
                     fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(end = 8.dp),
+                )
+                SculptedIconButton(
+                    icon = Icons.Filled.PictureAsPdf,
+                    contentDescription = "Export PDF",
+                    onClick = {
+                        if (isExportingPdf) return@SculptedIconButton
+                        isExportingPdf = true
+                        scope.launch {
+                            val items = savedImages.map { img ->
+                                ScreenPdfItem(
+                                    title = "Saved Image",
+                                    subtitle = SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(img.savedAt)),
+                                    accentRgb = 0xFF2C6F9B.toInt(),
+                                    imageUrl = img.url,
+                                    fields = listOf(
+                                        "Saved On" to SimpleDateFormat("EEEE, MMM d, yyyy", Locale.getDefault()).format(Date(img.savedAt)),
+                                        "Source URL" to img.url.take(80),
+                                    ).filter { it.second.isNotBlank() },
+                                    description = if (img.liked) "★ Liked" else "",
+                                )
+                            }
+                            ScreenPdfExporter.export(
+                                context = context,
+                                docTitle = "My Saved Images",
+                                fileName = "RockScout_SavedImages",
+                                items = items,
+                            )
+                            isExportingPdf = false
+                        }
+                    },
+                    accent = Aqua,
+                    iconTint = Aqua,
+                    size = 36.dp,
+                    shadowElevation = 3.dp,
+                    enabled = !isExportingPdf && savedImages.isNotEmpty(),
                 )
             }
 

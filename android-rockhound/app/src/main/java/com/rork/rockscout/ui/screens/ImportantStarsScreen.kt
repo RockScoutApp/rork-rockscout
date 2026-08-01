@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,12 +34,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -46,8 +50,12 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.rork.rockscout.data.StarData
 import com.rork.rockscout.data.StarEntry
+import com.rork.rockscout.data.ScreenPdfExporter
+import com.rork.rockscout.data.ScreenPdfItem
 import com.rork.rockscout.ui.components.TwinklingStars
 import com.rork.rockscout.ui.components.ScreenScaffold
+import com.rork.rockscout.ui.components.SculptedIconButton
+import kotlinx.coroutines.launch
 
 private val AuroraGreen = Color(0xFF00E5C9)
 private val AuroraPurple = Color(0xFF9B7BD8)
@@ -59,8 +67,58 @@ private val TextLowW = Color.White.copy(alpha = 0.45f)
 @Composable
 fun ImportantStarsScreen(navController: NavController) {
     var selectedStar by remember { mutableStateOf<StarEntry?>(null) }
+    var isExportingPdf by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val pdfScope = rememberCoroutineScope()
 
-    ScreenScaffold(title = "Important Stars", onBack = { navController.popBackStack() }) {
+    ScreenScaffold(
+        title = "Important Stars",
+        onBack = { navController.popBackStack() },
+        actions = {
+            SculptedIconButton(
+                icon = Icons.Filled.PictureAsPdf,
+                contentDescription = "Export PDF",
+                onClick = {
+                    if (isExportingPdf) return@SculptedIconButton
+                    isExportingPdf = true
+                    pdfScope.launch {
+                        val items = StarData.allStars.map { star ->
+                            ScreenPdfItem(
+                                title = star.name,
+                                subtitle = "${star.constellation}  •  Mag ${star.apparentMagnitude}  •  ${star.spectralClass}",
+                                accentRgb = AuroraGreen.toArgb(),
+                                imageUrl = star.heroImageUrl,
+                                fields = listOf(
+                                    "Constellation" to star.constellation,
+                                    "Apparent Magnitude" to star.apparentMagnitude.toString(),
+                                    "Absolute Magnitude" to star.absoluteMagnitude.toString(),
+                                    "Distance" to "${star.distanceLy} light-years",
+                                    "Spectral Class" to star.spectralClass,
+                                    "Temperature" to "${star.temperatureK} K",
+                                    "Luminosity" to "${star.luminositySolar}× Sun",
+                                    "Best Viewing" to star.bestViewingMonth,
+                                    "Hemisphere" to star.hemisphere,
+                                ),
+                                description = star.description,
+                            )
+                        }
+                        ScreenPdfExporter.export(
+                            context = context,
+                            docTitle = "Important Stars",
+                            fileName = "RockScout_ImportantStars",
+                            items = items,
+                        )
+                        isExportingPdf = false
+                    }
+                },
+                accent = AuroraGreen,
+                iconTint = TextHighW,
+                size = 36.dp,
+                shadowElevation = 3.dp,
+                enabled = !isExportingPdf,
+            )
+        },
+    ) {
         Box(modifier = Modifier.fillMaxSize()) {
             TwinklingStars(modifier = Modifier.fillMaxSize(), starCount = 50)
 

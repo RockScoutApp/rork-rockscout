@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -34,22 +35,29 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.launch
 import com.rork.rockscout.data.ConstellationData
 import com.rork.rockscout.data.ConstellationEntry
+import com.rork.rockscout.data.ScreenPdfExporter
+import com.rork.rockscout.data.ScreenPdfItem
 import com.rork.rockscout.ui.components.ConstellationStarChart
 import com.rork.rockscout.ui.components.TwinklingStars
 import com.rork.rockscout.ui.components.ScreenScaffold
+import com.rork.rockscout.ui.components.SculptedIconButton
 
 private val AuroraGreen = Color(0xFF00E5C9)
 private val AuroraPurple = Color(0xFF9B7BD8)
@@ -69,7 +77,55 @@ fun ConstellationsScreen(navController: NavController) {
             .groupBy { it.hemisphere }
     }
 
-    ScreenScaffold(title = "Constellations", onBack = { navController.popBackStack() }) {
+    var isExportingPdf by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val pdfScope = rememberCoroutineScope()
+
+    ScreenScaffold(
+        title = "Constellations",
+        onBack = { navController.popBackStack() },
+        actions = {
+            SculptedIconButton(
+                icon = Icons.Filled.PictureAsPdf,
+                contentDescription = "Export PDF",
+                onClick = {
+                    if (isExportingPdf) return@SculptedIconButton
+                    isExportingPdf = true
+                    pdfScope.launch {
+                        val items = ConstellationData.allConstellations.distinctBy { it.name }.map { con ->
+                            ScreenPdfItem(
+                                title = con.name,
+                                subtitle = "${con.abbr}  •  ${con.hemisphere}  •  Brightest: ${con.brightestStar}",
+                                accentRgb = AuroraGreen.toArgb(),
+                                imageUrl = con.heroImageUrl,
+                                fields = listOf(
+                                    "Abbreviation" to con.abbr,
+                                    "Hemisphere" to con.hemisphere,
+                                    "Brightest Star" to con.brightestStar,
+                                    "Best Season" to con.bestSeason,
+                                    "Right Ascension" to con.rightAscension,
+                                    "Declination" to con.declination,
+                                ).filter { it.second.isNotBlank() },
+                                description = con.description,
+                            )
+                        }
+                        ScreenPdfExporter.export(
+                            context = context,
+                            docTitle = "88 Constellations",
+                            fileName = "RockScout_Constellations",
+                            items = items,
+                        )
+                        isExportingPdf = false
+                    }
+                },
+                accent = AuroraGreen,
+                iconTint = TextHighW,
+                size = 36.dp,
+                shadowElevation = 3.dp,
+                enabled = !isExportingPdf,
+            )
+        },
+    ) {
         Box(modifier = Modifier.fillMaxSize()) {
             TwinklingStars(modifier = Modifier.fillMaxSize(), starCount = 50)
 

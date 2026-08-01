@@ -31,6 +31,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddLocation
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ViewList
@@ -70,6 +71,8 @@ import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.FavoriteSpotResolver
 import com.rork.rockscout.data.NaturalWonder
 import com.rork.rockscout.data.NaturalWondersData
+import com.rork.rockscout.data.ScreenPdfExporter
+import com.rork.rockscout.data.ScreenPdfItem
 import com.rork.rockscout.data.UsRegion
 import com.rork.rockscout.data.WonderType
 import com.rork.rockscout.data.stateName
@@ -101,6 +104,7 @@ import com.rork.rockscout.ui.theme.TextMid
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.runtime.rememberCoroutineScope
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -121,6 +125,9 @@ fun NaturalWondersScreen(navController: NavController) {
     var isFullscreenMap by remember { mutableStateOf(false) }
     var showAddLocation by remember { mutableStateOf(false) }
     var addLocationMessage by remember { mutableStateOf<String?>(null) }
+    var isExportingPdf by remember { mutableStateOf(false) }
+    val pdfContext = LocalContext.current
+    val pdfScope = rememberCoroutineScope()
     val repo = AppRepository.instance
     val favorites by repo.favoriteSpots.collectAsStateWithLifecycle()
 
@@ -167,6 +174,44 @@ fun NaturalWondersScreen(navController: NavController) {
                     )
                 },
                 actions = {
+                    SculptedIconButton(
+                        icon = Icons.Filled.PictureAsPdf,
+                        contentDescription = "Export PDF",
+                        onClick = {
+                            if (isExportingPdf) return@SculptedIconButton
+                            isExportingPdf = true
+                            pdfScope.launch {
+                                val items = filteredWonders.map { wonder ->
+                                    ScreenPdfItem(
+                                        title = wonder.name,
+                                        subtitle = "${wonder.type.label}  •  ${wonder.location}",
+                                        accentRgb = 0xFFE8A33D.toInt(),
+                                        imageUrl = wonder.imageUrl,
+                                        fields = listOf(
+                                            "Type" to wonder.type.label,
+                                            "Location" to wonder.location,
+                                            "Latitude" to "%.4f".format(wonder.latitude),
+                                            "Longitude" to "%.4f".format(wonder.longitude),
+                                            "Rocks to Find" to wonder.rocksToFind.joinToString(", "),
+                                        ).filter { it.second.isNotBlank() },
+                                        description = wonder.description,
+                                    )
+                                }
+                                ScreenPdfExporter.export(
+                                    context = pdfContext,
+                                    docTitle = "Natural Wonders",
+                                    fileName = "RockScout_NaturalWonders",
+                                    items = items,
+                                )
+                                isExportingPdf = false
+                            }
+                        },
+                        accent = Citrine,
+                        iconTint = Citrine,
+                        size = 40.dp,
+                        shadowElevation = 4.dp,
+                        enabled = !isExportingPdf && filteredWonders.isNotEmpty(),
+                    )
                     SculptedIconButton(
                         icon = Icons.Filled.AddLocation,
                         contentDescription = "Suggest a Natural Wonder",

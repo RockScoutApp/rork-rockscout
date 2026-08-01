@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.EmojiObjects
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Diamond
 import androidx.compose.material.icons.filled.Share
@@ -69,6 +70,8 @@ import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.GearGuide
 import com.rork.rockscout.data.GearKit
 import com.rork.rockscout.data.RocksAreAmazingSpecimens
+import com.rork.rockscout.data.ScreenPdfExporter
+import com.rork.rockscout.data.ScreenPdfItem
 import com.rork.rockscout.data.Specimen
 import com.rork.rockscout.data.SpecimenImages
 import com.rork.rockscout.ui.components.SculptedIconButton
@@ -129,6 +132,8 @@ fun RocksAreAmazingScreen(navController: NavController) {
     var isRefreshing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     var showSubmitDialog by remember { mutableStateOf(false) }
+    var isExportingPdf by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     val customRaaSpecimens by com.rork.rockscout.data.CustomSpecimenStore.raaSpecimens.collectAsStateWithLifecycle()
     val sections = remember {
@@ -233,6 +238,50 @@ fun RocksAreAmazingScreen(navController: NavController) {
                     )
                 },
                 actions = {
+                    SculptedIconButton(
+                        icon = Icons.Filled.PictureAsPdf,
+                        contentDescription = "Export PDF",
+                        onClick = {
+                            if (isExportingPdf) return@SculptedIconButton
+                            isExportingPdf = true
+                            scope.launch {
+                                val items = sections.flatMap { section ->
+                                    section.specimens.map { spec ->
+                                        ScreenPdfItem(
+                                            title = spec.name,
+                                            subtitle = "${section.title}  •  ${spec.rockClass.label}  •  ${spec.category}",
+                                            accentRgb = spec.colorHex.toInt(),
+                                            imageUrl = (SpecimenImages.urls[spec.id] ?: spec.imageUrls).firstOrNull(),
+                                            fields = listOf(
+                                                "Section" to section.title,
+                                                "Class" to spec.rockClass.label,
+                                                "Category" to spec.category,
+                                                "Hardness" to spec.hardness,
+                                                "Luster" to spec.luster,
+                                                "Crystal System" to spec.crystalSystem,
+                                                "Chemical Formula" to spec.chemicalFormula,
+                                                "Common Colors" to spec.commonColors.joinToString(", "),
+                                                "Rarity" to spec.rarity,
+                                            ).filter { it.second.isNotBlank() },
+                                            description = spec.description,
+                                        )
+                                    }
+                                }
+                                ScreenPdfExporter.export(
+                                    context = context,
+                                    docTitle = "Rocks Are Amazing",
+                                    fileName = "RockScout_RocksAreAmazing",
+                                    items = items,
+                                )
+                                isExportingPdf = false
+                            }
+                        },
+                        accent = Citrine,
+                        iconTint = Citrine,
+                        size = 40.dp,
+                        shadowElevation = 4.dp,
+                        enabled = !isExportingPdf,
+                    )
                     SculptedIconButton(
                         icon = Icons.Filled.CloudUpload,
                         contentDescription = "Submit specimen",

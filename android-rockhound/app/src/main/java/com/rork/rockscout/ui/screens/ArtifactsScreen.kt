@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalance
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -26,30 +27,39 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.rork.rockscout.data.ArtifactSpecimens
+import com.rork.rockscout.data.ScreenPdfExporter
+import com.rork.rockscout.data.ScreenPdfItem
 import com.rork.rockscout.ui.components.ArtifactListItem
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.ScreenScaffold
+import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.TextHigh
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.TextMid
+import kotlinx.coroutines.launch
 
 @Composable
 fun ArtifactsScreen(navController: NavController) {
     val accent = Color(0xFFB87333) // warm clay/ochre artifact accent
     var showRecentlyAddedOnly by remember { mutableStateOf(false) }
+    var isExportingPdf by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val pdfScope = rememberCoroutineScope()
 
     // Explicitly wire the system back button to the NavController so the
     // hardware/gesture back reliably pops the back stack instead of closing
@@ -60,6 +70,47 @@ fun ArtifactsScreen(navController: NavController) {
         title = "Artifacts",
         onBack = { navController.popBackStack() },
         background = { RockBackground(it) },
+        actions = {
+            SculptedIconButton(
+                icon = Icons.Filled.PictureAsPdf,
+                contentDescription = "Export PDF",
+                onClick = {
+                    if (isExportingPdf) return@SculptedIconButton
+                    isExportingPdf = true
+                    pdfScope.launch {
+                        val items = ArtifactSpecimens.allArtifacts.map { art ->
+                            ScreenPdfItem(
+                                title = art.name,
+                                subtitle = "${art.family}  •  ${art.subFamily}  •  ${art.timePeriod}",
+                                accentRgb = art.accentHex.toInt(),
+                                imageUrl = art.imageUrl,
+                                fields = listOf(
+                                    "Family" to art.family,
+                                    "Sub-Family" to art.subFamily,
+                                    "Tribe" to art.tribe,
+                                    "Time Period" to art.timePeriod,
+                                    "Where Found" to art.whereFound.joinToString(", "),
+                                    "How Made" to art.howMade,
+                                ).filter { it.second.isNotBlank() },
+                                description = art.description,
+                            )
+                        }
+                        ScreenPdfExporter.export(
+                            context = context,
+                            docTitle = "Artifacts Catalog",
+                            fileName = "RockScout_Artifacts",
+                            items = items,
+                        )
+                        isExportingPdf = false
+                    }
+                },
+                accent = accent,
+                iconTint = accent,
+                size = 36.dp,
+                shadowElevation = 3.dp,
+                enabled = !isExportingPdf,
+            )
+        },
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),

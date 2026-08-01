@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -30,10 +31,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -43,11 +46,14 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.rork.rockscout.data.PrehistoricOrganisms
+import com.rork.rockscout.data.ScreenPdfExporter
+import com.rork.rockscout.data.ScreenPdfItem
 import com.rork.rockscout.data.Specimen
 import com.rork.rockscout.data.SpecimenImages
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.FullScreenImageViewer
 import com.rork.rockscout.ui.components.ScreenScaffold
+import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.TagChip
 import com.rork.rockscout.ui.components.BookStyleImage
 import com.rork.rockscout.ui.components.PREHISTORIC_IMG_ARCHAEOPTERYX
@@ -60,6 +66,7 @@ import com.rork.rockscout.ui.theme.DarkTextLow
 import com.rork.rockscout.ui.theme.Fossil
 import com.rork.rockscout.ui.theme.Igneous
 import com.rork.rockscout.ui.theme.Slate800
+import kotlinx.coroutines.launch
 import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.TextMid
 import com.rork.rockscout.ui.components.glowingBorder
@@ -90,8 +97,58 @@ fun PrehistoricOrganismsScreen(navController: NavController) {
 
     var viewerUrls by remember { mutableStateOf<List<String>>(emptyList()) }
     var viewerInitialPage by remember { mutableIntStateOf(0) }
+    var isExportingPdf by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val pdfScope = rememberCoroutineScope()
 
-    ScreenScaffold(title = "Exploring Prehistoric Organisms", onBack = { navController.popBackStack() }) {
+    ScreenScaffold(
+        title = "Exploring Prehistoric Organisms",
+        onBack = { navController.popBackStack() },
+        actions = {
+            SculptedIconButton(
+                icon = Icons.Filled.PictureAsPdf,
+                contentDescription = "Export PDF",
+                onClick = {
+                    if (isExportingPdf) return@SculptedIconButton
+                    isExportingPdf = true
+                    pdfScope.launch {
+                        val items = organisms.map { spec ->
+                            ScreenPdfItem(
+                                title = spec.name,
+                                subtitle = "${spec.rockClass.label}  •  ${spec.category}",
+                                accentRgb = spec.colorHex.toInt(),
+                                imageUrl = (SpecimenImages.urls[spec.id] ?: spec.imageUrls).firstOrNull(),
+                                fields = listOf(
+                                    "Class" to spec.rockClass.label,
+                                    "Category" to spec.category,
+                                    "Hardness" to spec.hardness,
+                                    "Luster" to spec.luster,
+                                    "Streak" to spec.streak,
+                                    "Crystal System" to spec.crystalSystem,
+                                    "Chemical Formula" to spec.chemicalFormula,
+                                    "Common Colors" to spec.commonColors.joinToString(", "),
+                                    "Typical Localities" to spec.whereFound.joinToString("; "),
+                                ).filter { it.second.isNotBlank() },
+                                description = spec.description,
+                            )
+                        }
+                        ScreenPdfExporter.export(
+                            context = context,
+                            docTitle = "Prehistoric Organisms",
+                            fileName = "RockScout_PrehistoricOrganisms",
+                            items = items,
+                        )
+                        isExportingPdf = false
+                    }
+                },
+                accent = Aqua,
+                iconTint = DarkTextMid,
+                size = 36.dp,
+                shadowElevation = 3.dp,
+                enabled = !isExportingPdf,
+            )
+        },
+    ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 40.dp),

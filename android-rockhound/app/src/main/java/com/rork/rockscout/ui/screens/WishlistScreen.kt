@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -48,6 +49,8 @@ import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.IdentifyAccessManager
 import com.rork.rockscout.data.PurchaseManager
 import com.rork.rockscout.data.SeedData
+import com.rork.rockscout.data.ScreenPdfExporter
+import com.rork.rockscout.data.ScreenPdfItem
 import com.rork.rockscout.data.SpecimenImages
 import com.rork.rockscout.data.XpSource
 import com.rork.rockscout.ui.components.GlobalSearchSection
@@ -113,7 +116,71 @@ fun WishlistScreen(navController: NavController) {
         captures.filter { it.inWishlist }
     }
 
-    ScreenScaffold(title = "Wishlist", onBack = { navController.popBackStack() }) {
+    var isExportingPdf by remember { mutableStateOf(false) }
+
+    val sortedWishlist = remember(wishlist) {
+        wishlist.sortedBy { SeedData.specimenById(it)?.name?.lowercase() ?: it }
+    }
+    // Apply category filter
+    val filteredWishlist = remember(sortedWishlist, selectedFilter) {
+        if (selectedFilter == null) sortedWishlist
+        else sortedWishlist.filter { id ->
+            SeedData.specimenById(id)?.let { spec ->
+                filterSpecimensByCategory(listOf(spec), selectedFilter).isNotEmpty()
+            } ?: false
+        }
+    }
+
+    ScreenScaffold(
+        title = "Wishlist",
+        onBack = { navController.popBackStack() },
+        actions = {
+            SculptedIconButton(
+                icon = Icons.Filled.PictureAsPdf,
+                contentDescription = "Export PDF",
+                onClick = {
+                    if (isExportingPdf) return@SculptedIconButton
+                    isExportingPdf = true
+                    scope.launch {
+                        val items = filteredWishlist.mapNotNull { id ->
+                            SeedData.specimenById(id)?.let { spec ->
+                                ScreenPdfItem(
+                                    title = spec.name,
+                                    subtitle = "${spec.rockClass.label}  •  ${spec.category}  •  ${spec.rarity}",
+                                    accentRgb = spec.colorHex.toInt(),
+                                    imageUrl = (SpecimenImages.urls[spec.id] ?: spec.imageUrls).firstOrNull(),
+                                    fields = listOf(
+                                        "Class" to spec.rockClass.label,
+                                        "Category" to spec.category,
+                                        "Hardness" to spec.hardness,
+                                        "Luster" to spec.luster,
+                                        "Crystal System" to spec.crystalSystem,
+                                        "Chemical Formula" to spec.chemicalFormula,
+                                        "Common Colors" to spec.commonColors.joinToString(", "),
+                                        "Typical Localities" to spec.whereFound.joinToString("; "),
+                                        "Rarity" to spec.rarity,
+                                    ).filter { it.second.isNotBlank() },
+                                    description = spec.description,
+                                )
+                            }
+                        }
+                        ScreenPdfExporter.export(
+                            context = context,
+                            docTitle = "My Wishlist",
+                            fileName = "RockScout_Wishlist",
+                            items = items,
+                        )
+                        isExportingPdf = false
+                    }
+                },
+                accent = Aqua,
+                iconTint = DarkTextMid,
+                size = 36.dp,
+                shadowElevation = 3.dp,
+                enabled = !isExportingPdf && (filteredWishlist.isNotEmpty() || captureInWishlist.isNotEmpty()),
+            )
+        },
+    ) {
         if (wishlist.isEmpty() && captureInWishlist.isEmpty()) {
             EmptyState(
                 emoji = "\uD83D\uDD16",
@@ -121,18 +188,6 @@ fun WishlistScreen(navController: NavController) {
                 message = "Bookmark the rocks, minerals, and crystals you're hunting for and they'll appear here.",
             )
         } else {
-            val sortedWishlist = remember(wishlist) {
-                wishlist.sortedBy { SeedData.specimenById(it)?.name?.lowercase() ?: it }
-            }
-            // Apply category filter
-            val filteredWishlist = remember(sortedWishlist, selectedFilter) {
-                if (selectedFilter == null) sortedWishlist
-                else sortedWishlist.filter { id ->
-                    SeedData.specimenById(id)?.let { spec ->
-                        filterSpecimensByCategory(listOf(spec), selectedFilter).isNotEmpty()
-                    } ?: false
-                }
-            }
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = androidx.compose.foundation.layout.PaddingValues(start = 20.dp, end = 20.dp, bottom = 40.dp),

@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Message
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -58,11 +59,15 @@ import com.rork.rockscout.data.ListingType
 import com.rork.rockscout.data.TradeInterestRepository
 import com.rork.rockscout.data.TradeListing
 import com.rork.rockscout.data.CapturedPhoto
+import com.rork.rockscout.data.ScreenPdfExporter
+import com.rork.rockscout.data.ScreenPdfItem
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.FullScreenImageViewer
 import com.rork.rockscout.ui.components.LongPressableImage
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.SculptedButton
+import com.rork.rockscout.ui.components.SculptedIconButton
+import kotlinx.coroutines.launch
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.theme.Aqua
@@ -107,6 +112,7 @@ fun MyTradesScreen(navController: NavController) {
     val interestRepo = TradeInterestRepository.instance
     val myInterests by interestRepo.myInterests.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var tab by remember { mutableStateOf(MyTradesTab.POSTED) }
     // Per-tab sort direction: true = newest first (default), false = oldest first
     val sortDirections = remember {
@@ -125,6 +131,7 @@ fun MyTradesScreen(navController: NavController) {
     var viewerInitialPage by remember { mutableStateOf(0) }
     var editingListing by remember { mutableStateOf<TradeListing?>(null) }
     var showEditor by remember { mutableStateOf(false) }
+    var isExportingPdf by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         repo.expireStaleListings()
@@ -134,6 +141,50 @@ fun MyTradesScreen(navController: NavController) {
     ScreenScaffold(
         title = "My Trades",
         onBack = { navController.popBackStack() },
+        actions = {
+            SculptedIconButton(
+                icon = Icons.Filled.PictureAsPdf,
+                contentDescription = "Export PDF",
+                onClick = {
+                    if (isExportingPdf) return@SculptedIconButton
+                    isExportingPdf = true
+                    scope.launch {
+                        val items = listings.filter { it.status == "traded" }.map { listing ->
+                            ScreenPdfItem(
+                                title = listing.specimenName,
+                                subtitle = "${listing.type.label}  •  ${listing.listingMode.label}  •  ${listing.status.replaceFirstChar { it.uppercase() }}",
+                                accentRgb = 0xFFE8A33D.toInt(),
+                                imageUrl = listing.photoUri,
+                                fields = listOf(
+                                    "Type" to listing.type.label,
+                                    "Mode" to listing.listingMode.label,
+                                    "Condition" to listing.condition,
+                                    "Description" to listing.description,
+                                    "Want in Return" to listing.wantInReturn,
+                                    "Price" to listing.price,
+                                    "Tags" to listing.tags.joinToString(", "),
+                                    "Status" to listing.status,
+                                    "Created" to SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(listing.createdAt)),
+                                ).filter { it.second.isNotBlank() },
+                                description = "",
+                            )
+                        }
+                        ScreenPdfExporter.export(
+                            context = context,
+                            docTitle = "Completed Trades",
+                            fileName = "RockScout_CompletedTrades",
+                            items = items,
+                        )
+                        isExportingPdf = false
+                    }
+                },
+                accent = Citrine,
+                iconTint = Citrine,
+                size = 36.dp,
+                shadowElevation = 3.dp,
+                enabled = !isExportingPdf,
+            )
+        },
         background = { innerContent ->
             Box(modifier = Modifier.fillMaxSize()) {
                 androidx.compose.foundation.Image(

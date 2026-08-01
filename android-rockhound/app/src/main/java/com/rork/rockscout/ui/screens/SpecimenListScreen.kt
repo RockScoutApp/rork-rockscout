@@ -80,6 +80,8 @@ import com.rork.rockscout.data.RocksAreAmazingSpecimens
 import com.rork.rockscout.data.MeteoriteSpecimens
 import com.rork.rockscout.data.RockClass
 import com.rork.rockscout.data.SeedData
+import com.rork.rockscout.data.ScreenPdfExporter
+import com.rork.rockscout.data.ScreenPdfItem
 import com.rork.rockscout.data.Specimen
 import com.rork.rockscout.data.SpecimenImages
 import com.rork.rockscout.ui.components.AlphabetIndex
@@ -91,6 +93,7 @@ import com.rork.rockscout.ui.components.filterSpecimensByCategory
 import com.rork.rockscout.ui.components.InterstitialAdTrigger
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.SculptedButton
+import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.UploadSpecimenPill
 import com.rork.rockscout.ui.components.CardHeart
 import com.rork.rockscout.ui.components.SpecimenAddShare
@@ -114,6 +117,7 @@ import kotlinx.coroutines.launch
 import com.rork.rockscout.ui.components.noAutoFocus
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.PictureAsPdf
 import com.rork.rockscout.ui.components.glowingBorder
 
 
@@ -129,6 +133,7 @@ fun SpecimenListScreen(navController: NavController) {
     var debouncedQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf<ListCategoryFilter?>(null) }
     var showRecentlyAddedOnly by remember { mutableStateOf(false) }
+    var isExportingPdf by remember { mutableStateOf(false) }
 
     // Debounce search input — wait 250ms after the last keystroke before filtering.
     // Keeps the list responsive while typing fast on a large 900+ specimen database.
@@ -230,6 +235,49 @@ fun SpecimenListScreen(navController: NavController) {
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.weight(1f),
+                )
+                SculptedIconButton(
+                    icon = Icons.Filled.PictureAsPdf,
+                    contentDescription = "Export PDF",
+                    onClick = {
+                        if (isExportingPdf) return@SculptedIconButton
+                        isExportingPdf = true
+                        scope.launch {
+                            val items = filtered.map { spec ->
+                                ScreenPdfItem(
+                                    title = spec.name,
+                                    subtitle = "${spec.rockClass.label}  •  ${spec.category}  •  ${spec.rarity}",
+                                    accentRgb = spec.colorHex.toInt(),
+                                    imageUrl = (SpecimenImages.urls[spec.id] ?: spec.imageUrls).firstOrNull(),
+                                    fields = listOf(
+                                        "Class" to spec.rockClass.label,
+                                        "Category" to spec.category,
+                                        "Hardness" to spec.hardness,
+                                        "Luster" to spec.luster,
+                                        "Streak" to spec.streak,
+                                        "Crystal System" to spec.crystalSystem,
+                                        "Chemical Formula" to spec.chemicalFormula,
+                                        "Common Colors" to spec.commonColors.joinToString(", "),
+                                        "Typical Localities" to spec.whereFound.joinToString("; "),
+                                        "Rarity" to spec.rarity,
+                                    ).filter { it.second.isNotBlank() },
+                                    description = spec.description,
+                                )
+                            }
+                            ScreenPdfExporter.export(
+                                context = context,
+                                docTitle = "Specimen Database",
+                                fileName = "RockScout_SpecimenDatabase",
+                                items = items,
+                            )
+                            isExportingPdf = false
+                        }
+                    },
+                    accent = Citrine,
+                    iconTint = Citrine,
+                    size = 36.dp,
+                    shadowElevation = 3.dp,
+                    enabled = !isExportingPdf && filtered.isNotEmpty(),
                 )
             }
             // Action pills — moved under the header so the title has the full width.
