@@ -102,6 +102,24 @@ class AuthRepository private constructor() {
             return
         }
 
+        // No Supabase session — check for a pending email verification.
+        // The user may have signed up, received the verification email, then
+        // the app was killed before they clicked the verify button. Restore
+        // the PendingVerification state so the deep link can auto-complete.
+        val savedPendingEmail = LocalDataStore.getString(LocalDataStore.KEY_PENDING_VERIFY_EMAIL)
+        val savedPendingPassword = LocalDataStore.getString(LocalDataStore.KEY_PENDING_VERIFY_PASSWORD)
+        val savedPendingUserId = LocalDataStore.getString(LocalDataStore.KEY_PENDING_VERIFY_USER_ID)
+        if (!savedPendingEmail.isNullOrBlank() && !savedPendingPassword.isNullOrBlank()) {
+            pendingSupabaseUserId = savedPendingUserId
+            pendingPassword = savedPendingPassword
+            _sessionStatus.value = SessionStatus.PendingVerification(
+                email = savedPendingEmail,
+                userId = savedPendingUserId ?: "",
+            )
+            Log.i("AuthRepository", "Restored pending verification for $savedPendingEmail")
+            return
+        }
+
         // No session to restore.
         _sessionStatus.value = SessionStatus.NotAuthenticated()
     }
@@ -280,12 +298,18 @@ class AuthRepository private constructor() {
             // Store pending info for verification + sign-in after confirmation.
             pendingSupabaseUserId = userId
             pendingPassword = password
+            // Persist so we can recover if the app is killed between sending
+            // the email and the user clicking the verify link.
+            LocalDataStore.setString(LocalDataStore.KEY_PENDING_VERIFY_EMAIL, trimmed)
+            LocalDataStore.setString(LocalDataStore.KEY_PENDING_VERIFY_PASSWORD, password)
+            LocalDataStore.setString(LocalDataStore.KEY_PENDING_VERIFY_USER_ID, userId)
 
             // Generate a default display name.
             val baseName = "Rock Scout"
             val defaultName = baseName // Supabase profile upsert will handle uniqueness.
 
-            // Transition to PendingVerification — user must enter the 6-digit code.
+            // Transition to PendingVerification — user must enter the 6-digit code
+            // or click the verify button in the email.
             _sessionStatus.value = SessionStatus.PendingVerification(
                 email = trimmed,
                 userId = userId,
@@ -446,12 +470,120 @@ class AuthRepository private constructor() {
         return runCatching {
             pendingSupabaseUserId = null
             pendingPassword = null
+            clearPendingVerifyPersistence()
             // Clear any partial Supabase session from sign-up.
             clearSupabaseTokens()
             _sessionStatus.value = SessionStatus.NotAuthenticated()
             _error.value = null
             Unit
         }
+    }
+
+    /**
+     * Complete email verification from the click-to-verify deep link.
+     *
+     * Called when the app receives a `rockscout://verify_email?email=…&verified=true`
+     * deep link. The backend has already confirmed the Supabase email — we just
+     * need to sign in with the stored credentials to get a fresh session.
+     *
+     * If the app was killed between sending the email and clicking the link,
+     * the pending email/password/userId are restored from [LocalDataStore].
+     *
+     * Returns true on success, false on failure (with error set).
+     */
+    suspend fun completeVerificationFromLink(linkEmail: String): Boolean {
+        val email = linkEmail.trim().lowercase()
+
+        // Restore pending state from memory or persistence.
+        val pending = sessionStatus.value as? SessionStatus.PendingVerification
+        val storedEmail = pending?.email
+            ?: LocalDataStore.getString(LocalDataStore.KEY_PENDING_VERIFY_EMAIL)
+        val storedPassword = pending?.let { pendingPassword }
+            ?: LocalDataStore.getString(LocalDataStore.KEY_PENDING_VERIFY_PASSWORD)
+        val storedUserId = pending?.userId?.takeIf { it.isNotBlank() }
+            ?: LocalDataStore.getString(LocalDataStore.KEY_PENDING_VERIFY_USER_ID)
+
+        // If the deep link email doesn't match the pending email, something is
+        // wrong — don't sign in as the wrong user.
+        if (storedEmail != null && storedEmail != email) {
+            Log.w("AuthRepository", "verify-email link email mismatch: $email vs $storedEmail")
+            _error.value = "This verification link doesn't match your account. Please use the link from your own email."
+            return false
+        }
+
+        if (storedEmail == null || storedPassword.isNullOrBlank()) {
+            Log.w("AuthRepository", "verify-email link but no pending credentials")
+            // Transition to PendingVerification so the user can at least see
+            // the verification screen and resend.
+            _sessionStatus.value = SessionStatus.PendingVerification(
+                email = email,
+                userId = storedUserId ?: "",
+            )
+            _error.value = "Your email was verified, but we need your password to sign in. Please sign in manually."
+            return false
+        }
+
+        _isLoading.value = true
+        _error.value = null
+
+        // Make sure we're in PendingVerification so the UI shows the right state.
+        if (pending == null) {
+            pendingSupabaseUserId = storedUserId
+            pendingPassword = storedPassword
+            _sessionStatus.value = SessionStatus.PendingVerification(
+                email = storedEmail,
+                userId = storedUserId ?: "",
+            )
+        }
+
+        return runCatching {
+            // The backend already confirmed the email via the admin API, so
+            // sign-in should work immediately. Retry briefly in case Supabase
+            // hasn't propagated the confirmation yet.
+            val signInResult = signInWithRetry(storedEmail, storedPassword)
+            if (signInResult.isSuccess) {
+                val auth = signInResult.getOrThrow()
+                saveSupabaseTokens(auth.access_token, auth.refresh_token)
+                val userId = auth.user?.id ?: storedUserId ?: ""
+                val userEmail = auth.user?.email ?: storedEmail
+                LocalDataStore.setString(LocalDataStore.KEY_AUTH_EMAIL, userEmail)
+                LocalDataStore.setString(LocalDataStore.KEY_AUTH_USER_ID, userId)
+                LocalDataStore.setBoolean(LocalDataStore.KEY_LOCAL_AUTH_MIGRATED, true)
+                _needsMigration.value = false
+
+                // Upsert profile.
+                scope.launch {
+                    SupabaseAuthClient.upsertProfile(
+                        auth.access_token, userId, "Rock Scout", "\uD83E\uDD20"
+                    )
+                }
+
+                _sessionStatus.value = SessionStatus.Authenticated(
+                    Session(user = UserInfo(id = userId, email = userEmail))
+                )
+                scope.launch { PurchaseManager.instance.linkRevenueCatUser(userId) }
+                SupabaseDataSync.syncInBackground()
+                clearPendingVerifyPersistence()
+                true
+            } else {
+                val cause = signInResult.exceptionOrNull()?.message.orEmpty()
+                Log.w("AuthRepository", "verify-email sign-in failed: $cause")
+                _error.value = "Your email is verified, but we couldn't sign you in automatically. Please sign in with your email and password."
+                false
+            }
+        }.onFailure {
+            _error.value = it.message ?: "Verification failed"
+            Log.e("AuthRepository", "completeVerificationFromLink failed", it)
+        }.getOrDefault(false).also {
+            _isLoading.value = false
+        }
+    }
+
+    /** Clear persisted pending-verification state. */
+    private fun clearPendingVerifyPersistence() {
+        LocalDataStore.setString(LocalDataStore.KEY_PENDING_VERIFY_EMAIL, "")
+        LocalDataStore.setString(LocalDataStore.KEY_PENDING_VERIFY_PASSWORD, "")
+        LocalDataStore.setString(LocalDataStore.KEY_PENDING_VERIFY_USER_ID, "")
     }
 
     /** Sign in with email + password via Supabase. */

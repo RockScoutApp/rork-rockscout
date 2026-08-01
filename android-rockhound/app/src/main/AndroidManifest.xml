@@ -89,6 +89,7 @@
                 <data android:scheme="rockscout" android:host="notifications" />
                 <data android:scheme="rockscout" android:host="user_profile" />
                 <data android:scheme="rockscout" android:host="spot" />
+                <data android:scheme="rockscout" android:host="verify_email" />
             </intent-filter>
         </activity>
 

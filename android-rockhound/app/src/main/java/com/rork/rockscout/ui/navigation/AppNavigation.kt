@@ -418,6 +418,22 @@ fun AppNavigation(
     val pendingReferralCode by ReferralRepository.pendingReferralCode.collectAsState()
     val referralCodeApplied by ReferralRepository.referralCodeApplied.collectAsState()
 
+    // Handle the click-to-verify deep link BEFORE the auth gate. This link
+    // arrives while the user is in PendingVerification state (not yet
+    // Authenticated), so the normal handleDeepLink below (which runs after
+    // the gate) would never fire. The backend has already confirmed the
+    // Supabase email — we just sign in with the stored credentials.
+    LaunchedEffect(deepLinkUri) {
+        if (deepLinkUri != null && deepLinkUri.host == "verify_email") {
+            val linkEmail = deepLinkUri.getQueryParameter("email") ?: ""
+            val verified = deepLinkUri.getQueryParameter("verified")?.toBoolean() ?: false
+            if (verified && linkEmail.isNotBlank()) {
+                auth.completeVerificationFromLink(linkEmail)
+            }
+            onDeepLinkConsumed()
+        }
+    }
+
     // Mandatory auth gate — every user must create an account to use the app.
     // The SignInScreen is shown as a full-screen blocking overlay until the
     // user signs in. Once authenticated, the overlay disappears and the
@@ -495,9 +511,11 @@ fun AppNavigation(
         )
     }
 
-    // Handle deep-link from proximity notifications
+    // Handle deep-link from proximity notifications and other app links.
+    // verify_email links are already handled above (before the auth gate),
+    // so skip them here to avoid double-processing.
     LaunchedEffect(deepLinkUri) {
-        if (deepLinkUri != null) {
+        if (deepLinkUri != null && deepLinkUri.host != "verify_email") {
             handleDeepLink(deepLinkUri, navController)
             onDeepLinkConsumed()
         }

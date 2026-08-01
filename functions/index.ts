@@ -8,7 +8,7 @@ import { handleReferral } from "./referral";
 import { handleTrial } from "./trial";
 import { handleDevSmsVerify } from "./dev-sms-verify";
 import { handleDeleteAccount } from "./delete-account";
-import { handleEmailVerification } from "./email-verification";
+import { handleEmailVerification, handleVerifyEmailGet } from "./email-verification";
 import { handleEmbeddingsBackfill } from "./embeddings-backfill";
 import { handleArtifactsBackfill } from "./artifacts-backfill";
 import { handleSpecimenCatalogBackfill } from "./specimen-catalog-backfill";
@@ -33,6 +33,22 @@ export default {
 
     if (url.pathname === "/ping") {
       return Response.json({ ok: true, now: new Date().toISOString() });
+    }
+
+    // GET /verify-email — public click-to-verify callback from the email link.
+    // No app-key required: the HMAC token in the URL IS the authentication.
+    // The handler validates the token statelessly and redirects to the app.
+    if (url.pathname === "/verify-email" && request.method === "GET") {
+      return handleVerifyEmailGet(
+        request,
+        env as unknown as {
+          RESEND_API_KEY?: string;
+          EXPO_PUBLIC_RORK_APP_KEY?: string;
+          EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
+          SUPABASE_SERVICE_ROLE_KEY?: string;
+          EXPO_PUBLIC_SUPABASE_URL?: string;
+        },
+      );
     }
 
     // /app-version is a lightweight public endpoint — auth but no rate limit issues.

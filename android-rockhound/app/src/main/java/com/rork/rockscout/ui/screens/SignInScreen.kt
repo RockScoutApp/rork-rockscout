@@ -506,7 +506,7 @@ fun SignInScreen(
                 )
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    text = "We sent a 6-digit code to",
+                    text = "We sent a verification email to",
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextMid,
                     textAlign = TextAlign.Center,
@@ -518,7 +518,15 @@ fun SignInScreen(
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
                 )
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(20.dp))
+                Text(
+                    text = "Tap \u201cVerify My Email\u201d in the email, or enter the code below:",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextMid,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(16.dp))
 
                 // Code input — single styled field, numeric keyboard, 6 digits
                 OutlinedTextField(
@@ -626,7 +634,7 @@ fun SignInScreen(
                             scope.launch {
                                 auth.resendVerificationCode()
                                     .onSuccess {
-                                        verifyInfo = "New code sent! Check your email."
+                                        verifyInfo = "New email sent! Check your inbox."
                                         resendCooldown = 60
                                     }
                                     .onFailure { e ->
@@ -646,14 +654,14 @@ fun SignInScreen(
                         )
                     } else if (resendCooldown > 0) {
                         Text(
-                            text = "Resend code in ${resendCooldown}s",
+                            text = "Resend email in ${resendCooldown}s",
                             color = TextLow,
                             fontWeight = FontWeight.SemiBold,
                             style = MaterialTheme.typography.bodyMedium,
                         )
                     } else {
                         Text(
-                            text = "Resend code",
+                            text = "Resend email",
                             color = CitrineDeep,
                             fontWeight = FontWeight.SemiBold,
                             style = MaterialTheme.typography.bodyMedium,

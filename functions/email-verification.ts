@@ -1,7 +1,7 @@
 /**
- * Email verification endpoint — sends a 6-digit verification code via Resend
- * to a newly signed-up user, verifies the code, and confirms the Supabase
- * email so the user can sign in immediately.
+ * Email verification endpoint — sends a verification email via Resend with a
+ * click-to-verify button (primary) and a 6-digit code (fallback), verifies
+ * either method, and confirms the Supabase email so the user can sign in.
  *
  * POST /email-verification { action: "send", email }
  *   → { ok: true, expiresInSeconds } | { ok: false, error, reason }
@@ -9,18 +9,24 @@
  * POST /email-verification { action: "verify", email, code, supabaseUserId? }
  *   → { ok: true, verified: true, emailConfirmed } | { ok: false, error }
  *
- * ── Why codes are STATELESS ──────────────────────────────────────────────
+ * GET /verify-email?email=…&token=…
+ *   → Validates the token, confirms the Supabase email, then redirects to
+ *     rockscout://verify_email?email=…&verified=true (or false on failure).
+ *     Returns an HTML interstitial page so the browser handles the custom-scheme
+ *     redirect reliably (302s to custom schemes are dropped by some browsers).
+ *
+ * ── Why codes/tokens are STATELESS ──────────────────────────────────────
  * Cloudflare Workers run many isolates. The previous implementation stored
  * codes in a module-level Map with an optional KV fallback, so "send" and
  * "verify" frequently landed on different isolates and the user got a random
  * "Code expired. Please request a new one." even seconds after receiving it.
  *
- * Codes are now derived: HMAC-SHA256 over `${email}:${timeBucket}` keyed by
- * the server-side app key, truncated to 6 digits (RFC 4226 style). Any isolate
- * can validate any code instantly with zero storage and zero round trips, so
- * verification works every time. Codes rotate every 30s and stay valid for
- * CODE_WINDOW_BUCKETS * 30s (10 minutes), which also makes "Resend" safe — an
- * older code the user already typed still works.
+ * Codes and tokens are now derived: HMAC-SHA256 over `email-verify:${email}:${bucket}`
+ * keyed by the server-side app key. The code is truncated to 6 digits (RFC 4226
+ * style); the token is the full HMAC hex string. Any isolate can validate either
+ * instantly with zero storage and zero round trips, so verification works every
+ * time. Both rotate every 30s and stay valid for CODE_WINDOW_BUCKETS * 30s
+ * (10 minutes), which also makes "Resend" safe.
  *
  * Env vars:
  *   RESEND_API_KEY            (required — email delivery)
@@ -90,6 +96,31 @@ async function deriveCode(
   return (binary % 1_000_000).toString().padStart(6, "0");
 }
 
+/** Derive the full HMAC hex token for a given email + time bucket.
+ *  This is the same HMAC as the code, but the full hex string — used for
+ *  the click-to-verify link so the worker can validate it statelessly. */
+async function deriveToken(
+  secret: string,
+  email: string,
+  bucket: number,
+): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const mac = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(`email-verify:${email}:${bucket}`),
+  );
+  return Array.from(new Uint8Array(mac))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 /** Constant-time-ish string compare. */
 function safeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false;
@@ -98,7 +129,7 @@ function safeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
-function buildEmail(code: string): { html: string; text: string } {
+function buildEmail(code: string, verifyUrl: string): { html: string; text: string } {
   const html = `<!DOCTYPE html>
 <html><body style="margin:0;padding:0;background:#F3EFE7;font-family:-apple-system,Segoe UI,Roboto,sans-serif;">
   <div style="max-width:560px;margin:0 auto;padding:32px 24px;">
@@ -108,18 +139,29 @@ function buildEmail(code: string): { html: string; text: string } {
     </div>
     <div style="background:#FAF8F4;border:1px solid #D3CAB4;border-radius:16px;padding:24px;">
       <p style="color:#1C1A14;font-size:16px;line-height:1.5;margin-top:0;">
-        Enter this code in the RockScout app to verify your email address and
-        activate your account:
+        Tap the button below to verify your email address and activate your
+        RockScout account:
       </p>
       <div style="text-align:center;margin:24px 0;">
-        <span style="font-size:36px;font-weight:800;letter-spacing:10px;color:#1C1A14;
-                     background:#F3EFE7;border-radius:12px;padding:12px 24px;display:inline-block;">
+        <a href="${verifyUrl}"
+           style="display:inline-block;background:#C3D31A;color:#1C1A14;
+                  font-size:18px;font-weight:700;text-decoration:none;
+                  padding:16px 40px;border-radius:12px;">
+          Verify My Email
+        </a>
+      </div>
+      <p style="color:#514C42;font-size:14px;line-height:1.5;text-align:center;margin:16px 0 8px;">
+        Or enter this code in the app:
+      </p>
+      <div style="text-align:center;margin:8px 0 16px;">
+        <span style="font-size:28px;font-weight:800;letter-spacing:8px;color:#1C1A14;
+                     background:#F3EFE7;border-radius:12px;padding:10px 20px;display:inline-block;">
           ${code}
         </span>
       </div>
       <p style="color:#514C42;font-size:14px;line-height:1.5;margin-bottom:0;">
-        This code expires in 10 minutes. If you didn't create a RockScout account,
-        you can safely ignore this email.
+        This link and code expire in 10 minutes. If you didn't create a RockScout
+        account, you can safely ignore this email.
       </p>
     </div>
     <p style="text-align:center;color:#8A8475;font-size:13px;margin-top:24px;">
@@ -130,11 +172,15 @@ function buildEmail(code: string): { html: string; text: string } {
 
   const text = `Verify your email
 
-Enter this code in the RockScout app to verify your email address and activate your account:
+Open this link to verify your email address and activate your RockScout account:
+
+${verifyUrl}
+
+Or enter this code in the app:
 
 ${code}
 
-This code expires in 10 minutes. If you didn't create a RockScout account, you can safely ignore this email.
+This link and code expire in 10 minutes. If you didn't create a RockScout account, you can safely ignore this email.
 
 ${TAGLINE}`;
 
@@ -194,8 +240,12 @@ export async function handleEmailVerification(
       );
     }
 
-    const code = await deriveCode(secret, email, currentBucket());
-    const { html, text } = buildEmail(code);
+    const bucket = currentBucket();
+    const code = await deriveCode(secret, email, bucket);
+    const token = await deriveToken(secret, email, bucket);
+    const origin = new URL(request.url).origin;
+    const verifyUrl = `${origin}/verify-email?email=${encodeURIComponent(email)}&token=${token}`;
+    const { html, text } = buildEmail(code, verifyUrl);
 
     try {
       const res = await fetch("https://api.resend.com/emails", {
@@ -207,7 +257,7 @@ export async function handleEmailVerification(
         body: JSON.stringify({
           from: FROM,
           to: [email],
-          subject: `Your RockScout verification code: ${code}`,
+          subject: `Verify your email for RockScout`,
           html,
           text,
         }),
@@ -348,6 +398,94 @@ async function confirmSupabaseEmail(
   } catch (err) {
     console.error("email-verification: admin confirm threw", err);
     return { confirmed: false, reason: "admin_exception" };
+  }
+}
+
+/**
+ * GET /verify-email?email=…&token=… — click-to-verify callback.
+ *
+ * Validates the HMAC token against the current and recent buckets, confirms
+ * the Supabase email via admin API, then serves an HTML interstitial page
+ * that attempts to open the app via `rockscout://verify_email` deep link.
+ *
+ * We use an HTML page with a meta-refresh + JS redirect rather than a 302
+ * because many email clients and browsers silently drop redirects to custom
+ * schemes. The page gives the user a manual fallback link too.
+ */
+export async function handleVerifyEmailGet(
+  request: Request,
+  env: EmailVerificationEnv,
+): Promise<Response> {
+  const url = new URL(request.url);
+  const email = normalizeEmail(url.searchParams.get("email") ?? "");
+  const token = (url.searchParams.get("token") ?? "").trim();
+
+  const htmlBase = `<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>
+body{margin:0;padding:0;background:#F3EFE7;font-family:-apple-system,Segoe UI,Roboto,sans-serif;}
+.card{max-width:420px;margin:40px auto;padding:32px 24px;text-align:center;}
+.btn{display:inline-block;background:#C3D31A;color:#1C1A14;font-size:18px;font-weight:700;text-decoration:none;padding:16px 40px;border-radius:12px;margin:16px 0;}
+.sub{color:#514C42;font-size:14px;line-height:1.5;margin-top:12px;}
+</style></head><body><div class="card">`;
+  const htmlEnd = `</div></body></html>`;
+
+  if (!email || !email.includes("@")) {
+    return new Response(
+      `${htmlBase}<h1>Invalid link</h1><p class="sub">This verification link is malformed. Please use the link from your RockScout email.</p>${htmlEnd}`,
+      { status: 400, headers: { "Content-Type": "text/html; charset=utf-8" } },
+    );
+  }
+
+  if (!token) {
+    return new Response(
+      `${htmlBase}<h1>Invalid link</h1><p class="sub">This verification link is missing a security token. Please use the link from your RockScout email.</p>${htmlEnd}`,
+      { status: 400, headers: { "Content-Type": "text/html; charset=utf-8" } },
+    );
+  }
+
+  const secret =
+    env.EXPO_PUBLIC_RORK_APP_KEY ??
+    env.EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY ??
+    FALLBACK_SECRET;
+
+  const now = currentBucket();
+  let matched = false;
+  for (let i = 0; i <= CODE_WINDOW_BUCKETS; i++) {
+    const candidate = await deriveToken(secret, email, now - i);
+    if (safeEqual(candidate, token)) {
+      matched = true;
+      break;
+    }
+  }
+
+  if (!matched) {
+    const deepLink = `rockscout://verify_email?email=${encodeURIComponent(email)}&verified=false&reason=expired`;
+    return new Response(
+      `${htmlBase}<h1>Link expired</h1><p class="sub">This verification link has expired. Please open the RockScout app and tap "Resend code" to get a new email.</p><a href="${deepLink}" class="btn">Open RockScout</a>${htmlEnd}`,
+      { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
+    );
+  }
+
+  // Token is valid — confirm the Supabase email via admin API.
+  const confirm = await confirmSupabaseEmail(
+    env.EXPO_PUBLIC_SUPABASE_URL,
+    env.SUPABASE_SERVICE_ROLE_KEY,
+    email,
+  );
+
+  const verified = confirm.confirmed ? "true" : "false";
+  const reasonParam = confirm.reason ? `&reason=${encodeURIComponent(confirm.reason)}` : "";
+  const deepLink = `rockscout://verify_email?email=${encodeURIComponent(email)}&verified=${verified}${reasonParam}`;
+
+  if (confirm.confirmed) {
+    return new Response(
+      `${htmlBase}<h1 style="color:#1C1A14;">Email verified!</h1><p class="sub">Your RockScout account is now active. Opening the app…</p><a href="${deepLink}" class="btn">Open RockScout</a><p class="sub" style="margin-top:20px;">Didn't open automatically? Tap the button above.</p><script>window.location.href='${deepLink}';</script>${htmlEnd}`,
+      { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
+    );
+  } else {
+    return new Response(
+      `${htmlBase}<h1>Almost there!</h1><p class="sub">Your verification link was valid, but we couldn't fully activate your account (${confirm.reason ?? "unknown"}). Try opening the app and entering the code from your email.</p><a href="${deepLink}" class="btn">Open RockScout</a>${htmlEnd}`,
+      { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
+    );
   }
 }
 

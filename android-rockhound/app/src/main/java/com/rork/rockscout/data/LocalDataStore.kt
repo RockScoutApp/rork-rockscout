@@ -90,6 +90,11 @@ object LocalDataStore {
     const val KEY_SUPABASE_REFRESH_TOKEN = "supabase_refresh_token"
     const val KEY_LOCAL_AUTH_MIGRATED = "local_auth_migrated"
 
+    // ---- Pending email verification (for click-to-verify deep link recovery) --
+    const val KEY_PENDING_VERIFY_EMAIL = "pending_verify_email"
+    const val KEY_PENDING_VERIFY_PASSWORD = "pending_verify_password"
+    const val KEY_PENDING_VERIFY_USER_ID = "pending_verify_user_id"
+
     /** Must be called once from Application.onCreate before any access. */
     fun initialize(context: Context) {
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
