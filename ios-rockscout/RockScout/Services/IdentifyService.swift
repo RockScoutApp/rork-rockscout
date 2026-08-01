@@ -14,12 +14,12 @@ struct IdentifyService {
         mimeType: String = "image/jpeg",
         isPremium: Bool
     ) async throws -> IdentifyResponse {
-        let functionsUrl = Config.EXPO_PUBLIC_RORK_FUNCTIONS_URL
+        let functionsUrl = AppSecrets.functionsURL
         guard !functionsUrl.isEmpty else {
             throw IdentifyError.notConfigured
         }
 
-        let appKey = Config.EXPO_PUBLIC_RORK_APP_KEY
+        let appKey = AppSecrets.appKey
         let urlString = "\(functionsUrl)/identify"
         guard let url = URL(string: urlString) else {
             throw IdentifyError.invalidURL

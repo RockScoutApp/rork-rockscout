@@ -36,7 +36,7 @@ final class EntitlementManager: NSObject {
     // MARK: - Configure
 
     func configure() {
-        let apiKey = Config.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY
+        let apiKey = AppSecrets.revenueCatIOSKey
         guard !apiKey.isEmpty else { return }
 
         Purchases.logLevel = .warn

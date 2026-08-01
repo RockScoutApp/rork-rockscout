@@ -10,8 +10,8 @@ final class SupabaseManager {
     let client: SupabaseClient
 
     private init() {
-        let urlString = Config.EXPO_PUBLIC_SUPABASE_URL
-        let anonKey = Config.EXPO_PUBLIC_SUPABASE_ANON_KEY
+        let urlString = AppSecrets.supabaseURL
+        let anonKey = AppSecrets.supabaseAnonKey
 
         guard let url = URL(string: urlString), !anonKey.isEmpty else {
             fatalError("Supabase URL or anon key not configured")

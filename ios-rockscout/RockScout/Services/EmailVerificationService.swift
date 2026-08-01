@@ -98,6 +98,9 @@ nonisolated enum EmailVerificationService {
 nonisolated enum AppSecrets {
     private static let fallbackFunctionsURL = "https://rockscout-finder-backend.rork.app"
     private static let fallbackAppKey = "rpk_munggtdkjtv3tbx5sw9ge3kebajzh39k"
+    private static let fallbackSupabaseURL = "https://kzgzmudgascivwivxvvn.supabase.co"
+    private static let fallbackSupabaseAnonKey = "sb_publishable_xNJLANDaaAfuEF9q_lsBdw_3zfL6lBk"
+    private static let fallbackRevenueCatIOSKey = "appl_vfaAnYfbiMkgwtUSrQqmMnWGVPe"
 
     static var functionsURL: String {
         Config.EXPO_PUBLIC_RORK_FUNCTIONS_URL.isEmpty
@@ -109,5 +112,23 @@ nonisolated enum AppSecrets {
         Config.EXPO_PUBLIC_RORK_APP_KEY.isEmpty
             ? fallbackAppKey
             : Config.EXPO_PUBLIC_RORK_APP_KEY
+    }
+
+    static var supabaseURL: String {
+        Config.EXPO_PUBLIC_SUPABASE_URL.isEmpty
+            ? fallbackSupabaseURL
+            : Config.EXPO_PUBLIC_SUPABASE_URL
+    }
+
+    static var supabaseAnonKey: String {
+        Config.EXPO_PUBLIC_SUPABASE_ANON_KEY.isEmpty
+            ? fallbackSupabaseAnonKey
+            : Config.EXPO_PUBLIC_SUPABASE_ANON_KEY
+    }
+
+    static var revenueCatIOSKey: String {
+        Config.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY.isEmpty
+            ? fallbackRevenueCatIOSKey
+            : Config.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY
     }
 }

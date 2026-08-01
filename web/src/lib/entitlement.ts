@@ -24,15 +24,23 @@ interface EntitlementResponse {
  */
 export async function syncEntitlement(userId: string): Promise<boolean> {
   try {
-    const functionsUrl = import.meta.env.VITE_RORK_FUNCTIONS_URL;
-    if (!functionsUrl) {
-      console.warn("VITE_RORK_FUNCTIONS_URL not set — entitlement sync skipped");
+    const functionsUrl = import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL as
+      | string
+      | undefined;
+    const appKey = import.meta.env.EXPO_PUBLIC_RORK_APP_KEY as
+      | string
+      | undefined;
+    if (!functionsUrl || !appKey) {
+      console.warn("Entitlement sync not configured — env vars missing");
       return false;
     }
 
     const res = await fetch(`${functionsUrl}/entitlement`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "X-App-Key": appKey,
+      },
       body: JSON.stringify({ userId }),
     });
 
