@@ -56,6 +56,7 @@ import com.rork.rockscout.data.DinoLifeImageMap
 import com.rork.rockscout.ui.components.DinoSilhouette
 import com.rork.rockscout.ui.components.DinoSizeComparison
 import com.rork.rockscout.ui.components.MetricText
+import com.rork.rockscout.ui.components.PronunciationRow
 import com.rork.rockscout.ui.components.TagChip
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.theme.DarkTextLow
@@ -407,15 +408,13 @@ private fun HeroHeader(
                 color = Color.White,
                 fontWeight = FontWeight.ExtraBold,
             )
-            if (pronunciation.isNotBlank()) {
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = "say it: $pronunciation",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = eraColor.copy(alpha = 0.9f),
-                    fontWeight = FontWeight.Medium,
-                )
-            }
+            Spacer(Modifier.height(6.dp))
+            // Tap to hear the species name read aloud.
+            PronunciationRow(
+                name = entry.name,
+                pronunciation = pronunciation,
+                accent = eraColor,
+            )
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TagChip(entry.era.label, color = eraColor)

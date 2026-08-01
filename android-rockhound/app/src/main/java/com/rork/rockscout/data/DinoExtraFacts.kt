@@ -120,8 +120,16 @@ object DinoExtraFacts {
         "zuniceratops" to DinoFactExtras("zoo-nee-serra-tops", "Zuni (the name of a tribe of Indigenous People in the USA) horned-face", ""),
     )
 
-    /** Extra facts for this entry, or null when none are known. */
+    /**
+     * Extra facts for this entry, or null when none are known.
+     *
+     * Falls back to [DinoPronunciations] for the taxa outside the NHM dataset so
+     * marine reptiles, pterosaurs and Ice Age mammals also get a "say it" line.
+     */
     fun forEntry(entry: DinoEntry): DinoFactExtras? = extras[entry.id]
+        ?: DinoPronunciations.extras[entry.id]?.let { (pronunciation, meaning) ->
+            DinoFactExtras(pronunciation, meaning, "")
+        }
 
     /**
      * A playful, kid-readable size comparison derived from the entry length,
