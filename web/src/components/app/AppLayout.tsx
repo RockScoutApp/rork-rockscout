@@ -52,7 +52,7 @@ const NAV_ITEMS_PREMIUM: NavItem[] = [
 
 export default function AppLayout() {
   const { user, signOut } = useAuth();
-  const { isFree, isPremium } = useTier();
+  const { isPremium } = useTier();
   const navigate = useNavigate();
   const [helpOpen, setHelpOpen] = useState(false);
   const [fieldCameraOpen, setFieldCameraOpen] = useState(false);
@@ -95,13 +95,13 @@ export default function AppLayout() {
   useKeyboardShortcuts({ onToggleHelp: () => setHelpOpen((v) => !v) });
 
   // Listen for the "open-field-camera" custom event dispatched by the Home tile.
-  // Only enabled for premium users — free users don't have the field camera.
+  // Available to all users (including anonymous) so kids on tablets can
+  // photograph rocks and save them to their field captures.
   useEffect(() => {
-    if (isFree) return;
     const handler = () => setFieldCameraOpen(true);
     window.addEventListener("open-field-camera", handler);
     return () => window.removeEventListener("open-field-camera", handler);
-  }, [isFree]);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
