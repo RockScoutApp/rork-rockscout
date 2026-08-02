@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Search, X, Bone } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SculptedCard, ScreenScaffold, TagChip } from "@/components/sculpted";
+
+const AQUA_HEX = "20 62% 65%";
+const CITRINE_HEX = "36 80% 58%";
 
 interface FossilPeriod {
   id: string;
@@ -198,15 +202,11 @@ export default function Paleontology() {
   });
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-          Paleontology
-        </h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          {PERIODS.length} geological periods, key organisms, and mass extinctions
-        </p>
-      </div>
+    <ScreenScaffold title="Paleontology" onBack={() => window.history.back()}>
+     <div className="space-y-5 px-4 pb-8">
+      <p className="text-sm text-muted-foreground">
+        {PERIODS.length} geological periods, key organisms, and mass extinctions
+      </p>
 
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -244,93 +244,60 @@ export default function Paleontology() {
 
       <div className="space-y-3">
         {filtered.map((period) => (
-          <div
-            key={period.id}
-            className="space-y-3 rounded-xl border border-border bg-card p-4"
-          >
+          <SculptedCard key={period.id} accent="citrine" className="space-y-3 p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-2xl">
-                  {period.emoji}
-                </div>
+                <div className="glowing-border flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl" style={{ ["--glow-color" as string]: CITRINE_HEX }}>{period.emoji}</div>
                 <div>
-                  <h3 className="font-display text-lg font-bold text-foreground">
-                    {period.name} Period
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    {period.era} · {period.timeRange}
-                  </p>
+                  <h3 className="font-display text-base font-bold text-foreground">{period.name} Period</h3>
+                  <p className="text-xs text-muted-foreground">{period.era} · {period.timeRange}</p>
                 </div>
               </div>
-              <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-                {period.duration}
-              </span>
+              <TagChip accent={`hsl(${CITRINE_HEX})`}>{period.duration}</TagChip>
             </div>
-
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {period.climate}
-            </p>
-
+            <p className="text-xs leading-relaxed text-[hsl(var(--text-mid))]">{period.climate}</p>
             <div>
-              <p className="mb-1 text-xs font-medium text-foreground">
-                Major events
-              </p>
+              <p className="mb-1 text-xs font-bold text-foreground">Major events</p>
               <ul className="space-y-1">
                 {period.majorEvents.map((event, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-1.5 text-xs text-muted-foreground"
-                  >
-                    <span className="mt-0.5 text-primary">•</span>
+                  <li key={i} className="flex items-start gap-1.5 text-xs text-[hsl(var(--text-mid))]">
+                    <span className="mt-0.5" style={{ color: `hsl(${CITRINE_HEX})` }}>•</span>
                     {event}
                   </li>
                 ))}
               </ul>
             </div>
-
             <div>
-              <p className="mb-2 text-xs font-medium text-foreground">
-                Key organisms
-              </p>
+              <p className="mb-2 text-xs font-bold text-foreground">Key organisms</p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {period.keyOrganisms.map((org) => (
-                  <div
-                    key={org.name}
-                    className="rounded-lg bg-muted/30 p-2.5"
-                  >
+                  <div key={org.name} className="rounded-lg bg-muted/30 p-2.5">
                     <div className="flex items-center gap-1.5">
                       <span className="text-lg">{org.emoji}</span>
-                      <p className="text-xs font-medium text-foreground">
-                        {org.name}
-                      </p>
+                      <p className="text-xs font-bold text-foreground">{org.name}</p>
                     </div>
-                    <p className="mt-0.5 text-[10px] text-primary">{org.type}</p>
-                    <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-                      {org.description}
-                    </p>
+                    <p className="mt-0.5 text-[10px]" style={{ color: `hsl(${AQUA_HEX})` }}>{org.type}</p>
+                    <p className="mt-1 text-[11px] leading-relaxed text-[hsl(var(--text-mid))]">{org.description}</p>
                   </div>
                 ))}
               </div>
             </div>
-
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-2.5">
+            <SculptedCard accent="citrine" className="p-2.5">
               <p className="text-xs text-foreground/80">
-                <span className="font-semibold text-primary">Fun fact:</span>{" "}
-                {period.funFact}
+                <span className="font-bold" style={{ color: `hsl(${CITRINE_HEX})` }}>Fun fact:</span> {period.funFact}
               </p>
-            </div>
-          </div>
+            </SculptedCard>
+          </SculptedCard>
         ))}
       </div>
 
       {filtered.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
-          <Bone className="h-8 w-8 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            No periods found. Try a different search.
-          </p>
-        </div>
+        <SculptedCard accent="aqua" className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+          <Bone className="h-10 w-10 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">No periods found. Try a different search.</p>
+        </SculptedCard>
       )}
-    </div>
+     </div>
+    </ScreenScaffold>
   );
 }

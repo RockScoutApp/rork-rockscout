@@ -1,3 +1,7 @@
+import { SculptedCard, ScreenScaffold } from "@/components/sculpted";
+
+const CITRINE_HEX = "36 80% 58%";
+
 const FOSSILIZATION_STEPS = [
   { title: "Death", desc: "An organism dies and its remains settle in a low-energy environment — a lakebed, ocean floor, or volcanic ash layer. Scavengers and bacteria may remove soft tissue, leaving only hard parts (bones, shells, teeth)." },
   { title: "Burial", desc: "Sediment rapidly covers the remains, protecting them from scavengers and weather. The faster the burial, the better the preservation. Mudslides, volcanic ash, and river deltas are ideal." },
@@ -8,57 +12,66 @@ const FOSSILIZATION_STEPS = [
 ];
 
 const FOSSIL_TYPES = [
-  { name: "Body Fossils", emoji: "🦴", desc: "The preserved remains of the organism itself — bones, shells, teeth, or entire animals frozen in amber or ice." },
-  { name: "Trace Fossils", emoji: "👣", desc: "Evidence of activity rather than the organism — footprints, burrows, bite marks, coprolites (fossilized dung), and eggs." },
-  { name: "Molds & Casts", emoji: "🐚", desc: "A mold forms when an organism decays and leaves an impression in the rock. A cast forms when minerals fill the mold, creating a replica." },
-  { name: "Petrified Wood", emoji: "🌳", desc: "Wood where every cell has been replaced by silica or other minerals. Growth rings, bark, and even cell walls are preserved in stone." },
-  { name: "Amber", emoji: "🟡", desc: "Fossilized tree resin that traps insects, pollen, and small animals. The oldest amber with inclusions is from the Cretaceous period." },
-  { name: "Carbon Films", emoji: "🌑", desc: "Thin films of carbon left when an organism's volatile components escape, leaving only a black silhouette. Common for leaves and fish." },
+  { name: "Body Fossils", emoji: "🦴", desc: "The preserved remains of the organism itself — bones, shells, teeth, or entire animals frozen in amber or ice.", accent: "33 38% 64%" },
+  { name: "Trace Fossils", emoji: "👣", desc: "Evidence of activity rather than the organism — footprints, burrows, bite marks, coprolites (fossilized dung), and eggs.", accent: "20 62% 65%" },
+  { name: "Molds & Casts", emoji: "🐚", desc: "A mold forms when an organism decays and leaves an impression in the rock. A cast forms when minerals fill the mold, creating a replica.", accent: "200 67% 57%" },
+  { name: "Petrified Wood", emoji: "🌳", desc: "Wood where every cell has been replaced by silica or other minerals. Growth rings, bark, and even cell walls are preserved in stone.", accent: "147 49% 55%" },
+  { name: "Amber", emoji: "🟡", desc: "Fossilized tree resin that traps insects, pollen, and small animals. The oldest amber with inclusions is from the Cretaceous period.", accent: "36 80% 58%" },
+  { name: "Carbon Films", emoji: "🌑", desc: "Thin films of carbon left when an organism's volatile components escape, leaving only a black silhouette. Common for leaves and fish.", accent: "0 0% 40%" },
 ];
 
 export default function FossilTypes() {
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-          Fossilization & Types
-        </h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
+    <ScreenScaffold title="Fossilization & Types" onBack={() => window.history.back()}>
+      <div className="space-y-5 px-4 pb-8">
+        <p className="text-sm text-muted-foreground">
           How life becomes stone — and the different kinds of fossils
         </p>
-      </div>
 
-      <h2 className="font-display text-lg font-bold text-foreground">How Fossilization Works</h2>
-      <div className="space-y-2">
-        {FOSSILIZATION_STEPS.map((step, i) => (
-          <div key={step.title} className="rounded-xl border border-border bg-card p-4">
-            <div className="flex items-start gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 font-display text-sm font-bold text-primary">
-                {i + 1}
-              </span>
-              <div className="min-w-0 flex-1">
-                <h3 className="font-display text-sm font-semibold text-foreground">{step.title}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{step.desc}</p>
-              </div>
-            </div>
+        <div>
+          <h2 className="mb-3 font-display text-base font-bold" style={{ color: `hsl(${CITRINE_HEX})` }}>How Fossilization Works</h2>
+          <div className="space-y-3">
+            {FOSSILIZATION_STEPS.map((step, i) => (
+              <SculptedCard key={step.title} accent="citrine" className="p-4">
+                <div className="flex items-start gap-3">
+                  <span
+                    className="glowing-border flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-sm font-bold"
+                    style={{ ["--glow-color" as string]: CITRINE_HEX, color: `hsl(${CITRINE_HEX})` }}
+                  >
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-display text-sm font-bold text-foreground">{step.title}</h3>
+                    <p className="mt-1 text-xs leading-relaxed text-[hsl(var(--text-mid))]">{step.desc}</p>
+                  </div>
+                </div>
+              </SculptedCard>
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
 
-      <h2 className="font-display text-lg font-bold text-foreground">Types of Fossils</h2>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {FOSSIL_TYPES.map((type) => (
-          <div key={type.name} className="rounded-xl border border-border bg-card p-4">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">{type.emoji}</span>
-              <div className="min-w-0 flex-1">
-                <h3 className="font-display text-sm font-semibold text-foreground">{type.name}</h3>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{type.desc}</p>
-              </div>
-            </div>
+        <div>
+          <h2 className="mb-3 font-display text-base font-bold" style={{ color: `hsl(${CITRINE_HEX})` }}>Types of Fossils</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {FOSSIL_TYPES.map((type) => (
+              <SculptedCard key={type.name} accent="aqua" className="p-4">
+                <div className="flex items-start gap-3">
+                  <div
+                    className="glowing-border flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xl"
+                    style={{ ["--glow-color" as string]: type.accent }}
+                  >
+                    {type.emoji}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-display text-sm font-bold text-foreground">{type.name}</h3>
+                    <p className="mt-1 text-xs leading-relaxed text-[hsl(var(--text-mid))]">{type.desc}</p>
+                  </div>
+                </div>
+              </SculptedCard>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
-    </div>
+    </ScreenScaffold>
   );
 }

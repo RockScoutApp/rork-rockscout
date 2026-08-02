@@ -73,7 +73,7 @@ export default function ResourceLinks() {
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-start gap-3 rounded-lg border border-border bg-card p-3 transition-all hover:border-primary/40"
+                className="group flex items-start gap-3 dark-card sculpted-raised rounded-lg p-3 transition-all hover:border-primary/40"
               >
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">

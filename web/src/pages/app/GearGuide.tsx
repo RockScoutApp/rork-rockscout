@@ -113,7 +113,7 @@ export default function GearGuide() {
       </div>
 
       {filtered.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
           <Compass className="h-8 w-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
             No gear found. Try a different search or category.

@@ -403,7 +403,7 @@ export default function Friends() {
                 return (
                   <div
                     key={profile.id}
-                    className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
+                    className="flex items-center gap-3 dark-card sculpted-raised rounded-lg p-3"
                   >
                     <span className="text-2xl">{profile.avatar_emoji}</span>
                     <button
@@ -449,7 +449,7 @@ export default function Friends() {
           {!search.trim() && (
             <div className="space-y-2">
               {(friends ?? []).length === 0 ? (
-                <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+                <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
                   <Users className="h-8 w-8 text-muted-foreground" />
                   <p className="max-w-sm text-sm text-muted-foreground">
                     No friends yet. Search for rockhounds by name to send a
@@ -460,7 +460,7 @@ export default function Friends() {
                 (friends ?? []).map((conn) => (
                   <div
                     key={conn.id}
-                    className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
+                    className="flex items-center gap-3 dark-card sculpted-raised rounded-lg p-3"
                   >
                     <span className="text-2xl">
                       {conn.friend?.avatar_emoji ?? "💎"}
@@ -500,7 +500,7 @@ export default function Friends() {
       {tab === "requests" && (
         <div className="space-y-2">
           {(requests ?? []).length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+            <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
               <UserPlus className="h-8 w-8 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
                 No pending friend requests.
@@ -510,7 +510,7 @@ export default function Friends() {
             (requests ?? []).map((req) => (
               <div
                 key={req.id}
-                className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
+                className="flex items-center gap-3 dark-card sculpted-raised rounded-lg p-3"
               >
                 <span className="text-2xl">
                   {req.sender?.avatar_emoji ?? "💎"}
@@ -560,7 +560,7 @@ export default function Friends() {
           {/* Thread list */}
           <div className="space-y-2 md:max-h-[600px] md:overflow-y-auto">
             {(threads ?? []).length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+              <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
                 <MessageSquare className="h-8 w-8 text-muted-foreground" />
                 <p className="max-w-xs text-sm text-muted-foreground">
                   No conversations yet. Message a friend to start chatting.
@@ -595,7 +595,7 @@ export default function Friends() {
 
           {/* Active conversation */}
           {activeThread ? (
-            <div className="flex flex-col rounded-xl border border-border bg-card md:max-h-[600px]">
+            <div className="flex flex-col dark-card sculpted-raised rounded-xl md:max-h-[600px]">
               <div className="flex-1 space-y-3 overflow-y-auto p-4">
                 {(messages ?? []).length === 0 ? (
                   <p className="py-8 text-center text-sm text-muted-foreground">
@@ -657,7 +657,7 @@ export default function Friends() {
               </div>
             </div>
           ) : (
-            <div className="hidden items-center justify-center rounded-xl border border-border bg-card/50 py-20 text-center md:flex">
+            <div className="hidden items-center justify-center dark-card sculpted-raised rounded-xl/50 py-20 text-center md:flex">
               <p className="text-sm text-muted-foreground">
                 Select a conversation to view messages
               </p>

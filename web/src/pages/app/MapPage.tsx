@@ -298,7 +298,7 @@ export default function MapPage() {
 
       {/* Filter panel */}
       {showFilters && (
-        <div className="space-y-3 rounded-xl border border-border bg-card p-4">
+        <div className="space-y-3 dark-card sculpted-raised rounded-xl p-4">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-foreground">
               Location types
@@ -365,7 +365,7 @@ export default function MapPage() {
 
           {/* Selected marker info card */}
           {selectedMarker && (
-            <div className="space-y-3 rounded-xl border border-border bg-card p-4">
+            <div className="space-y-3 dark-card sculpted-raised rounded-xl p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
                   <div
@@ -421,7 +421,7 @@ export default function MapPage() {
         {/* Location list column — visible on desktop alongside the map,
             and stacked below the map on mobile. */}
         {showList && (
-          <div className="flex flex-col rounded-xl border border-border bg-card">
+          <div className="flex flex-col dark-card sculpted-raised rounded-xl">
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card/95 px-4 py-3 backdrop-blur">
               <h3 className="font-display text-sm font-semibold text-foreground">
                 {nearbyOnly && userLocation

@@ -49,7 +49,7 @@ export default function MassExtinctions() {
         </p>
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-4">
+      <div className="dark-card sculpted-raised rounded-lg p-4">
         <p className="text-sm leading-relaxed text-muted-foreground">
           Mass extinctions are events where a large percentage of species disappear in a
           geologically short time. After each extinction, surviving species diversified

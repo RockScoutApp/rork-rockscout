@@ -114,7 +114,7 @@ export default function Paywall() {
             <span className="text-sm font-medium text-primary">Active</span>
           </div>
         ) : (
-          <div className="mt-5 rounded-lg border border-border bg-card/50 p-4 text-center">
+          <div className="mt-5 dark-card sculpted-raised rounded-lg/50 p-4 text-center">
             <div className="mb-2 flex items-center justify-center gap-2">
               <Smartphone className="h-5 w-5 text-primary" />
               <span className="text-sm font-semibold text-foreground">

@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Search, X, Mountain, ArrowRight, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SculptedCard, ScreenScaffold, TagChip } from "@/components/sculpted";
+
+const AQUA_HEX = "20 62% 65%";
+const CITRINE_HEX = "36 80% 58%";
 
 interface RockType {
   id: string;
@@ -167,19 +171,15 @@ export default function GeologyReference() {
   });
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-          Geology Reference
-        </h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          Rock types, the rock cycle, and how the Earth makes stone
-        </p>
-      </div>
+    <ScreenScaffold title="Geology Reference" onBack={() => window.history.back()}>
+     <div className="space-y-5 px-4 pb-8">
+      <p className="text-sm text-muted-foreground">
+        Rock types, the rock cycle, and how the Earth makes stone
+      </p>
 
       {/* Rock cycle diagram */}
-      <div className="rounded-xl border border-border bg-gradient-to-br from-primary/10 to-card p-5">
-        <h2 className="mb-3 font-display text-base font-bold text-foreground">
+      <SculptedCard accent="citrine" glowing className="p-5">
+        <h2 className="mb-3 font-display text-base font-bold" style={{ color: `hsl(${AQUA_HEX})` }}>
           The Rock Cycle
         </h2>
         <p className="mb-4 text-sm text-muted-foreground">
@@ -188,23 +188,18 @@ export default function GeologyReference() {
         </p>
         <div className="space-y-2">
           {ROCK_CYCLE.map((step, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-3 rounded-lg bg-muted/30 px-3 py-2"
-            >
+            <div key={i} className="flex items-center gap-3 rounded-lg bg-muted/30 px-3 py-2">
               <span className="text-lg">{step.emoji}</span>
               <div className="flex min-w-0 flex-1 items-center gap-2 text-sm">
-                <span className="font-medium text-foreground">{step.from}</span>
+                <span className="font-bold text-foreground">{step.from}</span>
                 <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                <span className="font-medium text-foreground">{step.to}</span>
+                <span className="font-bold text-foreground">{step.to}</span>
               </div>
-              <span className="shrink-0 text-xs text-muted-foreground">
-                {step.process}
-              </span>
+              <span className="shrink-0 text-xs text-[hsl(var(--text-mid))]">{step.process}</span>
             </div>
           ))}
         </div>
-      </div>
+      </SculptedCard>
 
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -241,69 +236,46 @@ export default function GeologyReference() {
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {filtered.map((rock) => (
-          <div
-            key={rock.id}
-            className="space-y-3 rounded-xl border border-border bg-card p-4"
-          >
+        {filtered.map((rock) => {
+          const accent = rock.category === "Igneous" ? "14 75% 57%" : rock.category === "Sedimentary" ? "41 53% 64%" : "200 41% 61%";
+          return (
+          <SculptedCard key={rock.id} accent="aqua" className="space-y-3 p-4">
             <div className="flex items-start gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-2xl">
-                {rock.emoji}
-              </div>
+              <div className="glowing-border flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl" style={{ ["--glow-color" as string]: accent }}>{rock.emoji}</div>
               <div className="min-w-0 flex-1">
-                <h3 className="font-display text-base font-semibold text-foreground">
-                  {rock.name}
-                </h3>
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                  {rock.category}
-                </span>
+                <h3 className="font-display text-sm font-bold text-foreground">{rock.name}</h3>
+                <TagChip accent={`hsl(${accent})`}>{rock.category}</TagChip>
               </div>
             </div>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {rock.description}
-            </p>
+            <p className="text-xs leading-relaxed text-[hsl(var(--text-mid))]">{rock.description}</p>
             <div>
-              <p className="mb-1 text-xs font-medium text-foreground">
-                Formation
-              </p>
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                {rock.formation}
-              </p>
+              <p className="mb-1 text-xs font-bold text-foreground">Formation</p>
+              <p className="text-xs leading-relaxed text-[hsl(var(--text-mid))]">{rock.formation}</p>
             </div>
             <div>
-              <p className="mb-1 text-xs font-medium text-foreground">
-                Key traits
-              </p>
+              <p className="mb-1 text-xs font-bold text-foreground">Key traits</p>
               <ul className="space-y-0.5">
                 {rock.keyTraits.map((trait) => (
-                  <li
-                    key={trait}
-                    className="flex items-start gap-1.5 text-xs text-muted-foreground"
-                  >
-                    <span className="mt-0.5 text-primary">•</span>
+                  <li key={trait} className="flex items-start gap-1.5 text-xs text-[hsl(var(--text-mid))]">
+                    <span className="mt-0.5" style={{ color: `hsl(${CITRINE_HEX})` }}>•</span>
                     {trait}
                   </li>
                 ))}
               </ul>
             </div>
             <div>
-              <p className="mb-1 text-xs font-medium text-foreground">
-                Famous examples
-              </p>
+              <p className="mb-1 text-xs font-bold text-foreground">Famous examples</p>
               <div className="flex flex-wrap gap-1.5">
                 {rock.examples.map((ex) => (
-                  <span
-                    key={ex}
-                    className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
-                  >
-                    {ex}
-                  </span>
+                  <TagChip key={ex} accent={`hsl(${AQUA_HEX})`}>{ex}</TagChip>
                 ))}
               </div>
             </div>
-          </div>
-        ))}
+          </SculptedCard>
+          );
+        })}
       </div>
-    </div>
+     </div>
+    </ScreenScaffold>
   );
 }

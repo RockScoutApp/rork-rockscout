@@ -210,7 +210,7 @@ export default function FieldJournal() {
           {entries.map((entry) => (
             <div
               key={entry.id}
-              className="group space-y-2 rounded-xl border border-border bg-card p-4"
+              className="group space-y-2 dark-card sculpted-raised rounded-xl p-4"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-2 text-sm font-medium text-foreground">
@@ -258,7 +258,7 @@ export default function FieldJournal() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
           <ClipboardList className="h-8 w-8 text-muted-foreground" />
           <p className="max-w-sm text-sm text-muted-foreground">
             No journal entries yet. Log your field trips and finds — location,

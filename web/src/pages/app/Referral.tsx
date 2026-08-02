@@ -9,12 +9,14 @@ import {
   Loader2,
   Share2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { SculptedCard, SculptedButton, ScreenScaffold, StatTile } from "@/components/sculpted";
+
+const AQUA_HEX = "20 62% 65%";
+const CITRINE_HEX = "36 80% 58%";
 
 interface Profile {
   id: string;
@@ -134,175 +136,119 @@ export default function Referral() {
 
   if (!user) {
     return (
-      <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-        <Gift className="h-10 w-10 text-muted-foreground" />
-        <p className="text-muted-foreground">Sign in to use the referral program</p>
-      </div>
+      <ScreenScaffold title="Refer a Friend" onBack={() => window.history.back()}>
+        <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-center">
+          <Gift className="h-10 w-10 text-muted-foreground" />
+          <p className="text-muted-foreground">Sign in to use the referral program</p>
+        </div>
+      </ScreenScaffold>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <ScreenScaffold title="Refer a Friend" onBack={() => window.history.back()}>
+     <div className="space-y-5 px-4 pb-8">
       <div className="text-center">
-        <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary to-amber-500">
-          <Gift className="h-8 w-8 text-white" />
+        <div
+          className="glowing-border mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full"
+          style={{ ["--glow-color" as string]: CITRINE_HEX, background: `radial-gradient(circle, hsl(${CITRINE_HEX} / 0.3), hsl(${CITRINE_HEX} / 0.05))` }}
+        >
+          <Gift className="h-8 w-8" style={{ color: `hsl(${CITRINE_HEX})` }} />
         </div>
-        <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-          Refer a Friend
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Earn XP for every rockhound you bring to RockScout
         </p>
       </div>
 
       {/* Your referral code */}
-      <div className="rounded-xl border border-border bg-gradient-to-br from-primary/10 to-card p-6">
-        <h2 className="mb-1 font-display text-sm font-semibold text-foreground">
-          Your referral code
-        </h2>
+      <SculptedCard accent="citrine" glowing className="p-6">
+        <h2 className="mb-1 font-display text-sm font-bold text-foreground">Your referral code</h2>
         {referralCode ? (
           <>
             <div className="flex items-center gap-2">
-              <code className="rounded-lg bg-muted px-4 py-2 font-mono text-lg font-bold tracking-wider text-foreground">
-                {referralCode}
-              </code>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleCopy}
-                className="gap-2"
-              >
-                {copied ? (
-                  <>
-                    <Check className="h-4 w-4" />
-                    Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4" />
-                    Copy link
-                  </>
-                )}
-              </Button>
+              <code className="rounded-lg bg-muted px-4 py-2 font-mono text-lg font-bold tracking-wider text-foreground">{referralCode}</code>
+              <SculptedButton accent="aqua" size="sm" onClick={handleCopy}>
+                {copied ? <><Check className="h-4 w-4" /> Copied</> : <><Copy className="h-4 w-4" /> Copy link</>}
+              </SculptedButton>
             </div>
-            <p className="mt-3 break-all text-xs text-muted-foreground">
-              {referralLink}
-            </p>
-            <Button
-              className="mt-4 w-full gap-2"
-              variant="outline"
-              onClick={handleShare}
-            >
+            <p className="mt-3 break-all text-xs text-muted-foreground">{referralLink}</p>
+            <SculptedButton accent="citrine" glowing className="mt-4 w-full" onClick={handleShare}>
               <Share2 className="h-4 w-4" />
               Share with a friend
-            </Button>
+            </SculptedButton>
           </>
         ) : (
           <div className="flex justify-center py-4">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         )}
-      </div>
+      </SculptedCard>
 
       {/* How it works */}
-      <div className="rounded-xl border border-border bg-card p-5">
-        <h2 className="mb-3 font-display text-base font-bold text-foreground">
-          How it works
-        </h2>
+      <SculptedCard accent="aqua" className="p-5">
+        <h2 className="mb-3 font-display text-base font-bold" style={{ color: `hsl(${AQUA_HEX})` }}>How it works</h2>
         <div className="space-y-3">
           {[
-            {
-              icon: Share2,
-              title: "Share your link",
-              desc: "Send your referral link to a fellow rockhound.",
-            },
-            {
-              icon: Users,
-              title: "They sign up",
-              desc: "Your friend creates a RockScout account using your link.",
-            },
-            {
-              icon: Zap,
-              title: "You both earn XP",
-              desc: "You get 100 XP, your friend gets 50 XP — and a head start on Level 2.",
-            },
+            { icon: Share2, title: "Share your link", desc: "Send your referral link to a fellow rockhound." },
+            { icon: Users, title: "They sign up", desc: "Your friend creates a RockScout account using your link." },
+            { icon: Zap, title: "You both earn XP", desc: "You get 100 XP, your friend gets 50 XP — and a head start on Level 2." },
           ].map((step, i) => (
             <div key={i} className="flex items-start gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15">
-                <step.icon className="h-4 w-4 text-primary" />
+              <div
+                className="icon-badge flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+                style={{ ["--badge-accent" as string]: AQUA_HEX, color: `hsl(${AQUA_HEX})` }}
+              >
+                <step.icon className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-sm font-medium text-foreground">
-                  {step.title}
-                </p>
-                <p className="text-xs text-muted-foreground">{step.desc}</p>
+                <p className="text-sm font-bold text-foreground">{step.title}</p>
+                <p className="text-xs text-[hsl(var(--text-mid))]">{step.desc}</p>
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </SculptedCard>
 
       {/* Enter a code */}
       {!profile?.referred_by && (
-        <div className="rounded-xl border border-border bg-card p-5">
-          <h2 className="mb-1 font-display text-base font-bold text-foreground">
-            Have a referral code?
-          </h2>
-          <p className="mb-3 text-xs text-muted-foreground">
-            Enter a friend's code to earn 50 bonus XP.
-          </p>
+        <SculptedCard accent="citrine" className="p-5">
+          <h2 className="mb-1 font-display text-base font-bold text-foreground">Have a referral code?</h2>
+          <p className="mb-3 text-xs text-muted-foreground">Enter a friend's code to earn 50 bonus XP.</p>
           <div className="flex gap-2">
             <Input
               value={enteredCode}
-              onChange={(e) =>
-                setEnteredCode(e.target.value.toUpperCase())
-              }
+              onChange={(e) => setEnteredCode(e.target.value.toUpperCase())}
               placeholder="e.g. ROCK-AB12"
               className="flex-1 font-mono"
             />
-            <Button
+            <SculptedButton
+              accent="citrine"
+              glowing
               onClick={() => applyReferral.mutate()}
-              disabled={
-                applyReferral.isPending || !enteredCode.trim()
-              }
+              disabled={applyReferral.isPending || !enteredCode.trim()}
             >
-              {applyReferral.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "Apply"
-              )}
-            </Button>
+              {applyReferral.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
+            </SculptedButton>
           </div>
-        </div>
+        </SculptedCard>
       )}
 
       {profile?.referred_by && (
-        <div className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 p-4">
-          <Check className="h-5 w-5 text-primary" />
-          <p className="text-sm font-medium text-primary">
+        <SculptedCard accent="success" glowing className="flex items-center gap-2 p-4">
+          <Check className="h-5 w-5" style={{ color: "hsl(147 49% 55%)" }} />
+          <p className="text-sm font-bold" style={{ color: "hsl(147 49% 55%)" }}>
             You've applied a referral code — +50 XP earned!
           </p>
-        </div>
+        </SculptedCard>
       )}
 
       {/* Your stats */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-border bg-card p-4 text-center">
-          <Users className="mx-auto mb-1 h-5 w-5 text-primary" />
-          <p className="font-display text-xl font-bold text-foreground">
-            0
-          </p>
-          <p className="text-xs text-muted-foreground">Referrals</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-4 text-center">
-          <Zap className="mx-auto mb-1 h-5 w-5 text-primary" />
-          <p className="font-display text-xl font-bold text-foreground">
-            {profile?.xp ?? 0}
-          </p>
-          <p className="text-xs text-muted-foreground">Total XP</p>
-        </div>
+        <StatTile label="Referrals" value={0} accent="aqua" icon={<Users className="h-4 w-4" />} />
+        <StatTile label="Total XP" value={profile?.xp ?? 0} accent="citrine" icon={<Zap className="h-4 w-4" />} />
       </div>
-    </div>
+     </div>
+    </ScreenScaffold>
   );
 }
 

@@ -217,7 +217,7 @@ export default function OfflineDownloads() {
       </div>
 
       {/* Storage status */}
-      <div className="rounded-xl border border-border bg-card p-5">
+      <div className="dark-card sculpted-raised rounded-xl p-5">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/15">
             <HardDrive className="h-5 w-5 text-primary" />
@@ -275,7 +275,7 @@ export default function OfflineDownloads() {
       {/* Download packs */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {/* Curated pack */}
-        <div className="rounded-xl border border-border bg-card p-5">
+        <div className="dark-card sculpted-raised rounded-xl p-5">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/15">
               <Download className="h-6 w-6 text-primary" />
@@ -349,7 +349,7 @@ export default function OfflineDownloads() {
       </div>
 
       {/* Map tiles note */}
-      <div className="rounded-xl border border-border bg-card p-4">
+      <div className="dark-card sculpted-raised rounded-xl p-4">
         <p className="text-sm text-muted-foreground">
           <RefreshCw className="mr-1.5 inline h-4 w-4" />
           Map tiles are cached automatically as you browse the map. Visit an area

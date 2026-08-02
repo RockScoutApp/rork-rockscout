@@ -116,7 +116,7 @@ export default function Glossary() {
             return (
               <div
                 key={entry.term}
-                className="rounded-lg border border-border bg-card p-3"
+                className="dark-card sculpted-raised rounded-lg p-3"
               >
                 <div className="flex items-center gap-2">
                   <h3 className="font-display text-sm font-semibold text-foreground">
@@ -140,7 +140,7 @@ export default function Glossary() {
           })}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
           <BookOpen className="h-8 w-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
             No terms found. Try a different search.

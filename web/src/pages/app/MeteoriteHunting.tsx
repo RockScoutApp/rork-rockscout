@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Search, X, Globe } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SculptedCard, ScreenScaffold, TagChip } from "@/components/sculpted";
+
+const AQUA_HEX = "20 62% 65%";
+const CITRINE_HEX = "36 80% 58%";
 
 interface MeteoriteType {
   id: string;
@@ -137,38 +141,26 @@ export default function MeteoriteHunting() {
   );
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-          Meteorite Hunting Guide
-        </h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          {METEORITE_TYPES.length} meteorite types, field ID tips, and hunting guide
-        </p>
-      </div>
+    <ScreenScaffold title="Meteorite Hunting" onBack={() => window.history.back()}>
+     <div className="space-y-5 px-4 pb-8">
+      <p className="text-sm text-muted-foreground">
+        {METEORITE_TYPES.length} meteorite types, field ID tips, and hunting guide
+      </p>
 
       {/* Hunting tips */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {HUNTING_TIPS.map((section) => (
-          <div
-            key={section.title}
-            className="space-y-2 rounded-xl border border-border bg-card p-4"
-          >
-            <h3 className="font-display text-sm font-semibold text-foreground">
-              {section.title}
-            </h3>
+          <SculptedCard key={section.title} accent="aqua" className="space-y-2 p-4">
+            <h3 className="font-display text-sm font-bold text-foreground">{section.title}</h3>
             <ul className="space-y-1">
               {section.tips.map((tip, i) => (
-                <li
-                  key={i}
-                  className="flex items-start gap-1.5 text-xs text-muted-foreground"
-                >
-                  <span className="mt-0.5 text-primary">•</span>
+                <li key={i} className="flex items-start gap-1.5 text-xs text-[hsl(var(--text-mid))]">
+                  <span className="mt-0.5" style={{ color: `hsl(${AQUA_HEX})` }}>•</span>
                   {tip}
                 </li>
               ))}
             </ul>
-          </div>
+          </SculptedCard>
         ))}
       </div>
 
@@ -192,63 +184,39 @@ export default function MeteoriteHunting() {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {filtered.map((meteorite) => (
-          <div
-            key={meteorite.id}
-            className="space-y-3 rounded-xl border border-border bg-card p-4"
-          >
+          <SculptedCard key={meteorite.id} accent="citrine" className="space-y-3 p-4">
             <div className="flex items-start gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-2xl">
-                {meteorite.emoji}
-              </div>
+              <div className="glowing-border flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl" style={{ ["--glow-color" as string]: CITRINE_HEX }}>{meteorite.emoji}</div>
               <div className="min-w-0 flex-1">
-                <h3 className="font-display text-base font-semibold text-foreground">
-                  {meteorite.name}
-                </h3>
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                  {meteorite.type}
-                </span>
+                <h3 className="font-display text-sm font-bold text-foreground">{meteorite.name}</h3>
+                <TagChip accent={`hsl(${AQUA_HEX})`}>{meteorite.type}</TagChip>
               </div>
             </div>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {meteorite.description}
-            </p>
+            <p className="text-xs leading-relaxed text-[hsl(var(--text-mid))]">{meteorite.description}</p>
             <div>
-              <p className="mb-1 text-xs font-medium text-foreground">
-                How to identify
-              </p>
+              <p className="mb-1 text-xs font-bold text-foreground">How to identify</p>
               <ul className="space-y-1">
                 {meteorite.howToId.map((tip, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-1.5 text-xs text-muted-foreground"
-                  >
-                    <span className="mt-0.5 text-primary">•</span>
+                  <li key={i} className="flex items-start gap-1.5 text-xs text-[hsl(var(--text-mid))]">
+                    <span className="mt-0.5" style={{ color: `hsl(${CITRINE_HEX})` }}>•</span>
                     {tip}
                   </li>
                 ))}
               </ul>
             </div>
             <div>
-              <p className="mb-1 text-xs font-medium text-foreground">
-                Famous examples
-              </p>
+              <p className="mb-1 text-xs font-bold text-foreground">Famous examples</p>
               <div className="flex flex-wrap gap-1.5">
                 {meteorite.famousExamples.map((ex) => (
-                  <span
-                    key={ex}
-                    className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
-                  >
-                    {ex}
-                  </span>
+                  <TagChip key={ex} accent={`hsl(${AQUA_HEX})`}>{ex}</TagChip>
                 ))}
               </div>
             </div>
-            <p className="text-xs font-medium text-amber-600">
-              {meteorite.rarity}
-            </p>
-          </div>
+            <p className="text-xs font-bold" style={{ color: "hsl(36 80% 58%)" }}>{meteorite.rarity}</p>
+          </SculptedCard>
         ))}
       </div>
-    </div>
+     </div>
+    </ScreenScaffold>
   );
 }

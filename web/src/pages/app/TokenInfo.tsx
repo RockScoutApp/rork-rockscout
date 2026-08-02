@@ -58,7 +58,7 @@ export default function TokenInfo() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-4">
+      <div className="dark-card sculpted-raised rounded-lg p-4">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <Info className="h-4 w-4 text-primary" />
           What are ID tokens?
@@ -71,7 +71,7 @@ export default function TokenInfo() {
         </p>
       </div>
 
-      <div className="rounded-lg border border-border bg-card p-4">
+      <div className="dark-card sculpted-raised rounded-lg p-4">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <Zap className="h-4 w-4 text-primary" />
           How to earn more tokens

@@ -118,7 +118,7 @@ export default function Collection() {
           {filtered.map((item) => (
             <div
               key={item.id}
-              className="group relative flex flex-col overflow-hidden rounded-lg border border-border bg-card"
+              className="group relative flex flex-col overflow-hidden dark-card sculpted-raised rounded-lg"
             >
               <button
                 onClick={() => navigate(`/app/specimens/${item.specimen_id}`)}
@@ -152,7 +152,7 @@ export default function Collection() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
           {tab === "collection" ? (
             <Gem className="h-8 w-8 text-muted-foreground" />
           ) : (

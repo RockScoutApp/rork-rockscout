@@ -292,7 +292,7 @@ export default function Community() {
           {posts.map((post) => (
             <div
               key={post.id}
-              className="space-y-3 rounded-xl border border-border bg-card p-4"
+              className="space-y-3 dark-card sculpted-raised rounded-xl p-4"
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
@@ -418,7 +418,7 @@ export default function Community() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
           <Users className="h-8 w-8 text-muted-foreground" />
           <p className="max-w-sm text-sm text-muted-foreground">
             No posts yet. Share a find, a field trip story, or a specimen you're

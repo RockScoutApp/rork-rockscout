@@ -110,7 +110,7 @@ export default function Search() {
             <button
               key={`${result.type}-${result.id}`}
               onClick={() => navigate(result.route)}
-              className="flex w-full items-center gap-3 rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-primary/40"
+              className="flex w-full items-center gap-3 dark-card sculpted-raised rounded-lg p-3 text-left transition-colors hover:border-primary/40"
             >
               {result.imageUrl ? (
                 <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted/30">
@@ -142,7 +142,7 @@ export default function Search() {
         </div>
       ) : (
         query.trim() && (
-          <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+          <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
             <SearchIcon className="h-8 w-8 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">
               No results for "{query}". Try a different search term.
@@ -152,7 +152,7 @@ export default function Search() {
       )}
 
       {!query.trim() && (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
           <SearchIcon className="h-8 w-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
             Start typing to search across artifacts and locations.

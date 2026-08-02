@@ -303,12 +303,12 @@ export default function Identify() {
       {result && (
         <div className="space-y-4">
           {result.matches.length === 0 ? (
-            <div className="rounded-lg border border-border bg-card p-6 text-center text-muted-foreground">
+            <div className="dark-card sculpted-raised rounded-lg p-6 text-center text-muted-foreground">
               No matches found. Try a clearer photo or different angle.
             </div>
           ) : (
             <>
-              <div className="rounded-lg border border-border bg-card p-4">
+              <div className="dark-card sculpted-raised rounded-lg p-4">
                 <div className="mb-2 flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                   <span className="text-sm font-medium text-foreground">
@@ -372,7 +372,7 @@ export default function Identify() {
                       <button
                         key={match.id}
                         onClick={() => navigate(`/app/specimens/${match.id}`)}
-                        className="flex w-full items-center justify-between rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-primary/40"
+                        className="flex w-full items-center justify-between dark-card sculpted-raised rounded-lg p-3 text-left transition-colors hover:border-primary/40"
                       >
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium text-foreground">

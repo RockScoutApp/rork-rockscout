@@ -2,6 +2,10 @@ import { useState, useMemo } from "react";
 import { Calendar, Search, X, ExternalLink, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { gemShows, type GemShow } from "@/data/locations";
+import { SculptedCard, ScreenScaffold, TagChip } from "@/components/sculpted";
+
+const AQUA_HEX = "20 62% 65%";
+const CITRINE_HEX = "36 80% 58%";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -49,15 +53,11 @@ export default function GemShows() {
   }, [search, monthFilter]);
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-          Gem & Mineral Shows
-        </h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          {gemShows.length} upcoming shows across the US
-        </p>
-      </div>
+    <ScreenScaffold title="Gem & Mineral Shows" onBack={() => window.history.back()}>
+     <div className="space-y-5 px-4 pb-8">
+      <p className="text-sm text-muted-foreground">
+        {gemShows.length} upcoming shows across the US
+      </p>
 
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -107,59 +107,39 @@ export default function GemShows() {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         {filtered.map((show) => (
-          <div
-            key={show.id}
-            className="group flex flex-col gap-2 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/40"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-primary">
-                <Calendar className="h-3.5 w-3.5" />
-                {show.monthLabel}
+          <SculptedCard key={show.id} accent="citrine" interactive className="overflow-hidden"
+            onClick={() => window.open(show.website, "_blank")}>
+            <div className="flex flex-col gap-2 p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: `hsl(${CITRINE_HEX})` }}>
+                  <Calendar className="h-3.5 w-3.5" />
+                  {show.monthLabel}
+                </div>
+                <TagChip accent="hsl(36 80% 58%)">{show.dateRange}</TagChip>
               </div>
-              <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-medium text-amber-600">
-                {show.dateRange}
-              </span>
+              <h3 className="font-display text-sm font-bold text-foreground">{show.name}</h3>
+              <p className="flex items-center gap-1 text-xs" style={{ color: `hsl(${AQUA_HEX})` }}>
+                <MapPin className="h-3 w-3" />{show.city}, {show.state}
+              </p>
+              <p className="text-xs leading-relaxed text-[hsl(var(--text-mid))]">{show.description}</p>
+              <div className="mt-1 flex items-center justify-between border-t border-border pt-2">
+                <span className="text-xs text-muted-foreground">{show.entryFee}</span>
+                <span className="flex items-center gap-1 text-xs font-medium" style={{ color: `hsl(${CITRINE_HEX})` }}>
+                  Website <ExternalLink className="h-3 w-3" />
+                </span>
+              </div>
             </div>
-
-            <h3 className="font-display text-sm font-semibold text-foreground">
-              {show.name}
-            </h3>
-
-            <p className="flex items-center gap-1 text-xs text-muted-foreground">
-              <MapPin className="h-3 w-3" />
-              {show.city}, {show.state}
-            </p>
-
-            <p className="text-xs leading-relaxed text-muted-foreground">
-              {show.description}
-            </p>
-
-            <div className="mt-1 flex items-center justify-between border-t border-border pt-2">
-              <span className="text-xs text-muted-foreground">
-                {show.entryFee}
-              </span>
-              <a
-                href={show.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-              >
-                Website
-                <ExternalLink className="h-3 w-3" />
-              </a>
-            </div>
-          </div>
+          </SculptedCard>
         ))}
       </div>
 
       {filtered.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
-          <Calendar className="h-8 w-8 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            No shows found. Try a different search or month.
-          </p>
-        </div>
+        <SculptedCard accent="citrine" className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+          <Calendar className="h-10 w-10 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">No shows found. Try a different search or month.</p>
+        </SculptedCard>
       )}
-    </div>
+     </div>
+    </ScreenScaffold>
   );
 }

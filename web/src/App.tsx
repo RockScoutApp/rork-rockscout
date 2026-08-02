@@ -104,6 +104,11 @@ import DeveloperConsole from "./pages/app/DeveloperConsole";
 import Scan from "./pages/app/Scan";
 import Messenger from "./pages/app/Messenger";
 import ManageDevices from "./pages/app/ManageDevices";
+import DinosaurDictionary from "./pages/app/DinosaurDictionary";
+import CampgroundsTrailheads from "./pages/app/CampgroundsTrailheads";
+import Planets from "./pages/app/Planets";
+import DeepSkyObjects from "./pages/app/DeepSkyObjects";
+import ImportantStars from "./pages/app/ImportantStars";
 import type { ReactNode } from "react";
 
 const queryClient = new QueryClient();
@@ -236,6 +241,19 @@ const App = () => (
           <Route path="scan" element={<PremiumGate routePath="scan"><Scan /></PremiumGate>} />
           <Route path="messenger" element={<PremiumGate routePath="messenger"><Messenger /></PremiumGate>} />
           <Route path="manage-devices" element={<PremiumGate routePath="manage-devices"><ManageDevices /></PremiumGate>} />
+
+          {/* Route aliases for Home dashboard tiles */}
+          <Route path="blm" element={<PremiumGate routePath="blm"><BlmGuide /></PremiumGate>} />
+          <Route path="campgrounds" element={<PremiumGate routePath="campgrounds"><CampgroundsTrailheads /></PremiumGate>} />
+          <Route path="dinosaurs" element={<PremiumGate routePath="dinosaurs"><DinosaurDictionary /></PremiumGate>} />
+          <Route path="meteorites" element={<PremiumGate routePath="meteorites"><MeteoriteHunting /></PremiumGate>} />
+          <Route path="prehistoric" element={<PremiumGate routePath="prehistoric"><PrehistoricOrganisms /></PremiumGate>} />
+          <Route path="resources" element={<PremiumGate routePath="resources"><ResourceLinks /></PremiumGate>} />
+          <Route path="tectonics" element={<PremiumGate routePath="tectonics"><TectonicVolcanic /></PremiumGate>} />
+          <Route path="weather" element={<PremiumGate routePath="weather"><SevereWeather /></PremiumGate>} />
+          <Route path="planets" element={<PremiumGate routePath="planets"><Planets /></PremiumGate>} />
+          <Route path="deep-sky" element={<PremiumGate routePath="deep-sky"><DeepSkyObjects /></PremiumGate>} />
+          <Route path="important-stars" element={<PremiumGate routePath="important-stars"><ImportantStars /></PremiumGate>} />
         </Route>
 
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

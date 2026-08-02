@@ -100,7 +100,7 @@ export default function Wishlist() {
           {filtered.map((item) => (
             <div
               key={item.id}
-              className="group relative flex flex-col overflow-hidden rounded-lg border border-border bg-card"
+              className="group relative flex flex-col overflow-hidden dark-card sculpted-raised rounded-lg"
             >
               <button
                 onClick={() => navigate(`/app/specimens/${item.specimen_id}`)}
@@ -134,7 +134,7 @@ export default function Wishlist() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
           <Heart className="h-8 w-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
             Your wishlist is empty. Add specimens you're hunting for next.

@@ -267,7 +267,7 @@ export default function TradeBoard() {
             return (
               <div
                 key={listing.id}
-                className="group space-y-3 rounded-xl border border-border bg-card p-4"
+                className="group space-y-3 dark-card sculpted-raised rounded-xl p-4"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2">
@@ -350,7 +350,7 @@ export default function TradeBoard() {
           })}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
           <ArrowRightLeft className="h-8 w-8 text-muted-foreground" />
           <p className="max-w-sm text-sm text-muted-foreground">
             {tab === "mine"

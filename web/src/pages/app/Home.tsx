@@ -1,3 +1,4 @@
+import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Camera,
@@ -326,6 +327,8 @@ export default function Home() {
   const navigate = useNavigate();
   const { isFree, isPremium } = useTier();
   const { user } = useAuth();
+  const [versionTaps, setVersionTaps] = useState(0);
+  const versionTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleTileClick = (tile: HomeTileData) => {
     if (tile.onClick) {
@@ -333,6 +336,19 @@ export default function Home() {
     } else if (tile.to) {
       navigate(tile.to);
     }
+  };
+
+  // ── Version footer 5-tap easter egg → dev console ──
+  const handleVersionTap = () => {
+    const newCount = versionTaps + 1;
+    setVersionTaps(newCount);
+    if (versionTapTimer.current) clearTimeout(versionTapTimer.current);
+    if (newCount >= 5) {
+      setVersionTaps(0);
+      navigate("/app/dev-console");
+      return;
+    }
+    versionTapTimer.current = setTimeout(() => setVersionTaps(0), 1500);
   };
 
   return (
@@ -681,11 +697,17 @@ export default function Home() {
         </div>
       </SculptedCard>
 
-      {/* ── Version footer ── */}
+      {/* ── Version footer (5 taps → dev console easter egg) ── */}
       <div className="pt-4 text-center">
-        <p className="text-xs text-muted-foreground">
+        <button
+          onClick={handleVersionTap}
+          className="text-xs text-muted-foreground transition-colors hover:text-foreground/70"
+        >
           RockScout v1.1.6 · Built with passion for rockhounds
-        </p>
+          {versionTaps > 0 && versionTaps < 5 && (
+            <span className="ml-1 text-primary">{"·".repeat(versionTaps)}</span>
+          )}
+        </button>
       </div>
     </div>
   );

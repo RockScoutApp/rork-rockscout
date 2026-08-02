@@ -13,6 +13,14 @@ import {
   CloudCheck,
   CloudUpload,
   CloudOff,
+  Compass,
+  Star,
+  PawPrint,
+  Crown,
+  ArrowRightLeft,
+  Users,
+  ClipboardList,
+  Telescope,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTier } from "@/hooks/useTier";
@@ -29,21 +37,122 @@ interface NavItem {
   end?: boolean;
 }
 
-const NAV_ITEMS_FREE: NavItem[] = [
+interface NavSection {
+  label: string;
+  items: NavItem[];
+}
+
+const NAV_SECTIONS_FREE: NavSection[] = [
+  {
+    label: "Main",
+    items: [
+      { to: "/app", icon: Home, label: "Home", end: true },
+      { to: "/app/specimens", icon: BookOpen, label: "Specimens" },
+      { to: "/app/collection", icon: Gem, label: "Collection" },
+      { to: "/app/map", icon: Map, label: "Map & Dig Sites" },
+      { to: "/app/favorites", icon: MapPin, label: "Favorite Spots" },
+    ],
+  },
+  {
+    label: "Field Tools",
+    items: [
+      { to: "/app/captures", icon: Camera, label: "Field Captures" },
+      { to: "/app/saved-images", icon: MapPin, label: "Saved Images" },
+      { to: "/app/aurora", icon: Star, label: "Aurora Tracker" },
+      { to: "/app/stars", icon: Telescope, label: "Stars & Planets" },
+      { to: "/app/severe-weather", icon: CloudUpload, label: "Severe Weather" },
+    ],
+  },
+  {
+    label: "Explore",
+    items: [
+      { to: "/app/dinosaurs", icon: PawPrint, label: "Dino Dictionary" },
+      { to: "/app/reference", icon: BookOpen, label: "Reference Library" },
+      { to: "/app/gear", icon: Compass, label: "Gear Guide" },
+      { to: "/app/gem-shows", icon: Crown, label: "Gem Shows" },
+      { to: "/app/glossary", icon: BookOpen, label: "Glossary" },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { to: "/app/profile", icon: User, label: "Profile" },
+      { to: "/app/settings", icon: CloudCheck, label: "Settings" },
+    ],
+  },
+];
+
+const NAV_SECTIONS_PREMIUM: NavSection[] = [
+  {
+    label: "Main",
+    items: [
+      { to: "/app", icon: Home, label: "Home", end: true },
+      { to: "/app/identify", icon: Camera, label: "Identify" },
+      { to: "/app/specimens", icon: BookOpen, label: "Specimens" },
+      { to: "/app/collection", icon: Gem, label: "Collection" },
+      { to: "/app/map", icon: Map, label: "Map & Dig Sites" },
+      { to: "/app/favorites", icon: MapPin, label: "Favorite Spots" },
+    ],
+  },
+  {
+    label: "Field Tools",
+    items: [
+      { to: "/app/captures", icon: Camera, label: "Field Captures" },
+      { to: "/app/saved-images", icon: MapPin, label: "Saved Images" },
+      { to: "/app/journal", icon: ClipboardList, label: "Field Journal" },
+      { to: "/app/trips", icon: Compass, label: "Trip Planner" },
+      { to: "/app/aurora", icon: Star, label: "Aurora Tracker" },
+      { to: "/app/stars", icon: Telescope, label: "Stars & Planets" },
+      { to: "/app/severe-weather", icon: CloudUpload, label: "Severe Weather" },
+    ],
+  },
+  {
+    label: "Social",
+    items: [
+      { to: "/app/trade", icon: ArrowRightLeft, label: "Trade Board" },
+      { to: "/app/trading-floor", icon: Gem, label: "Trading Floor" },
+      { to: "/app/community", icon: Users, label: "Community" },
+      { to: "/app/friends", icon: Users, label: "Friends" },
+      { to: "/app/messenger", icon: Camera, label: "Messenger" },
+      { to: "/app/scan", icon: MapPin, label: "QR Scanner" },
+    ],
+  },
+  {
+    label: "Explore",
+    items: [
+      { to: "/app/dinosaurs", icon: PawPrint, label: "Dino Dictionary" },
+      { to: "/app/reference", icon: BookOpen, label: "Reference Library" },
+      { to: "/app/gear", icon: Compass, label: "Gear Guide" },
+      { to: "/app/gem-shows", icon: Crown, label: "Gem Shows" },
+      { to: "/app/glossary", icon: BookOpen, label: "Glossary" },
+    ],
+  },
+  {
+    label: "Account",
+    items: [
+      { to: "/app/profile", icon: User, label: "Profile" },
+      { to: "/app/settings", icon: CloudCheck, label: "Settings" },
+      { to: "/app/achievements", icon: Crown, label: "Achievements" },
+    ],
+  },
+];
+
+/** Compact bottom bar items (mobile) — only the most important 6 */
+const MOBILE_NAV_FREE: NavItem[] = [
   { to: "/app", icon: Home, label: "Home", end: true },
   { to: "/app/specimens", icon: BookOpen, label: "Specimens" },
-  { to: "/app/collection", icon: Gem, label: "Collection" },
   { to: "/app/map", icon: Map, label: "Map" },
+  { to: "/app/captures", icon: Camera, label: "Captures" },
   { to: "/app/favorites", icon: MapPin, label: "Spots" },
   { to: "/app/profile", icon: User, label: "Profile" },
 ];
 
-const NAV_ITEMS_PREMIUM: NavItem[] = [
+const MOBILE_NAV_PREMIUM: NavItem[] = [
   { to: "/app", icon: Home, label: "Home", end: true },
   { to: "/app/identify", icon: Camera, label: "Identify" },
-  { to: "/app/collection", icon: Gem, label: "Collection" },
   { to: "/app/map", icon: Map, label: "Map" },
-  { to: "/app/favorites", icon: MapPin, label: "Spots" },
+  { to: "/app/trade", icon: ArrowRightLeft, label: "Trade" },
+  { to: "/app/friends", icon: Users, label: "Friends" },
   { to: "/app/profile", icon: User, label: "Profile" },
 ];
 
@@ -52,7 +161,9 @@ export default function AppLayout() {
   const { isPremium } = useTier();
   const navigate = useNavigate();
   const [fieldCameraOpen, setFieldCameraOpen] = useState(false);
-  const navItems = isPremium ? NAV_ITEMS_PREMIUM : NAV_ITEMS_FREE;
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navSections = isPremium ? NAV_SECTIONS_PREMIUM : NAV_SECTIONS_FREE;
+  const mobileNavItems = isPremium ? MOBILE_NAV_PREMIUM : MOBILE_NAV_FREE;
 
   // Prevent browser back button from leaving the app shell or closing
   // the tab at the root route. Also closes dialogs/sheets on back press.
@@ -132,24 +243,31 @@ export default function AppLayout() {
           )}
         </div>
 
-        <nav className="flex flex-1 flex-col gap-1 px-3">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-primary/15 text-primary"
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
-                )
-              }
-            >
-              <item.icon className="h-5 w-5" />
-              {item.label}
-            </NavLink>
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 pb-4">
+          {navSections.map((section) => (
+            <div key={section.label} className="mt-3 first:mt-0">
+              <p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">
+                {section.label}
+              </p>
+              {section.items.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                      isActive
+                        ? "bg-primary/15 text-primary"
+                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
+                    )
+                  }
+                >
+                  <item.icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </NavLink>
+              ))}
+            </div>
           ))}
         </nav>
 
@@ -192,7 +310,7 @@ export default function AppLayout() {
 
       {/* Mobile bottom tab bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-border bg-card/95 backdrop-blur-lg md:hidden">
-        {navItems.map((item) => (
+        {mobileNavItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}

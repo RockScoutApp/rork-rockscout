@@ -1,6 +1,10 @@
 import { useState, useMemo } from "react";
 import { Search, X, FlaskConical } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SculptedCard, ScreenScaffold, TagChip } from "@/components/sculpted";
+
+const AQUA_HEX = "20 62% 65%";
+const CITRINE_HEX = "36 80% 58%";
 
 interface MohsEntry {
   number: number;
@@ -129,15 +133,11 @@ export default function MohsScale() {
   }, [search]);
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-          Mohs Hardness Scale
-        </h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          The 10-step mineral hardness reference for field identification
-        </p>
-      </div>
+    <ScreenScaffold title="Mohs Hardness Scale" onBack={() => window.history.back()}>
+     <div className="space-y-5 px-4 pb-8">
+      <p className="text-sm text-muted-foreground">
+        The 10-step mineral hardness reference for field identification
+      </p>
 
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -158,86 +158,60 @@ export default function MohsScale() {
       </div>
 
       {/* Quick reference: scratch tools */}
-      <div className="rounded-xl border border-border bg-card p-4">
-        <h3 className="mb-2 font-display text-sm font-semibold text-foreground">
-          Field scratch tools
-        </h3>
+      <SculptedCard accent="citrine" className="p-4">
+        <h3 className="mb-2 font-display text-sm font-bold text-foreground">Field scratch tools</h3>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {SCRATCH_TOOLS.map((tool) => (
-            <div
-              key={tool.tool}
-              className="flex items-center justify-between rounded-lg bg-muted/30 px-3 py-1.5 text-xs"
-            >
+            <div key={tool.tool} className="flex items-center justify-between rounded-lg bg-muted/30 px-3 py-1.5 text-xs">
               <span className="text-muted-foreground">{tool.tool}</span>
-              <span className="font-mono font-bold text-primary">
-                {tool.hardness}
-              </span>
+              <span className="font-mono font-bold" style={{ color: `hsl(${CITRINE_HEX})` }}>{tool.hardness}</span>
             </div>
           ))}
         </div>
-      </div>
+      </SculptedCard>
 
       {/* Mohs scale list */}
       <div className="space-y-3">
-        {filtered.map((entry) => (
-          <div
-            key={entry.number}
-            className="flex gap-4 rounded-xl border border-border bg-card p-4"
-          >
+        {filtered.map((entry) => {
+          const accent = entry.number <= 3 ? "4 70% 55%" : entry.number <= 6 ? "36 80% 58%" : "147 49% 55%";
+          return (
+          <SculptedCard key={entry.number} accent="citrine" className="flex gap-4 p-4">
             <div className="flex flex-col items-center gap-1">
-              <div
-                className={`flex h-12 w-12 items-center justify-center rounded-full text-2xl font-bold ${
-                  entry.number <= 3
-                    ? "bg-red-500/15 text-red-500"
-                    : entry.number <= 6
-                      ? "bg-amber-500/15 text-amber-600"
-                      : "bg-primary/15 text-primary"
-                }`}
-              >
+              <div className="glowing-border flex h-12 w-12 items-center justify-center rounded-full font-display text-xl font-bold"
+                style={{ ["--glow-color" as string]: accent, backgroundColor: `hsl(${accent} / 0.15)`, color: `hsl(${accent})` }}>
                 {entry.number}
               </div>
               <span className="text-xl">{entry.emoji}</span>
             </div>
             <div className="min-w-0 flex-1 space-y-2">
-              <h3 className="font-display text-base font-semibold text-foreground">
-                {entry.mineral}
-              </h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {entry.description}
-              </p>
+              <h3 className="font-display text-sm font-bold text-foreground">{entry.mineral}</h3>
+              <p className="text-xs leading-relaxed text-[hsl(var(--text-mid))]">{entry.description}</p>
               <div className="flex flex-wrap gap-1.5">
                 {entry.examples.map((ex) => (
-                  <span
-                    key={ex}
-                    className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
-                  >
-                    {ex}
-                  </span>
+                  <TagChip key={ex} accent={`hsl(${AQUA_HEX})`}>{ex}</TagChip>
                 ))}
               </div>
               <div className="grid grid-cols-1 gap-1 text-xs sm:grid-cols-2">
-                <p className="text-muted-foreground">
-                  <span className="font-medium text-foreground">Can scratch:</span>{" "}
-                  {entry.canScratch}
+                <p className="text-[hsl(var(--text-mid))]">
+                  <span className="font-bold text-foreground">Can scratch:</span> {entry.canScratch}
                 </p>
-                <p className="text-muted-foreground">
-                  <span className="font-medium text-foreground">Scratched by:</span>{" "}
-                  {entry.scratchedBy}
+                <p className="text-[hsl(var(--text-mid))]">
+                  <span className="font-bold text-foreground">Scratched by:</span> {entry.scratchedBy}
                 </p>
               </div>
             </div>
-          </div>
-        ))}
+          </SculptedCard>
+          );
+        })}
       </div>
 
       {filtered.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
-          <FlaskConical className="h-8 w-8 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            No minerals found. Try a different search.
-          </p>
-        </div>
+        <SculptedCard accent="aqua" className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+          <FlaskConical className="h-10 w-10 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">No minerals found. Try a different search.</p>
+        </SculptedCard>
       )}
-    </div>
+     </div>
+    </ScreenScaffold>
   );
 }

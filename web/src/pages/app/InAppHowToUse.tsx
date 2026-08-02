@@ -151,7 +151,7 @@ export default function InAppHowToUse() {
         {SECTIONS.map((section) => (
           <div
             key={section.title}
-            className="rounded-xl border border-border bg-card p-4"
+            className="dark-card sculpted-raised rounded-xl p-4"
           >
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <section.icon className="h-4 w-4 text-primary" />
@@ -164,7 +164,7 @@ export default function InAppHowToUse() {
         ))}
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-4">
+      <div className="dark-card sculpted-raised rounded-xl p-4">
         <h3 className="text-sm font-semibold text-foreground">
           5 MB Upload Limit
         </h3>
@@ -174,7 +174,7 @@ export default function InAppHowToUse() {
         </p>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-4">
+      <div className="dark-card sculpted-raised rounded-xl p-4">
         <h3 className="text-sm font-semibold text-foreground">
           Cross-Platform Sync
         </h3>

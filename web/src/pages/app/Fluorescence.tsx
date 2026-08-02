@@ -1,6 +1,10 @@
 import { useState } from "react";
-import { Search, X, Sun } from "lucide-react";
+import { Search, X, Sun, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SculptedCard, ScreenScaffold, TagChip } from "@/components/sculpted";
+
+const AQUA_HEX = "20 62% 65%";
+const CITRINE_HEX = "36 80% 58%";
 
 interface FluorescentMineral {
   name: string;
@@ -135,58 +139,45 @@ export default function Fluorescence() {
   );
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-          Fluorescence & UV Reference
-        </h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          {MINERALS.length} fluorescent minerals and UV light guide
-        </p>
-      </div>
+    <ScreenScaffold title="Fluorescence & UV" onBack={() => window.history.back()}>
+     <div className="space-y-5 px-4 pb-8">
+      <p className="text-sm text-muted-foreground">
+        {MINERALS.length} fluorescent minerals and UV light guide
+      </p>
 
       {/* UV light guide */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {UV_GUIDE.map((guide) => (
-          <div
-            key={guide.type}
-            className="space-y-2 rounded-xl border border-border bg-card p-4"
-          >
+          <SculptedCard key={guide.type} accent="citrine" className="space-y-2 p-4">
             <div className="flex items-center gap-2">
-              <Sun className="h-5 w-5 text-primary" />
-              <h3 className="font-display text-sm font-semibold text-foreground">
-                {guide.type}
-              </h3>
+              <Sun className="h-5 w-5" style={{ color: `hsl(${CITRINE_HEX})` }} />
+              <h3 className="font-display text-sm font-bold text-foreground">{guide.type}</h3>
             </div>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {guide.desc}
-            </p>
+            <p className="text-xs leading-relaxed text-[hsl(var(--text-mid))]">{guide.desc}</p>
             <ul className="space-y-0.5">
               {guide.pros.map((pro) => (
-                <li
-                  key={pro}
-                  className="flex items-start gap-1.5 text-xs text-muted-foreground"
-                >
-                  <span className="mt-0.5 text-primary">•</span>
+                <li key={pro} className="flex items-start gap-1.5 text-xs text-[hsl(var(--text-mid))]">
+                  <span className="mt-0.5" style={{ color: `hsl(${CITRINE_HEX})` }}>•</span>
                   {pro}
                 </li>
               ))}
             </ul>
-          </div>
+          </SculptedCard>
         ))}
       </div>
 
-      <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
-        <h3 className="mb-1 font-display text-sm font-semibold text-amber-600">
-          ⚠️ Safety note
-        </h3>
-        <p className="text-sm text-foreground/80">
-          Never look directly into a UV light — especially shortwave UV, which
-          can damage eyes. Wear UV-blocking safety glasses when using SW lights.
-          Some fluorescent minerals (autunite, torbernite) are radioactive —
-          handle with care and wash hands after.
-        </p>
-      </div>
+      <SculptedCard accent="danger" className="flex items-start gap-3 p-4">
+        <AlertTriangle className="h-5 w-5 shrink-0" style={{ color: "hsl(4 70% 55%)" }} />
+        <div>
+          <h3 className="text-sm font-bold text-foreground">⚠ Safety note</h3>
+          <p className="mt-1 text-xs text-[hsl(var(--text-mid))]">
+            Never look directly into a UV light — especially shortwave UV, which
+            can damage eyes. Wear UV-blocking safety glasses when using SW lights.
+            Some fluorescent minerals (autunite, torbernite) are radioactive —
+            handle with care and wash hands after.
+          </p>
+        </div>
+      </SculptedCard>
 
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -208,54 +199,31 @@ export default function Fluorescence() {
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {filtered.map((mineral) => (
-          <div
-            key={mineral.name}
-            className="space-y-2 rounded-xl border border-border bg-card p-4"
-          >
+          <SculptedCard key={mineral.name} accent="amethyst" className="space-y-2 p-4">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2">
-                <span className="text-2xl">{mineral.emoji}</span>
-                <h3 className="font-display text-base font-semibold text-foreground">
-                  {mineral.name}
-                </h3>
+                <div className="glowing-border flex h-10 w-10 items-center justify-center rounded-xl text-xl" style={{ ["--glow-color" as string]: "265 47% 67%" }}>{mineral.emoji}</div>
+                <h3 className="font-display text-sm font-bold text-foreground">{mineral.name}</h3>
               </div>
-              <span
-                className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                  mineral.uvType === "LW"
-                    ? "bg-blue-500/15 text-blue-500"
-                    : mineral.uvType === "SW"
-                      ? "bg-purple-500/15 text-purple-500"
-                      : "bg-primary/15 text-primary"
-                }`}
-              >
-                {mineral.uvType}
-              </span>
+              <TagChip accent={mineral.uvType === "LW" ? "hsl(210 70% 55%)" : mineral.uvType === "SW" ? "hsl(265 47% 67%)" : `hsl(${CITRINE_HEX})`}>{mineral.uvType}</TagChip>
             </div>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {mineral.description}
-            </p>
+            <p className="text-xs leading-relaxed text-[hsl(var(--text-mid))]">{mineral.description}</p>
             <div>
-              <p className="text-xs font-medium text-foreground">Glow color</p>
-              <p className="text-xs text-muted-foreground">{mineral.color}</p>
+              <p className="text-xs font-bold text-foreground">Glow color</p>
+              <p className="text-xs text-[hsl(var(--text-mid))]">{mineral.color}</p>
             </div>
             <div>
-              <p className="mb-1 text-xs font-medium text-foreground">
-                Best locations
-              </p>
+              <p className="mb-1 text-xs font-bold text-foreground">Best locations</p>
               <div className="flex flex-wrap gap-1.5">
                 {mineral.bestLocations.map((loc) => (
-                  <span
-                    key={loc}
-                    className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
-                  >
-                    {loc}
-                  </span>
+                  <TagChip key={loc} accent={`hsl(${AQUA_HEX})`}>{loc}</TagChip>
                 ))}
               </div>
             </div>
-          </div>
+          </SculptedCard>
         ))}
       </div>
-    </div>
+     </div>
+    </ScreenScaffold>
   );
 }

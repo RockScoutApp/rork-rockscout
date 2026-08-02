@@ -1,3 +1,7 @@
+import { SculptedCard, ScreenScaffold } from "@/components/sculpted";
+
+const CITRINE_HEX = "36 80% 58%";
+
 const STEPS = [
   { title: "Streak Test", desc: "Rub the mineral across an unglazed porcelain plate (streak plate). The color of the powdered residue is the streak, which is often different from the mineral's surface color. For example, hematite is silver-gray but leaves a red-brown streak." },
   { title: "Hardness Test", desc: "Use the Mohs scale (1–10) to determine hardness by scratching the mineral with reference objects: fingernail (2.5), copper penny (3.5), steel nail (5.5), glass (5.5), quartz (7). A mineral can scratch anything with a lower hardness number." },
@@ -11,48 +15,48 @@ const STEPS = [
 
 export default function MineralId() {
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-          Mineral Identification
-        </h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
+    <ScreenScaffold title="Mineral Identification" onBack={() => window.history.back()}>
+      <div className="space-y-5 px-4 pb-8">
+        <p className="text-sm text-muted-foreground">
           Field tests for identifying minerals without lab equipment
         </p>
-      </div>
 
-      <div className="rounded-lg border border-border bg-card p-4">
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          Identifying minerals in the field is a process of elimination. No single test
-          is definitive — combine several tests to narrow down the possibilities. Always
-          test on a fresh surface, as weathering can mask the true properties.
-        </p>
-      </div>
+        <SculptedCard accent="aqua" className="p-4">
+          <p className="text-xs leading-relaxed text-[hsl(var(--text-mid))]">
+            Identifying minerals in the field is a process of elimination. No single test
+            is definitive — combine several tests to narrow down the possibilities. Always
+            test on a fresh surface, as weathering can mask the true properties.
+          </p>
+        </SculptedCard>
 
-      <div className="space-y-3">
-        {STEPS.map((step, i) => (
-          <div key={step.title} className="rounded-xl border border-border bg-card p-4">
-            <div className="flex items-start gap-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 font-display text-sm font-bold text-primary">
-                {i + 1}
-              </span>
-              <div className="min-w-0 flex-1">
-                <h3 className="font-display text-sm font-semibold text-foreground">{step.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{step.desc}</p>
+        <div className="space-y-3">
+          {STEPS.map((step, i) => (
+            <SculptedCard key={step.title} accent="citrine" className="p-4">
+              <div className="flex items-start gap-3">
+                <span
+                  className="glowing-border flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-sm font-bold"
+                  style={{ ["--glow-color" as string]: CITRINE_HEX, color: `hsl(${CITRINE_HEX})` }}
+                >
+                  {i + 1}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-display text-sm font-bold text-foreground">{step.title}</h3>
+                  <p className="mt-1.5 text-xs leading-relaxed text-[hsl(var(--text-mid))]">{step.desc}</p>
+                </div>
               </div>
-            </div>
-          </div>
-        ))}
-      </div>
+            </SculptedCard>
+          ))}
+        </div>
 
-      <div className="rounded-xl border border-primary/30 bg-primary/5 p-4">
-        <h3 className="text-sm font-semibold text-primary">Pro Tip</h3>
-        <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-          Always carry a streak plate, a small magnet, a steel nail, and a hand lens (10x)
-          in your field kit. With these four tools plus the acid test, you can identify
-          most common minerals in the field.
-        </p>
+        <SculptedCard accent="citrine" glowing className="p-4">
+          <h3 className="text-sm font-bold" style={{ color: `hsl(${CITRINE_HEX})` }}>Pro Tip</h3>
+          <p className="mt-1.5 text-xs leading-relaxed text-[hsl(var(--text-mid))]">
+            Always carry a streak plate, a small magnet, a steel nail, and a hand lens (10x)
+            in your field kit. With these four tools plus the acid test, you can identify
+            most common minerals in the field.
+          </p>
+        </SculptedCard>
       </div>
-    </div>
+    </ScreenScaffold>
   );
 }

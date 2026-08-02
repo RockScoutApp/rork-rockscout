@@ -1,15 +1,17 @@
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   Calendar,
   MapPin,
   ExternalLink,
   Phone,
   Mail,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { gemShows } from "@/data/locations";
+import { SculptedCard, SculptedButton, ScreenScaffold, TagChip } from "@/components/sculpted";
 import NotFound from "@/pages/NotFound";
+
+const AQUA_HEX = "20 62% 65%";
+const CITRINE_HEX = "36 80% 58%";
 
 export default function GemShowDetail() {
   const { id } = useParams<{ id: string }>();
@@ -19,95 +21,81 @@ export default function GemShowDetail() {
   if (!show) return <NotFound />;
 
   return (
-    <div className="space-y-6">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => navigate("/app/gem-shows")}
-        className="gap-2"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Gem Shows
-      </Button>
+    <ScreenScaffold title={show.name} onBack={() => navigate("/app/gem-shows")}>
+      <div className="space-y-5 px-4 pb-8">
+        {/* Header card */}
+        <SculptedCard accent="citrine" glowing className="p-5">
+          <div className="flex items-start gap-3">
+            <div
+              className="icon-badge glowing-border flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
+              style={{ ["--badge-accent" as string]: CITRINE_HEX, ["--glow-color" as string]: CITRINE_HEX, color: `hsl(${CITRINE_HEX})` }}
+            >
+              <Calendar className="h-6 w-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="mt-1 flex items-center gap-1.5 text-sm" style={{ color: `hsl(${AQUA_HEX})` }}>
+                <MapPin className="h-3.5 w-3.5" />
+                {show.venue}, {show.city}, {show.state}
+              </p>
+            </div>
+          </div>
 
-      <div className="rounded-xl border border-border bg-card p-5">
-        <div className="flex items-start gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/15">
-            <Calendar className="h-6 w-6 text-primary" />
+          <div className="mt-4 flex flex-wrap gap-2">
+            <TagChip accent={`hsl(${CITRINE_HEX})`}>{show.monthLabel}</TagChip>
+            <TagChip accent="hsl(36 80% 58%)">{show.dateRange}</TagChip>
+            {show.isAnnual && (
+              <TagChip accent={`hsl(${AQUA_HEX})`}>Annual Event</TagChip>
+            )}
           </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="font-display text-2xl font-bold text-foreground">
-              {show.name}
-            </h1>
-            <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-              <MapPin className="h-3.5 w-3.5" />
-              {show.venue}, {show.city}, {show.state}
-            </p>
-          </div>
+        </SculptedCard>
+
+        {/* About */}
+        <SculptedCard accent="aqua" className="p-4">
+          <h3 className="text-sm font-bold text-foreground">About</h3>
+          <p className="mt-2 text-sm leading-relaxed text-[hsl(var(--text-mid))]">
+            {show.description}
+          </p>
+        </SculptedCard>
+
+        {/* Info grid */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <SculptedCard accent="citrine" className="p-4">
+            <h3 className="text-sm font-bold text-foreground">Entry Fee</h3>
+            <p className="mt-1.5 text-sm text-[hsl(var(--text-mid))]">{show.entryFee}</p>
+          </SculptedCard>
+          <SculptedCard accent="aqua" className="p-4">
+            <h3 className="text-sm font-bold text-foreground">Location</h3>
+            <p className="mt-1.5 text-sm text-[hsl(var(--text-mid))]">{show.venue}</p>
+            <p className="text-sm text-[hsl(var(--text-mid))]">{show.city}, {show.state}</p>
+          </SculptedCard>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-medium text-primary">
-            {show.monthLabel}
-          </span>
-          <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-medium text-amber-600">
-            {show.dateRange}
-          </span>
-          {show.isAnnual && (
-            <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-              Annual Event
-            </span>
+        {/* Action buttons */}
+        <div className="flex flex-wrap gap-3">
+          <a href={show.website} target="_blank" rel="noopener noreferrer">
+            <SculptedButton accent="citrine" glowing>
+              <ExternalLink className="h-4 w-4" />
+              Visit Website
+            </SculptedButton>
+          </a>
+          {show.phone && (
+            <a href={`tel:${show.phone}`}>
+              <SculptedButton accent="aqua">
+                <Phone className="h-4 w-4" />
+                {show.phone}
+              </SculptedButton>
+            </a>
+          )}
+          {show.email && (
+            <a href={`mailto:${show.email}`}>
+              <SculptedButton accent="aqua">
+                <Mail className="h-4 w-4" />
+                Email
+              </SculptedButton>
+            </a>
           )}
         </div>
       </div>
-
-      <div className="rounded-lg border border-border bg-card p-4">
-        <h3 className="text-sm font-semibold text-foreground">About</h3>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          {show.description}
-        </p>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-lg border border-border bg-card p-4">
-          <h3 className="text-sm font-semibold text-foreground">Entry Fee</h3>
-          <p className="mt-1.5 text-sm text-muted-foreground">{show.entryFee}</p>
-        </div>
-        <div className="rounded-lg border border-border bg-card p-4">
-          <h3 className="text-sm font-semibold text-foreground">Location</h3>
-          <p className="mt-1.5 text-sm text-muted-foreground">
-            {show.venue}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {show.city}, {show.state}
-          </p>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-3">
-        <a href={show.website} target="_blank" rel="noopener noreferrer">
-          <Button variant="outline" className="gap-2">
-            <ExternalLink className="h-4 w-4" />
-            Visit Website
-          </Button>
-        </a>
-        {show.phone && (
-          <a href={`tel:${show.phone}`}>
-            <Button variant="outline" className="gap-2">
-              <Phone className="h-4 w-4" />
-              {show.phone}
-            </Button>
-          </a>
-        )}
-        {show.email && (
-          <a href={`mailto:${show.email}`}>
-            <Button variant="outline" className="gap-2">
-              <Mail className="h-4 w-4" />
-              Email
-            </Button>
-          </a>
-        )}
-      </div>
-    </div>
+    </ScreenScaffold>
   );
 }

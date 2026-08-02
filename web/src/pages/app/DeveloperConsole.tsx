@@ -72,7 +72,7 @@ export default function DeveloperConsole() {
       </div>
 
       {/* Account Info */}
-      <div className="rounded-lg border border-border bg-card p-4">
+      <div className="dark-card sculpted-raised rounded-lg p-4">
         <h3 className="text-sm font-semibold text-foreground">Account Info</h3>
         <pre className="mt-2 rounded bg-muted/30 p-3 text-xs text-muted-foreground overflow-x-auto">
 {`User ID: ${user?.id}
@@ -81,7 +81,7 @@ Email: ${user?.email}`}
       </div>
 
       {/* Backend Status */}
-      <div className="rounded-lg border border-border bg-card p-4">
+      <div className="dark-card sculpted-raised rounded-lg p-4">
         <h3 className="text-sm font-semibold text-foreground">Backend Status</h3>
         <p className="mt-2 text-sm text-muted-foreground">
           Backend URL:{" "}
@@ -128,7 +128,7 @@ Email: ${user?.email}`}
         </div>
 
         {/* Daily clicks bar graph */}
-        <div className="rounded-lg border border-border bg-card p-4">
+        <div className="dark-card sculpted-raised rounded-lg p-4">
           <h3 className="text-sm font-semibold text-foreground">
             Daily Click-Throughs (last 14 days)
           </h3>
@@ -165,7 +165,7 @@ Email: ${user?.email}`}
         </div>
 
         {/* Top items bar graph */}
-        <div className="rounded-lg border border-border bg-card p-4">
+        <div className="dark-card sculpted-raised rounded-lg p-4">
           <h3 className="text-sm font-semibold text-foreground">
             Top Gear Items by Clicks
           </h3>

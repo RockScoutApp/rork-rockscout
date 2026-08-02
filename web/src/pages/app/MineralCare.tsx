@@ -1,6 +1,10 @@
 import { useState } from "react";
-import { Search, X, Droplets, Sparkles, Shield, Box } from "lucide-react";
+import { Search, X, Droplets, Sparkles, Shield, Box, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SculptedCard, ScreenScaffold, TagChip } from "@/components/sculpted";
+
+const AQUA_HEX = "20 62% 65%";
+const CITRINE_HEX = "36 80% 58%";
 
 interface CareTip {
   id: string;
@@ -141,15 +145,11 @@ export default function MineralCare() {
   });
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-          Mineral Care Guide
-        </h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          {CARE_TIPS.length} tips for cleaning, storing, and displaying your collection
-        </p>
-      </div>
+    <ScreenScaffold title="Mineral Care Guide" onBack={() => window.history.back()}>
+     <div className="space-y-5 px-4 pb-8">
+      <p className="text-sm text-muted-foreground">
+        {CARE_TIPS.length} tips for cleaning, storing, and displaying your collection
+      </p>
 
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -189,53 +189,39 @@ export default function MineralCare() {
         {filtered.map((tip) => {
           const Icon = CATEGORY_ICONS[tip.category] ?? Droplets;
           return (
-            <div
-              key={tip.id}
-              className="space-y-2 rounded-xl border border-border bg-card p-4"
-            >
+            <SculptedCard key={tip.id} accent="aqua" className="space-y-2 p-4">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/15">
-                  <Icon className="h-5 w-5 text-primary" />
+                <div className="icon-badge flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                  style={{ ["--badge-accent" as string]: AQUA_HEX, color: `hsl(${AQUA_HEX})` }}>
+                  <Icon className="h-5 w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="font-display text-sm font-semibold text-foreground">
-                    {tip.title}
-                  </h3>
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                    {tip.category}
-                  </span>
+                  <h3 className="font-display text-sm font-bold text-foreground">{tip.title}</h3>
+                  <TagChip accent={`hsl(${CITRINE_HEX})`}>{tip.category}</TagChip>
                 </div>
               </div>
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {tip.description}
-              </p>
+              <p className="text-xs leading-relaxed text-[hsl(var(--text-mid))]">{tip.description}</p>
               {tip.warning && (
-                <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5">
-                  <p className="text-xs text-amber-600">
-                    <span className="font-semibold">⚠️ Warning:</span>{" "}
-                    {tip.warning}
+                <SculptedCard accent="danger" className="flex items-start gap-2 p-2.5">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: "hsl(4 70% 55%)" }} />
+                  <p className="text-xs" style={{ color: "hsl(4 70% 55%)" }}>
+                    <span className="font-bold">Warning:</span> {tip.warning}
                   </p>
-                </div>
+                </SculptedCard>
               )}
               <div>
-                <p className="mb-1 text-xs font-medium text-foreground">
-                  Applies to
-                </p>
+                <p className="mb-1 text-xs font-bold text-foreground">Applies to</p>
                 <div className="flex flex-wrap gap-1.5">
                   {tip.appliesTo.map((item) => (
-                    <span
-                      key={item}
-                      className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
-                    >
-                      {item}
-                    </span>
+                    <TagChip key={item} accent={`hsl(${AQUA_HEX})`}>{item}</TagChip>
                   ))}
                 </div>
               </div>
-            </div>
+            </SculptedCard>
           );
         })}
       </div>
-    </div>
+     </div>
+    </ScreenScaffold>
   );
 }

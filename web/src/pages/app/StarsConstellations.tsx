@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Search, X, Telescope, Star } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Search, X, Telescope, Star, Globe, Sparkles, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SculptedCard } from "@/components/sculpted";
 
 interface Constellation {
   name: string;
@@ -119,6 +121,7 @@ const IMPORTANT_STARS = [
 ];
 
 export default function StarsConstellations() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"constellations" | "stars">("constellations");
 
@@ -143,6 +146,46 @@ export default function StarsConstellations() {
         <p className="mt-0.5 text-sm text-muted-foreground">
           Night sky guide for field trips — {CONSTELLATIONS.length} constellations & {IMPORTANT_STARS.length} bright stars
         </p>
+      </div>
+
+      {/* Sub-screen navigation */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <SculptedCard accent="cyan" interactive className="overflow-hidden" onClick={() => navigate("/app/planets")}>
+          <div className="flex items-center gap-3 p-4">
+            <div className="icon-badge flex h-10 w-10 items-center justify-center rounded-xl" style={{ ["--badge-accent" as string]: "174 100% 45%", color: "hsl(174 100% 45%)" }}>
+              <Globe className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-bold text-foreground">Planets</h3>
+              <p className="text-xs text-muted-foreground">10 solar system bodies</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </div>
+        </SculptedCard>
+        <SculptedCard accent="amethyst" interactive className="overflow-hidden" onClick={() => navigate("/app/deep-sky")}>
+          <div className="flex items-center gap-3 p-4">
+            <div className="icon-badge flex h-10 w-10 items-center justify-center rounded-xl" style={{ ["--badge-accent" as string]: "265 47% 67%", color: "hsl(265 47% 67%)" }}>
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-bold text-foreground">Deep Sky Objects</h3>
+              <p className="text-xs text-muted-foreground">37 galaxies & nebulae</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </div>
+        </SculptedCard>
+        <SculptedCard accent="citrine" interactive className="overflow-hidden" onClick={() => navigate("/app/important-stars")}>
+          <div className="flex items-center gap-3 p-4">
+            <div className="icon-badge flex h-10 w-10 items-center justify-center rounded-xl" style={{ ["--badge-accent" as string]: "36 80% 58%", color: "hsl(36 80% 58%)" }}>
+              <Star className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-bold text-foreground">Important Stars</h3>
+              <p className="text-xs text-muted-foreground">30 brightest stars</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </div>
+        </SculptedCard>
       </div>
 
       <div className="flex gap-2">
@@ -191,7 +234,7 @@ export default function StarsConstellations() {
           {filteredConstellations.map((c) => (
             <div
               key={c.name}
-              className="space-y-2 rounded-xl border border-border bg-card p-4"
+              className="space-y-2 dark-card sculpted-raised rounded-xl p-4"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
@@ -224,7 +267,7 @@ export default function StarsConstellations() {
           {filteredStars.map((star) => (
             <div
               key={star.name}
-              className="flex items-start gap-3 rounded-lg border border-border bg-card p-3"
+              className="flex items-start gap-3 dark-card sculpted-raised rounded-lg p-3"
             >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
                 <Star className="h-5 w-5 text-primary" />
@@ -253,7 +296,7 @@ export default function StarsConstellations() {
       )}
 
       {filteredConstellations.length === 0 && filteredStars.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
           <Telescope className="h-8 w-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
             No results found. Try a different search.

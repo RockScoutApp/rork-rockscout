@@ -123,7 +123,7 @@ export default function FavoriteSpots() {
             return (
               <div
                 key={spot.id}
-                className="group flex items-center gap-3 rounded-lg border border-border bg-card p-3 transition-colors hover:border-primary/40"
+                className="group flex items-center gap-3 dark-card sculpted-raised rounded-lg p-3 transition-colors hover:border-primary/40"
               >
                 <button
                   onClick={() => navigate(`/app/locations/${spot.spot_id}`)}
@@ -165,7 +165,7 @@ export default function FavoriteSpots() {
           })}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
           <Heart className="h-8 w-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
             {search

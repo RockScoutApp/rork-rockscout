@@ -77,7 +77,7 @@ export default function SavedImages() {
           {images.map((img) => (
             <div
               key={img.id}
-              className="group relative overflow-hidden rounded-lg border border-border bg-card"
+              className="group relative overflow-hidden dark-card sculpted-raised rounded-lg"
             >
               <div className="relative aspect-square w-full overflow-hidden bg-muted/30">
                 <OptimizedImage
@@ -98,7 +98,7 @@ export default function SavedImages() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
           <ImageIcon className="h-8 w-8 text-muted-foreground" />
           <p className="max-w-sm text-sm text-muted-foreground">
             No saved images yet. Use the Field Camera and choose "Save to My

@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Search, X, CloudRain, Wind, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SculptedCard, ScreenScaffold, TagChip } from "@/components/sculpted";
+
+const AQUA_HEX = "20 62% 65%";
+const CITRINE_HEX = "36 80% 58%";
 
 interface WeatherHazard {
   id: string;
@@ -143,27 +147,23 @@ export default function SevereWeather() {
   });
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-          Severe Weather Guide
-        </h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          {HAZARDS.length} weather hazards every rockhound should know
-        </p>
-      </div>
+    <ScreenScaffold title="Severe Weather Guide" onBack={() => window.history.back()}>
+     <div className="space-y-5 px-4 pb-8">
+      <p className="text-sm text-muted-foreground">
+        {HAZARDS.length} weather hazards every rockhound should know
+      </p>
 
-      <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4">
-        <h3 className="mb-1 flex items-center gap-2 font-display text-sm font-semibold text-amber-600">
-          <AlertTriangle className="h-4 w-4" />
-          Field safety first
-        </h3>
-        <p className="text-sm text-foreground/80">
-          Weather is the #1 danger for rockhounds in the field. Always check the
-          forecast for your collecting area <strong>and the surrounding watershed</strong>{" "}
-          before you go. Carry a NOAA weather radio for remote areas.
-        </p>
-      </div>
+      <SculptedCard accent="danger" className="flex items-start gap-3 p-4">
+        <AlertTriangle className="h-5 w-5 shrink-0" style={{ color: "hsl(4 70% 55%)" }} />
+        <div>
+          <h3 className="text-sm font-bold text-foreground">Field safety first</h3>
+          <p className="mt-1 text-xs text-[hsl(var(--text-mid))]">
+            Weather is the #1 danger for rockhounds in the field. Always check the
+            forecast for your collecting area <strong>and the surrounding watershed</strong>{" "}
+            before you go. Carry a NOAA weather radio for remote areas.
+          </p>
+        </div>
+      </SculptedCard>
 
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -201,77 +201,55 @@ export default function SevereWeather() {
 
       <div className="space-y-3">
         {filtered.map((hazard) => (
-          <div
-            key={hazard.id}
-            className="space-y-3 rounded-xl border border-border bg-card p-4"
-          >
+          <SculptedCard key={hazard.id} accent="danger" className="space-y-3 p-4">
             <div className="flex items-start gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-amber-500/15 text-2xl">
-                {hazard.emoji}
-              </div>
+              <div className="glowing-border flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl" style={{ ["--glow-color" as string]: "4 70% 55%" }}>{hazard.emoji}</div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="font-display text-base font-semibold text-foreground">
-                    {hazard.name}
-                  </h3>
-                  <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium text-amber-600">
-                    {hazard.severity}
-                  </span>
+                  <h3 className="font-display text-sm font-bold text-foreground">{hazard.name}</h3>
+                  <TagChip accent="hsl(4 70% 55%)">{hazard.severity}</TagChip>
                 </div>
                 <span className="text-xs text-muted-foreground">{hazard.category}</span>
               </div>
             </div>
-
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {hazard.description}
-            </p>
-
-            <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-2.5">
-              <p className="text-xs text-foreground/80">
-                <span className="font-semibold text-amber-600">Rockhound risk:</span>{" "}
-                {hazard.rockhoundRisk}
+            <p className="text-xs leading-relaxed text-[hsl(var(--text-mid))]">{hazard.description}</p>
+            <SculptedCard accent="danger" className="p-2.5">
+              <p className="text-xs text-[hsl(var(--text-mid))]">
+                <span className="font-bold" style={{ color: "hsl(4 70% 55%)" }}>Rockhound risk:</span> {hazard.rockhoundRisk}
               </p>
-            </div>
-
+            </SculptedCard>
             <div>
-              <p className="mb-1.5 text-xs font-medium text-foreground">Safety tips</p>
+              <p className="mb-1.5 text-xs font-bold text-foreground">Safety tips</p>
               <ul className="space-y-1">
                 {hazard.safetyTips.map((tip, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-1.5 text-xs text-muted-foreground"
-                  >
-                    <span className="mt-0.5 text-primary">•</span>
+                  <li key={i} className="flex items-start gap-1.5 text-xs text-[hsl(var(--text-mid))]">
+                    <span className="mt-0.5" style={{ color: `hsl(${CITRINE_HEX})` }}>•</span>
                     {tip}
                   </li>
                 ))}
               </ul>
             </div>
-          </div>
+          </SculptedCard>
         ))}
       </div>
 
       {/* NOAA links */}
-      <div className="rounded-xl border border-border bg-card p-4">
-        <h2 className="mb-2 flex items-center gap-2 font-display text-sm font-semibold text-foreground">
-          <CloudRain className="h-4 w-4 text-primary" />
+      <SculptedCard accent="cyan" className="p-4">
+        <h2 className="mb-2 flex items-center gap-2 font-display text-sm font-bold text-foreground">
+          <CloudRain className="h-4 w-4" style={{ color: `hsl(${AQUA_HEX})` }} />
           Official Weather Resources
         </h2>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {NOAA_LINKS.map((link) => (
-            <a
-              key={link.name}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-lg border border-border p-2.5 transition-colors hover:border-primary/40"
-            >
-              <p className="text-sm font-medium text-foreground">{link.name}</p>
-              <p className="text-xs text-muted-foreground">{link.desc}</p>
+            <a key={link.name} href={link.url} target="_blank" rel="noopener noreferrer"
+              className="sculpted-button sculpted-raised dark-card rounded-lg p-2.5 transition-colors">
+              <p className="text-sm font-bold text-foreground">{link.name}</p>
+              <p className="text-xs text-[hsl(var(--text-mid))]">{link.desc}</p>
             </a>
           ))}
         </div>
-      </div>
-    </div>
+      </SculptedCard>
+     </div>
+    </ScreenScaffold>
   );
 }

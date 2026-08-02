@@ -363,7 +363,7 @@ export default function TripPlanner() {
           {visibleTrips.map((trip) => (
             <div
               key={trip.id}
-              className="group space-y-3 rounded-xl border border-border bg-card p-4"
+              className="group space-y-3 dark-card sculpted-raised rounded-xl p-4"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -472,7 +472,7 @@ export default function TripPlanner() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
           <Calendar className="h-8 w-8 text-muted-foreground" />
           <p className="max-w-sm text-sm text-muted-foreground">
             {tab === "active"
@@ -582,7 +582,7 @@ export default function TripPlanner() {
                   placeholder="Search dig sites, parks, shops to add..."
                 />
                 {filteredStops.length > 0 && (
-                  <div className="absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-border bg-card shadow-lg">
+                  <div className="absolute z-10 mt-1 max-h-60 w-full overflow-y-auto dark-card sculpted-raised rounded-lg shadow-lg">
                     {filteredStops.map((marker) => {
                       const meta = getTypeMeta(marker.type);
                       return (

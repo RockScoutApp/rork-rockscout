@@ -1,11 +1,14 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Heart, Plus, Loader2, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Heart, Plus, Loader2, AlertCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
+import { SculptedCard, SculptedButton, ScreenScaffold, TagChip } from "@/components/sculpted";
+
+const AQUA_HEX = "20 62% 65%";
+const CITRINE_HEX = "36 80% 58%";
 
 interface SpecimenDetail {
   id: string;
@@ -88,21 +91,14 @@ export default function SpecimenDetail() {
 
   if (error || !specimen) {
     return (
-      <div className="space-y-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate("/app/specimens")}
-          className="gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </Button>
-        <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-          <AlertCircle className="h-4 w-4" />
-          Specimen not found.
+      <ScreenScaffold title="Specimen Not Found" onBack={() => navigate("/app/specimens")}>
+        <div className="px-4 pb-8">
+          <SculptedCard accent="danger" className="flex items-center gap-2 p-4 text-sm" >
+            <AlertCircle className="h-4 w-4" style={{ color: "hsl(4 70% 55%)" }} />
+            <span style={{ color: "hsl(4 70% 55%)" }}>Specimen not found.</span>
+          </SculptedCard>
         </div>
-      </div>
+      </ScreenScaffold>
     );
   }
 
@@ -117,107 +113,98 @@ export default function SpecimenDetail() {
   ].filter((p) => p.value && p.value !== "—");
 
   return (
-    <div className="space-y-5">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => navigate("/app/specimens")}
-        className="gap-2"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to database
-      </Button>
+    <ScreenScaffold title={specimen.name} onBack={() => navigate("/app/specimens")}>
+      <div className="space-y-5 px-4 pb-8">
+        {specimen.image_url && (
+          <SculptedCard accent="citrine" glowing className="overflow-hidden">
+            <div className="relative overflow-hidden">
+              <OptimizedImage
+                src={specimen.image_url}
+                alt={specimen.name}
+                loading="eager"
+                className="max-h-[400px] w-full object-cover"
+              />
+            </div>
+          </SculptedCard>
+        )}
 
-      {specimen.image_url && (
-        <div className="relative overflow-hidden rounded-xl border border-border">
-          <OptimizedImage
-            src={specimen.image_url}
-            alt={specimen.name}
-            loading="eager"
-            className="max-h-[400px] w-full object-cover"
-          />
+        <div>
+          <p className="text-sm text-muted-foreground">{specimen.tagline}</p>
         </div>
-      )}
 
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-          {specimen.name}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">{specimen.tagline}</p>
+        {user && (
+          <div className="flex gap-3">
+            <SculptedButton
+              accent="citrine"
+              glowing
+              onClick={() => saveToCollection.mutate()}
+              disabled={saveToCollection.isPending}
+            >
+              <Plus className="h-4 w-4" />
+              {saveToCollection.isPending ? "Saving..." : "Add to Collection"}
+            </SculptedButton>
+            <SculptedButton
+              accent="amethyst"
+              onClick={() => addToWishlist.mutate()}
+              disabled={addToWishlist.isPending}
+            >
+              <Heart className="h-4 w-4" />
+              {addToWishlist.isPending ? "Saving..." : "Wishlist"}
+            </SculptedButton>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <SculptedCard accent="aqua" className="p-4">
+            <h3 className="mb-3 font-display text-sm font-bold" style={{ color: `hsl(${AQUA_HEX})` }}>
+              Physical Properties
+            </h3>
+            <dl className="space-y-2">
+              {properties.map((prop) => (
+                <div key={prop.label} className="flex justify-between gap-4 text-sm">
+                  <dt className="shrink-0 text-muted-foreground">{prop.label}</dt>
+                  <dd className="text-right font-bold text-foreground">
+                    {prop.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </SculptedCard>
+
+          {specimen.description && (
+            <SculptedCard accent="citrine" className="p-4">
+              <h3 className="mb-2 font-display text-sm font-bold" style={{ color: `hsl(${CITRINE_HEX})` }}>
+                Description
+              </h3>
+              <p className="text-sm leading-relaxed text-[hsl(var(--text-mid))]">
+                {specimen.description}
+              </p>
+            </SculptedCard>
+          )}
+
+          {specimen.formation && (
+            <SculptedCard accent="cyan" className="p-4 md:col-span-2">
+              <h3 className="mb-2 font-display text-sm font-bold" style={{ color: `hsl(174 100% 45%)` }}>
+                Formation
+              </h3>
+              <p className="text-sm leading-relaxed text-[hsl(var(--text-mid))]">
+                {specimen.formation}
+              </p>
+            </SculptedCard>
+          )}
+
+          {specimen.where_found && (
+            <SculptedCard accent="success" className="p-4 md:col-span-2">
+              <h3 className="mb-2 font-display text-sm font-bold" style={{ color: "hsl(147 49% 55%)" }}>
+                Where It&apos;s Found
+              </h3>
+              <p className="text-sm leading-relaxed text-[hsl(var(--text-mid))]">
+                {specimen.where_found}
+              </p>
+            </SculptedCard>
+          )}
+        </div>
       </div>
-
-      {user && (
-        <div className="flex gap-3">
-          <Button
-            onClick={() => saveToCollection.mutate()}
-            disabled={saveToCollection.isPending}
-            className="gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            {saveToCollection.isPending ? "Saving..." : "Add to Collection"}
-          </Button>
-          <Button
-            onClick={() => addToWishlist.mutate()}
-            disabled={addToWishlist.isPending}
-            variant="outline"
-            className="gap-2"
-          >
-            <Heart className="h-4 w-4" />
-            {addToWishlist.isPending ? "Saving..." : "Wishlist"}
-          </Button>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card p-4">
-          <h3 className="mb-3 font-display text-sm font-semibold text-foreground">
-            Physical Properties
-          </h3>
-          <dl className="space-y-2">
-            {properties.map((prop) => (
-              <div key={prop.label} className="flex justify-between gap-4 text-sm">
-                <dt className="shrink-0 text-muted-foreground">{prop.label}</dt>
-                <dd className="text-right font-medium text-foreground">
-                  {prop.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-
-        {specimen.description && (
-          <div className="rounded-xl border border-border bg-card p-4">
-            <h3 className="mb-2 font-display text-sm font-semibold text-foreground">
-              Description
-            </h3>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {specimen.description}
-            </p>
-          </div>
-        )}
-
-        {specimen.formation && (
-          <div className="rounded-xl border border-border bg-card p-4 md:col-span-2">
-            <h3 className="mb-2 font-display text-sm font-semibold text-foreground">
-              Formation
-            </h3>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {specimen.formation}
-            </p>
-          </div>
-        )}
-
-        {specimen.where_found && (
-          <div className="rounded-xl border border-border bg-card p-4 md:col-span-2">
-            <h3 className="mb-2 font-display text-sm font-semibold text-foreground">
-              Where It&apos;s Found
-            </h3>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {specimen.where_found}
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
+    </ScreenScaffold>
   );
 }

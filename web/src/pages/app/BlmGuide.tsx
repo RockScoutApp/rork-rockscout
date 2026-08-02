@@ -194,7 +194,7 @@ export default function BlmGuide() {
           return (
             <div
               key={`${site.type}-${site.id}`}
-              className="space-y-2 rounded-xl border border-border bg-card p-4"
+              className="space-y-2 dark-card sculpted-raised rounded-xl p-4"
             >
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-display text-sm font-semibold text-foreground">
@@ -249,7 +249,7 @@ export default function BlmGuide() {
       </div>
 
       {filtered.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
           <Mountain className="h-8 w-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
             No BLM sites found. Try a different search.

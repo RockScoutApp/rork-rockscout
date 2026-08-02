@@ -10,6 +10,9 @@ import {
   getTypeMeta,
   type DigSite,
 } from "@/data/locations";
+import { SculptedCard, ScreenScaffold, TagChip } from "@/components/sculpted";
+
+const AQUA_HEX = "20 62% 65%";
 
 interface LocationEntry {
   id: string;
@@ -80,15 +83,11 @@ export default function Locations() {
   }, [search, typeFilter]);
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-          Dig Sites & Locations
-        </h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          {ALL_LOCATIONS.length} collecting sites, mines, parks, and shops
-        </p>
-      </div>
+    <ScreenScaffold title="Dig Sites & Locations" onBack={() => window.history.back()}>
+     <div className="space-y-5 px-4 pb-8">
+      <p className="text-sm text-muted-foreground">
+        {ALL_LOCATIONS.length} collecting sites, mines, parks, and shops
+      </p>
 
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -128,43 +127,31 @@ export default function Locations() {
         {filtered.map((loc) => {
           const meta = getTypeMeta(loc.markerType);
           return (
-            <button
-              key={loc.id}
-              onClick={() => navigate(`/app/locations/${loc.id}`)}
-              className="group flex flex-col gap-2 rounded-xl border border-border bg-card p-4 text-left transition-all hover:border-primary/40"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-2xl">{meta.emoji}</span>
-                <span
-                  className="rounded-full px-2 py-0.5 text-[10px] font-medium"
-                  style={{ backgroundColor: `${meta.color}20`, color: meta.color }}
-                >
-                  {getTypeLabel(loc.markerType)}
-                </span>
+            <SculptedCard key={loc.id} accent="aqua" interactive className="overflow-hidden"
+              onClick={() => navigate(`/app/locations/${loc.id}`)}>
+              <div className="flex flex-col gap-2 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-2xl">{meta.emoji}</span>
+                  <TagChip accent={meta.color}>{getTypeLabel(loc.markerType)}</TagChip>
+                </div>
+                <h3 className="font-display text-sm font-bold text-foreground">{loc.name}</h3>
+                <p className="flex items-center gap-1 text-xs" style={{ color: `hsl(${AQUA_HEX})` }}>
+                  <MapPin className="h-3 w-3" />{loc.region}
+                </p>
+                <p className="line-clamp-2 text-xs text-[hsl(var(--text-mid))]">{loc.summary}</p>
               </div>
-              <h3 className="font-display text-sm font-semibold text-foreground">
-                {loc.name}
-              </h3>
-              <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                <MapPin className="h-3 w-3" />
-                {loc.region}
-              </p>
-              <p className="line-clamp-2 text-xs text-muted-foreground">
-                {loc.summary}
-              </p>
-            </button>
+            </SculptedCard>
           );
         })}
       </div>
 
       {filtered.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
-          <MapPin className="h-8 w-8 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            No locations found. Try a different search or filter.
-          </p>
-        </div>
+        <SculptedCard accent="aqua" className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+          <MapPin className="h-10 w-10 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">No locations found. Try a different search or filter.</p>
+        </SculptedCard>
       )}
-    </div>
+     </div>
+    </ScreenScaffold>
   );
 }

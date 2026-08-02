@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { Mail, MessageSquare, Send, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { SculptedCard, SculptedButton, ScreenScaffold } from "@/components/sculpted";
+
+const AQUA_HEX = "20 62% 65%";
+const CITRINE_HEX = "36 80% 58%";
 
 export default function ContactUs() {
   const { user } = useAuth();
@@ -21,7 +24,6 @@ export default function ContactUs() {
     }
     setSending(true);
     try {
-      // Open the user's email client with a pre-filled message
       const body = encodeURIComponent(
         `${message}\n\n---\nFrom: ${user?.email ?? "Unknown"}\nAccount ID: ${user?.id ?? "N/A"}`,
       );
@@ -36,71 +38,84 @@ export default function ContactUs() {
   };
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-          Contact Us
-        </h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
+    <ScreenScaffold title="Contact Us" onBack={() => window.history.back()}>
+      <div className="space-y-5 px-4 pb-8">
+        <p className="text-sm text-muted-foreground">
           Questions, feedback, or need help? We're here.
         </p>
-      </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <Mail className="h-4 w-4 text-primary" />
-            Email
-          </div>
-          <p className="mt-2 text-sm text-muted-foreground">
-            support@rockscout.app
-          </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <SculptedCard accent="citrine" className="p-4">
+            <div className="flex items-center gap-3">
+              <div
+                className="icon-badge flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                style={{ ["--badge-accent" as string]: CITRINE_HEX, color: `hsl(${CITRINE_HEX})` }}
+              >
+                <Mail className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-foreground">Email</p>
+                <p className="text-sm text-[hsl(var(--text-mid))]">support@rockscout.app</p>
+              </div>
+            </div>
+          </SculptedCard>
+          <SculptedCard accent="aqua" className="p-4">
+            <div className="flex items-center gap-3">
+              <div
+                className="icon-badge flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+                style={{ ["--badge-accent" as string]: AQUA_HEX, color: `hsl(${AQUA_HEX})` }}
+              >
+                <MessageSquare className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-foreground">Response Time</p>
+                <p className="text-sm text-[hsl(var(--text-mid))]">Usually within 24–48 hours</p>
+              </div>
+            </div>
+          </SculptedCard>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <MessageSquare className="h-4 w-4 text-primary" />
-            Response Time
-          </div>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Usually within 24–48 hours
-          </p>
-        </div>
-      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-border bg-card p-5">
-        <div className="space-y-1.5">
-          <Label htmlFor="subject">Subject</Label>
-          <Input
-            id="subject"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            placeholder="What do you need help with?"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="message">Message</Label>
-          <Textarea
-            id="message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Describe your issue or feedback..."
-            rows={6}
-          />
-        </div>
-        <Button type="submit" disabled={sending} className="gap-2">
-          {sending ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Opening email...
-            </>
-          ) : (
-            <>
-              <Send className="h-4 w-4" />
-              Send Message
-            </>
-          )}
-        </Button>
-      </form>
-    </div>
+        <SculptedCard accent="citrine" className="space-y-4 p-5">
+          <div className="space-y-1.5">
+            <Label htmlFor="subject">Subject</Label>
+            <Input
+              id="subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="What do you need help with?"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="message">Message</Label>
+            <Textarea
+              id="message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Describe your issue or feedback..."
+              rows={6}
+            />
+          </div>
+          <SculptedButton
+            accent="citrine"
+            glowing
+            className="w-full"
+            disabled={sending}
+            onClick={(e) => handleSubmit(e as unknown as React.FormEvent)}
+          >
+            {sending ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Opening email...
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                Send Message
+              </>
+            )}
+          </SculptedButton>
+        </SculptedCard>
+      </div>
+    </ScreenScaffold>
   );
 }

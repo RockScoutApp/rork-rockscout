@@ -147,7 +147,7 @@ export default function FieldCaptures() {
           {captures.map((capture) => (
             <div
               key={capture.id}
-              className="group overflow-hidden rounded-xl border border-border bg-card"
+              className="group overflow-hidden dark-card sculpted-raised rounded-xl"
             >
               <div className="relative aspect-square w-full overflow-hidden bg-muted/30">
                 <OptimizedImage
@@ -211,7 +211,7 @@ export default function FieldCaptures() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
           <Camera className="h-8 w-8 text-muted-foreground" />
           <p className="max-w-sm text-sm text-muted-foreground">
             No field captures yet. Use the Field Camera to capture and save

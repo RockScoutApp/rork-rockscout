@@ -1,0 +1,172 @@
+/**
+ * Complete periodic table data — all 118 elements with category, period, group,
+ * and rock/mineral relevance.
+ */
+export interface Element {
+  number: number;
+  symbol: string;
+  name: string;
+  category: ElementCategory;
+  period: number;
+  group: number;
+  rockRelevance?: string;
+}
+
+export type ElementCategory =
+  | "alkali"
+  | "alkaline"
+  | "transition"
+  | "post-metal"
+  | "metalloid"
+  | "nonmetal"
+  | "halogen"
+  | "noble"
+  | "lanthanide"
+  | "actinide";
+
+export const CATEGORY_COLORS: Record<ElementCategory, string> = {
+  nonmetal: "#5CC98C",
+  noble: "#9B7BD8",
+  alkali: "#E5683C",
+  alkaline: "#D9B26A",
+  metalloid: "#6FA8C7",
+  halogen: "#E8A33D",
+  "post-metal": "#B87333",
+  transition: "#DC9A6E",
+  lanthanide: "#C97BD8",
+  actinide: "#E2574C",
+};
+
+export const CATEGORY_LABELS: Record<ElementCategory, string> = {
+  nonmetal: "Nonmetal",
+  noble: "Noble Gas",
+  alkali: "Alkali Metal",
+  alkaline: "Alkaline Earth",
+  metalloid: "Metalloid",
+  halogen: "Halogen",
+  "post-metal": "Post-Transition Metal",
+  transition: "Transition Metal",
+  lanthanide: "Lanthanide",
+  actinide: "Actinide",
+};
+
+export const ELEMENTS: Element[] = [
+  { number: 1, symbol: "H", name: "Hydrogen", category: "nonmetal", period: 1, group: 1, rockRelevance: "Water and organic minerals" },
+  { number: 2, symbol: "He", name: "Helium", category: "noble", period: 1, group: 18 },
+  { number: 3, symbol: "Li", name: "Lithium", category: "alkali", period: 2, group: 1, rockRelevance: "Petalite, spodumene, lepidolite" },
+  { number: 4, symbol: "Be", name: "Beryllium", category: "alkaline", period: 2, group: 2, rockRelevance: "Beryl, emerald, aquamarine" },
+  { number: 5, symbol: "B", name: "Boron", category: "metalloid", period: 2, group: 13, rockRelevance: "Borax, ulexite, kernite" },
+  { number: 6, symbol: "C", name: "Carbon", category: "nonmetal", period: 2, group: 14, rockRelevance: "Diamond, graphite, calcite" },
+  { number: 7, symbol: "N", name: "Nitrogen", category: "nonmetal", period: 2, group: 15, rockRelevance: "Nitrates like saltpeter" },
+  { number: 8, symbol: "O", name: "Oxygen", category: "nonmetal", period: 2, group: 16, rockRelevance: "Most abundant element in Earth's crust" },
+  { number: 9, symbol: "F", name: "Fluorine", category: "halogen", period: 2, group: 17, rockRelevance: "Fluorite, fluoroapatite" },
+  { number: 10, symbol: "Ne", name: "Neon", category: "noble", period: 2, group: 18 },
+  { number: 11, symbol: "Na", name: "Sodium", category: "alkali", period: 3, group: 1, rockRelevance: "Halite, sodalite, albite" },
+  { number: 12, symbol: "Mg", name: "Magnesium", category: "alkaline", period: 3, group: 2, rockRelevance: "Dolomite, olivine, magnesite" },
+  { number: 13, symbol: "Al", name: "Aluminum", category: "post-metal", period: 3, group: 13, rockRelevance: "Bauxite, corundum, feldspar" },
+  { number: 14, symbol: "Si", name: "Silicon", category: "metalloid", period: 3, group: 14, rockRelevance: "Quartz, silicate minerals" },
+  { number: 15, symbol: "P", name: "Phosphorus", category: "nonmetal", period: 3, group: 15, rockRelevance: "Apatite, turquoise, phosphates" },
+  { number: 16, symbol: "S", name: "Sulfur", category: "nonmetal", period: 3, group: 16, rockRelevance: "Pyrite, gypsum, galena" },
+  { number: 17, symbol: "Cl", name: "Chlorine", category: "halogen", period: 3, group: 17, rockRelevance: "Halite, sylvite" },
+  { number: 18, symbol: "Ar", name: "Argon", category: "noble", period: 3, group: 18 },
+  { number: 19, symbol: "K", name: "Potassium", category: "alkali", period: 4, group: 1, rockRelevance: "Orthoclase, muscovite, sylvite" },
+  { number: 20, symbol: "Ca", name: "Calcium", category: "alkaline", period: 4, group: 2, rockRelevance: "Calcite, gypsum, fluorite" },
+  { number: 21, symbol: "Sc", name: "Scandium", category: "transition", period: 4, group: 3 },
+  { number: 22, symbol: "Ti", name: "Titanium", category: "transition", period: 4, group: 4, rockRelevance: "Ilmenite, rutile, titanite" },
+  { number: 23, symbol: "V", name: "Vanadium", category: "transition", period: 4, group: 5, rockRelevance: "Vanadinite, carnotite" },
+  { number: 24, symbol: "Cr", name: "Chromium", category: "transition", period: 4, group: 6, rockRelevance: "Chromite, uvarovite garnet" },
+  { number: 25, symbol: "Mn", name: "Manganese", category: "transition", period: 4, group: 7, rockRelevance: "Rhodochrosite, pyrolusite, rhodonite" },
+  { number: 26, symbol: "Fe", name: "Iron", category: "transition", period: 4, group: 8, rockRelevance: "Hematite, magnetite, pyrite" },
+  { number: 27, symbol: "Co", name: "Cobalt", category: "transition", period: 4, group: 9, rockRelevance: "Cobaltite, erythrite" },
+  { number: 28, symbol: "Ni", name: "Nickel", category: "transition", period: 4, group: 10, rockRelevance: "Nickeline, garnierite" },
+  { number: 29, symbol: "Cu", name: "Copper", category: "transition", period: 4, group: 11, rockRelevance: "Native copper, malachite, azurite" },
+  { number: 30, symbol: "Zn", name: "Zinc", category: "transition", period: 4, group: 12, rockRelevance: "Sphalerite, smithsonite" },
+  { number: 31, symbol: "Ga", name: "Gallium", category: "post-metal", period: 4, group: 13 },
+  { number: 32, symbol: "Ge", name: "Germanium", category: "metalloid", period: 4, group: 14 },
+  { number: 33, symbol: "As", name: "Arsenic", category: "metalloid", period: 4, group: 15, rockRelevance: "Arsenopyrite, realgar, orpiment" },
+  { number: 34, symbol: "Se", name: "Selenium", category: "nonmetal", period: 4, group: 16 },
+  { number: 35, symbol: "Br", name: "Bromine", category: "halogen", period: 4, group: 17 },
+  { number: 36, symbol: "Kr", name: "Krypton", category: "noble", period: 4, group: 18 },
+  { number: 37, symbol: "Rb", name: "Rubidium", category: "alkali", period: 5, group: 1 },
+  { number: 38, symbol: "Sr", name: "Strontium", category: "alkaline", period: 5, group: 2, rockRelevance: "Celestite, strontianite" },
+  { number: 39, symbol: "Y", name: "Yttrium", category: "transition", period: 5, group: 3, rockRelevance: "Xenotime, garnet varieties" },
+  { number: 40, symbol: "Zr", name: "Zirconium", category: "transition", period: 5, group: 4, rockRelevance: "Zircon, baddeleyite" },
+  { number: 41, symbol: "Nb", name: "Niobium", category: "transition", period: 5, group: 5, rockRelevance: "Columbite, pyrochlore" },
+  { number: 42, symbol: "Mo", name: "Molybdenum", category: "transition", period: 5, group: 6, rockRelevance: "Molybdenite, wulfenite" },
+  { number: 43, symbol: "Tc", name: "Technetium", category: "transition", period: 5, group: 7 },
+  { number: 44, symbol: "Ru", name: "Ruthenium", category: "transition", period: 5, group: 8 },
+  { number: 45, symbol: "Rh", name: "Rhodium", category: "transition", period: 5, group: 9 },
+  { number: 46, symbol: "Pd", name: "Palladium", category: "transition", period: 5, group: 10 },
+  { number: 47, symbol: "Ag", name: "Silver", category: "transition", period: 5, group: 11, rockRelevance: "Native silver, acanthite, chlorargyrite" },
+  { number: 48, symbol: "Cd", name: "Cadmium", category: "transition", period: 5, group: 12, rockRelevance: "Greenockite, sphalerite trace" },
+  { number: 49, symbol: "In", name: "Indium", category: "post-metal", period: 5, group: 13 },
+  { number: 50, symbol: "Sn", name: "Tin", category: "post-metal", period: 5, group: 14, rockRelevance: "Cassiterite, stannite" },
+  { number: 51, symbol: "Sb", name: "Antimony", category: "metalloid", period: 5, group: 15, rockRelevance: "Stibnite, valentinite" },
+  { number: 52, symbol: "Te", name: "Tellurium", category: "metalloid", period: 5, group: 16 },
+  { number: 53, symbol: "I", name: "Iodine", category: "halogen", period: 5, group: 17 },
+  { number: 54, symbol: "Xe", name: "Xenon", category: "noble", period: 5, group: 18 },
+  { number: 55, symbol: "Cs", name: "Cesium", category: "alkali", period: 6, group: 1, rockRelevance: "Pollucite, beryl trace" },
+  { number: 56, symbol: "Ba", name: "Barium", category: "alkaline", period: 6, group: 2, rockRelevance: "Barite, witherite" },
+  { number: 57, symbol: "La", name: "Lanthanum", category: "lanthanide", period: 6, group: 3, rockRelevance: "Monazite, bastnäsite" },
+  { number: 58, symbol: "Ce", name: "Cerium", category: "lanthanide", period: 6, group: 3, rockRelevance: "Monazite, cerite" },
+  { number: 59, symbol: "Pr", name: "Praseodymium", category: "lanthanide", period: 6, group: 3 },
+  { number: 60, symbol: "Nd", name: "Neodymium", category: "lanthanide", period: 6, group: 3 },
+  { number: 61, symbol: "Pm", name: "Promethium", category: "lanthanide", period: 6, group: 3 },
+  { number: 62, symbol: "Sm", name: "Samarium", category: "lanthanide", period: 6, group: 3 },
+  { number: 63, symbol: "Eu", name: "Europium", category: "lanthanide", period: 6, group: 3 },
+  { number: 64, symbol: "Gd", name: "Gadolinium", category: "lanthanide", period: 6, group: 3 },
+  { number: 65, symbol: "Tb", name: "Terbium", category: "lanthanide", period: 6, group: 3 },
+  { number: 66, symbol: "Dy", name: "Dysprosium", category: "lanthanide", period: 6, group: 3 },
+  { number: 67, symbol: "Ho", name: "Holmium", category: "lanthanide", period: 6, group: 3 },
+  { number: 68, symbol: "Er", name: "Erbium", category: "lanthanide", period: 6, group: 3 },
+  { number: 69, symbol: "Tm", name: "Thulium", category: "lanthanide", period: 6, group: 3 },
+  { number: 70, symbol: "Yb", name: "Ytterbium", category: "lanthanide", period: 6, group: 3 },
+  { number: 71, symbol: "Lu", name: "Lutetium", category: "lanthanide", period: 6, group: 3 },
+  { number: 72, symbol: "Hf", name: "Hafnium", category: "transition", period: 6, group: 4 },
+  { number: 73, symbol: "Ta", name: "Tantalum", category: "transition", period: 6, group: 5, rockRelevance: "Tantalite, columbite" },
+  { number: 74, symbol: "W", name: "Tungsten", category: "transition", period: 6, group: 6, rockRelevance: "Wolframite, scheelite" },
+  { number: 75, symbol: "Re", name: "Rhenium", category: "transition", period: 6, group: 7 },
+  { number: 76, symbol: "Os", name: "Osmium", category: "transition", period: 6, group: 8 },
+  { number: 77, symbol: "Ir", name: "Iridium", category: "transition", period: 6, group: 9 },
+  { number: 78, symbol: "Pt", name: "Platinum", category: "transition", period: 6, group: 10, rockRelevance: "Native platinum, cooperite" },
+  { number: 79, symbol: "Au", name: "Gold", category: "transition", period: 6, group: 11, rockRelevance: "Native gold, calaverite, sylvanite" },
+  { number: 80, symbol: "Hg", name: "Mercury", category: "transition", period: 6, group: 12, rockRelevance: "Cinnabar, native mercury" },
+  { number: 81, symbol: "Tl", name: "Thallium", category: "post-metal", period: 6, group: 13 },
+  { number: 82, symbol: "Pb", name: "Lead", category: "post-metal", period: 6, group: 14, rockRelevance: "Galena, anglesite, cerussite" },
+  { number: 83, symbol: "Bi", name: "Bismuth", category: "post-metal", period: 6, group: 15, rockRelevance: "Bismuthinite, native bismuth" },
+  { number: 84, symbol: "Po", name: "Polonium", category: "post-metal", period: 6, group: 16 },
+  { number: 85, symbol: "At", name: "Astatine", category: "halogen", period: 6, group: 17 },
+  { number: 86, symbol: "Rn", name: "Radon", category: "noble", period: 6, group: 18 },
+  { number: 87, symbol: "Fr", name: "Francium", category: "alkali", period: 7, group: 1 },
+  { number: 88, symbol: "Ra", name: "Radium", category: "alkaline", period: 7, group: 2 },
+  { number: 89, symbol: "Ac", name: "Actinium", category: "actinide", period: 7, group: 3 },
+  { number: 90, symbol: "Th", name: "Thorium", category: "actinide", period: 7, group: 3, rockRelevance: "Thorite, monazite trace" },
+  { number: 91, symbol: "Pa", name: "Protactinium", category: "actinide", period: 7, group: 3 },
+  { number: 92, symbol: "U", name: "Uranium", category: "actinide", period: 7, group: 3, rockRelevance: "Uraninite, autunite, carnotite" },
+  { number: 93, symbol: "Np", name: "Neptunium", category: "actinide", period: 7, group: 3 },
+  { number: 94, symbol: "Pu", name: "Plutonium", category: "actinide", period: 7, group: 3 },
+  { number: 95, symbol: "Am", name: "Americium", category: "actinide", period: 7, group: 3 },
+  { number: 96, symbol: "Cm", name: "Curium", category: "actinide", period: 7, group: 3 },
+  { number: 97, symbol: "Bk", name: "Berkelium", category: "actinide", period: 7, group: 3 },
+  { number: 98, symbol: "Cf", name: "Californium", category: "actinide", period: 7, group: 3 },
+  { number: 99, symbol: "Es", name: "Einsteinium", category: "actinide", period: 7, group: 3 },
+  { number: 100, symbol: "Fm", name: "Fermium", category: "actinide", period: 7, group: 3 },
+  { number: 101, symbol: "Md", name: "Mendelevium", category: "actinide", period: 7, group: 3 },
+  { number: 102, symbol: "No", name: "Nobelium", category: "actinide", period: 7, group: 3 },
+  { number: 103, symbol: "Lr", name: "Lawrencium", category: "actinide", period: 7, group: 3 },
+  { number: 104, symbol: "Rf", name: "Rutherfordium", category: "transition", period: 7, group: 4 },
+  { number: 105, symbol: "Db", name: "Dubnium", category: "transition", period: 7, group: 5 },
+  { number: 106, symbol: "Sg", name: "Seaborgium", category: "transition", period: 7, group: 6 },
+  { number: 107, symbol: "Bh", name: "Bohrium", category: "transition", period: 7, group: 7 },
+  { number: 108, symbol: "Hs", name: "Hassium", category: "transition", period: 7, group: 8 },
+  { number: 109, symbol: "Mt", name: "Meitnerium", category: "transition", period: 7, group: 9 },
+  { number: 110, symbol: "Ds", name: "Darmstadtium", category: "transition", period: 7, group: 10 },
+  { number: 111, symbol: "Rg", name: "Roentgenium", category: "transition", period: 7, group: 11 },
+  { number: 112, symbol: "Cn", name: "Copernicium", category: "transition", period: 7, group: 12 },
+  { number: 113, symbol: "Nh", name: "Nihonium", category: "post-metal", period: 7, group: 13 },
+  { number: 114, symbol: "Fl", name: "Flerovium", category: "post-metal", period: 7, group: 14 },
+  { number: 115, symbol: "Mc", name: "Moscovium", category: "post-metal", period: 7, group: 15 },
+  { number: 116, symbol: "Lv", name: "Livermorium", category: "post-metal", period: 7, group: 16 },
+  { number: 117, symbol: "Ts", name: "Tennessine", category: "halogen", period: 7, group: 17 },
+  { number: 118, symbol: "Og", name: "Oganesson", category: "noble", period: 7, group: 18 },
+];

@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Search, X, Globe, Navigation } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SculptedCard, ScreenScaffold, TagChip } from "@/components/sculpted";
+
+const AQUA_HEX = "20 62% 65%";
+const CITRINE_HEX = "36 80% 58%";
 
 interface NaturalWonder {
   id: string;
@@ -217,15 +221,11 @@ export default function NaturalWonders() {
   };
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-          Natural Wonders
-        </h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          {WONDERS.length} world-famous geological landmarks and the stories behind them
-        </p>
-      </div>
+    <ScreenScaffold title="Natural Wonders" onBack={() => window.history.back()}>
+     <div className="space-y-5 px-4 pb-8">
+      <p className="text-sm text-muted-foreground">
+        {WONDERS.length} world-famous geological landmarks and the stories behind them
+      </p>
 
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -265,81 +265,49 @@ export default function NaturalWonders() {
         {filtered.map((w) => {
           const color = TYPE_COLORS[w.type] ?? "#666";
           return (
-            <div
-              key={w.id}
-              className="space-y-3 rounded-xl border border-border bg-card p-4"
-            >
+            <SculptedCard key={w.id} accent="aqua" className="space-y-3 p-4">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <Globe className="h-5 w-5 text-muted-foreground" />
-                  <h3 className="font-display text-base font-semibold text-foreground">
-                    {w.name}
-                  </h3>
+                  <Globe className="h-5 w-5" style={{ color: `hsl(${AQUA_HEX})` }} />
+                  <h3 className="font-display text-sm font-bold text-foreground">{w.name}</h3>
                 </div>
-                <span
-                  className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium"
-                  style={{ backgroundColor: `${color}20`, color }}
-                >
-                  {w.type}
-                </span>
+                <TagChip accent={color}>{w.type}</TagChip>
               </div>
-
-              <p className="text-xs text-muted-foreground">{w.location}</p>
-
-              <p className="text-sm leading-relaxed text-muted-foreground">
-                {w.description}
-              </p>
-
+              <p className="text-xs" style={{ color: `hsl(${CITRINE_HEX})` }}>{w.location}</p>
+              <p className="text-xs leading-relaxed text-[hsl(var(--text-mid))]">{w.description}</p>
               <div>
-                <p className="mb-1 text-xs font-medium text-foreground">
-                  How it formed
-                </p>
-                <p className="text-xs leading-relaxed text-muted-foreground">
-                  {w.formation}
-                </p>
+                <p className="mb-1 text-xs font-bold text-foreground">How it formed</p>
+                <p className="text-xs leading-relaxed text-[hsl(var(--text-mid))]">{w.formation}</p>
               </div>
-
               <div>
-                <p className="mb-1 text-xs font-medium text-foreground">
-                  Rocks to find
-                </p>
+                <p className="mb-1 text-xs font-bold text-foreground">Rocks to find</p>
                 <div className="flex flex-wrap gap-1.5">
                   {w.rocksToFind.map((rock) => (
-                    <span
-                      key={rock}
-                      className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground"
-                    >
-                      {rock}
-                    </span>
+                    <TagChip key={rock} accent={`hsl(${AQUA_HEX})`}>{rock}</TagChip>
                   ))}
                 </div>
               </div>
-
               <div className="rounded-lg bg-muted/30 p-2.5">
                 <ul className="space-y-1">
                   {w.funFacts.map((fact, i) => (
-                    <li
-                      key={i}
-                      className="flex items-start gap-1.5 text-xs text-muted-foreground"
-                    >
-                      <span className="mt-0.5 text-primary">•</span>
+                    <li key={i} className="flex items-start gap-1.5 text-xs text-[hsl(var(--text-mid))]">
+                      <span className="mt-0.5" style={{ color: `hsl(${CITRINE_HEX})` }}>•</span>
                       {fact}
                     </li>
                   ))}
                 </ul>
               </div>
-
-              <button
-                onClick={() => openInMaps(w)}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border py-2 text-xs font-medium text-primary transition-colors hover:border-primary/40"
-              >
+              <button onClick={() => openInMaps(w)}
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border py-2 text-xs font-medium transition-colors hover:border-primary/40"
+                style={{ color: `hsl(${CITRINE_HEX})` }}>
                 <Navigation className="h-3.5 w-3.5" />
                 View on map
               </button>
-            </div>
+            </SculptedCard>
           );
         })}
       </div>
-    </div>
+     </div>
+    </ScreenScaffold>
   );
 }

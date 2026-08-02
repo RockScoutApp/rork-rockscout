@@ -245,7 +245,7 @@ export default function UserProfile() {
       )}
 
       {/* Profile header */}
-      <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-card p-6 text-center sm:flex-row sm:text-left">
+      <div className="flex flex-col items-center gap-4 dark-card sculpted-raised rounded-xl p-6 text-center sm:flex-row sm:text-left">
         <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-primary/10 text-4xl">
           {profile.avatar_emoji}
         </div>
@@ -322,21 +322,21 @@ export default function UserProfile() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-xl border border-border bg-card p-4 text-center">
+        <div className="dark-card sculpted-raised rounded-xl p-4 text-center">
           <Gem className="mx-auto mb-1 h-5 w-5 text-primary" />
           <p className="font-display text-xl font-bold text-foreground">
             {counts?.collection_count ?? 0}
           </p>
           <p className="text-xs text-muted-foreground">Collection</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4 text-center">
+        <div className="dark-card sculpted-raised rounded-xl p-4 text-center">
           <Heart className="mx-auto mb-1 h-5 w-5 text-primary" />
           <p className="font-display text-xl font-bold text-foreground">
             {counts?.wishlist_count ?? 0}
           </p>
           <p className="text-xs text-muted-foreground">Wishlist</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4 text-center">
+        <div className="dark-card sculpted-raised rounded-xl p-4 text-center">
           <MapPin className="mx-auto mb-1 h-5 w-5 text-primary" />
           <p className="font-display text-xl font-bold text-foreground">
             {counts?.favorite_spots_count ?? 0}
@@ -349,7 +349,7 @@ export default function UserProfile() {
       {isOwnProfile && (
         <button
           onClick={() => navigate("/app/achievements")}
-          className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-primary/40"
+          className="flex w-full items-center gap-3 dark-card sculpted-raised rounded-xl p-4 text-left transition-colors hover:border-primary/40"
         >
           <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/15">
             <Award className="h-5 w-5 text-primary" />

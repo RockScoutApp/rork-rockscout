@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { Search, X, Hexagon } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { SculptedCard, ScreenScaffold, TagChip } from "@/components/sculpted";
+
+const AQUA_HEX = "20 62% 65%";
+const CITRINE_HEX = "36 80% 58%";
 
 interface CrystalSystem {
   name: string;
@@ -90,15 +94,11 @@ export default function CrystalSystems() {
   );
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-          Crystal Systems
-        </h1>
-        <p className="mt-0.5 text-sm text-muted-foreground">
-          The 7 crystal systems — how minerals are classified by their atomic structure
-        </p>
-      </div>
+    <ScreenScaffold title="Crystal Systems" onBack={() => window.history.back()}>
+     <div className="space-y-5 px-4 pb-8">
+      <p className="text-sm text-muted-foreground">
+        The 7 crystal systems — how minerals are classified by their atomic structure
+      </p>
 
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -120,66 +120,44 @@ export default function CrystalSystems() {
 
       <div className="space-y-3">
         {filtered.map((system) => (
-          <div
-            key={system.name}
-            className="space-y-3 rounded-xl border border-border bg-card p-4"
-          >
+          <SculptedCard key={system.name} accent="amethyst" className="space-y-3 p-4">
             <div className="flex items-start gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-2xl">
-                {system.emoji}
-              </div>
+              <div className="glowing-border flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl" style={{ ["--glow-color" as string]: "265 47% 67%" }}>{system.emoji}</div>
               <div className="min-w-0 flex-1">
-                <h3 className="font-display text-base font-semibold text-foreground">
-                  {system.name}
-                </h3>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {system.keyFeature}
-                </p>
+                <h3 className="font-display text-sm font-bold text-foreground">{system.name}</h3>
+                <p className="mt-0.5 text-xs text-[hsl(var(--text-mid))]">{system.keyFeature}</p>
               </div>
             </div>
-
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              {system.description}
-            </p>
-
+            <p className="text-xs leading-relaxed text-[hsl(var(--text-mid))]">{system.description}</p>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               <div className="rounded-lg bg-muted/30 px-3 py-2">
-                <p className="text-xs font-medium text-foreground">Axes</p>
-                <p className="text-xs text-muted-foreground">{system.axes}</p>
+                <p className="text-xs font-bold text-foreground">Axes</p>
+                <p className="text-xs text-[hsl(var(--text-mid))]">{system.axes}</p>
               </div>
               <div className="rounded-lg bg-muted/30 px-3 py-2">
-                <p className="text-xs font-medium text-foreground">Angles</p>
-                <p className="text-xs text-muted-foreground">{system.angles}</p>
+                <p className="text-xs font-bold text-foreground">Angles</p>
+                <p className="text-xs text-[hsl(var(--text-mid))]">{system.angles}</p>
               </div>
             </div>
-
             <div>
-              <p className="mb-1 text-xs font-medium text-foreground">
-                Common minerals
-              </p>
+              <p className="mb-1 text-xs font-bold text-foreground">Common minerals</p>
               <div className="flex flex-wrap gap-1.5">
                 {system.examples.map((ex) => (
-                  <span
-                    key={ex}
-                    className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
-                  >
-                    {ex}
-                  </span>
+                  <TagChip key={ex} accent={`hsl(${AQUA_HEX})`}>{ex}</TagChip>
                 ))}
               </div>
             </div>
-          </div>
+          </SculptedCard>
         ))}
       </div>
 
       {filtered.length === 0 && (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card py-12 text-center">
-          <Hexagon className="h-8 w-8 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            No crystal systems found. Try a different search.
-          </p>
-        </div>
+        <SculptedCard accent="amethyst" className="flex flex-col items-center justify-center gap-3 py-16 text-center">
+          <Hexagon className="h-10 w-10 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">No crystal systems found. Try a different search.</p>
+        </SculptedCard>
       )}
-    </div>
+     </div>
+    </ScreenScaffold>
   );
 }
