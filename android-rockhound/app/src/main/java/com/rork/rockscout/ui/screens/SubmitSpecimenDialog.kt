@@ -76,6 +76,8 @@ import com.rork.rockscout.ui.components.SculptedTextButton
 import com.rork.rockscout.ui.components.noAutoFocus
 import com.rork.rockscout.ui.components.processSavedImage
 import com.rork.rockscout.ui.components.glowingBorder
+import com.rork.rockscout.ui.components.ImageSourcePickerDialog
+import com.rork.rockscout.ui.components.processImageUri
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.DarkTextHigh
@@ -110,6 +112,7 @@ fun SubmitSpecimenDialog(
     var useCustomLocation by remember { mutableStateOf(false) }
     var isModerating by remember { mutableStateOf(false) }
     var showSavedImagePicker by remember { mutableStateOf(false) }
+    var showImageSourcePicker by remember { mutableStateOf(false) }
     var pendingRemovePhotoIdx by remember { mutableStateOf<Int?>(null) }
     var alreadyInDatabaseSpecimen by remember { mutableStateOf<Specimen?>(null) }
     val scope = rememberCoroutineScope()

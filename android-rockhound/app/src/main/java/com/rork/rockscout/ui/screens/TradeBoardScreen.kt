@@ -112,6 +112,7 @@ import com.rork.rockscout.ui.components.ImageSourcePickerDialog
 import com.rork.rockscout.ui.components.SculptedTextButton
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.processSavedImage
+import com.rork.rockscout.ui.components.processImageUri
 import com.rork.rockscout.ui.components.ShareCardImage
 import com.rork.rockscout.ui.components.ShareToProfileComposer
 import com.rork.rockscout.ui.components.TagChip

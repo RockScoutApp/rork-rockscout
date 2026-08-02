@@ -38,6 +38,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.shape.CircleShape
+import com.rork.rockscout.data.SeedData
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -2552,7 +2553,7 @@ fun ImageSourcePickerDialog(
         },
         confirmButton = {},
         dismissButton = {
-            TextButton(onClick = if (mode == null) onDismiss else { mode = null }) {
+            TextButton(onClick = { if (mode == null) onDismiss() else { mode = null } }) {
                 Text(if (mode == null) "Cancel" else "Back", color = DarkTextMid)
             }
         },

@@ -86,6 +86,8 @@ import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.noAutoFocus
 import com.rork.rockscout.ui.components.glowingBorder
+import com.rork.rockscout.ui.components.ImageSourcePickerDialog
+import com.rork.rockscout.ui.components.processImageUri
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.Danger

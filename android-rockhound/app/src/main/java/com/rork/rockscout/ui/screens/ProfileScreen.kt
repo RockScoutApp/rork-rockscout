@@ -113,6 +113,7 @@ import com.rork.rockscout.ui.components.BadgeIconButton
 import com.rork.rockscout.ui.components.ProBadge
 import com.rork.rockscout.ui.components.postImageNavigation
 import com.rork.rockscout.data.SeedData
+import com.rork.rockscout.ui.components.ImageSourcePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
