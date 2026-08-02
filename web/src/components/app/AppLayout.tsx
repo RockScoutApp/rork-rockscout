@@ -10,18 +10,15 @@ import {
   LogIn,
   Gem,
   MapPin,
-  Keyboard,
   CloudCheck,
   CloudUpload,
   CloudOff,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTier } from "@/hooks/useTier";
-import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useBackGuard } from "@/hooks/useBackGuard";
 import { syncEntitlement } from "@/lib/entitlement";
 import IosBetaBanner from "@/components/app/IosBetaBanner";
-import KeyboardHelpOverlay from "@/components/app/KeyboardHelpOverlay";
 import FieldCameraDialog from "@/components/app/FieldCameraDialog";
 import { cn } from "@/lib/utils";
 
@@ -54,7 +51,6 @@ export default function AppLayout() {
   const { user, signOut } = useAuth();
   const { isPremium } = useTier();
   const navigate = useNavigate();
-  const [helpOpen, setHelpOpen] = useState(false);
   const [fieldCameraOpen, setFieldCameraOpen] = useState(false);
   const navItems = isPremium ? NAV_ITEMS_PREMIUM : NAV_ITEMS_FREE;
 
@@ -91,8 +87,6 @@ export default function AppLayout() {
     idle: { icon: CloudUpload, color: "text-muted-foreground", label: "—" },
   } as const;
   const SyncIcon = syncConfig[syncState].icon;
-
-  useKeyboardShortcuts({ onToggleHelp: () => setHelpOpen((v) => !v) });
 
   // Listen for the "open-field-camera" custom event dispatched by the Home tile.
   // Available to all users (including anonymous) so kids on tablets can
@@ -160,20 +154,6 @@ export default function AppLayout() {
         </nav>
 
         <div className="space-y-1 border-t border-border p-3">
-          <button
-            onClick={() => setHelpOpen(true)}
-            className="hidden w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground md:flex"
-            aria-label="Keyboard shortcuts help"
-            title="Keyboard shortcuts (?)"
-          >
-            <Keyboard className="h-5 w-5" />
-            Shortcuts
-            <span className="ml-auto flex items-center gap-1">
-              <kbd className="rounded border border-border bg-muted px-1.5 py-0.5 font-sans text-[10px] font-semibold text-muted-foreground">
-                ?
-              </kbd>
-            </span>
-          </button>
           {user ? (
             <div className="mb-1 truncate px-3 text-xs text-muted-foreground">
               {user.email}
@@ -230,7 +210,6 @@ export default function AppLayout() {
         ))}
       </nav>
 
-      <KeyboardHelpOverlay open={helpOpen} onClose={() => setHelpOpen(false)} />
       <FieldCameraDialog
         open={fieldCameraOpen}
         onDismiss={() => setFieldCameraOpen(false)}

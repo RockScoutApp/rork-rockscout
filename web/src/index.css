@@ -10,47 +10,85 @@
     --font-display: "Fraunces", ui-serif, Georgia, serif;
     --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 
-    /* Surfaces — warm charcoal dark theme */
-    --background: 30 23% 7%;            /* near-black warm charcoal */
-    --foreground: 36 40% 92%;           /* warm bone */
+    /* Surfaces — dark warm stone palette (matching Android Color.kt) */
+    --background: 30 10% 9%;             /* Obsidian #2A2620 */
+    --foreground: 36 40% 95%;            /* TextHigh #F5F2EA */
 
-    --card: 32 20% 11%;                 /* polished slate */
-    --card-foreground: 36 40% 92%;
+    --card: 32 14% 11%;                  /* Slate800 #332E25 */
+    --card-foreground: 36 40% 95%;
 
-    --popover: 32 22% 9%;
-    --popover-foreground: 36 40% 92%;
+    --popover: 32 16% 9%;               /* Slate900 #242019 */
+    --popover-foreground: 36 40% 95%;
 
-    /* Brand — Citrine amber (from app Color.kt #E8A33D) */
+    /* Brand — Citrine amber (#E8A33D) */
     --primary: 36 80% 58%;
-    --primary-foreground: 30 35% 10%;   /* ink on amber */
+    --primary-foreground: 30 30% 9%;    /* Ink #1C1A14 */
 
-    /* Secondary — Aqua/copper (from app #DC9A6E) */
+    /* Secondary — warm copper mineral (#DC9A6E) */
     --secondary: 20 62% 65%;
-    --secondary-foreground: 30 35% 10%;
+    --secondary-foreground: 30 30% 9%;
 
-    --muted: 32 14% 18%;
-    --muted-foreground: 36 20% 68%;
+    --muted: 30 12% 20%;                /* Slate600 #4A4338 */
+    --muted-foreground: 36 18% 70%;     /* TextMid #D8D2C3 */
 
-    --accent: 172 30% 28%;              /* deep malachite teal */
-    --accent-foreground: 36 40% 92%;
+    /* Accent — deep malachite teal (#2E6B5C) */
+    --accent: 172 30% 28%;
+    --accent-foreground: 36 40% 95%;
 
-    --destructive: 0 70% 55%;
-    --destructive-foreground: 36 40% 92%;
+    --destructive: 4 70% 55%;           /* Danger #E2574C */
+    --destructive-foreground: 36 40% 95%;
 
-    --border: 32 14% 20%;
+    --border: 30 10% 24%;               /* StoneLine #6B6052 dimmed */
     --input: 32 14% 22%;
     --ring: 36 80% 58%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 32 22% 9%;
-    --sidebar-foreground: 36 40% 92%;
+    --sidebar-background: 30 12% 8%;    /* Slate900 dark */
+    --sidebar-foreground: 36 40% 95%;
     --sidebar-primary: 36 80% 58%;
-    --sidebar-primary-foreground: 30 35% 10%;
-    --sidebar-accent: 32 14% 18%;
-    --sidebar-accent-foreground: 36 40% 92%;
-    --sidebar-border: 32 14% 20%;
+    --sidebar-primary-foreground: 30 30% 9%;
+    --sidebar-accent: 30 12% 18%;
+    --sidebar-accent-foreground: 36 40% 95%;
+    --sidebar-border: 30 10% 20%;
     --sidebar-ring: 36 80% 58%;
+
+    /* ── Rock-class color system (matching Android Color.kt) ── */
+    --rock-igneous: 14 75% 57%;         /* #E5683C — molten/volcanic */
+    --rock-sedimentary: 41 53% 64%;     /* #D9B26A — sand/strata */
+    --rock-metamorphic: 200 41% 61%;    /* #6FA8C7 — pressure/slate-blue */
+    --rock-fossil: 33 38% 64%;          /* #C9A87C — bone/amber */
+    --rock-mineral: 36 80% 58%;         /* Citrine — default mineral */
+    --rock-crystal: 265 47% 67%;        /* Amethyst #9B7BD8 */
+
+    /* ── Accent colors ── */
+    --citrine: 36 80% 58%;              /* #E8A33D */
+    --citrine-soft: 34 84% 70%;         /* #F2C171 */
+    --citrine-deep: 30 72% 42%;         /* #B97B1E */
+    --aqua: 20 62% 65%;                 /* #DC9A6E */
+    --aqua-deep: 18 46% 39%;            /* #9C5C3A */
+    --cyan: 174 100% 45%;               /* #00E5C9 */
+    --cyan-deep: 172 100% 36%;          /* #00B894 */
+    --amethyst: 265 47% 67%;            /* #9B7BD8 */
+
+    /* ── Status colors ── */
+    --success: 147 49% 55%;             /* #5CC98C */
+    --warning: 36 80% 58%;              /* #E8A33D */
+    --danger: 4 70% 55%;                /* #E2574C */
+
+    /* ── Chat bubble colors ── */
+    --bubble-mine: 168 57% 27%;         /* #1E6B5E — malachite */
+    --bubble-other: 226 16% 30%;        /* #3D4258 — lapis */
+
+    /* ── Text contrast roles ── */
+    --text-high: 36 40% 95%;            /* #F5F2EA */
+    --text-mid: 36 34% 84%;             /* #D8D2C3 */
+    --text-low: 38 26% 73%;             /* #B5AE9A */
+    --ink: 30 30% 9%;                   /* #1C1A14 */
+
+    /* ── Sculpted bevel colors ── */
+    --bevel-light: 255 100% 100%;       /* white highlight */
+    --bevel-dark: 0 0% 0%;             /* black shadow */
   }
 }
 
@@ -70,10 +108,23 @@
     font-family: var(--font-sans);
     font-feature-settings: "ss01", "cv11";
     font-size: 16px;
+    /* Agate-slice background — dark warm stone with radial mineral gradients */
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% -10%, hsl(36 80% 58% / 0.08), transparent 60%),
-      radial-gradient(ellipse 60% 40% at 85% 20%, hsl(172 30% 28% / 0.08), transparent 70%);
+      radial-gradient(ellipse 80% 50% at 50% -10%, hsl(36 80% 58% / 0.06), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 85% 20%, hsl(172 30% 28% / 0.07), transparent 70%),
+      radial-gradient(ellipse 50% 60% at 20% 80%, hsl(265 47% 67% / 0.04), transparent 65%);
     background-attachment: fixed;
+    /* Subtle SVG grain texture — mineral fleck impression */
+    position: relative;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.03;
+    z-index: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   }
 
   h1, h2, h3, .font-display {
@@ -198,6 +249,115 @@
   /* Dashed field-guide border accent */
   .field-border {
     border: 1px dashed hsl(var(--border));
+  }
+
+  /* ── Sculpted stone component system ── */
+
+  /* Raised stone bevel — light highlight top/left, dark shadow bottom/right */
+  .sculpted-raised {
+    position: relative;
+    box-shadow:
+      /* ambient dark shadow (depth) */
+      0 4px 6px -1px rgba(0, 0, 0, 0.4),
+      0 2px 4px -2px rgba(0, 0, 0, 0.3),
+      /* accent-tinted key shadow */
+      0 8px 24px -8px hsl(var(--sculpted-accent, 36 80% 58%) / 0.35),
+      /* inner top-left highlight bevel */
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.14),
+      /* inner bottom-right shadow bevel */
+      inset 0 -1px 0 0 rgba(0, 0, 0, 0.28),
+      /* inner left highlight */
+      inset 1px 0 0 0 rgba(255, 255, 255, 0.07),
+      /* inner right shadow */
+      inset -1px 0 0 0 rgba(0, 0, 0, 0.14);
+    transition: transform 0.1s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Pressed stone state — bevels swap, scale down, shadow shrinks */
+  .sculpted-pressed {
+    transform: scale(0.96);
+    box-shadow:
+      0 1px 2px -1px rgba(0, 0, 0, 0.5),
+      0 2px 8px -4px hsl(var(--sculpted-accent, 36 80% 58%) / 0.2),
+      inset 0 1px 0 0 rgba(0, 0, 0, 0.28),
+      inset 0 -1px 0 0 rgba(255, 255, 255, 0.07),
+      inset 1px 0 0 0 rgba(0, 0, 0, 0.14),
+      inset -1px 0 0 0 rgba(255, 255, 255, 0.04);
+  }
+
+  /* Active press handler via CSS */
+  .sculpted-button {
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .sculpted-button:active {
+    transform: scale(0.96);
+    box-shadow:
+      0 1px 2px -1px rgba(0, 0, 0, 0.5),
+      0 2px 8px -4px hsl(var(--sculpted-accent, 36 80% 58%) / 0.2),
+      inset 0 1px 0 0 rgba(0, 0, 0, 0.28),
+      inset 0 -1px 0 0 rgba(255, 255, 255, 0.07);
+  }
+
+  /* Glowing mineral border — matches Android glowingBorder() */
+  .glowing-border {
+    box-shadow:
+      0 0 0 1px hsl(var(--glow-color, 36 80% 58%) / 0.55),
+      0 0 3px 1px hsl(var(--glow-color, 36 80% 58%) / 0.08),
+      0 0 5px 2px hsl(var(--glow-color, 36 80% 58%) / 0.16),
+      0 0 0 3px hsl(var(--glow-color, 36 80% 58%) / 0.08);
+  }
+
+  /* Dark card — dark vertical gradient with glowing border */
+  .dark-card {
+    background: linear-gradient(
+      180deg,
+      hsl(30 14% 14%) 0%,
+      hsl(30 12% 10%) 60%,
+      hsl(30 10% 7%) 100%
+    );
+    border-radius: var(--radius);
+  }
+
+  /* Breathing glow animation for dashboard tiles */
+  @keyframes breathing-glow {
+    0%, 100% { opacity: 0.35; transform: scale(1); }
+    50% { opacity: 0.65; transform: scale(1.04); }
+  }
+  .breathing-glow {
+    animation: breathing-glow var(--breathe-duration, 3s) ease-in-out infinite;
+    animation-delay: var(--breathe-delay, 0s);
+  }
+
+  /* Dashboard tile gradient overlay (top color wash) */
+  .tile-header-wash {
+    background: linear-gradient(
+      180deg,
+      hsl(var(--tile-accent, 36 80% 58%) / 0.18) 0%,
+      hsl(var(--tile-accent, 36 80% 58%) / 0.04) 40%,
+      transparent 100%
+    );
+  }
+
+  /* Tile bottom gradient (text legibility over images) */
+  .tile-bottom-fade {
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      hsl(30 10% 7% / 0.78) 60%,
+      hsl(30 10% 7% / 0.96) 100%
+    );
+  }
+
+  /* Icon badge — radial gradient background with glow */
+  .icon-badge {
+    background: radial-gradient(
+      circle at 50% 50%,
+      hsl(var(--badge-accent, 36 80% 58%) / 0.35) 0%,
+      hsl(var(--badge-accent, 36 80% 58%) / 0.10) 100%
+    );
   }
 
   /* Parchment scroll background — mirrors the Android app's creator note dialog */
