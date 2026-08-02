@@ -1,26 +1,8 @@
-import java.util.Properties
-import java.io.File
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-}
-
-/**
- * Persistent release keystore — loaded from keystore.properties in the project
- * root. This ensures EVERY build (local, CI, Rork) is signed with the SAME key
- * so users can update over an existing install without getting "App not installed".
- *
- * The debug keystore is auto-generated per machine and therefore produces
- * different signatures on different machines — that was the root cause of the
- * persistent "app not installed" errors on update.
- */
-val keystorePropertiesFile = File(rootProject.projectDir, "keystore.properties")
-val keystoreProperties = Properties()
-if (keystorePropertiesFile.exists()) {
-    keystoreProperties.load(keystorePropertiesFile.inputStream())
 }
 
 android {
@@ -36,8 +18,8 @@ android {
         // than the installed one, and the in-app updater only offers an update
         // when the server-reported code is higher. Keep this in lockstep with
         // LATEST_VERSION_CODE in functions/app-version.ts.
-        versionCode = 8
-        versionName = "1.1.6"
+        versionCode = 9
+        versionName = "1.1.7"
 
         multiDexEnabled = true
     }
@@ -54,29 +36,15 @@ android {
         }
     }
 
-    signingConfigs {
-        create("release") {
-            if (keystorePropertiesFile.exists()) {
-                storeFile = file(keystoreProperties.getProperty("storeFile"))
-                storePassword = keystoreProperties.getProperty("storePassword")
-                keyAlias = keystoreProperties.getProperty("keyAlias")
-                keyPassword = keystoreProperties.getProperty("keyPassword")
-            }
-        }
-    }
-
     buildTypes {
         release {
             isMinifyEnabled = false
-            // Use the persistent project keystore so all builds share the same
-            // signing key. Falls back to debug only if the keystore is missing.
-            // This is critical: if different builds are signed with different
-            // keys, Android rejects the update with "App not installed".
-            signingConfig = if (keystorePropertiesFile.exists()) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
-            }
+            // Always use debug signing as the baseline. Rork's build system
+            // (runChecks) injects its own persistent managed signing key,
+            // ensuring every published APK is signed with the SAME key.
+            // NEVER add a custom keystore — mixing keys causes "App not installed"
+            // on update because Android rejects signature mismatches.
+            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
