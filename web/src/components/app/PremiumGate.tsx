@@ -1,17 +1,21 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { Lock, Crown, Camera, Sparkles } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { useTier } from "@/hooks/useTier";
 import { getRouteTier } from "@/lib/routeAccess";
 import { Link } from "react-router-dom";
 import type { ReactNode } from "react";
 
 /**
- * Wraps a route element and gates access based on the user's tier.
+ * Wraps a route element and gates access based on the user's tier and
+ * authentication state.
  *
  * - "open" routes: always rendered (read-only content).
- * - "bookmarks" routes: always rendered (personal data, free + premium).
+ * - "bookmarks" routes: require an account (collection, wishlist, profile,
+ *   settings). Anonymous users are redirected to sign-in.
  * - "premium" routes: free users see a lock screen with a "Go Premium" CTA.
- * - "social" routes: free users are redirected to Home (invisible).
+ *   Anonymous users also see the lock screen (which leads to the paywall).
+ * - "social" routes: invisible to free and anonymous users — redirect to Home.
  */
 export function PremiumGate({
   routePath,
@@ -20,9 +24,12 @@ export function PremiumGate({
   routePath: string;
   children: ReactNode;
 }) {
-  const { tier, isLoading } = useTier();
+  const { user, isLoading: authLoading } = useAuth();
+  const { tier, isLoading: tierLoading } = useTier();
   const location = useLocation();
   const accessTier = getRouteTier(routePath);
+
+  const isLoading = authLoading || tierLoading;
 
   if (isLoading) {
     return (
@@ -32,10 +39,20 @@ export function PremiumGate({
     );
   }
 
+  // Anonymous users can only access open routes. Everything else needs an
+  // account (bookmarks) or shows the premium paywall (premium/social).
+  if (!user) {
+    if (accessTier === "open") return <>{children}</>;
+    if (accessTier === "bookmarks") {
+      return <Navigate to="/app/signin" state={{ from: location.pathname }} replace />;
+    }
+    // premium and social fall through to the same handling as free users below.
+  }
+
   // Premium users get full access to everything
   if (tier === "premium") return <>{children}</>;
 
-  // Free user
+  // Free user (or anonymous on premium/social routes)
   if (accessTier === "social") {
     // Social routes are invisible to free users — redirect to Home
     return <Navigate to="/app" replace />;
@@ -45,7 +62,7 @@ export function PremiumGate({
     return <LockedScreen routePath={routePath} />;
   }
 
-  // "open" and "bookmarks" routes are accessible to everyone
+  // "open" and "bookmarks" routes are accessible to authenticated users
   return <>{children}</>;
 }
 

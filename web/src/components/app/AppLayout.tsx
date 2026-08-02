@@ -7,6 +7,7 @@ import {
   Map,
   User,
   LogOut,
+  LogIn,
   Gem,
   MapPin,
   Keyboard,
@@ -107,6 +108,10 @@ export default function AppLayout() {
     navigate("/app");
   };
 
+  const handleSignIn = () => {
+    navigate("/app/signin");
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-background md:flex-row">
       <IosBetaBanner />
@@ -169,16 +174,32 @@ export default function AppLayout() {
               </kbd>
             </span>
           </button>
-          <div className="mb-1 truncate px-3 text-xs text-muted-foreground">
-            {user?.email}
-          </div>
-          <button
-            onClick={handleSignOut}
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-          >
-            <LogOut className="h-5 w-5" />
-            Sign out
-          </button>
+          {user ? (
+            <div className="mb-1 truncate px-3 text-xs text-muted-foreground">
+              {user.email}
+            </div>
+          ) : (
+            <div className="mb-1 px-3 text-xs text-muted-foreground">
+              Free preview mode
+            </div>
+          )}
+          {user ? (
+            <button
+              onClick={handleSignOut}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+            >
+              <LogOut className="h-5 w-5" />
+              Sign out
+            </button>
+          ) : (
+            <button
+              onClick={handleSignIn}
+              className="flex w-full items-center gap-3 rounded-lg bg-primary/10 px-3 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/15"
+            >
+              <LogIn className="h-5 w-5" />
+              Sign in
+            </button>
+          )}
         </div>
       </aside>
 

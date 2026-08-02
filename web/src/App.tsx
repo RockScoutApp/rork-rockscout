@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { AuthProvider } from "@/hooks/useAuth";
 import { TierProvider } from "@/hooks/useTier";
 import { PremiumGate } from "@/components/app/PremiumGate";
 import { UpdateBanner } from "@/components/UpdateBanner";
@@ -131,21 +131,6 @@ export function Providers({ children }: { children: ReactNode }) {
   );
 }
 
-/** Auth gate — wraps the app layout. Redirects to the sign-in screen when
- *  the user is not authenticated. */
-function RequireAuth({ children }: { children: ReactNode }) {
-  const { user, isLoading } = useAuth();
-  if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    );
-  }
-  if (!user) return <SignIn />;
-  return <>{children}</>;
-}
-
 const App = () => (
   <Providers>
     <Toaster />
@@ -166,15 +151,10 @@ const App = () => (
         <Route path="/cookies" element={<Cookies />} />
         <Route path="/press" element={<Press />} />
 
-        {/* PWA app routes — gated by auth */}
-        <Route
-          path="/app"
-          element={
-            <RequireAuth>
-              <AppLayout />
-            </RequireAuth>
-          }
-        >
+        {/* PWA app routes — free content is open; auth only triggers for
+            personal-data (bookmarks) or premium features. */}
+        <Route path="/app/signin" element={<SignIn />} />
+        <Route path="/app" element={<AppLayout />}>
           <Route index element={<PremiumGate routePath=""><Home /></PremiumGate>} />
           <Route path="identify" element={<PremiumGate routePath="identify"><Identify /></PremiumGate>} />
           <Route path="specimens" element={<PremiumGate routePath="specimens"><Specimens /></PremiumGate>} />

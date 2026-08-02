@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useStandaloneMode } from "@/hooks/usePlatform";
 import { Button } from "@/components/ui/button";
@@ -6,8 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mountain, Loader2, AlertCircle } from "lucide-react";
 
-export default function SignIn() {
+interface SignInLocationState {
+  from?: string;
+}
+
+export default function SignIn({ returnTo }: { returnTo?: string }) {
   const { signIn, signUp, isLoading, error, clearError } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const state = (location.state as SignInLocationState | undefined) ?? {};
+  const destination = returnTo || state.from || "/app";
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,9 +36,17 @@ export default function SignIn() {
           setVerificationMsg(
             "Check your email for a confirmation link to finish creating your account.",
           );
+        } else if (destination && destination !== "/app/signin") {
+          // Auto-redirect if signUp also created a session.
+          navigate(destination, { replace: true });
         }
       } else {
         await signIn(email, password);
+        // After successful sign-in, send the user back to the feature they
+        // were trying to access (e.g., collection, paywall, premium route).
+        if (destination && destination !== "/app/signin") {
+          navigate(destination, { replace: true });
+        }
       }
     } catch {
       // error is set in the hook
