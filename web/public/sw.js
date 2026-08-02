@@ -26,6 +26,24 @@ const TILE_HOSTS = [
   "c.tile.openstreetmap.org",
 ];
 
+// Background Sync — when the browser fires the "rockscout-offline-sync" sync
+// event (connectivity restored after being offline), notify all open clients
+// to drain their IndexedDB sync queue. The actual sync logic lives in the app
+// (useOfflineSync hook) because it needs the Supabase auth session.
+self.addEventListener("sync", (event) => {
+  if (event.tag === "rockscout-offline-sync") {
+    event.waitUntil(
+      self.clients.matchAll({ includeUncontrolled: true, type: "window" }).then(
+        (clients) => {
+          clients.forEach((client) =>
+            client.postMessage({ type: "OFFLINE_SYNC_TRIGGER" })
+          );
+        }
+      )
+    );
+  }
+});
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches

@@ -23,9 +23,12 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 
 /**
  * Supabase data sync manager — local-first with background push/pull.
@@ -566,6 +569,195 @@ object SupabaseDataSync {
         }
     }
 
+    // ─── Push: individual record uploads (used by SyncQueueManager) ────────
+
+    /** Push a single capture to Supabase (upsert by id). */
+    suspend fun pushCapture(capture: CapturedPhoto, uid: String): Boolean {
+        val token = accessToken() ?: return false
+        val url = baseUrl()
+        val key = anonKey()
+        return try {
+            val imageUrlsArray = capture.imageUris.joinToString(",", prefix = "[", postfix = "]") { "\"$it\"" }
+            val body = buildJsonObject {
+                put("id", capture.id)
+                put("user_id", uid)
+                put("specimen_id", capture.specimenId)
+                put("specimen_emoji", capture.specimenEmoji)
+                put("custom_name", capture.customName)
+                put("custom_location", capture.customLocation)
+                put("general_info", capture.generalInfo)
+                put("image_urls", imageUrlsArray)
+                put("in_collection", capture.inCollection.toString())
+                put("in_wishlist", capture.inWishlist.toString())
+                capture.latitude?.let { put("latitude", it.toString()) }
+                capture.longitude?.let { put("longitude", it.toString()) }
+            }
+            client.post("$url/rest/v1/rockscout_captures") {
+                header("apikey", key)
+                header(HttpHeaders.Authorization, "Bearer $token")
+                contentType(ContentType.Application.Json)
+                header("Prefer", "resolution=merge-duplicates,return=minimal")
+                setBody(json.encodeToString(JsonObject.serializer(), body))
+            }.status.isSuccess()
+        } catch (e: Exception) {
+            Log.w(TAG, "pushCapture failed: ${e.message}")
+            false
+        }
+    }
+
+    /** Delete a single capture from Supabase by id. */
+    suspend fun deleteCapture(captureId: String): Boolean {
+        val token = accessToken() ?: return false
+        val url = baseUrl()
+        val key = anonKey()
+        return try {
+            client.delete("$url/rest/v1/rockscout_captures?id=eq.$captureId") {
+                header("apikey", key)
+                header(HttpHeaders.Authorization, "Bearer $token")
+            }.status.isSuccess()
+        } catch (e: Exception) {
+            Log.w(TAG, "deleteCapture failed: ${e.message}")
+            false
+        }
+    }
+
+    /** Push a single saved image to Supabase (upsert by id). */
+    suspend fun pushSavedImage(image: SavedImage, uid: String): Boolean {
+        val token = accessToken() ?: return false
+        val url = baseUrl()
+        val key = anonKey()
+        return try {
+            val body = buildJsonObject {
+                put("id", image.id)
+                put("user_id", uid)
+                put("image_url", image.url)
+                put("source", "field-camera")
+            }
+            client.post("$url/rest/v1/rockscout_saved_images") {
+                header("apikey", key)
+                header(HttpHeaders.Authorization, "Bearer $token")
+                contentType(ContentType.Application.Json)
+                header("Prefer", "resolution=merge-duplicates,return=minimal")
+                setBody(json.encodeToString(JsonObject.serializer(), body))
+            }.status.isSuccess()
+        } catch (e: Exception) {
+            Log.w(TAG, "pushSavedImage failed: ${e.message}")
+            false
+        }
+    }
+
+    /** Delete a single saved image from Supabase by id. */
+    suspend fun deleteSavedImage(imageId: String): Boolean {
+        val token = accessToken() ?: return false
+        val url = baseUrl()
+        val key = anonKey()
+        return try {
+            client.delete("$url/rest/v1/rockscout_saved_images?id=eq.$imageId") {
+                header("apikey", key)
+                header(HttpHeaders.Authorization, "Bearer $token")
+            }.status.isSuccess()
+        } catch (e: Exception) {
+            Log.w(TAG, "deleteSavedImage failed: ${e.message}")
+            false
+        }
+    }
+
+    /** Push a single journal entry to Supabase (upsert by id). */
+    suspend fun pushJournalEntry(entry: JournalEntry, uid: String): Boolean {
+        val token = accessToken() ?: return false
+        val url = baseUrl()
+        val key = anonKey()
+        return try {
+            val photoUrlsArray = entry.photoUris.joinToString(",", prefix = "[", postfix = "]") { "\"$it\"" }
+            val body = buildJsonObject {
+                put("id", entry.id)
+                put("user_id", uid)
+                put("entry_date", formatDateForDb(entry.date))
+                put("location", entry.location)
+                put("dig_site_id", entry.digSiteId ?: "")
+                put("weather_summary", entry.weatherSummary)
+                put("notes", entry.notes)
+                put("photo_urls", photoUrlsArray)
+            }
+            client.post("$url/rest/v1/rockscout_field_journal") {
+                header("apikey", key)
+                header(HttpHeaders.Authorization, "Bearer $token")
+                contentType(ContentType.Application.Json)
+                header("Prefer", "resolution=merge-duplicates,return=minimal")
+                setBody(json.encodeToString(JsonObject.serializer(), body))
+            }.status.isSuccess()
+        } catch (e: Exception) {
+            Log.w(TAG, "pushJournalEntry failed: ${e.message}")
+            false
+        }
+    }
+
+    /** Delete a single journal entry from Supabase by id. */
+    suspend fun deleteJournalEntry(entryId: String): Boolean {
+        val token = accessToken() ?: return false
+        val url = baseUrl()
+        val key = anonKey()
+        return try {
+            client.delete("$url/rest/v1/rockscout_field_journal?id=eq.$entryId") {
+                header("apikey", key)
+                header(HttpHeaders.Authorization, "Bearer $token")
+            }.status.isSuccess()
+        } catch (e: Exception) {
+            Log.w(TAG, "deleteJournalEntry failed: ${e.message}")
+            false
+        }
+    }
+
+    /** Push a single trip to Supabase (upsert by id). */
+    suspend fun pushTrip(trip: Trip, uid: String): Boolean {
+        val token = accessToken() ?: return false
+        val url = baseUrl()
+        val key = anonKey()
+        return try {
+            val stopsArray = json.encodeToString(trip.stops)
+            val targetsArray = json.encodeToString(trip.targetSpecimens)
+            val gearArray = json.encodeToString(trip.gearChecklist)
+            val body = buildJsonObject {
+                put("id", trip.id)
+                put("user_id", uid)
+                put("name", trip.name)
+                put("trip_date", formatDateForDb(trip.date))
+                put("stops", stopsArray)
+                put("target_specimens", targetsArray)
+                put("gear_checklist", gearArray)
+                put("notes", trip.notes)
+                put("is_archived", trip.isArchived.toString())
+                trip.completedAt?.let { put("completed_at", formatIsoForDb(it)) }
+            }
+            client.post("$url/rest/v1/rockscout_trips") {
+                header("apikey", key)
+                header(HttpHeaders.Authorization, "Bearer $token")
+                contentType(ContentType.Application.Json)
+                header("Prefer", "resolution=merge-duplicates,return=minimal")
+                setBody(json.encodeToString(JsonObject.serializer(), body))
+            }.status.isSuccess()
+        } catch (e: Exception) {
+            Log.w(TAG, "pushTrip failed: ${e.message}")
+            false
+        }
+    }
+
+    /** Delete a single trip from Supabase by id. */
+    suspend fun deleteTrip(tripId: String): Boolean {
+        val token = accessToken() ?: return false
+        val url = baseUrl()
+        val key = anonKey()
+        return try {
+            client.delete("$url/rest/v1/rockscout_trips?id=eq.$tripId") {
+                header("apikey", key)
+                header(HttpHeaders.Authorization, "Bearer $token")
+            }.status.isSuccess()
+        } catch (e: Exception) {
+            Log.w(TAG, "deleteTrip failed: ${e.message}")
+            false
+        }
+    }
+
     // ─── Sync: pull then push ────────────────────────────────────────────
 
     /**
@@ -605,5 +797,27 @@ object SupabaseDataSync {
         return try {
             java.time.LocalDate.parse(date).atStartOfDay(java.time.ZoneOffset.UTC).toInstant().toEpochMilli()
         } catch (e: Exception) { 0L }
+    }
+
+    /** Format epoch millis as a date string ("2024-01-15") for database columns. */
+    private fun formatDateForDb(epochMillis: Long): String {
+        return try {
+            java.time.Instant.ofEpochMilli(epochMillis)
+                .atZone(java.time.ZoneOffset.UTC)
+                .toLocalDate()
+                .toString()
+        } catch (e: Exception) {
+            java.time.LocalDate.now().toString()
+        }
+    }
+
+    /** Format epoch millis as an ISO 8601 timestamp for database columns. */
+    private fun formatIsoForDb(epochMillis: Long): String {
+        return try {
+            java.time.Instant.ofEpochMilli(epochMillis)
+                .toString()
+        } catch (e: Exception) {
+            java.time.Instant.now().toString()
+        }
     }
 }

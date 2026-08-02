@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
+import { useOfflineSyncContext } from "@/hooks/useOfflineSyncContext";
+import { deleteCapture as offlineDeleteCapture, upsertCapture } from "@/lib/offline-mutations";
 import { toast } from "sonner";
 import { OptimizedImage } from "@/components/OptimizedImage";
 
@@ -53,6 +55,7 @@ const formatDate = (iso: string): string =>
 export default function FieldCaptures() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { drainNow } = useOfflineSyncContext();
   const [editingCapture, setEditingCapture] = useState<Capture | null>(null);
   const [editName, setEditName] = useState("");
   const [editLocation, setEditLocation] = useState("");
@@ -75,35 +78,33 @@ export default function FieldCaptures() {
 
   const deleteCapture = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("rockscout_captures")
-        .delete()
-        .eq("id", id);
-      if (error) throw error;
+      await offlineDeleteCapture(id);
     },
     onSuccess: () => {
       toast.success("Capture deleted");
       queryClient.invalidateQueries({ queryKey: ["field-captures"] });
+      drainNow();
     },
     onError: () => toast.error("Failed to delete capture"),
   });
 
   const updateCapture = useMutation({
     mutationFn: async () => {
-      if (!editingCapture) return;
-      const { error } = await supabase
-        .from("rockscout_captures")
-        .update({
+      if (!editingCapture || !user) return;
+      await upsertCapture(
+        {
+          ...editingCapture,
           custom_name: editName,
           custom_location: editLocation,
           general_info: editDescription,
-        })
-        .eq("id", editingCapture.id);
-      if (error) throw error;
+        },
+        user.id,
+      );
     },
     onSuccess: () => {
       toast.success("Capture updated");
       queryClient.invalidateQueries({ queryKey: ["field-captures"] });
+      drainNow();
       setEditingCapture(null);
     },
     onError: () => toast.error("Failed to update capture"),

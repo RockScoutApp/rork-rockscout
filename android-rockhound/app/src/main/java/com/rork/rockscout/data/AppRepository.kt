@@ -585,6 +585,7 @@ class AppRepository {
         )) + _captures.value
         persistCaptures()
         AchievementsRepository.checkAchievements()
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.CAPTURES, photo.id)
     }
 
     fun updateCaptureNote(captureId: String, note: String) {
@@ -592,6 +593,7 @@ class AppRepository {
             if (it.id == captureId) it.copy(note = ProfanityFilter.filter(note)) else it
         }
         persistCaptures()
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.CAPTURES, captureId)
     }
 
     /** Updates the editable user-defined fields on a field capture. */
@@ -615,6 +617,7 @@ class AppRepository {
             } else it
         }
         persistCaptures()
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.CAPTURES, captureId)
     }
 
     /** Adds an image URI to an existing field capture card. */
@@ -625,6 +628,7 @@ class AppRepository {
             } else it
         }
         persistCaptures()
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.CAPTURES, captureId)
     }
 
     /** Removes an image from a field capture card by index. */
@@ -635,6 +639,7 @@ class AppRepository {
             } else it
         }
         persistCaptures()
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.CAPTURES, captureId)
     }
 
     /** Toggles a field capture's membership in My Rocks. */
@@ -643,6 +648,7 @@ class AppRepository {
             if (it.id == captureId) it.copy(inCollection = !it.inCollection) else it
         }
         persistCaptures()
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.CAPTURES, captureId)
     }
 
     /** Toggles a field capture's membership in the Wishlist. */
@@ -651,6 +657,7 @@ class AppRepository {
             if (it.id == captureId) it.copy(inWishlist = !it.inWishlist) else it
         }
         persistCaptures()
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.CAPTURES, captureId)
     }
 
     /**
@@ -679,6 +686,8 @@ class AppRepository {
             .filterNot { it.id == otherId || it.id == targetId }
             .let { listOf(merged) + it }
         persistCaptures()
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.CAPTURES, targetId)
+        SyncQueueManager.enqueueDelete(SyncQueueManager.SyncTable.CAPTURES, otherId)
     }
 
     /** Updates the coordinates of a field capture (for the specimen marker map). */
@@ -687,11 +696,13 @@ class AppRepository {
             if (it.id == captureId) it.copy(latitude = latitude, longitude = longitude) else it
         }
         persistCaptures()
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.CAPTURES, captureId)
     }
 
     fun removeCapture(captureId: String) {
         _captures.value = _captures.value.filterNot { it.id == captureId }
         persistCaptures()
+        SyncQueueManager.enqueueDelete(SyncQueueManager.SyncTable.CAPTURES, captureId)
     }
 
     /** Batch-removes all captures whose id is in [ids]. */
@@ -699,6 +710,7 @@ class AppRepository {
         if (ids.isEmpty()) return
         _captures.value = _captures.value.filterNot { it.id in ids }
         persistCaptures()
+        ids.forEach { SyncQueueManager.enqueueDelete(SyncQueueManager.SyncTable.CAPTURES, it) }
     }
 
     /** Batch-moves captures into My Rocks (sets inCollection = true). */
@@ -708,6 +720,7 @@ class AppRepository {
             if (it.id in ids) it.copy(inCollection = true) else it
         }
         persistCaptures()
+        ids.forEach { SyncQueueManager.enqueue(SyncQueueManager.SyncTable.CAPTURES, it) }
     }
 
     /** Batch-moves captures into the Wishlist (sets inWishlist = true). */
@@ -717,6 +730,7 @@ class AppRepository {
             if (it.id in ids) it.copy(inWishlist = true) else it
         }
         persistCaptures()
+        ids.forEach { SyncQueueManager.enqueue(SyncQueueManager.SyncTable.CAPTURES, it) }
     }
 
     // Trips -----------------------------------------------------------------
@@ -741,12 +755,14 @@ class AppRepository {
         if (existing == null) {
             AchievementsRepository.checkAchievements()
         }
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.TRIPS, filtered.id)
     }
 
     fun deleteTrip(tripId: String) {
         _allTrips.value = _allTrips.value.filterNot { it.id == tripId }
         refreshTripFlows()
         persistTrips()
+        SyncQueueManager.enqueueDelete(SyncQueueManager.SyncTable.TRIPS, tripId)
     }
 
     /** Adds a stop to an existing trip and persists it. */
@@ -758,6 +774,7 @@ class AppRepository {
         }
         refreshTripFlows()
         persistTrips()
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.TRIPS, tripId)
     }
 
     /** Updates the specimen markers on a trip and persists it. */
@@ -773,6 +790,7 @@ class AppRepository {
         }
         refreshTripFlows()
         persistTrips()
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.TRIPS, tripId)
     }
 
     fun getTrip(tripId: String): Trip? = _allTrips.value.firstOrNull { it.id == tripId }
@@ -785,6 +803,7 @@ class AppRepository {
         refreshTripFlows()
         persistTrips()
         AchievementsRepository.checkAchievements()
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.TRIPS, tripId)
     }
 
     /** Restores an archived trip back to active. */
@@ -795,6 +814,7 @@ class AppRepository {
         refreshTripFlows()
         persistTrips()
         AchievementsRepository.checkAchievements()
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.TRIPS, tripId)
     }
 
     /** Permanently deletes an archived trip. */
@@ -802,6 +822,7 @@ class AppRepository {
         _allTrips.value = _allTrips.value.filterNot { it.id == tripId }
         refreshTripFlows()
         persistTrips()
+        SyncQueueManager.enqueueDelete(SyncQueueManager.SyncTable.TRIPS, tripId)
     }
 
     // Journal entries -------------------------------------------------------
@@ -818,11 +839,13 @@ class AppRepository {
             _journalEntries.value.map { if (it.id == filtered.id) filtered else it }
         }).sortedByDescending { it.date }
         persistJournalEntries()
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.FIELD_JOURNAL, filtered.id)
     }
 
     fun deleteJournalEntry(entryId: String) {
         _journalEntries.value = _journalEntries.value.filterNot { it.id == entryId }
         persistJournalEntries()
+        SyncQueueManager.enqueueDelete(SyncQueueManager.SyncTable.FIELD_JOURNAL, entryId)
     }
 
     fun getJournalEntry(entryId: String): JournalEntry? =
@@ -909,12 +932,14 @@ class AppRepository {
         val id = "${System.currentTimeMillis()}_${url.hashCode().toUInt()}"
         _savedImages.value = listOf(SavedImage(id = id, url = url, localUri = localUri)) + current
         persistSavedImages()
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.SAVED_IMAGES, id)
         return true
     }
 
     fun removeSavedImage(id: String) {
         _savedImages.value = _savedImages.value.filterNot { it.id == id }
         persistSavedImages()
+        SyncQueueManager.enqueueDelete(SyncQueueManager.SyncTable.SAVED_IMAGES, id)
     }
 
     fun isSavedImage(url: String): Boolean = _savedImages.value.any { it.url == url }
@@ -924,6 +949,31 @@ class AppRepository {
             if (it.id == id) it.copy(liked = !it.liked) else it
         }
         persistSavedImages()
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.SAVED_IMAGES, id)
+    }
+
+    /** Updates the image URLs on a field capture with remote (uploaded) URLs. Called by SyncQueueManager after photo upload. */
+    fun updateCaptureImageUrls(captureId: String, imageUris: List<String>) {
+        _captures.value = _captures.value.map {
+            if (it.id == captureId) it.copy(imageUris = imageUris) else it
+        }
+        persistCaptures()
+    }
+
+    /** Updates the URL on a saved image with the remote (uploaded) URL. Called by SyncQueueManager after photo upload. */
+    fun updateSavedImageUrl(imageId: String, remoteUrl: String) {
+        _savedImages.value = _savedImages.value.map {
+            if (it.id == imageId) it.copy(url = remoteUrl) else it
+        }
+        persistSavedImages()
+    }
+
+    /** Updates the photo URLs on a journal entry with remote (uploaded) URLs. Called by SyncQueueManager after photo upload. */
+    fun updateJournalPhotoUrls(entryId: String, photoUris: List<String>) {
+        _journalEntries.value = _journalEntries.value.map {
+            if (it.id == entryId) it.copy(photoUris = photoUris) else it
+        }
+        persistJournalEntries()
     }
 
     // Aurora Saved Spots -------------------------------------------------

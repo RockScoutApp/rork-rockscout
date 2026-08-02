@@ -1,6 +1,10 @@
 package com.rork.rockscout
 
 import android.app.Application
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.util.Log
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
@@ -41,6 +45,7 @@ import com.rork.rockscout.data.ReferralRepository
 import com.rork.rockscout.data.SubscriptionAdminManager
 import com.rork.rockscout.data.ExportCleanupWorker
 import com.rork.rockscout.data.UpdateManager
+import com.rork.rockscout.data.SyncQueueManager
 import com.rork.rockscout.data.WorkScheduler
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.RequestConfiguration
@@ -222,6 +227,10 @@ class RockScoutApplication : Application() {
             EmailComposerDraftStore.initialize(this)
         }
 
+        safeInit("sync-queue-manager") {
+            SyncQueueManager.initialize(this)
+        }
+
         safeInit("user-timezone-provider") {
             UserTimezoneProvider.initialize()
         }
@@ -278,6 +287,10 @@ class RockScoutApplication : Application() {
             NotificationRepository.instance.initialize(this)
         }
 
+        safeInit("connectivity-sync-trigger") {
+            registerConnectivityListener()
+        }
+
         safeInit("work-scheduler") {
             WorkScheduler.schedule(this)
         }
@@ -317,6 +330,31 @@ class RockScoutApplication : Application() {
                     .build()
             )
         }
+    }
+
+    /**
+     * Registers a [ConnectivityManager.NetworkCallback] that triggers an
+     * immediate offline sync drain when the device regains connectivity.
+     * This ensures captures, saved images, journal entries, and trips created
+     * while offline are synced to Supabase as soon as the connection is back,
+     * without waiting for the periodic 6-hour or nightly 4 AM worker.
+     */
+    private fun registerConnectivityListener() {
+        runCatching {
+            val cm = getSystemService(ConnectivityManager::class.java) ?: return
+            val request = NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .build()
+            cm.registerNetworkCallback(request, object : ConnectivityManager.NetworkCallback() {
+                override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) {
+                    if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                        caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
+                        Log.d(startupTag, "Connectivity restored — triggering offline sync")
+                        SyncQueueManager.drainInBackground()
+                    }
+                }
+            })
+        }.onFailure { Log.w(startupTag, "Failed to register connectivity listener", it) }
     }
 
     /**

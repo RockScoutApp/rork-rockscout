@@ -11,6 +11,8 @@ struct RockScoutApp: App {
         EntitlementManager.shared.configure()
         // Configure central error reporting
         ErrorReporter.shared.configure()
+        // Schedule nightly offline capture sync at 4 AM user-local time
+        OfflineSyncService.shared.scheduleNightlySync()
     }
 
     var body: some Scene {

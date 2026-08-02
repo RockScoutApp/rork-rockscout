@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import { TierProvider } from "@/hooks/useTier";
+import { OfflineSyncProvider } from "@/hooks/useOfflineSyncContext";
 import { PremiumGate } from "@/components/app/PremiumGate";
 import { UpdateBanner } from "@/components/UpdateBanner";
 
@@ -137,7 +138,9 @@ export function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TierProvider>
-          <TooltipProvider>{children}</TooltipProvider>
+          <OfflineSyncProvider>
+            <TooltipProvider>{children}</TooltipProvider>
+          </OfflineSyncProvider>
         </TierProvider>
       </AuthProvider>
     </QueryClientProvider>

@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Image as ImageIcon, Trash2, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
+import { useOfflineSyncContext } from "@/hooks/useOfflineSyncContext";
+import { deleteSavedImage as offlineDeleteSavedImage } from "@/lib/offline-mutations";
 import { toast } from "sonner";
 import { OptimizedImage } from "@/components/OptimizedImage";
 
@@ -17,6 +19,7 @@ interface SavedImage {
 export default function SavedImages() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { drainNow } = useOfflineSyncContext();
 
   const { data: images, isLoading } = useQuery<SavedImage[]>({
     queryKey: ["saved-images", user?.id],
@@ -35,15 +38,12 @@ export default function SavedImages() {
 
   const deleteImage = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("rockscout_saved_images")
-        .delete()
-        .eq("id", id);
-      if (error) throw error;
+      await offlineDeleteSavedImage(id);
     },
     onSuccess: () => {
       toast.success("Image removed");
       queryClient.invalidateQueries({ queryKey: ["saved-images"] });
+      drainNow();
     },
     onError: () => toast.error("Failed to remove image"),
   });

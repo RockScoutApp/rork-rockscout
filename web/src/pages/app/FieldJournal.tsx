@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
+import { useOfflineSyncContext } from "@/hooks/useOfflineSyncContext";
+import { upsertJournalEntry, deleteJournalEntry as offlineDeleteJournal } from "@/lib/offline-mutations";
 import { toast } from "sonner";
 
 interface JournalEntry {
@@ -67,6 +69,7 @@ const formatDate = (iso: string): string => {
 export default function FieldJournal() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { drainNow } = useOfflineSyncContext();
   const [showEditor, setShowEditor] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<EntryForm>(EMPTY_FORM);
@@ -89,34 +92,27 @@ export default function FieldJournal() {
   const saveEntry = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Sign in to save journal entries");
-      if (editingId) {
-        const { error } = await supabase
-          .from("rockscout_field_journal")
-          .update({
-            entry_date: form.entry_date,
-            location: form.location,
-            weather_summary: form.weather_summary,
-            notes: form.notes,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", editingId);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("rockscout_field_journal")
-          .insert({
-            user_id: user.id,
-            entry_date: form.entry_date,
-            location: form.location,
-            weather_summary: form.weather_summary,
-            notes: form.notes,
-          });
-        if (error) throw error;
-      }
+      const id = editingId || crypto.randomUUID();
+      await upsertJournalEntry(
+        {
+          id,
+          user_id: user.id,
+          entry_date: form.entry_date,
+          location: form.location,
+          dig_site_id: null,
+          weather_summary: form.weather_summary,
+          notes: form.notes,
+          photo_urls: [],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        user.id,
+      );
     },
     onSuccess: () => {
       toast.success(editingId ? "Entry updated" : "Journal entry saved");
       queryClient.invalidateQueries({ queryKey: ["field-journal"] });
+      drainNow();
       handleCloseEditor();
     },
     onError: (err) => {
@@ -126,15 +122,12 @@ export default function FieldJournal() {
 
   const deleteEntry = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("rockscout_field_journal")
-        .delete()
-        .eq("id", id);
-      if (error) throw error;
+      await offlineDeleteJournal(id);
     },
     onSuccess: () => {
       toast.success("Entry deleted");
       queryClient.invalidateQueries({ queryKey: ["field-journal"] });
+      drainNow();
     },
     onError: () => toast.error("Failed to delete entry"),
   });

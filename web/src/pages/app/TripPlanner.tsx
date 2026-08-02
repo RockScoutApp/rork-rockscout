@@ -28,6 +28,8 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
+import { useOfflineSyncContext } from "@/hooks/useOfflineSyncContext";
+import { upsertTrip, deleteTrip as offlineDeleteTrip } from "@/lib/offline-mutations";
 import { toast } from "sonner";
 import {
   allMapMarkers,
@@ -105,6 +107,7 @@ export default function TripPlanner() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { drainNow } = useOfflineSyncContext();
   const [tab, setTab] = useState<"active" | "archived">("active");
   const [showEditor, setShowEditor] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -132,38 +135,29 @@ export default function TripPlanner() {
     mutationFn: async () => {
       if (!user) throw new Error("Sign in to save trips");
       if (!form.name.trim()) throw new Error("Give your trip a name");
-      if (editingId) {
-        const { error } = await supabase
-          .from("rockscout_trips")
-          .update({
-            name: form.name,
-            trip_date: form.trip_date,
-            notes: form.notes,
-            stops: form.stops,
-            target_specimens: form.target_specimens,
-            gear_checklist: form.gear_checklist,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", editingId);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("rockscout_trips")
-          .insert({
-            user_id: user.id,
-            name: form.name,
-            trip_date: form.trip_date,
-            notes: form.notes,
-            stops: form.stops,
-            target_specimens: form.target_specimens,
-            gear_checklist: form.gear_checklist,
-          });
-        if (error) throw error;
-      }
+      const id = editingId || crypto.randomUUID();
+      await upsertTrip(
+        {
+          id,
+          user_id: user.id,
+          name: form.name,
+          trip_date: form.trip_date,
+          notes: form.notes,
+          stops: form.stops,
+          target_specimens: form.target_specimens,
+          gear_checklist: form.gear_checklist,
+          is_archived: false,
+          completed_at: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        user.id,
+      );
     },
     onSuccess: () => {
       toast.success(editingId ? "Trip updated" : "Trip created");
       queryClient.invalidateQueries({ queryKey: ["trips"] });
+      drainNow();
       handleCloseEditor();
     },
     onError: (err) => {
@@ -173,33 +167,33 @@ export default function TripPlanner() {
 
   const archiveTrip = useMutation({
     mutationFn: async (trip: Trip) => {
-      const { error } = await supabase
-        .from("rockscout_trips")
-        .update({
+      if (!user) return;
+      await upsertTrip(
+        {
+          ...trip,
           is_archived: true,
           completed_at: new Date().toISOString(),
-        })
-        .eq("id", trip.id);
-      if (error) throw error;
+          updated_at: new Date().toISOString(),
+        },
+        user.id,
+      );
     },
     onSuccess: () => {
       toast.success("Trip archived");
       queryClient.invalidateQueries({ queryKey: ["trips"] });
+      drainNow();
     },
     onError: () => toast.error("Failed to archive trip"),
   });
 
   const deleteTrip = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("rockscout_trips")
-        .delete()
-        .eq("id", id);
-      if (error) throw error;
+      await offlineDeleteTrip(id);
     },
     onSuccess: () => {
       toast.success("Trip deleted");
       queryClient.invalidateQueries({ queryKey: ["trips"] });
+      drainNow();
     },
     onError: () => toast.error("Failed to delete trip"),
   });
