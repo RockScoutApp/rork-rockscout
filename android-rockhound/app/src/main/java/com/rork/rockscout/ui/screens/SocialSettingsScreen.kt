@@ -41,6 +41,8 @@ import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -80,6 +82,7 @@ import androidx.compose.material3.SliderDefaults
 import kotlin.math.roundToInt
 import com.rork.rockscout.data.AuroraRepository
 import com.rork.rockscout.data.WorkScheduler
+import com.rork.rockscout.data.SyncQueueManager
 import com.rork.rockscout.data.SeedData
 import com.rork.rockscout.ui.components.BulkDownloadCard
 import com.rork.rockscout.ui.components.LegalPillButton
@@ -458,6 +461,86 @@ fun SocialSettingsScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextMid,
             )
+
+            // ── Sync Now button ──
+            // Manually forces an immediate upload of all pending local changes
+            // (captures, saved images, field journal entries, trips) to Supabase.
+            val syncQueuePending by SyncQueueManager.pendingCount.collectAsStateWithLifecycle()
+            var isSyncingNow by remember { mutableStateOf(false) }
+            var syncResultMsg by remember { mutableStateOf<String?>(null) }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .glowingBorder(1.dp, Aqua.copy(alpha = 0.55f), RoundedCornerShape(14.dp))
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(
+                                Color(0xFF0A1410).copy(alpha = 0.85f),
+                                Color(0xFF08100C).copy(alpha = 0.65f),
+                            )
+                        )
+                    )
+                    .clickable(enabled = !isSyncingNow && syncQueuePending > 0) {
+                        isSyncingNow = true
+                        syncResultMsg = null
+                        scope.launch(Dispatchers.IO) {
+                            val synced = SyncQueueManager.drain()
+                            isSyncingNow = false
+                            syncResultMsg = if (synced > 0) {
+                                "Synced $synced item${if (synced == 1) "" else "s"} successfully"
+                            } else if (syncQueuePending == 0) {
+                                "Nothing to sync — all caught up"
+                            } else {
+                                "Sync failed — will retry automatically"
+                            }
+                        }
+                    }
+                    .padding(horizontal = 14.dp, vertical = 14.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Aqua.copy(alpha = if (isSyncingNow) 0.08f else 0.18f))
+                            .glowingBorder(1.dp, Aqua.copy(alpha = if (isSyncingNow) 0.25f else 0.45f), RoundedCornerShape(12.dp)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            if (isSyncingNow) Icons.Filled.CloudUpload else Icons.Filled.Sync,
+                            contentDescription = null,
+                            tint = Aqua,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = if (isSyncingNow) "Syncing…" else "Sync Now",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                shadow = Shadow(color = Color.Black.copy(alpha = 0.8f), offset = Offset(0f, 1f), blurRadius = 4f),
+                            ),
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            text = when {
+                                isSyncingNow -> "Uploading pending captures, photos, and journal entries…"
+                                syncResultMsg != null -> syncResultMsg!!
+                                syncQueuePending > 0 -> "$syncQueuePending pending item${if (syncQueuePending == 1) "" else "s"} waiting to sync"
+                                else -> "All changes synced — nothing pending"
+                            },
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                shadow = Shadow(color = Color.Black.copy(alpha = 0.7f), offset = Offset(0f, 1f), blurRadius = 3f),
+                            ),
+                            color = if (syncResultMsg != null && syncResultMsg!!.contains("failed")) Color(0xFFFF6B3D) else TextMid,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                }
+            }
 
             // Live storage usage card: shows cached map tiles + uploaded rock
             // images currently on-device, recomputed whenever the user enters

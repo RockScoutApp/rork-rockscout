@@ -1,10 +1,12 @@
 import { useNavigate } from "react-router-dom";
-import { Bell, Download, LogOut, ChevronRight, Smartphone } from "lucide-react";
+import { Bell, Download, LogOut, ChevronRight, Smartphone, RefreshCw, CloudUpload, CheckCircle2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useOfflineSyncContext } from "@/hooks/useOfflineSyncContext";
 import { SculptedCard, SculptedButton, ScreenScaffold } from "@/components/sculpted";
+import { toast } from "sonner";
 
 const AQUA_HEX = "20 62% 65%";
 const CITRINE_HEX = "36 80% 58%";
@@ -17,10 +19,21 @@ export default function Settings() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const push = usePushNotifications();
+  const offlineSync = useOfflineSyncContext();
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/app");
+  };
+
+  const handleSyncNow = async () => {
+    if (!user || offlineSync.isSyncing) return;
+    await offlineSync.drainNow();
+    if (offlineSync.pendingCount === 0) {
+      toast.success("All changes synced to the cloud");
+    } else {
+      toast.error("Some items couldn't sync — will retry automatically");
+    }
   };
 
   return (
@@ -100,6 +113,46 @@ export default function Settings() {
               </SculptedButton>
             </div>
           )}
+        </SculptedCard>
+
+        {/* Sync Now — manually force upload of pending local changes */}
+        <SculptedCard accent="aqua" className="p-5">
+          <div className="flex items-center gap-3">
+            <div
+              className="icon-badge glowing-border flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+              style={{ ["--badge-accent" as string]: AQUA_HEX, ["--glow-color" as string]: AQUA_HEX, color: `hsl(${AQUA_HEX})` }}
+            >
+              {offlineSync.isSyncing ? (
+                <CloudUpload className="h-5 w-5 animate-pulse" />
+              ) : offlineSync.pendingCount === 0 ? (
+                <CheckCircle2 className="h-5 w-5" />
+              ) : (
+                <RefreshCw className="h-5 w-5" />
+              )}
+            </div>
+            <div className="flex-1">
+              <p className="font-display text-sm font-bold text-foreground">
+                {offlineSync.isSyncing ? "Syncing…" : "Sync Now"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {offlineSync.isSyncing
+                  ? "Uploading pending captures, photos, and journal entries…"
+                  : offlineSync.pendingCount > 0
+                    ? `${offlineSync.pendingCount} pending item${offlineSync.pendingCount === 1 ? "" : "s"} waiting to upload`
+                    : "All changes synced — nothing pending"}
+              </p>
+            </div>
+          </div>
+          <SculptedButton
+            accent="aqua"
+            size="sm"
+            className="mt-4 w-full"
+            disabled={offlineSync.isSyncing || offlineSync.pendingCount === 0}
+            onClick={() => void handleSyncNow()}
+          >
+            <RefreshCw className={`h-4 w-4 ${offlineSync.isSyncing ? "animate-spin" : ""}`} />
+            {offlineSync.isSyncing ? "Syncing…" : "Force sync now"}
+          </SculptedButton>
         </SculptedCard>
 
         {/* Offline downloads */}

@@ -7,6 +7,8 @@ struct ProfileScreen: View {
     @Environment(EntitlementManager.self) private var entitlement
     @State private var showSignOutConfirm: Bool = false
     @State private var showPaywall: Bool = false
+    @State private var isSyncingNow: Bool = false
+    @State private var syncResultMsg: String? = nil
 
     var body: some View {
         ZStack {
@@ -130,9 +132,71 @@ struct ProfileScreen: View {
             SettingsRow(icon: "location.fill", title: "Location Services", value: "Enabled")
             Divider().background(RockScoutColors.stoneLine.opacity(0.3))
             SettingsRow(icon: "camera.fill", title: "Camera Access", value: "Granted")
+            Divider().background(RockScoutColors.stoneLine.opacity(0.3))
+
+            // Sync Now button — manually forces upload of pending local changes
+            syncNowRow
         }
         .padding(16)
         .rsCard()
+    }
+
+    @ViewBuilder
+    private var syncNowRow: some View {
+        Button {
+            guard !isSyncingNow else { return }
+            isSyncingNow = true
+            syncResultMsg = nil
+            Task {
+                let synced = await OfflineSyncService.shared.drain()
+                await MainActor.run {
+                    isSyncingNow = false
+                    if synced > 0 {
+                        syncResultMsg = "Synced \(synced) item\(synced == 1 ? "" : "s") successfully"
+                    } else if OfflineSyncService.shared.pendingCount == 0 {
+                        syncResultMsg = "All caught up — nothing pending"
+                    } else {
+                        syncResultMsg = "Sync failed — will retry automatically"
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: isSyncingNow ? "arrow.triangle.2.circlepath.circle" : "arrow.up.icloud.fill")
+                    .font(.body)
+                    .foregroundStyle(.rsAccent)
+                    .frame(width: 24)
+                    .rotationEffect(.degrees(isSyncingNow ? 360 : 0))
+                    .animation(
+                        isSyncingNow
+                            ? .linear(duration: 1).repeatForever(autoreverses: false)
+                            : .default,
+                        value: isSyncingNow
+                    )
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(isSyncingNow ? "Syncing…" : "Sync Now")
+                        .font(.subheadline)
+                        .foregroundStyle(.rsText)
+                    Text(
+                        isSyncingNow
+                            ? "Uploading pending captures and photos…"
+                            : syncResultMsg ?? "\(OfflineSyncService.shared.pendingCount) pending item\(OfflineSyncService.shared.pendingCount == 1 ? "" : "s") waiting to upload"
+                    )
+                    .font(.caption)
+                    .foregroundStyle(syncResultMsg?.contains("failed") == true ? RockScoutColors.danger : .rsTextMuted)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.rsTextMuted)
+            }
+            .padding(.vertical, 10)
+        }
+        .disabled(isSyncingNow || OfflineSyncService.shared.pendingCount == 0)
+        .opacity(OfflineSyncService.shared.pendingCount == 0 && !isSyncingNow ? 0.6 : 1)
     }
 
     // MARK: - About
