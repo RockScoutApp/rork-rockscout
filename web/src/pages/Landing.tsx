@@ -484,7 +484,7 @@ const FEATURES_LIST = [
   {
     icon: Upload,
     title: "Submit specimens & add locations",
-    desc: "Found a specimen that isn't in the database? Use the Upload Specimen pill on the Specimen Database screen, Field Captures screen, or specimen detail pages. Submit up to 4 photos plus a name, date found, location, and description — images are automatically checked against a 5 MB size limit to prevent upload failures. If the specimen already exists and your location is a common find spot for it, you'll get a small pop-up letting you know it's already included; if the location is unusual for that specimen, it goes to developer review. Approved entries get added to the Specimen Database or Rocks Are Amazing for every RockScout user to discover. Found a great dig site, rock shop, or gem show not on the map? Use the Upload New Location form to add it, reviewed before going live for everyone.",
+    desc: "Found a specimen that isn't in the database? Use the Upload Specimen pill on the Specimen Database screen, Field Captures screen, or specimen detail pages. Submit up to 10 photos plus a name, date found, location, and description — images are automatically checked against a 5 MB size limit to prevent upload failures. If the specimen already exists and your location is a common find spot for it, you'll get a small pop-up letting you know it's already included; if the location is unusual for that specimen, it goes to developer review. Approved entries get added to the Specimen Database or Rocks Are Amazing for every RockScout user to discover. Found a great dig site, rock shop, or gem show not on the map? Use the Upload New Location form to add it, reviewed before going live for everyone.",
     items: ["Submit specimens", "5 MB image check", "Submit locations", "Reviewed by RockScout", "Community-built database"],
   },
   {
@@ -565,7 +565,7 @@ const FEATURES_LIST = [
     icon: Trophy,
     title: "Achievements, XP & badges",
     desc: "101 achievements and 31 badges with confetti level-ups. Earn XP for every action, track your progress on each locked achievement with a visual progress bar, and share brag-worthy level-up cards.",
-    items: ["102 achievements", "34 badges", "Progress bars on locked achievements", "XP & leveling"],
+    items: ["101 achievements", "31 badges", "Progress bars on locked achievements", "XP & leveling"],
   },
 
   // ── Educational Content & Catalogs ──

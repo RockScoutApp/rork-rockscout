@@ -646,7 +646,7 @@ private fun FreeTierCard() {
             Spacer(Modifier.height(8.dp))
             FeatureRow(Icons.Filled.Bolt, "Watch 2 short rock-related videos = 1 ID token (no weekly cap)", Aqua)
             Spacer(Modifier.height(8.dp))
-            FeatureRow(Icons.Filled.Favorite, "Donate any amount — get tokens + a temporary full-feature unlock (2 days up to 1 month)", Color(0xFFE2574C))
+            FeatureRow(Icons.Filled.Favorite, "Donate any amount — get tokens + a temporary full-feature unlock (2 days up to 5 days)", Color(0xFFE2574C))
             Spacer(Modifier.height(12.dp))
 
             // Accuracy
@@ -902,7 +902,7 @@ fun DonationCard(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Choose an amount to support the developer. Each donation grants identifier tokens and a temporary full-feature unlock — from 2 days up to 1 week.",
+                        text = "Choose an amount to support the developer. Each donation grants identifier tokens and a temporary full-feature unlock — from 2 days up to 5 days.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFFF5F2EA),
                     )

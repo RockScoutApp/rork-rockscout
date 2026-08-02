@@ -29,7 +29,7 @@ export default function SubmitSpecimenDialog({ open, onDismiss }: SubmitSpecimen
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    Array.from(files).slice(0, 5 - photos.length).forEach((file) => {
+    Array.from(files).slice(0, 10 - photos.length).forEach((file) => {
       const reader = new FileReader();
       reader.onload = () => setPhotos((prev) => [...prev, reader.result as string]);
       reader.readAsDataURL(file);
@@ -114,7 +114,7 @@ export default function SubmitSpecimenDialog({ open, onDismiss }: SubmitSpecimen
                   </button>
                 </div>
               ))}
-              {photos.length < 5 && (
+              {photos.length < 10 && (
                 <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-primary/40 bg-muted/20">
                   <ImageIcon className="h-6 w-6 text-muted-foreground" />
                   <span className="mt-1 text-[10px] text-muted-foreground">Add</span>

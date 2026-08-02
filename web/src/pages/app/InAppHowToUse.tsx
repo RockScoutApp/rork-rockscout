@@ -20,6 +20,9 @@ import {
   FileText,
   Smartphone,
   Locate,
+  CloudUpload,
+  RefreshCw,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -110,6 +113,21 @@ const SECTIONS: { title: string; icon: typeof Camera; body: string }[] = [
     body: "Install RockScout as a PWA on desktop, laptop, or tablet. Free tier: read-only access to the full database, guides, and map. Premium tier: all features unlocked on up to 2 additional devices with email confirmation.",
   },
   {
+    title: "Offline Photo Sync Queue",
+    icon: CloudUpload,
+    body: "When you capture photos with no signal, RockScout stores them in a local offline sync queue automatically. The queue holds your photos, form data, and location pins safely on-device until your connection is restored, then drains automatically — uploading everything to your cloud storage on Supabase without any action needed. A periodic background sync runs every 6 hours, and an optional nightly sync at 4 AM in your local time zone backs up a day's worth of captures while your device charges on WiFi.",
+  },
+  {
+    title: "Sync Now — Manual Upload",
+    icon: RefreshCw,
+    body: "Open Settings and tap the \"Sync Now\" button in the Storage section to force an immediate upload of all pending local changes — field captures, saved images, field journal entries, and trip planner data. Use it after a long field day with no signal to push everything to the cloud immediately.",
+  },
+  {
+    title: "Data Security & Row Level Security",
+    icon: ShieldCheck,
+    body: "Your specimen captures, field journal entries, saved images, and trip planner data are protected by Supabase Row Level Security (RLS) policies. Only you can view, edit, or delete your own data. Photos are stored in individual user-specific storage buckets, encrypted in transit via HTTPS/TLS, and your credentials are managed through Supabase Auth with secure session management.",
+  },
+  {
     title: "Search Near Me",
     icon: Locate,
     body: "Tap \"Search Near Me\" on the Dig Sites section to run a web search for rock-related places near your GPS location. Searches 50 miles first, then expands to 100 miles automatically. Results open in your browser.",
@@ -169,8 +187,8 @@ export default function InAppHowToUse() {
           5 MB Upload Limit
         </h3>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          All photo uploads (Identify, Field Camera) are limited to 5 MB. If
-          your photo is larger, choose a smaller one or compress it first.
+          All photo uploads (Identify, Field Camera, Submit Specimen) are limited to 5 MB each. If
+          your photo is larger, choose a smaller one or compress it first. Specimen submissions accept up to 10 photos.
         </p>
       </div>
 
@@ -182,6 +200,15 @@ export default function InAppHowToUse() {
           Your collection, wishlist, field journal, trips, favorite spots, and
           achievements sync across the Android app and the web PWA. Sign in
           with the same account on any device — your data follows you.
+        </p>
+      </div>
+
+      <div className="dark-card sculpted-raised rounded-xl p-4">
+        <h3 className="text-sm font-semibold text-foreground">
+          Offline-First Design
+        </h3>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          RockScout is built for the field. Bulk-download all specimen photos (~3.5 GB) for offline access, cache map tiles for dig sites and trip areas, and capture photos with no signal — the offline sync queue uploads everything automatically once you're back online. Tap Sync Now in Settings to force an immediate upload.
         </p>
       </div>
     </div>
