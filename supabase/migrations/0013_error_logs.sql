@@ -4,6 +4,9 @@
 -- RLS disabled — inserts are gated by the app-key on the worker side.
 -- Anyone with the anon key can read for diagnostics dashboards.
 
+-- Ensure pg_cron is available before scheduling the retention job.
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
 CREATE TABLE IF NOT EXISTS rockscout_error_logs (
   id bigserial PRIMARY KEY,
   created_at timestamptz NOT NULL DEFAULT now(),
@@ -50,6 +53,13 @@ CREATE INDEX IF NOT EXISTS rockscout_error_logs_fatal_idx
 
 -- Retention: auto-delete errors older than 90 days (Supabase pg_cron)
 -- Keeps the table from growing unbounded in production.
+-- Idempotent: unschedule any existing job first to avoid duplicates on re-run.
+DO $$
+BEGIN
+  PERFORM cron.unschedule('cleanup-old-error-logs');
+EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
+
 SELECT cron.schedule(
   'cleanup-old-error-logs',
   '0 3 * * *',
