@@ -4,6 +4,7 @@ import { ArrowLeft, Heart, Plus, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import { toast } from "sonner";
 
 interface SpecimenDetail {
@@ -128,10 +129,11 @@ export default function SpecimenDetail() {
       </Button>
 
       {specimen.image_url && (
-        <div className="overflow-hidden rounded-xl border border-border">
-          <img
+        <div className="relative overflow-hidden rounded-xl border border-border">
+          <OptimizedImage
             src={specimen.image_url}
             alt={specimen.name}
+            loading="eager"
             className="max-h-[400px] w-full object-cover"
           />
         </div>

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 interface Specimen {
   id: string;
@@ -165,15 +166,13 @@ export default function Specimens() {
                 onClick={() => navigate(`/app/specimens/${specimen.id}`)}
                 className="group flex flex-col overflow-hidden rounded-lg border border-border bg-card text-left transition-all hover:border-primary/40"
               >
-                <div className="aspect-square w-full overflow-hidden bg-muted/30">
-                  {specimen.image_url && (
-                    <img
-                      src={specimen.image_url}
-                      alt={specimen.name}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                    />
-                  )}
+                <div className="relative aspect-square w-full overflow-hidden bg-muted/30">
+                  <OptimizedImage
+                    src={specimen.image_url}
+                    alt={specimen.name}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                  />
                 </div>
                 <div className="p-2.5">
                   <h3 className="truncate text-sm font-semibold text-foreground">

@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, Clock, Hammer, Lightbulb, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { findArtifactById } from "@/data/artifacts";
+import { OptimizedImage } from "@/components/OptimizedImage";
 import NotFound from "@/pages/NotFound";
 
 export default function ArtifactDetail() {
@@ -25,9 +26,10 @@ export default function ArtifactDetail() {
 
       <div className="overflow-hidden rounded-xl border border-border bg-card">
         <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted/20">
-          <img
+          <OptimizedImage
             src={artifact.imageUrl}
             alt={artifact.name}
+            loading="eager"
             className="h-full w-full object-cover"
           />
         </div>

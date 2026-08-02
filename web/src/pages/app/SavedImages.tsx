@@ -3,6 +3,7 @@ import { Image as ImageIcon, Trash2, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 interface SavedImage {
   id: string;
@@ -78,8 +79,8 @@ export default function SavedImages() {
               key={img.id}
               className="group relative overflow-hidden rounded-lg border border-border bg-card"
             >
-              <div className="aspect-square w-full overflow-hidden bg-muted/30">
-                <img
+              <div className="relative aspect-square w-full overflow-hidden bg-muted/30">
+                <OptimizedImage
                   src={img.image_url}
                   alt="Saved image"
                   loading="lazy"

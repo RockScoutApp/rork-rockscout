@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 interface CollectionItem {
   id: string;
@@ -123,15 +124,13 @@ export default function Collection() {
                 onClick={() => navigate(`/app/specimens/${item.specimen_id}`)}
                 className="flex flex-1 flex-col text-left"
               >
-                <div className="aspect-square w-full overflow-hidden bg-muted/30">
-                  {item.specimen?.[0]?.image_url && (
-                    <img
-                      src={item.specimen[0].image_url}
-                      alt={item.specimen[0].name}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                    />
-                  )}
+                <div className="relative aspect-square w-full overflow-hidden bg-muted/30">
+                  <OptimizedImage
+                    src={item.specimen?.[0]?.image_url}
+                    alt={item.specimen?.[0]?.name || ""}
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                  />
                 </div>
                 <div className="p-2.5">
                   <h3 className="truncate text-sm font-semibold text-foreground">

@@ -16,6 +16,7 @@ import { handlePush } from "./push";
 import { handleMuseums } from "./museums";
 import { handleEntitlement } from "./entitlement";
 import { handleSettingsBackup } from "./settings-backup";
+import { handleImageProxy, buildProxyCors } from "./image-proxy";
 import {
   buildCorsHeaders,
   guardEndpoint,
@@ -292,6 +293,19 @@ export default {
         },
         cors,
       );
+    }
+
+    // Image caching proxy — public GET, no auth required.
+    // Proxies r2-pub.rork.com images with immutable cache headers so
+    // Cloudflare's edge CDN caches them (r2-pub returns no cache-control,
+    // so without this every image request hits origin).
+    if (url.pathname === "/img" && request.method === "GET") {
+      return handleImageProxy(request, buildProxyCors(request));
+    }
+
+    // CORS preflight for /img
+    if (url.pathname === "/img" && request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: buildProxyCors(request) });
     }
 
     return new Response("not found", { status: 404, headers: cors });

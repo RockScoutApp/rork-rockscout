@@ -4,10 +4,11 @@
 // cache-first for static assets.
 const CACHE_NAME = "rockscout-v10";
 const TILE_CACHE = "rockscout-tiles-v1";
-// Caches that must survive activation. TILE_CACHE is deliberately unversioned:
-// downloaded map tiles are expensive to refetch in the field, so a new shell
-// version must not wipe them.
-const KEEP_CACHES = [CACHE_NAME, TILE_CACHE];
+const IMAGE_CACHE = "rockscout-images-v1";
+// Caches that must survive activation. TILE_CACHE and IMAGE_CACHE are
+// deliberately unversioned: downloaded images and map tiles are expensive
+// to refetch, so a new shell version must not wipe them.
+const KEEP_CACHES = [CACHE_NAME, TILE_CACHE, IMAGE_CACHE];
 const SHELL_ASSETS = [
   "/",
   "/app",
@@ -131,6 +132,28 @@ self.addEventListener("fetch", (event) => {
   if (TILE_HOSTS.includes(url.hostname)) {
     event.respondWith(
       caches.open(TILE_CACHE).then((cache) =>
+        cache.match(request).then((cached) => {
+          const fetchPromise = fetch(request)
+            .then((response) => {
+              if (response.ok) cache.put(request, response.clone());
+              return response;
+            })
+            .catch(() => cached || Response.error());
+          return cached || fetchPromise;
+        }),
+      ),
+    );
+    return;
+  }
+
+  // r2-pub.rork.com images and our image proxy: cache-first with
+  // stale-while-revalidate. Images are immutable (content-addressed by UUID),
+  // so a cached copy is always valid. The proxy adds cache-control headers
+  // for edge caching; the SW provides instant repeat loads from disk.
+  if (url.hostname === "r2-pub.rork.com" ||
+      (url.hostname === "rockscout-finder-backend.rork.app" && url.pathname === "/img")) {
+    event.respondWith(
+      caches.open(IMAGE_CACHE).then((cache) =>
         cache.match(request).then((cached) => {
           const fetchPromise = fetch(request)
             .then((response) => {

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRightLeft, Loader2, MapPin } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 interface TradeListing {
   id: string;
@@ -51,8 +52,8 @@ export default function TradingFloor() {
           {listings.map((listing) => (
             <div key={listing.id} className="rounded-xl border border-border bg-card overflow-hidden">
               {listing.image_url && (
-                <div className="aspect-square w-full overflow-hidden bg-muted/30">
-                  <img src={listing.image_url} alt={listing.title} loading="lazy" className="h-full w-full object-cover" />
+                <div className="relative aspect-square w-full overflow-hidden bg-muted/30">
+                  <OptimizedImage src={listing.image_url} alt={listing.title} loading="lazy" className="h-full w-full object-cover" />
                 </div>
               )}
               <div className="p-3">

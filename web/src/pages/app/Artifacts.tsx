@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Bone, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { artifacts, artifactFamilies } from "@/data/artifacts";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 export default function Artifacts() {
   const navigate = useNavigate();
@@ -90,8 +91,8 @@ export default function Artifacts() {
             onClick={() => navigate(`/app/artifacts/${artifact.id}`)}
             className="group flex flex-col overflow-hidden rounded-lg border border-border bg-card text-left transition-all hover:border-primary/40"
           >
-            <div className="aspect-square w-full overflow-hidden bg-muted/30">
-              <img
+            <div className="relative aspect-square w-full overflow-hidden bg-muted/30">
+              <OptimizedImage
                 src={artifact.imageUrl}
                 alt={artifact.name}
                 loading="lazy"

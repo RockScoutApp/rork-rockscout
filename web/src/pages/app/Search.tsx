@@ -4,6 +4,7 @@ import { Search as SearchIcon, X, Bone, MapPin, BookOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { artifacts } from "@/data/artifacts";
 import { digSites, blmDigSites, stateParks, getTypeLabel, getTypeMeta } from "@/data/locations";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 interface SearchResult {
   id: string;
@@ -112,8 +113,8 @@ export default function Search() {
               className="flex w-full items-center gap-3 rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-primary/40"
             >
               {result.imageUrl ? (
-                <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted/30">
-                  <img
+                <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted/30">
+                  <OptimizedImage
                     src={result.imageUrl}
                     alt={result.name}
                     loading="lazy"

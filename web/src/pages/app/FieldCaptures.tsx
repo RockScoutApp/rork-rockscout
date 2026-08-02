@@ -24,6 +24,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 interface Capture {
   id: string;
@@ -149,14 +150,12 @@ export default function FieldCaptures() {
               className="group overflow-hidden rounded-xl border border-border bg-card"
             >
               <div className="relative aspect-square w-full overflow-hidden bg-muted/30">
-                {capture.image_urls?.[0] && (
-                  <img
-                    src={capture.image_urls[0]}
-                    alt={capture.custom_name || "Field capture"}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                  />
-                )}
+                <OptimizedImage
+                  src={capture.image_urls?.[0]}
+                  alt={capture.custom_name || "Field capture"}
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                />
                 <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                   <button
                     onClick={() => handleEdit(capture)}
