@@ -103,7 +103,7 @@ nonisolated enum EmailVerificationService {
 nonisolated enum AppSecrets {
     private static let fallbackFunctionsURL = "https://rockscout-finder-backend.rork.app"
     private static let fallbackAppKey = "rpk_munggtdkjtv3tbx5sw9ge3kebajzh39k"
-    private static let fallbackSupabaseURL = "https://kzgzmudgascivwivxvvn.supabase.co"
+    private static let fallbackSupabaseURL = "https://kblsiyyelyokhxaxefhy.supabase.co"
     private static let fallbackSupabaseAnonKey = "sb_publishable_xNJLANDaaAfuEF9q_lsBdw_3zfL6lBk"
     private static let fallbackRevenueCatIOSKey = "appl_vfaAnYfbiMkgwtUSrQqmMnWGVPe"
 
