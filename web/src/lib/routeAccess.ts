@@ -76,14 +76,14 @@ export const ROUTE_ACCESS: Record<string, RouteTier> = {
   "token-info": "bookmarks",
   referral: "bookmarks",
   "manage-devices": "bookmarks",
+  captures: "bookmarks",
+  "saved-images": "bookmarks",
 
   // ─── Premium (locked for free users — show PremiumGate) ───
   identify: "premium",
   scan: "premium",
   journal: "premium",
   trips: "premium",
-  captures: "premium",
-  "saved-images": "premium",
   "archived-trips": "premium",
 
   // ─── Social (fully hidden for free users — redirect to Home) ───

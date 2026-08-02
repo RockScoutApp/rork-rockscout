@@ -146,15 +146,6 @@ function getFeatureInfo(routePath: string): FeatureInfo {
       description:
         "Build multi-stop rockhounding routes with drag-and-drop reordering, gear checklists, and a calendar view.",
     },
-    captures: {
-      shortLabel: "field captures",
-      description:
-        "Snap quick field photos and save them to your Field Captures album with GPS tags and notes.",
-    },
-    "saved-images": {
-      shortLabel: "saved images",
-      description: "Access your full saved images gallery with bulk download and offline support.",
-    },
     "archived-trips": {
       shortLabel: "archived trips",
       description: "Browse and restore your completed rockhounding trips.",

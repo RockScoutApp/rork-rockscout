@@ -190,11 +190,11 @@ export default function Home() {
   const navigate = useNavigate();
   const { isFree, isPremium } = useTier();
 
-  // Free users: hide social/camera/identify tiles, show Go Premium banner
+  // Free users: hide social/identify tiles, show Go Premium banner.
+  // Field Camera, Field Captures, and Saved Images are available to free users
+  // so kids can use tablet cameras to photograph rocks and keep them.
   const premiumOnlyRoutes = new Set([
     "/app/identify",
-    "/app/captures",
-    "/app/saved-images",
     "/app/journal",
     "/app/trips",
     "/app/trade",
@@ -206,7 +206,6 @@ export default function Home() {
   ]);
   const visibleTiles = TILES.filter((tile) => {
     if (isPremium) return true;
-    if (tile.onClick) return false; // Field Camera
     if (premiumOnlyRoutes.has(tile.to)) return false;
     return true;
   });
@@ -236,7 +235,7 @@ export default function Home() {
               Go Premium
             </h3>
             <p className="text-sm text-muted-foreground">
-              Unlock AI identification, field camera, social, trade, and more.
+              Unlock AI identification, social, trade, and more.
             </p>
           </div>
           <Zap className="h-5 w-5 text-amber-600 dark:text-amber-400" />
