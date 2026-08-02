@@ -133,7 +133,7 @@ fun SpecimenDetailScreen(
     val collected = collection.any { it.specimenId == spec.id }
     val wishlisted = wishlist.contains(spec.id)
     val isLiked = likedSpecimens.contains(spec.id)
-    val imageUrls = SpecimenImages.urls[spec.id] ?: emptyList()
+    val imageUrls = SpecimenImages.urls[spec.id] ?: spec.imageUrls
     var viewerOpen by remember { mutableStateOf(false) }
     var viewerPage by remember { mutableIntStateOf(0) }
 

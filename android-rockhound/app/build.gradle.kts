@@ -18,8 +18,8 @@ android {
         // than the installed one, and the in-app updater only offers an update
         // when the server-reported code is higher. Keep this in lockstep with
         // LATEST_VERSION_CODE in functions/app-version.ts.
-        versionCode = 10
-        versionName = "1.1.8"
+        versionCode = 11
+        versionName = "1.1.9"
 
         multiDexEnabled = true
     }

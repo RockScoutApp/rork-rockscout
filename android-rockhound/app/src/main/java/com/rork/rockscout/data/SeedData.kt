@@ -5366,7 +5366,11 @@ object SeedData {
         allSpecimens.associateBy { it.id }
     }
 
-    fun specimenById(id: String): Specimen? = specimenMap[id] ?: PrehistoricOrganisms.specimens.find { it.id == id }
+    fun specimenById(id: String): Specimen? =
+        specimenMap[id]
+            ?: PrehistoricOrganisms.specimens.find { it.id == id }
+            ?: CustomSpecimenStore.specimens.value.find { it.id == id }
+            ?: CustomSpecimenStore.raaSpecimens.value.find { it.id == id }
 
     fun locationById(id: String): DigLocation? = allLocations.firstOrNull { it.id == id }
     fun guideById(id: String): RockGuide? = guides.firstOrNull { it.id == id }

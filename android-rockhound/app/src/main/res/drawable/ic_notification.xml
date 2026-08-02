@@ -5,11 +5,18 @@
     android:viewportHeight="24"
     android:tint="#FFFFFF">
     <!--
-        RockScout notification icon: white silhouette of a pickaxe crossed behind
-        a magnifying glass on a transparent background. Android applies the
-        notification accent tint to the source shape, so this stays white.
+        RockScout notification icon: white faceted diamond silhouette on a
+        transparent background. Android applies the notification accent tint to
+        the source shape, so this stays white.
     -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M8,8 A3.5,3.5 0 1,1 8,15 A3.5,3.5 0 1,1 8,8 Z M11,13 L13,11 L16,14 L14,16 Z M4,20 L5,19 L19,5 L18,4 Z M16,7 L19,4 L22,7 L19,10 Z" />
+        android:pathData="M12,2 L22,12 L12,22 L2,12 Z" />
+    <!-- Internal facet lines -->
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="1"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M12,2 L12,22 M2,12 L22,12 M7,7 L17,17 M17,7 L7,17" />
 </vector>
