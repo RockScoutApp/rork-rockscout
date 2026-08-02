@@ -9,6 +9,8 @@ struct RockScoutApp: App {
     init() {
         // Configure RevenueCat on launch
         EntitlementManager.shared.configure()
+        // Configure central error reporting
+        ErrorReporter.shared.configure()
     }
 
     var body: some Scene {
@@ -17,6 +19,10 @@ struct RockScoutApp: App {
                 .environment(authManager)
                 .environment(entitlementManager)
                 .preferredColorScheme(.dark)
+                .onAppear {
+                    // Set user ID for error reporting once auth is known
+                    ErrorReporter.shared.setUserId(authManager.currentUserId?.uuidString)
+                }
         }
     }
 }

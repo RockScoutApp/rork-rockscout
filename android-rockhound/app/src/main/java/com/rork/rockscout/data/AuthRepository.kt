@@ -133,6 +133,7 @@ class AuthRepository private constructor() {
             _sessionStatus.value = SessionStatus.Authenticated(
                 Session(user = UserInfo(id = user.id, email = user.email))
             )
+            ErrorReporter.setUserId(user.id)
             scope.launch { PurchaseManager.instance.linkRevenueCatUser(user.id) }
             SupabaseDataSync.syncInBackground()
             Log.i("AuthRepository", "Session restored for user=${user.id}")
@@ -165,6 +166,7 @@ class AuthRepository private constructor() {
 
         // Both failed — clear tokens and require sign-in.
         clearSupabaseTokens()
+        ErrorReporter.setUserId(null)
         _sessionStatus.value = SessionStatus.NotAuthenticated()
         Log.w("AuthRepository", "Session restore failed — tokens cleared")
     }
@@ -665,6 +667,7 @@ class AuthRepository private constructor() {
             clearSupabaseTokens()
             LocalDataStore.setString(LocalDataStore.KEY_AUTH_EMAIL, "")
             LocalDataStore.setString(LocalDataStore.KEY_AUTH_USER_ID, "")
+            ErrorReporter.setUserId(null)
             _sessionStatus.value = SessionStatus.NotAuthenticated()
             Unit
         }.onFailure {

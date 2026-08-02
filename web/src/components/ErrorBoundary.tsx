@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from "react";
+import { reportError } from "@/lib/errorReporter";
 
 interface Props {
   children: ReactNode;
@@ -23,6 +24,13 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error("RockScout render crash:", error, info.componentStack);
+    // Report to central service with the component stack as breadcrumb
+    void reportError(
+      window.location.pathname,
+      error,
+      true,  // isFatal
+      false, // attemptSelfHeal
+    );
   }
 
   render() {

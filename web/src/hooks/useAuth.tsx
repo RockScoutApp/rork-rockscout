@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase, supabaseUrl } from "@/lib/supabase";
 import { syncEntitlement } from "@/lib/entitlement";
+import { setErrorReporterUserId } from "@/lib/errorReporter";
 
 /**
  * Local capture mode. Enabled ONLY by running the dev server with
@@ -114,6 +115,8 @@ function useAuthState() {
     const { data: listener } = supabase.auth.onAuthStateChange(
       (_event, newSession) => {
         setSession(newSession);
+        // Update error reporter with user ID for attribution
+        setErrorReporterUserId(newSession?.user?.id ?? null);
       },
     );
 

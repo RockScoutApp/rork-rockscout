@@ -17,6 +17,7 @@ import { handleMuseums } from "./museums";
 import { handleEntitlement } from "./entitlement";
 import { handleSettingsBackup } from "./settings-backup";
 import { handleImageProxy, buildProxyCors } from "./image-proxy";
+import { handleErrorReport } from "./error-report";
 import {
   buildCorsHeaders,
   guardEndpoint,
@@ -290,6 +291,20 @@ export default {
           REVENUECAT_SECRET_API_KEY?: string;
           SUPABASE_SERVICE_ROLE_KEY?: string;
           EXPO_PUBLIC_SUPABASE_URL?: string;
+        },
+        cors,
+      );
+    }
+
+    // Central error reporting — app-key auth, no rate limit (errors should
+    // always be accepted). Deduplicated on the server side to prevent floods.
+    if (url.pathname === "/error-report" && request.method === "POST") {
+      return handleErrorReport(
+        request,
+        env as unknown as {
+          EXPO_PUBLIC_RORK_APP_KEY?: string;
+          EXPO_PUBLIC_SUPABASE_URL?: string;
+          SUPABASE_SERVICE_ROLE_KEY?: string;
         },
         cors,
       );

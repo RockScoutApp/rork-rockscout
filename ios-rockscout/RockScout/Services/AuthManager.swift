@@ -33,8 +33,10 @@ final class AuthManager {
         do {
             let restored = try await SupabaseManager.shared.client.auth.session
             session = restored
+            ErrorReporter.shared.setUserId(restored.user.id.uuidString)
         } catch {
             session = nil
+            ErrorReporter.shared.setUserId(nil)
         }
         isLoading = false
     }
@@ -53,9 +55,11 @@ final class AuthManager {
             )
             if let session = response.session {
                 self.session = session
+                ErrorReporter.shared.setUserId(session.user.id.uuidString)
             }
         } catch {
             self.error = userFriendlyError(error)
+            ErrorReporter.shared.report(screen: "SignUp", error: error)
             throw error
         }
     }
@@ -73,8 +77,10 @@ final class AuthManager {
                 password: password
             )
             session = response.session
+            ErrorReporter.shared.setUserId(response.session?.user.id.uuidString)
         } catch {
             self.error = userFriendlyError(error)
+            ErrorReporter.shared.report(screen: "SignIn", error: error)
             throw error
         }
     }
@@ -88,6 +94,7 @@ final class AuthManager {
             // Best-effort — clear local state regardless
         }
         session = nil
+        ErrorReporter.shared.setUserId(nil)
     }
 
     // MARK: - Password reset

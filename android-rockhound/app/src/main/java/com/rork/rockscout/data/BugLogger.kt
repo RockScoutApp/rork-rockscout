@@ -131,6 +131,26 @@ object BugLogger {
         }
     }
 
+    /**
+     * Report a non-fatal error to the central service AND store it locally.
+     * Called from catch blocks that want both local logging and remote reporting.
+     */
+    fun reportAndLog(
+        context: Context?,
+        screen: String,
+        throwable: Throwable,
+        isFatal: Boolean = false,
+    ) {
+        log(context, screen, throwable, isFatal)
+        ErrorReporter.report(
+            context = context,
+            screen = screen,
+            throwable = throwable,
+            isFatal = isFatal,
+            attemptSelfHeal = !isFatal,
+        )
+    }
+
     private fun addEntry(
         context: Context?,
         screen: String,

@@ -3,7 +3,12 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { registerServiceWorker } from "./lib/swUpdate";
+import { installGlobalErrorHandlers } from "./lib/errorReporter";
 import "./index.css";
+
+// Install global error capture before React mounts so we catch
+// module-eval errors, chunk loading failures, and unhandled rejections.
+installGlobalErrorHandlers();
 
 const root = createRoot(document.getElementById("root")!);
 root.render(

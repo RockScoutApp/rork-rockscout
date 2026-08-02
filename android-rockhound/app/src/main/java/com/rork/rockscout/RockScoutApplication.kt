@@ -19,6 +19,7 @@ import com.rork.rockscout.data.AdAnalyticsTracker
 import com.rork.rockscout.data.AffiliateClickTracker
 import com.rork.rockscout.data.TopPickManager
 import com.rork.rockscout.data.BugLogger
+import com.rork.rockscout.data.ErrorReporter
 import com.rork.rockscout.data.IdentifyAccessManager
 import com.rork.rockscout.data.IdentifyCache
 import com.rork.rockscout.data.NotificationHelper
@@ -90,6 +91,14 @@ class RockScoutApplication : Application() {
             Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
                 Log.e("RockScoutCrash", "Uncaught exception on ${thread.name}", throwable)
                 writeCrashLog(thread, throwable)
+                runCatching {
+                    ErrorReporter.report(
+                        screen = "Global/${thread.name}",
+                        throwable = throwable,
+                        isFatal = true,
+                        attemptSelfHeal = false,
+                    )
+                }
                 runCatching { previousHandler?.uncaughtException(thread, throwable) }
             }
             Log.e(startupTag, "Crash handler installed")
@@ -199,6 +208,10 @@ class RockScoutApplication : Application() {
 
         safeInit("bug-logger") {
             BugLogger.initialize(this)
+        }
+
+        safeInit("error-reporter") {
+            ErrorReporter.initialize(this)
         }
 
         safeInit("dig-site-discovery-store") {
