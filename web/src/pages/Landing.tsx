@@ -936,15 +936,15 @@ const CTA = () => (
           RockScout is coming soon to Google Play and the App Store. Be the first to know when it launches.
         </p>
         <div className="mt-7 flex flex-col items-center justify-center gap-3">
-          <span
-            aria-disabled
-            className="inline-flex h-14 w-56 cursor-default items-center justify-center gap-2.5 rounded-full bg-primary px-5 font-semibold text-primary-foreground"
+          <a
+            href="/download/rockscout-1.1.6.apk"
+            className="inline-flex h-14 w-56 items-center justify-center gap-2.5 rounded-full bg-primary px-5 font-semibold text-primary-foreground transition-transform hover:scale-[1.02] active:scale-[0.98]"
           >
             <Download className="h-5 w-5 shrink-0" />
             <span className="text-center leading-tight">
-              Coming soon to Google Play
+              Download Android APK
             </span>
-          </span>
+          </a>
           <span
             aria-disabled
             className="inline-flex h-14 w-56 cursor-default items-center justify-center gap-2.5 rounded-full border border-primary/40 bg-primary/10 px-5 font-semibold text-primary/80"

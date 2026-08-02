@@ -13,3 +13,7 @@
 # Site images: 1 day.
 /images/*
   cache-control: public, max-age=86400
+
+# APK downloads: immutable per version, cache long-term at the edge but not in the PWA SW.
+/download/*
+  cache-control: public, max-age=31536000, immutable

@@ -174,6 +174,11 @@ self.addEventListener("fetch", (event) => {
   // Never cache the service worker itself, so a broken SW can always be replaced.
   if (url.pathname === "/sw.js") return;
 
+  // APK downloads are large and immutable per release — never cache them in the
+  // PWA shell, otherwise the service worker install/activate will OOM or pin
+  // an outdated APK forever.
+  if (url.pathname.startsWith("/download/")) return;
+
   // Navigation requests: network-first, fall back to cached shell when offline.
   if (request.mode === "navigate") {
     event.respondWith(

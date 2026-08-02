@@ -28,7 +28,7 @@ const IOS_STORE_URL = "https://apps.apple.com/app/rockscout/id0000000000";
  * that serves it with a stable URL and correct byte length. Leave empty to
  * fall back to the Play Store listing.
  */
-const APK_URL = "";
+const APK_URL = "https://jvns5dfy7fpytx79a2tb3-web.rork.live/download/rockscout-1.1.6.apk";
 const CHANGELOG =
   "1.1.6: Fixed a critical issue where updates could fail with 'App not installed' on some devices. All builds now use a consistent signing key so updates install seamlessly over existing installs. Improved install error reporting and reliability.";
 
