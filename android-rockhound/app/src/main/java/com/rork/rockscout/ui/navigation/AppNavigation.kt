@@ -521,15 +521,20 @@ fun AppNavigation(
         }
     }
 
-    // Safety net: prevent the hardware/OS back button from exiting the
-    // app when at the root (HOME) destination. Individual screens handle
-    // their own back logic (dismiss overlays, pop to previous screen).
-    // This only fires if the HomeScreen's own BackHandler is not active
-    // (e.g. during screen transitions) — it consumes the press as a no-op.
+    // Safety net for the hardware/OS back button. This handler is always
+    // registered and covers every screen, so screens that don't register their
+    // own BackHandler still navigate back instead of exiting the app. At the
+    // root (HOME) destination the press is consumed to prevent the app from
+    // closing. A debounce/lifecycle guard prevents rapid presses from crashing
+    // the NavController during a transition.
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val isAtRoot = currentBackStackEntry?.destination?.route == Routes.HOME
-    BackHandler(enabled = isAtRoot) {
-        // Consume — never exit the app via back button at root
+    BackHandler {
+        if (isAtRoot) {
+            // Consume — never exit the app via back button at root
+        } else {
+            navController.safePopBackStack()
+        }
     }
 
     Box(

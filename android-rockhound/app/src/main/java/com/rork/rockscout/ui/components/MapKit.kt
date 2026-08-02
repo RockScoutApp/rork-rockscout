@@ -948,47 +948,52 @@ fun TripRouteMap(
         // MapView is being detached (when the edit dialog is dismissed) races
         // and throws ConcurrentModificationException / NPE, crashing the app.
         // See FullscreenRouteMapOverlay below for the same correct pattern.
+        // The whole block is wrapped in runCatching and checks isAttachedToWindow
+        // so rapid tab switches or dialog dismissals never bring the app down.
         scope.launch(Dispatchers.IO) {
-            val routePoints = stopsWithLocations.map { (_, loc) -> GeoPoint(loc.latitude, loc.longitude) }
-            val density = context.resources.displayMetrics.density
-            // Outline shadow polyline (dark, thick, behind)
-            val outlinePolyline = Polyline().apply {
-                id = "trip_route_outline"
-                setPoints(routePoints)
-                outlinePaint.strokeWidth = 10f * density
-                outlinePaint.color = android.graphics.Color.argb(120, 0, 0, 0)
-                outlinePaint.isAntiAlias = true
-                outlinePaint.style = Paint.Style.STROKE
-                outlinePaint.strokeCap = Paint.Cap.ROUND
-            }
-            // Main dashed citrine polyline
-            val polyline = Polyline().apply {
-                id = "trip_route"
-                setPoints(routePoints)
-                styleRoutePolyline(this, density)
-            }
-            // Directional arrow markers at midpoint of each segment
-            val arrows = (1 until routePoints.size).map { i ->
-                createDirectionalArrow(mv, routePoints[i - 1], routePoints[i])
-            }
-            val markers = stopsWithLocations.mapIndexed { index, (stop, loc) ->
-                TripStopMarker(mv, index + 1, loc, stop, stop.isCustomPin) {
-                    onStopTap(stop)
-                }.apply { id = "trip_stop_${stop.locationId}" }
-            }
+            runCatching {
+                val routePoints = stopsWithLocations.map { (_, loc) -> GeoPoint(loc.latitude, loc.longitude) }
+                val density = context.resources.displayMetrics.density
+                // Outline shadow polyline (dark, thick, behind)
+                val outlinePolyline = Polyline().apply {
+                    id = "trip_route_outline"
+                    setPoints(routePoints)
+                    outlinePaint.strokeWidth = 10f * density
+                    outlinePaint.color = android.graphics.Color.argb(120, 0, 0, 0)
+                    outlinePaint.isAntiAlias = true
+                    outlinePaint.style = Paint.Style.STROKE
+                    outlinePaint.strokeCap = Paint.Cap.ROUND
+                }
+                // Main dashed citrine polyline
+                val polyline = Polyline().apply {
+                    id = "trip_route"
+                    setPoints(routePoints)
+                    styleRoutePolyline(this, density)
+                }
+                // Directional arrow markers at midpoint of each segment
+                val arrows = (1 until routePoints.size).map { i ->
+                    createDirectionalArrow(mv, routePoints[i - 1], routePoints[i])
+                }
+                val markers = stopsWithLocations.mapIndexed { index, (stop, loc) ->
+                    TripStopMarker(mv, index + 1, loc, stop, stop.isCustomPin) {
+                        onStopTap(stop)
+                    }.apply { id = "trip_stop_${stop.locationId}" }
+                }
 
-            withContext(Dispatchers.Main) {
-                // Clear old route markers/polylines and add new ones on the main
-                // thread to avoid concurrent modification of mv.overlays.
-                mv.overlays.removeAll { it is Marker && it.id?.startsWith("trip_stop_") == true }
-                mv.overlays.removeAll { it is Polyline && (it.id == "trip_route" || it.id == "trip_route_outline") }
-                mv.overlays.add(0, outlinePolyline)
-                mv.overlays.add(1, polyline)
-                arrows.forEach { mv.overlays.add(it) }
-                markers.forEach { mv.overlays.add(it) }
-                val box = BoundingBox.fromGeoPoints(routePoints)
-                mv.zoomToBoundingBox(box, false, 48)
-                mv.invalidate()
+                withContext(Dispatchers.Main) {
+                    if (!mv.isAttachedToWindow) return@withContext
+                    // Clear old route markers/polylines and add new ones on the main
+                    // thread to avoid concurrent modification of mv.overlays.
+                    mv.overlays.removeAll { it is Marker && it.id?.startsWith("trip_stop_") == true }
+                    mv.overlays.removeAll { it is Polyline && (it.id == "trip_route" || it.id == "trip_route_outline") }
+                    mv.overlays.add(0, outlinePolyline)
+                    mv.overlays.add(1, polyline)
+                    arrows.forEach { mv.overlays.add(it) }
+                    markers.forEach { mv.overlays.add(it) }
+                    val box = BoundingBox.fromGeoPoints(routePoints)
+                    mv.zoomToBoundingBox(box, false, 48)
+                    mv.invalidate()
+                }
             }
 
             // NOTE: Automatic tile prefetching removed — it was causing the app to

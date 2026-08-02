@@ -1,6 +1,12 @@
 package com.rork.rockscout.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,13 +18,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,52 +37,63 @@ import androidx.navigation.NavController
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.glowingBorder
+import com.rork.rockscout.ui.navigation.safePopBackStack
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.DarkTextMid
 import kotlinx.coroutines.launch
 
 /**
- * Merged Trip Planner & Field Journal screen — a single tappable tile on the
- * home screen opens this swipeable two-tab page (Trip Planner | Field Journal)
- * using the same pill-switcher + HorizontalPager pattern as the Friends &
- * Messages screen. Both tab pages reuse the existing TripPlannerScreen and
- * FieldJournalScreen composables in embedded mode (no inner scaffold), so all
- * current functionality (add, edit, archive, share, detail sheets, etc.)
- * works exactly the same.
+ * Merged Trip Planner & Field Journal screen. The pill switcher lets the user
+ * flip between Trip Planner and Field Journal. To avoid the native crashes seen
+ * with two OSMDroid MapViews alive inside a HorizontalPager, the content uses
+ * AnimatedContent so only one tab is composed at a time while still keeping a
+ * smooth horizontal slide feel.
  */
 @Composable
 fun TripJournalScreen(
     navController: NavController,
     initialTabIndex: Int = 0,
 ) {
-    val pagerState = rememberPagerState(initialPage = initialTabIndex.coerceIn(0, 1)) { 2 }
+    var currentPage by remember { mutableIntStateOf(initialTabIndex.coerceIn(0, 1)) }
     val scope = rememberCoroutineScope()
 
-    val screenTitle = when (pagerState.currentPage) {
+    val screenTitle = when (currentPage) {
         1 -> "Field Journal"
         else -> "Trip Planner"
     }
 
+    // System-back handler: if the user is on this combined screen, a back press
+    // should leave the combined screen, not fall through to the activity.
+    // The debounced safe pop helper prevents crashes from rapid presses.
+    BackHandler { navController.safePopBackStack() }
+
     ScreenScaffold(
         title = screenTitle,
-        onBack = { navController.popBackStack() },
+        onBack = { navController.safePopBackStack() },
         background = { RockBackground(it) },
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // ── Pill switcher ──
             TripJournalPillSwitcher(
-                currentPage = pagerState.currentPage,
-                onPageSelected = { page ->
-                    scope.launch { pagerState.animateScrollToPage(page) }
-                },
+                currentPage = currentPage,
+                onPageSelected = { page -> currentPage = page },
             )
 
-            HorizontalPager(
-                state = pagerState,
+            AnimatedContent<Int>(
+                targetState = currentPage,
                 modifier = Modifier.fillMaxSize(),
-                pageSpacing = 0.dp,
+                transitionSpec = {
+                    val direction = if (targetState > initialState) 1 else -1
+                    (slideInHorizontally { width -> width * direction } + fadeIn())
+                        .togetherWith(
+                            slideOutHorizontally { width -> -width * direction } + fadeOut()
+                        )
+                },
+                label = "tripJournalTab",
             ) { page ->
+                // Only the active page is composed, so only one MapView can be
+                // alive at a time. This eliminates the freeze/close on tab switch.
                 when (page) {
                     0 -> TripPlannerScreen(navController = navController, embedded = true)
                     1 -> FieldJournalScreen(navController = navController, embedded = true)

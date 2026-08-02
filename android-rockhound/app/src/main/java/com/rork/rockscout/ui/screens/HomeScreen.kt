@@ -227,6 +227,7 @@ import com.rork.rockscout.data.ApkInstaller
 import com.rork.rockscout.data.PlayUpdateManager
 import com.rork.rockscout.ui.components.TokenBank
 import com.rork.rockscout.ui.navigation.Routes
+import com.rork.rockscout.ui.navigation.safePopBackStack
 import com.rork.rockscout.ui.theme.Amethyst
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.AquaDeep
@@ -400,9 +401,7 @@ fun HomeScreen(navController: NavController) {
             else -> {
                 // Never exit the app via back button — only pop if
                 // there's a previous screen. At root, consume and stay.
-                if (navController.previousBackStackEntry != null) {
-                    navController.popBackStack()
-                }
+                navController.safePopBackStack()
             }
         }
     }
