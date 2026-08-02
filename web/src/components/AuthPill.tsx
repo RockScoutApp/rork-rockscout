@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
-  LogIn,
   Crown,
   LogOut,
   Loader2,
@@ -227,21 +226,14 @@ export function AuthPill() {
   if (!user) {
     return (
       <>
-        <button
-          type="button"
-          onClick={() => {
-            setMode("signin");
-            setDialogOpen(true);
-          }}
-          title="Sign in to verify your Premium account and install the RockScout PWA"
-          className="group inline-flex items-center gap-1.5 rounded-full border border-primary/50 bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary transition-all hover:border-primary hover:bg-primary/15 hover:shadow-sm sm:px-4 sm:py-2 sm:text-sm"
+        <Link
+          to="/install"
+          title="Install the Premium PWA with all features unlocked"
+          className="group inline-flex items-center gap-1.5 rounded-full border border-amber-500/50 bg-gradient-to-br from-amber-500/10 to-primary/10 px-3.5 py-1.5 text-xs font-semibold text-amber-600 transition-all hover:border-amber-500 hover:shadow-sm sm:px-4 sm:py-2 sm:text-sm dark:text-amber-400"
         >
-          <LogIn className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-          <span>Sign in</span>
-          <span className="hidden text-[10px] font-normal text-primary/60 sm:inline">
-            · Premium PWA
-          </span>
-        </button>
+          <Crown className="h-3.5 w-3.5 transition-transform group-hover:scale-110" />
+          <span>Premium PWA</span>
+        </Link>
 
         <Dialog
           open={dialogOpen}

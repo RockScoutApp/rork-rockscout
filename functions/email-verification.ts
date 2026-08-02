@@ -56,6 +56,10 @@ interface EmailVerificationEnv {
   EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
   EXPO_PUBLIC_SUPABASE_URL?: string;
+  /** The public web app URL for email-verification redirects. The Worker's
+   *  own origin is the backend domain, not the web app, so redirects must use
+   *  this env var to send users to the correct PWA install page. */
+  WEB_APP_URL?: string;
   /** Legacy binding — no longer used, kept so existing bindings don't break typing. */
   VERIFICATION_KV?: KVNamespace;
 }
@@ -507,8 +511,8 @@ body{margin:0;padding:0;background:#F3EFE7;font-family:-apple-system,Segoe UI,Ro
     const deepLink = `rockscout://verify_email?email=${encodeURIComponent(email)}&verified=false&reason=expired`;
     const userAgent = request.headers.get("User-Agent") ?? "";
     const isMobile = isMobileDevice(userAgent);
-    const origin = new URL(request.url).origin;
-    const pwaInstallUrl = `${origin}/install?verified=false&email=${encodeURIComponent(email)}&reason=expired`;
+    const webOrigin = env.WEB_APP_URL ?? "https://rockscout.net";
+    const pwaInstallUrl = `${webOrigin}/install?verified=false&email=${encodeURIComponent(email)}&reason=expired`;
     if (isMobile) {
       return new Response(
         `${htmlBase}<h1>Link expired</h1><p class="sub">This verification link has expired. Please open the RockScout app and tap "Resend code" to get a new email.</p><a href="${deepLink}" class="btn">Open RockScout</a><p class="sub" style="margin-top:16px;"><a href="${pwaInstallUrl}" style="color:#5C8C1A;text-decoration:underline;">Or open the web version</a></p>${htmlEnd}`,
@@ -538,8 +542,8 @@ body{margin:0;padding:0;background:#F3EFE7;font-family:-apple-system,Segoe UI,Ro
   // Desktop -> redirect to the PWA install page with a success banner.
   const userAgent = request.headers.get("User-Agent") ?? "";
   const isMobile = isMobileDevice(userAgent);
-  const origin = new URL(request.url).origin;
-  const pwaInstallUrl = `${origin}/install?verified=${verified}&email=${encodeURIComponent(email)}${reasonParam}`;
+  const webOrigin = env.WEB_APP_URL ?? "https://rockscout.net";
+  const pwaInstallUrl = `${webOrigin}/install?verified=${verified}&email=${encodeURIComponent(email)}${reasonParam}`;
 
   if (confirm.confirmed) {
     if (isMobile) {

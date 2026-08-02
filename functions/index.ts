@@ -1,6 +1,6 @@
 import { handleIdentify, handleClarify, handleArtifactDetect } from "./identify";
 // RockScout backend — Cloudflare Worker entry (auth + rate-limit enabled).
-// Env sync: Supabase URL + keys updated to kblsiyyelyokhxaxefhy project.
+// Env sync: Supabase URL + keys point to the kzgzmudgascivwivxvvn project.
 // Routes: /ping, /identify, /identify/clarify, /identify/artifact-detect, /app-version, /welcome-email, /image-rejection-email, /referral/*, /dev-sms-verify, /push/*.
 import { handleAppVersion } from "./app-version";
 import { handleWelcomeEmail } from "./welcome-email";
@@ -50,6 +50,7 @@ export default {
           EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
           SUPABASE_SERVICE_ROLE_KEY?: string;
           EXPO_PUBLIC_SUPABASE_URL?: string;
+          WEB_APP_URL?: string;
         },
       );
     }
@@ -158,6 +159,7 @@ export default {
           EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
           SUPABASE_SERVICE_ROLE_KEY?: string;
           EXPO_PUBLIC_SUPABASE_URL?: string;
+          WEB_APP_URL?: string;
         },
         cors,
       );
@@ -371,6 +373,8 @@ type Env = {
   REVENUECAT_SECRET_API_KEY?: string;
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;
+  /** Public web app URL for email-verification redirects (e.g. https://rockscout.net). */
+  WEB_APP_URL?: string;
 };
 
 // Re-export for auth module type compatibility.
