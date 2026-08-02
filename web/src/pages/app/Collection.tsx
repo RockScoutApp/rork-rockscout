@@ -1,25 +1,42 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Gem, Trash2, Loader2, Search } from "lucide-react";
+import { Heart, Gem, Trash2, Loader2, Search, BarChart3 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { OptimizedImage } from "@/components/OptimizedImage";
+import { SculptedCard } from "@/components/sculpted";
 
 interface CollectionItem {
   id: string;
   specimen_id: string;
   created_at: string;
+  notes: string;
   specimen: {
     name: string;
     category: string;
+    rarity: string;
+    colors: string;
     image_url: string;
   }[];
 }
+
+const ROCK_CLASS_COLORS: Record<string, string> = {
+  Igneous: "4 70% 55%",
+  Sedimentary: "41 53% 64%",
+  Metamorphic: "200 67% 57%",
+  Mineral: "36 80% 58%",
+  Crystal: "265 47% 67%",
+  Fossil: "30 40% 55%",
+};
+
+const CITRINE_HEX = "36 80% 58%";
+const AQUA_HEX = "20 62% 65%";
+const AMETHYST_HEX = "265 47% 67%";
 
 export default function Collection() {
   const { user } = useAuth();
@@ -36,7 +53,7 @@ export default function Collection() {
       if (!user) return [];
       const { data, error } = await supabase
         .from(table)
-        .select("id, specimen_id, created_at, specimen:specimen_catalog(name, category, image_url)")
+        .select("id, specimen_id, created_at, notes, specimen:specimen_catalog(name, category, rarity, colors, image_url)")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -66,6 +83,8 @@ export default function Collection() {
     item.specimen?.[0]?.name?.toLowerCase().includes(search.toLowerCase()),
   );
 
+  const [showStats, setShowStats] = useState(false);
+
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
@@ -86,18 +105,31 @@ export default function Collection() {
         </p>
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-        <TabsList>
-          <TabsTrigger value="collection" className="gap-2">
-            <Gem className="h-4 w-4" />
-            Collection
-          </TabsTrigger>
-          <TabsTrigger value="wishlist" className="gap-2">
-            <Heart className="h-4 w-4" />
-            Wishlist
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+      <div className="flex items-center gap-3">
+        <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
+          <TabsList>
+            <TabsTrigger value="collection" className="gap-2">
+              <Gem className="h-4 w-4" />
+              Collection
+            </TabsTrigger>
+            <TabsTrigger value="wishlist" className="gap-2">
+              <Heart className="h-4 w-4" />
+              Wishlist
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        {tab === "collection" && (items ?? []).length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-auto gap-2"
+            onClick={() => setShowStats((s) => !s)}
+          >
+            <BarChart3 className="h-4 w-4" />
+            {showStats ? "Hide Stats" : "Statistics"}
+          </Button>
+        )}
+      </div>
 
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -113,7 +145,12 @@ export default function Collection() {
         <div className="flex justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
-      ) : filtered.length > 0 ? (
+      ) : (
+        <>
+        {showStats && tab === "collection" && (items ?? []).length > 0 && (
+          <CollectionStatisticsDashboard items={items ?? []} />
+        )}
+        {filtered.length > 0 ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {filtered.map((item) => (
             <div
@@ -172,6 +209,137 @@ export default function Collection() {
           </Button>
         </div>
       )}
+        </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Collection statistics dashboard — mirrors the Android CollectionStatisticsDashboard.
+ * Shows breakdowns by rock class, rarity, color, and date added.
+ */
+function CollectionStatisticsDashboard({ items }: { items: CollectionItem[] }) {
+  const stats = useMemo(() => {
+    const specimens = items.map((i) => i.specimen?.[0]).filter(Boolean) as {
+      name: string; category: string; rarity: string; colors: string; image_url: string;
+    }[];
+
+    const byClass = new Map<string, number>();
+    for (const s of specimens) {
+      const cat = s.category || "Unknown";
+      byClass.set(cat, (byClass.get(cat) ?? 0) + 1);
+    }
+
+    const byRarity = new Map<string, number>();
+    for (const s of specimens) {
+      const r = s.rarity || "Unknown";
+      byRarity.set(r, (byRarity.get(r) ?? 0) + 1);
+    }
+
+    const byColor = new Map<string, number>();
+    for (const s of specimens) {
+      const colors = (s.colors || "").split(/[,/\s]+/).filter(Boolean);
+      for (const c of colors) {
+        const lc = c.toLowerCase();
+        byColor.set(lc, (byColor.get(lc) ?? 0) + 1);
+      }
+    }
+
+    const byMonth = new Map<string, number>();
+    for (const item of items) {
+      const d = new Date(item.created_at);
+      const key = d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+      byMonth.set(key, (byMonth.get(key) ?? 0) + 1);
+    }
+
+    return {
+      total: items.length,
+      byClass: [...byClass.entries()].sort((a, b) => b[1] - a[1]),
+      byRarity: [...byRarity.entries()].sort((a, b) => b[1] - a[1]),
+      byColor: [...byColor.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8),
+      byMonth: [...byMonth.entries()].sort((a, b) => a[0].localeCompare(b[0])).slice(-6),
+    };
+  }, [items]);
+
+  if (stats.total === 0) return null;
+
+  return (
+    <div className="space-y-4">
+      <SculptedCard accent="citrine" className="flex items-center gap-4 p-5" glowing>
+        <div
+          className="glowing-border flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl font-display text-2xl font-bold"
+          style={{ ["--glow-color" as string]: CITRINE_HEX, color: `hsl(${CITRINE_HEX})`, backgroundColor: `hsl(${CITRINE_HEX} / 0.15)` }}
+        >
+          {stats.total}
+        </div>
+        <div>
+          <h3 className="font-display text-base font-bold text-foreground">Total specimens</h3>
+          <p className="text-sm text-[hsl(var(--text-mid))]">in your collection cabinet</p>
+        </div>
+      </SculptedCard>
+
+      {stats.byClass.length > 0 && (
+        <StatSection title="BY TYPE" items={stats.byClass} accentHsl={AQUA_HEX} colorMap={ROCK_CLASS_COLORS} />
+      )}
+      {stats.byRarity.length > 0 && (
+        <StatSection title="BY RARITY" items={stats.byRarity} accentHsl={AMETHYST_HEX} />
+      )}
+      {stats.byColor.length > 0 && (
+        <StatSection title="BY COLOR" items={stats.byColor} accentHsl={CITRINE_HEX} capitalize />
+      )}
+      {stats.byMonth.length > 0 && (
+        <StatSection title="ADDED OVER TIME" items={stats.byMonth} accentHsl={CITRINE_HEX} />
+      )}
+    </div>
+  );
+}
+
+function StatSection({
+  title,
+  items,
+  accentHsl,
+  colorMap,
+  capitalize,
+}: {
+  title: string;
+  items: [string, number][];
+  accentHsl: string;
+  colorMap?: Record<string, string>;
+  capitalize?: boolean;
+}) {
+  const maxCount = Math.max(...items.map(([, c]) => c), 1);
+  return (
+    <div>
+      <h4 className="mb-2 text-xs font-extrabold tracking-wider" style={{ color: `hsl(${accentHsl})` }}>
+        {title}
+      </h4>
+      <SculptedCard accent="aqua" className="space-y-2 p-4">
+        {items.map(([label, count]) => {
+          const pct = count / maxCount;
+          const colorHsl = colorMap?.[label] ?? accentHsl;
+          const displayLabel = capitalize ? label.charAt(0).toUpperCase() + label.slice(1) : label;
+          return (
+            <div key={label} className="flex items-center gap-3">
+              <span className="w-28 shrink-0 truncate text-sm font-medium text-foreground">
+                {displayLabel}
+              </span>
+              <div
+                className="h-5 flex-1 overflow-hidden rounded-full"
+                style={{ backgroundColor: `hsl(${colorHsl} / 0.12)` }}
+              >
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{ width: `${pct * 100}%`, backgroundColor: `hsl(${colorHsl} / 0.5)` }}
+                />
+              </div>
+              <span className="w-8 shrink-0 text-right font-display text-sm font-bold" style={{ color: `hsl(${colorHsl})` }}>
+                {count}
+              </span>
+            </div>
+          );
+        })}
+      </SculptedCard>
     </div>
   );
 }
