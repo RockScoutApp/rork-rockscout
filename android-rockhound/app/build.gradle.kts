@@ -18,8 +18,8 @@ android {
         // than the installed one, and the in-app updater only offers an update
         // when the server-reported code is higher. Keep this in lockstep with
         // LATEST_VERSION_CODE in functions/app-version.ts.
-        versionCode = 9
-        versionName = "1.1.7"
+        versionCode = 10
+        versionName = "1.1.8"
 
         multiDexEnabled = true
     }
@@ -33,6 +33,17 @@ android {
         create("pro") {
             dimension = "tier"
             buildConfigField("boolean", "FORCE_PREMIUM", "true")
+        }
+    }
+
+    signingConfigs {
+        getByName("debug") {
+            // Force ALL signing schemes so sideloaded APKs install on every
+            // Android device/ROM. v1 (JAR) is required by many OEM installers
+            // even on API 26+. Without it, users see "App not installed."
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
         }
     }
 

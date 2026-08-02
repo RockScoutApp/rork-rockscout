@@ -18,8 +18,8 @@
  * / APP_CHANGELOG in the Worker settings.
  */
 
-const LATEST_VERSION_CODE = 9;
-const LATEST_VERSION_NAME = "1.1.7";
+const LATEST_VERSION_CODE = 10;
+const LATEST_VERSION_NAME = "1.1.8";
 const STORE_URL = "https://play.google.com/store/apps/details?id=com.rork.rockscout";
 const IOS_STORE_URL = "https://apps.apple.com/app/rockscout/id0000000000";
 /**
@@ -28,9 +28,9 @@ const IOS_STORE_URL = "https://apps.apple.com/app/rockscout/id0000000000";
  * that serves it with a stable URL and correct byte length. Leave empty to
  * fall back to the Play Store listing.
  */
-const APK_URL = "https://jvns5dfy7fpytx79a2tb3-web.rork.live/download/rockscout-1.1.7.apk";
+const APK_URL = "https://jvns5dfy7fpytx79a2tb3-web.rork.live/download/rockscout-1.1.8-trial.apk";
 const CHANGELOG =
-  "1.1.7: Permanently fixed the 'App not installed' update issue by removing the conflicting custom keystore. All builds now use a single consistent signing key. Also includes navigation crash fixes for field journal and trip planner screens.";
+  "1.1.8: Fixed APK signing to enable all signature schemes (v1+v2+v3) so sideloaded installs work on every Android device. If you still see 'App not installed', uninstall the old version first — the previous build used a different signing key.";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
