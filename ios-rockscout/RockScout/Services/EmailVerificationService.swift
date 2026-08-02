@@ -104,7 +104,7 @@ nonisolated enum AppSecrets {
     private static let fallbackFunctionsURL = "https://rockscout-finder-backend.rork.app"
     private static let fallbackAppKey = "rpk_munggtdkjtv3tbx5sw9ge3kebajzh39k"
     private static let fallbackSupabaseURL = "https://kblsiyyelyokhxaxefhy.supabase.co"
-    private static let fallbackSupabaseAnonKey = "sb_publishable_xNJLANDaaAfuEF9q_lsBdw_3zfL6lBk"
+    private static let fallbackSupabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtibHNpeXllbHlva2h4YXhlZmh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwNjUxMjIsImV4cCI6MjEwMDY0MTEyMn0.qrJW7EH6HHcvYtprhU26dwHX0RBfZjQ9JDEObmrFDmE"
     private static let fallbackRevenueCatIOSKey = "appl_vfaAnYfbiMkgwtUSrQqmMnWGVPe"
 
     static var functionsURL: String {

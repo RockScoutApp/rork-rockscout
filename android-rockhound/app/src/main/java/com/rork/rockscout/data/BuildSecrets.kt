@@ -17,7 +17,7 @@ internal object BuildSecrets {
     val TOOLKIT_URL: String = "https://toolkit.rork.com"
     val RORK_TOOLKIT_SECRET_KEY: String = "rork_sk_kh0hz7qm6std3qhpjinwahh056a37a5a"
     val SUPABASE_URL: String = "https://kblsiyyelyokhxaxefhy.supabase.co"
-    val SUPABASE_ANON_KEY: String = "sb_publishable_xNJLANDaaAfuEF9q_lsBdw_3zfL6lBk"
+    val SUPABASE_ANON_KEY: String = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtibHNpeXllbHlva2h4YXhlZmh5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwNjUxMjIsImV4cCI6MjEwMDY0MTEyMn0.qrJW7EH6HHcvYtprhU26dwHX0RBfZjQ9JDEObmrFDmE"
     val REVENUECAT_ANDROID_API_KEY: String = "goog_CaFgvliztBwDdFcsrcjgHzcZaEN"
     val REVENUECAT_IOS_API_KEY: String = "appl_vfaAnYfbiMkgwtUSrQqmMnWGVPe"
     val REVENUECAT_TEST_API_KEY: String = "test_ftsMKaJTfnSAjBYzcqUfhuhnKrC"
