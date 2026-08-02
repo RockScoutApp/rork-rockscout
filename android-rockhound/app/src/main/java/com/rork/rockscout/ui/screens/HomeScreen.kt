@@ -72,6 +72,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonSearch
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.MarkEmailRead
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.Construction
 import androidx.compose.material.icons.filled.Lightbulb
@@ -327,6 +328,7 @@ fun HomeScreen(navController: NavController) {
     val auth = AuthRepository.instance
     val sessionStatus by auth.sessionStatus.collectAsStateWithLifecycle()
     val isSignedIn = sessionStatus is com.rork.rockscout.data.SessionStatus.Authenticated
+    val justVerifiedFromLink by auth.justVerifiedFromLink.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
     val reviewManager = remember { ReviewManager(context) }
@@ -561,6 +563,26 @@ fun HomeScreen(navController: NavController) {
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
+            // Email verification success banner — shown once when the user
+            // arrives from a click-to-verify email link. Auto-dismisses after 6s.
+            if (justVerifiedFromLink) {
+                item {
+                    EmailVerifiedBanner(
+                        onDismiss = { auth.consumeJustVerifiedFromLink() },
+                    )
+                }
+            }
+
+            // Auto-dismiss the verification banner after 6 seconds.
+            if (justVerifiedFromLink) {
+                item {
+                    androidx.compose.runtime.LaunchedEffect(Unit) {
+                        kotlinx.coroutines.delay(6000)
+                        auth.consumeJustVerifiedFromLink()
+                    }
+                }
+            }
+
             // Trial expired upsell banner — dismissible but reappears on next launch
             if (trialExpired && !isPremium && !trialBannerDismissed) {
                 item {
@@ -5467,6 +5489,74 @@ private fun TrialExpiredBanner(
                     icon = Icons.Filled.FavoriteBorder,
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Success banner shown on the home dashboard when the user arrives from a
+ * click-to-verify email link. Displays a checkmark icon, confirmation message,
+ * and auto-dismisses after 6 seconds (handled by the caller's LaunchedEffect).
+ */
+@Composable
+private fun EmailVerifiedBanner(
+    onDismiss: () -> Unit,
+) {
+    DarkCard(modifier = Modifier.fillMaxWidth(), accent = Success) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Success.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Filled.MarkEmailRead,
+                        contentDescription = null,
+                        tint = Success,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = "Email verified!",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = DarkTextHigh,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = "Your RockScout account is now active. Welcome aboard!",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextMid,
+                    )
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .clickable(onClick = onDismiss)
+                    .background(Color.White.copy(alpha = 0.08f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Filled.Close,
+                    contentDescription = "Dismiss",
+                    tint = TextMid,
+                    modifier = Modifier.size(16.dp),
                 )
             }
         }

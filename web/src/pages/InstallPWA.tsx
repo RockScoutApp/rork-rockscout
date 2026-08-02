@@ -46,6 +46,13 @@ export default function InstallPWA() {
     const email = searchParams.get("email");
     if (verified === "true" && email) {
       setJustVerified(true);
+      // Persist a flag so the app dashboard can show a verification banner
+      // after the user signs in and navigates to /app.
+      try {
+        sessionStorage.setItem("rockscout_just_verified", email);
+      } catch {
+        // sessionStorage might be unavailable in private browsing
+      }
       // Clean the URL so the banner doesn't persist on refresh
       const cleanUrl = window.location.pathname;
       window.history.replaceState({}, "", cleanUrl);

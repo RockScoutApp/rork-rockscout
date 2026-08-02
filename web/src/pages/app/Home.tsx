@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Camera,
@@ -329,6 +329,21 @@ export default function Home() {
   const { user } = useAuth();
   const [versionTaps, setVersionTaps] = useState(0);
   const versionTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [justVerified, setJustVerified] = useState(false);
+
+  // Show a verification-success banner if the user arrived from a click-to-verify
+  // email link. The InstallPWA page sets a sessionStorage flag before redirecting.
+  useEffect(() => {
+    try {
+      const flag = sessionStorage.getItem("rockscout_just_verified");
+      if (flag) {
+        setJustVerified(true);
+        sessionStorage.removeItem("rockscout_just_verified");
+      }
+    } catch {
+      // sessionStorage unavailable
+    }
+  }, []);
 
   const handleTileClick = (tile: HomeTileData) => {
     if (tile.onClick) {
@@ -353,6 +368,32 @@ export default function Home() {
 
   return (
     <div className="space-y-8">
+      {/* ── Email verification success banner ── */}
+      {justVerified && (
+        <div className="fade-rise flex items-center gap-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
+            <svg className="h-5 w-5 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 13.5L14 5.5L2 17.5" />
+              <path d="M16 5.5H22V11.5" />
+              <path d="M5 19L2 22" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <p className="font-display text-sm font-bold text-foreground">Email verified!</p>
+            <p className="text-xs text-muted-foreground">Your RockScout account is now active. Welcome aboard!</p>
+          </div>
+          <button
+            onClick={() => setJustVerified(false)}
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted/50 text-muted-foreground transition-colors hover:bg-muted"
+            aria-label="Dismiss"
+          >
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* ── Header bar ── */}
       <div className="fade-rise flex items-center gap-3">
         <button

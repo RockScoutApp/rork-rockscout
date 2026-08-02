@@ -67,6 +67,13 @@ class AuthRepository private constructor() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    /** Fires once when the user's email is confirmed via a click-to-verify deep link. */
+    private val _justVerifiedFromLink = MutableStateFlow(false)
+    val justVerifiedFromLink: StateFlow<Boolean> = _justVerifiedFromLink.asStateFlow()
+
+    /** Clears the verification flag so the banner doesn't reappear on recomposition. */
+    fun consumeJustVerifiedFromLink() { _justVerifiedFromLink.value = false }
+
     /** Pending Supabase user ID from sign-up (used to confirm email via backend). */
     private var pendingSupabaseUserId: String? = null
 
@@ -391,6 +398,7 @@ class AuthRepository private constructor() {
                         SupabaseDataSync.syncInBackground()
                         // Cloud-restore settings if this is a fresh install.
                         restoreSettingsFromCloudIfNeeded(userId)
+                        _justVerifiedFromLink.value = true
                     } else {
                         val cause = signInResult.exceptionOrNull()?.message.orEmpty()
                         Log.w("AuthRepository", "Post-verification sign-in failed: $cause")
@@ -561,6 +569,7 @@ class AuthRepository private constructor() {
                 // Cloud-restore settings if this is a fresh install.
                 restoreSettingsFromCloudIfNeeded(userId)
                 clearPendingVerifyPersistence()
+                _justVerifiedFromLink.value = true
                 true
             } else {
                 val cause = signInResult.exceptionOrNull()?.message.orEmpty()
