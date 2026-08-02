@@ -109,6 +109,14 @@ import CampgroundsTrailheads from "./pages/app/CampgroundsTrailheads";
 import Planets from "./pages/app/Planets";
 import DeepSkyObjects from "./pages/app/DeepSkyObjects";
 import ImportantStars from "./pages/app/ImportantStars";
+import TripCalendar from "./pages/app/TripCalendar";
+import TripJournal from "./pages/app/TripJournal";
+import RockGuideDetail from "./pages/app/RockGuideDetail";
+import RockInfo from "./pages/app/RockInfo";
+import UserAchievements from "./pages/app/UserAchievements";
+import UserCollection from "./pages/app/UserCollection";
+import BlmDetail from "./pages/app/BlmDetail";
+import AccountDeletedAppeal from "./pages/app/AccountDeletedAppeal";
 import type { ReactNode } from "react";
 
 const queryClient = new QueryClient();
@@ -254,6 +262,16 @@ const App = () => (
           <Route path="planets" element={<PremiumGate routePath="planets"><Planets /></PremiumGate>} />
           <Route path="deep-sky" element={<PremiumGate routePath="deep-sky"><DeepSkyObjects /></PremiumGate>} />
           <Route path="important-stars" element={<PremiumGate routePath="important-stars"><ImportantStars /></PremiumGate>} />
+
+          {/* Phase 6: New screens */}
+          <Route path="trip-calendar" element={<PremiumGate routePath="trip-calendar"><TripCalendar /></PremiumGate>} />
+          <Route path="trip-journal" element={<PremiumGate routePath="trip-journal"><TripJournal /></PremiumGate>} />
+          <Route path="guide/:guideId" element={<PremiumGate routePath="guide/:guideId"><RockGuideDetail /></PremiumGate>} />
+          <Route path="rock-info" element={<PremiumGate routePath="rock-info"><RockInfo /></PremiumGate>} />
+          <Route path="user-achievements/:id" element={<PremiumGate routePath="user-achievements/:id"><UserAchievements /></PremiumGate>} />
+          <Route path="user-collection/:id/:mode" element={<PremiumGate routePath="user-collection/:id/:mode"><UserCollection /></PremiumGate>} />
+          <Route path="blm/:id" element={<PremiumGate routePath="blm/:id"><BlmDetail /></PremiumGate>} />
+          <Route path="account-appeal" element={<AccountDeletedAppeal />} />
         </Route>
 
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import {
   Home,
   Camera,
@@ -156,14 +156,73 @@ const MOBILE_NAV_PREMIUM: NavItem[] = [
   { to: "/app/profile", icon: User, label: "Profile" },
 ];
 
+const DISCLAIMER_KEY = "rockscout-disclaimer-accepted";
+const TAP_THRESHOLD = 5;
+const TAP_RESET_MS = 2000;
+
 export default function AppLayout() {
   const { user, signOut } = useAuth();
   const { isPremium } = useTier();
   const navigate = useNavigate();
+  const location = useLocation();
   const [fieldCameraOpen, setFieldCameraOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navSections = isPremium ? NAV_SECTIONS_PREMIUM : NAV_SECTIONS_FREE;
   const mobileNavItems = isPremium ? MOBILE_NAV_PREMIUM : MOBILE_NAV_FREE;
+
+  // ── Disclaimer gate ──
+  // First-time visitors must accept the legal disclaimer before accessing the app.
+  // The disclaimer route itself is exempt so the user can see and accept it.
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState(true);
+  const isDisclaimerRoute = location.pathname === "/app/disclaimer";
+
+  useEffect(() => {
+    try {
+      const accepted = localStorage.getItem(DISCLAIMER_KEY) === "true";
+      setDisclaimerAccepted(accepted);
+      if (!accepted && !isDisclaimerRoute) {
+        navigate("/app/disclaimer", { replace: true });
+      }
+    } catch {
+      // localStorage may be blocked — skip gate
+    }
+  }, [isDisclaimerRoute, navigate]);
+
+  // ── Dev console easter egg ──
+  // Tapping the RockScout logo 5 times within 2 seconds opens the dev console.
+  const tapCountRef = useRef(0);
+  const tapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleLogoTap = useCallback(() => {
+    tapCountRef.current += 1;
+    if (tapTimerRef.current) clearTimeout(tapTimerRef.current);
+    tapTimerRef.current = setTimeout(() => {
+      tapCountRef.current = 0;
+    }, TAP_RESET_MS);
+    if (tapCountRef.current >= TAP_THRESHOLD) {
+      tapCountRef.current = 0;
+      navigate("/app/dev-console");
+    }
+  }, [navigate]);
+
+  // Show disclaimer gate overlay if not accepted and not on disclaimer route
+  if (!disclaimerAccepted && !isDisclaimerRoute) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="dark-card sculpted-raised max-w-md rounded-2xl p-6 text-center">
+          <p className="text-sm text-[hsl(var(--text-mid))]">
+            Please review and accept the disclaimer to continue.
+          </p>
+          <button
+            onClick={() => navigate("/app/disclaimer")}
+            className="mt-4 rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground"
+          >
+            View Disclaimer
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Prevent browser back button from leaving the app shell or closing
   // the tab at the root route. Also closes dialogs/sheets on back press.
@@ -224,12 +283,20 @@ export default function AppLayout() {
       {/* Desktop sidebar */}
       <aside className="hidden w-60 shrink-0 border-r border-border bg-card/50 md:flex md:flex-col">
         <div className="flex items-center gap-2.5 px-5 py-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 ring-1 ring-primary/30">
+          <button
+            onClick={handleLogoTap}
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 ring-1 ring-primary/30"
+            title="RockScout"
+          >
             <Gem className="h-5 w-5 text-primary" />
-          </div>
-          <span className="font-display text-lg font-bold text-foreground">
+          </button>
+          <button
+            onClick={handleLogoTap}
+            className="font-display text-lg font-bold text-foreground"
+            title="RockScout"
+          >
             RockScout
-          </span>
+          </button>
           {isPremium && (
             <span
               title={`Entitlement sync: ${syncConfig[syncState].label}`}
