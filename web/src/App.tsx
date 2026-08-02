@@ -20,6 +20,7 @@ import Safety from "./pages/Safety";
 import Cookies from "./pages/Cookies";
 import Press from "./pages/Press";
 import NotFound from "./pages/NotFound";
+import InstallPWA from "./pages/InstallPWA";
 
 // PWA app pages
 import AppLayout from "@/components/app/AppLayout";
@@ -166,6 +167,7 @@ const App = () => (
         <Route path="/safety" element={<Safety />} />
         <Route path="/cookies" element={<Cookies />} />
         <Route path="/press" element={<Press />} />
+        <Route path="/install" element={<InstallPWA />} />
 
         {/* PWA app routes — free content is open; auth only triggers for
             personal-data (bookmarks) or premium features. */}

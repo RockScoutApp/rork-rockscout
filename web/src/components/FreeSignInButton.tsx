@@ -9,8 +9,8 @@ import { BookOpen } from "lucide-react";
  */
 export const FreeSignInButton = () => (
   <Link
-    to="/app"
-    title="Create a free account to install the read-only PWA — perfect for learning"
+    to="/install"
+    title="Install the free read-only PWA — perfect for learning, no account needed"
     className="hidden items-center gap-1.5 rounded-full border border-border bg-card/40 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:border-primary/30 hover:text-foreground sm:inline-flex"
   >
     <BookOpen className="h-3 w-3" />

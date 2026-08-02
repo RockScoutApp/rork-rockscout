@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Download, Crown, CheckCircle2, Share, MoreVertical, MonitorDown } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTier } from "@/hooks/useTier";
 import { usePwaInstall, type Platform } from "@/hooks/usePwaInstall";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
+import { getDeviceFingerprint, getDeviceLabel } from "@/lib/deviceFingerprint";
 
 interface DeviceRow {
   id: string;
@@ -84,6 +85,8 @@ export const InstallAppButton = () => {
   const { canInstall, install, installed, platform, hasNativePrompt } = usePwaInstall();
   const [installing, setInstalling] = useState<boolean>(false);
   const [showGuide, setShowGuide] = useState<boolean>(false);
+  const queryClient = useQueryClient();
+  const deviceRegisteredRef = useRef<boolean>(false);
 
   const { data: deviceCount = 0 } = useQuery<number>({
     queryKey: ["device-count", user?.id],
@@ -99,6 +102,29 @@ export const InstallAppButton = () => {
     enabled: !!user && isPremium,
     staleTime: 60_000,
   });
+
+  // Register the device in Supabase when a premium user installs the PWA.
+  // This tracks their 2-device allowance. Runs once per install event.
+  useEffect(() => {
+    if (!installed || !user || !isPremium || deviceRegisteredRef.current) return;
+    deviceRegisteredRef.current = true;
+    const fp = getDeviceFingerprint();
+    const label = getDeviceLabel();
+    void (async () => {
+      try {
+        await supabase
+          .from("rockscout_installed_devices")
+          .upsert(
+            { user_id: user.id, device_fingerprint: fp, device_label: label },
+            { onConflict: "user_id,device_fingerprint" },
+          );
+        queryClient.invalidateQueries({ queryKey: ["device-count", user.id] });
+        queryClient.invalidateQueries({ queryKey: ["installed-devices", user.id] });
+      } catch {
+        // Best-effort — the install still succeeded even if tracking fails.
+      }
+    })();
+  }, [installed, user, isPremium, queryClient]);
 
   if (installed) {
     return (

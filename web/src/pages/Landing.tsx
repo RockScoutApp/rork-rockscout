@@ -937,7 +937,7 @@ const CTA = () => (
         </p>
         <div className="mt-7 flex flex-col items-center justify-center gap-3">
           <a
-            href="/download/rockscout-1.1.6.apk"
+            href="/download/rockscout-1.1.9-premium.apk"
             className="inline-flex h-14 w-56 items-center justify-center gap-2.5 rounded-full bg-primary px-5 font-semibold text-primary-foreground transition-transform hover:scale-[1.02] active:scale-[0.98]"
           >
             <Download className="h-5 w-5 shrink-0" />
@@ -945,9 +945,18 @@ const CTA = () => (
               Download Android APK
             </span>
           </a>
+          <Link
+            to="/install"
+            className="inline-flex h-14 w-56 items-center justify-center gap-2.5 rounded-full border border-primary/40 bg-primary/10 px-5 font-semibold text-primary/80 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <Monitor className="h-5 w-5 shrink-0" />
+            <span className="text-center leading-tight">
+              Install Desktop PWA
+            </span>
+          </Link>
           <span
             aria-disabled
-            className="inline-flex h-14 w-56 cursor-default items-center justify-center gap-2.5 rounded-full border border-primary/40 bg-primary/10 px-5 font-semibold text-primary/80"
+            className="inline-flex h-14 w-56 cursor-default items-center justify-center gap-2.5 rounded-full border border-border bg-card/40 px-5 font-semibold text-muted-foreground/60"
           >
             <Smartphone className="h-5 w-5 shrink-0" />
             <span className="text-center leading-tight">

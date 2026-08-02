@@ -60,6 +60,13 @@ interface EmailVerificationEnv {
   VERIFICATION_KV?: KVNamespace;
 }
 
+/** Detect mobile devices from the User-Agent so we can route the verification
+ *  redirect to the native app (mobile) or the PWA install page (desktop). */
+function isMobileDevice(userAgent: string): boolean {
+  const ua = userAgent.toLowerCase();
+  return /android|iphone|ipad|ipod/.test(ua);
+}
+
 function currentBucket(): number {
   return Math.floor(Date.now() / 1000 / BUCKET_SECONDS);
 }
@@ -498,10 +505,21 @@ body{margin:0;padding:0;background:#F3EFE7;font-family:-apple-system,Segoe UI,Ro
 
   if (!matched) {
     const deepLink = `rockscout://verify_email?email=${encodeURIComponent(email)}&verified=false&reason=expired`;
-    return new Response(
-      `${htmlBase}<h1>Link expired</h1><p class="sub">This verification link has expired. Please open the RockScout app and tap "Resend code" to get a new email.</p><a href="${deepLink}" class="btn">Open RockScout</a>${htmlEnd}`,
-      { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
-    );
+    const userAgent = request.headers.get("User-Agent") ?? "";
+    const isMobile = isMobileDevice(userAgent);
+    const origin = new URL(request.url).origin;
+    const pwaInstallUrl = `${origin}/install?verified=false&email=${encodeURIComponent(email)}&reason=expired`;
+    if (isMobile) {
+      return new Response(
+        `${htmlBase}<h1>Link expired</h1><p class="sub">This verification link has expired. Please open the RockScout app and tap "Resend code" to get a new email.</p><a href="${deepLink}" class="btn">Open RockScout</a><p class="sub" style="margin-top:16px;"><a href="${pwaInstallUrl}" style="color:#5C8C1A;text-decoration:underline;">Or open the web version</a></p>${htmlEnd}`,
+        { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
+      );
+    } else {
+      return new Response(
+        `${htmlBase}<h1>Link expired</h1><p class="sub">This verification link has expired. Please open RockScout and request a new verification code.</p><a href="${pwaInstallUrl}" class="btn">Open RockScout Web</a>${htmlEnd}`,
+        { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
+      );
+    }
   }
 
   // Token is valid — confirm the Supabase email via admin API.
@@ -515,16 +533,41 @@ body{margin:0;padding:0;background:#F3EFE7;font-family:-apple-system,Segoe UI,Ro
   const reasonParam = confirm.reason ? `&reason=${encodeURIComponent(confirm.reason)}` : "";
   const deepLink = `rockscout://verify_email?email=${encodeURIComponent(email)}&verified=${verified}${reasonParam}`;
 
+  // Detect mobile vs desktop to route the redirect correctly.
+  // Mobile -> attempt the rockscout:// deep link to open the native app.
+  // Desktop -> redirect to the PWA install page with a success banner.
+  const userAgent = request.headers.get("User-Agent") ?? "";
+  const isMobile = isMobileDevice(userAgent);
+  const origin = new URL(request.url).origin;
+  const pwaInstallUrl = `${origin}/install?verified=${verified}&email=${encodeURIComponent(email)}${reasonParam}`;
+
   if (confirm.confirmed) {
-    return new Response(
-      `${htmlBase}<h1 style="color:#1C1A14;">Email verified!</h1><p class="sub">Your RockScout account is now active. Opening the app…</p><a href="${deepLink}" class="btn">Open RockScout</a><p class="sub" style="margin-top:20px;">Didn't open automatically? Tap the button above.</p><script>window.location.href='${deepLink}';</script>${htmlEnd}`,
-      { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
-    );
+    if (isMobile) {
+      // Mobile: attempt to open the native app via deep link, with a
+      // timed fallback to the PWA install page if the app isn't installed.
+      return new Response(
+        `${htmlBase}<h1 style="color:#1C1A14;">Email verified!</h1><p class="sub">Your RockScout account is now active. Opening the app…</p><a href="${deepLink}" class="btn">Open RockScout App</a><p class="sub" style="margin-top:20px;">App not opening? <a href="${pwaInstallUrl}" style="color:#5C8C1A;text-decoration:underline;">Open the web version instead</a></p><script>try{window.location.href='${deepLink}';}catch(e){}setTimeout(function(){if(!document.hidden){window.location.href='${pwaInstallUrl}';}},2500);</script>${htmlEnd}`,
+        { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
+      );
+    } else {
+      // Desktop: redirect to the PWA install page with a success banner.
+      return new Response(
+        `${htmlBase}<h1 style="color:#1C1A14;">Email verified!</h1><p class="sub">Your RockScout account is now active. Redirecting to the web app…</p><a href="${pwaInstallUrl}" class="btn">Open RockScout</a><script>window.location.href='${pwaInstallUrl}';</script>${htmlEnd}`,
+        { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
+      );
+    }
   } else {
-    return new Response(
-      `${htmlBase}<h1>Almost there!</h1><p class="sub">Your verification link was valid, but we couldn't fully activate your account (${confirm.reason ?? "unknown"}). Try opening the app and entering the code from your email.</p><a href="${deepLink}" class="btn">Open RockScout</a>${htmlEnd}`,
-      { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
-    );
+    if (isMobile) {
+      return new Response(
+        `${htmlBase}<h1>Almost there!</h1><p class="sub">Your verification link was valid, but we couldn't fully activate your account (${confirm.reason ?? "unknown"}). Try opening the app and entering the code from your email.</p><a href="${deepLink}" class="btn">Open RockScout</a>${htmlEnd}`,
+        { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
+      );
+    } else {
+      return new Response(
+        `${htmlBase}<h1>Almost there!</h1><p class="sub">Your verification link was valid, but we couldn't fully activate your account (${confirm.reason ?? "unknown"}). Try opening the web app and entering the code from your email.</p><a href="${pwaInstallUrl}" class="btn">Open RockScout Web</a>${htmlEnd}`,
+        { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
+      );
+    }
   }
 }
 
