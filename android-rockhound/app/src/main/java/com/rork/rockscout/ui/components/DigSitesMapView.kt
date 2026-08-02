@@ -70,7 +70,6 @@ import com.rork.rockscout.ui.components.MapZoomControls
 import com.rork.rockscout.ui.components.MapExpandButton
 import com.rork.rockscout.ui.components.FullscreenMapOverlay
 import com.rork.rockscout.ui.components.MapDownloadSheet
-import com.rork.rockscout.ui.components.MapCacheStatusIndicator
 import com.rork.rockscout.ui.components.ParkingButtonState
 import com.rork.rockscout.ui.components.applyHybridTiles
 import com.rork.rockscout.ui.components.createRockScoutMapView

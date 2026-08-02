@@ -108,7 +108,7 @@ import com.rork.rockscout.ui.components.LongPressableImage
 import com.rork.rockscout.ui.components.SculptedButton
 import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.SculptedOutlinedButton
-import com.rork.rockscout.ui.components.SavedImagesPickerDialog
+import com.rork.rockscout.ui.components.ImageSourcePickerDialog
 import com.rork.rockscout.ui.components.SculptedTextButton
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.processSavedImage
@@ -798,7 +798,7 @@ internal fun ListingEditorDialog(
     var showCapturePicker by remember { mutableStateOf(false) }
     var showCollectionPicker by remember { mutableStateOf(false) }
     var showWishlistPicker by remember { mutableStateOf(false) }
-    var showSavedImagePicker by remember { mutableStateOf(false) }
+    var showImageSourcePicker by remember { mutableStateOf(false) }
     var showDatabasePicker by remember { mutableStateOf(false) }
     var pendingRemoveTag by remember { mutableStateOf<String?>(null) }
 
@@ -970,9 +970,9 @@ internal fun ListingEditorDialog(
                             modifier = Modifier.weight(1f),
                         )
                         SourceButton(
-                            label = "Saved",
+                            label = "Photo",
                             icon = Icons.Filled.Download,
-                            onClick = { showSavedImagePicker = true },
+                            onClick = { showImageSourcePicker = true },
                             modifier = Modifier.weight(1f),
                         )
                         SourceButton(
@@ -1267,13 +1267,13 @@ internal fun ListingEditorDialog(
             },
         )
     }
-    if (showSavedImagePicker) {
-        SavedImagesPickerDialog(
-            onDismiss = { showSavedImagePicker = false },
-            onImageSelected = { image ->
-                showSavedImagePicker = false
+    if (showImageSourcePicker) {
+        ImageSourcePickerDialog(
+            onDismiss = { showImageSourcePicker = false },
+            onImageSelected = { uri ->
+                showImageSourcePicker = false
                 scope.launch {
-                    val path = processSavedImage(context, image, "trade_listings", "trade_listing")
+                    val path = processImageUri(context, uri, "trade_listings", "trade_listing")
                     if (path != null) {
                         photoUri = path
                         sourceCaptureId = null

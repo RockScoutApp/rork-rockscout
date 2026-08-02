@@ -77,9 +77,9 @@ import com.rork.rockscout.data.SessionStatus
 import com.rork.rockscout.data.SocialRepository
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.ReportSubmittedDialog
-import com.rork.rockscout.ui.components.SavedImagesPickerDialog
+import com.rork.rockscout.ui.components.ImageSourcePickerDialog
 import com.rork.rockscout.ui.components.SculptedButton
-import com.rork.rockscout.ui.components.processSavedImage
+import com.rork.rockscout.ui.components.processImageUri
 import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.SculptedOutlinedButton
 import com.rork.rockscout.ui.components.SculptedTextButton
@@ -409,7 +409,7 @@ private fun ThreadView(
     var showPreview by remember { mutableStateOf(false) }
     var imageModerating by remember { mutableStateOf(false) }
     var moderationError by remember { mutableStateOf<String?>(null) }
-    var showSavedImagePicker by remember { mutableStateOf(false) }
+    var showImageSourcePicker by remember { mutableStateOf(false) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -695,7 +695,7 @@ private fun ThreadView(
                             .clip(CircleShape)
                             .background(Color(0xFF3A3830))
                             .glowingBorder(1.dp, Color(0xFF3A3830).copy(alpha = 0.35f), CircleShape)
-                            .clickable(enabled = !imageModerating) { showSavedImagePicker = true },
+                            .clickable(enabled = !imageModerating) { showImageSourcePicker = true },
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
@@ -779,14 +779,14 @@ private fun ThreadView(
             onClose = { showPreview = false },
         )
     }
-    if (showSavedImagePicker) {
-        SavedImagesPickerDialog(
-            onDismiss = { showSavedImagePicker = false },
-            onImageSelected = { image ->
-                showSavedImagePicker = false
+    if (showImageSourcePicker) {
+        ImageSourcePickerDialog(
+            onDismiss = { showImageSourcePicker = false },
+            onImageSelected = { uri ->
+                showImageSourcePicker = false
                 scope.launch {
                     imageModerating = true
-                    val path = processSavedImage(context, image, "message_images", "message_image")
+                    val path = processImageUri(context, uri, "message_images", "message_image")
                     imageModerating = false
                     if (path != null) onSendImage(path)
                 }

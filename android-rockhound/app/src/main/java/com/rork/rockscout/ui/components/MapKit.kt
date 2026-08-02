@@ -223,150 +223,6 @@ fun MapOfflineNotice(modifier: Modifier = Modifier) {
 }
 
 /**
- * Sync status for a map's offline cache. Driven by the timestamps recorded by
- * [MapTileCacheManager] in [PersistenceManager]. The indicator tells the user
- * at a glance whether the visible area is cached, how fresh the cache is, and
- * whether a refresh is recommended (tiles older than [STALE_AFTER_MS]).
- *
- * States:
- * - [Mode.UNKNOWN]      — no cache record for this area yet (shows a subtle "Not cached" pill).
- * - [Mode.FRESH]        — cached < 24h ago (green CloudDone, "Cached Xm / Xh ago").
- * - [Mode.CACHED]       — cached < 7 days ago (aqua CloudSync, "Cached Xd ago").
- * - [Mode.STALE]        — cached >= 7 days ago (warning CloudSync + Refresh hint,
- *                         "Cached Xd ago • Tap refresh").
- * - [Mode.OFFLINE_FRESH]— device offline AND tiles are cached (green, "Offline • tiles fresh").
- * - [Mode.OFFLINE_STALE]— device offline AND tiles are stale or unknown (warning,
- *                         "Offline • tiles may be stale").
- */
-enum class CacheSyncState { UNKNOWN, FRESH, CACHED, STALE, OFFLINE_FRESH, OFFLINE_STALE }
-
-/** Tiles older than this are considered stale (7 days). */
-private const val CACHE_STALE_AFTER_MS = 7L * 24 * 60 * 60 * 1000
-
-/** Tiles younger than this are "fresh" (24h). */
-private const val CACHE_FRESH_AFTER_MS = 24L * 60 * 60 * 1000
-
-/**
- * Resolves the [CacheSyncState] for a cached-at timestamp, taking the device's
- * online state into account. Returns [CacheSyncState.UNKNOWN] when
- * [cachedAtMillis] is null.
- */
-fun resolveCacheSyncState(cachedAtMillis: Long?, isOnline: Boolean): CacheSyncState {
-    if (cachedAtMillis == null) {
-        return if (isOnline) CacheSyncState.UNKNOWN else CacheSyncState.OFFLINE_STALE
-    }
-    val age = System.currentTimeMillis() - cachedAtMillis
-    val isStale = age >= CACHE_STALE_AFTER_MS
-    val isFresh = age < CACHE_FRESH_AFTER_MS
-    return when {
-        !isOnline && isStale -> CacheSyncState.OFFLINE_STALE
-        !isOnline -> CacheSyncState.OFFLINE_FRESH
-        isStale -> CacheSyncState.STALE
-        isFresh -> CacheSyncState.FRESH
-        else -> CacheSyncState.CACHED
-    }
-}
-
-/** Formats a cached-at millis as a human-readable "Xm / Xh / Xd ago" string. */
-fun formatCacheAge(cachedAtMillis: Long?): String {
-    if (cachedAtMillis == null) return "Not cached"
-    val ageMs = System.currentTimeMillis() - cachedAtMillis
-    if (ageMs < 0) return "just now"
-    val minutes = ageMs / 60_000
-    val hours = ageMs / 3_600_000
-    val days = ageMs / 86_400_000
-    return when {
-        minutes < 1 -> "just now"
-        minutes < 60 -> "${minutes}m ago"
-        hours < 24 -> "${hours}h ago"
-        days < 30 -> "${days}d ago"
-        else -> "${days / 30}mo ago"
-    }
-}
-
-/**
- * Pill-shaped indicator that shows the current sync status of the cached map
- * tiles for the visible area. Tapping it triggers [onRefresh] (typically a
- * re-prefetch of the visible area's tiles). When the device is offline, the
- * pill is non-interactive and only reports staleness.
- */
-@Composable
-fun MapCacheStatusIndicator(
-    cachedAtMillis: Long?,
-    onRefresh: () -> Unit,
-    modifier: Modifier = Modifier,
-    label: String = "Offline maps",
-) {
-    val isOnline by rememberNetworkOnline()
-    val state = remember(cachedAtMillis, isOnline) {
-        resolveCacheSyncState(cachedAtMillis, isOnline)
-    }
-    val ageText = remember(cachedAtMillis) { formatCacheAge(cachedAtMillis) }
-
-    val (icon, tint, bg, border, subtitle, clickable) = when (state) {
-        CacheSyncState.UNKNOWN -> Six(Icons.Filled.CloudOff, DarkTextMid,
-            Color(0xE6000000), Color.White.copy(alpha = 0.15f),
-            "tap to cache", isOnline)
-        CacheSyncState.FRESH -> Six(Icons.Filled.CloudDone, Success,
-            Color(0xE6000000), Success.copy(alpha = 0.45f),
-            "Up to date", true)
-        CacheSyncState.CACHED -> Six(Icons.Filled.CloudDone, Aqua,
-            Color(0xE6000000), Aqua.copy(alpha = 0.45f),
-            "Cached", true)
-        CacheSyncState.STALE -> Six(Icons.Filled.CloudSync, Warning,
-            Color(0xE6000000), Warning.copy(alpha = 0.55f),
-            "Stale • tap to refresh", true)
-        CacheSyncState.OFFLINE_FRESH -> Six(Icons.Filled.CloudDone, Success,
-            Color(0xE6000000), Success.copy(alpha = 0.45f),
-            "Offline • tiles fresh", false)
-        CacheSyncState.OFFLINE_STALE -> Six(Icons.Filled.CloudOff, Warning,
-            Color(0xE6000000), Warning.copy(alpha = 0.55f),
-            "Offline • may be stale", false)
-    }
-    Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
-            .background(bg)
-            .glowingBorder(2.dp, border, RoundedCornerShape(10.dp))
-            .let { if (clickable) it.clickable(onClick = onRefresh) else it }
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(14.dp))
-        Column {
-            Text(
-                label,
-                color = Color.White,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                "$ageText • $subtitle",
-                color = Color.White.copy(alpha = 0.78f),
-                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
-}
-
-/** Tiny tuple helper so we can return 6 values from a `when` without a data class. */
-private class Six<A, B, C, D, E, F>(
-    val a: A, val b: B, val c: C, val d: D, val e: E, val f: F,
-)
-
-private operator fun <A, B, C, D, E, F> Six<A, B, C, D, E, F>.component1() = a
-private operator fun <A, B, C, D, E, F> Six<A, B, C, D, E, F>.component2() = b
-private operator fun <A, B, C, D, E, F> Six<A, B, C, D, E, F>.component3() = c
-private operator fun <A, B, C, D, E, F> Six<A, B, C, D, E, F>.component4() = d
-private operator fun <A, B, C, D, E, F> Six<A, B, C, D, E, F>.component5() = e
-private operator fun <A, B, C, D, E, F> Six<A, B, C, D, E, F>.component6() = f
-
-/**
  * Modern network availability check for osmdroid.
  *
  * osmdroid 6.1.20's built-in NetworkAvailablityCheck uses the deprecated
@@ -1053,12 +909,6 @@ fun TripRouteMap(
     var isFullscreen by remember { mutableStateOf(false) }
     var fullscreenCenter by remember { mutableStateOf(GeoPoint(39.5, -98.0)) }
     var fullscreenZoom by remember { mutableStateOf(4.0) }
-    // Live cache timestamp for this trip's tiles. Re-read on every recomposition
-    // of the trip card / detail sheet so a refresh from the Cache Trip Area
-    // button is reflected immediately.
-    var tripCacheTimestamp by remember(trip.id) {
-        mutableStateOf(PersistenceManager.loadCachedTripTimestamps()[trip.id])
-    }
 
     val stopsWithLocations = remember(trip.stops) {
         trip.stops.mapNotNull { stop ->
@@ -1199,8 +1049,6 @@ fun TripRouteMap(
             onStopTap = onStopTap,
             onAddStop = onAddStop,
             onSubmitLocation = onSubmitLocation,
-            cacheTimestamp = tripCacheTimestamp,
-            onCacheUpdated = { tripCacheTimestamp = it },
         )
     }
 
@@ -1229,8 +1077,6 @@ fun FullscreenRouteMapOverlay(
     onStopTap: (TripStop) -> Unit = {},
     onAddStop: ((name: String, lat: Double, lng: Double, locationId: String?) -> Unit)? = null,
     onSubmitLocation: ((lat: Double, lng: Double) -> Unit)? = null,
-    cacheTimestamp: Long? = null,
-    onCacheUpdated: ((Long?) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -1240,7 +1086,6 @@ fun FullscreenRouteMapOverlay(
     var showNameInput by remember { mutableStateOf(false) }
     var customStopName by remember { mutableStateOf("") }
     var scanResultMessage by remember { mutableStateOf<String?>(null) }
-    var tripCacheTimestamp by remember(trip.id) { mutableStateOf(cacheTimestamp) }
 
     val stopsWithLocations = remember(trip.stops) {
         trip.stops.mapNotNull { stop ->
@@ -1395,34 +1240,6 @@ fun FullscreenRouteMapOverlay(
 
             MapOfflineNotice(
                 modifier = Modifier.align(Alignment.TopCenter).padding(top = 64.dp),
-            )
-
-            MapCacheStatusIndicator(
-                cachedAtMillis = tripCacheTimestamp,
-                onRefresh = {
-                    val mv = fsMapView ?: return@MapCacheStatusIndicator
-                    scope.launch {
-                        withContext(Dispatchers.IO) {
-                            runCatching {
-                                MapTileCacheManager.prefetchTripArea(
-                                    context = context,
-                                    trip = trip,
-                                    radiusMiles = 3.0,
-                                )
-                            }
-                        }
-                        val updated = PersistenceManager.loadCachedTripTimestamps()[trip.id]
-                        tripCacheTimestamp = updated
-                        onCacheUpdated?.invoke(updated)
-                        android.widget.Toast.makeText(
-                            context,
-                            "Offline tiles refreshed.",
-                            android.widget.Toast.LENGTH_SHORT,
-                        ).show()
-                    }
-                },
-                label = "Trip tiles",
-                modifier = Modifier.align(Alignment.TopStart).padding(top = 72.dp, start = 16.dp),
             )
 
             // Pin-drop hint
@@ -1902,11 +1719,6 @@ fun FullscreenMapOverlay(
     var pinLocation by remember { mutableStateOf<Pair<Double, Double>?>(null) }
     var downloadCoords by remember { mutableStateOf<Pair<Double, Double>?>(null) }
     var showDownloadSheet by remember { mutableStateOf(false) }
-    // Live cache timestamp for the area around the fullscreen map's center.
-    // Re-read after a refresh so the indicator flips to "fresh" immediately.
-    var areaCacheTimestamp by remember(initialCenter) {
-        mutableStateOf(PersistenceManager.areaCacheTime(initialCenter.latitude, initialCenter.longitude))
-    }
 
     // Run the caller's map setup (creating bitmaps, markers, polylines, and
     // calling zoomToBoundingBox) after the view has been laid out and on a
@@ -2008,33 +1820,6 @@ fun FullscreenMapOverlay(
 
             MapOfflineNotice(
                 modifier = Modifier.align(Alignment.TopCenter).padding(top = 64.dp),
-            )
-
-            MapCacheStatusIndicator(
-                cachedAtMillis = areaCacheTimestamp,
-                onRefresh = {
-                    val mv = fsMapView ?: return@MapCacheStatusIndicator
-                    val center = mv.mapCenter
-                    scope.launch {
-                        withContext(Dispatchers.IO) {
-                            runCatching {
-                                MapTileCacheManager.prefetchUserArea(
-                                    context = context,
-                                    lat = center.latitude,
-                                    lng = center.longitude,
-                                )
-                            }
-                        }
-                        areaCacheTimestamp = PersistenceManager.areaCacheTime(center.latitude, center.longitude)
-                        android.widget.Toast.makeText(
-                            context,
-                            "Offline tiles refreshed.",
-                            android.widget.Toast.LENGTH_SHORT,
-                        ).show()
-                    }
-                },
-                label = "Area tiles",
-                modifier = Modifier.align(Alignment.TopStart).padding(top = 72.dp, start = 16.dp),
             )
 
             // Pin-drop hint banner — shows until the user drops a pin

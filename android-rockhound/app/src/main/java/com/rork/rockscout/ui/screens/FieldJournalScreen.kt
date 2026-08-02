@@ -95,10 +95,10 @@ import com.rork.rockscout.ui.components.CardAction
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.FullScreenImageViewer
 import com.rork.rockscout.ui.components.LongPressableImage
-import com.rork.rockscout.ui.components.SavedImagesPickerDialog
+import com.rork.rockscout.ui.components.ImageSourcePickerDialog
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.SculptedButton
-import com.rork.rockscout.ui.components.processSavedImage
+import com.rork.rockscout.ui.components.processImageUri
 import com.rork.rockscout.ui.components.MultiPinDropMap
 import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.SculptedOutlinedButton
@@ -544,7 +544,7 @@ private fun JournalEditorScreen(
     var uploadLocationMessage by remember { mutableStateOf<String?>(null) }
     var showCapturePicker by remember { mutableStateOf(false) }
     var showTripPicker by remember { mutableStateOf(false) }
-    var showSavedImagePicker by remember { mutableStateOf(false) }
+    var showImageSourcePicker by remember { mutableStateOf(false) }
     var weatherSummary by remember { mutableStateOf(initial?.weatherSummary ?: "") }
     var pendingPhotoDeleteIdx by remember { mutableStateOf<Int?>(null) }
     var pendingDetachCaptureIdx by remember { mutableStateOf<Int?>(null) }
@@ -737,7 +737,7 @@ private fun JournalEditorScreen(
                             modifier = Modifier.size(64.dp).clip(RoundedCornerShape(10.dp))
                                 .background(MaterialTheme.colorScheme.surfaceVariant)
                                 .glowingBorder(2.dp, Citrine.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
-                                .clickable { showSavedImagePicker = true },
+                                .clickable { showImageSourcePicker = true },
                             contentAlignment = Alignment.Center,
                         ) { Icon(Icons.Filled.Download, "Saved images", tint = Citrine) }
                     }
@@ -1113,13 +1113,13 @@ private fun JournalEditorScreen(
         }
     }
 
-    if (showSavedImagePicker) {
-        SavedImagesPickerDialog(
-            onDismiss = { showSavedImagePicker = false },
-            onImageSelected = { image ->
-                showSavedImagePicker = false
+    if (showImageSourcePicker) {
+        ImageSourcePickerDialog(
+            onDismiss = { showImageSourcePicker = false },
+            onImageSelected = { uri ->
+                showImageSourcePicker = false
                 scope.launch {
-                    val path = processSavedImage(context, image, "journal_photos", "journal_photo")
+                    val path = processImageUri(context, uri, "journal_photos", "journal_photo")
                     if (path != null) photoUris.add(path)
                 }
             },

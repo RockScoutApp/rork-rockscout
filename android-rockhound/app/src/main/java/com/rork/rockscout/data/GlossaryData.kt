@@ -212,7 +212,6 @@ val GLOSSARY_ENTRIES: List<GlossaryEntry> = listOf(
     GlossaryEntry("Hardness tester", GlossaryCategory.LAPIDARY, "A set of known reference minerals or picks used to determine a stone's Mohs hardness by scratch testing."),
 
     // ── Expanded Aurora & Space ───────────────────────────────────────────
-    GlossaryEntry("Auroral oval", GlossaryCategory.AURORA_SPACE, "The ring-shaped zone around each magnetic pole where aurora most often appears. Expands equatorward during storms."),
     GlossaryEntry("Proton flare", GlossaryCategory.AURORA_SPACE, "A powerful solar flare that accelerates protons toward Earth — can cause radio blackouts and enhanced aurora."),
     GlossaryEntry("Sudden impulse", GlossaryCategory.AURORA_SPACE, "A sharp, sudden jump in Earth's magnetic field when a solar shock front arrives — often precedes a geomagnetic storm."),
 

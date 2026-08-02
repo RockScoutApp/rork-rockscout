@@ -78,7 +78,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.rork.rockscout.ui.components.MapDownloadSheet
-import com.rork.rockscout.ui.components.MapCacheStatusIndicator
 import com.rork.rockscout.ui.components.applyHybridTiles
 import com.rork.rockscout.ui.components.MapOfflineNotice
 import com.rork.rockscout.ui.components.MapTileCacheManager
@@ -140,9 +139,6 @@ fun RockScoutsMapScreen(navController: NavController) {
     var showSafetyNote by remember { mutableStateOf(true) }
     var showPingConfirmDialog by remember { mutableStateOf(false) }
     var showDownloadSheet by remember { mutableStateOf(false) }
-    // Live cache timestamp for the user's current area — drives the sync-status
-    // pill on the RockScouts map. Re-read after a prefetch / refresh.
-    var areaCacheTimestamp by remember { mutableStateOf<Long?>(null) }
 
     BackHandler(enabled = showSafetyNote) { showSafetyNote = false }
 
@@ -173,17 +169,6 @@ fun RockScoutsMapScreen(navController: NavController) {
         }
     }
 
-    // NOTE: Automatic tile prefetching removed — it was causing entry freezes
-    // (same root cause as LocationDetailScreen and DigSitesMapView). Keyed on
-    // `current` (a Pair that changes on every GPS refresh), this re-prefetched
-    // hundreds of tiles across 3 sources × zoom 12-19 every minute while the
-    // screen was open, contending with the visible map's tile loads on the
-    // shared SqlTileWriter lock. The map loads tiles on demand for visible
-    // areas; users can manually download offline tiles from the download button.
-    LaunchedEffect(isSignedIn, profile.clubEnabled) {
-        if (!isSignedIn || !profile.clubEnabled) return@LaunchedEffect
-        areaCacheTimestamp = PersistenceManager.areaCacheTime(current.first, current.second)
-    }
 
     // Track which ping is mine.
     LaunchedEffect(pings, auth.currentUserId) {
@@ -295,32 +280,7 @@ fun RockScoutsMapScreen(navController: NavController) {
                 modifier = Modifier.align(Alignment.TopCenter).padding(top = 76.dp),
             )
 
-            MapCacheStatusIndicator(
-                cachedAtMillis = areaCacheTimestamp,
-                onRefresh = {
-                    val mv = mapView ?: return@MapCacheStatusIndicator
-                    val center = mv.mapCenter
-                    scope.launch {
-                        withContext(Dispatchers.IO) {
-                            runCatching {
-                                MapTileCacheManager.prefetchUserArea(
-                                    context = context,
-                                    lat = center.latitude,
-                                    lng = center.longitude,
-                                )
-                            }
-                        }
-                        areaCacheTimestamp = PersistenceManager.areaCacheTime(center.latitude, center.longitude)
-                        android.widget.Toast.makeText(
-                            context,
-                            "Offline tiles refreshed.",
-                            android.widget.Toast.LENGTH_SHORT,
-                        ).show()
-                    }
-                },
-                label = "Area tiles",
-                modifier = Modifier.align(Alignment.TopStart).padding(top = 76.dp, start = 12.dp),
-            )
+
         }
 
         // Centered ping pin — stays fixed at screen center while the map pans

@@ -44,6 +44,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
@@ -107,6 +109,9 @@ import com.rork.rockscout.data.ImageModerator
 import com.rork.rockscout.data.ImageReviewRepository
 import com.rork.rockscout.data.ImageUtils
 import com.rork.rockscout.data.ModerationTriState
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.rork.rockscout.data.CapturedPhoto
 import com.rork.rockscout.data.SavedImage
 import com.rork.rockscout.data.Specimen
 import com.rork.rockscout.data.SpecimenImages
@@ -2480,6 +2485,269 @@ fun SavedImagesPickerDialog(
     )
 }
 
+/** Modal dialog that lets the user pick a photo from one of three in-app sources:
+ *  phone gallery, Saved Images, or Field Captures. The selected image is returned as a URI. */
+@Composable
+fun ImageSourcePickerDialog(
+    onImageSelected: (android.net.Uri) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val context = LocalContext.current
+    val savedImages by AppRepository.instance.savedImages.collectAsStateWithLifecycle()
+    val captures by AppRepository.instance.captures.collectAsStateWithLifecycle()
+    var mode by remember { mutableStateOf<ImageSourcePickerMode?>(null) }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+    ) { uri: android.net.Uri? ->
+        if (uri != null) {
+            onImageSelected(uri)
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        modifier = Modifier.fillMaxWidth().padding(8.dp),
+        containerColor = Slate900,
+        title = {
+            Text(
+                when (mode) {
+                    ImageSourcePickerMode.SAVED_IMAGES -> "Pick from Saved Images"
+                    ImageSourcePickerMode.FIELD_CAPTURES -> "Pick from Field Captures"
+                    null -> "Choose photo source"
+                },
+                style = MaterialTheme.typography.headlineSmall,
+                color = Aqua,
+            )
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth().height(420.dp)) {
+                when (mode) {
+                    null -> ImageSourceOptions(
+                        onGallery = { galleryLauncher.launch("image/*") },
+                        onSavedImages = { mode = ImageSourcePickerMode.SAVED_IMAGES },
+                        onFieldCaptures = { mode = ImageSourcePickerMode.FIELD_CAPTURES },
+                    )
+                    ImageSourcePickerMode.SAVED_IMAGES -> SavedImagesGrid(
+                        savedImages = savedImages,
+                        onImageSelected = { image ->
+                            val uri = image.localUri?.let { android.net.Uri.parse(it) }
+                                ?: android.net.Uri.parse(image.url)
+                            onImageSelected(uri)
+                        },
+                        emptyMessage = "No saved images yet. Long-press any photo in the app to save one.",
+                    )
+                    ImageSourcePickerMode.FIELD_CAPTURES -> FieldCapturesGrid(
+                        captures = captures,
+                        onImageSelected = { capture ->
+                            val uriString = capture.imageUris.firstOrNull()
+                            if (uriString != null) {
+                                onImageSelected(android.net.Uri.parse(uriString))
+                            }
+                        },
+                        emptyMessage = "No field captures yet. Use the Field Camera tile to snap photos.",
+                    )
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = if (mode == null) onDismiss else { mode = null }) {
+                Text(if (mode == null) "Cancel" else "Back", color = DarkTextMid)
+            }
+        },
+    )
+}
+
+private enum class ImageSourcePickerMode { SAVED_IMAGES, FIELD_CAPTURES }
+
+@Composable
+private fun ImageSourceOptions(
+    onGallery: () -> Unit,
+    onSavedImages: () -> Unit,
+    onFieldCaptures: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        ImageSourceOptionCard(
+            icon = Icons.Filled.PhotoLibrary,
+            label = "Phone Gallery",
+            subtitle = "Choose from your device",
+            accent = Citrine,
+            onClick = onGallery,
+        )
+        ImageSourceOptionCard(
+            icon = Icons.Filled.Download,
+            label = "Saved Images",
+            subtitle = "Photos you've saved in the app",
+            accent = Aqua,
+            onClick = onSavedImages,
+        )
+        ImageSourceOptionCard(
+            icon = Icons.Filled.PhotoCamera,
+            label = "Field Captures",
+            subtitle = "Photos from your field camera",
+            accent = Color(0xFF00E5C9),
+            onClick = onFieldCaptures,
+        )
+    }
+}
+
+@Composable
+private fun ImageSourceOptionCard(
+    icon: ImageVector,
+    label: String,
+    subtitle: String,
+    accent: Color,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color(0xFF1A1812))
+            .glowingBorder(1.dp, accent.copy(alpha = 0.35f), RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(accent.copy(alpha = 0.15f))
+                .glowingBorder(1.dp, accent.copy(alpha = 0.45f), RoundedCornerShape(12.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(icon, contentDescription = null, tint = accent, modifier = Modifier.size(24.dp))
+        }
+        Spacer(Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(label, style = MaterialTheme.typography.titleSmall, color = accent, fontWeight = FontWeight.Bold)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = DarkTextMid)
+        }
+        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = accent, modifier = Modifier.size(20.dp).graphicsLayer(rotationZ = 180f))
+    }
+}
+
+@Composable
+private fun SavedImagesGrid(
+    savedImages: List<SavedImage>,
+    onImageSelected: (SavedImage) -> Unit,
+    emptyMessage: String,
+) {
+    if (savedImages.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                emptyMessage,
+                style = MaterialTheme.typography.bodyMedium,
+                color = DarkTextMid,
+                textAlign = TextAlign.Center,
+            )
+        }
+    } else {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            items(savedImages, key = { it.id }) { image ->
+                Box(
+                    modifier = Modifier
+                        .aspectRatio(1f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFF1A1812))
+                        .glowingBorder(1.dp, Color(0xFF1A1812).copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+                        .clickable { onImageSelected(image) },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    AsyncImage(
+                        model = image.url,
+                        contentDescription = "Saved image",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FieldCapturesGrid(
+    captures: List<CapturedPhoto>,
+    onImageSelected: (CapturedPhoto) -> Unit,
+    emptyMessage: String,
+) {
+    if (captures.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                emptyMessage,
+                style = MaterialTheme.typography.bodyMedium,
+                color = DarkTextMid,
+                textAlign = TextAlign.Center,
+            )
+        }
+    } else {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            items(captures, key = { it.id }) { capture ->
+                val firstUri = capture.imageUris.firstOrNull()
+                val specimenName = remember(capture.specimenId) {
+                    SeedData.specimenById(capture.specimenId)?.name ?: "Field Capture"
+                }
+                Column(
+                    modifier = Modifier
+                        .aspectRatio(1f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color(0xFF1A1812))
+                        .glowingBorder(1.dp, Color(0xFF1A1812).copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+                        .clickable { onImageSelected(capture) }
+                        .padding(6.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFF0D0C08)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (firstUri != null) {
+                            AsyncImage(
+                                model = firstUri,
+                                contentDescription = specimenName,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                            )
+                        } else {
+                            Text(capture.specimenEmoji, style = MaterialTheme.typography.headlineMedium)
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        capture.displayName(specimenName),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = DarkTextHigh,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+        }
+    }
+}
+
 /** Copies a saved image into the requested destination folder, runs it through the same
  *  moderation pipeline as a gallery pick, and returns the persistent path (or null if
  *  it was rejected). */
@@ -2488,17 +2756,26 @@ suspend fun processSavedImage(
     savedImage: SavedImage,
     subdir: String,
     type: String,
+): String? = processImageUri(
+    context,
+    if (savedImage.localUri != null) android.net.Uri.parse(savedImage.localUri) else android.net.Uri.parse(savedImage.url),
+    subdir,
+    type,
+)
+
+/** Copies any image URI into the requested destination folder, runs it through the same
+ *  moderation pipeline, and returns the persistent path (or null if rejected). */
+suspend fun processImageUri(
+    context: android.content.Context,
+    uri: android.net.Uri,
+    subdir: String,
+    type: String,
 ): String? {
-    val sourceUri = if (savedImage.localUri != null) {
-        android.net.Uri.parse(savedImage.localUri)
-    } else {
-        android.net.Uri.parse(savedImage.url)
-    }
-    val persistentPath = ImageUtils.copyUriToInternalStorage(context, sourceUri, subdir) ?: return null
+    val persistentPath = ImageUtils.copyUriToInternalStorage(context, uri, subdir) ?: return null
 
     val base64 = ImageUtils.uriToModerationBase64(context, android.net.Uri.parse(persistentPath))
     if (base64 == null) {
-        android.widget.Toast.makeText(context, "Could not load saved image.", android.widget.Toast.LENGTH_SHORT).show()
+        android.widget.Toast.makeText(context, "Could not load image.", android.widget.Toast.LENGTH_SHORT).show()
         return null
     }
     val verdict = ImageModerator.scan(base64, "image/jpeg")

@@ -426,13 +426,6 @@ fun SocialSettingsScreen(
                 },
             )
 
-            // ── Aurora Alert Kp Threshold ──
-            Spacer(Modifier.height(12.dp))
-            SectionHeader("Aurora Alert Threshold")
-            AuroraKpThresholdSlider(repo = repo, auroraAlertsEnabled = PersistenceManager.isAuroraAlertsEnabled())
-
-            Spacer(Modifier.height(12.dp))
-
             // Note about always-on moderation notifications
             Row(
                 modifier = Modifier
@@ -1254,77 +1247,6 @@ private fun SectionHeader(text: String) {
         color = Citrine,
         fontWeight = FontWeight.ExtraBold,
     )
-}
-
-@Composable
-private fun AuroraKpThresholdSlider(repo: AppRepository, auroraAlertsEnabled: Boolean) {
-    val profile by repo.profile.collectAsStateWithLifecycle()
-    val currentLocation by repo.currentLocation.collectAsStateWithLifecycle()
-    val defaultThreshold = AuroraRepository.kpThresholdForLatitude(currentLocation.first)
-    val customThreshold = repo.getAuroraKpThreshold()
-    val sliderValue = customThreshold ?: defaultThreshold.toFloat()
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .glowingBorder(1.dp, Color(0xFF00E5C9).copy(alpha = 0.35f), RoundedCornerShape(14.dp))
-            .background(Color(0xFF1A1812).copy(alpha = 0.7f))
-            .padding(16.dp),
-    ) {
-        Text(
-            text = "Notify me when Kp reaches: ${String.format("%.1f", sliderValue)}",
-            style = MaterialTheme.typography.titleMedium,
-            color = if (auroraAlertsEnabled) Color(0xFF00E5C9) else TextLow,
-            fontWeight = FontWeight.Bold,
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = if (customThreshold != null)
-                "Custom threshold set. Default for your latitude: Kp ${String.format("%.1f", defaultThreshold)}"
-            else
-                "Default: based on your latitude (Kp ${String.format("%.1f", defaultThreshold)}). Set a custom level to get alerts at your preferred Kp threshold.",
-            style = MaterialTheme.typography.bodySmall,
-            color = TextMid,
-        )
-        Spacer(Modifier.height(12.dp))
-        Slider(
-            value = sliderValue,
-            onValueChange = { newVal ->
-                val stepped = (newVal * 2).roundToInt() / 2f
-                repo.setAuroraKpThreshold(stepped)
-            },
-            valueRange = 0f..9f,
-            steps = 17,
-            enabled = auroraAlertsEnabled,
-            colors = SliderDefaults.colors(
-                thumbColor = Color(0xFF00E5C9),
-                activeTrackColor = Color(0xFF00E5C9).copy(alpha = 0.7f),
-                inactiveTrackColor = Color(0xFF00E5C9).copy(alpha = 0.2f),
-                disabledThumbColor = TextLow,
-                disabledActiveTrackColor = TextLow.copy(alpha = 0.3f),
-                disabledInactiveTrackColor = TextLow.copy(alpha = 0.1f),
-            ),
-        )
-        if (customThreshold != null) {
-            Spacer(Modifier.height(4.dp))
-            SculptedOutlinedButton(
-                text = "Use Default (Kp ${String.format("%.1f", defaultThreshold)})",
-                onClick = { repo.setAuroraKpThreshold(null) },
-                modifier = Modifier.fillMaxWidth(),
-                accent = Color(0xFF00E5C9),
-                icon = Icons.Filled.Bedtime,
-            )
-        }
-        if (!auroraAlertsEnabled) {
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = "Enable Aurora alerts above to activate this threshold.",
-                style = MaterialTheme.typography.labelSmall,
-                color = TextLow,
-            )
-        }
-    }
 }
 
 @Composable

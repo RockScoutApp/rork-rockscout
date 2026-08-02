@@ -47,6 +47,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -90,6 +92,7 @@ import com.rork.rockscout.data.WorkScheduler
 import com.rork.rockscout.ui.components.AuroraSavedSpotsMap
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.SculptedIconButton
+import com.rork.rockscout.ui.components.SculptedOutlinedButton
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.theme.Aqua
@@ -1060,6 +1063,13 @@ fun AuroraScreen(navController: NavController) {
                 }
             }
 
+            // ─── Kp Alert Threshold ───
+            AuroraKpThresholdSlider(
+                repo = repo,
+                auroraAlertsEnabled = auroraAlertsEnabled,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+            )
+
             // ─── Education Card (collapsible) ───
             AuroraCard(title = "How Aurora Works", accent = AuroraPurple) {
                 Row(
@@ -1199,6 +1209,92 @@ private fun EducationText(title: String, body: String) {
             style = MaterialTheme.typography.bodyMedium,
             color = TextMid,
         )
+    }
+}
+
+@Composable
+private fun AuroraKpThresholdSlider(
+    repo: AppRepository,
+    auroraAlertsEnabled: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val currentLocation by repo.currentLocation.collectAsStateWithLifecycle()
+    val defaultThreshold = AuroraRepository.kpThresholdForLatitude(currentLocation.first)
+    val customThreshold = repo.getAuroraKpThreshold()
+    val storedValue = customThreshold ?: defaultThreshold.toFloat()
+
+    // Local thumb position makes dragging smooth; repo is only updated on release.
+    var sliderPosition by remember(storedValue) { mutableStateOf(storedValue) }
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(Color(0xFF1A1812).copy(alpha = 0.92f), Color(0xFF120F0A).copy(alpha = 0.88f))
+                )
+            )
+            .glowingBorder(1.dp, AuroraGreen.copy(alpha = 0.35f), RoundedCornerShape(20.dp))
+            .padding(16.dp),
+    ) {
+        Text(
+            text = "Notify me when Kp reaches: ${String.format("%.1f", sliderPosition)}",
+            style = MaterialTheme.typography.titleMedium,
+            color = if (auroraAlertsEnabled) AuroraGreen else TextLow,
+            fontWeight = FontWeight.Bold,
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = if (customThreshold != null)
+                "Custom threshold set. Default for your latitude: Kp ${String.format("%.1f", defaultThreshold)}"
+            else
+                "Default: based on your latitude (Kp ${String.format("%.1f", defaultThreshold)}). Set a custom level to get alerts at your preferred Kp threshold.",
+            style = MaterialTheme.typography.bodySmall,
+            color = TextMid,
+        )
+        Spacer(Modifier.height(12.dp))
+        Slider(
+            value = sliderPosition,
+            onValueChange = { newVal ->
+                sliderPosition = (newVal * 2).roundToInt() / 2f
+            },
+            onValueChangeFinished = {
+                repo.setAuroraKpThreshold(sliderPosition)
+            },
+            valueRange = 0f..9f,
+            steps = 17,
+            enabled = auroraAlertsEnabled,
+            colors = SliderDefaults.colors(
+                thumbColor = AuroraGreen,
+                activeTrackColor = AuroraGreen.copy(alpha = 0.7f),
+                inactiveTrackColor = AuroraGreen.copy(alpha = 0.2f),
+                disabledThumbColor = TextLow,
+                disabledActiveTrackColor = TextLow.copy(alpha = 0.3f),
+                disabledInactiveTrackColor = TextLow.copy(alpha = 0.1f),
+            ),
+        )
+        if (customThreshold != null) {
+            Spacer(Modifier.height(4.dp))
+            SculptedOutlinedButton(
+                text = "Use Default (Kp ${String.format("%.1f", defaultThreshold)})",
+                onClick = {
+                    repo.setAuroraKpThreshold(null)
+                    sliderPosition = defaultThreshold.toFloat()
+                },
+                modifier = Modifier.fillMaxWidth(),
+                accent = AuroraGreen,
+                icon = Icons.Filled.Bedtime,
+            )
+        }
+        if (!auroraAlertsEnabled) {
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "Enable Aurora alerts above to activate this threshold.",
+                style = MaterialTheme.typography.labelSmall,
+                color = TextLow,
+            )
+        }
     }
 }
 

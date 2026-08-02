@@ -215,51 +215,12 @@ fun AddLocationDialog(
     var showPinPicker by remember { mutableStateOf(false) }
 
     val photoUris = remember { mutableStateListOf<Uri>() }
-    var cameraUri by remember { mutableStateOf<Uri?>(null) }
     var isSubmitting by remember { mutableStateOf(false) }
     var submitStatus by remember { mutableStateOf<String?>(null) }
     var moderationError by remember { mutableStateOf<String?>(null) }
-    var showSavedImagePicker by remember { mutableStateOf(false) }
+    var showImageSourcePicker by remember { mutableStateOf(false) }
     var pendingRemovePhoto by remember { mutableStateOf<Uri?>(null) }
 
-    // Camera launcher
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture(),
-    ) { success ->
-        if (success && cameraUri != null) {
-            val uri = cameraUri
-            if (uri != null && photoUris.size < 10) {
-                photoUris.add(uri)
-            }
-        }
-        cameraUri = null
-    }
-
-    // Gallery picker launcher
-    val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-    ) { uri: Uri? ->
-        if (uri != null && photoUris.size < 10) {
-            // Reject files larger than 5 MB before adding to the upload set.
-            if (com.rork.rockscout.data.ImageUtils.isOverUploadLimit(context, uri)) {
-                android.widget.Toast.makeText(
-                    context,
-                    "That image is over 5 MB. Please choose a smaller photo.",
-                    android.widget.Toast.LENGTH_LONG,
-                ).show()
-                return@rememberLauncherForActivityResult
-            }
-            photoUris.add(uri)
-        }
-    }
-
-    fun startCamera() {
-        val photoFile = File(context.cacheDir, "photos/${UUID.randomUUID()}.jpg")
-        photoFile.parentFile?.mkdirs()
-        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile)
-        cameraUri = uri
-        cameraLauncher.launch(uri)
-    }
 
     ScreenScaffold(
         title = dialogTitle,
@@ -475,49 +436,19 @@ fun AddLocationDialog(
                     }
                     if (photoUris.size < 10) {
                         item {
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Column(
-                                    modifier = Modifier
-                                        .size(80.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(Slate800.copy(alpha = 0.5f))
-                                        .glowingBorder(1.5.dp, Aqua.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
-                                        .clickable { startCamera() },
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                ) {
-                                    Icon(Icons.Filled.PhotoCamera, contentDescription = "Camera", tint = Aqua, modifier = Modifier.size(24.dp))
-                                    Spacer(Modifier.height(2.dp))
-                                    Text("Camera", style = MaterialTheme.typography.labelSmall, color = Aqua, fontWeight = FontWeight.Medium)
-                                }
-                                Column(
-                                    modifier = Modifier
-                                        .size(80.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(Slate800.copy(alpha = 0.5f))
-                                        .glowingBorder(1.5.dp, Citrine.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
-                                        .clickable { galleryLauncher.launch("image/*") },
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                ) {
-                                    Icon(Icons.Filled.Add, contentDescription = "Gallery", tint = Citrine, modifier = Modifier.size(24.dp))
-                                    Spacer(Modifier.height(2.dp))
-                                    Text("Gallery", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Medium)
-                                }
-                                Column(
-                                    modifier = Modifier
-                                        .size(80.dp)
-                                        .clip(RoundedCornerShape(10.dp))
-                                        .background(Slate800.copy(alpha = 0.5f))
-                                        .glowingBorder(1.5.dp, Citrine.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
-                                        .clickable { showSavedImagePicker = true },
-                                    verticalArrangement = Arrangement.Center,
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                ) {
-                                    Icon(Icons.Filled.Download, contentDescription = "Saved Images", tint = Citrine, modifier = Modifier.size(24.dp))
-                                    Spacer(Modifier.height(2.dp))
-                                    Text("Saved", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Medium)
-                                }
+                            Column(
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Slate800.copy(alpha = 0.5f))
+                                    .glowingBorder(1.5.dp, Aqua.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                                    .clickable { showImageSourcePicker = true },
+                                verticalArrangement = Arrangement.Center,
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Icon(Icons.Filled.Add, contentDescription = "Add photo", tint = Aqua, modifier = Modifier.size(24.dp))
+                                Spacer(Modifier.height(2.dp))
+                                Text("Add", style = MaterialTheme.typography.labelSmall, color = Aqua, fontWeight = FontWeight.Medium)
                             }
                         }
                     }
@@ -715,14 +646,16 @@ fun AddLocationDialog(
         )
     }
 
-    if (showSavedImagePicker) {
-        SavedImagesPickerDialog(
-            onDismiss = { showSavedImagePicker = false },
-            onImageSelected = { image ->
-                showSavedImagePicker = false
-                scope.launch {
-                    val path = processSavedImage(context, image, "location_submissions", "location_submission")
-                    if (path != null) photoUris.add(Uri.parse(path))
+    if (showImageSourcePicker) {
+        ImageSourcePickerDialog(
+            onDismiss = { showImageSourcePicker = false },
+            onImageSelected = { uri ->
+                showImageSourcePicker = false
+                if (photoUris.size < 10) {
+                    scope.launch {
+                        val path = processImageUri(context, uri, "location_submissions", "location_submission")
+                        if (path != null) photoUris.add(Uri.parse(path))
+                    }
                 }
             },
         )

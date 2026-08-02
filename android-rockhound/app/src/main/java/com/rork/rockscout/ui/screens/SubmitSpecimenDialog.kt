@@ -290,7 +290,7 @@ fun SubmitSpecimenDialog(
                                     .clip(RoundedCornerShape(10.dp))
                                     .background(Aqua.copy(alpha = 0.12f))
                                     .glowingBorder(2.dp, Aqua.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
-                                    .clickable { galleryLauncher.launch("image/*") },
+                                    .clickable { showImageSourcePicker = true },
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -299,24 +299,6 @@ fun SubmitSpecimenDialog(
                                         "${imageUris.size}/4",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = Aqua,
-                                    )
-                                }
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .size(72.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(Citrine.copy(alpha = 0.12f))
-                                    .glowingBorder(2.dp, Citrine.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
-                                    .clickable { showSavedImagePicker = true },
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(Icons.Filled.Download, "Saved images", tint = Citrine, modifier = Modifier.size(24.dp))
-                                    Text(
-                                        "Saved",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = Citrine,
                                     )
                                 }
                             }
@@ -464,15 +446,15 @@ fun SubmitSpecimenDialog(
         }
     }
 
-    if (showSavedImagePicker) {
-        SavedImagesPickerDialog(
-            onDismiss = { showSavedImagePicker = false },
-            onImageSelected = { image ->
-                showSavedImagePicker = false
+    if (showImageSourcePicker) {
+        ImageSourcePickerDialog(
+            onDismiss = { showImageSourcePicker = false },
+            onImageSelected = { uri ->
+                showImageSourcePicker = false
                 if (imageUris.size < 4) {
                     scope.launch {
                         isModerating = true
-                        val path = processSavedImage(context, image, "specimen_submissions", "specimen_submission")
+                        val path = processImageUri(context, uri, "specimen_submissions", "specimen_submission")
                         isModerating = false
                         if (path != null) imageUris.add(path)
                     }

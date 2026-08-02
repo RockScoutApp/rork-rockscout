@@ -1344,28 +1344,11 @@ private fun EditProfileSheet(
     var nameError by remember { mutableStateOf<String?>(null) }
     var bgModerating by remember { mutableStateOf(false) }
     var bgRejected by remember { mutableStateOf<String?>(null) }
-    var showSavedImagePicker by remember { mutableStateOf(false) }
+    var showImageSourcePicker by remember { mutableStateOf(false) }
     // Track the original name so we know whether the user actually changed it
     // (needed to avoid blocking the save when they kept their own name).
     val originalName = remember { name.trim() }
     val coroutineScope = rememberCoroutineScope()
-    val context = androidx.compose.ui.platform.LocalContext.current
-
-    val bgGalleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-    ) { uri: Uri? ->
-        if (uri != null) {
-            // Reject files larger than 5 MB before moderation to prevent
-            // base64-encoding OOMs and failed uploads.
-            if (ImageUtils.isOverUploadLimit(context, uri)) {
-                bgRejected = "That image is over 5 MB. Please choose a smaller photo."
-                return@rememberLauncherForActivityResult
-            }
-            bgModerating = true
-            bgRejected = null
-            onBackgroundSelected(uri)
-        }
-    }
 
     // Live duplicate check — re-validate whenever the name changes.
     LaunchedEffect(editName) {
@@ -1407,7 +1390,7 @@ private fun EditProfileSheet(
                     .clip(RoundedCornerShape(12.dp))
                     .background(Citrine.copy(alpha = 0.15f))
                     .glowingBorder(2.dp, Citrine.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
-                    .clickable { bgGalleryLauncher.launch("image/*") }
+                    .clickable { showImageSourcePicker = true }
                     .padding(horizontal = 14.dp, vertical = 10.dp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -1419,31 +1402,6 @@ private fun EditProfileSheet(
                     Spacer(Modifier.width(8.dp))
                     Text(
                         if (backgroundImagePath.isNullOrBlank()) "Add Background" else "Change Background",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = Citrine,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            }
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Citrine.copy(alpha = 0.15f))
-                    .glowingBorder(2.dp, Citrine.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
-                    .clickable { showSavedImagePicker = true }
-                    .padding(horizontal = 14.dp, vertical = 10.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Filled.Download,
-                        contentDescription = "Saved images",
-                        tint = Citrine,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        "Saved Images",
                         style = MaterialTheme.typography.labelLarge,
                         color = Citrine,
                         fontWeight = FontWeight.Bold,
@@ -1550,12 +1508,11 @@ private fun EditProfileSheet(
         Spacer(Modifier.height(16.dp))
     }
 
-    if (showSavedImagePicker) {
-        SavedImagesPickerDialog(
-            onDismiss = { showSavedImagePicker = false },
-            onImageSelected = { image ->
-                showSavedImagePicker = false
-                val uri = image.localUri?.let { android.net.Uri.parse(it) } ?: android.net.Uri.parse(image.url)
+    if (showImageSourcePicker) {
+        ImageSourcePickerDialog(
+            onDismiss = { showImageSourcePicker = false },
+            onImageSelected = { uri ->
+                showImageSourcePicker = false
                 onBackgroundSelected(uri)
             },
         )

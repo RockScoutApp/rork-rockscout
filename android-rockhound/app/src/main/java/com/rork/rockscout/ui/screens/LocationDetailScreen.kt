@@ -82,7 +82,6 @@ import com.rork.rockscout.ui.components.GearLinksCard
 import com.rork.rockscout.ui.components.MapTileCacheManager
 import com.rork.rockscout.data.OfflineMapExporter
 import com.rork.rockscout.ui.components.MapViewLifecycleEffect
-import com.rork.rockscout.ui.components.MapCacheStatusIndicator
 import com.rork.rockscout.ui.components.MapZoomControls
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.ShareCardImage
@@ -485,11 +484,6 @@ private fun RouteMap(loc: DigLocation, miles: Double, showBackButton: Boolean = 
     val scope = rememberCoroutineScope()
     var mapView by remember { mutableStateOf<org.osmdroid.views.MapView?>(null) }
     var isFullscreen by remember { mutableStateOf(false) }
-    // Live cache timestamp for this location's tiles — drives the sync-status
-    // pill on the route map. Re-read after a prefetch / refresh.
-    var pointCacheTimestamp by remember(loc.id) {
-        mutableStateOf(com.rork.rockscout.data.PersistenceManager.pointCacheTime(loc.latitude, loc.longitude))
-    }
     val repo = AppRepository.instance
     val current by repo.currentLocation.collectAsStateWithLifecycle()
 
@@ -624,30 +618,7 @@ private fun RouteMap(loc: DigLocation, miles: Double, showBackButton: Boolean = 
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 60.dp),
         )
 
-        MapCacheStatusIndicator(
-            cachedAtMillis = pointCacheTimestamp,
-            onRefresh = {
-                val mv = mapView ?: return@MapCacheStatusIndicator
-                scope.launch {
-                    withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        runCatching {
-                            com.rork.rockscout.ui.components.MapTileCacheManager.prefetchLocation(
-                                context = context,
-                                loc = loc,
-                            )
-                        }
-                    }
-                    pointCacheTimestamp = com.rork.rockscout.data.PersistenceManager.pointCacheTime(loc.latitude, loc.longitude)
-                    android.widget.Toast.makeText(
-                        context,
-                        "Offline tiles refreshed.",
-                        android.widget.Toast.LENGTH_SHORT,
-                    ).show()
-                }
-            },
-            label = "Location tiles",
-            modifier = Modifier.align(Alignment.TopStart).padding(start = 12.dp, top = 60.dp),
-        )
+
     }
 
     if (isFullscreen) {
