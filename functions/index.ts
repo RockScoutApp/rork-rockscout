@@ -1,5 +1,6 @@
 import { handleIdentify, handleClarify, handleArtifactDetect } from "./identify";
 // RockScout backend — Cloudflare Worker entry (auth + rate-limit enabled).
+// Env sync: Supabase URL + keys updated to kblsiyyelyokhxaxefhy project.
 // Routes: /ping, /identify, /identify/clarify, /identify/artifact-detect, /app-version, /welcome-email, /image-rejection-email, /referral/*, /dev-sms-verify, /push/*.
 import { handleAppVersion } from "./app-version";
 import { handleWelcomeEmail } from "./welcome-email";

@@ -35,6 +35,8 @@
  *   EXPO_PUBLIC_SUPABASE_URL
  */
 
+import { resolveSupabaseUrl } from "./auth";
+
 const FROM = "RockScout <welcome@rockscout.net>";
 const TAGLINE = "Made by a rockhounder, for rockhounders";
 
@@ -324,7 +326,7 @@ export async function handleEmailVerification(
     // verified=true because the code was correct — the client can then attempt
     // a fallback sign-in or surface a clear error instead of a generic failure.
     const confirm = await confirmSupabaseEmail(
-      env.EXPO_PUBLIC_SUPABASE_URL,
+      resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY),
       env.SUPABASE_SERVICE_ROLE_KEY,
       email,
       body.supabaseUserId,
@@ -504,7 +506,7 @@ body{margin:0;padding:0;background:#F3EFE7;font-family:-apple-system,Segoe UI,Ro
 
   // Token is valid — confirm the Supabase email via admin API.
   const confirm = await confirmSupabaseEmail(
-    env.EXPO_PUBLIC_SUPABASE_URL,
+    resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY),
     env.SUPABASE_SERVICE_ROLE_KEY,
     email,
   );

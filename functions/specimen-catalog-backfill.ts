@@ -12,6 +12,7 @@
 // detail pages, and the identify-to-detail link depend on.
 
 import { SPECIMEN_DB } from "./specimens";
+import { resolveSupabaseUrl } from "./auth";
 
 interface CatalogBackfillEnv {
   EXPO_PUBLIC_SUPABASE_URL: string;
@@ -66,7 +67,7 @@ export async function handleSpecimenCatalogBackfill(
     );
   }
 
-  const supabaseUrl = env.EXPO_PUBLIC_SUPABASE_URL;
+  const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, undefined);
   const supabaseAnonKey = env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {

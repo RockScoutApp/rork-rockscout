@@ -28,7 +28,7 @@
  * identical errors from a crash loop.
  */
 
-import { buildCorsHeaders } from "./auth";
+import { buildCorsHeaders, resolveSupabaseUrl } from "./auth";
 
 interface ErrorReport {
   platform: string;
@@ -86,7 +86,7 @@ export async function handleErrorReport(
     return Response.json({ ok: false, error: "Missing required fields." }, { status: 400, headers });
   }
 
-  const supabaseUrl = env.EXPO_PUBLIC_SUPABASE_URL;
+  const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !serviceKey) {
     // Still return ok so the client doesn't retry — just log to console

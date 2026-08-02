@@ -57,6 +57,8 @@ function resolveVapidKeys(env: {
   return { publicKey: FALLBACK_VAPID_PUBLIC_KEY, privateKey: FALLBACK_VAPID_PRIVATE_KEY };
 }
 
+import { resolveSupabaseUrl } from "./auth";
+
 /** Env bindings the push handlers need. */
 interface PushEnv {
   EXPO_PUBLIC_RORK_APP_KEY?: string;
@@ -144,7 +146,7 @@ async function handleSubscribe(
     return Response.json({ error: "Missing endpoint or keys." }, { status: 400, headers });
   }
 
-  const supabaseUrl = env.EXPO_PUBLIC_SUPABASE_URL;
+  const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
   const anonKey = env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !anonKey) {
     return Response.json({ error: "Supabase not configured." }, { status: 503, headers });
@@ -205,7 +207,7 @@ async function handleUnsubscribe(
     return Response.json({ error: "Missing endpoint." }, { status: 400, headers });
   }
 
-  const supabaseUrl = env.EXPO_PUBLIC_SUPABASE_URL;
+  const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
   const anonKey = env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !anonKey) {
     return Response.json({ error: "Supabase not configured." }, { status: 503, headers });
@@ -297,7 +299,7 @@ async function deliver(
 ): Promise<Response> {
   const { publicKey: vapidPublic, privateKey: vapidPrivate } = resolveVapidKeys(env);
 
-  const supabaseUrl = env.EXPO_PUBLIC_SUPABASE_URL;
+  const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY ?? env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !serviceKey) {
     return Response.json({ error: "Supabase not configured." }, { status: 503, headers });

@@ -30,6 +30,8 @@ interface RestoreResponse {
   settingsJson: string | null;
 }
 
+import { resolveSupabaseUrl } from "./auth";
+
 interface SettingsBackupEnv {
   EXPO_PUBLIC_SUPABASE_URL?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
@@ -137,7 +139,8 @@ export async function handleSettingsBackup(
 ): Promise<Response> {
   const url = new URL(request.url);
 
-  if (!env.EXPO_PUBLIC_SUPABASE_URL) {
+  const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+  if (!supabaseUrl) {
     return Response.json(
       { error: "Backup storage not configured — missing Supabase URL" },
       { status: 503, headers: cors },
@@ -174,7 +177,7 @@ export async function handleSettingsBackup(
     }
 
     const success = await upsertSettings(
-      env.EXPO_PUBLIC_SUPABASE_URL,
+      supabaseUrl,
       accessToken,
       body.userId,
       body.settingsJson,
@@ -201,7 +204,7 @@ export async function handleSettingsBackup(
     }
 
     const settingsJson = await fetchSettings(
-      env.EXPO_PUBLIC_SUPABASE_URL,
+      supabaseUrl,
       accessToken,
       userId,
     );

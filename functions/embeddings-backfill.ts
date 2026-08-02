@@ -26,6 +26,7 @@ import {
   embedTextBatch,
   upsertEmbedding,
 } from "./embeddings";
+import { resolveSupabaseUrl } from "./auth";
 
 interface BackfillEnv {
   EXPO_PUBLIC_TOOLKIT_URL: string;
@@ -82,7 +83,7 @@ export async function handleEmbeddingsBackfill(
 
   const toolkitUrl = env.EXPO_PUBLIC_TOOLKIT_URL ?? "https://toolkit.rork.com";
   const toolkitSecret = env.EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY;
-  const supabaseUrl = env.EXPO_PUBLIC_SUPABASE_URL;
+  const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, undefined);
   const supabaseAnonKey = env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!toolkitSecret) {

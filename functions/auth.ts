@@ -206,3 +206,33 @@ type Env = {
   VAPID_PUBLIC_KEY?: string;
   VAPID_PRIVATE_KEY?: string;
 };
+
+/**
+ * Resolves the correct Supabase URL, preferring the project ref embedded in the
+ * service-role key's JWT payload over the EXPO_PUBLIC_SUPABASE_URL env var.
+ *
+ * The env var can go stale when a Supabase project is migrated but the platform
+ * env widget hasn't been updated yet. The service-role key is always correct for
+ * its own project, so deriving the URL from its `ref` claim guarantees we hit
+ * the right project regardless of a stale env var.
+ *
+ * Falls back to the env var if the key can't be decoded.
+ */
+export function resolveSupabaseUrl(
+  envUrl: string | undefined,
+  serviceKey: string | undefined,
+): string | undefined {
+  if (serviceKey) {
+    try {
+      const payload = JSON.parse(
+        atob(serviceKey.split(".")[1] ?? ""),
+      ) as { ref?: string };
+      if (payload.ref) {
+        return `https://${payload.ref}.supabase.co`;
+      }
+    } catch {
+      // Not a JWT or decode failed — fall through to env var.
+    }
+  }
+  return envUrl;
+}

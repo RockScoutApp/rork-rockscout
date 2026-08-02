@@ -1,3 +1,5 @@
+import { resolveSupabaseUrl } from "./auth";
+
 /**
  * Entitlement bridge endpoint — Cloudflare Worker.
  *
@@ -178,10 +180,11 @@ export async function handleEntitlement(
   );
 
   // 2. Write the result back to Supabase so the web PWA sees it.
+  const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
   let supabaseUpdated = false;
-  if (env.SUPABASE_SERVICE_ROLE_KEY && env.EXPO_PUBLIC_SUPABASE_URL) {
+  if (env.SUPABASE_SERVICE_ROLE_KEY && supabaseUrl) {
     supabaseUpdated = await updateSupabaseIsPro(
-      env.EXPO_PUBLIC_SUPABASE_URL,
+      supabaseUrl,
       env.SUPABASE_SERVICE_ROLE_KEY,
       userId,
       isPremium,

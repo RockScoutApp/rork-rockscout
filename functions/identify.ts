@@ -69,7 +69,7 @@ export async function handleIdentify(
     // narrowed candidates → visual comparison. Falls back to the old
     // text-first Haiku pass (full 58K-token DB in system prompt) if Supabase
     // or the embedding pipeline is unavailable.
-    const supabaseUrl = env.EXPO_PUBLIC_SUPABASE_URL;
+    const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, undefined);
     const supabaseAnonKey = env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
     const embeddingEnabled = !!(supabaseUrl && supabaseAnonKey);
 
@@ -337,7 +337,7 @@ async function identifyArtifact(
   const modelsUsed: string[] = ["artifact-mode"];
 
   // ── Embedding-first pipeline (mirrors the rock-ID flow) ──────────────
-  const supabaseUrl = env.EXPO_PUBLIC_SUPABASE_URL;
+  const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, undefined);
   const supabaseAnonKey = env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
   const embeddingEnabled = !!(supabaseUrl && supabaseAnonKey);
 
@@ -2648,3 +2648,6 @@ type Env = {
   EXPO_PUBLIC_SUPABASE_URL?: string;
   EXPO_PUBLIC_SUPABASE_ANON_KEY?: string;
 };
+
+// Resolved import for Supabase URL correction.
+import { resolveSupabaseUrl } from "./auth";

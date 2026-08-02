@@ -11,6 +11,8 @@
  * local data. This endpoint handles the server-side cleanup.
  */
 
+import { resolveSupabaseUrl } from "./auth";
+
 export async function handleDeleteAccount(
   request: Request,
   env: {
@@ -44,11 +46,12 @@ export async function handleDeleteAccount(
   // Delete the Supabase auth user if we have the service-role key.
   // This cascades to all Supabase tables (profiles, captures, journal, trips,
   // favorites, social, etc.) via ON DELETE CASCADE foreign keys.
-  if (env.SUPABASE_SERVICE_ROLE_KEY && env.EXPO_PUBLIC_SUPABASE_URL) {
+  const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+  if (env.SUPABASE_SERVICE_ROLE_KEY && supabaseUrl) {
     // If we have the user ID, delete directly.
     if (body.userId) {
       supabaseDeleted = await deleteSupabaseUser(
-        env.EXPO_PUBLIC_SUPABASE_URL,
+        supabaseUrl,
         env.SUPABASE_SERVICE_ROLE_KEY,
         body.userId,
       );
@@ -57,7 +60,7 @@ export async function handleDeleteAccount(
     // If userId deletion failed or wasn't provided, try to find + delete by email.
     if (!supabaseDeleted) {
       supabaseDeleted = await deleteSupabaseUserByEmail(
-        env.EXPO_PUBLIC_SUPABASE_URL,
+        supabaseUrl,
         env.SUPABASE_SERVICE_ROLE_KEY,
         email,
       );
