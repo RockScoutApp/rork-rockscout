@@ -3285,7 +3285,6 @@ object SpecimenImages {
 
     // ── Corrected Datolite split-half color palette (2026-07-19) ──
     private const val IMG_DATOLITE_DARK_PINK_HALF = "$Q/1657b42d-959d-4896-829d-c9b1853028fa.png"
-    private const val IMG_DATOLITE_LIGHT_PINK_HALF = "$Q/18f29764-373c-4ab1-aacb-db982cc5d9a3.png"
     private const val IMG_DATOLITE_LIGHT_GREEN_HALF = "$Q/e083ac1d-f360-4712-b125-a309ac39a910.png"
     private const val IMG_DATOLITE_CREAM_WHITE_HALF = "$Q/04e9c5a8-ca62-4f21-8aac-7449ea724ea7.png"
     private const val IMG_DATOLITE_PINK_WHITE_MARBLED_HALF = "$Q/eca048ce-c4cc-4da9-bc8d-8a93255b3080.png"
@@ -3392,7 +3391,6 @@ object SpecimenImages {
         "datolite" to listOf(
             IMG_DATOLITE_ROUGH_NODULE_V3,
             IMG_DATOLITE_DARK_PINK_HALF,
-            IMG_DATOLITE_LIGHT_PINK_HALF,
             IMG_DATOLITE_LIGHT_GREEN_HALF,
             IMG_DATOLITE_CREAM_WHITE_HALF,
             IMG_DATOLITE_PINK_WHITE_MARBLED_HALF

@@ -48,7 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import coil3.compose.AsyncImage
+import com.rork.rockscout.ui.components.LongPressableImage
 import kotlinx.coroutines.launch
 import com.rork.rockscout.data.ConstellationData
 import com.rork.rockscout.data.ConstellationEntry
@@ -179,11 +179,12 @@ private fun ConstellationRow(con: ConstellationEntry, onTap: (ConstellationEntry
                         .clip(RoundedCornerShape(8.dp))
                         .background(Color.Black),
                 ) {
-                    AsyncImage(
+                    LongPressableImage(
                         model = url,
                         contentDescription = con.name,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
+                        onClick = { onTap(con) },
                     )
                 }
                 Spacer(Modifier.width(10.dp))
@@ -274,7 +275,7 @@ private fun ConstellationDetailDialog(con: ConstellationEntry, onDismiss: () -> 
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color.Black),
                     ) {
-                        AsyncImage(
+                        LongPressableImage(
                             model = url,
                             contentDescription = con.name,
                             modifier = Modifier.fillMaxWidth(),

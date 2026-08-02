@@ -42,7 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import coil3.compose.AsyncImage
+import com.rork.rockscout.ui.components.LongPressableImage
 import com.rork.rockscout.data.DeepSkyObjectData
 import com.rork.rockscout.data.DeepSkyObject
 import com.rork.rockscout.ui.components.TwinklingStars
@@ -117,11 +117,12 @@ private fun DsoRow(dso: DeepSkyObject, onTap: (DeepSkyObject) -> Unit) {
                         .background(Color.Black),
                     contentAlignment = Alignment.Center,
                 ) {
-                    AsyncImage(
+                    LongPressableImage(
                         model = url,
                         contentDescription = dso.commonName,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Fit,
+                        onClick = { onTap(dso) },
                     )
                 }
                 Spacer(Modifier.width(10.dp))
@@ -211,7 +212,7 @@ private fun DsoDetailDialog(dso: DeepSkyObject, onDismiss: () -> Unit) {
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color.Black),
                     ) {
-                        AsyncImage(
+                        LongPressableImage(
                             model = url,
                             contentDescription = dso.commonName,
                             modifier = Modifier.fillMaxWidth(),

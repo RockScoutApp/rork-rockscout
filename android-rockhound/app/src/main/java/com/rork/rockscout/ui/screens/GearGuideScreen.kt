@@ -24,7 +24,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Diamond
 import androidx.compose.material.icons.filled.OpenInNew
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +43,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.rork.rockscout.data.GearItem
@@ -55,6 +55,7 @@ import com.rork.rockscout.data.TopPickManager
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.SculptedIconButton
+import com.rork.rockscout.ui.components.TopPickBadge
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
@@ -319,34 +320,16 @@ private fun GearItemRow(item: GearItem, accent: Color, onClick: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     item.name,
+                    modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.titleSmall,
                     color = Color.White,
                     fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 if (isTopPick) {
                     Spacer(Modifier.width(6.dp))
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(Citrine.copy(alpha = 0.25f))
-                            .glowingBorder(1.dp, Citrine.copy(alpha = 0.5f), RoundedCornerShape(6.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            Icons.Filled.Star,
-                            contentDescription = null,
-                            tint = Citrine,
-                            modifier = Modifier.size(10.dp),
-                        )
-                        Spacer(Modifier.width(3.dp))
-                        Text(
-                            "Top Pick",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Citrine,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
+                    TopPickBadge()
                 }
             }
             Text(

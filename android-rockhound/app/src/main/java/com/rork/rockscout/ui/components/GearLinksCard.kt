@@ -23,7 +23,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.OpenInNew
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -219,6 +218,7 @@ private fun CompactGearItemRow(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     item.name,
+                    modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White,
                     fontWeight = FontWeight.SemiBold,
@@ -227,28 +227,7 @@ private fun CompactGearItemRow(
                 )
                 if (isTopPick) {
                     Spacer(Modifier.width(6.dp))
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(Citrine.copy(alpha = 0.25f))
-                            .glowingBorder(1.dp, Citrine.copy(alpha = 0.5f), RoundedCornerShape(6.dp))
-                            .padding(horizontal = 5.dp, vertical = 1.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            Icons.Filled.Star,
-                            contentDescription = null,
-                            tint = Citrine,
-                            modifier = Modifier.size(9.dp),
-                        )
-                        Spacer(Modifier.width(2.dp))
-                        Text(
-                            "Top Pick",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Citrine,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
+                    TopPickBadge()
                 }
             }
             Text(
@@ -301,34 +280,16 @@ private fun GearItemRow(item: GearItem, accent: Color, onClick: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     item.name,
+                    modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.titleSmall,
                     color = Color.White,
                     fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 if (isTopPick) {
                     Spacer(Modifier.width(6.dp))
-                    Row(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(Citrine.copy(alpha = 0.25f))
-                            .glowingBorder(1.dp, Citrine.copy(alpha = 0.5f), RoundedCornerShape(6.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            Icons.Filled.Star,
-                            contentDescription = null,
-                            tint = Citrine,
-                            modifier = Modifier.size(10.dp),
-                        )
-                        Spacer(Modifier.width(3.dp))
-                        Text(
-                            "Top Pick",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Citrine,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
+                    TopPickBadge()
                 }
             }
             Text(

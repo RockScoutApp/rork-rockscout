@@ -47,7 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import coil3.compose.AsyncImage
+import com.rork.rockscout.ui.components.LongPressableImage
 import com.rork.rockscout.data.StarData
 import com.rork.rockscout.data.StarEntry
 import com.rork.rockscout.data.ScreenPdfExporter
@@ -158,11 +158,12 @@ private fun StarRow(star: StarEntry, onTap: (StarEntry) -> Unit) {
                         .clip(RoundedCornerShape(8.dp))
                         .background(Color.Black),
                 ) {
-                    AsyncImage(
+                    LongPressableImage(
                         model = url,
                         contentDescription = star.name,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
+                        onClick = { onTap(star) },
                     )
                 }
                 Spacer(Modifier.width(10.dp))
@@ -252,7 +253,7 @@ private fun StarDetailDialog(star: StarEntry, onDismiss: () -> Unit) {
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color.Black),
                     ) {
-                        AsyncImage(
+                        LongPressableImage(
                             model = url,
                             contentDescription = star.name,
                             modifier = Modifier.fillMaxWidth(),

@@ -41,7 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import coil3.compose.AsyncImage
+import com.rork.rockscout.ui.components.LongPressableImage
 import com.rork.rockscout.data.PlanetData
 import kotlin.math.roundToInt
 import com.rork.rockscout.data.PlanetEntry
@@ -98,11 +98,12 @@ private fun PlanetRow(planet: PlanetEntry, onTap: (PlanetEntry) -> Unit) {
                 .size(56.dp)
                 .clip(RoundedCornerShape(28.dp)),
         ) {
-            AsyncImage(
+            LongPressableImage(
                 model = planet.heroImageUrl,
                 contentDescription = planet.name,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop,
+                onClick = { onTap(planet) },
             )
         }
         Spacer(Modifier.padding(end = 12.dp))
@@ -190,7 +191,7 @@ private fun PlanetDetailDialog(planet: PlanetEntry, onDismiss: () -> Unit) {
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color.Black),
                 ) {
-                    AsyncImage(
+                    LongPressableImage(
                         model = planet.heroImageUrl,
                         contentDescription = planet.name,
                         modifier = Modifier.fillMaxWidth(),
