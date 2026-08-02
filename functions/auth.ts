@@ -23,6 +23,14 @@ const ALLOWED_ORIGINS = new Set([
   "http://localhost:3000",
 ]);
 
+/**
+ * Checks if an origin matches the *.rork.live pattern (Rork preview/deploy domains).
+ * These are dynamically generated per project, so we can't enumerate them.
+ */
+function isRorkLiveOrigin(origin: string): boolean {
+  return /^https:\/\/[a-z0-9-]+\.rork\.live$/i.test(origin);
+}
+
 /** Per-endpoint rate-limit configs (requests per minute). */
 interface RateLimitConfig {
   rpm: number;
@@ -76,7 +84,7 @@ const memoryBuckets = new Map<string, { tokens: number; lastRefill: number }>();
  */
 export function resolveCorsOrigin(request: Request): string {
   const origin = request.headers.get("origin") ?? "";
-  if (origin && ALLOWED_ORIGINS.has(origin)) return origin;
+  if (origin && (ALLOWED_ORIGINS.has(origin) || isRorkLiveOrigin(origin))) return origin;
   // Native app requests have no Origin header — allow them.
   return ALLOWED_ORIGINS.values().next().value ?? "*";
 }

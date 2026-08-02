@@ -22,10 +22,13 @@ const CACHE_MAX_AGE = 2592000; // 30 days
 const ALLOWED_ORIGINS = new Set([
   "https://rockscout.app",
   "https://rockscout.net",
-  "https://jvns5dfy7fpytx79a2tb3-web.rork.live",
   "http://localhost:8080",
   "http://localhost:3000",
 ]);
+
+function isRorkLiveOrigin(origin: string): boolean {
+  return /^https:\/\/[a-z0-9-]+\.rork\.live$/i.test(origin);
+}
 
 export async function handleImageProxy(
   request: Request,
@@ -96,7 +99,7 @@ export async function handleImageProxy(
 /** Build CORS headers for the proxy based on request origin. */
 export function buildProxyCors(request: Request): Record<string, string> {
   const origin = request.headers.get("Origin") || "";
-  const allowed = ALLOWED_ORIGINS.has(origin) ? origin : "";
+  const allowed = ALLOWED_ORIGINS.has(origin) || isRorkLiveOrigin(origin) ? origin : "";
   return {
     "Access-Control-Allow-Origin": allowed || "*",
     "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
