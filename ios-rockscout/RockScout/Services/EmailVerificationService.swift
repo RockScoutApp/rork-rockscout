@@ -14,7 +14,7 @@ nonisolated enum EmailVerificationService {
     /// Outcome of a verification call.
     nonisolated enum Outcome: Sendable {
         case sent
-        case verified(emailConfirmed: Bool)
+        case verified(emailConfirmed: Bool, hint: String?)
         case failed(message: String)
     }
 
@@ -22,6 +22,8 @@ nonisolated enum EmailVerificationService {
         let ok: Bool?
         let verified: Bool?
         let emailConfirmed: Bool?
+        let confirmReason: String?
+        let confirmHint: String?
         let error: String?
         let reason: String?
     }
@@ -71,7 +73,10 @@ nonisolated enum EmailVerificationService {
 
             if decoded?.ok == true {
                 if body["action"] == "verify" {
-                    return .verified(emailConfirmed: decoded?.emailConfirmed ?? false)
+                    return .verified(
+                        emailConfirmed: decoded?.emailConfirmed ?? false,
+                        hint: decoded?.confirmHint,
+                    )
                 }
                 return .sent
             }

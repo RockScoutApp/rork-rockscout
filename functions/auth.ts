@@ -98,10 +98,22 @@ export function buildCorsHeaders(request: Request): Record<string, string> {
  */
 export function validateAppKey(request: Request, env: Env): boolean {
   const expectedKey = env.EXPO_PUBLIC_RORK_APP_KEY;
-  if (!expectedKey) return false;
+  if (!expectedKey) {
+    console.error("[auth] EXPO_PUBLIC_RORK_APP_KEY is not set on the worker — all requests will 401");
+    return false;
+  }
   const providedKey = request.headers.get(APP_KEY_HEADER);
-  if (!providedKey) return false;
-  return providedKey === expectedKey;
+  if (!providedKey) {
+    console.warn("[auth] Request missing X-App-Key header");
+    return false;
+  }
+  if (providedKey !== expectedKey) {
+    console.warn(
+      `[auth] App key mismatch — expected ${expectedKey.slice(0, 8)}… got ${providedKey.slice(0, 8)}…`,
+    );
+    return false;
+  }
+  return true;
 }
 
 /**

@@ -320,6 +320,9 @@ export async function handleEmailVerification(
 
     // Mark the Supabase email confirmed so the user can sign in right away —
     // our 6-digit code IS the verification, there's no separate link to click.
+    // If the admin API fails (e.g. service-role key mismatch), we still return
+    // verified=true because the code was correct — the client can then attempt
+    // a fallback sign-in or surface a clear error instead of a generic failure.
     const confirm = await confirmSupabaseEmail(
       env.EXPO_PUBLIC_SUPABASE_URL,
       env.SUPABASE_SERVICE_ROLE_KEY,
@@ -333,6 +336,14 @@ export async function handleEmailVerification(
         verified: true,
         emailConfirmed: confirm.confirmed,
         ...(confirm.reason ? { confirmReason: confirm.reason } : {}),
+        // When the admin confirm fails, include a user-facing hint so the
+        // client can show an actionable message instead of a generic error.
+        ...(confirm.confirmed
+          ? {}
+          : {
+              confirmHint:
+                "Your code is correct, but we couldn't fully activate your account. Please try signing in, or contact support if it persists.",
+            }),
       },
       { status: 200, headers },
     );
@@ -365,6 +376,32 @@ async function confirmSupabaseEmail(
       "email-verification: SUPABASE_SERVICE_ROLE_KEY / SUPABASE_URL missing — cannot confirm email",
     );
     return { confirmed: false, reason: "supabase_admin_not_configured" };
+  }
+
+  // Detect key/project mismatch by decoding the JWT ref claim.
+  // This produces a clear log entry instead of a cryptic admin_401.
+  try {
+    const payload = JSON.parse(
+      atob(serviceKey.split(".")[1] ?? ""),
+    ) as { ref?: string; role?: string };
+    const projectRef = supabaseUrl.match(/https?:\/\/([a-z0-9]+)\.supabase\.co/)?.[1];
+    if (payload.ref && projectRef && payload.ref !== projectRef) {
+      console.error(
+        `email-verification: SERVICE ROLE KEY MISMATCH — key is for project '${payload.ref}' but SUPABASE_URL is '${projectRef}'. ` +
+          `Update SUPABASE_SERVICE_ROLE_KEY to the key for '${projectRef}'.`,
+      );
+      return {
+        confirmed: false,
+        reason: `service_key_project_mismatch:${payload.ref}_vs_${projectRef}`,
+      };
+    }
+    if (payload.role && payload.role !== "service_role") {
+      console.error(
+        `email-verification: SUPABASE_SERVICE_ROLE_KEY has role '${payload.role}', expected 'service_role'`,
+      );
+    }
+  } catch {
+    // Not a JWT or decode failed — proceed with the API call; Supabase will reject if invalid.
   }
 
   const userId = supabaseUserId?.trim()

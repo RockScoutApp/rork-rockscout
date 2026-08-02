@@ -395,14 +395,14 @@ struct SignInView: View {
         )
 
         switch outcome {
-        case .verified:
+        case .verified(let emailConfirmed, let hint):
             do {
                 try await auth.signIn(email: email, password: password)
                 await EntitlementManager.shared.login(userId: auth.currentUserId?.uuidString ?? "")
                 awaitingCode = false
                 codeInput = ""
             } catch {
-                localError = "Email verified. Please sign in to continue."
+                localError = hint ?? "Email verified. Please sign in to continue."
                 awaitingCode = false
                 mode = .signIn
             }

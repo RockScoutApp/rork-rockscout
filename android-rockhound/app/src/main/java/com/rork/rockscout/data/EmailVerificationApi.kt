@@ -51,6 +51,7 @@ object EmailVerificationApi {
         val verified: Boolean = false,
         val emailConfirmed: Boolean = false,
         val confirmReason: String? = null,
+        val confirmHint: String? = null,
         val reason: String? = null,
         val error: String? = null,
     )
@@ -61,8 +62,13 @@ object EmailVerificationApi {
          * The call succeeded. [emailConfirmed] is true when the backend also
          * marked the Supabase email as confirmed, which is what allows the
          * immediate sign-in that follows verification.
+         * [hint] carries a user-facing message from the backend when the
+         * code was correct but the Supabase admin confirm failed.
          */
-        data class Success(val emailConfirmed: Boolean = true) : VerificationResult()
+        data class Success(
+            val emailConfirmed: Boolean = true,
+            val hint: String? = null,
+        ) : VerificationResult()
         data class Failed(val message: String) : VerificationResult()
         data object NetworkError : VerificationResult()
     }
@@ -144,7 +150,10 @@ object EmailVerificationApi {
                 if (!parsed.emailConfirmed) {
                     Log.w(TAG, "Code correct but Supabase confirm skipped: ${parsed.confirmReason}")
                 }
-                VerificationResult.Success(emailConfirmed = parsed.emailConfirmed)
+                VerificationResult.Success(
+                    emailConfirmed = parsed.emailConfirmed,
+                    hint = parsed.confirmHint,
+                )
             } else {
                 VerificationResult.Failed(messageFor(parsed))
             }

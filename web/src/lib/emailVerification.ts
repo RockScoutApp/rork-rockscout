@@ -20,6 +20,10 @@ export interface VerificationOutcome {
   verified?: boolean;
   /** True when the backend also confirmed the Supabase email. */
   emailConfirmed?: boolean;
+  /** Backend reason when emailConfirmed is false (e.g. admin_401). */
+  confirmReason?: string;
+  /** User-facing hint from the backend when confirm failed. */
+  confirmHint?: string;
   /** User-facing message when `ok` is false. */
   error?: string;
 }
@@ -28,6 +32,8 @@ interface WorkerResponse {
   ok?: boolean;
   verified?: boolean;
   emailConfirmed?: boolean;
+  confirmReason?: string;
+  confirmHint?: string;
   error?: string;
   reason?: string;
 }
@@ -65,6 +71,8 @@ async function postAction(
         ok: true,
         verified: data.verified ?? false,
         emailConfirmed: data.emailConfirmed ?? false,
+        confirmReason: data.confirmReason,
+        confirmHint: data.confirmHint,
       };
     }
 

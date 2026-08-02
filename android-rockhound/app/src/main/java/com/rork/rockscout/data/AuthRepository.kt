@@ -359,7 +359,7 @@ class AuthRepository private constructor() {
             when (result) {
                 is EmailVerificationApi.VerificationResult.Success -> {
                     if (!result.emailConfirmed) {
-                        Log.w("AuthRepository", "Backend could not confirm the Supabase email")
+                        Log.w("AuthRepository", "Backend could not confirm the Supabase email: ${result.hint}")
                     }
                     // Sign in with Supabase to get a fresh session. The admin
                     // confirmation we just triggered can take a moment to become
