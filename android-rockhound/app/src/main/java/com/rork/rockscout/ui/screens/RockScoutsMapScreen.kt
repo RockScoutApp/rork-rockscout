@@ -71,6 +71,7 @@ import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Ink
 import com.rork.rockscout.ui.theme.Success
+import com.rork.rockscout.ui.theme.Danger
 import com.rork.rockscout.ui.theme.Warning
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Directions
@@ -380,21 +381,22 @@ fun RockScoutsMapScreen(navController: NavController) {
             exit = fadeOut(),
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 110.dp, start = 16.dp, end = 16.dp),
         ) {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFF1C1A14).copy(alpha = 0.95f))
-                    .glowingBorder(2.dp, Warning.copy(alpha = 0.45f), RoundedCornerShape(12.dp))
+                    .background(Color(0xFF2A1410).copy(alpha = 0.96f))
+                    .glowingBorder(2.dp, Danger.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
                     .padding(12.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("\uD83D\uDEE1\uFE0F", style = MaterialTheme.typography.titleMedium)
+                    Text("\u26A0\uFE0F", style = MaterialTheme.typography.titleMedium)
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        "Your ping is private — only you see it. Use Share to send it to someone via Messenger. Move it to a safe meet-up spot before sharing.",
+                        "Always meet in a public area. Keep your own safety in mind when sharing your location with anyone.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = DarkTextHigh,
+                        color = Danger,
+                        fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(1f),
                     )
                     Box(
@@ -419,6 +421,12 @@ fun RockScoutsMapScreen(navController: NavController) {
                         )
                     }
                 }
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Your ping is private — only you see it. Use Share to send it to someone via Messenger. Move it to a safe meet-up spot before sharing.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = DarkTextMid,
+                )
             }
         }
 
