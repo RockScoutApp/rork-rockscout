@@ -387,7 +387,7 @@ export function AuthPill() {
             <Sparkles className="h-3.5 w-3.5 text-primary" />
           )}
           <span className="max-w-[8rem] truncate sm:max-w-none">
-            {isPro ? "Premium" : "Free"}
+            Premium
           </span>
           <ChevronDown className="h-3 w-3 opacity-60" />
         </button>

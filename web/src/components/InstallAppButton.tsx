@@ -7,6 +7,7 @@ import { usePwaInstall, type Platform } from "@/hooks/usePwaInstall";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { getDeviceFingerprint, getDeviceLabel } from "@/lib/deviceFingerprint";
+import { cn } from "@/lib/utils";
 
 interface DeviceRow {
   id: string;
@@ -101,6 +102,7 @@ export const InstallAppButton = ({
   // Resolve the effective tier mode. Explicit prop wins; otherwise use the
   // signed-in user's tier (free when signed out).
   const effectiveMode: "free" | "premium" = mode ?? (isPremium ? "premium" : "free");
+  const isPremiumMode = effectiveMode === "premium";
 
   const { data: deviceCount = 0 } = useQuery<number>({
     queryKey: ["device-count", user?.id],
@@ -140,10 +142,22 @@ export const InstallAppButton = ({
   }, [installed, user, effectiveMode, queryClient]);
 
   if (installed) {
+    const installedLabel = isPremiumMode ? "Premium PWA installed" : "Free PWA installed";
     return (
-      <span className="inline-flex items-center gap-2 rounded-full border border-green-500/40 bg-green-500/10 px-3.5 py-1.5 text-xs font-medium text-green-600 dark:text-green-400">
-        <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-        PWA installed
+      <span
+        className={cn(
+          "inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs font-medium",
+          isPremiumMode
+            ? "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+            : "border-green-500/40 bg-green-500/10 text-green-600 dark:text-green-400",
+        )}
+      >
+        {isPremiumMode ? (
+          <Crown className="h-3.5 w-3.5" aria-hidden="true" />
+        ) : (
+          <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+        )}
+        {installedLabel}
       </span>
     );
   }
@@ -213,7 +227,6 @@ export const InstallAppButton = ({
     }
   };
 
-  const isPremiumMode = effectiveMode === "premium";
   const label = installing
     ? "Installing…"
     : isPremiumMode
