@@ -48,6 +48,7 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
@@ -61,6 +62,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -76,6 +78,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -104,6 +107,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.rork.rockscout.data.AngleImage
 import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.CapturedPhoto
 import com.rork.rockscout.data.GallerySaver
@@ -177,9 +181,7 @@ const val IDENTIFY_BACKGROUND_URL = "https://r2-pub.rork.com/attachments/t5vh4q8
 
 private enum class ScanState {
     IDLE,
-    CAPTURED,
     MODERATING,
-    ARTIFACT_CONFIRM, // Artifact-detection pre-pass suspects an artifact
     SCANNING,
     CLARIFY_QUESTIONS,
     CLARIFYING,
@@ -188,6 +190,17 @@ private enum class ScanState {
     LOCKED,
     REJECTED,
 }
+
+/** Data class for a single angle capture in the 3-angle capture flow.
+ * The user captures up to 3 photos (top, side, bottom) with optional
+ * per-angle descriptions. The description is stored independently of the
+ * bitmap/uri so deleting a photo does not clear the description. */
+private data class AngleCapture(
+    val angle: String, // "top", "side", "bottom"
+    val bitmap: Bitmap? = null,
+    val uri: Uri? = null,
+    val description: String = "",
+)
 
 @Composable
 fun IdentifyScreen(navController: NavController) {
@@ -205,9 +218,20 @@ fun IdentifyScreen(navController: NavController) {
     val hasLocationUnlock by accessManager.hasLocationUnlock.collectAsState()
 
     var state by remember { mutableStateOf(ScanState.IDLE) }
-    var capturedBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    var capturedUri by remember { mutableStateOf<Uri?>(null) }
-    var capturedBase64 by remember { mutableStateOf("") }
+    // 3-angle capture state — each slot has its own bitmap, uri, and
+    // description. The description is independent of the photo state so
+    // deleting a photo preserves the typed text.
+    val angleLabels = remember { listOf("top", "side", "bottom") }
+    var angleCaptures by remember {
+        mutableStateOf(List(3) { i -> AngleCapture(angle = angleLabels[i]) })
+    }
+    var currentAngleIndex by remember { mutableIntStateOf(0) }
+    var showDeleteConfirmFor by remember { mutableIntStateOf(-1) }
+    var rejectedAngle by remember { mutableStateOf("") }
+    // Stored angle images (with base64) for the clarify call — populated at
+    // identify time so the clarify re-rank can re-examine all viewpoints.
+    var storedAngleImages by remember { mutableStateOf<List<AngleImage>>(emptyList()) }
+
     var matches by remember { mutableStateOf<List<Pair<Specimen, IdentifyMatch>>>(emptyList()) }
     // Parallel artifact match list — populated only when the user confirmed
     // an artifact and the backend ran in "artifacts" search mode. Kept fully
@@ -278,9 +302,11 @@ fun IdentifyScreen(navController: NavController) {
 
     fun resetAll() {
         state = ScanState.IDLE
-        capturedBitmap = null
-        capturedUri = null
-        capturedBase64 = ""
+        angleCaptures = List(3) { i -> AngleCapture(angle = angleLabels[i]) }
+        currentAngleIndex = 0
+        showDeleteConfirmFor = -1
+        rejectedAngle = ""
+        storedAngleImages = emptyList()
         matches = emptyList()
         artifactMatches = emptyList()
         aiSummary = ""
@@ -297,7 +323,8 @@ fun IdentifyScreen(navController: NavController) {
     }
 
     fun startIdentification(searchMode: String = "rocks") {
-        val bitmap = capturedBitmap ?: return
+        val captures = angleCaptures.filter { it.bitmap != null }
+        if (captures.isEmpty()) return
         // Gate: consume a credit before firing the AI call.
         val consumedCredit = accessManager.consumeIdentify(isPremium)
         if (consumedCredit == ConsumedCredit.NONE) {
@@ -312,36 +339,42 @@ fun IdentifyScreen(navController: NavController) {
 
         scope.launch {
             try {
-                val base64 = withContext(Dispatchers.IO) {
-                    val resized = resizeBitmap(bitmap, 1536)
-                    val baos = ByteArrayOutputStream()
-                    resized.compress(Bitmap.CompressFormat.JPEG, 88, baos)
-                    val bytes = baos.toByteArray()
-                    android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+                // Encode all captured angle photos to base64
+                val angleImages = withContext(Dispatchers.IO) {
+                    captures.map { capture ->
+                        val resized = resizeBitmap(capture.bitmap!!, 1536)
+                        val baos = ByteArrayOutputStream()
+                        resized.compress(Bitmap.CompressFormat.JPEG, 88, baos)
+                        val bytes = baos.toByteArray()
+                        val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+                        AngleImage(
+                            imageBase64 = base64,
+                            mimeType = "image/jpeg",
+                            angle = capture.angle,
+                            description = capture.description.take(500),
+                        )
+                    }
                 }
-                capturedBase64 = base64
+                storedAngleImages = angleImages
                 identifyProgress = 0.40f
 
-                // On-device exact-image cache: if the user is re-identifying the
-                // exact same photo (accidental re-submit, re-upload after closing
-                // the result), return the cached result instantly with zero AI
-                // cost and zero accuracy loss. The cache key is the SHA-256 of the
-                // normalized image bytes — a different specimen photo produces a
-                // different hash and always falls through to a fresh AI call.
-                val imageBytes = android.util.Base64.decode(base64, android.util.Base64.NO_WRAP)
-                val imageHash = IdentifyCache.hash(imageBytes)
-                val cached = IdentifyCache.get(imageHash)
+                // On-device exact-image cache: keyed on combined SHA-256 of all
+                // submitted image bytes. Same set of photos = cache hit.
+                val combinedHash = withContext(Dispatchers.IO) {
+                    val allBytes = angleImages.flatMap { img ->
+                        android.util.Base64.decode(img.imageBase64, android.util.Base64.NO_WRAP).toList()
+                    }.toByteArray()
+                    IdentifyCache.hash(allBytes)
+                }
+                val cached = IdentifyCache.get(combinedHash)
                 val entitlement = when {
                     isPremium -> "premium"
                     else -> "free"
                 }
                 identifyStage = "Comparing against ${SeedData.allSpecimens.size} known specimens…"
                 identifyProgress = 0.55f
-                val response = cached ?: IdentifyApi.identify(base64, "image/jpeg", entitlement, pendingSearchMode).also {
-                    // Cache only successful, non-error first-pass results. Errors
-                    // and clarification re-rank calls are never cached (re-rank
-                    // depends on user answers, which are unique each time).
-                    if (it.error == null) IdentifyCache.put(imageHash, it)
+                val response = cached ?: IdentifyApi.identifyMultiAngle(angleImages, entitlement, pendingSearchMode).also {
+                    if (it.error == null) IdentifyCache.put(combinedHash, it)
                 }
                 identifyProgress = 0.85f
                 identifyStage = "Building your results…"
@@ -376,9 +409,9 @@ fun IdentifyScreen(navController: NavController) {
                         state = ScanState.ERROR
                         return@launch
                     }
-                    // Save top artifact match as field capture
+                    // Save top artifact match as field capture with all angle URIs
                     val topArtifact = matchedArtifacts.first()
-                    val imageUriStr = capturedUri?.toString() ?: ""
+                    val allUris = angleCaptures.mapNotNull { it.uri?.toString() }
                     AppRepository.instance.addCapture(
                         CapturedPhoto(
                             id = UUID.randomUUID().toString(),
@@ -386,7 +419,7 @@ fun IdentifyScreen(navController: NavController) {
                             specimenEmoji = topArtifact.first.emoji,
                             confidence = topArtifact.second.confidence,
                             timestamp = System.currentTimeMillis(),
-                            imageUris = if (imageUriStr.isNotBlank()) listOf(imageUriStr) else emptyList(),
+                            imageUris = allUris,
                         )
                     )
                     AchievementsRepository.award(XpSource.IDENTIFY, familyTag = topArtifact.first.id)
@@ -418,9 +451,9 @@ fun IdentifyScreen(navController: NavController) {
                     return@launch
                 }
 
-                // Save top match as field capture
+                // Save top match as field capture with all angle URIs
                 val topMatch = matchedList.first()
-                val imageUriStr = capturedUri?.toString() ?: ""
+                val allUris = angleCaptures.mapNotNull { it.uri?.toString() }
                 AppRepository.instance.addCapture(
                     CapturedPhoto(
                         id = UUID.randomUUID().toString(),
@@ -428,7 +461,7 @@ fun IdentifyScreen(navController: NavController) {
                         specimenEmoji = topMatch.first.emoji,
                         confidence = topMatch.second.confidence,
                         timestamp = System.currentTimeMillis(),
-                        imageUris = if (imageUriStr.isNotBlank()) listOf(imageUriStr) else emptyList(),
+                        imageUris = allUris,
                     )
                 )
 
@@ -479,10 +512,9 @@ fun IdentifyScreen(navController: NavController) {
      * capture is rejected with a friendly message and the credit is preserved.
      */
     fun moderateAndIdentify() {
-        val bitmap = capturedBitmap ?: return
-        // Hard-block the identify flow when the device is offline — the backend
-        // AI pipeline can't be reached without a connection. Show a clear error
-        // (no token consumed) so the user knows to reconnect and try again.
+        val captures = angleCaptures.filter { it.bitmap != null }
+        if (captures.isEmpty()) return
+        // Hard-block the identify flow when the device is offline.
         if (!isOnline) {
             errorMessage = "No internet connection. The AI identifier needs a signal to reach the rock database and analysis models. " +
                 "Your token was not used. Reconnect and try again, or browse the on-device specimen database offline."
@@ -491,42 +523,34 @@ fun IdentifyScreen(navController: NavController) {
         }
         state = ScanState.MODERATING
         identifyProgress = 0.05f
-        identifyStage = "Checking photo…"
+        identifyStage = "Checking photos…"
         scope.launch {
             try {
-                val base64 = withContext(Dispatchers.IO) {
-                    val resized = resizeBitmap(bitmap, 1024)
-                    val baos = ByteArrayOutputStream()
-                    resized.compress(Bitmap.CompressFormat.JPEG, 80, baos)
-                    android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP)
-                }
-                val verdict = ImageModerator.scan(base64, "image/jpeg")
-                identifyProgress = 0.15f
-                if (!verdict.allowed) {
-                    moderationReason = verdict.reason.ifBlank {
-                        "This photo can't be used because it contains content that violates our family-friendly policy."
+                // Moderate all captured photos — if any fails, reject with
+                // a message identifying which angle was blocked.
+                for ((index, capture) in captures.withIndex()) {
+                    val base64 = withContext(Dispatchers.IO) {
+                        val resized = resizeBitmap(capture.bitmap!!, 1024)
+                        val baos = ByteArrayOutputStream()
+                        resized.compress(Bitmap.CompressFormat.JPEG, 80, baos)
+                        android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP)
                     }
-                    state = ScanState.REJECTED
-                    return@launch
+                    val verdict = ImageModerator.scan(base64, "image/jpeg")
+                    if (!verdict.allowed) {
+                        moderationReason = verdict.reason.ifBlank {
+                            "This photo can't be used because it contains content that violates our family-friendly policy."
+                        }
+                        rejectedAngle = capture.angle.replaceFirstChar { it.uppercase() }
+                        state = ScanState.REJECTED
+                        return@launch
+                    }
+                    identifyProgress = 0.05f + (0.20f * (index + 1) / captures.size)
                 }
-                // Passed moderation — run the artifact-detection pre-pass
-                // (Haiku-only, fast, cheap, no credit consumed). If it suspects
-                // an artifact, show the confirmation popup before proceeding.
-                val detectBase64 = withContext(Dispatchers.IO) {
-                    val resized = resizeBitmap(bitmap, 1024)
-                    val baos = ByteArrayOutputStream()
-                    resized.compress(Bitmap.CompressFormat.JPEG, 80, baos)
-                    android.util.Base64.encodeToString(baos.toByteArray(), android.util.Base64.NO_WRAP)
-                }
-                val detection = IdentifyApi.detectArtifact(detectBase64, "image/jpeg")
                 identifyProgress = 0.25f
-                if (detection.isArtifact && detection.confidence >= 70) {
-                    // Suspected artifact — ask the user to confirm before routing
-                    state = ScanState.ARTIFACT_CONFIRM
-                } else {
-                    // Not an artifact (or detection failed) — normal rock-ID flow
-                    startIdentification()
-               }
+                // All photos passed moderation — proceed to identification.
+                // Artifact detection is now handled by the backend in the
+                // combined describe+detect Haiku call. No client-side pre-pass.
+                startIdentification()
             } catch (e: Exception) {
                 // Moderation hiccup — fail open and proceed to identification.
                 startIdentification()
@@ -535,7 +559,7 @@ fun IdentifyScreen(navController: NavController) {
     }
 
     fun submitClarification() {
-        if (capturedBase64.isEmpty()) return
+        if (storedAngleImages.isEmpty()) return
         state = ScanState.CLARIFYING
         identifyProgress = 0.30f
         identifyStage = "Refining identification…"
@@ -552,8 +576,7 @@ fun IdentifyScreen(navController: NavController) {
                 identifyProgress = 0.50f
                 identifyStage = "Cross-referencing your answers…"
                 val response = IdentifyApi.clarify(
-                    imageBase64 = capturedBase64,
-                    mimeType = "image/jpeg",
+                    angleImages = storedAngleImages,
                     answers = finalAnswers,
                     preliminaryMatches = preliminaryMatches,
                     summary = preliminarySummary,
@@ -586,7 +609,7 @@ fun IdentifyScreen(navController: NavController) {
 
                 // Update the saved capture with the refined top match
                 val topMatch = matchedList.first()
-                val imageUriStr = capturedUri?.toString() ?: ""
+                val allUris = angleCaptures.mapNotNull { it.uri?.toString() }
                 AppRepository.instance.addCapture(
                     CapturedPhoto(
                         id = UUID.randomUUID().toString(),
@@ -594,7 +617,7 @@ fun IdentifyScreen(navController: NavController) {
                         specimenEmoji = topMatch.first.emoji,
                         confidence = topMatch.second.confidence,
                         timestamp = System.currentTimeMillis(),
-                        imageUris = if (imageUriStr.isNotBlank()) listOf(imageUriStr) else emptyList(),
+                        imageUris = allUris,
                     )
                 )
 
@@ -608,32 +631,30 @@ fun IdentifyScreen(navController: NavController) {
         }
     }
 
-    // Camera launcher — auto-runs identification immediately after capture.
-    // The captured photo is persisted to the device gallery under a dedicated
-    // "RockScout Captures" album, and that persistent gallery URI is used as
-    // the field-capture image so it survives across launches and is available
-    // in the user's photo library.
+    // Camera launcher — fills the current angle slot. Does NOT auto-run
+    // identification; the user captures 1-3 photos at their own pace, then
+    // taps "Identify".
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success && cameraUri != null) {
             val capturedCameraUri: Uri = cameraUri!!
+            val slotIndex = currentAngleIndex
             scope.launch {
                 try {
                     val bitmap = withContext(Dispatchers.IO) {
                         com.rork.rockscout.data.ImageUtils.decodeSampledBitmap(context, capturedCameraUri)
                     }
                     if (bitmap != null) {
-                        capturedBitmap = bitmap
-                        // Save the capture to the device gallery's "RockScout Captures"
-                        // album so the photo is available in the user's photo library and
-                        // as a stable URI for the field capture card.
                         val galleryUri = withContext(Dispatchers.IO) {
                             GallerySaver.saveBitmap(context.contentResolver, bitmap)
                         }
-                        capturedUri = galleryUri ?: cameraUri
-                        // Auto-run moderation then identification — camera is already closed at this point
-                        moderateAndIdentify()
+                        val uri = galleryUri ?: capturedCameraUri
+                        // Update the angle slot, preserving the description text
+                        angleCaptures = angleCaptures.toMutableList().also {
+                            val existing = it[slotIndex]
+                            it[slotIndex] = existing.copy(bitmap = bitmap, uri = uri)
+                        }
                     }
                 } catch (_: Exception) {
                     errorMessage = "Failed to load the captured photo. Please try again."
@@ -643,33 +664,33 @@ fun IdentifyScreen(navController: NavController) {
         }
     }
 
-    // Gallery picker launcher — also auto-runs for a streamlined flow
+    // Gallery picker launcher — fills the current angle slot from gallery.
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
-            // Reject files larger than 5 MB before decoding to prevent OOMs
-            // and failed identification requests on slow connections.
             if (com.rork.rockscout.data.ImageUtils.isOverUploadLimit(context, uri)) {
                 errorMessage = "That image is over 5 MB. Please choose a smaller photo."
                 state = ScanState.ERROR
                 return@rememberLauncherForActivityResult
             }
+            val slotIndex = currentAngleIndex
             scope.launch {
                 try {
                     val bitmap = withContext(Dispatchers.IO) {
                         com.rork.rockscout.data.ImageUtils.decodeSampledBitmap(context, uri)
                     }
                     if (bitmap != null) {
-                        capturedBitmap = bitmap
-                        // Copy to internal storage so the capture image survives restart
                         val persistentUri = withContext(Dispatchers.IO) {
                             com.rork.rockscout.data.ImageUtils.copyUriToInternalStorage(
                                 context, uri, "capture_images",
                             )
                         }
-                        capturedUri = persistentUri?.let { Uri.parse(it) } ?: uri
-                        moderateAndIdentify()
+                        val finalUri = persistentUri?.let { Uri.parse(it) } ?: uri
+                        angleCaptures = angleCaptures.toMutableList().also {
+                            val existing = it[slotIndex]
+                            it[slotIndex] = existing.copy(bitmap = bitmap, uri = finalUri)
+                        }
                     }
                 } catch (_: Exception) {
                     errorMessage = "Failed to load the selected photo. Please try again."
@@ -679,12 +700,18 @@ fun IdentifyScreen(navController: NavController) {
         }
     }
 
-    fun startCamera() {
+    fun startCameraForAngle(slotIndex: Int) {
+        currentAngleIndex = slotIndex
         val photoFile = File(context.cacheDir, "photos/${UUID.randomUUID()}.jpg")
         photoFile.parentFile?.mkdirs()
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile)
         cameraUri = uri
         cameraLauncher.launch(uri)
+    }
+
+    fun startGalleryForAngle(slotIndex: Int) {
+        currentAngleIndex = slotIndex
+        galleryLauncher.launch("image/*")
     }
 
     // Clean up camera file reference
@@ -782,55 +809,77 @@ fun IdentifyScreen(navController: NavController) {
                 }
             }
 
-            // Photo preview area
+            // 3-angle capture area
             item {
-                PhotoPreview(
-                    bitmap = capturedBitmap,
+                MultiAngleCapture(
+                    angleCaptures = angleCaptures,
                     state = state,
                     identifyProgress = identifyProgress,
                     identifyStage = identifyStage,
-                    onRetake = { resetAll() },
-                    onCamera = { startCamera() },
+                    onCapture = { idx -> startCameraForAngle(idx) },
+                    onGallery = { idx -> startGalleryForAngle(idx) },
+                    onDelete = { idx -> showDeleteConfirmFor = idx },
+                    onDescriptionChange = { idx, text ->
+                        angleCaptures = angleCaptures.toMutableList().also {
+                            it[idx] = it[idx].copy(description = text.take(500))
+                        }
+                    },
+                    onReset = { resetAll() },
                 )
             }
 
             // Action buttons
             item {
                 when (state) {
-                    ScanState.IDLE -> CaptureButtons(
-                        onCamera = { startCamera() },
-                        onGallery = { galleryLauncher.launch("image/*") },
-                    )
-                    ScanState.CAPTURED -> Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        // Filled dark surface so the discard label stays legible over the photo background.
-                        OutlinedButton(
-                            onClick = { resetAll() },
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(54.dp)
-                                .sculpted(shape = RoundedCornerShape(14.dp), accent = Aqua, shadowElevation = 6.dp)
-                                .background(Slate800, RoundedCornerShape(14.dp)),
-                            shape = RoundedCornerShape(14.dp),
-                            border = BorderStroke(1.5.dp, Aqua),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Aqua),
-                        ) {
-                            Icon(Icons.Filled.Close, contentDescription = null, modifier = Modifier.size(20.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text("Discard", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    ScanState.IDLE -> {
+                        val capturedCount = angleCaptures.count { it.bitmap != null }
+                        if (capturedCount > 0) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                OutlinedButton(
+                                    onClick = { resetAll() },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(54.dp)
+                                        .sculpted(shape = RoundedCornerShape(14.dp), accent = Aqua, shadowElevation = 6.dp)
+                                        .background(Slate800, RoundedCornerShape(14.dp)),
+                                    shape = RoundedCornerShape(14.dp),
+                                    border = BorderStroke(1.5.dp, Aqua),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Aqua),
+                                ) {
+                                    Icon(Icons.Filled.Close, contentDescription = null, modifier = Modifier.size(20.dp))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Clear", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                }
+                                SculptedButton(
+                                    text = "Identify",
+                                    onClick = { moderateAndIdentify() },
+                                    accent = Citrine,
+                                    containerColor = Citrine,
+                                    textColor = Ink,
+                                    icon = Icons.Filled.AutoAwesome,
+                                    modifier = Modifier.weight(1f).height(54.dp),
+                                    shape = RoundedCornerShape(14.dp),
+                                )
+                            }
+                            if (capturedCount < 3) {
+                                Spacer(Modifier.height(6.dp))
+                                Text(
+                                    "$capturedCount of 3 photos taken — add more angles for best accuracy",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextMid,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth(),
+                                )
+                            }
+                        } else {
+                            CaptureButtons(
+                                onCamera = { startCameraForAngle(0) },
+                                onGallery = { startGalleryForAngle(0) },
+                            )
                         }
-                        SculptedButton(
-                            text = "Identify",
-                            onClick = { moderateAndIdentify() },
-                            accent = Citrine,
-                            containerColor = Citrine,
-                            textColor = Ink,
-                            icon = Icons.Filled.AutoAwesome,
-                            modifier = Modifier.weight(1f).height(54.dp),
-                            shape = RoundedCornerShape(14.dp),
-                        )
                     }
                     ScanState.SCANNING -> Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -1007,8 +1056,8 @@ fun IdentifyScreen(navController: NavController) {
                             Text("Discard", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                         }
                         SculptedButton(
-                            text = "New photo",
-                            onClick = { startCamera() },
+                            text = "Retake",
+                            onClick = { state = ScanState.IDLE },
                             accent = Citrine,
                             containerColor = Citrine,
                             textColor = Ink,
@@ -1017,19 +1066,7 @@ fun IdentifyScreen(navController: NavController) {
                             shape = RoundedCornerShape(14.dp),
                         )
                     }
-                    ScanState.ARTIFACT_CONFIRM -> Spacer(Modifier.height(0.dp))
                     ScanState.LOCKED -> Spacer(Modifier.height(0.dp))
-                }
-            }
-
-            // Artifact confirmation popup — 3 vertically stacked, centered pill buttons
-            if (state == ScanState.ARTIFACT_CONFIRM) {
-                item {
-                    ArtifactConfirmPopup(
-                        onYes = { startIdentification(searchMode = "artifacts") },
-                        onMaybe = { startIdentification(searchMode = "artifacts") },
-                        onNo = { startIdentification(searchMode = "rocks") },
-                    )
                 }
             }
 
@@ -1277,8 +1314,8 @@ fun IdentifyScreen(navController: NavController) {
                                 generatingReportIndex = index
                                 scope.launch {
                                     val reportData = SpecimenReportPdfExporter.ReportData(
-                                        capturedBitmap = capturedBitmap,
-                                        capturedUri = capturedUri,
+                                        capturedBitmap = angleCaptures.firstOrNull { it.bitmap != null }?.bitmap,
+                                        capturedUri = angleCaptures.firstOrNull { it.uri != null }?.uri,
                                         matches = artifactMatches.map { (a, m) ->
                                             SpecimenReportPdfExporter.MatchEntry(a.name, m.confidence, m.reasoning)
                                         },
@@ -1368,8 +1405,8 @@ fun IdentifyScreen(navController: NavController) {
                                 generatingReportIndex = index
                                 scope.launch {
                                     val reportData = SpecimenReportPdfExporter.ReportData(
-                                        capturedBitmap = capturedBitmap,
-                                        capturedUri = capturedUri,
+                                        capturedBitmap = angleCaptures.firstOrNull { it.bitmap != null }?.bitmap,
+                                        capturedUri = angleCaptures.firstOrNull { it.uri != null }?.uri,
                                         matches = matches.map { (s, m) ->
                                             SpecimenReportPdfExporter.MatchEntry(s.name, m.confidence, m.reasoning)
                                         },
@@ -1448,7 +1485,7 @@ fun IdentifyScreen(navController: NavController) {
                 artifactMatchNames = artifactMatches.map { it.first.name },
                 artifactConfidences = artifactMatches.map { it.second.confidence },
                 aiSummary = aiSummary,
-                capturedBitmap = capturedBitmap,
+                capturedBitmap = angleCaptures.firstOrNull { it.bitmap != null }?.bitmap,
             )
         }
 
@@ -1477,253 +1514,354 @@ fun IdentifyScreen(navController: NavController) {
                 },
             )
         }
+        // Delete confirmation dialog for angle photos
+        if (showDeleteConfirmFor >= 0) {
+            val slotIndex = showDeleteConfirmFor
+            val angleName = angleCaptures[slotIndex].angle.replaceFirstChar { it.uppercase() }
+            AlertDialog(
+                onDismissRequest = { showDeleteConfirmFor = -1 },
+                title = { Text("Delete this photo?") },
+                text = { Text("Remove the $angleName view photo? Your description text will be kept so you can retake the photo without losing your notes.") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            angleCaptures = angleCaptures.toMutableList().also {
+                                val existing = it[slotIndex]
+                                it[slotIndex] = existing.copy(bitmap = null, uri = null)
+                            }
+                            showDeleteConfirmFor = -1
+                        },
+                    ) { Text("Delete", color = Color(0xFFE2574C), fontWeight = FontWeight.Bold) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteConfirmFor = -1 }) {
+                        Text("Cancel", color = Citrine)
+                    }
+                },
+                containerColor = Slate800,
+                titleContentColor = TextHigh,
+                textContentColor = TextMid,
+            )
+        }
         } // close Box
     }
 }
 
+/** 3-angle capture composable — shows 3 labeled slots (top, side, bottom),
+ *  each with a thumbnail, description field, and delete/retake/gallery options.
+ *  Replaces the old single-photo PhotoPreview. During scanning/moderating/
+ *  clarifying states, an overlay with progress is shown on top of the
+ *  first captured photo. */
 @Composable
-private fun PhotoPreview(
-    bitmap: Bitmap?,
+private fun MultiAngleCapture(
+    angleCaptures: List<AngleCapture>,
     state: ScanState,
     identifyProgress: Float,
     identifyStage: String,
-    onRetake: () -> Unit,
-    onCamera: () -> Unit,
+    onCapture: (Int) -> Unit,
+    onGallery: (Int) -> Unit,
+    onDelete: (Int) -> Unit,
+    onDescriptionChange: (Int, String) -> Unit,
+    onReset: () -> Unit,
 ) {
-    val showBitmap = state == ScanState.CAPTURED ||
-        state == ScanState.MODERATING ||
-        state == ScanState.ARTIFACT_CONFIRM ||
+    val angleLabels = listOf("Top view" to "top", "Side view" to "side", "Bottom view" to "bottom")
+    val angleIcons = listOf(Icons.Filled.CameraAlt, Icons.Filled.CameraAlt, Icons.Filled.CameraAlt)
+    val isInteractive = state == ScanState.IDLE
+    val showOverlay = state == ScanState.MODERATING ||
         state == ScanState.SCANNING ||
-        state == ScanState.CLARIFY_QUESTIONS ||
         state == ScanState.CLARIFYING ||
-        state == ScanState.RESULTS ||
-        state == ScanState.ERROR ||
         state == ScanState.REJECTED
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(1f)
             .clip(RoundedCornerShape(24.dp))
-            .background(
-                Brush.linearGradient(listOf(Slate800, Slate900))
-            ),
-        contentAlignment = Alignment.Center,
+            .background(Brush.linearGradient(listOf(Slate800, Slate900)))
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        if (bitmap != null && showBitmap) {
-            Image(
-                bitmap = bitmap.asImageBitmap(),
-                contentDescription = "Captured specimen photo",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop,
-            )
-            // Retake button overlay
-            if (state == ScanState.CAPTURED) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(12.dp)
-                        .size(36.dp)
-                        .sculpted(
-                            shape = CircleShape,
-                            accent = Citrine,
-                            shadowElevation = 4.dp,
-                            circular = true,
-                            onClick = onRetake,
-                        )
-                        .clip(CircleShape)
-                        .background(Color.Black),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        Icons.Filled.Close,
-                        contentDescription = "Remove photo",
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-            }
-            // Moderating overlay — scanning for inappropriate content
-            if (state == ScanState.MODERATING) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.40f)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(horizontal = 32.dp),
-                    ) {
-                        Text(
-                            identifyStage.ifBlank { "Checking photo…" },
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Spacer(Modifier.height(16.dp))
-                        LinearProgressIndicator(
-                            progress = { identifyProgress },
-                            modifier = Modifier
-                                .fillMaxWidth(0.70f)
-                                .height(6.dp)
-                                .clip(RoundedCornerShape(3.dp)),
-                            color = Citrine,
-                            trackColor = Color(0x33FFFFFF),
-                        )
-                        Spacer(Modifier.height(10.dp))
-                        Text(
-                            "Scanning for inappropriate content before identifying",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-                }
-            }
-            // Rejected overlay — content policy violation blocked the photo
-            if (state == ScanState.REJECTED) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.70f)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            "\u26d4",
-                            style = MaterialTheme.typography.displayMedium,
-                        )
-                        Spacer(Modifier.height(12.dp))
-                        Text(
-                            "Photo blocked",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                }
-            }
-            // Scanning overlay
-            if (state == ScanState.SCANNING) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.35f)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(horizontal = 32.dp),
-                    ) {
-                        Text(
-                            identifyStage.ifBlank { "Scanning specimen…" },
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Spacer(Modifier.height(16.dp))
-                        LinearProgressIndicator(
-                            progress = { identifyProgress },
-                            modifier = Modifier
-                                .fillMaxWidth(0.70f)
-                                .height(6.dp)
-                                .clip(RoundedCornerShape(3.dp)),
-                            color = Citrine,
-                            trackColor = Color(0x33FFFFFF),
-                        )
-                        Spacer(Modifier.height(10.dp))
-                        Text(
-                            "This might take a minute. The search is extensive.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-                }
-            }
-            // Clarifying overlay
-            if (state == ScanState.CLARIFYING) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.35f)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(horizontal = 32.dp),
-                    ) {
-                        Text(
-                            identifyStage.ifBlank { "Refining results…" },
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Spacer(Modifier.height(16.dp))
-                        LinearProgressIndicator(
-                            progress = { identifyProgress },
-                            modifier = Modifier
-                                .fillMaxWidth(0.70f)
-                                .height(6.dp)
-                                .clip(RoundedCornerShape(3.dp)),
-                            color = Citrine,
-                            trackColor = Color(0x33FFFFFF),
-                        )
-                        Spacer(Modifier.height(10.dp))
-                        Text(
-                            "Cross-referencing your answers with the database",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White.copy(alpha = 0.7f),
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-                }
-            }
-        } else {
-            // Empty state
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(32.dp)) {
-                Box(
-                    modifier = Modifier
-                        .size(96.dp)
-                        .clip(CircleShape)
-                        .background(Citrine.copy(alpha = 0.18f))
-                        .glowingBorder(3.dp, Citrine, CircleShape)
-                        .clickable(enabled = state == ScanState.IDLE, onClick = onCamera),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        Icons.Filled.CameraAlt,
-                        contentDescription = "Take photo",
-                        tint = Citrine,
-                        modifier = Modifier.size(44.dp),
-                    )
-                }
-                Spacer(Modifier.height(20.dp))
-                Text(
-                    text = "Tap the camera to take a photo, or choose one from your gallery",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = TextMid,
-                    textAlign = TextAlign.Center,
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = "For best results, place the specimen on a neutral background in good natural light. Make sure texture and crystal structure are visible.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextMid,
-                    textAlign = TextAlign.Center,
-                )
-            }
-        }
-        // AI Vision badge
-        if (state != ScanState.SCANNING && state != ScanState.CLARIFYING) {
+        // Header — explanatory text
+        Row(verticalAlignment = Alignment.CenterVertically) {
             TagChip(
                 "AI VISION",
                 color = Citrine,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(12.dp),
+                modifier = Modifier,
             )
+            Spacer(Modifier.width(10.dp))
+            Text(
+                "3 photos = best accuracy",
+                style = MaterialTheme.typography.labelMedium,
+                color = Citrine,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+        Text(
+            "For the most accurate ID, take 3 photos from different angles — top, side, and bottom. One at a time. You can also describe what you see from each angle.",
+            style = MaterialTheme.typography.bodySmall,
+            color = TextMid,
+            lineHeight = 18.sp,
+        )
+
+        // 3 angle slots
+        angleCaptures.forEachIndexed { index, capture ->
+            AngleSlot(
+                label = angleLabels[index].first,
+                angleKey = angleLabels[index].second,
+                capture = capture,
+                isInteractive = isInteractive,
+                onCapture = { onCapture(index) },
+                onGallery = { onGallery(index) },
+                onDelete = { onDelete(index) },
+                onDescriptionChange = { text -> onDescriptionChange(index, text) },
+            )
+        }
+
+        // Progress overlay — shown during scanning/moderating/clarifying/rejected
+        if (showOverlay) {
+            val firstBitmap = angleCaptures.firstOrNull { it.bitmap != null }?.bitmap
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Slate900),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (firstBitmap != null) {
+                    Image(
+                        bitmap = firstBitmap.asImageBitmap(),
+                        contentDescription = "Captured specimen",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(
+                            alpha = if (state == ScanState.REJECTED) 0.70f else 0.40f
+                        )),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.padding(horizontal = 32.dp),
+                    ) {
+                        if (state == ScanState.REJECTED) {
+                            Text("\u26d4", style = MaterialTheme.typography.displayMedium)
+                            Spacer(Modifier.height(12.dp))
+                            Text(
+                                "Photo blocked",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        } else {
+                            Text(
+                                identifyStage.ifBlank {
+                                    when (state) {
+                                        ScanState.MODERATING -> "Checking photos…"
+                                        ScanState.CLARIFYING -> "Refining results…"
+                                        else -> "Scanning specimen…"
+                                    }
+                                },
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Spacer(Modifier.height(16.dp))
+                            LinearProgressIndicator(
+                                progress = { identifyProgress },
+                                modifier = Modifier
+                                    .fillMaxWidth(0.70f)
+                                    .height(6.dp)
+                                    .clip(RoundedCornerShape(3.dp)),
+                                color = Citrine,
+                                trackColor = Color(0x33FFFFFF),
+                            )
+                            Spacer(Modifier.height(10.dp))
+                            Text(
+                                when (state) {
+                                    ScanState.MODERATING -> "Scanning for inappropriate content before identifying"
+                                    ScanState.CLARIFYING -> "Cross-referencing your answers with the database"
+                                    else -> "This might take a minute. The search is extensive."
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.White.copy(alpha = 0.7f),
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Single angle slot — shows label, thumbnail (or empty placeholder with
+ *  camera/gallery buttons), and a 500-char description field. */
+@Composable
+private fun AngleSlot(
+    label: String,
+    angleKey: String,
+    capture: AngleCapture,
+    isInteractive: Boolean,
+    onCapture: () -> Unit,
+    onGallery: () -> Unit,
+    onDelete: () -> Unit,
+    onDescriptionChange: (String) -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        // Label row
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(Citrine.copy(alpha = 0.15f))
+                    .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    Icons.Filled.CameraAlt,
+                    contentDescription = null,
+                    tint = Citrine,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+            Spacer(Modifier.width(8.dp))
+            Text(
+                label,
+                style = MaterialTheme.typography.titleSmall,
+                color = TextHigh,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+
+        // Description field — always visible, independent of photo state
+        OutlinedTextField(
+            value = capture.description,
+            onValueChange = { text -> onDescriptionChange(text.take(500)) },
+            label = { Text("Describe this angle (optional)") },
+            supportingText = {
+                Text(
+                    "Describe what you see — luster, small crystals, texture, grain size, transparency, or other details the camera might not pick up.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextLow,
+                    lineHeight = 16.sp,
+                )
+            },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            singleLine = false,
+            minLines = 1,
+            maxLines = 3,
+            enabled = isInteractive,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = TextHigh,
+                unfocusedTextColor = TextHigh,
+                focusedContainerColor = Slate800,
+                unfocusedContainerColor = Slate800,
+                focusedBorderColor = Citrine,
+                unfocusedBorderColor = Slate700,
+                focusedLabelColor = Citrine,
+                unfocusedLabelColor = TextMid,
+                cursorColor = Citrine,
+            ),
+        )
+        // Character counter
+        if (capture.description.isNotEmpty()) {
+            Text(
+                "${capture.description.length} / 500",
+                style = MaterialTheme.typography.labelSmall,
+                color = TextLow,
+                modifier = Modifier.padding(start = 4.dp),
+            )
+        }
+
+        // Thumbnail (if photo captured) or empty placeholder (camera/gallery buttons)
+        if (capture.bitmap != null) {
+            // Thumbnail with delete button
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Slate700),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Image(
+                        bitmap = capture.bitmap.asImageBitmap(),
+                        contentDescription = "$label photo",
+                        modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+                // Retake button
+                OutlinedButton(
+                    onClick = onCapture,
+                    enabled = isInteractive,
+                    modifier = Modifier.height(40.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 14.dp),
+                ) {
+                    Icon(Icons.Filled.CameraAlt, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Retake", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                }
+                // Delete button
+                OutlinedButton(
+                    onClick = onDelete,
+                    enabled = isInteractive,
+                    modifier = Modifier.height(40.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 14.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color(0xFFE2574C),
+                    ),
+                ) {
+                    Icon(Icons.Filled.Delete, contentDescription = "Delete photo", modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Delete", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        } else {
+            // Empty placeholder — camera + gallery buttons
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                OutlinedButton(
+                    onClick = onCapture,
+                    enabled = isInteractive,
+                    modifier = Modifier.weight(1f).height(44.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Citrine.copy(alpha = 0.4f)),
+                ) {
+                    Icon(Icons.Filled.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Camera", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                }
+                OutlinedButton(
+                    onClick = onGallery,
+                    enabled = isInteractive,
+                    modifier = Modifier.weight(1f).height(44.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Aqua.copy(alpha = 0.4f)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Aqua),
+                ) {
+                    Icon(Icons.Filled.PhotoLibrary, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Gallery", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
         }
     }
 }
@@ -2911,101 +3049,5 @@ private fun AssemblageCard(assemblage: AssemblageResult) {
     }
 }
 
-/**
- * Artifact confirmation popup — 3 vertically stacked, centered pill buttons.
- * Shown when the AI artifact-detection pre-pass suspects the photo contains
- * an artifact (knapped stone tool, point, bead, etc.). The user confirms
- * before the full identify runs.
- *
- * - Yes (warm clay accent, primary) → searches artifacts first
- * - Maybe? (clay accent, secondary) → searches artifacts first
- * - No (neutral / Aqua accent) → normal rock-ID flow
- */
-@Composable
-private fun ArtifactConfirmPopup(
-    onYes: () -> Unit,
-    onMaybe: () -> Unit,
-    onNo: () -> Unit,
-) {
-    val clayAccent = Color(0xFFB87333)
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        // Question header
-        DarkCard(
-            modifier = Modifier.fillMaxWidth(),
-            accent = clayAccent,
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Icon(
-                    Icons.Filled.HelpOutline,
-                    contentDescription = null,
-                    tint = clayAccent,
-                    modifier = Modifier.size(24.dp),
-                )
-                Spacer(Modifier.width(10.dp))
-                Column {
-                    Text(
-                        "Is this an artifact?",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = TextHigh,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text(
-                        "Our AI thinks this might be a knapped stone tool, point, or other artifact. Help us search the right database.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextMid,
-                    )
-                }
-            }
-        }
-
-        // Yes — warm clay accent, primary
-        SculptedButton(
-            text = "Yes",
-            onClick = onYes,
-            accent = clayAccent,
-            containerColor = clayAccent,
-            textColor = Ink,
-            modifier = Modifier.fillMaxWidth().height(54.dp),
-            shape = RoundedCornerShape(14.dp),
-        )
-
-        // Maybe? — clay accent, secondary (outlined)
-        OutlinedButton(
-            onClick = onMaybe,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(54.dp)
-                .sculpted(shape = RoundedCornerShape(14.dp), accent = clayAccent, shadowElevation = 6.dp)
-                .background(Slate800, RoundedCornerShape(14.dp)),
-            shape = RoundedCornerShape(14.dp),
-            border = BorderStroke(1.5.dp, clayAccent),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = clayAccent),
-        ) {
-            Text("Maybe?", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        }
-
-        // No — neutral / Aqua accent (matches the existing Discard pill aesthetic)
-        OutlinedButton(
-            onClick = onNo,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(54.dp)
-                .sculpted(shape = RoundedCornerShape(14.dp), accent = Aqua, shadowElevation = 6.dp)
-                .background(Slate800, RoundedCornerShape(14.dp)),
-            shape = RoundedCornerShape(14.dp),
-            border = BorderStroke(1.5.dp, Aqua),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = Aqua),
-        ) {
-            Text("No", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-        }
-    }
-}
+// ArtifactConfirmPopup removed — artifact detection is now handled by the
+// backend in the combined describe+detect Haiku call. No client-side pre-pass.

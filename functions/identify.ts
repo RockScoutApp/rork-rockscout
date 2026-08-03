@@ -8,6 +8,50 @@ import {
   type ArtifactEmbeddingMatch,
 } from "./embeddings";
 
+// ── Multi-angle image type ──────────────────────────────────────────────
+// Each angle photo sent by the client. The client sends 1-3 photos
+// (top, side, bottom) with optional per-angle descriptions (max 500 chars).
+interface AngleImage {
+  imageBase64: string;
+  mimeType: string;
+  angle: string; // "top", "side", "bottom"
+  description: string; // optional, max 500 chars — empty string if not provided
+}
+
+/** Parse the request body into an AngleImage array, falling back to the
+ *  legacy single `imageBase64` field for backward compatibility. */
+function parseAngleImages(body: {
+  imageBase64?: string;
+  mimeType?: string;
+  images?: Array<{
+    imageBase64: string;
+    mimeType?: string;
+    angle?: string;
+    description?: string;
+  }>;
+}): AngleImage[] {
+  if (body.images && Array.isArray(body.images) && body.images.length > 0) {
+    return body.images.slice(0, 3).map((img) => ({
+      imageBase64: stripDataUriPrefix(img.imageBase64),
+      mimeType: img.mimeType ?? "image/jpeg",
+      angle: img.angle ?? "top",
+      description: (img.description ?? "").slice(0, 500),
+    }));
+  }
+  // Legacy fallback: single imageBase64 as a top-angle photo
+  if (body.imageBase64) {
+    return [{
+      imageBase64: stripDataUriPrefix(body.imageBase64),
+      mimeType: body.mimeType ?? "image/jpeg",
+      angle: "top",
+      description: "",
+    }];
+  }
+  return [];
+}
+
+// ── Main identify handler ───────────────────────────────────────────────
+
 export async function handleIdentify(
   request: Request,
   env: Env,
@@ -15,40 +59,35 @@ export async function handleIdentify(
 ): Promise<Response> {
   try {
     const body = await request.json() as {
-      imageBase64: string;
+      imageBase64?: string;
       mimeType?: string;
-      /** Caller's entitlement tier — drives the accuracy ladder.
-       *  "free" = Haiku only, "premium" = Haiku + Sonnet re-rank on ambiguous,
-       *  "pro" = Haiku + Sonnet + Gemini third opinion on the hardest cases.
-       *  Defaults to "free" so missing/legacy callers stay on the safe path. */
+      images?: Array<{
+        imageBase64: string;
+        mimeType?: string;
+        angle?: string;
+        description?: string;
+      }>;
       entitlement?: string;
-      /** Search mode: "rocks" (default — current behavior, artifacts excluded)
-       *  or "artifacts" (artifacts prioritized in the candidate set). */
       searchMode?: string;
     };
 
-    if (!body.imageBase64) {
+    // Parse images array, falling back to legacy single imageBase64
+    const images = parseAngleImages(body);
+    if (images.length === 0) {
       return Response.json(
-        { error: "imageBase64 is required" },
+        { error: "At least one image is required" },
         { status: 400, headers: cors },
       );
     }
 
-    const mimeType = body.mimeType ?? "image/jpeg";
-    const imageData = stripDataUriPrefix(body.imageBase64);
     const tier = ((body.entitlement ?? "free") as string).toLowerCase();
     const searchMode = (body.searchMode ?? "rocks").toLowerCase();
 
-    // ── Artifact identification branch ───────────────────────────────────
-    // When the user confirms (or suspects) they're scanning an artifact, we
-    // route to a dedicated artifact-first pipeline that uses ARTIFACT_DB as
-    // the candidate set instead of the rock/mineral/fossil specimen database.
-    // The rock-ID flow below is completely untouched.
+    // ── Explicit artifact search mode ────────────────────────────────────
     if (searchMode === "artifacts") {
-      return await identifyArtifact(request, env, cors, imageData, mimeType, tier);
+      return await identifyArtifact(env, cors, images, tier);
     }
-    // Premium and legacy Pro both get all 3 models (Haiku + Sonnet + Gemini).
-    // Free stays Haiku-only.
+
     const useSonnet = tier === "premium" || tier === "pro";
     const useGemini = tier === "premium" || tier === "pro";
 
@@ -63,12 +102,27 @@ export async function handleIdentify(
     }
 
     const responseHeaders = { ...cors, "Content-Type": "application/json" };
+    const modelsUsed: string[] = [];
 
-    // ── Embedding-first identification pipeline ──────────────────────────
-    // New flow: describe photo → embed description → pgvector match →
-    // narrowed candidates → visual comparison. Falls back to the old
-    // text-first Haiku pass (full 58K-token DB in system prompt) if Supabase
-    // or the embedding pipeline is unavailable.
+    // ── Step 1: Combined describe + artifact detection (one Haiku call) ──
+    // Haiku examines ALL photos + descriptions and returns BOTH a combined
+    // description AND an artifact-detection verdict in a single JSON response.
+    const describeResult = await callDescribeAndDetect(
+      toolkitUrl, toolkitSecret, images,
+    );
+
+    // If artifact detected (>= 70% confidence), route to artifact pipeline
+    if (describeResult?.isArtifact && describeResult.artifactConfidence >= 70) {
+      modelsUsed.push("haiku-describe-artifact-detect");
+      return await identifyArtifact(env, cors, images, tier);
+    }
+
+    const photoDescription = describeResult?.description ?? "";
+    if (photoDescription) {
+      modelsUsed.push("haiku-describe");
+    }
+
+    // ── Step 2: Database embedding search ───────────────────────────────
     const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, undefined);
     const supabaseAnonKey = env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
     const embeddingEnabled = !!(supabaseUrl && supabaseAnonKey);
@@ -76,27 +130,20 @@ export async function handleIdentify(
     let parsed: IdentificationResult;
     let usedEmbeddingFlow = false;
 
-    if (embeddingEnabled) {
+    if (embeddingEnabled && photoDescription) {
       try {
-        // Step 1: Lightweight Haiku pass — describe the photo in specimen
-        // vocabulary (no DB in context, just visual observation).
-        const photoDescription = await callDescribePhoto(
-          toolkitUrl, toolkitSecret, imageData, mimeType,
+        const queryEmbedding = await embedText(toolkitUrl, toolkitSecret, photoDescription);
+        const matchCount = 15;
+        const embeddingMatches = await matchSpecimenEmbeddings(
+          supabaseUrl!, supabaseAnonKey!, queryEmbedding, matchCount,
         );
-        if (photoDescription) {
-          // Step 2: Embed the description and match against pgvector.
-          const queryEmbedding = await embedText(toolkitUrl, toolkitSecret, photoDescription);
-          const matchCount = useSonnet ? 20 : 25;
-          const embeddingMatches = await matchSpecimenEmbeddings(
-            supabaseUrl!, supabaseAnonKey!, queryEmbedding, matchCount,
-          );
-          if (embeddingMatches.length > 0) {
-            parsed = {
-              matches: embeddingMatchesToMatchResults(embeddingMatches),
-              summary: "Narrowed by embedding index — pending visual comparison.",
-            };
-            usedEmbeddingFlow = true;
-          }
+        if (embeddingMatches.length > 0) {
+          parsed = {
+            matches: embeddingMatchesToMatchResults(embeddingMatches),
+            summary: "Narrowed by embedding index — pending visual comparison.",
+          };
+          usedEmbeddingFlow = true;
+          modelsUsed.push("embedding");
         }
       } catch (err) {
         console.error("Embedding flow failed, falling back to text-first:", String(err));
@@ -105,7 +152,8 @@ export async function handleIdentify(
 
     if (!usedEmbeddingFlow) {
       // Fallback: old text-first flow (full 58K-token DB in system prompt).
-      const result = await callVisionModel(toolkitUrl, toolkitSecret, imageData, mimeType);
+      const firstImage = images[0];
+      const result = await callVisionModel(toolkitUrl, toolkitSecret, firstImage.imageBase64, firstImage.mimeType);
       if (!result.ok) {
         const errorBody = await result.text().catch(() => "unknown error");
         console.error("AI Gateway error:", result.status, errorBody);
@@ -126,71 +174,69 @@ export async function handleIdentify(
         );
       }
       parsed = parseIdentificationResponse(content);
+      modelsUsed.push("haiku");
     }
 
-    // Determine if clarification is needed (top match below 85%)
-    const topConfidence = parsed.matches.length > 0 ? parsed.matches[0].confidence : 0;
-    const isAmbiguous = topConfidence < 85 && parsed.matches.length > 0;
+    // ── Step 3: Web text search on authoritative mineralogy sites ──────
+    // Runs BEFORE the visual comparison so the web data can be fed in as
+    // additional context. Constrained to mindat.org, webmineral.com,
+    // minerals.net, geology.com, handbookofmineralogy.org, rruff.info,
+    // minsocam.org, wikipedia.org.
+    const webContext = await fetchMineralogyContext(
+      toolkitUrl, toolkitSecret, parsed.matches, photoDescription,
+    );
+    if (webContext.text) {
+      modelsUsed.push("web-search");
+    }
 
-    // ── Visual reference comparison ───────────────────────────────────────
-    // In the embedding-first flow, this is the primary identification step —
-    // the model compares the user's photo against the reference images of the
-    // embedding-narrowed candidates (25 for free, 20 for premium).
-    // In the fallback flow, it refines the top 5 from the text-first pass.
-    //   • Free tier → Haiku visual comparison
-    //   • Premium/Pro → Sonnet visual comparison
-    // If the visual match confidence is >= 92%, short-circuit the entire
-    // remaining pipeline (Sonnet re-rank, Gemini, web search, clarification).
-    const visualMaxCandidates = usedEmbeddingFlow ? (useSonnet ? 20 : 25) : 5;
+    // ── Step 4: Haiku visual comparison (all images + web context) ─────
+    // ALL tiers use Haiku for the first visual pass. 15 reference images.
+    const visualMaxCandidates = 15;
     const visualResult = await callVisualReferenceComparison(
-      toolkitUrl, toolkitSecret, imageData, mimeType, parsed.matches, useSonnet, visualMaxCandidates,
+      toolkitUrl, toolkitSecret, images, parsed.matches, webContext.text, visualMaxCandidates,
     );
 
     let finalMatches = parsed.matches;
     let finalSummary = parsed.summary;
-    const modelsUsed: string[] = usedEmbeddingFlow ? ["embedding", "haiku-describe"] : ["haiku"];
-    let sonnetDisagreed = false;
     let visualReferenceUsed = false;
     let visualShortCircuit = false;
 
     if (visualResult) {
-      modelsUsed.push(useSonnet ? "sonnet-visual" : "haiku-visual");
+      modelsUsed.push("haiku-visual");
       visualReferenceUsed = true;
       finalMatches = visualResult.matches;
       finalSummary = visualResult.summary;
 
+      // Free tier short-circuits at 90%+ — no Sonnet/Gemini needed.
       const visualTopConf = visualResult.matches.length > 0 ? visualResult.matches[0].confidence : 0;
-      if (visualTopConf >= 92) {
+      if (!useSonnet && visualTopConf >= 90) {
         visualShortCircuit = true;
       }
     }
 
-    // Recalculate ambiguity after the visual step — the visual comparison may
-    // have resolved what was previously ambiguous, or vice versa.
-    const visualTopConfidence = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
-    const isAmbiguousAfterVisual = visualTopConfidence < 85 && finalMatches.length > 0;
+    // ── Step 5: Sonnet re-rank (ALWAYS runs for premium) ───────────────
+    // Premium NEVER short-circuits — Sonnet always runs to catch assemblages
+    // (granite = quartz + feldspar + mica) that Haiku might miss.
+    let sonnetDisagreed = false;
 
-    if (!visualShortCircuit && useSonnet && isAmbiguousAfterVisual) {
+    if (useSonnet && !visualShortCircuit) {
       const sonnetResult = await callSonnetRerank(
-        toolkitUrl, toolkitSecret, imageData, mimeType, finalMatches, finalSummary,
+        toolkitUrl, toolkitSecret, images, finalMatches, finalSummary, webContext.text,
       );
       if (sonnetResult) {
         modelsUsed.push("sonnet");
+        const haikuTopId = visualResult?.matches?.[0]?.id ?? finalMatches[0]?.id;
         const merged = mergeRankings(finalMatches, sonnetResult.matches);
         finalMatches = merged.matches;
         finalSummary = merged.summary;
-        // Compare Sonnet's top against the ORIGINAL Haiku top (before merge),
-        // not the merged result — otherwise we'd always see "agreement" after
-        // the merge overwrites the ranking.
-        const haikuTopId = visualResult?.matches?.[0]?.id ?? finalMatches[0]?.id;
         sonnetDisagreed = sonnetResult.matches.length > 0 &&
           sonnetResult.matches[0].id !== haikuTopId;
 
-        // Pro: Gemini third opinion when both Haiku and Sonnet land < 85% or disagree
+        // ── Step 6: Gemini third opinion (only on disagreement or low conf) ──
         const sonnetTopConf = sonnetResult.matches.length > 0 ? sonnetResult.matches[0].confidence : 0;
         if (useGemini && (sonnetTopConf < 85 || sonnetDisagreed)) {
           const geminiResult = await callGeminiThirdOpinion(
-            toolkitUrl, toolkitSecret, imageData, mimeType, finalMatches, sonnetResult.matches, finalSummary,
+            toolkitUrl, toolkitSecret, images, finalMatches, sonnetResult.matches, finalSummary, webContext.text,
           );
           if (geminiResult) {
             modelsUsed.push("gemini");
@@ -202,78 +248,19 @@ export async function handleIdentify(
       }
     }
 
-    const needsClarification = !visualShortCircuit && isAmbiguousAfterVisual;
+    // ── Step 7: Clarification (last resort, only if < 60%) ─────────────
+    const finalTopConfidence = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
+    const needsClarification = finalTopConfidence < 60 && finalMatches.length > 0;
 
     let clarificationQuestions: ClarificationQuestion[] = [];
-    let webReferences: WebReference[] = [];
-
-    if (needsClarification && finalMatches.length > 0) {
-      // Generate questions tailored to the ambiguous matches
+    if (needsClarification) {
       clarificationQuestions = await generateClarificationQuestions(
-        toolkitUrl,
-        toolkitSecret,
-        finalMatches,
-        finalSummary,
-      );
-
-      // Cross-reference with web search for additional accuracy
-      webReferences = await searchWebReferences(
-        toolkitUrl,
-        toolkitSecret,
-        finalMatches,
+        toolkitUrl, toolkitSecret, finalMatches, finalSummary,
       );
     }
 
-    // ── Assemblage auto-detection (Phase 8) ───────────────────────────────
-    // After the tiered accuracy ladder, check if the top match looks like a
-    // multi-mineral assemblage. If the summary mentions multiple minerals or
-    // the top match is a rock type, run a Gemini assemblage analysis pass.
-    let assemblageResult: AssemblageResult | null = null;
-    const topMatchName = finalMatches.length > 0 ? finalMatches[0].name : "";
-    const assemblageKeywords = ["assemblage", "with", "in ", "hosting", "containing", "bearing", "veins", "included", "association"];
-    const looksLikeAssemblage = assemblageKeywords.some(kw => 
-      finalSummary.toLowerCase().includes(kw) || topMatchName.toLowerCase().includes(kw)
-    ) || finalMatches.some(m => 
-      m.reasoning.toLowerCase().includes("assemblage") || 
-      m.reasoning.toLowerCase().includes("multiple minerals") ||
-      m.reasoning.toLowerCase().includes("host rock")
-    );
-    if (looksLikeAssemblage && finalMatches.length > 0) {
-      // Sonnet is the primary assemblage model. If its top component confidence
-      // is below 88%, run Gemini as a second pass and keep whichever result has
-      // the higher top component percentage. If Sonnet fails entirely, fall
-      // back to Gemini.
-      const sonnetResult = await callSonnetAssemblageAnalysis(
-        toolkitUrl, toolkitSecret, imageData, mimeType, topMatchName, finalSummary,
-      );
-      if (sonnetResult) {
-        modelsUsed.push("sonnet-assemblage");
-        const sonnetTopPct = Math.max(0, ...sonnetResult.components.map(c => c.percentage));
-        if (sonnetTopPct < 88) {
-          // Low confidence — run Gemini as a second pass.
-          const geminiResult = await callGeminiAssemblageAnalysis(
-            toolkitUrl, toolkitSecret, imageData, mimeType, topMatchName, finalSummary,
-          );
-          if (geminiResult) {
-            modelsUsed.push("gemini-assemblage");
-            const geminiTopPct = Math.max(0, ...geminiResult.components.map(c => c.percentage));
-            assemblageResult = geminiTopPct > sonnetTopPct ? geminiResult : sonnetResult;
-          } else {
-            assemblageResult = sonnetResult;
-          }
-        } else {
-          assemblageResult = sonnetResult;
-        }
-      } else {
-        // Sonnet failed — fall back to Gemini.
-        assemblageResult = await callGeminiAssemblageAnalysis(
-          toolkitUrl, toolkitSecret, imageData, mimeType, topMatchName, finalSummary,
-        );
-        if (assemblageResult) {
-          modelsUsed.push("gemini-assemblage");
-        }
-      }
-    }
+    // Always return web references for transparency
+    const webReferences = webContext.references ?? [];
 
     const response: IdentifyResponse = {
       matches: finalMatches,
@@ -283,7 +270,6 @@ export async function handleIdentify(
       webReferences,
       modelsUsed,
       visualReferenceUsed,
-      assemblage: assemblageResult ?? undefined,
     };
 
     return Response.json(response, { headers: responseHeaders });
@@ -296,29 +282,20 @@ export async function handleIdentify(
   }
 }
 
+// ── Artifact identification pipeline ────────────────────────────────────
+
 /**
- * Artifact-first identification pipeline. Runs when the user confirms (or
- * suspects) they're scanning an artifact — uses ARTIFACT_DB as the candidate
- * set instead of the rock/mineral/fossil specimen database.
+ * Artifact-first identification pipeline. Runs when the combined describe+
+ * detect step identifies an artifact, or when the user explicitly selects
+ * artifact search mode. Uses ARTIFACT_DB as the candidate set.
  *
- * Follows the SAME embedding-first pipeline as the rock-ID flow:
- *   1. Haiku describes the photo in artifact vocabulary (no DB in context)
- *   2. The description is embedded and matched against the artifact_embeddings
- *      pgvector index to narrow candidates
- *   3. Visual reference comparison against the narrowed candidate images
- *   4. Optional Sonnet re-rank on ambiguous matches (top < 85%)
- * Falls back to the old text-first flow (full DB in system prompt) if the
- * embedding pipeline is unavailable.
- *
- * The rock-ID path (handleIdentify above) is completely untouched — this is
- * a separate, self-contained branch.
+ * Accepts the multi-angle images array. Currently uses the first image for
+ * the artifact-specific vision functions (which still take a single image).
  */
 async function identifyArtifact(
-  request: Request,
   env: Env,
   cors: Record<string, string>,
-  imageData: string,
-  mimeType: string,
+  images: AngleImage[],
   tier: string,
 ): Promise<Response> {
   const responseHeaders = { ...cors, "Content-Type": "application/json" };
@@ -332,11 +309,14 @@ async function identifyArtifact(
     );
   }
 
+  const firstImage = images[0];
+  const imageData = firstImage.imageBase64;
+  const mimeType = firstImage.mimeType;
+
   const useSonnet = tier === "premium" || tier === "pro";
   const useGemini = tier === "premium" || tier === "pro";
   const modelsUsed: string[] = ["artifact-mode"];
 
-  // ── Embedding-first pipeline (mirrors the rock-ID flow) ──────────────
   const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, undefined);
   const supabaseAnonKey = env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
   const embeddingEnabled = !!(supabaseUrl && supabaseAnonKey);
@@ -347,13 +327,10 @@ async function identifyArtifact(
 
     if (embeddingEnabled) {
       try {
-        // Step 1: Lightweight Haiku pass — describe the photo in artifact
-        // vocabulary (no DB in context, just visual observation).
         const photoDescription = await callDescribeArtifactPhoto(
           toolkitUrl, toolkitSecret, imageData, mimeType,
         );
         if (photoDescription) {
-          // Step 2: Embed the description and match against pgvector.
           const queryEmbedding = await embedText(toolkitUrl, toolkitSecret, photoDescription);
           const matchCount = useSonnet ? 20 : 25;
           const embeddingMatches = await matchArtifactEmbeddings(
@@ -373,7 +350,6 @@ async function identifyArtifact(
     }
 
     if (!usedEmbeddingFlow) {
-      // Fallback: old text-first flow (full 106-artifact DB in system prompt).
       const result = await callArtifactVisionModel(
         toolkitUrl, toolkitSecret, imageData, mimeType,
       );
@@ -396,13 +372,10 @@ async function identifyArtifact(
           { status: 502, headers: responseHeaders },
         );
       }
-      parsed = parseIdentificationResponse(content);
+      parsed = parseArtifactIdentificationResponse(content);
       modelsUsed.push("haiku-artifact");
     }
 
-    // Step 3: Visual reference comparison — send the user's photo alongside
-    // the top artifact reference images for a direct visual match.
-    // In the embedding-first flow, this is the primary identification step.
     const visualMaxCandidates = usedEmbeddingFlow
       ? (useSonnet ? 20 : 25)
       : (useSonnet ? 12 : 15);
@@ -425,7 +398,6 @@ async function identifyArtifact(
       finalMatches = visualResult.matches;
       finalSummary = visualResult.summary;
 
-      // Short-circuit if visual confidence is very high (same as rock flow).
       const visualTopConf = visualResult.matches.length > 0
         ? visualResult.matches[0].confidence : 0;
       if (visualTopConf >= 92) {
@@ -433,8 +405,6 @@ async function identifyArtifact(
       }
     }
 
-    // Step 4: Optional Sonnet re-rank on ambiguous artifact matches (top < 85%).
-    // Mirrors the rock-ID tiered accuracy ladder exactly.
     let sonnetDisagreed = false;
     const topConf = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
     if (!visualShortCircuit && useSonnet && topConf < 85 && finalMatches.length > 0) {
@@ -450,8 +420,6 @@ async function identifyArtifact(
         sonnetDisagreed = sonnetResult.matches.length > 0 &&
           sonnetResult.matches[0].id !== haikuTopId;
 
-        // Gemini third opinion when both Sonnet and Haiku land < 85% or disagree.
-        // Mirrors the rock-ID callGeminiThirdOpinion gate.
         const sonnetTopConf = sonnetResult.matches.length > 0
           ? sonnetResult.matches[0].confidence : 0;
         if (useGemini && (sonnetTopConf < 85 || sonnetDisagreed)) {
@@ -471,8 +439,6 @@ async function identifyArtifact(
       }
     }
 
-    // Step 5: Web search + clarification when still ambiguous after the full
-    // accuracy ladder. Mirrors the rock-ID flow exactly.
     const finalTopConfidence = finalMatches.length > 0
       ? finalMatches[0].confidence : 0;
     const needsClarification = !visualShortCircuit && finalTopConfidence < 85 && finalMatches.length > 0;
@@ -487,11 +453,6 @@ async function identifyArtifact(
       webReferences = await searchWebReferences(toolkitUrl, toolkitSecret, finalMatches);
     }
 
-    // Uncertainty flag — only fires when the ENTIRE pipeline (database,
-    // Haiku, Sonnet, Gemini, and web search) still can't produce a
-    // reasonably confident match. The app shows a notification that the
-    // object could not be fully distinguished between an actual artifact
-    // and a similar-shaped natural rock.
     const uncertainArtifact = !visualShortCircuit && finalTopConfidence < 55;
 
     const artifactResponse: IdentifyResponse = {
@@ -516,11 +477,8 @@ async function identifyArtifact(
   }
 }
 
-/** Convert artifact embedding match RPC results into MatchResult objects
- *  for the visual comparison step. Mirrors embeddingMatchesToMatchResults
- *  for specimens — confidence is mapped from cosine similarity (0–1) to
- *  the 0–100 scale. Reasoning is a placeholder; the real reasoning comes
- *  from the LLM visual pass. */
+// ── Artifact pipeline helpers ───────────────────────────────────────────
+
 function artifactEmbeddingMatchesToMatchResults(
   matches: ArtifactEmbeddingMatch[],
 ): MatchResult[] {
@@ -536,12 +494,6 @@ function artifactEmbeddingMatchesToMatchResults(
   });
 }
 
-/** Lightweight Haiku pass that describes the user's photo in artifact
- *  vocabulary WITHOUT the full database in context — mirrors
- *  callDescribePhoto for specimens. The returned text is embedded and
- *  matched against the pgvector artifact index to narrow candidates.
- *  Returns null on any failure — the caller falls back to the text-first
- *  flow (full DB in system prompt). */
 async function callDescribeArtifactPhoto(
   toolkitUrl: string,
   secret: string,
@@ -599,8 +551,6 @@ Return ONLY the description prose — no JSON, no markdown, no preamble.`;
   }
 }
 
-/** Build the artifact system prompt — the full ARTIFACT_DB as a compact
- *  reference list, grouped by family. */
 function buildArtifactSystemPrompt(): string {
   const families = [
     "Arrowheads", "Spear Points & Dart Tips", "Hand Axes & Axe Heads",
@@ -628,7 +578,6 @@ ${sections.join("\n\n")}
 For each match, explain which visual features (shape, flaking pattern, notching, base style, material, size hints) support the identification and what distinguishes it from similar types.`;
 }
 
-/** Haiku vision call for artifact identification. */
 async function callArtifactVisionModel(
   toolkitUrl: string,
   secret: string,
@@ -703,8 +652,6 @@ Return ONLY valid JSON — no markdown, no extra text:
   });
 }
 
-/** Visual reference comparison for artifacts — sends the user's photo
- *  alongside the top artifact reference images. */
 async function callArtifactVisualComparison(
   toolkitUrl: string,
   secret: string,
@@ -791,7 +738,6 @@ Return ONLY valid JSON — no markdown:
   }
 }
 
-/** Sonnet re-rank for ambiguous artifact matches. */
 async function callSonnetArtifactRerank(
   toolkitUrl: string,
   secret: string,
@@ -854,9 +800,6 @@ Return ONLY valid JSON — no markdown:
   }
 }
 
-/** Gemini third-opinion for the artifact pipeline — mirrors
- *  callGeminiThirdOpinion for specimens. Casts a tie-breaking vote when the
- *  Haiku and Sonnet passes disagree on the top pick or both land < 85%. */
 async function callGeminiArtifactThirdOpinion(
   toolkitUrl: string,
   secret: string,
@@ -920,10 +863,6 @@ You are the tie-breaker. Look at the photo yourself and return your own ranked m
   }
 }
 
-/** Candidate-only system prompt for the artifact pipeline — mirrors
- *  buildCandidateSystemPrompt for specimens. Includes ONLY the narrowed
- *  candidate set's metadata so the rerank / tie-breaker models can reason
- *  about the candidates without the full 106-artifact DB in context. */
 function buildArtifactCandidateSystemPrompt(candidates: MatchResult[]): string {
   const seen = new Set<string>();
   const rows: string[] = [];
@@ -968,9 +907,6 @@ A pre-filter step has narrowed the database to these ${rows.length} candidates. 
 ${candidateList}`;
 }
 
-/** Generate clarification questions tailored to ambiguous artifact matches.
- *  Mirrors generateClarificationQuestions for specimens but uses artifact
- *  vocabulary (shape, flaking, base style, material, hafting). */
 async function generateArtifactClarificationQuestions(
   toolkitUrl: string,
   secret: string,
@@ -1053,9 +989,6 @@ Return ONLY valid JSON — no markdown, no extra text:
   }
 }
 
-/** Fallback clarification questions for artifacts when the AI generation
- *  fails. Mirrors getDefaultQuestions for specimens but uses artifact
- *  vocabulary. */
 function getDefaultArtifactQuestions(matches: MatchResult[]): ClarificationQuestion[] {
   const arts = matches.slice(0, 4)
     .map(m => ARTIFACT_MAP[m.id])
@@ -1063,7 +996,6 @@ function getDefaultArtifactQuestions(matches: MatchResult[]): ClarificationQuest
 
   const questions: ClarificationQuestion[] = [];
 
-  // Shape question — based on subFamily hints
   const shapes = new Set<string>();
   arts.forEach(a => {
     const sf = a.subFamily.toLowerCase();
@@ -1081,21 +1013,18 @@ function getDefaultArtifactQuestions(matches: MatchResult[]): ClarificationQuest
     });
   }
 
-  // Material question
   questions.push({
     id: "material",
     question: "What material is it made from?",
     options: ["Gray/tan chert or flint", "Black obsidian", "Quartz or quartzite", "Slate or other stone", "Shell or bone"],
   });
 
-  // Size question
   questions.push({
     id: "size",
     question: "How large is the object?",
     options: ["Under 1 inch", "1-2 inches", "2-4 inches", "Over 4 inches", "Not sure"],
   });
 
-  // Context question
   questions.push({
     id: "context",
     question: "Where did you find it?",
@@ -1105,9 +1034,6 @@ function getDefaultArtifactQuestions(matches: MatchResult[]): ClarificationQuest
   return questions.slice(0, 4);
 }
 
-/** Parse the artifact identification response — validates IDs against
- *  ARTIFACT_DB instead of SPECIMEN_DB. Without this, all artifact IDs
- *  ("art-*") would be silently filtered out by parseIdentificationResponse. */
 function parseArtifactIdentificationResponse(content: string): IdentificationResult {
   let jsonStr = content.trim();
   const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
@@ -1157,11 +1083,11 @@ function parseArtifactIdentificationResponse(content: string): IdentificationRes
   }
 }
 
-/**
- * Lightweight artifact-detection pre-pass (Haiku-only, fast, cheap).
- * Returns { isArtifact, confidence } — no credit consumed on the client.
- * Used by the IdentifyScreen confirmation gate before the full identify runs.
- */
+// ── Artifact detection (legacy standalone endpoint) ─────────────────────
+// Kept for backward compatibility — functions/index.ts still routes here.
+// The main identify pipeline now handles artifact detection internally via
+// callDescribeAndDetect, so the client no longer calls this endpoint.
+
 export async function handleArtifactDetect(
   request: Request,
   env: Env,
@@ -1192,7 +1118,6 @@ export async function handleArtifactDetect(
       );
     }
 
-    // Single Haiku call — cheap and fast (~5-10s). No DB needed in context.
     const detectPrompt = `You are an expert archaeologist. Look at this photo and determine: is this a prehistoric artifact (knapped stone tool, arrowhead, spear point, hand axe, scraper, drill, bead, effigy, pipe, game disc, pottery sherd, or other human-made object of stone, shell, wood, or ceramic)?
 
 Respond with ONLY a JSON object:
@@ -1205,30 +1130,51 @@ If it's clearly a natural rock, mineral, crystal, or fossil, return isArtifact: 
 If it's clearly an artifact, return isArtifact: true with high confidence.
 If you're unsure, return your best guess with appropriate confidence.`;
 
-    const result = await callVisionModel(
-      toolkitUrl,
-      toolkitSecret,
-      imageData,
-      mimeType,
-      detectPrompt,
-      "claude-haiku-4-5",
-    );
+    const messages = [
+    {
+      role: "user",
+      content: [
+        { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageData}` } },
+        { type: "text", text: detectPrompt },
+      ],
+    },
+  ];
 
-    // Parse the JSON response from the model
+    const response = await fetch(`${toolkitUrl}/v2/vercel/v1/chat/completions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${toolkitSecret}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "anthropic/claude-haiku-4.5",
+        messages,
+        max_tokens: 256,
+        temperature: 0.1,
+      }),
+    });
+
     let isArtifact = false;
     let confidence = 0;
-    try {
-      const cleaned = result.trim()
-        .replace(/^```json\s*/i, "")
-        .replace(/```$/, "")
-        .trim();
-      const parsed = JSON.parse(cleaned);
-      isArtifact = !!parsed.isArtifact;
-      confidence = Math.max(0, Math.min(100, Number(parsed.confidence) || 0));
-    } catch {
-      // If parsing fails, fail open — don't block the user
-      isArtifact = false;
-      confidence = 0;
+    if (response.ok) {
+      const data = await response.json() as {
+        choices?: Array<{ message?: { content?: string } }>;
+      };
+      const content = data.choices?.[0]?.message?.content;
+      if (content) {
+        try {
+          const cleaned = content.trim()
+            .replace(/^```json\s*/i, "")
+            .replace(/```$/, "")
+            .trim();
+          const parsed = JSON.parse(cleaned);
+          isArtifact = !!parsed.isArtifact;
+          confidence = Math.max(0, Math.min(100, Number(parsed.confidence) || 0));
+        } catch {
+          isArtifact = false;
+          confidence = 0;
+        }
+      }
     }
 
     return Response.json(
@@ -1243,6 +1189,8 @@ If you're unsure, return your best guess with appropriate confidence.`;
   }
 }
 
+// ── Clarify handler ─────────────────────────────────────────────────────
+
 export async function handleClarify(
   request: Request,
   env: Env,
@@ -1250,22 +1198,34 @@ export async function handleClarify(
 ): Promise<Response> {
   try {
     const body = await request.json() as {
-      imageBase64: string;
+      imageBase64?: string;
       mimeType?: string;
+      images?: Array<{
+        imageBase64: string;
+        mimeType?: string;
+        angle?: string;
+        description?: string;
+      }>;
       answers: Record<string, string>;
       preliminaryMatches: MatchResult[];
       summary: string;
     };
 
-    if (!body.imageBase64 || !body.answers || !body.preliminaryMatches) {
+    if (!body.answers || !body.preliminaryMatches) {
       return Response.json(
-        { error: "imageBase64, answers, and preliminaryMatches are required" },
+        { error: "answers and preliminaryMatches are required" },
         { status: 400, headers: cors },
       );
     }
 
-    const mimeType = body.mimeType ?? "image/jpeg";
-    const imageData = stripDataUriPrefix(body.imageBase64);
+    // Parse images array, falling back to legacy single imageBase64
+    const images = parseAngleImages(body);
+    if (images.length === 0) {
+      return Response.json(
+        { error: "At least one image is required" },
+        { status: 400, headers: cors },
+      );
+    }
 
     const toolkitUrl = env.EXPO_PUBLIC_TOOLKIT_URL ?? "https://toolkit.rork.com";
     const toolkitSecret = env.EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY;
@@ -1277,17 +1237,16 @@ export async function handleClarify(
       );
     }
 
+    const responseHeaders = { ...cors, "Content-Type": "application/json" };
+
     const result = await callClarifyModel(
       toolkitUrl,
       toolkitSecret,
-      imageData,
-      mimeType,
+      images,
       body.answers,
       body.preliminaryMatches,
       body.summary,
     );
-
-    const responseHeaders = { ...cors, "Content-Type": "application/json" };
 
     if (!result.ok) {
       const errorBody = await result.text().catch(() => "unknown error");
@@ -1312,7 +1271,6 @@ export async function handleClarify(
 
     const parsed = parseClarificationResponse(content);
 
-    // Cross-reference the refined matches with web search
     const webReferences = await searchWebReferences(
       toolkitUrl,
       toolkitSecret,
@@ -1337,18 +1295,14 @@ export async function handleClarify(
   }
 }
 
+// ── Utility helpers ─────────────────────────────────────────────────────
+
 function stripDataUriPrefix(b64: string): string {
   if (!b64.startsWith("data:")) return b64;
   const comma = b64.indexOf(",");
   return comma === -1 ? b64 : b64.slice(comma + 1);
 }
 
-// --- Embedding-first pipeline helpers ---
-
-/** Convert pgvector match RPC results into MatchResult objects for the
- *  visual comparison step. Confidence is mapped from cosine similarity
- *  (0–1) to the 0–100 scale the rest of the pipeline uses. Reasoning is
- *  a placeholder — the real reasoning comes from the LLM visual pass. */
 function embeddingMatchesToMatchResults(matches: EmbeddingMatch[]): MatchResult[] {
   return matches.map((m) => {
     const spec = SPECIMEN_DB.find((s) => s.id === m.specimen_id);
@@ -1362,20 +1316,39 @@ function embeddingMatchesToMatchResults(matches: EmbeddingMatch[]): MatchResult[
   });
 }
 
-/** Lightweight Haiku pass that describes the user's photo in specimen
- *  vocabulary WITHOUT the full database in context. The returned text is
- *  embedded and matched against the pgvector index to narrow candidates.
- *  Returns null on any failure — the caller falls back to the text-first
- *  flow. */
-async function callDescribePhoto(
+// ── Combined describe + artifact detection (NEW — replaces callDescribePhoto) ──
+
+/** Combined Haiku call that examines ALL angle photos + descriptions and
+ *  returns BOTH a synthesized description AND an artifact-detection verdict
+ *  in a single JSON response. This replaces the old separate callDescribePhoto
+ *  + client-side handleArtifactDetect flow, saving ~8-12s per identification. */
+async function callDescribeAndDetect(
   toolkitUrl: string,
   secret: string,
-  imageBase64: string,
-  mimeType: string,
-): Promise<string | null> {
-  const describePrompt = `Observe this rock, mineral, crystal, gem, or fossil photograph carefully and describe what you see using the vocabulary a field geologist would use.
+  images: AngleImage[],
+): Promise<{ description: string; isArtifact: boolean; artifactConfidence: number } | null> {
+  // Build content with all images + per-angle descriptions
+  const userContent: Array<Record<string, unknown>> = [];
 
-Describe in 3-5 sentences:
+  for (const img of images) {
+    userContent.push({
+      type: "image_url",
+      image_url: { url: `data:${img.mimeType};base64,${img.imageBase64}` },
+    });
+    if (img.description) {
+      userContent.push({
+        type: "text",
+        text: `User's description of this ${img.angle} view: ${img.description}`,
+      });
+    }
+  }
+
+  const angleLabels = images.map((img) => img.angle).join(", ");
+  userContent.push({
+    type: "text",
+    text: `You are given ${images.length} photo(s) of a specimen from different angles (${angleLabels}). Examine all photos carefully and produce a single combined description that integrates what you observe from each angle.${images.length > 1 ? " Different angles may reveal different features — synthesize them into one coherent description." : ""}
+
+Describe in 3-6 sentences using field-geologist vocabulary:
 - Primary color(s), color zoning, banding patterns
 - Crystal habit or form (cubes, hexagonal prisms, blades, needles, botryoidal, massive, microcrystalline, etc.)
 - Luster (metallic, vitreous, waxy, pearly, dull, adamantine, silky)
@@ -1384,18 +1357,24 @@ Describe in 3-5 sentences:
 - Any visible matrix or associated minerals
 - Any special optical effects (chatoyancy, asterism, play of color, adularescence, iridescence)
 - For fossils: shape, symmetry, surface texture, skeletal features
+- If the specimen appears to be a multi-mineral assemblage (e.g. granite, schist, gneiss), note the visible component minerals
 
-Return ONLY the description prose — no JSON, no markdown, no preamble.`;
+ALSO determine: does this photo show a prehistoric artifact (knapped stone tool, arrowhead, spear point, hand axe, scraper, drill, bead, effigy, pipe, game disc, pottery sherd, or other human-made object)?
 
-  const messages = [
-    {
-      role: "user",
-      content: [
-        { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
-        { type: "text", text: describePrompt },
-      ],
-    },
-  ];
+Return ONLY a JSON object — no markdown, no extra text:
+{
+  "description": "your combined description prose here",
+  "isArtifact": false,
+  "artifactConfidence": 0
+}
+
+- description: the combined description of the specimen
+- isArtifact: true if the object appears to be a human-made artifact
+- artifactConfidence: 0-100, your confidence in the artifact verdict
+
+If it's clearly a natural rock, mineral, crystal, or fossil, return isArtifact: false with high confidence.
+If it's clearly an artifact, return isArtifact: true with high confidence.`,
+  });
 
   try {
     const response = await fetch(`${toolkitUrl}/v2/vercel/v1/chat/completions`, {
@@ -1406,8 +1385,8 @@ Return ONLY the description prose — no JSON, no markdown, no preamble.`;
       },
       body: JSON.stringify({
         model: "anthropic/claude-haiku-4.5",
-        messages,
-        max_tokens: 512,
+        messages: [{ role: "user", content: userContent }],
+        max_tokens: 768,
         temperature: 0.1,
       }),
     });
@@ -1417,12 +1396,35 @@ Return ONLY the description prose — no JSON, no markdown, no preamble.`;
     };
     const content = data.choices?.[0]?.message?.content;
     if (!content || content.trim().length === 0) return null;
-    return content.trim();
+
+    // Parse JSON response
+    let jsonStr = content.trim();
+    const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (jsonMatch) jsonStr = jsonMatch[1].trim();
+    if (!jsonStr.startsWith("{")) {
+      const firstBrace = jsonStr.indexOf("{");
+      const lastBrace = jsonStr.lastIndexOf("}");
+      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        jsonStr = jsonStr.slice(firstBrace, lastBrace + 1);
+      }
+    }
+    const parsed = JSON.parse(jsonStr) as {
+      description?: string;
+      isArtifact?: boolean;
+      artifactConfidence?: number;
+    };
+    return {
+      description: (parsed.description ?? "").trim(),
+      isArtifact: !!parsed.isArtifact,
+      artifactConfidence: Math.max(0, Math.min(100, Math.round(parsed.artifactConfidence ?? 0))),
+    };
   } catch (err) {
-    console.error("callDescribePhoto error:", String(err));
+    console.error("callDescribeAndDetect error:", String(err));
     return null;
   }
 }
+
+// ── Fallback vision model (text-first flow) ─────────────────────────────
 
 async function callVisionModel(
   toolkitUrl: string,
@@ -1433,9 +1435,6 @@ async function callVisionModel(
   const systemPrompt = buildSystemPrompt();
   const userPrompt = buildUserPrompt();
 
-  // Prompt caching: mark the system prompt (specimen database, ~58K tokens) as
-  // cacheable. Within the 5-minute cache window, repeat calls reuse the cached
-  // tokens at ~88% discount. The user's photo and question are never cached.
   const messages = [
     {
       role: "system",
@@ -1474,17 +1473,28 @@ async function callVisionModel(
   });
 }
 
+// ── Clarify model (updated for multi-angle) ─────────────────────────────
+
 async function callClarifyModel(
   toolkitUrl: string,
   secret: string,
-  imageBase64: string,
-  mimeType: string,
+  images: AngleImage[],
   answers: Record<string, string>,
   preliminaryMatches: MatchResult[],
   summary: string,
 ): Promise<Response> {
   const systemPrompt = buildSystemPrompt();
   const userPrompt = buildClarifyUserPrompt(answers, preliminaryMatches, summary);
+
+  // Build user content with all angle images
+  const userContent: Array<Record<string, unknown>> = [];
+  for (const img of images) {
+    userContent.push({
+      type: "image_url",
+      image_url: { url: `data:${img.mimeType};base64,${img.imageBase64}` },
+    });
+  }
+  userContent.push({ type: "text", text: userPrompt });
 
   const messages = [
     {
@@ -1495,13 +1505,7 @@ async function callClarifyModel(
     },
     {
       role: "user",
-      content: [
-        {
-          type: "image_url",
-          image_url: { url: `data:${mimeType};base64,${imageBase64}` },
-        },
-        { type: "text", text: userPrompt },
-      ],
+      content: userContent,
     },
   ];
 
@@ -1524,29 +1528,24 @@ async function callClarifyModel(
   });
 }
 
-// --- Visual reference comparison (Phase 9) ---
+// ── Visual reference comparison (updated for multi-angle + web context) ──
 
-/** Visual reference comparison: sends the user's photo alongside the database
- *  reference images for the top 5 candidates, asking the vision model to
- *  directly compare visual similarity rather than working from text alone.
- *  Reference images are passed as public R2 URL strings (not base64), so they
- *  don't count against the 4.5 MB Vercel body limit.
+/** Visual reference comparison: sends ALL user photos (labeled by angle)
+ *  alongside 15 database reference images, WITH web mineralogy context and
+ *  per-angle descriptions fed in as additional context.
  *
- *  Model tiering: Haiku for free, Sonnet for premium/pro. */
+ *  ALL tiers use Haiku for this pass. The prompt labels each user photo by
+ *  angle so the model can cross-reference across viewpoints. */
 async function callVisualReferenceComparison(
   toolkitUrl: string,
   secret: string,
-  imageBase64: string,
-  mimeType: string,
+  images: AngleImage[],
   preliminaryMatches: MatchResult[],
-  useSonnet: boolean,
-  maxCandidates: number = 5,
+  webContext: string,
+  maxCandidates: number = 15,
 ): Promise<IdentificationResult | null> {
   if (preliminaryMatches.length === 0) return null;
 
-  // Look up reference image URLs for the top candidates (up to maxCandidates).
-  // In the embedding-first flow this is 25 (free) / 20 (premium); in the
-  // fallback text-first flow it's 5.
   const topCandidates = preliminaryMatches.slice(0, maxCandidates);
   const refs: Array<{ id: string; name: string; imageUrl: string }> = [];
   for (const m of topCandidates) {
@@ -1557,43 +1556,59 @@ async function callVisualReferenceComparison(
   }
   if (refs.length === 0) return null;
 
-  // Build the user content: user's photo first, then each reference image with a label
-  const userContent: Array<Record<string, unknown>> = [
-    {
-      type: "image_url",
-      image_url: { url: `data:${mimeType};base64,${imageBase64}` },
-    },
-    {
-      type: "text",
-      text: "This is the user's photo that needs identification. Below are database reference images for the top candidates. Compare the user's photo against each reference image visually.",
-    },
-  ];
+  // Build user content: all angle photos first (labeled), then reference images
+  const userContent: Array<Record<string, unknown>> = [];
 
-  for (const ref of refs) {
+  // Add each user photo with angle label
+  for (let i = 0; i < images.length; i++) {
     userContent.push({
       type: "image_url",
-      image_url: { url: ref.imageUrl },
+      image_url: { url: `data:${images[i].mimeType};base64,${images[i].imageBase64}` },
     });
     userContent.push({
       type: "text",
-      text: `Reference image ${refs.indexOf(ref) + 1}: ${ref.name} (id: ${ref.id})`,
+      text: `Photo ${i + 1} — ${images[i].angle} view${images[i].description ? ` (user notes: ${images[i].description})` : ""}`,
+    });
+  }
+
+  userContent.push({
+    type: "text",
+    text: `The above ${images.length} photo(s) show the user's unknown specimen from different angles. Below are database reference images for the top candidates. Compare the user's photos against each reference image visually.`,
+  });
+
+  // Add reference images
+  for (let i = 0; i < refs.length; i++) {
+    userContent.push({
+      type: "image_url",
+      image_url: { url: refs[i].imageUrl },
+    });
+    userContent.push({
+      type: "text",
+      text: `Reference image ${i + 1}: ${refs[i].name} (id: ${refs[i].id})`,
     });
   }
 
   const refList = refs.map((r, i) => `${i + 1}. ${r.name} (id: ${r.id})`).join("\n");
 
-  const prompt = `You are comparing a user's specimen photo against database reference images.
+  // Build the prompt with web context
+  const webContextBlock = webContext
+    ? `\n\nPublished mineralogy data for top candidates:\n${webContext}\n\nUse BOTH the visual similarity across all angles AND the published properties (hardness, crystal system, luster, streak, associated minerals) to rank candidates. If the published data contradicts the visual appearance, note the discrepancy in your reasoning.`
+    : "";
 
-The first image is the user's unknown specimen. The following images are reference photos for these candidates:
+  const prompt = `You are comparing a user's specimen photos (from ${images.length} angle${images.length > 1 ? "s" : ""}) against database reference images.
+
+The user's photos are labeled by angle above. The following images are reference photos for these candidates:
 ${refList}
+${webContextBlock}
 
-Visually compare the user's photo against each reference image. Focus on:
-- Color match (hue, saturation, zoning, banding)
+Visually compare the user's photos against each reference image. Focus on:
+- Color match (hue, saturation, zoning, banding) — check across all angles
 - Crystal habit / form match (cubes, prisms, botryoidal, massive, etc.)
-- Luster and surface texture match
-- Overall visual similarity
+- Luster and surface texture match — may vary by angle
+- Overall visual similarity across all viewpoints
+- If the specimen appears to be a multi-mineral assemblage (e.g. granite with quartz + feldspar + mica), identify the rock type AND note the visible component minerals
 
-Rank all candidates by how well the user's photo visually matches the reference image. You may reorder from the initial ranking if visual comparison suggests a different top match.
+Rank all candidates by how well the user's photos visually match the reference images. You may reorder from the initial ranking if visual comparison suggests a different top match.
 
 Return ONLY valid JSON — no markdown, no extra text:
 {
@@ -1602,7 +1617,7 @@ Return ONLY valid JSON — no markdown, no extra text:
       "id": "specimen-id from the list above",
       "name": "Specimen Name",
       "confidence": 90,
-      "reasoning": "2-3 sentences explaining the visual similarity or differences between the user's photo and the reference image."
+      "reasoning": "2-3 sentences explaining the visual similarity or differences between the user's photos and the reference image."
     }
   ],
   "summary": "3-4 sentence visual comparison summary noting which features matched and which differed."
@@ -1610,14 +1625,12 @@ Return ONLY valid JSON — no markdown, no extra text:
 
   userContent.push({ type: "text", text: prompt });
 
-  const model = useSonnet ? "anthropic/claude-sonnet-4.5" : "anthropic/claude-haiku-4.5";
-
   try {
     const response = await fetch(`${toolkitUrl}/v2/vercel/v1/chat/completions`, {
       method: "POST",
       headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model,
+        model: "anthropic/claude-haiku-4.5",
         messages: [{ role: "user", content: userContent }],
         max_tokens: 4096,
         temperature: 0.1,
@@ -1634,31 +1647,49 @@ Return ONLY valid JSON — no markdown, no extra text:
   }
 }
 
-// --- Tiered accuracy ladder helpers (Phase 8) ---
+// ── Sonnet re-rank (updated for multi-angle + web context) ──────────────
 
-/** Premium / high-donation tier: Sonnet independently re-scores the same image
- *  and candidate set. Used on ambiguous calls (top confidence < 85%). */
+/** Sonnet independently re-scores the specimen using all angle photos + web
+ *  context. ALWAYS runs for premium — catches assemblages that Haiku might
+ *  call as a single mineral at high confidence. */
 async function callSonnetRerank(
   toolkitUrl: string,
   secret: string,
-  imageBase64: string,
-  mimeType: string,
+  images: AngleImage[],
   preliminaryMatches: MatchResult[],
   summary: string,
+  webContext: string,
 ): Promise<IdentificationResult | null> {
-  // Embedding-first flow: use the trimmed candidate-only system prompt
-  // instead of the full 58K-token database.
   const systemPrompt = buildCandidateSystemPrompt(preliminaryMatches);
   const matchList = preliminaryMatches.slice(0, 5)
     .map(m => `- ${m.name} (${m.confidence}%): ${m.reasoning}`)
     .join("\n");
+
+  const webContextBlock = webContext
+    ? `\n\nPublished mineralogy data:\n${webContext}\n`
+    : "";
+
   const userPrompt = `Re-evaluate this specimen photo independently. A first-pass model returned these candidates:
 
 ${matchList}
 
-Summary: ${summary}
+Summary: ${summary}${webContextBlock}
 
-Look at the photo again with fresh eyes and return your own ranked matches. You may agree, reorder, or introduce new candidates from the database — but every id must exist in the reference database. Return the same JSON shape as the first pass.`;
+Look at the photo(s) again with fresh eyes and return your own ranked matches. You may agree, reorder, or introduce new candidates from the database — but every id must exist in the reference database.
+
+IMPORTANT: Check carefully if this specimen is a multi-mineral assemblage (e.g. granite = quartz + feldspar + mica, schist = mica + quartz, gneiss, basalt). If the first-pass model called a single mineral but the specimen is actually a rock with multiple visible minerals, identify the correct rock type and note the component minerals in your reasoning.
+
+Return the same JSON shape as the first pass.`;
+
+  // Build user content with all angle photos
+  const userContent: Array<Record<string, unknown>> = [];
+  for (const img of images) {
+    userContent.push({
+      type: "image_url",
+      image_url: { url: `data:${img.mimeType};base64,${img.imageBase64}` },
+    });
+  }
+  userContent.push({ type: "text", text: userPrompt });
 
   const messages = [
     {
@@ -1669,10 +1700,7 @@ Look at the photo again with fresh eyes and return your own ranked matches. You 
     },
     {
       role: "user",
-      content: [
-        { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
-        { type: "text", text: userPrompt },
-      ],
+      content: userContent,
     },
   ];
 
@@ -1698,23 +1726,28 @@ Look at the photo again with fresh eyes and return your own ranked matches. You 
   }
 }
 
-/** Pro tier: Gemini casts a third vote only when Haiku AND Sonnet both land
- *  < 85% or disagree on the top pick. Resolves the final ranking by majority. */
+// ── Gemini third opinion (updated for multi-angle + web context) ────────
+
+/** Gemini casts a tie-breaking vote when Haiku and Sonnet disagree or both
+ *  land < 85%. Receives all angle photos + web context. */
 async function callGeminiThirdOpinion(
   toolkitUrl: string,
   secret: string,
-  imageBase64: string,
-  mimeType: string,
+  images: AngleImage[],
   haikuMatches: MatchResult[],
   sonnetMatches: MatchResult[],
   summary: string,
+  webContext: string,
 ): Promise<IdentificationResult | null> {
-  // Embedding-first flow: use the trimmed candidate-only system prompt.
-  // Combine both match sets for the candidate list.
   const allCandidates = [...haikuMatches, ...sonnetMatches];
   const systemPrompt = buildCandidateSystemPrompt(allCandidates);
   const haikuList = haikuMatches.slice(0, 5).map(m => `- ${m.name} (${m.confidence}%)`).join("\n");
   const sonnetList = sonnetMatches.slice(0, 5).map(m => `- ${m.name} (${m.confidence}%)`).join("\n");
+
+  const webContextBlock = webContext
+    ? `\n\nPublished mineralogy data:\n${webContext}\n`
+    : "";
+
   const userPrompt = `Two prior models disagreed on this specimen photo.
 
 Model A (first pass) candidates:
@@ -1723,9 +1756,19 @@ ${haikuList}
 Model B (re-rank) candidates:
 ${sonnetList}
 
-Summary: ${summary}
+Summary: ${summary}${webContextBlock}
 
-You are the tie-breaker. Look at the photo yourself and return your own ranked matches. Every id must exist in the reference database. Return the same JSON shape.`;
+You are the tie-breaker. Look at the photo(s) yourself and return your own ranked matches. Every id must exist in the reference database. Return the same JSON shape.`;
+
+  // Build user content with all angle photos
+  const userContent: Array<Record<string, unknown>> = [];
+  for (const img of images) {
+    userContent.push({
+      type: "image_url",
+      image_url: { url: `data:${img.mimeType};base64,${img.imageBase64}` },
+    });
+  }
+  userContent.push({ type: "text", text: userPrompt });
 
   const messages = [
     {
@@ -1736,10 +1779,7 @@ You are the tie-breaker. Look at the photo yourself and return your own ranked m
     },
     {
       role: "user",
-      content: [
-        { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
-        { type: "text", text: userPrompt },
-      ],
+      content: userContent,
     },
   ];
 
@@ -1765,9 +1805,8 @@ You are the tie-breaker. Look at the photo yourself and return your own ranked m
   }
 }
 
-/** Gemini assemblage analysis — detects and analyzes multi-mineral assemblages.
- *  Called when the initial identification suggests the specimen contains multiple
- *  distinct minerals (e.g. garnets in granite, epidote in basalt, druzy quartz on petrified wood). */
+// ── Assemblage analysis (kept for backward compat, not called from main flow) ──
+
 async function callGeminiAssemblageAnalysis(
   toolkitUrl: string,
   secret: string,
@@ -1782,13 +1821,6 @@ The initial identification suggests: ${topMatchName}
 Summary: ${summary}
 
 Look at the photo carefully. If this specimen is a multi-mineral assemblage (a host rock containing multiple distinct minerals visible together), analyze each component.
-
-Examples of assemblages:
-- Granite with garnet crystals
-- Basalt with epidote veins
-- Petrified wood with druzy quartz
-- Amazonite with smoky quartz
-- Quartz with chalcopyrite
 
 Return JSON in exactly this shape:
 {
@@ -1834,10 +1866,6 @@ If the specimen is NOT an assemblage (single mineral/crystal/fossil), return:
   }
 }
 
-/** Sonnet assemblage analysis — primary model for detecting and analyzing
- *  multi-mineral assemblages. Uses claude-sonnet-4.5 with the same prompt as
- *  the Gemini pass. If the top component confidence is below 88%, the caller
- *  runs [callGeminiAssemblageAnalysis] as a second pass. */
 async function callSonnetAssemblageAnalysis(
   toolkitUrl: string,
   secret: string,
@@ -1852,13 +1880,6 @@ The initial identification suggests: ${topMatchName}
 Summary: ${summary}
 
 Look at the photo carefully. If this specimen is a multi-mineral assemblage (a host rock containing multiple distinct minerals visible together), analyze each component.
-
-Examples of assemblages:
-- Granite with garnet crystals
-- Basalt with epidote veins
-- Petrified wood with druzy quartz
-- Amazonite with smoky quartz
-- Quartz with chalcopyrite
 
 Return JSON in exactly this shape:
 {
@@ -1904,7 +1925,6 @@ If the specimen is NOT an assemblage (single mineral/crystal/fossil), return:
   }
 }
 
-/** Parse the assemblage analysis response from Gemini or Sonnet. */
 function parseAssemblageResponse(content: string): AssemblageResult | null {
   let jsonStr = content.trim();
   const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
@@ -1936,8 +1956,8 @@ function parseAssemblageResponse(content: string): AssemblageResult | null {
   }
 }
 
-/** Merge two ranked match lists into a consensus ranking. Picks are weighted by
- *  confidence; a specimen that both models agree on rises to the top. */
+// ── Ranking merge helpers ───────────────────────────────────────────────
+
 function mergeRankings(a: MatchResult[], b: MatchResult[]): { matches: MatchResult[]; summary: string } {
   const scores = new Map<string, { match: MatchResult; score: number }>();
   for (const m of a) {
@@ -1962,7 +1982,6 @@ function mergeRankings(a: MatchResult[], b: MatchResult[]): { matches: MatchResu
   return { matches, summary: b[0]?.reasoning ? `Consensus of two models. ${b[0].reasoning}` : "" };
 }
 
-/** Merge three ranked match lists (Haiku, Sonnet, Gemini) by majority vote. */
 function mergeRankingsThreeWay(
   a: MatchResult[],
   b: MatchResult[],
@@ -1996,6 +2015,8 @@ function mergeRankingsThreeWay(
   return { matches, summary: `Three-model consensus. ${c[0]?.reasoning ?? ""}` };
 }
 
+// ── Clarification questions ─────────────────────────────────────────────
+
 async function generateClarificationQuestions(
   toolkitUrl: string,
   secret: string,
@@ -2014,7 +2035,7 @@ ${matchDetails}
 
 Summary: ${summary}
 
-The top match confidence is below 85%, meaning there's ambiguity. Generate 3-4 short questions that will help disambiguate between these candidates. Each question should have 3-5 multiple-choice options.
+The top match confidence is below 60%, meaning there's significant ambiguity. Generate 3-4 short questions that will help disambiguate between these candidates. Each question should have 3-5 multiple-choice options.
 
 Focus on properties the user can easily observe or test:
 - Visual properties (color under different light, banding patterns, crystal shapes)
@@ -2077,7 +2098,6 @@ Return ONLY valid JSON — no markdown, no extra text:
       return getDefaultQuestions(matches);
     }
 
-    // Validate each question
     return parsed.questions
       .filter(q => q.id && q.question && Array.isArray(q.options) && q.options.length >= 2)
       .slice(0, 4);
@@ -2088,12 +2108,10 @@ Return ONLY valid JSON — no markdown, no extra text:
 }
 
 function getDefaultQuestions(matches: MatchResult[]): ClarificationQuestion[] {
-  // Build questions based on the actual candidates' properties
   const specs = matches.slice(0, 4).map(m => SPECIMEN_DB.find(s => s.id === m.id)).filter(Boolean) as SpecimenEntry[];
 
   const questions: ClarificationQuestion[] = [];
 
-  // Color question
   const allColors = new Set<string>();
   specs.forEach(s => {
     if (s.colors) s.colors.split(",").forEach(c => allColors.add(c.trim().toLowerCase()));
@@ -2106,7 +2124,6 @@ function getDefaultQuestions(matches: MatchResult[]): ClarificationQuestion[] {
     });
   }
 
-  // Luster question
   const lusters = new Set(specs.map(s => s.luster).filter(Boolean));
   if (lusters.size > 1) {
     questions.push({
@@ -2116,7 +2133,6 @@ function getDefaultQuestions(matches: MatchResult[]): ClarificationQuestion[] {
     });
   }
 
-  // Hardness question
   questions.push({
     id: "hardness",
     question: "Can you scratch it with your fingernail, a copper penny, or a steel knife?",
@@ -2129,7 +2145,6 @@ function getDefaultQuestions(matches: MatchResult[]): ClarificationQuestion[] {
     ],
   });
 
-  // Context question
   questions.push({
     id: "context",
     question: "Where did you find this specimen?",
@@ -2145,6 +2160,12 @@ function getDefaultQuestions(matches: MatchResult[]): ClarificationQuestion[] {
   return questions.slice(0, 4);
 }
 
+// ── Web search ──────────────────────────────────────────────────────────
+
+/** Search authoritative mineralogy sites for reference data. Used both for
+ *  feeding context into the visual comparison (via fetchMineralogyContext)
+ *  and for returning web references to the user. Now constrained to
+ *  authoritative domains. */
 async function searchWebReferences(
   toolkitUrl: string,
   secret: string,
@@ -2171,6 +2192,16 @@ async function searchWebReferences(
         query,
         numResults: 4,
         useAutoprompt: true,
+        includeDomains: [
+          "mindat.org",
+          "webmineral.com",
+          "minerals.net",
+          "geology.com",
+          "handbookofmineralogy.org",
+          "rruff.info",
+          "minsocam.org",
+          "wikipedia.org",
+        ],
         contents: {
           text: { maxCharacters: 500 },
           highlights: { numSentences: 2, highlightsPerUrl: 1 },
@@ -2199,6 +2230,102 @@ async function searchWebReferences(
   }
 }
 
+/** Fetch mineralogy context from authoritative sites to feed into the visual
+ *  comparison prompt. Returns a formatted text block (~500-800 tokens) with
+ *  key properties for the top 3 candidates, plus the web references for the
+ *  response. Runs BEFORE the visual comparison so the data can be used as
+ *  additional context. */
+async function fetchMineralogyContext(
+  toolkitUrl: string,
+  secret: string,
+  matches: MatchResult[],
+  combinedDescription: string,
+): Promise<{ text: string; references: WebReference[] }> {
+  if (matches.length === 0) return { text: "", references: [] };
+
+  // Build search queries for the top 2-3 candidates, incorporating the
+  // combined multi-angle description for more targeted results.
+  const topCandidates = matches.slice(0, 3);
+  const candidateNames = topCandidates.map(m => m.name).join(" vs ");
+
+  // Extract key keywords from the combined description for the search query
+  const descKeywords = combinedDescription
+    .split(/\s+/)
+    .filter(w => w.length > 4)
+    .slice(0, 8)
+    .join(" ");
+
+  const query = descKeywords
+    ? `${candidateNames} ${descKeywords} mineralogy hardness crystal system luster distinguishing features`
+    : `${candidateNames} mineral identification properties hardness luster crystal system`;
+
+  try {
+    const exaUrl = `${toolkitUrl}/v2/exa/search`;
+    const response = await fetch(exaUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${secret}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query,
+        numResults: 6,
+        useAutoprompt: true,
+        includeDomains: [
+          "mindat.org",
+          "webmineral.com",
+          "minerals.net",
+          "geology.com",
+          "handbookofmineralogy.org",
+          "rruff.info",
+          "minsocam.org",
+          "wikipedia.org",
+        ],
+        contents: {
+          text: { maxCharacters: 500 },
+          highlights: { numSentences: 2, highlightsPerUrl: 1 },
+        },
+        type: "neural",
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("Mineralogy context search error:", response.status);
+      return { text: "", references: [] };
+    }
+
+    const data = await response.json() as ExaSearchResponse;
+    if (!data.results || !Array.isArray(data.results)) return { text: "", references: [] };
+
+    // Build formatted text block for the visual comparison prompt
+    // Format: "Candidate: [name] — [key properties from web sources]"
+    // Keep to ~500-800 tokens total (top 3 candidates × ~200-250 tokens each)
+    const contextLines: string[] = [];
+    for (let i = 0; i < Math.min(data.results.length, 6); i++) {
+      const r = data.results[i];
+      const title = r.title ?? "";
+      const text = r.text ?? "";
+      const source = extractDomain(r.url ?? "");
+      // Truncate each entry to keep the total context manageable
+      const snippet = text.slice(0, 300);
+      contextLines.push(`[${title}] (${source}): ${snippet}`);
+    }
+
+    const text = contextLines.join("\n");
+    const references = data.results.slice(0, 4).map((r, i): WebReference => ({
+      title: r.title ?? `Reference ${i + 1}`,
+      url: r.url ?? "",
+      snippet: r.text?.slice(0, 300) ?? (r.highlight ? r.highlight[0] : ""),
+      source: extractDomain(r.url ?? ""),
+    }));
+
+    return { text, references };
+  } catch (err) {
+    console.error("Mineralogy context fetch error:", String(err));
+    return { text: "", references: [] };
+  }
+}
+
 function extractDomain(url: string): string {
   try {
     const u = new URL(url);
@@ -2207,6 +2334,8 @@ function extractDomain(url: string): string {
     return "";
   }
 }
+
+// ── Prompt builders ─────────────────────────────────────────────────────
 
 function buildUserPrompt(): string {
   return `Analyze this specimen photograph carefully. I need you to identify what rock, mineral, crystal, gem, or fossil is shown.
@@ -2292,7 +2421,6 @@ Return ONLY valid JSON — no markdown, no extra text:
 }
 
 function buildSystemPrompt(): string {
-  // Group specimens by category for more organized reference
   const minerals = SPECIMEN_DB.filter(s => 
     s.category.toLowerCase().includes("mineral") || 
     s.category.toLowerCase().includes("silicate") ||
@@ -2343,7 +2471,6 @@ function buildSystemPrompt(): string {
     s.category.toLowerCase().includes("period")
   );
 
-  // Build compact specimen lists with all key visual properties
   const formatSpecimen = (s: SpecimenEntry): string => {
     const parts = [`- ${s.id}: "${s.name}" [${s.category}]`];
     if (s.tagline) parts.push(s.tagline);
@@ -2404,12 +2531,6 @@ ${rockList}
 ${fossilList}`;
 }
 
-/** Candidate-only system prompt for the embedding-first flow. Instead of
- *  dumping the full 794-specimen database (58K tokens) into context, this
- *  includes ONLY the narrowed candidate set's metadata — enough for the
- *  rerank / tie-breaker models to reason about the candidates without the
- *  massive prompt. The diagnostic-features guide and confidence calibration
- *  are retained; only the specimen list is trimmed. */
 function buildCandidateSystemPrompt(candidates: MatchResult[]): string {
   const seen = new Set<string>();
   const rows: string[] = [];
@@ -2462,7 +2583,7 @@ A pre-filter step has narrowed the database to these ${rows.length} candidates. 
 ${candidateList}`;
 }
 
-// --- Types ---
+// ── Types ───────────────────────────────────────────────────────────────
 
 interface MatchResult {
   id: string;
@@ -2508,16 +2629,9 @@ interface IdentifyResponse {
   clarificationQuestions: ClarificationQuestion[];
   webReferences: WebReference[];
   error?: string;
-  /** Which AI models contributed to this result (Phase 8 accuracy ladder). */
   modelsUsed?: string[];
-  /** Whether the visual reference comparison step was used. */
   visualReferenceUsed?: boolean;
-  /** Assemblage analysis result — present when the specimen is a multi-mineral assemblage. */
   assemblage?: AssemblageResult;
-  /** Artifact-only: true when the full pipeline (database + Haiku + Sonnet +
-   *  Gemini + web search) still can't produce a reasonably confident match
-   *  (top < 55%). The app shows a notification that the object could not be
-   *  fully distinguished between an actual artifact and a similar-shaped rock. */
   uncertainArtifact?: boolean;
 }
 
@@ -2532,7 +2646,7 @@ interface ExaSearchResponse {
   results?: ExaSearchResult[];
 }
 
-// --- Parsing ---
+// ── Parsing ─────────────────────────────────────────────────────────────
 
 function parseIdentificationResponse(content: string): IdentificationResult {
   let jsonStr = content.trim();

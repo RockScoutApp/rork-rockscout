@@ -12,17 +12,28 @@ import io.ktor.http.contentType
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
+/** A single angle photo captured by the user. Used in the 3-angle capture
+ *  flow — the user takes 1-3 photos (top, side, bottom) with optional
+ *  per-angle descriptions. */
 @Serializable
-data class IdentifyRequest(
+data class AngleImage(
     val imageBase64: String,
     val mimeType: String = "image/jpeg",
-    /** Caller's entitlement tier — drives the accuracy ladder on the backend.
-     *  "free" = Haiku only, "premium" = Haiku + Sonnet re-rank on ambiguous,
-     *  "pro" = Haiku + Sonnet + Gemini third opinion on the hardest cases. */
+    val angle: String,
+    val description: String = "",
+)
+
+@Serializable
+data class IdentifyRequest(
+    /** Legacy single-image field — kept for backward compatibility.
+     *  If `images` is non-empty, this is ignored by the backend. */
+    val imageBase64: String = "",
+    val mimeType: String = "image/jpeg",
     val entitlement: String = "free",
-    /** Search mode: "rocks" (default — current behavior, artifacts excluded)
-     *  or "artifacts" (artifacts prioritized in the candidate set). */
     val searchMode: String = "rocks",
+    /** Multi-angle images array — 1-3 photos with per-angle descriptions.
+     *  When non-empty, the backend uses this instead of `imageBase64`. */
+    val images: List<AngleImage> = emptyList(),
 )
 
 @Serializable
@@ -70,14 +81,8 @@ data class IdentifyResponse(
     val clarificationQuestions: List<ClarificationQuestion> = emptyList(),
     val webReferences: List<WebReference> = emptyList(),
     val error: String? = null,
-    /** Which AI models contributed to this result (Phase 8 accuracy ladder). */
     val modelsUsed: List<String> = emptyList(),
-    /** Assemblage analysis — present when the specimen is a multi-mineral assemblage. */
     val assemblage: AssemblageResult? = null,
-    /** Artifact-only: true when the full pipeline (database + Haiku + Sonnet +
-     *  Gemini + web search) still can't produce a reasonably confident match.
-     *  The app shows a notification that the object could not be fully
-     *  distinguished between an actual artifact and a similar-shaped rock. */
     val uncertainArtifact: Boolean = false,
 )
 
@@ -89,11 +94,15 @@ data class ClarifyAnswer(
 
 @Serializable
 data class ClarifyRequest(
-    val imageBase64: String,
+    /** Legacy single-image field — kept for backward compatibility. */
+    val imageBase64: String = "",
     val mimeType: String = "image/jpeg",
     val answers: Map<String, String>,
     val preliminaryMatches: List<IdentifyMatch>,
     val summary: String,
+    /** Multi-angle images for the clarify re-rank — allows the backend
+     *  to re-examine all viewpoints with the user's answers. */
+    val images: List<AngleImage> = emptyList(),
 )
 
 @Serializable
@@ -104,17 +113,14 @@ data class ArtifactDetectionResult(
 )
 
 /**
- * Calls the Cloudflare Worker backend to identify a specimen from a base64-encoded photo.
- * Uses the Rork AI proxy with Claude Sonnet 5 for vision analysis.
- * When top confidence is below 85%, the backend returns clarification questions
- * and web search references for cross-referencing.
+ * Calls the Cloudflare Worker backend to identify a specimen from photos.
+ * Supports the 3-angle capture flow: the client sends 1-3 photos (top,
+ * side, bottom) with optional per-angle descriptions.
  */
 object IdentifyApi {
-    // The backend URL — resolve from Config (auto-generated) with a baked fallback.
     private val BASE_URL: String =
         BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", BuildSecrets.RORK_FUNCTIONS_URL)
             .removeSuffix("/")
-    // App key for backend auth — sent as X-App-Key header.
     private val APP_KEY: String =
         BuildSecrets.resolve("EXPO_PUBLIC_RORK_APP_KEY", BuildSecrets.RORK_APP_KEY)
 
@@ -126,15 +132,9 @@ object IdentifyApi {
 
     /**
      * Dedicated HTTP client for identification calls. The backend may chain
-     * up to 6 sequential AI model calls (Haiku + Sonnet + Gemini + questions
-     * + web search + assemblage) for premium/pro users, which can take 60-90
-     * seconds. The shared NetworkClient has a 30s request timeout that is too
-     * short for these multi-model calls.
-     *
-     * Configuration:
-     * - 120s request + socket timeout (allows multi-model chains to complete)
-     * - 2 retries on IOException only (network drops), NOT on 5xx (retrying a
-     *   failed AI identification wastes 2+ minutes and will likely fail again)
+     * up to 5 sequential AI model calls (Haiku describe+detect + Haiku visual
+     * + Sonnet re-rank + Gemini third opinion + clarification) for premium
+     * users, which can take 45-90 seconds.
      */
     private val identifyClient = HttpClient {
         install(HttpTimeout) {
@@ -152,6 +152,48 @@ object IdentifyApi {
         }
     }
 
+    /**
+     * Multi-angle identify call. Sends 1-3 photos with per-angle descriptions
+     * to the backend. The backend runs the full pipeline: combined describe+
+     * artifact detection → embedding search → web search → Haiku visual →
+     * Sonnet re-rank (premium) → Gemini third opinion (on disagreement).
+     *
+     * @param angleImages List of 1-3 AngleImage objects (top/side/bottom)
+     * @param entitlement "free" or "premium"
+     * @param searchMode "rocks" or "artifacts"
+     */
+    suspend fun identifyMultiAngle(
+        angleImages: List<AngleImage>,
+        entitlement: String = "free",
+        searchMode: String = "rocks",
+    ): IdentifyResponse {
+        val response = identifyClient.post("$BASE_URL/identify") {
+            contentType(ContentType.Application.Json)
+            if (APP_KEY.isNotBlank()) header("X-App-Key", APP_KEY)
+            setBody(
+                json.encodeToString(
+                    IdentifyRequest.serializer(),
+                    IdentifyRequest(
+                        images = angleImages,
+                        entitlement = entitlement,
+                        searchMode = searchMode,
+                    ),
+                )
+            )
+        }
+
+        val body = response.body<String>()
+        return try {
+            json.decodeFromString(IdentifyResponse.serializer(), body)
+        } catch (e: Exception) {
+            IdentifyResponse(error = "Failed to parse identification results: ${e.message}")
+        }
+    }
+
+    /**
+     * Legacy single-image identify call — kept for backward compatibility.
+     * Prefer [identifyMultiAngle] for the 3-angle capture flow.
+     */
     suspend fun identify(
         imageBase64: String,
         mimeType: String = "image/jpeg",
@@ -183,8 +225,42 @@ object IdentifyApi {
     }
 
     /**
-     * Sends user answers to clarification questions along with the original photo
-     * and preliminary matches to get refined identification results.
+     * Sends user answers to clarification questions along with the original
+     * angle photos and preliminary matches to get refined identification
+     * results. Now supports multi-angle images.
+     */
+    suspend fun clarify(
+        angleImages: List<AngleImage>,
+        answers: Map<String, String>,
+        preliminaryMatches: List<IdentifyMatch>,
+        summary: String,
+    ): IdentifyResponse {
+        val response = identifyClient.post("$BASE_URL/identify/clarify") {
+            contentType(ContentType.Application.Json)
+            if (APP_KEY.isNotBlank()) header("X-App-Key", APP_KEY)
+            setBody(
+                json.encodeToString(
+                    ClarifyRequest.serializer(),
+                    ClarifyRequest(
+                        images = angleImages,
+                        answers = answers,
+                        preliminaryMatches = preliminaryMatches,
+                        summary = summary,
+                    ),
+                )
+            )
+        }
+
+        val body = response.body<String>()
+        return try {
+            json.decodeFromString(IdentifyResponse.serializer(), body)
+        } catch (e: Exception) {
+            IdentifyResponse(error = "Failed to parse clarification results: ${e.message}")
+        }
+    }
+
+    /**
+     * Legacy single-image clarify call — kept for backward compatibility.
      */
     suspend fun clarify(
         imageBase64: String,
@@ -220,9 +296,9 @@ object IdentifyApi {
 
     /**
      * Lightweight artifact-detection pre-pass (Haiku-only, fast, cheap).
-     * Returns whether the photo likely contains an artifact (knapped stone tool,
-     * point, bead, or other artifact) and a confidence score.
-     * Consumes NO credit — it's a cheap gate, not a full ID.
+     * DEPRECATED — artifact detection is now handled internally by the main
+     * /identify endpoint via the combined describe+detect Haiku call.
+     * Kept for backward compatibility but no longer called from the UI.
      */
     suspend fun detectArtifact(imageBase64: String, mimeType: String = "image/jpeg"): ArtifactDetectionResult {
         return try {
@@ -244,7 +320,6 @@ object IdentifyApi {
             val body = response.body<String>()
             json.decodeFromString(ArtifactDetectionResult.serializer(), body)
         } catch (e: Exception) {
-            // Fail open — if the pre-pass fails, skip straight to normal ID
             ArtifactDetectionResult(isArtifact = false, confidence = 0)
         }
     }
