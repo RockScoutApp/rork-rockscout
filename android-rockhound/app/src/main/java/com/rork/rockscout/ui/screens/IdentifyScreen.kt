@@ -62,6 +62,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Museum
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -1464,6 +1465,47 @@ fun IdentifyScreen(navController: NavController) {
                         items = GearGuide.confirmIdGear,
                         accent = Citrine,
                     )
+                }
+                // Always-available Ask an Expert card for artifact IDs — lets
+                // the user contact a museum even when the AI is confident, in
+                // case they have something rare or historically significant.
+                item {
+                    DarkCard(modifier = Modifier.fillMaxWidth(), accent = Citrine) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Filled.Museum,
+                                contentDescription = null,
+                                tint = Citrine,
+                                modifier = Modifier.size(22.dp),
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    "Want to confirm with a museum?",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    "If you think you may have something rare or historically significant, reach out to a nearby museum or cultural center. They can help verify your find with expert eyes.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = DarkTextLow,
+                                    lineHeight = 18.sp,
+                                )
+                                Spacer(Modifier.height(10.dp))
+                                SculptedButton(
+                                    text = "Ask an Expert",
+                                    onClick = { showMuseumFinder = true },
+                                    accent = Citrine,
+                                    containerColor = Citrine,
+                                    textColor = Color.Black,
+                                    icon = Icons.Filled.Museum,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
