@@ -253,6 +253,20 @@ object MockDataSeeder {
         val created_at: String,
     )
 
+    /** A ping shared with this user by someone else via Messenger.
+     *  Stored locally when the user taps a rockscout://ping deep link.
+     *  Shown on the map in a distinct color with a directions button. */
+    @Serializable
+    data class LocalSharedPing(
+        val id: String,
+        val lat: Double,
+        val lng: Double,
+        val label: String,
+        val sender_name: String,
+        val received_at: String,
+        val expires_at: String,
+    )
+
     @Serializable
     data class LocalPublicTradeListing(
         val id: String,
@@ -307,6 +321,7 @@ object MockDataSeeder {
         ensureTable(LocalDataStore.KEY_TRADE_INTERESTS, emptyList<LocalTradeInterest>())
         ensureTable(LocalDataStore.KEY_USER_REPORTS, emptyList<LocalUserReport>())
         ensureTable(LocalDataStore.KEY_PINGS, emptyList<LocalPing>())
+        ensureTable(LocalDataStore.KEY_SHARED_PINGS, emptyList<LocalSharedPing>())
         ensureTable(LocalDataStore.KEY_PUBLIC_TRADE_LISTINGS, emptyList<LocalPublicTradeListing>())
         ensureTable(LocalDataStore.KEY_LIST_LIKES, emptyList<LocalListLike>())
         ensureTable(LocalDataStore.KEY_IMAGE_REVIEWS, emptyList<LocalImageReview>())

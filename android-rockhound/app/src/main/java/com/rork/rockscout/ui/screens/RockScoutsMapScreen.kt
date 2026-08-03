@@ -73,6 +73,7 @@ import com.rork.rockscout.ui.theme.Ink
 import com.rork.rockscout.ui.theme.Success
 import com.rork.rockscout.ui.theme.Warning
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Directions
 import com.rork.rockscout.data.SessionStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
@@ -132,6 +133,7 @@ fun RockScoutsMapScreen(navController: NavController) {
     }
 
     val pings by social.pings.collectAsStateWithLifecycle()
+    val sharedPings by social.sharedPings.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -140,13 +142,17 @@ fun RockScoutsMapScreen(navController: NavController) {
     var showSafetyNote by remember { mutableStateOf(true) }
     var showPingConfirmDialog by remember { mutableStateOf(false) }
     var showDownloadSheet by remember { mutableStateOf(false) }
+    var showShareConfirmDialog by remember { mutableStateOf(false) }
+    var selectedSharedPing by remember { mutableStateOf<SocialRepository.SharedPingRow?>(null) }
 
     BackHandler(enabled = showSafetyNote) { showSafetyNote = false }
 
-    // Load my pings on open. Pings are private — only mine show here.
+    // Load my pings and shared pings on open. Pings are private — only mine show here.
+    // Shared pings are ones others sent me via Messenger deep links.
     LaunchedEffect(isSignedIn, profile.clubEnabled) {
         if (isSignedIn && profile.clubEnabled) {
             social.loadVisiblePings()
+            social.loadSharedPings()
         }
     }
 
@@ -155,6 +161,7 @@ fun RockScoutsMapScreen(navController: NavController) {
         while (profile.clubEnabled) {
             kotlinx.coroutines.delay(30_000)
             social.loadVisiblePings()
+            social.loadSharedPings()
         }
     }
 
@@ -164,14 +171,16 @@ fun RockScoutsMapScreen(navController: NavController) {
         myPingId = pings.firstOrNull { it.user_id == auth.currentUserId }?.id
     }
 
-    // Render my ping marker on the map. Only my own ping is shown —
-    // pings are private, nobody else's appears here.
-    LaunchedEffect(pings, mapView) {
+    // Render my ping marker + shared pings on the map. Only my own ping
+    // is shown by default — shared pings (received via Messenger) appear
+    // in a different color with a directions button.
+    LaunchedEffect(pings, sharedPings, mapView) {
         val mv = mapView ?: return@LaunchedEffect
         try {
             withContext(Dispatchers.IO) {
                 if (!isActive) return@withContext
                 mv.overlays.removeAll { it is Marker && it.id?.startsWith("ping_") == true }
+                // My ping — citrine/Success color
                 pings.forEach { ping ->
                     if (!isActive) return@withContext
                     val marker = PingMarker(
@@ -185,6 +194,24 @@ fun RockScoutsMapScreen(navController: NavController) {
                         onOpenThread = { {} },
                     )
                     marker.id = "ping_${ping.id}"
+                    mv.overlays.add(marker)
+                }
+                // Shared pings — Aqua color, tappable to show directions
+                sharedPings.forEach { sp ->
+                    if (!isActive) return@withContext
+                    val marker = PingMarker(
+                        mv,
+                        sp.lat,
+                        sp.lng,
+                        sp.label,
+                        isMine = false,
+                        displayName = sp.senderName,
+                        avatarEmoji = "\uD83D\uDC65",
+                        onOpenThread = {
+                            selectedSharedPing = sp
+                        },
+                    )
+                    marker.id = "ping_shared_${sp.id}"
                     mv.overlays.add(marker)
                 }
                 if (!isActive) return@withContext
@@ -443,12 +470,10 @@ fun RockScoutsMapScreen(navController: NavController) {
                         }
                     }
                     Spacer(Modifier.height(10.dp))
-                    // Share button — opens Android share sheet with maps link
+                    // Share button — opens confirmation dialog, then Messenger
                     SculptedButton(
                         text = "Share ping location",
-                        onClick = {
-                            SafeLinkOpener.sharePingLocation(context, myPing.lat, myPing.lng, myPing.label)
-                        },
+                        onClick = { showShareConfirmDialog = true },
                         modifier = Modifier.fillMaxWidth(),
                         accent = Citrine,
                         containerColor = Citrine,
@@ -518,6 +543,125 @@ fun RockScoutsMapScreen(navController: NavController) {
                 lat = lat,
                 lng = lng,
                 onDismiss = { showDownloadSheet = false },
+            )
+        }
+
+        // Share confirmation dialog — confirms before opening Messenger
+        if (showShareConfirmDialog && myPing != null) {
+            val ping = myPing!!
+            AlertDialog(
+                onDismissRequest = { showShareConfirmDialog = false },
+                containerColor = Color(0xFF1C1A14),
+                titleContentColor = DarkTextHigh,
+                textContentColor = DarkTextHigh,
+                title = { Text("Share via Messenger?") },
+                text = {
+                    Column {
+                        Text(
+                            "This will open Messenger so you can pick a conversation to send your ping to. Make sure you select the right conversation — your exact location will be shared with that person.",
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Lat: %.5f  ·  Lng: %.5f".format(ping.lat, ping.lng),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = DarkTextMid,
+                        )
+                    }
+                },
+                confirmButton = {
+                    SculptedButton(
+                        text = "Open Messenger",
+                        onClick = {
+                            showShareConfirmDialog = false
+                            SafeLinkOpener.sharePingLocation(
+                                context,
+                                ping.lat,
+                                ping.lng,
+                                ping.label,
+                                profile.name,
+                            )
+                        },
+                        accent = Citrine,
+                        containerColor = Citrine,
+                        textColor = Ink,
+                        icon = Icons.Filled.Share,
+                    )
+                },
+                dismissButton = {
+                    SculptedOutlinedButton(
+                        text = "Cancel",
+                        onClick = { showShareConfirmDialog = false },
+                        accent = Aqua,
+                        textColor = DarkTextHigh,
+                    )
+                },
+            )
+        }
+
+        // Shared ping directions dialog — shows when tapping a shared ping marker
+        if (selectedSharedPing != null) {
+            val sp = selectedSharedPing!!
+            AlertDialog(
+                onDismissRequest = { selectedSharedPing = null },
+                containerColor = Color(0xFF1C1A14),
+                titleContentColor = DarkTextHigh,
+                textContentColor = DarkTextHigh,
+                title = { Text("${sp.senderName}'s ping") },
+                text = {
+                    Column {
+                        Text(sp.label)
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Lat: %.5f  ·  Lng: %.5f".format(sp.lat, sp.lng),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = DarkTextMid,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Received ${sp.receivedAt.substringBefore("T")} · expires in 24h",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = DarkTextMid,
+                        )
+                    }
+                },
+                confirmButton = {
+                    SculptedButton(
+                        text = "Get directions",
+                        onClick = {
+                            val origin = current
+                            SafeLinkOpener.openPointToPointDirections(
+                                context,
+                                origin = Pair(origin.first, origin.second),
+                                destination = Pair(sp.lat, sp.lng),
+                            )
+                        },
+                        accent = Aqua,
+                        containerColor = Aqua,
+                        textColor = Ink,
+                        icon = Icons.Filled.Directions,
+                    )
+                },
+                dismissButton = {
+                    Row {
+                        SculptedOutlinedButton(
+                            text = "Remove",
+                            onClick = {
+                                val id = sp.id
+                                selectedSharedPing = null
+                                scope.launch { social.removeSharedPing(id) }
+                            },
+                            accent = Warning,
+                            textColor = DarkTextHigh,
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        SculptedOutlinedButton(
+                            text = "Close",
+                            onClick = { selectedSharedPing = null },
+                            accent = Aqua,
+                            textColor = DarkTextHigh,
+                        )
+                    }
+                },
             )
         }
 

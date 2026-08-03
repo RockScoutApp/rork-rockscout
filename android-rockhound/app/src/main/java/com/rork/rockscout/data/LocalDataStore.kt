@@ -74,6 +74,7 @@ object LocalDataStore {
     const val KEY_TRADE_INTERESTS = "trade_interests"
     const val KEY_USER_REPORTS = "user_reports"
     const val KEY_PINGS = "pings"
+    const val KEY_SHARED_PINGS = "shared_pings"
     const val KEY_PUBLIC_TRADE_LISTINGS = "public_trade_listings"
     const val KEY_IMAGE_REVIEWS = "image_reviews"
     const val KEY_LIST_LIKES = "list_likes"

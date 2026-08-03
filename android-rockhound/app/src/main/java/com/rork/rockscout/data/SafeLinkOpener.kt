@@ -172,21 +172,47 @@ object SafeLinkOpener {
     }
 
     /**
-     * Share a ping location via the Android share sheet. Opens a chooser
-     * with a pre-filled message containing a Google Maps link to the
-     * ping coordinates. The user picks Messenger (or any app) to send it
-     * privately to whoever they choose.
+     * Share a ping location via Messenger. Opens the Android share sheet
+     * with Messenger as the primary target. The message contains a
+     * rockscout://ping deep link so the recipient's RockScout app can
+     * open it directly on their ping map, plus a fallback Google Maps
+     * link for users who don't have RockScout installed.
      */
-    fun sharePingLocation(context: Context, lat: Double, lng: Double, label: String) {
+    fun sharePingLocation(context: Context, lat: Double, lng: Double, label: String, senderName: String) {
+        val deepLink = "rockscout://ping/$lat,$lng?label=${Uri.encode(label)}&from=${Uri.encode(senderName)}"
         val mapsUrl = "https://www.google.com/maps?q=$lat,$lng"
-        val shareText = "My RockScout ping: $label\nMaps: $mapsUrl"
+        val shareText = "My RockScout ping: $label\nOpen in RockScout: $deepLink\nMaps: $mapsUrl"
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_SUBJECT, "RockScout ping location")
             putExtra(Intent.EXTRA_TEXT, shareText)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
-        openShareChooser(context, shareIntent, "Share ping via…")
+        // Try Messenger directly first, then fall back to the generic share sheet.
+        val messengerIntent = Intent(shareIntent).apply {
+            setPackage("com.facebook.orca")
+        }
+        if (canHandle(context, messengerIntent)) {
+            runCatching { context.startActivity(messengerIntent) }
+                .onFailure {
+                    Log.w(TAG, "Messenger launch failed: ${it.message}")
+                    openShareChooser(context, shareIntent, "Share ping via…")
+                }
+        } else {
+            // Messenger not installed — try Messenger Lite, then generic chooser.
+            val messengerLiteIntent = Intent(shareIntent).apply {
+                setPackage("com.facebook.mlite")
+            }
+            if (canHandle(context, messengerLiteIntent)) {
+                runCatching { context.startActivity(messengerLiteIntent) }
+                    .onFailure {
+                        Log.w(TAG, "Messenger Lite launch failed: ${it.message}")
+                        openShareChooser(context, shareIntent, "Share ping via…")
+                    }
+            } else {
+                openShareChooser(context, shareIntent, "Share ping via…")
+            }
+        }
     }
 
     /**

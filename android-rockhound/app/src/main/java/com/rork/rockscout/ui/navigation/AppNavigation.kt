@@ -83,6 +83,8 @@ import com.rork.rockscout.ui.screens.RockScoutsMapScreen
 import com.rork.rockscout.data.AuthRepository
 import com.rork.rockscout.data.ReferralRepository
 import com.rork.rockscout.data.ReportRepository
+import com.rork.rockscout.data.SocialRepository
+import kotlinx.coroutines.launch
 import com.rork.rockscout.ui.components.AccountDeletedPopup
 import com.rork.rockscout.ui.components.NightModeOverlay
 import com.rork.rockscout.ui.components.ReportWarningDialog
@@ -353,6 +355,28 @@ private fun handleDeepLink(uri: Uri, navController: NavController) {
                     if (lat != null && lng != null) {
                         val name = uri.getQueryParameter("name") ?: ""
                         navController.navigate(Routes.sharedSpot(lat, lng, name))
+                    }
+                }
+            }
+        }
+        "ping" -> {
+            // Format: rockscout://ping/<lat>,<lng>?label=<encoded>&from=<sender>
+            // Stores a shared ping so it appears on the ping map in a
+            // distinct color with a directions button.
+            val coordSegment = segments.firstOrNull()
+            if (coordSegment != null) {
+                val parts = coordSegment.split(',')
+                if (parts.size == 2) {
+                    val lat = parts[0].toDoubleOrNull()
+                    val lng = parts[1].toDoubleOrNull()
+                    if (lat != null && lng != null) {
+                        val label = uri.getQueryParameter("label") ?: "Shared ping"
+                        val from = uri.getQueryParameter("from") ?: "A fellow hunter"
+                        // Store the shared ping asynchronously, then navigate to the map.
+                        kotlinx.coroutines.MainScope().launch {
+                            SocialRepository.instance.addSharedPing(lat, lng, label, from)
+                        }
+                        navController.navigate(Routes.ROCKSCOUTS_MAP)
                     }
                 }
             }

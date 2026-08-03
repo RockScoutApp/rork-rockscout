@@ -608,6 +608,82 @@ class SocialRepository private constructor() {
     private val _pings = MutableStateFlow<List<PingRow>>(emptyList())
     val pings: StateFlow<List<PingRow>> = _pings.asStateFlow()
 
+    // ---- Shared pings (received from others via Messenger) ---------------
+    @Serializable
+    data class SharedPingRow(
+        val id: String,
+        val lat: Double,
+        val lng: Double,
+        val label: String,
+        val senderName: String,
+        val receivedAt: String,
+        val expiresAt: String,
+    )
+
+    private val _sharedPings = MutableStateFlow<List<SharedPingRow>>(emptyList())
+    val sharedPings: StateFlow<List<SharedPingRow>> = _sharedPings.asStateFlow()
+
+    /** Add a shared ping received via a rockscout://ping deep link.
+     *  Deduplicates by lat+lng+senderName — tapping the same link twice
+     *  doesn't create duplicate markers. Expires after 24 hours. */
+    suspend fun addSharedPing(lat: Double, lng: Double, label: String, senderName: String): Result<Unit> {
+        return runCatching {
+            val now = java.time.OffsetDateTime.now()
+            val expires = now.plusHours(24)
+            val rows = LocalDataStore.getTable<MockDataSeeder.LocalSharedPing>(LocalDataStore.KEY_SHARED_PINGS).toMutableList()
+            // Deduplicate — skip if same coords + sender already exist and not expired.
+            val exists = rows.any {
+                it.lat == lat && it.lng == lng && it.sender_name == senderName &&
+                runCatching { java.time.OffsetDateTime.parse(it.expires_at).isAfter(now) }.getOrDefault(false)
+            }
+            if (!exists) {
+                rows.add(MockDataSeeder.LocalSharedPing(
+                    id = "shared-ping-" + UUID.randomUUID(),
+                    lat = lat,
+                    lng = lng,
+                    label = label,
+                    sender_name = senderName,
+                    received_at = now.toString(),
+                    expires_at = expires.toString(),
+                ))
+                LocalDataStore.setTable(LocalDataStore.KEY_SHARED_PINGS, rows)
+            }
+            loadSharedPings()
+            Unit
+        }.onFailure { Log.w("SocialRepository", "addSharedPing failed", it) }
+    }
+
+    /** Load all non-expired shared pings received from others. */
+    suspend fun loadSharedPings(): Result<List<SharedPingRow>> {
+        return runCatching {
+            val now = java.time.OffsetDateTime.now()
+            val all = LocalDataStore.getTable<MockDataSeeder.LocalSharedPing>(LocalDataStore.KEY_SHARED_PINGS)
+            // Prune expired entries.
+            val active = all.filter {
+                runCatching { java.time.OffsetDateTime.parse(it.expires_at).isAfter(now) }.getOrDefault(false)
+            }
+            if (active.size != all.size) {
+                LocalDataStore.setTable(LocalDataStore.KEY_SHARED_PINGS, active.map {
+                    MockDataSeeder.LocalSharedPing(it.id, it.lat, it.lng, it.label, it.sender_name, it.received_at, it.expires_at)
+                })
+            }
+            _sharedPings.value = active.map {
+                SharedPingRow(it.id, it.lat, it.lng, it.label, it.sender_name, it.received_at, it.expires_at)
+            }
+            _sharedPings.value
+        }.onFailure { Log.w("SocialRepository", "loadSharedPings failed", it) }
+    }
+
+    /** Remove a specific shared ping by id. */
+    suspend fun removeSharedPing(id: String) {
+        runCatching {
+            val rows = LocalDataStore.getTable<MockDataSeeder.LocalSharedPing>(LocalDataStore.KEY_SHARED_PINGS)
+                .filterNot { it.id == id }
+            LocalDataStore.setTable(LocalDataStore.KEY_SHARED_PINGS, rows)
+            loadSharedPings()
+        }.onFailure { Log.w("SocialRepository", "removeSharedPing failed", it) }
+    }
+
     /** Drop a new ping at [lat]/[lng]. Replaces any existing live ping of mine. */
     suspend fun setPing(lat: Double, lng: Double, label: String, ttlHours: Int = 12): Result<Unit> {
         val me = currentUserId() ?: return Result.failure(IllegalStateException("Not signed in"))
