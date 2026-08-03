@@ -356,6 +356,7 @@ object MockDataSeeder {
                 home_region = "Arkansas, USA",
                 club_enabled = true,
                 scan_radius_miles = 50,
+                last_location_update = System.currentTimeMillis() - 5 * 60 * 1000,
             ),
             LocalUser(
                 id = "mock-granite-2",
@@ -372,6 +373,7 @@ object MockDataSeeder {
                 home_region = "Minnesota, USA",
                 club_enabled = true,
                 scan_radius_miles = 100,
+                last_location_update = System.currentTimeMillis() - 60 * 60 * 1000,
             ),
             LocalUser(
                 id = "mock-jade-3",
@@ -388,6 +390,7 @@ object MockDataSeeder {
                 bio = "Pacific NW jade and fossils.",
                 home_region = "Washington, USA",
                 club_enabled = true,
+                last_location_update = System.currentTimeMillis() - 12 * 60 * 1000,
             ),
             LocalUser(
                 id = "mock-copper-4",
@@ -403,6 +406,7 @@ object MockDataSeeder {
                 bio = "Lake Superior agates and copper.",
                 home_region = "Michigan, USA",
                 club_enabled = true,
+                last_location_update = System.currentTimeMillis() - 3 * 60 * 60 * 1000,
             ),
             LocalUser(
                 id = "mock-garnet-5",
@@ -419,6 +423,7 @@ object MockDataSeeder {
                 bio = "Wyoming jade & garnet prospector.",
                 home_region = "Wyoming, USA",
                 club_enabled = true,
+                last_location_update = System.currentTimeMillis() - 45 * 60 * 1000,
             ),
             LocalUser(
                 id = "mock-topaz-6",
@@ -434,6 +439,7 @@ object MockDataSeeder {
                 bio = "Colorado topaz and aquamarine.",
                 home_region = "Colorado, USA",
                 club_enabled = true,
+                last_location_update = System.currentTimeMillis() - 90 * 60 * 1000,
             ),
             LocalUser(
                 id = "mock-obsidian-7",
@@ -465,6 +471,7 @@ object MockDataSeeder {
                 bio = "Tennessee creek fossils — crinoids & trilobites.",
                 home_region = "Tennessee, USA",
                 club_enabled = true,
+                last_location_update = System.currentTimeMillis() - 8 * 60 * 1000,
             ),
             LocalUser(
                 id = "mock-sapphire-9",
@@ -480,6 +487,7 @@ object MockDataSeeder {
                 bio = "Montana sapphire gravel miner.",
                 home_region = "Montana, USA",
                 club_enabled = true,
+                last_location_update = System.currentTimeMillis() - 2 * 60 * 60 * 1000,
             ),
             LocalUser(
                 id = "mock-turquoise-10",
@@ -496,6 +504,7 @@ object MockDataSeeder {
                 bio = "New Mexico turquoise & geodes.",
                 home_region = "New Mexico, USA",
                 club_enabled = true,
+                last_location_update = System.currentTimeMillis() - 20 * 60 * 1000,
             ),
         )
         // Assign each mock user a small public collection, wishlist, and favorite

@@ -4,16 +4,12 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -58,6 +54,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -71,7 +68,6 @@ import com.rork.rockscout.data.SocialRepository
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.HunterStatusIcon
 import com.rork.rockscout.ui.components.profileBorderColor
-import com.rork.rockscout.ui.components.ProfileStatBar
 import com.rork.rockscout.ui.components.ReportSubmittedDialog
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.navigation.Routes
@@ -82,10 +78,12 @@ import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Ink
 import com.rork.rockscout.ui.theme.Success
 import com.rork.rockscout.ui.theme.Danger
+import com.rork.rockscout.ui.theme.Slate800
 import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.TextMid
 import com.rork.rockscout.data.SessionStatus
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import com.rork.rockscout.ui.components.noAutoFocus
 import com.rork.rockscout.ui.components.sculpted
 import com.rork.rockscout.ui.components.SculptedButton
@@ -96,13 +94,15 @@ import com.rork.rockscout.ui.components.glowingBorder
 
 /**
  * RockScout Scan screen — discovery list of nearby hunters who are on the
- * hunt. Profile-first, location-fuzzy: cards show avatar, name, status, and a
- * coarse distance bucket — never exact miles or a pin. Each card has a
- * "Send message" button that opens the message-request flow.
+ * hunt. Cards match the trip planner tile style, vertically stacked, showing
+ * user name and distance/direction text. A sort pill toggles between Closest,
+ * Furthest, and Most Recent. Clicking a card opens the user's profile.
  *
- * Requires: RockScout Friends toggle ON (auth is mandatory for all users).
- * Users with Friends off are prompted to enable it.
+ * Users are automatically included in each other's search radius when their
+ * location monitoring and searchable toggles are ON.
  */
+enum class ScanSortMode { CLOSEST, FURTHEST, MOST_RECENT }
+
 @Composable
 fun ScanScreen(navController: NavController) {
     val repo = AppRepository.instance
@@ -130,6 +130,18 @@ fun ScanScreen(navController: NavController) {
     val isScanning by social.isScanning.collectAsStateWithLifecycle()
     val scanError by social.scanError.collectAsStateWithLifecycle()
     val connections by social.connections.collectAsStateWithLifecycle()
+
+    // Sort mode for the scan results list.
+    var sortMode by remember { mutableStateOf(ScanSortMode.CLOSEST) }
+
+    // Re-sort scan results when sort mode or results change.
+    val sortedResults = remember(scanResults, sortMode) {
+        when (sortMode) {
+            ScanSortMode.CLOSEST -> scanResults.sortedBy { it.distanceMiles }
+            ScanSortMode.FURTHEST -> scanResults.sortedByDescending { it.distanceMiles }
+            ScanSortMode.MOST_RECENT -> scanResults.sortedByDescending { it.hunter.last_location_update }
+        }
+    }
 
     // Determinate staged progress for the scan operation — mirrors the cloud
     // backup bar: an invisible progress track that fills up with contextual
@@ -301,14 +313,24 @@ fun ScanScreen(navController: NavController) {
                 }
             }
 
-            items(scanResults, key = { it.hunter.id }) { result ->
+            // Sorting pill — Closest / Furthest / Most Recent
+            if (scanResults.isNotEmpty()) {
+                item {
+                    SortPillRow(
+                        sortMode = sortMode,
+                        onSortMode = { sortMode = it },
+                    )
+                }
+            }
+
+            items(sortedResults, key = { it.hunter.id }) { result ->
                 HunterCard(
                     result = result,
-                    radius = profile.scanRadiusMiles,
+                    myLat = current.first,
+                    myLng = current.second,
                     isConnected = connections.contains(result.hunter.id),
                     onRequest = { requestTarget = result.hunter },
                     onOpenThread = {
-                        // Already connected — open the thread directly (Messenger).
                         navController.navigate(Routes.messengerThread(result.hunter.id))
                     },
                     onFriendRequest = {
@@ -602,9 +624,63 @@ private fun ScanButton(
 }
 
 @Composable
+private fun SortPillRow(
+    sortMode: ScanSortMode,
+    onSortMode: (ScanSortMode) -> Unit,
+) {
+    val pillShape = RoundedCornerShape(50.dp)
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ScanSortMode.entries.forEach { mode ->
+            val label = when (mode) {
+                ScanSortMode.CLOSEST -> "Closest"
+                ScanSortMode.FURTHEST -> "Furthest"
+                ScanSortMode.MOST_RECENT -> "Most Recent"
+            }
+            val selected = sortMode == mode
+            val accent = when (mode) {
+                ScanSortMode.CLOSEST -> Citrine
+                ScanSortMode.FURTHEST -> Aqua
+                ScanSortMode.MOST_RECENT -> Color(0xFFB08BFF)
+            }
+            Box(
+                modifier = Modifier
+                    .sculpted(
+                        shape = pillShape,
+                        accent = accent,
+                        shadowElevation = if (selected) 6.dp else 3.dp,
+                        onClick = { onSortMode(mode) },
+                    )
+                    .clip(pillShape)
+                    .background(if (selected) accent.copy(alpha = 0.25f) else Slate800)
+                    .glowingBorder(
+                        2.dp,
+                        if (selected) accent else accent.copy(alpha = 0.3f),
+                        pillShape,
+                    )
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    label,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (selected) accent else DarkTextMid,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun HunterCard(
     result: SocialRepository.ScanResult,
-    radius: Int,
+    myLat: Double,
+    myLng: Double,
     isConnected: Boolean,
     onRequest: () -> Unit,
     onOpenThread: () -> Unit,
@@ -634,9 +710,54 @@ private fun HunterCard(
         else -> "Off the grid"
     }
 
-    DarkCard(modifier = Modifier.fillMaxWidth().clickable(onClick = onViewProfile), accent = statusAccent) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            // Identity row — avatar + name/status/level on the left, report on the right
+    // Compute the distance/direction text.
+    val distDirText = remember(result, myLat, myLng) {
+        val theirLat = h.coarse_lat
+        val theirLng = h.coarse_lng
+        if (theirLat != null && theirLng != null) {
+            SocialRepository.instance.distanceDirectionText(
+                result.distanceMiles, myLat, myLng, theirLat, theirLng,
+            )
+        } else {
+            "about ${result.distanceMiles.roundToInt()} miles from you"
+        }
+    }
+
+    // Match the trip planner tile style: full-width, rounded card with gradient
+    // background, accent glow at top, and dark overlay.
+    val cardShape = RoundedCornerShape(20.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .sculpted(shape = cardShape, accent = statusAccent, shadowElevation = 6.dp, onClick = onViewProfile)
+            .clip(cardShape)
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        Color.Black.copy(alpha = 0.62f),
+                        Color.Black.copy(alpha = 0.72f),
+                        Color.Black.copy(alpha = 0.82f),
+                    )
+                )
+            )
+            .glowingBorder(3.dp, statusAccent.copy(alpha = 0.50f), cardShape),
+    ) {
+        // Accent glow overlay at top
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.TopCenter)
+                .height(80.dp)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(statusAccent.copy(alpha = 0.15f), Color.Transparent)
+                    )
+                )
+        )
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            // Identity row — avatar + name/distance on the left, report on the right
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -659,10 +780,11 @@ private fun HunterCard(
                     ) {
                         Text(
                             h.display_name,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = DarkTextHigh,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Color.White,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
                         )
                         if (h.premium_badge) {
                             Box(
@@ -676,6 +798,7 @@ private fun HunterCard(
                             }
                         }
                     }
+                    Spacer(Modifier.height(4.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -689,18 +812,21 @@ private fun HunterCard(
                             maxLines = 1,
                         )
                     }
+                    Spacer(Modifier.height(4.dp))
+                    // Distance/direction text — the key info line
                     Text(
-                        "Lvl ${h.level} · within $radius mi",
+                        "$distDirText",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = DarkTextHigh,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        "Lvl ${h.level}",
                         style = MaterialTheme.typography.labelMedium,
                         color = DarkTextMid,
                         maxLines = 1,
-                    )
-                    Spacer(Modifier.height(6.dp))
-                    ProfileStatBar(
-                        collectionCount = h.collection_count,
-                        wishlistCount = h.wishlist_count,
-                        onCollectionClick = onViewCollection,
-                        onWishlistClick = onViewWishlist,
                     )
                 }
                 SculptedIconButton(

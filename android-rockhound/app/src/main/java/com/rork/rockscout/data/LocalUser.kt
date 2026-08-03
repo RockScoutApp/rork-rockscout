@@ -32,6 +32,8 @@ data class LocalUser(
     val wishlist_ids: List<String> = emptyList(),
     val favorite_spot_ids: List<String> = emptyList(),
     val email_verified: Boolean = true,
+    /** Epoch millis when the user last updated their coarse location (for Most Recent sort). */
+    val last_location_update: Long = 0L,
     /** Admin-controlled deletion: when true, the user sees a blocking popup and cannot access the app.
      *  The account remains in the DB so it can be identified on sign-in and restored. */
     val account_deleted: Boolean = false,
@@ -56,5 +58,6 @@ data class LocalUser(
         collection_count = collection_ids.size,
         wishlist_count = wishlist_ids.size,
         favorite_spots_count = favorite_spot_ids.size,
+        last_location_update = last_location_update,
     )
 }

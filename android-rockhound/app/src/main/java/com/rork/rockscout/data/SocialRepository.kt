@@ -44,6 +44,7 @@ class SocialRepository private constructor() {
         val collection_count: Int = 0,
         val wishlist_count: Int = 0,
         val favorite_spots_count: Int = 0,
+        val last_location_update: Long = 0L,
     )
 
     /** Result of a scan: the hunter + coarse distance bucket (mi). */
@@ -62,8 +63,12 @@ class SocialRepository private constructor() {
     val scanError: StateFlow<String?> = _scanError.asStateFlow()
 
 /** Run a scan for nearby hunters within [radiusMiles].
-     *  Only returns users who are in the caller's connections list — the scan
-     *  populates a card list of connected RockScout Friends within range.
+     *  Returns all users who have location monitoring ON and are searchable
+     *  (club_enabled), within the caller's radius. Users are automatically
+     *  included in each other's search radius when their toggles are ON —
+     *  no prior connection required.
+     *
+     *  The scan populates a card list of RockScouts within range.
      *  It does NOT show anyone on the ping map (pings are private).
      *  Returns the results list (also pushed into [scanResults]). */
     suspend fun scan(
@@ -76,13 +81,9 @@ class SocialRepository private constructor() {
         return runCatching {
             val me = currentUserId() ?: error("Not signed in")
             val blocks = FriendRepository.instance
-            // Ensure connections are loaded so we can filter by them.
-            if (_connections.value.isEmpty()) loadConnections()
-            val connIds = _connections.value.toSet()
             val users = LocalDataStore.getTable<LocalUser>(LocalDataStore.KEY_USERS)
             val results = users.mapNotNull { u ->
                 if (u.id == me) return@mapNotNull null
-                if (u.id !in connIds) return@mapNotNull null // Only connected users.
                 if (!u.club_enabled) return@mapNotNull null
                 if (u.status == "off") return@mapNotNull null
                 if (blocks.isBlocked(u.id)) return@mapNotNull null
@@ -107,6 +108,30 @@ class SocialRepository private constructor() {
         miles <= radius * 0.5 -> "within ${radius * 0.5} mi"
         else -> "within $radius mi"
     }.replace(".0", "")
+
+    /** Format distance as a rounded-mile string with compass direction.
+     *  e.g. "about 2 miles south of you", "about 0 miles from you". */
+    fun distanceDirectionText(miles: Double, myLat: Double, myLng: Double, theirLat: Double, theirLng: Double): String {
+        val rounded = miles.roundToInt().coerceAtLeast(0)
+        val dir = compassDirection(myLat, myLng, theirLat, theirLng)
+        return if (dir == null) {
+            "about $rounded ${if (rounded == 1) "mile" else "miles"} from you"
+        } else {
+            "about $rounded ${if (rounded == 1) "mile" else "miles"} $dir of you"
+        }
+    }
+
+    /** 8-point compass direction from (myLat,myLng) → (theirLat,theirLng), or null if ~same spot. */
+    private fun compassDirection(myLat: Double, myLng: Double, theirLat: Double, theirLng: Double): String? {
+        val dLat = theirLat - myLat
+        val dLng = theirLng - myLng
+        if (kotlin.math.abs(dLat) < 0.0001 && kotlin.math.abs(dLng) < 0.0001) return null
+        val angle = Math.toDegrees(atan2(dLng, dLat))
+        val normalized = ((angle + 360.0) % 360.0)
+        val dirs = arrayOf("north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest")
+        val idx = ((normalized + 22.5) / 45.0).toInt() % 8
+        return dirs[idx]
+    }
 
     // ---- My profile sync ---------------------------------------------------
     /** Upsert the signed-in user's profile row in the local users table. */
@@ -139,6 +164,7 @@ class SocialRepository private constructor() {
                 home_region = profile.homeRegion,
                 club_enabled = profile.clubEnabled,
                 scan_radius_miles = profile.scanRadiusMiles,
+                last_location_update = users.getOrNull(idx)?.last_location_update ?: 0L,
             )
             if (idx >= 0) users[idx] = updated else users.add(updated)
             LocalDataStore.setTable(LocalDataStore.KEY_USERS, users)
@@ -161,13 +187,20 @@ class SocialRepository private constructor() {
         }.onFailure { Log.w("SocialRepository", "updateClubEnabled failed", it) }
     }
 
-    /** Update the coarse scan location (snap to ~1 mile grid before storing). */
+    /** Update the coarse scan location (snap to ~1 mile grid before storing).
+     *  Also stamps [last_location_update] so the Most Recent sort works. */
     suspend fun updateCoarseLocation(lat: Double, lng: Double) {
         val me = currentUserId() ?: return
         val snappedLat = (lat * 100.0).roundToInt() / 100.0
         val snappedLng = (lng * 100.0).roundToInt() / 100.0
         runCatching {
-            updateMyUser { it.copy(coarse_lat = snappedLat, coarse_lng = snappedLng) }
+            updateMyUser {
+                it.copy(
+                    coarse_lat = snappedLat,
+                    coarse_lng = snappedLng,
+                    last_location_update = System.currentTimeMillis(),
+                )
+            }
         }.onFailure { Log.w("SocialRepository", "updateCoarseLocation failed", it) }
     }
 
