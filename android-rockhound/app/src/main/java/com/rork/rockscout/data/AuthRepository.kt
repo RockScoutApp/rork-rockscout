@@ -677,6 +677,7 @@ class AuthRepository private constructor() {
             LocalDataStore.setString(LocalDataStore.KEY_AUTH_EMAIL, "")
             LocalDataStore.setString(LocalDataStore.KEY_AUTH_USER_ID, "")
             ErrorReporter.setUserId(null)
+            ReferralRepository.switchUser(null)
             _sessionStatus.value = SessionStatus.NotAuthenticated()
             Unit
         }.onFailure {

@@ -31,7 +31,8 @@ import kotlin.random.Random
  */
 object ReferralRepository {
 
-    private const val PREFS_NAME = "rockscout_referrals"
+    private const val PREFS_NAME_BASE = "rockscout_referrals"
+    private const val PREFS_NAME_GLOBAL = "rockscout_referrals" // pre-user-scoping fallback
     private const val KEY_REFERRAL_CODE = "referral_code"
     private const val KEY_PENDING_COUNT = "pending_count"
     private const val KEY_COMPLETED_COUNT = "completed_count"
@@ -58,7 +59,9 @@ object ReferralRepository {
     /** XP credited per completed referral for premium users. */
     const val PREMIUM_XP_REWARD = 500
 
+    private lateinit var appContext: Context
     private lateinit var prefs: SharedPreferences
+    private var currentScopedUserId: String? = null
 
     private val _referralCode = MutableStateFlow("")
     val referralCode: StateFlow<String> = _referralCode.asStateFlow()
@@ -101,7 +104,35 @@ object ReferralRepository {
 
     /** Must be called once from Application.onCreate() before any access. */
     fun initialize(context: Context) {
-        prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        appContext = context.applicationContext
+        // Load from the global (pre-user-scoping) prefs initially.
+        // switchUser() will be called once the user signs in to load
+        // user-scoped data.
+        prefs = context.getSharedPreferences(PREFS_NAME_GLOBAL, Context.MODE_PRIVATE)
+        loadFromPrefs()
+    }
+
+    /**
+     * Switch to a user-scoped SharedPreferences file so referral state is
+     * isolated per signed-in account on shared devices. Must be called after
+     * sign-in completes. If [userId] is null, falls back to the global prefs.
+     */
+    fun switchUser(userId: String?) {
+        if (!::appContext.isInitialized) return
+        if (userId == currentScopedUserId) return // already scoped to this user
+        currentScopedUserId = userId
+        prefs = if (userId != null) {
+            appContext.getSharedPreferences("${PREFS_NAME_BASE}_$userId", Context.MODE_PRIVATE)
+        } else {
+            appContext.getSharedPreferences(PREFS_NAME_GLOBAL, Context.MODE_PRIVATE)
+        }
+        loadFromPrefs()
+        Log.d(TAG, "Switched to user-scoped prefs: userId=$userId")
+    }
+
+    /** Reload all state flows from the current [prefs]. */
+    private fun loadFromPrefs() {
+        if (!::prefs.isInitialized) return
         val existing = prefs.getString(KEY_REFERRAL_CODE, null)
         val code = existing ?: generateCode()
         if (existing == null) {
@@ -130,7 +161,7 @@ object ReferralRepository {
         }
         Log.d(
             TAG,
-            "Initialized: code=$code, pending=${_pendingCount.value}, completed=${_completedCount.value}, " +
+            "Loaded: code=$code, pending=${_pendingCount.value}, completed=${_completedCount.value}, " +
                 "rewardsCredited=${_rewardsCredited.value}, codeApplied=${_referralCodeApplied.value}",
         )
     }

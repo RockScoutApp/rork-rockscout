@@ -1,5 +1,10 @@
 package com.rork.rockscout.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +21,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,13 +30,25 @@ import androidx.compose.material.icons.automirrored.filled.Launch
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Diamond
 import androidx.compose.material.icons.filled.EmojiNature
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Gavel
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Museum
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Science
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,7 +62,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.rork.rockscout.data.MuseumEntry
 import com.rork.rockscout.data.SafeLinkOpener
+import com.rork.rockscout.data.UsMuseums
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.GEM_MINERAL_HERO_URL
 import com.rork.rockscout.ui.components.GEM_IMG_CUT_GEMS
@@ -60,6 +81,7 @@ import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.TextHigh
 import com.rork.rockscout.ui.theme.TextMid
 import com.rork.rockscout.ui.components.glowingBorder
+import kotlinx.coroutines.launch
 
 private data class ResourceCategory(
     val title: String,
@@ -76,125 +98,438 @@ private data class ResourceLink(
 
 @Composable
 fun ResourceLinksScreen(navController: NavController) {
+    val pagerState = rememberPagerState(initialPage = 0) { 2 }
+    val pagerScope = rememberCoroutineScope()
+
+    val screenTitle = when (pagerState.currentPage) {
+        1 -> "Museum Directory"
+        else -> "Rock & Gem Resources"
+    }
+
+    ScreenScaffold(title = screenTitle, onBack = { navController.popBackStack() }) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // ── Pill switcher ──
+            ResourcePillSwitcher(
+                currentPage = pagerState.currentPage,
+                onPageSelected = { page ->
+                    pagerScope.launch { pagerState.animateScrollToPage(page) }
+                },
+            )
+
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+                pageSpacing = 0.dp,
+            ) { page ->
+                when (page) {
+                    0 -> WebsitesPage()
+                    1 -> MuseumsPage()
+                }
+            }
+        }
+    }
+}
+
+/* ── Pill switcher ────────────────────────────────────────────────────────── */
+
+@Composable
+private fun ResourcePillSwitcher(
+    currentPage: Int,
+    onPageSelected: (Int) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val pills = listOf("Websites" to 0, "Museums" to 1)
+        pills.forEach { (label, page) ->
+            val isActive = currentPage == page
+            val accent = if (page == 0) Citrine else Aqua
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(
+                        if (isActive) accent.copy(alpha = 0.18f) else Color.Transparent
+                    )
+                    .glowingBorder(
+                        1.5.dp,
+                        if (isActive) accent else Color(0x33FFFFFF),
+                        RoundedCornerShape(24.dp),
+                    )
+                    .clickable { onPageSelected(page) }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        if (page == 0) Icons.Filled.Language else Icons.Filled.Museum,
+                        contentDescription = null,
+                        tint = if (isActive) accent else DarkTextMid,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = if (isActive) accent else DarkTextMid,
+                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
+                    )
+                }
+            }
+            if (page < 1) {
+                Spacer(Modifier.width(12.dp))
+            }
+        }
+    }
+}
+
+/* ── Page 1: Websites ─────────────────────────────────────────────────────── */
+
+@Composable
+private fun WebsitesPage() {
     val context = LocalContext.current
 
-    ScreenScaffold(title = "Rock & Gem Resources", onBack = { navController.popBackStack() }) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 40.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            // Hero banner image
-            item {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 40.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        // Hero banner image
+        item {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color(0xFF1A1812))
+                    .glowingBorder(1.dp, Color(0xFF1A1812).copy(alpha = 0.35f), RoundedCornerShape(20.dp)),
+            ) {
+                AsyncImage(
+                    model = GEM_MINERAL_HERO_URL,
+                    contentDescription = "Collection of colorful gemstones and minerals",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color(0xFF1A1812))
-                        .glowingBorder(1.dp, Color(0xFF1A1812).copy(alpha = 0.35f), RoundedCornerShape(20.dp)),
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(Color.Transparent, Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.7f))
+                            )
+                        ),
+                    contentAlignment = Alignment.BottomStart,
                 ) {
-                    AsyncImage(
-                        model = GEM_MINERAL_HERO_URL,
-                        contentDescription = "Collection of colorful gemstones and minerals",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
+                    Text(
+                        "A curated collection of trusted websites for rock, gem, mineral, and fossil research. Tap any card to open it in your browser.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White,
+                        modifier = Modifier.padding(16.dp),
                     )
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    listOf(Color.Transparent, Color.Black.copy(alpha = 0.35f), Color.Black.copy(alpha = 0.7f))
-                                )
-                            ),
-                        contentAlignment = Alignment.BottomStart,
+                }
+            }
+        }
+
+        item {
+            InlineContentImage(
+                imageUrl = GEM_IMG_CUT_GEMS,
+                contentDescription = "Collection of cut and polished gemstones on dark velvet",
+                caption = "Cut and faceted gemstones — the end result of lapidary art",
+            )
+        }
+        item {
+            ResourceCategoryCard(
+                category = resourceCategories[0],
+                onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
+            )
+        }
+        item {
+            InlineContentImage(
+                imageUrl = GEM_IMG_MUSEUM,
+                contentDescription = "Museum mineral display case with crystal specimens",
+                caption = "Museum mineral collections — a wealth of reference data",
+            )
+        }
+        item {
+            ResourceCategoryCard(
+                category = resourceCategories[1],
+                onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
+            )
+        }
+        item {
+            InlineContentImage(
+                imageUrl = GEM_IMG_LAPIDARY,
+                contentDescription = "Lapidary faceting machine cutting a gemstone",
+                caption = "Faceting machine — where rough stones become gems",
+            )
+        }
+        item {
+            ResourceCategoryCard(
+                category = resourceCategories[2],
+                onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
+            )
+        }
+        item {
+            InlineContentImage(
+                imageUrl = GEM_IMG_AMMONITE,
+                contentDescription = "Fossil ammonite in sedimentary rock",
+                caption = "Ammonite fossil — paleontology meets rockhounding",
+            )
+        }
+        item {
+            ResourceCategoryCard(
+                category = resourceCategories[3],
+                onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
+            )
+        }
+        item {
+            InlineContentImage(
+                imageUrl = GEM_IMG_PEGMATITE,
+                contentDescription = "Pegmatite pocket with large tourmaline and quartz crystals",
+                caption = "Pegmatite pocket — where giant crystals grow",
+            )
+        }
+        item {
+            ResourceCategoryCard(
+                category = resourceCategories[4],
+                onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
+            )
+        }
+        item {
+            ResourceCategoryCard(
+                category = resourceCategories[5],
+                onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
+            )
+        }
+    }
+}
+
+/* ── Page 2: Museums ──────────────────────────────────────────────────────── */
+
+@Composable
+private fun MuseumsPage() {
+    val context = LocalContext.current
+    var searchQuery by remember { mutableStateOf("") }
+    var expandedState by remember { mutableStateOf("") }
+
+    val filteredStates = remember(searchQuery) {
+        if (searchQuery.isBlank()) {
+            UsMuseums.states
+        } else {
+            UsMuseums.states.map { sg ->
+                sg.copy(museums = sg.museums.filter { m ->
+                    m.name.contains(searchQuery, ignoreCase = true) ||
+                        m.city.contains(searchQuery, ignoreCase = true) ||
+                        sg.state.contains(searchQuery, ignoreCase = true)
+                })
+            }.filter { it.museums.isNotEmpty() }
+        }
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 40.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        // ── Search bar ──
+        item {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = {
+                    Text(
+                        "Search by state, city, or museum name\u2026",
+                        color = DarkTextMid,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                },
+                leadingIcon = {
+                    Icon(Icons.Filled.Search, contentDescription = null, tint = Aqua, modifier = Modifier.size(20.dp))
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(16.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Aqua.copy(alpha = 0.5f),
+                    unfocusedBorderColor = Color(0x33FFFFFF),
+                    focusedContainerColor = Color(0xFF15130E),
+                    unfocusedContainerColor = Color(0xFF15130E),
+                    cursorColor = Aqua,
+                ),
+            )
+        }
+
+        if (filteredStates.isEmpty()) {
+            item {
+                DarkCard(modifier = Modifier.fillMaxWidth(), accent = TextMid) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
+                        Text("\uD83C\uDFDB\uFE0F", style = MaterialTheme.typography.displayMedium)
+                        Spacer(Modifier.height(8.dp))
                         Text(
-                            "A curated collection of trusted websites for rock, gem, mineral, and fossil research. Tap any card to open it in your browser.",
+                            "No museums found.",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = TextHigh,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Try a different search term.",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White,
-                            modifier = Modifier.padding(16.dp),
+                            color = DarkTextMid,
                         )
                     }
                 }
             }
-
-            // Inline content images interspersed between resource categories
-            item {
-                InlineContentImage(
-                    imageUrl = GEM_IMG_CUT_GEMS,
-                    contentDescription = "Collection of cut and polished gemstones on dark velvet",
-                    caption = "Cut and faceted gemstones — the end result of lapidary art",
-                )
-            }
-            item {
-                ResourceCategoryCard(
-                    category = resourceCategories[0],
-                    onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
-                )
-            }
-            item {
-                InlineContentImage(
-                    imageUrl = GEM_IMG_MUSEUM,
-                    contentDescription = "Museum mineral display case with crystal specimens",
-                    caption = "Museum mineral collections — a wealth of reference data",
-                )
-            }
-            item {
-                ResourceCategoryCard(
-                    category = resourceCategories[1],
-                    onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
-                )
-            }
-            item {
-                InlineContentImage(
-                    imageUrl = GEM_IMG_LAPIDARY,
-                    contentDescription = "Lapidary faceting machine cutting a gemstone",
-                    caption = "Faceting machine — where rough stones become gems",
-                )
-            }
-            item {
-                ResourceCategoryCard(
-                    category = resourceCategories[2],
-                    onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
-                )
-            }
-            item {
-                InlineContentImage(
-                    imageUrl = GEM_IMG_AMMONITE,
-                    contentDescription = "Fossil ammonite in sedimentary rock",
-                    caption = "Ammonite fossil — paleontology meets rockhounding",
-                )
-            }
-            item {
-                ResourceCategoryCard(
-                    category = resourceCategories[3],
-                    onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
-                )
-            }
-            item {
-                InlineContentImage(
-                    imageUrl = GEM_IMG_PEGMATITE,
-                    contentDescription = "Pegmatite pocket with large tourmaline and quartz crystals",
-                    caption = "Pegmatite pocket — where giant crystals grow",
-                )
-            }
-            item {
-                ResourceCategoryCard(
-                    category = resourceCategories[4],
-                    onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
-                )
-            }
-            item {
-                ResourceCategoryCard(
-                    category = resourceCategories[5],
-                    onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
+        } else {
+            items(filteredStates, key = { it.state }) { stateGroup ->
+                MuseumStateSection(
+                    stateGroup = stateGroup,
+                    isExpanded = expandedState == stateGroup.state,
+                    onToggle = {
+                        expandedState = if (expandedState == stateGroup.state) "" else stateGroup.state
+                    },
+                    onOpenWebsite = { url -> SafeLinkOpener.openUrl(context, url) },
                 )
             }
         }
     }
 }
+
+@Composable
+private fun MuseumStateSection(
+    stateGroup: UsMuseums.StateGroup,
+    isExpanded: Boolean,
+    onToggle: () -> Unit,
+    onOpenWebsite: (String) -> Unit,
+) {
+    DarkCard(modifier = Modifier.fillMaxWidth(), accent = Aqua) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Header row — tappable to expand/collapse
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable(onClick = onToggle)
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(Aqua.copy(alpha = 0.18f))
+                        .glowingBorder(1.dp, Aqua.copy(alpha = 0.35f), CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Filled.LocationOn, contentDescription = null, tint = Aqua, modifier = Modifier.size(20.dp))
+                }
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    stateGroup.state,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextHigh,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    "${stateGroup.museums.size}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = DarkTextMid,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Spacer(Modifier.width(6.dp))
+                Icon(
+                    Icons.Filled.ExpandMore,
+                    contentDescription = if (isExpanded) "Collapse" else "Expand",
+                    tint = DarkTextMid,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut(),
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Spacer(Modifier.height(4.dp))
+                    stateGroup.museums.forEach { museum ->
+                        MuseumCard(
+                            museum = museum,
+                            onOpenWebsite = { onOpenWebsite(museum.website) },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MuseumCard(
+    museum: MuseumEntry,
+    onOpenWebsite: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color(0xFF15130E))
+            .glowingBorder(1.dp, Color(0xFF15130E).copy(alpha = 0.35f), RoundedCornerShape(14.dp))
+            .clickable(onClick = onOpenWebsite)
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Citrine.copy(alpha = 0.15f))
+                .glowingBorder(1.dp, Citrine.copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Filled.Museum, contentDescription = null, tint = Citrine, modifier = Modifier.size(22.dp))
+        }
+        Spacer(Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                museum.name,
+                style = MaterialTheme.typography.titleSmall,
+                color = TextHigh,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                "${museum.city}, ${museum.state}",
+                style = MaterialTheme.typography.bodySmall,
+                color = DarkTextMid,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Spacer(Modifier.width(8.dp))
+        Icon(
+            Icons.AutoMirrored.Filled.Launch,
+            contentDescription = "Open website",
+            tint = Aqua,
+            modifier = Modifier.size(20.dp),
+        )
+    }
+}
+
+/* ── Shared components ────────────────────────────────────────────────────── */
 
 @Composable
 private fun ResourceCategoryCard(
@@ -222,7 +557,6 @@ private fun ResourceCategoryCard(
             )
         }
         Spacer(Modifier.height(14.dp))
-        // Book-style illustration in upper right for first two categories
         if (category.title.contains("Gem", ignoreCase = true)) {
             Row(verticalAlignment = Alignment.Top) {
                 Text(

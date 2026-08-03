@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -308,6 +309,9 @@ fun CommunityScreen(navController: NavController) {
                     hoursUntilExpiry = hoursLeft,
                     onTap = { navController.navigate(Routes.communityPostDetail(post.id)) },
                     onLike = { scope.launch { repo.toggleLike(post.id) } },
+                    onRepost = if (post.user_id != myUserId) {
+                        { repostTarget = post }
+                    } else null,
                     onDelete = if (post.user_id == myUserId) {
                         {
                             pendingDeletePostId = post.id
@@ -778,6 +782,7 @@ private fun CompactCommunityCard(
     hoursUntilExpiry: Long,
     onTap: () -> Unit,
     onLike: () -> Unit,
+    onRepost: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
 ) {
     val category = CommunityRepository.resolveCategory(post.category)
@@ -948,6 +953,33 @@ private fun CompactCommunityCard(
                         color = DarkTextMid,
                     )
                     Spacer(Modifier.weight(1f))
+                    if (onRepost != null) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.Transparent)
+                                .clickable(onClick = onRepost)
+                                .padding(horizontal = 6.dp, vertical = 3.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Filled.Repeat,
+                                    contentDescription = "Repost",
+                                    tint = Aqua,
+                                    modifier = Modifier.size(14.dp),
+                                )
+                                Spacer(Modifier.width(3.dp))
+                                Text(
+                                    "Repost",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Aqua,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                            }
+                        }
+                        Spacer(Modifier.width(8.dp))
+                    }
                     Text(
                         "Tap to view ›",
                         style = MaterialTheme.typography.labelSmall,

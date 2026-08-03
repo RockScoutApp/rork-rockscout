@@ -126,11 +126,17 @@ import com.rork.rockscout.ui.theme.Slate800
 import com.rork.rockscout.ui.theme.Success
 import com.rork.rockscout.ui.theme.TextHigh
 import com.rork.rockscout.ui.theme.TextLow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
+import java.io.File
+import android.net.Uri
+import androidx.core.content.FileProvider
+import com.rork.rockscout.data.GallerySaver
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.ui.platform.LocalView
 import com.rork.rockscout.data.ReportRepository
@@ -802,6 +808,7 @@ internal fun ListingEditorDialog(
     var showImageSourcePicker by remember { mutableStateOf(false) }
     var showDatabasePicker by remember { mutableStateOf(false) }
     var pendingRemoveTag by remember { mutableStateOf<String?>(null) }
+    var cameraUri by remember { mutableStateOf<Uri?>(null) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -864,8 +871,74 @@ internal fun ListingEditorDialog(
     } }
 
     val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview(),
-    ) { _ -> /* preview-only placeholder; full camera capture wired when on device */ }
+        contract = ActivityResultContracts.TakePicture(),
+    ) { success ->
+        if (success && cameraUri != null) {
+            val capturedUri = cameraUri!!
+            scope.launch {
+                try {
+                    val bitmap = withContext(Dispatchers.IO) {
+                        com.rork.rockscout.data.ImageUtils.decodeSampledBitmap(context, capturedUri)
+                    }
+                    if (bitmap != null) {
+                        val galleryUri = withContext(Dispatchers.IO) {
+                            GallerySaver.saveBitmap(context.contentResolver, bitmap)
+                        }
+                        val uri = galleryUri ?: capturedUri
+                        val base64 = ImageUtils.uriToModerationBase64(context, uri)
+                        if (base64 != null) {
+                            val verdict = ImageModerator.scan(base64, "image/jpeg")
+                            when (verdict.triState) {
+                                ModerationTriState.CLEAN -> {
+                                    val persistentPath = ImageUtils.copyUriToInternalStorage(
+                                        context, uri, "trade_listings",
+                                    )
+                                    photoUri = persistentPath ?: uri.toString()
+                                    sourceCaptureId = null; sourceCollectionSpecimenId = null
+                                }
+                                ModerationTriState.EXPLICIT -> {
+                                    android.widget.Toast.makeText(
+                                        context,
+                                        verdict.reason.ifBlank { "This image can't be used because it violates our family-friendly policies." },
+                                        android.widget.Toast.LENGTH_LONG,
+                                    ).show()
+                                }
+                                ModerationTriState.QUESTIONABLE -> {
+                                    val persistentPath = ImageUtils.copyUriToInternalStorage(
+                                        context, uri, "trade_listings",
+                                    )
+                                    val userId = AuthRepository.instance.currentUserId
+                                    val userName = AppRepository.instance.profile.value.name
+                                    val avatar = AppRepository.instance.profile.value.avatarEmoji
+                                    ImageReviewRepository.instance.submitReview(
+                                        userId = userId ?: "unknown",
+                                        userName = userName,
+                                        userAvatar = avatar,
+                                        imageUri = persistentPath ?: uri.toString(),
+                                        type = "trade_listing",
+                                        reason = verdict.reason,
+                                    )
+                                    photoUri = persistentPath ?: uri.toString()
+                                    sourceCaptureId = null; sourceCollectionSpecimenId = null
+                                    android.widget.Toast.makeText(
+                                        context,
+                                        "Image submitted for review. It'll be visible once approved.",
+                                        android.widget.Toast.LENGTH_LONG,
+                                    ).show()
+                                }
+                            }
+                        }
+                    }
+                } catch (_: Exception) {
+                    android.widget.Toast.makeText(
+                        context,
+                        "Failed to load the captured photo. Please try again.",
+                        android.widget.Toast.LENGTH_SHORT,
+                    ).show()
+                }
+            }
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -991,7 +1064,13 @@ internal fun ListingEditorDialog(
                         SourceButton(
                             label = "Camera",
                             icon = Icons.Filled.CameraAlt,
-                            onClick = { cameraLauncher.launch(null) },
+                            onClick = {
+                                val photoFile = File(context.cacheDir, "photos/${UUID.randomUUID()}.jpg")
+                                photoFile.parentFile?.mkdirs()
+                                val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile)
+                                cameraUri = uri
+                                cameraLauncher.launch(uri)
+                            },
                             modifier = Modifier.weight(1f),
                         )
                     }

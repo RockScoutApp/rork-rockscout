@@ -513,6 +513,9 @@ fun AppNavigation(
             // process it now: verify against the backend, apply free gifts,
             // create the RockScout Friends connection, and queue a
             // confirmation popup for the home screen.
+            // Switch referral state to the signed-in user's scoped prefs
+            // so shared devices don't mix referral data across accounts.
+            ReferralRepository.switchUser(AuthRepository.instance.currentUserId)
             if (!referralCodeApplied && pendingReferralCode != null) {
                 ReferralRepository.processPendingReferralCode()
             }

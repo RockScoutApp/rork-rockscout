@@ -84,9 +84,12 @@ object ProfanityFilter {
     /**
      * Walks [input] and, for each run of letters/digits/leet chars separated by
      * other characters, collapses the run, normalizes leet, and checks whether
-     * any censored word is a substring of the collapsed form. If so, the entire
-     * run is masked. Allowed words are never masked even if they contain a
-     * censored substring.
+     * the collapsed form *equals* a censored word (not merely contains one as a
+     * substring). This word-boundary approach prevents false positives on
+     * innocent words like "cocktail", "Dickinson", or "Scunthorpe" while still
+     * catching separator-split obscenities like "f.u.c.k" or "d1-c-k".
+     *
+     * Allowed words are never masked even if they exactly match a censored word.
      */
     private fun secondPassCollapsible(input: String): String {
         if (input.isEmpty()) return input
@@ -95,8 +98,6 @@ object ProfanityFilter {
         while (i < input.length) {
             val ch = input[i]
             if (ch.isLetterOrDigit() || ch in leetMap) {
-                // Capture a run of [letters/digits/leet] possibly interleaved
-                // with separators (.,-_* etc.) that are NOT in the leetMap.
                 val runStart = i
                 val collapsed = StringBuilder()
                 var j = i
@@ -105,10 +106,8 @@ object ProfanityFilter {
                     if (c.isLetterOrDigit() || c in leetMap) {
                         collapsed.append(c)
                         j++
-                    } else if (c.isLetterOrDigit() || c in leetMap ||
-                               c == '.' || c == '-' || c == '_' || c == '*' ||
+                    } else if (c == '.' || c == '-' || c == '_' || c == '*' ||
                                c == ' ' || c == ',' || c == '/' || c == '\\') {
-                        // separator inside the run — keep scanning but don't add
                         j++
                     } else {
                         break
@@ -118,8 +117,10 @@ object ProfanityFilter {
                 val lower = run.lowercase()
                 val normalized = normalize(lower.filter { it.isLetterOrDigit() || it in leetMap })
                 val allowed = allowedWords.contains(lower) || allowedWords.contains(normalized)
+                // Word-boundary match: only block if the collapsed form exactly
+                // equals a censored word, not if it merely contains one.
                 val blocked = !allowed &&
-                    censoredWords.any { normalized.contains(it) || lower.contains(it) }
+                    (censoredWords.contains(normalized) || censoredWords.contains(lower))
                 out.append(if (blocked) "*".repeat(run.length) else run)
                 i = j
             } else {
