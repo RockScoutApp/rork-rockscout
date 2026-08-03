@@ -3,6 +3,8 @@ import { BookOpen, Download } from "lucide-react";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { useState } from "react";
 
+const PWA_START_URL = "/app";
+
 /**
  * Free PWA install button for the navbar.
  *
@@ -37,7 +39,12 @@ export const FreeSignInButton = () => {
     }
     setInstalling(true);
     try {
-      await install();
+      const accepted = await install();
+      if (accepted) {
+        // Once the free PWA is installed, open the app instead of leaving the
+        // browser tab on the marketing website.
+        navigate(PWA_START_URL);
+      }
     } catch {
       navigate("/install/free");
     } finally {

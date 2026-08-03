@@ -48,7 +48,8 @@ function isStandalone(): boolean {
  * Returns:
  * - `canInstall`: true when an install button should be shown
  * - `platform`: the detected platform for tailoring UI/instructions
- * - `install`: triggers the native install prompt (Android Chrome, desktop Chrome/Edge)
+ * - `install`: triggers the native install prompt (Android Chrome, desktop Chrome/Edge).
+ *   Returns `true` if the user accepted the install, `false` otherwise.
  * - `installed`: true once the app has been installed / is running standalone
  */
 export function usePwaInstall() {
@@ -80,15 +81,17 @@ export function usePwaInstall() {
     };
   }, []);
 
-  const install = useCallback(async () => {
-    if (!deferredPrompt) return;
+  const install = useCallback(async (): Promise<boolean> => {
+    if (!deferredPrompt) return false;
     await deferredPrompt.prompt();
     const choice = await deferredPrompt.userChoice;
-    if (choice.outcome === "accepted") {
+    const accepted = choice.outcome === "accepted";
+    if (accepted) {
       setInstalled(true);
     }
     setDeferredPrompt(null);
     setHasNativePrompt(false);
+    return accepted;
   }, [deferredPrompt]);
 
   // Always show the button when not already installed — every major browser

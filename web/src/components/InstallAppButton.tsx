@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Download, Crown, CheckCircle2, Share, MoreVertical, MonitorDown, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useTier } from "@/hooks/useTier";
 import { usePwaInstall, type Platform } from "@/hooks/usePwaInstall";
@@ -8,6 +8,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { getDeviceFingerprint, getDeviceLabel } from "@/lib/deviceFingerprint";
 import { cn } from "@/lib/utils";
+
+const PWA_START_URL = "/app";
 
 interface DeviceRow {
   id: string;
@@ -94,6 +96,7 @@ export const InstallAppButton = ({
   const { user } = useAuth();
   const { isPremium } = useTier();
   const { canInstall, install, installed, platform, hasNativePrompt } = usePwaInstall();
+  const navigate = useNavigate();
   const [installing, setInstalling] = useState<boolean>(false);
   const [showGuide, setShowGuide] = useState<boolean>(false);
   const queryClient = useQueryClient();
@@ -218,7 +221,12 @@ export const InstallAppButton = ({
     }
     setInstalling(true);
     try {
-      await install();
+      const accepted = await install();
+      if (accepted && effectiveMode === "free") {
+        // Open the free PWA content after a successful install so the user isn't
+        // left staring at the marketing website.
+        navigate(PWA_START_URL);
+      }
     } catch {
       setShowGuide(true);
       onGuideToggle?.(true);

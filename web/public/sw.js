@@ -2,13 +2,15 @@
 // Caches the app shell so the site still loads with no connection.
 // Network-first for navigation requests (fresh content when online),
 // cache-first for static assets.
-const CACHE_NAME = "rockscout-v16";
+const CACHE_NAME = "rockscout-v17";
 const TILE_CACHE = "rockscout-tiles-v1";
 const IMAGE_CACHE = "rockscout-images-v1";
-// Caches that must survive activation. TILE_CACHE and IMAGE_CACHE are
-// deliberately unversioned: downloaded images and map tiles are expensive
-// to refetch, so a new shell version must not wipe them.
-const KEEP_CACHES = [CACHE_NAME, TILE_CACHE, IMAGE_CACHE];
+const LOCAL_IMAGE_CACHE = "rockscout-local-images-v1";
+// Caches that must survive activation. TILE_CACHE, IMAGE_CACHE and
+// LOCAL_IMAGE_CACHE are deliberately unversioned: downloaded images, map
+// tiles, and our local static images are expensive to refetch, so a new
+// shell version must not wipe them.
+const KEEP_CACHES = [CACHE_NAME, TILE_CACHE, IMAGE_CACHE, LOCAL_IMAGE_CACHE];
 const SHELL_ASSETS = [
   "/",
   "/app",
@@ -18,6 +20,7 @@ const SHELL_ASSETS = [
   "/apple-touch-icon.png",
   "/pwa-192.png",
   "/pwa-512.png",
+  "/images/app-icon.webp",
 ];
 const TILE_HOSTS = [
   "tile.openstreetmap.org",
@@ -198,6 +201,27 @@ self.addEventListener("fetch", (event) => {
   // an outdated APK forever.
   if (url.pathname.startsWith("/download/")) return;
 
+  // Same-origin static images (landing, app, dino dictionary, screenshots).
+  // These are immutable on disk and expensive to re-download, so keep them in
+  // a dedicated cache that survives shell updates. Cache-first with
+  // stale-while-revalidate gives instant repeat loads.
+  if (url.origin === self.location.origin && isLocalImagePath(url.pathname)) {
+    event.respondWith(
+      caches.open(LOCAL_IMAGE_CACHE).then((cache) =>
+        cache.match(request).then((cached) => {
+          const fetchPromise = fetch(request)
+            .then((response) => {
+              if (response.ok) cache.put(request, response.clone());
+              return response;
+            })
+            .catch(() => cached || Response.error());
+          return cached || fetchPromise;
+        })
+      )
+    );
+    return;
+  }
+
   // Navigation requests: network-first, fall back to cached shell when offline.
   if (request.mode === "navigate") {
     event.respondWith(
@@ -229,10 +253,10 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Everything else same-origin (icons, images, audio, manifest, …) keeps a
-  // stable filename across deploys. Serve the cached copy instantly but always
-  // refresh it in the background, so a new build's assets land on the very next
-  // visit instead of being pinned forever.
+  // Everything else same-origin (icons, audio, manifest, …) keeps a stable
+  // filename across deploys. Serve the cached copy instantly but always refresh
+  // it in the background, so a new build's assets land on the very next visit
+  // instead of being pinned forever.
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) =>
       cache.match(request).then((cached) => {
@@ -247,3 +271,12 @@ self.addEventListener("fetch", (event) => {
     )
   );
 });
+
+function isLocalImagePath(pathname) {
+  return (
+    pathname.startsWith("/images/") ||
+    pathname.startsWith("/dino_images/") ||
+    pathname.startsWith("/dino_life/") ||
+    pathname.startsWith("/screenshots/")
+  );
+}
