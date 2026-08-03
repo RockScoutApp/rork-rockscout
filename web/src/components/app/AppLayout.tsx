@@ -181,7 +181,7 @@ export default function AppLayout() {
       const accepted = localStorage.getItem(DISCLAIMER_KEY) === "true";
       setDisclaimerAccepted(accepted);
       if (!accepted && !isDisclaimerRoute) {
-        navigate("/app/disclaimer", { replace: true });
+        navigate("/app/disclaimer?isGate=true", { replace: true });
       }
     } catch {
       // localStorage may be blocked — skip gate

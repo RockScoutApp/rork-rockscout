@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { SculptedCard, SculptedButton, ScreenScaffold } from "@/components/sculpted";
 
+const DISCLAIMER_KEY = "rockscout-disclaimer-accepted";
 const CITRINE_HEX = "36 80% 58%";
 const AQUA_HEX = "20 62% 65%";
 const DANGER_HEX = "4 70% 55%";
@@ -47,10 +48,13 @@ export default function Disclaimer() {
 
   const handleAccept = () => {
     setAccepted(true);
-    toast.success("Disclaimer accepted");
-    if (isGate) {
-      navigate("/app");
+    try {
+      localStorage.setItem(DISCLAIMER_KEY, "true");
+    } catch {
+      // localStorage may be blocked in private browsing — continue without persistence
     }
+    toast.success("Disclaimer accepted");
+    navigate("/app");
   };
 
   return (

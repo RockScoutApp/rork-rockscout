@@ -65,23 +65,22 @@ export class ErrorBoundary extends Component<Props, State> {
             happening, clearing your browser cache should fix it.
           </p>
           <button
-            onClick={() => {
-              // Clear any stale service worker caches before reloading.
-              if ("caches" in window) {
-                caches.keys().then((keys) =>
-                  Promise.all(keys.map((k) => caches.delete(k))),
-                );
+            onClick={async () => {
+              // Clear any stale service worker caches before reloading so the
+              // next load fetches the latest build, not the cached broken one.
+              try {
+                if ("caches" in window) {
+                  const keys = await caches.keys();
+                  await Promise.all(keys.map((k) => caches.delete(k)));
+                }
+                if ("serviceWorker" in navigator) {
+                  const regs = await navigator.serviceWorker.getRegistrations();
+                  await Promise.all(regs.map((r) => r.unregister()));
+                }
+              } catch {
+                // Ignore cleanup failures — a plain reload is still better than nothing.
               }
-              if ("serviceWorker" in navigator) {
-                navigator.serviceWorker
-                  .getRegistrations()
-                  .then((regs) =>
-                    Promise.all(regs.map((r) => r.unregister())),
-                  )
-                  .finally(() => window.location.reload());
-              } else {
-                window.location.reload();
-              }
+              window.location.reload();
             }}
             style={{
               marginTop: "1.5rem",

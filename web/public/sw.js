@@ -2,7 +2,7 @@
 // Caches the app shell so the site still loads with no connection.
 // Network-first for navigation requests (fresh content when online),
 // cache-first for static assets.
-const CACHE_NAME = "rockscout-v14";
+const CACHE_NAME = "rockscout-v15";
 const TILE_CACHE = "rockscout-tiles-v1";
 const IMAGE_CACHE = "rockscout-images-v1";
 // Caches that must survive activation. TILE_CACHE and IMAGE_CACHE are
@@ -59,10 +59,11 @@ self.addEventListener("install", (event) => {
         )
       )
   );
-  // NOTE: deliberately no skipWaiting() here. The new worker parks in the
-  // "waiting" state so the page can tell the user an update is ready and then
-  // activate it on demand (see the SKIP_WAITING message below). Activating
-  // silently mid-session would swap the asset cache underneath running code.
+  // Activate the new worker immediately on install. A broken/stale build
+  // cannot show the update banner, so waiting for user approval leaves users
+  // stuck on a crashed app. The controlling page listens for controllerchange
+  // and reloads exactly once once the new worker takes over.
+  self.skipWaiting();
 });
 
 // The page asks us to activate immediately once the user accepts the update.
