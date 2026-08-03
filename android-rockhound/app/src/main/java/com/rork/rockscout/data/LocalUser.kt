@@ -49,6 +49,8 @@ data class LocalUser(
     val birthday_millis: Long? = null,
     /** Whether the birthday is shown publicly. */
     val birthday_public: Boolean = false,
+    /** User's favorite rock — free text shown on the profile card. */
+    val favorite_rock: String = "",
 ) {
     /** Convert to the HunterProfile shape used by scan results + friend lists. */
     fun toHunterProfile(): SocialRepository.HunterProfile = SocialRepository.HunterProfile(
@@ -68,5 +70,6 @@ data class LocalUser(
         gender = gender,
         birthday_millis = if (birthday_public) birthday_millis else null,
         birthday_public = birthday_public,
+        favorite_rock = favorite_rock,
     )
 }

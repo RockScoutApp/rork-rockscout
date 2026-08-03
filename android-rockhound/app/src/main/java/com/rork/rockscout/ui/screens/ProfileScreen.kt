@@ -607,6 +607,40 @@ fun ProfileScreen(
                                         fontWeight = FontWeight.SemiBold,
                                     )
                                 }
+                                // Favorite Rock — single row at the bottom of the profile card
+                                if (profile.favoriteRock.isNotBlank()) {
+                                    Spacer(Modifier.height(10.dp))
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(Citrine.copy(alpha = 0.10f))
+                                            .glowingBorder(1.dp, Citrine.copy(alpha = 0.30f), RoundedCornerShape(10.dp))
+                                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Text(
+                                            "\uD83E\uDEA8",
+                                            style = MaterialTheme.typography.labelLarge,
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(
+                                            "Favorite Rock:",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = Citrine,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                        Spacer(Modifier.width(6.dp))
+                                        Text(
+                                            profile.favoriteRock,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = Color.White,
+                                            fontWeight = FontWeight.SemiBold,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -1235,8 +1269,9 @@ fun ProfileScreen(
             gender = profile.gender,
             birthdayMillis = profile.birthdayMillis,
             birthdayPublic = profile.birthdayPublic,
+            favoriteRock = profile.favoriteRock,
             onDismiss = { showEditSheet = false },
-            onSave = { newName, newRegion, newBio, newAvatar, newBgPath, newGender, newBirthday, newBirthdayPublic ->
+            onSave = { newName, newRegion, newBio, newAvatar, newBgPath, newGender, newBirthday, newBirthdayPublic, newFavoriteRock ->
                 // Block save if the display name is already taken by another user.
                 if (SocialRepository.instance.isDisplayNameTaken(newName, excludeUserId = currentUid)) {
                     return@EditProfileSheetContainer
@@ -1250,6 +1285,7 @@ fun ProfileScreen(
                         gender = newGender,
                         birthdayMillis = newBirthday,
                         birthdayPublic = newBirthdayPublic,
+                        favoriteRock = ProfanityFilter.filter(newFavoriteRock),
                     )
                 }
                 if (newBgPath != profile.backgroundImagePath) {
@@ -1355,8 +1391,9 @@ private fun EditProfileSheetContainer(
     gender: String,
     birthdayMillis: Long?,
     birthdayPublic: Boolean,
+    favoriteRock: String,
     onDismiss: () -> Unit,
-    onSave: (String, String, String, String, String?, String, Long?, Boolean) -> Unit,
+    onSave: (String, String, String, String, String?, String, Long?, Boolean, String) -> Unit,
     onBackgroundSelected: (Uri) -> Unit,
     onRemoveBackground: () -> Unit,
 ) {
@@ -1377,6 +1414,7 @@ private fun EditProfileSheetContainer(
             gender = gender,
             birthdayMillis = birthdayMillis,
             birthdayPublic = birthdayPublic,
+            favoriteRock = favoriteRock,
             onSave = onSave,
             onBackgroundSelected = onBackgroundSelected,
             onRemoveBackground = onRemoveBackground,
@@ -1397,7 +1435,8 @@ private fun EditProfileSheet(
     gender: String,
     birthdayMillis: Long?,
     birthdayPublic: Boolean,
-    onSave: (String, String, String, String, String?, String, Long?, Boolean) -> Unit,
+    favoriteRock: String,
+    onSave: (String, String, String, String, String?, String, Long?, Boolean, String) -> Unit,
     onBackgroundSelected: (Uri) -> Unit,
     onRemoveBackground: () -> Unit,
 ) {
@@ -1408,6 +1447,7 @@ private fun EditProfileSheet(
     var editGender by remember { mutableStateOf(gender) }
     var editBirthday by remember { mutableStateOf(birthdayMillis) }
     var editBirthdayPublic by remember { mutableStateOf(birthdayPublic) }
+    var editFavoriteRock by remember { mutableStateOf(favoriteRock) }
     var showBirthdayPicker by remember { mutableStateOf(false) }
     var nameError by remember { mutableStateOf<String?>(null) }
     var bgModerating by remember { mutableStateOf(false) }
@@ -1659,6 +1699,33 @@ private fun EditProfileSheet(
         }
 
         ProfileField("Bio", editBio) { v -> editBio = v }
+
+        // ── Favorite Rock input ──
+        Column {
+            Text("Favorite Rock", style = MaterialTheme.typography.labelMedium, color = Aqua, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(6.dp))
+            OutlinedTextField(
+                value = editFavoriteRock,
+                onValueChange = { editFavoriteRock = it.take(60) },
+                modifier = Modifier.fillMaxWidth().noAutoFocus(),
+                singleLine = true,
+                placeholder = {
+                    Text("e.g. Smoky Quartz", color = TextMid)
+                },
+                keyboardOptions = KeyboardOptions.Default,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Slate800,
+                    unfocusedContainerColor = Slate800,
+                    focusedIndicatorColor = Citrine,
+                    unfocusedIndicatorColor = StoneLine,
+                    focusedTextColor = TextHigh,
+                    unfocusedTextColor = TextHigh,
+                    cursorColor = Citrine,
+                ),
+                shape = RoundedCornerShape(12.dp),
+            )
+        }
+
         Text("Choose an avatar", style = MaterialTheme.typography.labelMedium, color = Aqua, fontWeight = FontWeight.Bold)
         Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             avatarOptions.forEach { emoji ->
@@ -1675,7 +1742,7 @@ private fun EditProfileSheet(
             }
         }
         Button(
-            onClick = { onSave(editName, editRegion, editBio, editAvatar, backgroundImagePath, editGender, editBirthday, editBirthdayPublic) },
+            onClick = { onSave(editName, editRegion, editBio, editAvatar, backgroundImagePath, editGender, editBirthday, editBirthdayPublic, editFavoriteRock.trim()) },
             modifier = Modifier.fillMaxWidth(),
             enabled = nameError == null && editName.trim().isNotBlank(),
             colors = ButtonDefaults.buttonColors(

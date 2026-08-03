@@ -48,6 +48,7 @@ class SocialRepository private constructor() {
         val gender: String = "rather_not_say",
         val birthday_millis: Long? = null,
         val birthday_public: Boolean = false,
+        val favorite_rock: String = "",
     )
 
     /** Result of a scan: the hunter + coarse distance bucket (mi). */
@@ -171,6 +172,7 @@ class SocialRepository private constructor() {
                 gender = profile.gender,
                 birthday_millis = profile.birthdayMillis,
                 birthday_public = profile.birthdayPublic,
+                favorite_rock = profile.favoriteRock,
             )
             if (idx >= 0) users[idx] = updated else users.add(updated)
             LocalDataStore.setTable(LocalDataStore.KEY_USERS, users)

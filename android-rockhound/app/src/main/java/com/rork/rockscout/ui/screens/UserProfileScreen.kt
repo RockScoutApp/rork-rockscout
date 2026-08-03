@@ -524,6 +524,40 @@ fun UserProfileScreen(
                                 fontStyle = if (isFriend && !fu.home_region.isNullOrBlank()) null else androidx.compose.ui.text.font.FontStyle.Italic,
                             )
                         }
+                        // Favorite Rock — single row at the bottom of the profile card
+                        if (!fu.favorite_rock.isNullOrBlank()) {
+                            Spacer(Modifier.height(10.dp))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Citrine.copy(alpha = 0.10f))
+                                    .glowingBorder(1.dp, Citrine.copy(alpha = 0.30f), RoundedCornerShape(10.dp))
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    "\uD83E\uDEA8",
+                                    style = MaterialTheme.typography.labelLarge,
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    "Favorite Rock:",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = Citrine,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    fu.favorite_rock,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
 
                     }
                 }

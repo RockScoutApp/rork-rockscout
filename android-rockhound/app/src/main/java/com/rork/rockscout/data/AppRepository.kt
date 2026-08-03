@@ -109,6 +109,8 @@ data class UserProfile(
     val birthdayMillis: Long? = null,
     /** Whether the birthday is shown publicly. When false, public profiles show "Private". */
     val birthdayPublic: Boolean = false,
+    /** User's favorite rock — free text shown on the profile card. */
+    val favoriteRock: String = "",
 )
 
 /**
