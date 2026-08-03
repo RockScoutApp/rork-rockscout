@@ -86,6 +86,9 @@ import com.rork.rockscout.data.AuroraRepository
 import com.rork.rockscout.data.WorkScheduler
 import com.rork.rockscout.data.SyncQueueManager
 import com.rork.rockscout.data.SeedData
+import com.rork.rockscout.data.UpdateManager
+import com.rork.rockscout.data.ApkInstaller
+import com.rork.rockscout.data.PlayUpdateManager
 import com.rork.rockscout.ui.components.BulkDownloadCard
 import com.rork.rockscout.ui.components.LegalPillButton
 import com.rork.rockscout.ui.components.DeleteConfirmDialog
@@ -97,8 +100,10 @@ import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
+import com.rork.rockscout.ui.theme.Cyan
 import com.rork.rockscout.ui.theme.Danger
 import com.rork.rockscout.ui.theme.Ink
+import com.rork.rockscout.ui.theme.Success
 import com.rork.rockscout.ui.theme.TextLow
 import com.rork.rockscout.ui.theme.TextMid
 
@@ -1012,6 +1017,196 @@ fun SocialSettingsScreen(
                         }
                     },
                 )
+            }
+
+            // ── Update App ──
+            // Lets the user manually check for and install app updates
+            // directly from settings, without needing to go to the Play Store.
+            Spacer(Modifier.height(8.dp))
+            SectionHeader("App Updates")
+
+            val updateInfo by UpdateManager.updateInfo.collectAsStateWithLifecycle()
+            val apkStatus by ApkInstaller.status.collectAsStateWithLifecycle()
+            val apkProgress by ApkInstaller.progress.collectAsStateWithLifecycle()
+            val playReady by PlayUpdateManager.readyToInstall.collectAsStateWithLifecycle()
+            var isCheckingForUpdate by remember { mutableStateOf(false) }
+            var updateCheckMsg by remember { mutableStateOf<String?>(null) }
+            val context = navController.context.applicationContext
+
+            // Trigger a manual update check when this section first appears
+            LaunchedEffect(Unit) {
+                if (updateInfo == null && !isCheckingForUpdate) {
+                    isCheckingForUpdate = true
+                    UpdateManager.checkForUpdate(context)
+                    // Give the check a moment, then clear the spinner
+                    kotlinx.coroutines.delay(3000L)
+                    isCheckingForUpdate = false
+                }
+            }
+
+            // Auto-clear the "up to date" message after 4 seconds
+            LaunchedEffect(updateCheckMsg) {
+                if (updateCheckMsg != null) {
+                    kotlinx.coroutines.delay(4000L)
+                    updateCheckMsg = null
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .glowingBorder(
+                        1.dp,
+                        if (updateInfo != null) Success.copy(alpha = 0.55f) else Citrine.copy(alpha = 0.35f),
+                        RoundedCornerShape(14.dp),
+                    )
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(
+                                Color(0xFF0A1410).copy(alpha = 0.85f),
+                                Color(0xFF08100C).copy(alpha = 0.65f),
+                            )
+                        )
+                    )
+                    .padding(horizontal = 14.dp, vertical = 14.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(
+                                if (updateInfo != null) Success.copy(alpha = 0.18f)
+                                else Citrine.copy(alpha = 0.18f)
+                            )
+                            .glowingBorder(
+                                1.dp,
+                                if (updateInfo != null) Success.copy(alpha = 0.45f)
+                                else Citrine.copy(alpha = 0.45f),
+                                RoundedCornerShape(12.dp),
+                        ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            if (updateInfo != null) Icons.Filled.CloudUpload else Icons.Filled.Sync,
+                            contentDescription = null,
+                            tint = if (updateInfo != null) Success else Citrine,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = when {
+                                apkStatus == ApkInstaller.Status.DOWNLOADING -> "Downloading update…"
+                                apkStatus == ApkInstaller.Status.VERIFYING -> "Verifying update…"
+                                apkStatus == ApkInstaller.Status.INSTALLING -> "Installing update…"
+                                updateInfo != null -> "Update available: v${updateInfo?.latestVersionName}"
+                                isCheckingForUpdate -> "Checking for updates…"
+                                else -> "Check for updates"
+                            },
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                shadow = Shadow(color = Color.Black.copy(alpha = 0.8f), offset = Offset(0f, 1f), blurRadius = 4f),
+                            ),
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            text = when {
+                                apkStatus == ApkInstaller.Status.DOWNLOADING ->
+                                    if (apkProgress > 0) "$apkProgress% downloaded" else "Starting download…"
+                                apkStatus == ApkInstaller.Status.VERIFYING ->
+                                    "Making sure the download is complete and genuine…"
+                                apkStatus == ApkInstaller.Status.INSTALLING ->
+                                    "Confirm the install when Android asks."
+                                updateInfo != null ->
+                                    updateInfo?.changelog ?: "Tap Update Now to install."
+                                isCheckingForUpdate -> "Contacting the update server…"
+                                updateCheckMsg != null -> updateCheckMsg!!
+                                else -> "Tap to check if a new version is available."
+                            },
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                shadow = Shadow(color = Color.Black.copy(alpha = 0.7f), offset = Offset(0f, 1f), blurRadius = 3f),
+                            ),
+                            color = TextMid,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                    // Update Now button — shown when an update is available
+                    if (updateInfo != null && apkStatus == ApkInstaller.Status.IDLE) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Success)
+                                .glowingBorder(2.dp, Cyan.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
+                                .clickable { UpdateManager.downloadAndInstall(context) }
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = "Update Now",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Ink,
+                            )
+                        }
+                    } else if (!isCheckingForUpdate && apkStatus == ApkInstaller.Status.IDLE && updateInfo == null) {
+                        // Check for updates button
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Citrine.copy(alpha = 0.2f))
+                                .glowingBorder(1.dp, Citrine.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
+                                .clickable {
+                                    isCheckingForUpdate = true
+                                    updateCheckMsg = null
+                                    UpdateManager.checkForUpdate(context)
+                                    scope.launch {
+                                        kotlinx.coroutines.delay(3000L)
+                                        isCheckingForUpdate = false
+                                        // Read the result after the check
+                                        updateCheckMsg = if (UpdateManager.updateInfo.value != null) {
+                                            "Update found! Tap Update Now."
+                                        } else {
+                                            "You're up to date!"
+                                        }
+                                    }
+                                }
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = "Check",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Citrine,
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Play update ready to install
+            if (playReady) {
+                Spacer(Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .glowingBorder(1.dp, Success.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                        .background(Success.copy(alpha = 0.1f))
+                        .clickable { PlayUpdateManager.completeUpdate() }
+                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Restart & install update",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Success,
+                    )
+                }
             }
 
             // ── Account deletion ──

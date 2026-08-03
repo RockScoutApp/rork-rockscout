@@ -9,6 +9,8 @@ import {
   Eye,
   EyeOff,
   Loader2,
+  RefreshCw,
+  Download,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/lib/supabase";
@@ -275,6 +277,46 @@ export default function SocialSettings() {
             </div>
           </SculptedCard>
         </div>
+
+        {/* Update App */}
+        <SculptedCard accent="citrine" className="p-5">
+          <div className="flex items-start gap-3">
+            <div
+              className="icon-badge glowing-border flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+              style={{ ["--badge-accent" as string]: CITRINE_HEX, ["--glow-color" as string]: CITRINE_HEX, color: `hsl(${CITRINE_HEX})` }}
+            >
+              <RefreshCw className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-display text-sm font-bold text-foreground">
+                App Updates
+              </h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Check for and install the latest version of RockScout directly from here.
+              </p>
+              <div className="mt-3 flex gap-2">
+                <SculptedButton
+                  accent="citrine"
+                  size="sm"
+                  onClick={() => {
+                    if ("serviceWorker" in navigator) {
+                      navigator.serviceWorker.getRegistrations().then((regs) => {
+                        Promise.all(regs.map((r) => r.update())).then(() => {
+                          window.location.reload();
+                        });
+                      });
+                    } else {
+                      window.location.reload();
+                    }
+                  }}
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Check for Updates
+                </SculptedButton>
+              </div>
+            </div>
+          </div>
+        </SculptedCard>
 
         {/* Privacy notice */}
         <SculptedCard accent="amethyst" className="p-4">

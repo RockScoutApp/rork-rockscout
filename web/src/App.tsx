@@ -252,7 +252,7 @@ const App = () => (
           <Route path="profile/friends" element={<PremiumGate routePath="profile/friends"><ProfileFriends /></PremiumGate>} />
           <Route path="shared-spot/:lat/:lng" element={<PremiumGate routePath="shared-spot/:lat/:lng"><SharedSpot /></PremiumGate>} />
           <Route path="disclaimer" element={<PremiumGate routePath="disclaimer"><Disclaimer /></PremiumGate>} />
-          <Route path="dev-console" element={<DeveloperConsole />} />
+          <Route path="dev-console" element={<PremiumGate routePath="dev-console"><DeveloperConsole /></PremiumGate>} />
           <Route path="scan" element={<PremiumGate routePath="scan"><Scan /></PremiumGate>} />
           <Route path="messenger" element={<PremiumGate routePath="messenger"><Messenger /></PremiumGate>} />
           <Route path="manage-devices" element={<PremiumGate routePath="manage-devices"><ManageDevices /></PremiumGate>} />

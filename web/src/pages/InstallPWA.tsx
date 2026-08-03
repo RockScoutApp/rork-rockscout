@@ -280,9 +280,13 @@ function SignInDialog({
    */
   const checkUserPremiumDirect = useCallback(async (): Promise<boolean> => {
     try {
+      const { data: authData } = await supabase.auth.getUser();
+      const userId = authData.user?.id;
+      if (!userId) return false;
       const { data } = await supabase
         .from("rockscout_profiles")
         .select("is_pro")
+        .eq("id", userId)
         .maybeSingle();
       return (data as { is_pro: boolean } | null)?.is_pro ?? false;
     } catch {

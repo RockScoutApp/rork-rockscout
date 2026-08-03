@@ -187,7 +187,9 @@ object NotificationHelper {
 
     /** Whether the user has granted POST_NOTIFICATIONS permission (Android 13+). */
     fun hasNotificationPermission(context: Context): Boolean {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return NotificationManagerCompat.from(context).areNotificationsEnabled()
+        }
         return ContextCompat.checkSelfPermission(
             context,
             Manifest.permission.POST_NOTIFICATIONS,

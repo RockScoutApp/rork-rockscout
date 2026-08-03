@@ -219,6 +219,26 @@ class RockScoutApplication : Application() {
             ErrorReporter.initialize(this)
         }
 
+        // Re-upload any crash log from a previous session. The crash handler
+        // writes to crash_logs/last_crash.txt but the async upload usually
+        // loses the race with process death. This gives it a second chance.
+        safeInit("crash-log-reupload") {
+            val crashFile = File(crashLogDir, "last_crash.txt")
+            if (crashFile.exists() && crashFile.length() > 0) {
+                val crashText = runCatching { crashFile.readText() }.getOrDefault("")
+                if (crashText.isNotBlank()) {
+                    ErrorReporter.reportMessage(
+                        context = this,
+                        screen = "Global/CrashRecovery",
+                        message = "Previous session crash (re-uploaded on startup):\n$crashText",
+                        isFatal = true,
+                    )
+                    // Archive the crash file so we don't re-upload it next time.
+                    runCatching { crashFile.renameTo(File(crashLogDir, "last_crash_uploaded.txt")) }
+                }
+            }
+        }
+
         safeInit("dig-site-discovery-store") {
             DigSiteDiscoveryStore.initialize()
         }

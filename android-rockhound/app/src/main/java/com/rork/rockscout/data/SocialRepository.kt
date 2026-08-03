@@ -89,7 +89,7 @@ class SocialRepository private constructor() {
             val results = users.mapNotNull { u ->
                 if (u.id == me) return@mapNotNull null
                 if (!u.club_enabled) return@mapNotNull null
-                if (u.status == "off") return@mapNotNull null
+                if (u.status == "off" || u.status == "off-grid" || u.status == "invisible") return@mapNotNull null
                 if (blocks.isBlocked(u.id)) return@mapNotNull null
                 val lat = u.coarse_lat ?: return@mapNotNull null
                 val lng = u.coarse_lng ?: return@mapNotNull null
@@ -742,6 +742,12 @@ class SocialRepository private constructor() {
                 created_at = now.toString(),
             ))
             LocalDataStore.setTable(LocalDataStore.KEY_PINGS, rows)
+            // Update the _pings StateFlow immediately so any observing UI
+            // reflects the new ping without requiring a separate load call.
+            _pings.value = rows.filter {
+                it.user_id == me &&
+                runCatching { java.time.OffsetDateTime.parse(it.expires_at).isAfter(java.time.OffsetDateTime.now()) }.getOrDefault(false)
+            }.map { PingRow(it.id, it.user_id, it.lat, it.lng, it.label, it.expires_at, it.created_at) }
             Unit
         }.onFailure { Log.w("SocialRepository", "setPing failed", it) }
     }
@@ -753,6 +759,11 @@ class SocialRepository private constructor() {
             val rows = LocalDataStore.getTable<LocalPing>(LocalDataStore.KEY_PINGS)
                 .filterNot { it.user_id == me }
             LocalDataStore.setTable(LocalDataStore.KEY_PINGS, rows)
+            // Update _pings StateFlow immediately so the UI reflects the removal.
+            _pings.value = rows.filter {
+                it.user_id == me &&
+                runCatching { java.time.OffsetDateTime.parse(it.expires_at).isAfter(java.time.OffsetDateTime.now()) }.getOrDefault(false)
+            }.map { PingRow(it.id, it.user_id, it.lat, it.lng, it.label, it.expires_at, it.created_at) }
         }.onFailure { Log.w("SocialRepository", "clearMyPing failed", it) }
     }
 

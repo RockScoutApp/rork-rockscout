@@ -85,6 +85,8 @@ export const ROUTE_ACCESS: Record<string, RouteTier> = {
   journal: "premium",
   trips: "premium",
   "archived-trips": "premium",
+  "trip-calendar": "premium",
+  "trip-journal": "premium",
 
   // ─── Social (fully hidden for free users — redirect to Home) ───
   community: "social",
@@ -103,6 +105,19 @@ export const ROUTE_ACCESS: Record<string, RouteTier> = {
   achievements: "social",
   "all-achievements": "social",
   notifications: "social",
+  "user-achievements/:id": "social",
+  "user-collection/:id/:mode": "social",
+  "blm": "open",
+  "campgrounds": "open",
+  "dinosaurs": "open",
+  "meteorites": "open",
+  "prehistoric": "open",
+  "resources": "open",
+  "tectonics": "open",
+  "weather": "open",
+  "planets": "open",
+  "deep-sky": "open",
+  "important-stars": "open",
 };
 
 /**

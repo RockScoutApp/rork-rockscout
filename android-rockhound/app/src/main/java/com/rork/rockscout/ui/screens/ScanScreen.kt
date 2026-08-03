@@ -1,7 +1,9 @@
 package com.rork.rockscout.ui.screens
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
+import androidx.core.content.ContextCompat
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.RepeatMode
@@ -65,6 +67,7 @@ import com.rork.rockscout.data.FriendRepository
 import com.rork.rockscout.data.ReportRepository
 import com.rork.rockscout.data.ReportScreenshotHelper
 import com.rork.rockscout.data.SocialRepository
+import com.rork.rockscout.data.LocationRefresher
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.HunterStatusIcon
 import com.rork.rockscout.ui.components.profileBorderColor
@@ -164,9 +167,39 @@ fun ScanScreen(navController: NavController) {
 
     val radiusOptions = remember { listOf(5, 25, 50, 100, 250) }
 
+    // Staged scan coroutine — called after location permission is confirmed
+    suspend fun performScan() {
+        scanStage = "Locating nearby hunters…"
+        kotlinx.coroutines.delay(200)
+        scanProgress = 0.25f
+        scanStage = "Searching the field…"
+        val result = social.scan(
+            myLat = current.first,
+            myLng = current.second,
+            radiusMiles = profile.scanRadiusMiles,
+        )
+        scanProgress = 0.75f
+        val count = result.getOrNull()?.size ?: 0
+        foundCount = count
+        scanStage = if (count > 0) "Found $count ${if (count == 1) "RockScout" else "RockScouts"} nearby!" else "No RockScouts found in range."
+        kotlinx.coroutines.delay(200)
+        scanProgress = 1f
+        scanStage = ""
+    }
+
+    var pendingScan by remember { mutableStateOf(false) }
     val permsLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
-    ) { _ -> /* handled implicitly */ }
+    ) { results ->
+        val locationGranted = results[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        if (locationGranted || Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            if (pendingScan) {
+                pendingScan = false
+                LocationRefresher.refresh(navController.context.applicationContext)
+                scope.launch { performScan() }
+            }
+        }
+    }
 
     ScreenScaffold(title = "RockScout Scan", onBack = { navController.popBackStack() }) {
         if (!isSignedIn) {
@@ -261,36 +294,26 @@ fun ScanScreen(navController: NavController) {
                     foundCount = foundCount,
                     onScan = {
                         if (profile.locationMonitoring) {
-                            val perms = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION)
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            val hasLocationPerm = ContextCompat.checkSelfPermission(
+                                navController.context,
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                            ) == PackageManager.PERMISSION_GRANTED
+                            if (!hasLocationPerm && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                pendingScan = true
+                                val perms = mutableListOf(Manifest.permission.ACCESS_FINE_LOCATION)
                                 perms.add(Manifest.permission.POST_NOTIFICATIONS)
+                                permsLauncher.launch(perms.toTypedArray())
+                                return@ScanButton
+                            } else if (!hasLocationPerm) {
+                                pendingScan = true
+                                permsLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
+                                return@ScanButton
                             }
-                            permsLauncher.launch(perms.toTypedArray())
                         }
                         scanProgress = 0f
                         scanStage = "Locating nearby hunters…"
                         foundCount = 0
-                        scope.launch {
-                            // Stage 1: locate
-                            scanStage = "Locating nearby hunters…"
-                            kotlinx.coroutines.delay(200)
-                            scanProgress = 0.25f
-                            // Stage 2: query (actual scan runs here)
-                            scanStage = "Searching the field…"
-                            val result = social.scan(
-                                myLat = current.first,
-                                myLng = current.second,
-                                radiusMiles = profile.scanRadiusMiles,
-                            )
-                            scanProgress = 0.75f
-                            // Stage 3: tally results
-                            val count = result.getOrNull()?.size ?: 0
-                            foundCount = count
-                            scanStage = if (count > 0) "Found $count ${if (count == 1) "RockScout" else "RockScouts"} nearby!" else "No RockScouts found in range."
-                            kotlinx.coroutines.delay(200)
-                            scanProgress = 1f
-                            scanStage = ""
-                        }
+                        scope.launch { performScan() }
                     },
                 )
             }
@@ -830,15 +853,14 @@ private fun HunterCard(
                     )
                     // Last-active indicator
                     if (h.last_location_update > 0L) {
-                        val activeText = remember(h.last_location_update) {
-                            val elapsedMs = System.currentTimeMillis() - h.last_location_update
-                            val mins = elapsedMs / 60_000L
-                            when {
-                                mins < 1L -> "Active just now"
-                                mins < 60L -> "Active ${mins}m ago"
-                                mins < 24 * 60L -> "Active ${mins / 60L}h ago"
-                                else -> "Active ${mins / (24 * 60L)}d ago"
-                            }
+                        val nowMs = System.currentTimeMillis()
+                        val elapsedMs = nowMs - h.last_location_update
+                        val mins = elapsedMs.coerceAtLeast(0L) / 60_000L
+                        val activeText = when {
+                            mins < 1L -> "Active just now"
+                            mins < 60L -> "Active ${mins}m ago"
+                            mins < 24 * 60L -> "Active ${mins / 60L}h ago"
+                            else -> "Active ${mins / (24 * 60L)}d ago"
                         }
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -849,8 +871,8 @@ private fun HunterCard(
                                     .size(6.dp)
                                     .clip(CircleShape)
                                     .background(
-                                        if (h.last_location_update > System.currentTimeMillis() - 300_000L) Success
-                                        else if (h.last_location_update > System.currentTimeMillis() - 3_600_000L) Citrine
+                                        if (h.last_location_update > nowMs - 300_000L) Success
+                                        else if (h.last_location_update > nowMs - 3_600_000L) Citrine
                                         else TextLow
                                     ),
                             )

@@ -78,11 +78,13 @@ object ErrorReporter {
     private var currentUserId: String? = null
     private var lastBreadcrumb: String? = null
     private var initialized = false
+    private var appContext: Context? = null
 
     /** Must be called once from Application.onCreate. */
     fun initialize(context: Context) {
         if (initialized) return
         initialized = true
+        appContext = context
         appVersionName = runCatching {
             context.packageManager
                 .getPackageInfo(context.packageName, 0)
@@ -193,6 +195,7 @@ object ErrorReporter {
         screen: String,
         message: String,
         isFatal: Boolean = false,
+        context: Context? = null,
     ) {
         val fingerprint = fingerprint("Message", message, screen)
 
@@ -215,7 +218,7 @@ object ErrorReporter {
 
         // Also log locally to BugLogger so it shows up in the dev tools bug section
         BugLogger.logMessage(
-            context = null,
+            context = context ?: appContext,
             screen = screen,
             message = message,
             isFatal = isFatal,

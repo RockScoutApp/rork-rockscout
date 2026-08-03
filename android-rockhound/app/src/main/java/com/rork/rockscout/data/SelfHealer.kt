@@ -61,8 +61,9 @@ object SelfHealer {
         }
 
         // 5. SharedPreferences corruption — wipe and reload
-        if (message.contains("SharedPreferences", ignoreCase = true) ||
-            message.contains("prefs", ignoreCase = true) && message.contains("corrupt", ignoreCase = true)
+        if ((message.contains("SharedPreferences", ignoreCase = true) &&
+            message.contains("corrupt", ignoreCase = true)) ||
+            (message.contains("prefs", ignoreCase = true) && message.contains("corrupt", ignoreCase = true))
         ) {
             return healPrefs(context)
         }
@@ -157,10 +158,12 @@ object SelfHealer {
     /** Reset the shared Ktor client's connection state. */
     private fun healNetworkState(): String? {
         // The NetworkClient singleton uses HttpRequestRetry with exponential
-        // backoff, so transient network issues are already retried. The heal
-        // here is just a breadcrumb — we log that the error was recognized.
+        // backoff, so transient network issues are already retried.
+        // Return null so the error is logged fully instead of being masked
+        // as auto-healed. This preserves the stack trace in BugLogger for
+        // debugging while still allowing Ktor's built-in retry to work.
         Log.i(TAG, "Network error recognized — Ktor retry handles this automatically")
-        return "network_retry_acknowledged"
+        return null
     }
 
     /** Recreate missing directories referenced in the error message. */
