@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AlertTriangle, Send, Loader2, CheckCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -12,6 +13,7 @@ const AQUA_HEX = "20 62% 65%";
  * deleted to submit an appeal for reinstatement.
  */
 export default function AccountDeletedAppeal() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,7 +43,7 @@ export default function AccountDeletedAppeal() {
 
   if (submitted) {
     return (
-      <ScreenScaffold title="Appeal Submitted" onBack={() => window.history.back()}>
+      <ScreenScaffold title="Appeal Submitted">
         <div className="flex flex-col items-center justify-center gap-4 px-4 py-16 text-center">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15 ring-2 ring-emerald-500/30">
             <CheckCircle className="h-10 w-10 text-emerald-500" />
@@ -53,7 +55,7 @@ export default function AccountDeletedAppeal() {
             We've received your appeal and will review it within 48 hours.
             You'll receive an email at <span className="font-bold text-foreground">{email}</span> with our decision.
           </p>
-          <SculptedButton accent="aqua" size="sm" onClick={() => window.history.back()}>
+          <SculptedButton accent="aqua" size="sm" onClick={() => navigate("/app")}>
             Back to App
           </SculptedButton>
         </div>
@@ -62,7 +64,7 @@ export default function AccountDeletedAppeal() {
   }
 
   return (
-    <ScreenScaffold title="Account Appeal" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Account Appeal">
       <div className="space-y-5 px-4 pb-8">
         {/* Warning banner */}
         <SculptedCard accent="citrine" className="flex items-start gap-3 p-4">

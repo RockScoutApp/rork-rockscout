@@ -70,7 +70,7 @@ export default function Specimens() {
   const hasFilters = Boolean(search || category || rarity);
 
   return (
-    <ScreenScaffold title="Specimen Database" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Specimen Database">
       <div className="space-y-5 px-4 pb-8">
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground">

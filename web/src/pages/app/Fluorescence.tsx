@@ -139,7 +139,7 @@ export default function Fluorescence() {
   );
 
   return (
-    <ScreenScaffold title="Fluorescence & UV" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Fluorescence & UV">
      <div className="space-y-5 px-4 pb-8">
       <p className="text-sm text-muted-foreground">
         {MINERALS.length} fluorescent minerals and UV light guide

@@ -39,7 +39,7 @@ export default function ArchivedTrips() {
 
   if (!user) {
     return (
-      <ScreenScaffold title="Archived Trips" onBack={() => window.history.back()}>
+      <ScreenScaffold title="Archived Trips">
         <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-center">
           <Archive className="h-10 w-10 text-muted-foreground" />
           <p className="text-muted-foreground">Sign in to view archived trips</p>
@@ -49,7 +49,7 @@ export default function ArchivedTrips() {
   }
 
   return (
-    <ScreenScaffold title="Archived Trips" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Archived Trips">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           Your completed and archived trip plans

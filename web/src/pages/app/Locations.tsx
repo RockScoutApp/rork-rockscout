@@ -83,7 +83,7 @@ export default function Locations() {
   }, [search, typeFilter]);
 
   return (
-    <ScreenScaffold title="Dig Sites & Locations" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Dig Sites & Locations">
      <div className="space-y-5 px-4 pb-8">
       <p className="text-sm text-muted-foreground">
         {ALL_LOCATIONS.length} collecting sites, mines, parks, and shops

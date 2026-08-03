@@ -199,7 +199,7 @@ export default function Messenger() {
 
   if (!user) {
     return (
-      <ScreenScaffold title="Messages" onBack={() => window.history.back()}>
+      <ScreenScaffold title="Messages">
         <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-center">
           <MessageCircle className="h-10 w-10 text-muted-foreground" />
           <p className="text-muted-foreground">Sign in to view messages</p>
@@ -290,7 +290,7 @@ export default function Messenger() {
   });
 
   return (
-    <ScreenScaffold title="Messages" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Messages">
       <div className="space-y-4 px-4 pb-8">
         {/* Search */}
         <div className="relative">

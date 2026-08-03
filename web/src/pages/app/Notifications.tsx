@@ -108,7 +108,7 @@ export default function Notifications() {
 
   if (!user) {
     return (
-      <ScreenScaffold title="Notifications" onBack={() => window.history.back()}>
+      <ScreenScaffold title="Notifications">
         <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-center">
           <Bell className="h-10 w-10 text-muted-foreground" />
           <p className="text-muted-foreground">Sign in to view notifications</p>
@@ -118,7 +118,7 @@ export default function Notifications() {
   }
 
   return (
-    <ScreenScaffold title="Notifications" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Notifications">
      <div className="space-y-5 px-4 pb-8">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">

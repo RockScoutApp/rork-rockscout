@@ -13,7 +13,7 @@ const STAGES = [
 
 export default function RockCycleTools() {
   return (
-    <ScreenScaffold title="The Rock Cycle" onBack={() => window.history.back()}>
+    <ScreenScaffold title="The Rock Cycle">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           How rocks transform between igneous, sedimentary, and metamorphic

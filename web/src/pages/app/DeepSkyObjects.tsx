@@ -46,7 +46,7 @@ export default function DeepSkyObjects() {
   }, [search, filterType]);
 
   return (
-    <ScreenScaffold title="Deep Sky Objects" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Deep Sky Objects">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           {DEEP_SKY_OBJECTS.length} galaxies, nebulae, and star clusters

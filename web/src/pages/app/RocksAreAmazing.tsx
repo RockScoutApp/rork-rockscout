@@ -16,7 +16,7 @@ const FACTS = [
 
 export default function RocksAreAmazing() {
   return (
-    <ScreenScaffold title="Rocks Are Amazing" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Rocks Are Amazing">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           Fascinating facts about the rocks beneath our feet

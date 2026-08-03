@@ -53,7 +53,7 @@ export default function AuroraTracker() {
   const [search, setSearch] = useState("");
 
   return (
-    <ScreenScaffold title="Aurora Tracker" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Aurora Tracker">
      <div className="space-y-5 px-4 pb-8">
       <p className="text-sm text-muted-foreground">
         KP index guide, viewing tips, and forecast resources

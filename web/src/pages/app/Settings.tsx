@@ -37,7 +37,7 @@ export default function Settings() {
   };
 
   return (
-    <ScreenScaffold title="Settings" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Settings">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           Notifications, offline storage, and account.

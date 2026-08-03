@@ -89,7 +89,7 @@ export default function UserAchievements() {
 
   if (isLoading) {
     return (
-      <ScreenScaffold title="Achievements" onBack={() => window.history.back()}>
+      <ScreenScaffold title="Achievements">
         <div className="flex justify-center py-16">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
@@ -99,7 +99,7 @@ export default function UserAchievements() {
 
   if (!profile) {
     return (
-      <ScreenScaffold title="Achievements" onBack={() => window.history.back()}>
+      <ScreenScaffold title="Achievements">
         <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-center">
           <p className="text-muted-foreground">User not found</p>
         </div>
@@ -121,7 +121,7 @@ export default function UserAchievements() {
   const progress = ((profile.xp || 0) - xpForLevel(level)) / (xpForLevel(level + 1) - xpForLevel(level));
 
   return (
-    <ScreenScaffold title={`${profile.display_name}'s Achievements`} onBack={() => window.history.back()}>
+    <ScreenScaffold title={`${profile.display_name}'s Achievements`}>
       <div className="space-y-5 px-4 pb-8">
         {/* Gamer header */}
         <SculptedCard accent="citrine" className="overflow-hidden p-5">

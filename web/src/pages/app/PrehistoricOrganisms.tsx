@@ -21,7 +21,7 @@ const ORGANISMS = [
 
 export default function PrehistoricOrganisms() {
   return (
-    <ScreenScaffold title="Prehistoric Organisms" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Prehistoric Organisms">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           Life through the ages — from the Cambrian explosion to the Ice Age

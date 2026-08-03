@@ -221,7 +221,7 @@ export default function NaturalWonders() {
   };
 
   return (
-    <ScreenScaffold title="Natural Wonders" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Natural Wonders">
      <div className="space-y-5 px-4 pb-8">
       <p className="text-sm text-muted-foreground">
         {WONDERS.length} world-famous geological landmarks and the stories behind them

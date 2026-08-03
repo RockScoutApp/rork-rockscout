@@ -53,7 +53,7 @@ export default function RockInfo() {
   const navigate = useNavigate();
 
   return (
-    <ScreenScaffold title="Exploring Geology" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Exploring Geology">
       <div className="space-y-5 px-4 pb-8">
         {/* Intro card */}
         <SculptedCard accent="citrine" className="p-5">

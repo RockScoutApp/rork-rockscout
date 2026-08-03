@@ -150,7 +150,7 @@ export default function RockGuideDetail() {
   const accent = CLASS_COLORS[guide.rockClass] ?? CITRINE_HEX;
 
   return (
-    <ScreenScaffold title={guide.title} onBack={() => window.history.back()}>
+    <ScreenScaffold title={guide.title}>
       <div className="space-y-5 px-4 pb-8">
         {/* Hero header */}
         <SculptedCard

@@ -131,7 +131,7 @@ export default function MyTrades() {
 
   if (!user) {
     return (
-      <ScreenScaffold title="My Trades" onBack={() => window.history.back()}>
+      <ScreenScaffold title="My Trades">
         <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-center">
           <ArrowRightLeft className="h-10 w-10 text-muted-foreground" />
           <p className="text-muted-foreground">Sign in to view your trades</p>
@@ -144,7 +144,7 @@ export default function MyTrades() {
   const tradedListings = (listings ?? []).filter((l) => l.status === "traded");
 
   return (
-    <ScreenScaffold title="My Trades" onBack={() => window.history.back()}>
+    <ScreenScaffold title="My Trades">
       <div className="space-y-5 px-4 pb-8">
         {/* Create button */}
         <SculptedButton

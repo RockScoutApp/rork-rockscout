@@ -141,7 +141,7 @@ export default function MeteoriteHunting() {
   );
 
   return (
-    <ScreenScaffold title="Meteorite Hunting" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Meteorite Hunting">
      <div className="space-y-5 px-4 pb-8">
       <p className="text-sm text-muted-foreground">
         {METEORITE_TYPES.length} meteorite types, field ID tips, and hunting guide

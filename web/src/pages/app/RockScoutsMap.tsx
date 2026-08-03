@@ -233,7 +233,7 @@ export default function RockScoutsMap() {
 
   if (!user) {
     return (
-      <ScreenScaffold title="RockScouts Map" onBack={() => window.history.back()}>
+      <ScreenScaffold title="RockScouts Map">
         <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-center">
           <MapPin className="h-10 w-10 text-muted-foreground" />
           <p className="text-muted-foreground">Sign in to use the RockScouts map</p>
@@ -243,7 +243,7 @@ export default function RockScoutsMap() {
   }
 
   return (
-    <ScreenScaffold title="RockScouts Map" onBack={() => window.history.back()}>
+    <ScreenScaffold title="RockScouts Map">
       <div className="space-y-4 px-4 pb-8">
         {/* Private badge */}
         <div

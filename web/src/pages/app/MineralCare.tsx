@@ -145,7 +145,7 @@ export default function MineralCare() {
   });
 
   return (
-    <ScreenScaffold title="Mineral Care Guide" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Mineral Care Guide">
      <div className="space-y-5 px-4 pb-8">
       <p className="text-sm text-muted-foreground">
         {CARE_TIPS.length} tips for cleaning, storing, and displaying your collection

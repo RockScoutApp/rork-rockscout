@@ -26,7 +26,7 @@ const FIELD_REFERENCES = [
 
 export default function CrystalHardness() {
   return (
-    <ScreenScaffold title="Crystal Hardness Scale" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Crystal Hardness Scale">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           The Mohs scale — from talc (1) to diamond (10)

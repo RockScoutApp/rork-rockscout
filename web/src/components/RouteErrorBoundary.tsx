@@ -88,7 +88,7 @@ export class RouteErrorBoundary extends Component<Props, State> {
               <button
                 onClick={() => {
                   this.setState({ hasError: false, error: null, errorPath: null });
-                  window.history.back();
+                  window.location.href = "/app";
                 }}
                 className="rounded-full border border-border bg-card/60 px-5 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
               >

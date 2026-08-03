@@ -22,7 +22,7 @@ const FOSSIL_TYPES = [
 
 export default function FossilTypes() {
   return (
-    <ScreenScaffold title="Fossilization & Types" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Fossilization & Types">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           How life becomes stone — and the different kinds of fossils

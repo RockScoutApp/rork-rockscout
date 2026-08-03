@@ -183,7 +183,7 @@ export default function DiscoverHunters() {
 
   if (!user) {
     return (
-      <ScreenScaffold title="Discover Hunters" onBack={() => window.history.back()}>
+      <ScreenScaffold title="Discover Hunters">
         <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-center">
           <Users className="h-10 w-10 text-muted-foreground" />
           <p className="text-muted-foreground">Sign in to discover hunters</p>
@@ -200,7 +200,7 @@ export default function DiscoverHunters() {
   const pendingRequestIds = new Set<string>();
 
   return (
-    <ScreenScaffold title="Discover Hunters" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Discover Hunters">
       <div className="space-y-5 px-4 pb-8">
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3">

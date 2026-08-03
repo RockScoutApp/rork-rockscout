@@ -66,7 +66,7 @@ export default function DinosaurDictionary() {
   }, [search, filterEra, filterDiet]);
 
   return (
-    <ScreenScaffold title="Dinosaur Dictionary" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Dinosaur Dictionary">
       <div className="space-y-5 px-4 pb-8">
         {/* Search — compact, at the top */}
         <div className="relative">

@@ -133,7 +133,7 @@ export default function MohsScale() {
   }, [search]);
 
   return (
-    <ScreenScaffold title="Mohs Hardness Scale" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Mohs Hardness Scale">
      <div className="space-y-5 px-4 pb-8">
       <p className="text-sm text-muted-foreground">
         The 10-step mineral hardness reference for field identification

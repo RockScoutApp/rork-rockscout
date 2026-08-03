@@ -94,7 +94,7 @@ export default function CrystalSystems() {
   );
 
   return (
-    <ScreenScaffold title="Crystal Systems" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Crystal Systems">
      <div className="space-y-5 px-4 pb-8">
       <p className="text-sm text-muted-foreground">
         The 7 crystal systems — how minerals are classified by their atomic structure

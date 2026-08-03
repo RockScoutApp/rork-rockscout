@@ -17,7 +17,7 @@ export default function RockTypes() {
   const navigate = useNavigate();
 
   return (
-    <ScreenScaffold title="Rock Types" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Rock Types">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           The three major rock groups and the specimens within them

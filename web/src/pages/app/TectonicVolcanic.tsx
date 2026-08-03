@@ -19,7 +19,7 @@ const VOLCANO_TYPES = [
 
 export default function TectonicVolcanic() {
   return (
-    <ScreenScaffold title="Tectonics & Volcanoes" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Tectonics & Volcanoes">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           How plate tectonics shape the Earth and create the rocks we find

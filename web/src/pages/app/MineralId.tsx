@@ -15,7 +15,7 @@ const STEPS = [
 
 export default function MineralId() {
   return (
-    <ScreenScaffold title="Mineral Identification" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Mineral Identification">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           Field tests for identifying minerals without lab equipment

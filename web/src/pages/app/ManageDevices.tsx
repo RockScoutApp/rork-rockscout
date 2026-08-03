@@ -83,7 +83,7 @@ export default function ManageDevices() {
 
   if (!isPremium) {
     return (
-      <ScreenScaffold title="Manage Devices" onBack={() => window.history.back()}>
+      <ScreenScaffold title="Manage Devices">
         <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
           <p className="text-sm text-muted-foreground">
             Device management is a Premium feature.
@@ -100,7 +100,7 @@ export default function ManageDevices() {
   const remaining = Math.max(0, MAX_DEVICES - devices.length);
 
   return (
-    <ScreenScaffold title="Manage Devices" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Manage Devices">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           Your Premium PWA can be installed on up to {MAX_DEVICES} additional

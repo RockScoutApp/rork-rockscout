@@ -57,7 +57,7 @@ export default function ProfileFriends() {
 
   if (!user) {
     return (
-      <ScreenScaffold title="Friends" onBack={() => window.history.back()}>
+      <ScreenScaffold title="Friends">
         <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-center">
           <Users className="h-10 w-10 text-muted-foreground" />
           <p className="text-muted-foreground">Sign in to view friends</p>
@@ -67,7 +67,7 @@ export default function ProfileFriends() {
   }
 
   return (
-    <ScreenScaffold title="Friends" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Friends">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           {friends ? `${friends.length} connections` : "Loading..."}

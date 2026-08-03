@@ -57,7 +57,7 @@ export default function PeriodicTable() {
   const isFiltering = search || filterCategory !== "all";
 
   return (
-    <ScreenScaffold title="Periodic Table" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Periodic Table">
       <div className="space-y-5 px-4 pb-8">
         {/* Search */}
         <div className="relative">

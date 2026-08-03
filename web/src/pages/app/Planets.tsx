@@ -18,7 +18,7 @@ export default function Planets() {
   const [selected, setSelected] = useState<PlanetEntry | null>(null);
 
   return (
-    <ScreenScaffold title="Planets" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Planets">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           The 8 planets + 2 dwarf planets of our solar system

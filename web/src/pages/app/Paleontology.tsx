@@ -202,7 +202,7 @@ export default function Paleontology() {
   });
 
   return (
-    <ScreenScaffold title="Paleontology" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Paleontology">
      <div className="space-y-5 px-4 pb-8">
       <p className="text-sm text-muted-foreground">
         {PERIODS.length} geological periods, key organisms, and mass extinctions

@@ -147,7 +147,7 @@ export default function SevereWeather() {
   });
 
   return (
-    <ScreenScaffold title="Severe Weather Guide" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Severe Weather Guide">
      <div className="space-y-5 px-4 pb-8">
       <p className="text-sm text-muted-foreground">
         {HAZARDS.length} weather hazards every rockhound should know

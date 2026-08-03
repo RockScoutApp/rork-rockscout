@@ -183,7 +183,7 @@ export default function Scan() {
 
   if (!user) {
     return (
-      <ScreenScaffold title="QR Scanner" onBack={() => window.history.back()}>
+      <ScreenScaffold title="QR Scanner" onBack={() => stopCamera()}>
         <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-center">
           <QrCode className="h-10 w-10 text-muted-foreground" />
           <p className="text-muted-foreground">Sign in to use the scanner</p>
@@ -193,7 +193,7 @@ export default function Scan() {
   }
 
   return (
-    <ScreenScaffold title="QR Scanner" onBack={() => { stopCamera(); window.history.back(); }}>
+    <ScreenScaffold title="QR Scanner" onBack={() => stopCamera()}>
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           Scan a RockScout QR code to open a shared spot, hunter profile, or link.

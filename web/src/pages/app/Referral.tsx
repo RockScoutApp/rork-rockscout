@@ -136,7 +136,7 @@ export default function Referral() {
 
   if (!user) {
     return (
-      <ScreenScaffold title="Refer a Friend" onBack={() => window.history.back()}>
+      <ScreenScaffold title="Refer a Friend">
         <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-center">
           <Gift className="h-10 w-10 text-muted-foreground" />
           <p className="text-muted-foreground">Sign in to use the referral program</p>
@@ -146,7 +146,7 @@ export default function Referral() {
   }
 
   return (
-    <ScreenScaffold title="Refer a Friend" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Refer a Friend">
      <div className="space-y-5 px-4 pb-8">
       <div className="text-center">
         <div

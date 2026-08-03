@@ -17,7 +17,7 @@ export default function StateParks() {
   const states = Object.keys(byState).sort();
 
   return (
-    <ScreenScaffold title="State Parks" onBack={() => window.history.back()}>
+    <ScreenScaffold title="State Parks">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           {stateParks.length} state parks with rockhounding and geological relevance

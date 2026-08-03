@@ -167,7 +167,7 @@ export default function TripCalendar() {
 
   if (!user) {
     return (
-      <ScreenScaffold title="Trip Calendar" onBack={() => window.history.back()}>
+      <ScreenScaffold title="Trip Calendar">
         <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-center">
           <Calendar className="h-10 w-10 text-muted-foreground" />
           <p className="text-muted-foreground">Sign in to view your trip calendar</p>
@@ -177,7 +177,7 @@ export default function TripCalendar() {
   }
 
   return (
-    <ScreenScaffold title="Trip Calendar" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Trip Calendar">
       <div className="space-y-5 px-4 pb-8">
         {/* Header with Plan New Trip button */}
         <div className="flex items-center justify-between">

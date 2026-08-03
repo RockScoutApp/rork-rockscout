@@ -75,7 +75,7 @@ export default function BlmDetail() {
     blmSite?.whatToFind ?? trailhead?.description ?? campground?.description ?? "";
 
   return (
-    <ScreenScaffold title={title} onBack={() => window.history.back()}>
+    <ScreenScaffold title={title}>
       <div className="space-y-5 px-4 pb-8">
         {/* Header card */}
         <SculptedCard accent="aqua" className="p-5">

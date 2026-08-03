@@ -55,7 +55,7 @@ export default function ReferenceLibrary() {
   const navigate = useNavigate();
 
   return (
-    <ScreenScaffold title="Reference Library" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Reference Library">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           Guides, tools, and resources for rockhounds

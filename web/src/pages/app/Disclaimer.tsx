@@ -58,7 +58,7 @@ export default function Disclaimer() {
   };
 
   return (
-    <ScreenScaffold title="Disclaimer" onBack={() => !isGate && window.history.back()}>
+    <ScreenScaffold title="Disclaimer" onBack={() => !isGate && navigate("/app")}>
       <div className="space-y-5 px-4 pb-8">
         {/* Header */}
         <SculptedCard accent="citrine" glowing className="p-5">

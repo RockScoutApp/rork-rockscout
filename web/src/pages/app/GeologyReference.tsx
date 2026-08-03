@@ -171,7 +171,7 @@ export default function GeologyReference() {
   });
 
   return (
-    <ScreenScaffold title="Geology Reference" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Geology Reference">
      <div className="space-y-5 px-4 pb-8">
       <p className="text-sm text-muted-foreground">
         Rock types, the rock cycle, and how the Earth makes stone

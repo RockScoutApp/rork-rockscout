@@ -91,7 +91,7 @@ export default function CampgroundsTrailheads() {
   }, [campgrounds, search, filterType]);
 
   return (
-    <ScreenScaffold title="Campgrounds & Trailheads" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Campgrounds & Trailheads">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           Camp and hike near prime rockhounding locations

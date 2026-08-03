@@ -100,7 +100,7 @@ export default function UserCollection() {
   const title = `${profile?.display_name ?? "RockScout"}'s ${isWishlist ? "Wishlist" : "Rocks"}`;
 
   return (
-    <ScreenScaffold title={title} onBack={() => window.history.back()}>
+    <ScreenScaffold title={title}>
       <div className="space-y-4 px-4 pb-8">
         {isLoading ? (
           <div className="flex justify-center py-12">

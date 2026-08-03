@@ -35,7 +35,7 @@ export default function ImportantStars() {
   }, [search, filterHemi]);
 
   return (
-    <ScreenScaffold title="Important Stars" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Important Stars">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           {STARS.length} notable stars — the brightest and most famous in the night sky

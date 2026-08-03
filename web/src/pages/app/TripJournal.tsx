@@ -18,7 +18,7 @@ export default function TripJournal() {
   return (
     <ScreenScaffold
       title={activeTab === "planner" ? "Trip Planner" : "Field Journal"}
-      onBack={() => window.history.back()}
+     
     >
       <div className="space-y-0 px-0 pb-0">
         {/* Pill switcher */}

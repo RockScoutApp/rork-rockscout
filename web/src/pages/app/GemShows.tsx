@@ -53,7 +53,7 @@ export default function GemShows() {
   }, [search, monthFilter]);
 
   return (
-    <ScreenScaffold title="Gem & Mineral Shows" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Gem & Mineral Shows">
      <div className="space-y-5 px-4 pb-8">
       <p className="text-sm text-muted-foreground">
         {gemShows.length} upcoming shows across the US

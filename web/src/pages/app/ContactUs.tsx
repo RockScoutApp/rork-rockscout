@@ -38,7 +38,7 @@ export default function ContactUs() {
   };
 
   return (
-    <ScreenScaffold title="Contact Us" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Contact Us">
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           Questions, feedback, or need help? We're here.

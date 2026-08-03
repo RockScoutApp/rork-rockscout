@@ -169,7 +169,7 @@ export default function LapidaryBasics() {
   });
 
   return (
-    <ScreenScaffold title="Lapidary Basics" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Lapidary Basics">
      <div className="space-y-5 px-4 pb-8">
       <p className="text-sm text-muted-foreground">
         {TOPICS.length} guides for cutting, grinding, and polishing stones

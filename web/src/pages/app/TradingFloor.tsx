@@ -168,7 +168,7 @@ export default function TradingFloor() {
   });
 
   return (
-    <ScreenScaffold title="Trading Floor" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Trading Floor">
       <div className="space-y-5 px-4 pb-8">
         {/* Search + Create */}
         <div className="flex gap-3">
