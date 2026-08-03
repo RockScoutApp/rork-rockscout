@@ -1,5 +1,10 @@
 package com.rork.rockscout.ui.screens
 
+import android.graphics.Bitmap
+import android.graphics.Canvas as AndroidCanvas
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.drawable.BitmapDrawable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -16,6 +21,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -34,16 +40,19 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Museum
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,12 +69,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.rork.rockscout.data.MuseumEntry
 import com.rork.rockscout.data.SafeLinkOpener
 import com.rork.rockscout.data.UsMuseums
 import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.FullscreenMapOverlay
 import com.rork.rockscout.ui.components.GEM_MINERAL_HERO_URL
 import com.rork.rockscout.ui.components.GEM_IMG_CUT_GEMS
 import com.rork.rockscout.ui.components.GEM_IMG_MUSEUM
@@ -74,14 +85,30 @@ import com.rork.rockscout.ui.components.GEM_IMG_AMMONITE
 import com.rork.rockscout.ui.components.GEM_IMG_PEGMATITE
 import com.rork.rockscout.ui.components.InlineContentImage
 import com.rork.rockscout.ui.components.BookStyleImage
+import com.rork.rockscout.ui.components.MapExpandButton
+import com.rork.rockscout.ui.components.MapOfflineNotice
+import com.rork.rockscout.ui.components.MapViewLifecycleEffect
+import com.rork.rockscout.ui.components.MapZoomControls
 import com.rork.rockscout.ui.components.ScreenScaffold
+import com.rork.rockscout.ui.components.SculptedIconButton
+import com.rork.rockscout.ui.components.createRockScoutMapView
+import com.rork.rockscout.ui.components.glowingBorder
+import com.rork.rockscout.ui.components.toggleSatelliteView
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.DarkTextMid
+import com.rork.rockscout.ui.theme.Slate800
 import com.rork.rockscout.ui.theme.TextHigh
 import com.rork.rockscout.ui.theme.TextMid
-import com.rork.rockscout.ui.components.glowingBorder
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.osmdroid.util.BoundingBox
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.compass.CompassOverlay
+import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
 
 private data class ResourceCategory(
     val title: String,
@@ -315,6 +342,8 @@ private fun MuseumsPage() {
     val context = LocalContext.current
     var searchQuery by remember { mutableStateOf("") }
     var expandedState by remember { mutableStateOf("") }
+    var isMapView by remember { mutableStateOf(false) }
+    var isFullscreenMap by remember { mutableStateOf(false) }
 
     val filteredStates = remember(searchQuery) {
         if (searchQuery.isBlank()) {
@@ -330,20 +359,25 @@ private fun MuseumsPage() {
         }
     }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 40.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        // ── Search bar ──
-        item {
+    val filteredMuseums = remember(filteredStates) {
+        filteredStates.flatMap { it.museums }
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        // ── Search bar + map toggle ──
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.weight(1f),
                 placeholder = {
                     Text(
-                        "Search by state, city, or museum name\u2026",
+                        "Search by state, city, or museum name…",
                         color = DarkTextMid,
                         style = MaterialTheme.typography.bodyMedium,
                     )
@@ -361,46 +395,271 @@ private fun MuseumsPage() {
                     cursorColor = Aqua,
                 ),
             )
+            Spacer(Modifier.width(8.dp))
+            SculptedIconButton(
+                icon = if (isMapView) Icons.Filled.ViewList else Icons.Filled.Map,
+                contentDescription = if (isMapView) "Switch to list view" else "Switch to map view",
+                onClick = { isMapView = !isMapView },
+                accent = Aqua,
+                iconTint = Aqua,
+                size = 48.dp,
+                shadowElevation = 3.dp,
+            )
         }
 
-        if (filteredStates.isEmpty()) {
-            item {
-                DarkCard(modifier = Modifier.fillMaxWidth(), accent = TextMid) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Text("\uD83C\uDFDB\uFE0F", style = MaterialTheme.typography.displayMedium)
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "No museums found.",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = TextHigh,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            "Try a different search term.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = DarkTextMid,
+        if (isMapView) {
+            MuseumMapView(
+                museums = filteredMuseums,
+                isFullscreen = false,
+                onExpand = { isFullscreenMap = true },
+                onOpenWebsite = { url -> SafeLinkOpener.openUrl(context, url) },
+                modifier = Modifier.fillMaxSize().navigationBarsPadding(),
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 40.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                if (filteredStates.isEmpty()) {
+                    item {
+                        DarkCard(modifier = Modifier.fillMaxWidth(), accent = TextMid) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                Text("\uD83C\uDFDB\uFE0F", style = MaterialTheme.typography.displayMedium)
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    "No museums found.",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = TextHigh,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    "Try a different search term.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = DarkTextMid,
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    items(filteredStates, key = { it.state }) { stateGroup ->
+                        MuseumStateSection(
+                            stateGroup = stateGroup,
+                            isExpanded = expandedState == stateGroup.state,
+                            onToggle = {
+                                expandedState = if (expandedState == stateGroup.state) "" else stateGroup.state
+                            },
+                            onOpenWebsite = { url -> SafeLinkOpener.openUrl(context, url) },
                         )
                     }
                 }
             }
-        } else {
-            items(filteredStates, key = { it.state }) { stateGroup ->
-                MuseumStateSection(
-                    stateGroup = stateGroup,
-                    isExpanded = expandedState == stateGroup.state,
-                    onToggle = {
-                        expandedState = if (expandedState == stateGroup.state) "" else stateGroup.state
-                    },
-                    onOpenWebsite = { url -> SafeLinkOpener.openUrl(context, url) },
+        }
+    }
+
+    // Full-screen map overlay
+    if (isFullscreenMap) {
+        FullscreenMapOverlay(
+            onDismiss = { isFullscreenMap = false },
+            initialCenter = GeoPoint(39.5, -98.35),
+            initialZoom = 3.5,
+            onMapReady = { fsMv ->
+                val points = filteredMuseums.map { GeoPoint(it.lat, it.lng) }
+                if (points.isNotEmpty()) {
+                    val box = BoundingBox.fromGeoPoints(points)
+                    fsMv.zoomToBoundingBox(box, false, 48)
+                }
+                filteredMuseums.forEach { museum ->
+                    val marker = MuseumMarker(fsMv, museum)
+                    marker.id = "museum_fs_${museum.name}"
+                    fsMv.overlays.add(marker)
+                }
+                withContext(Dispatchers.Main) { fsMv.invalidate() }
+            },
+        )
+    }
+}
+
+/* ── Museum map view ───────────────────────────────────────────────────────── */
+
+/**
+ * Interactive osmdroid map showing every museum in [museums] as a pin.
+ * The map auto-fits to show all pins on load, with zoom controls,
+ * satellite toggle, compass, and an expand-to-fullscreen button.
+ * Tapping a pin shows an info bubble with the museum name and city.
+ */
+@Composable
+private fun MuseumMapView(
+    museums: List<MuseumEntry>,
+    isFullscreen: Boolean,
+    onExpand: () -> Unit,
+    onOpenWebsite: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var mapView by remember { mutableStateOf<MapView?>(null) }
+
+    // Render / refresh pins whenever the filtered list changes.
+    LaunchedEffect(mapView, museums) {
+        val mv = mapView ?: return@LaunchedEffect
+        mv.overlays.removeAll { it is Marker && it.id?.startsWith("museum_pin_") == true }
+        museums.forEach { museum ->
+            val marker = MuseumMarker(mv, museum)
+            marker.id = "museum_pin_${museum.name}"
+            mv.overlays.add(marker)
+        }
+        // Auto-fit to all pins
+        val points = museums.map { GeoPoint(it.lat, it.lng) }
+        if (points.isNotEmpty()) {
+            if (points.size == 1) {
+                mv.controller.animateTo(points.first())
+                mv.controller.setZoom(8.0)
+            } else {
+                val box = BoundingBox.fromGeoPoints(points)
+                mv.zoomToBoundingBox(box, false, 64)
+            }
+        }
+        mv.invalidate()
+    }
+
+    Box(modifier = modifier) {
+        AndroidView(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+                .clip(RoundedCornerShape(20.dp)),
+            factory = { ctx ->
+                createRockScoutMapView(ctx).apply {
+                    controller.setZoom(3.5)
+                    controller.setCenter(GeoPoint(39.5, -98.35))
+                    overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
+                    val compass = CompassOverlay(ctx, this).apply { enableCompass() }
+                    overlays.add(compass)
+                    post {
+                        val d = ctx.resources.displayMetrics.density
+                        compass.setCompassCenter(width - 56f * d, 40f * d)
+                    }
+                    mapView = this
+                }
+            },
+            update = { /* handled by LaunchedEffect */ },
+        )
+
+        // Zoom controls (bottom-right)
+        MapZoomControls(
+            onZoomIn = { mapView?.controller?.zoomIn() },
+            onZoomOut = { mapView?.controller?.zoomOut() },
+            onRecenter = {},
+            showUser = false,
+            onSatellite = { toggleSatelliteView(mapView) },
+            mapView = mapView,
+            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+        )
+
+        // Expand to fullscreen (top-right)
+        MapExpandButton(
+            onClick = onExpand,
+            modifier = Modifier.align(Alignment.TopEnd).padding(16.dp),
+        )
+
+        // Offline notice (top-center)
+        MapOfflineNotice(
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 12.dp),
+        )
+
+        // Pin count badge (top-left)
+        if (museums.isNotEmpty()) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(16.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Slate800.copy(alpha = 0.92f))
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+            ) {
+                Text(
+                    "${museums.size} museum${if (museums.size != 1) "s" else ""} on map",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
                 )
             }
         }
     }
+
+    MapViewLifecycleEffect(mapView)
 }
+
+/**
+ * A map marker for a [MuseumEntry]. The pin is tinted with the Aqua accent.
+ * Tapping shows an info bubble with name + city, state.
+ */
+private class MuseumMarker(
+    mapView: MapView,
+    private val museum: MuseumEntry,
+) : Marker(mapView) {
+    init {
+        position = GeoPoint(museum.lat, museum.lng)
+        title = museum.name
+        snippet = "${museum.city}, ${museum.state}"
+        setAnchor(ANCHOR_CENTER, ANCHOR_BOTTOM)
+        icon = createMuseumPinDrawable(mapView.context)
+    }
+}
+
+/** Process-wide cache of museum pin bitmaps keyed by density. */
+private val museumPinCache = java.util.concurrent.ConcurrentHashMap<String, Bitmap>()
+
+/**
+ * Builds (or retrieves from cache) a teardrop pin [Drawable] in Aqua.
+ * Cached so 250+ pins don't allocate separate bitmaps.
+ */
+private fun createMuseumPinDrawable(
+    context: android.content.Context,
+): android.graphics.drawable.Drawable {
+    val density = context.resources.displayMetrics.density
+    val key = "museum_pin_${density}"
+    val bmp = museumPinCache.getOrPut(key) {
+        buildMuseumPinBitmap(density)
+    }
+    return BitmapDrawable(context.resources, bmp)
+}
+
+/** Builds the teardrop pin bitmap in Aqua with a white inner ring. */
+private fun buildMuseumPinBitmap(density: Float): Bitmap {
+    val sizePx = (28 * density).toInt().coerceAtLeast(28)
+    val bmp = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+    val canvas = AndroidCanvas(bmp)
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    val cx = sizePx / 2f
+    val cy = sizePx / 2f
+    val r = sizePx / 3f
+    val pinColor = 0xFF38B6FF.toInt() // Aqua
+
+    paint.color = pinColor
+    val path = Path().apply {
+        moveTo(cx, sizePx.toFloat())
+        lineTo(cx - r * 0.9f, cy + r * 0.4f)
+        lineTo(cx + r * 0.9f, cy + r * 0.4f)
+        close()
+    }
+    canvas.drawPath(path, paint)
+    canvas.drawCircle(cx, cy, r, paint)
+
+    paint.color = android.graphics.Color.WHITE
+    paint.style = Paint.Style.STROKE
+    paint.strokeWidth = 2.5f * density
+    canvas.drawCircle(cx, cy, r, paint)
+    paint.style = Paint.Style.FILL
+    canvas.drawCircle(cx, cy, r * 0.35f, paint)
+
+    return bmp
+}
+
+/* ── Museum list components ────────────────────────────────────────────────── */
 
 @Composable
 private fun MuseumStateSection(
