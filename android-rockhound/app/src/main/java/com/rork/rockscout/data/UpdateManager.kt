@@ -113,7 +113,12 @@ object UpdateManager {
     fun downloadAndInstall(context: Context): Boolean {
         val info = _updateInfo.value
         val storeUrl = info?.storeUrl?.ifBlank { DEFAULT_PLAY_STORE_URL } ?: DEFAULT_PLAY_STORE_URL
-        val apkUrl = info?.apkUrl?.ifBlank { null }
+
+        // Pro-flavor builds must use the premium APK so a self-update never
+        // downgrades a premium user to the trial build. Free-flavor builds
+        // use the trial APK.
+        val isProFlavor = com.rork.rockscout.BuildConfig.FORCE_PREMIUM
+        val apkUrl = (if (isProFlavor) info?.premiumApkUrl else info?.apkUrl)?.ifBlank { null }
 
         // Play installs must update through Play — sideloading over a Play
         // build fails on signature mismatch (Play re-signs with its own key).
@@ -131,7 +136,14 @@ object UpdateManager {
     }
 
     /** True when the backend published a direct APK for this release. */
-    fun hasDirectApk(): Boolean = _updateInfo.value?.apkUrl?.isNotBlank() == true
+    fun hasDirectApk(): Boolean {
+        val info = _updateInfo.value ?: return false
+        return if (com.rork.rockscout.BuildConfig.FORCE_PREMIUM) {
+            info.premiumApkUrl.isNotBlank()
+        } else {
+            info.apkUrl.isNotBlank()
+        }
+    }
 
     private fun installedVersionCode(context: Context): Int {
         return context.packageManager
@@ -158,8 +170,12 @@ data class AppUpdateInfo(
     val latestVersionName: String = "",
     val storeUrl: String = "",
     val changelog: String = "",
-    /** Direct APK download URL — when non-empty, the app can self-update by
-     * downloading and launching the system installer instead of going to the
-     * Play Store. Empty means fall back to [storeUrl]. */
+    /** Direct APK download URL for the **free/trial** flavor — when non-empty,
+     * the app can self-update by downloading and launching the system installer
+     * instead of going to the Play Store. Empty means fall back to [storeUrl]. */
     val apkUrl: String = "",
+    /** Direct APK download URL for the **premium/pro** flavor. Free-flavor
+     * builds ignore this; pro-flavor builds use it instead of [apkUrl] so a
+     * self-update never downgrades a premium user to the trial build. */
+    val premiumApkUrl: String = "",
 )

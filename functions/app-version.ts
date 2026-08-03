@@ -15,7 +15,7 @@
  * Every value can be overridden at runtime with a Cloudflare environment
  * variable of the same name, so a new APK can be published without a code
  * deploy — set APP_LATEST_VERSION_CODE / APP_LATEST_VERSION_NAME / APP_APK_URL
- * / APP_CHANGELOG in the Worker settings.
+ * / APP_PREMIUM_APK_URL / APP_CHANGELOG in the Worker settings.
  */
 
 const LATEST_VERSION_CODE = 11;
@@ -48,6 +48,7 @@ type AppVersionEnv = {
   APP_LATEST_VERSION_CODE?: string;
   APP_LATEST_VERSION_NAME?: string;
   APP_APK_URL?: string;
+  APP_PREMIUM_APK_URL?: string;
   APP_STORE_URL?: string;
   APP_IOS_STORE_URL?: string;
   APP_CHANGELOG?: string;
@@ -76,6 +77,7 @@ export function handleAppVersion(request: Request, env?: AppVersionEnv): Respons
       androidStoreUrl,
       iosStoreUrl,
       apkUrl: env?.APP_APK_URL?.trim() || APK_URL,
+      premiumApkUrl: env?.APP_PREMIUM_APK_URL?.trim() || PREMIUM_APK_URL,
       changelog: env?.APP_CHANGELOG?.trim() || CHANGELOG,
       checkedAt: new Date().toISOString(),
     }),
