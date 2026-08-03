@@ -183,6 +183,7 @@ private enum class ScanState {
     IDLE,
     MODERATING,
     SCANNING,
+    ARTIFACT_CONFIRM,
     CLARIFY_QUESTIONS,
     CLARIFYING,
     RESULTS,
@@ -246,6 +247,7 @@ fun IdentifyScreen(navController: NavController) {
     var webReferences by remember { mutableStateOf<List<WebReference>>(emptyList()) }
     var assemblageResult by remember { mutableStateOf<AssemblageResult?>(null) }
     var uncertainArtifact by remember { mutableStateOf(false) }
+    var artifactDetectConfidence by remember { mutableIntStateOf(0) }
     var preliminaryMatches by remember { mutableStateOf<List<IdentifyMatch>>(emptyList()) }
     var preliminarySummary by remember { mutableStateOf("") }
     val answers = remember { mutableStateMapOf<String, String>() }
@@ -316,13 +318,14 @@ fun IdentifyScreen(navController: NavController) {
         webReferences = emptyList()
         assemblageResult = null
         uncertainArtifact = false
+        artifactDetectConfidence = 0
         preliminaryMatches = emptyList()
         preliminarySummary = ""
         answers.clear()
         customAnswers.clear()
     }
 
-    fun startIdentification(searchMode: String = "rocks") {
+    fun startIdentification(searchMode: String = "rocks", skipArtifactDetect: Boolean = false) {
         val captures = angleCaptures.filter { it.bitmap != null }
         if (captures.isEmpty()) return
         // Gate: consume a credit before firing the AI call.
@@ -373,8 +376,8 @@ fun IdentifyScreen(navController: NavController) {
                 }
                 identifyStage = "Comparing against ${SeedData.allSpecimens.size} known specimens…"
                 identifyProgress = 0.55f
-                val response = cached ?: IdentifyApi.identifyMultiAngle(angleImages, entitlement, pendingSearchMode).also {
-                    if (it.error == null) IdentifyCache.put(combinedHash, it)
+                val response = cached ?: IdentifyApi.identifyMultiAngle(angleImages, entitlement, pendingSearchMode, skipArtifactDetect).also {
+                    if (it.error == null && !it.artifactDetected) IdentifyCache.put(combinedHash, it)
                 }
                 identifyProgress = 0.85f
                 identifyStage = "Building your results…"
@@ -387,6 +390,20 @@ fun IdentifyScreen(navController: NavController) {
                     accessManager.refundIdentify(consumedCredit)
                     errorMessage = response.error
                     state = ScanState.ERROR
+                    return@launch
+                }
+
+                // ── Artifact detection confirmation ──────────────────────────
+                // The backend detected a possible artifact (>= 70% confidence).
+                // Show the yes/maybe/no popup so the user can confirm before
+                // routing to the artifact pipeline. The consumed credit is
+                // preserved — the re-call (artifact or rock) does not consume
+                // a second credit because we refund here and re-consume on the
+                // next call.
+                if (response.artifactDetected && !skipArtifactDetect) {
+                    accessManager.refundIdentify(consumedCredit)
+                    artifactDetectConfidence = response.artifactConfidence
+                    state = ScanState.ARTIFACT_CONFIRM
                     return@launch
                 }
 
@@ -1066,6 +1083,39 @@ fun IdentifyScreen(navController: NavController) {
                             shape = RoundedCornerShape(14.dp),
                         )
                     }
+                    ScanState.ARTIFACT_CONFIRM -> Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        SculptedButton(
+                            text = "No",
+                            onClick = { startIdentification(skipArtifactDetect = true) },
+                            accent = Aqua,
+                            containerColor = Slate800,
+                            textColor = Aqua,
+                            modifier = Modifier.weight(1f).height(54.dp),
+                            shape = RoundedCornerShape(14.dp),
+                        )
+                        SculptedButton(
+                            text = "Maybe",
+                            onClick = { startIdentification(searchMode = "artifacts") },
+                            accent = Warning,
+                            containerColor = Warning,
+                            textColor = Color.Black,
+                            modifier = Modifier.weight(1f).height(54.dp),
+                            shape = RoundedCornerShape(14.dp),
+                        )
+                        SculptedButton(
+                            text = "Yes",
+                            onClick = { startIdentification(searchMode = "artifacts") },
+                            accent = Citrine,
+                            containerColor = Citrine,
+                            textColor = Ink,
+                            icon = Icons.Filled.Check,
+                            modifier = Modifier.weight(1f).height(54.dp),
+                            shape = RoundedCornerShape(14.dp),
+                        )
+                    }
                     ScanState.LOCKED -> Spacer(Modifier.height(0.dp))
                 }
             }
@@ -1101,6 +1151,42 @@ fun IdentifyScreen(navController: NavController) {
                                 color = Color(0xFFE2574C),
                                 fontWeight = FontWeight.SemiBold,
                             )
+                        }
+                    }
+                }
+            }
+
+            // Artifact detection confirmation — the AI detected a possible
+            // prehistoric artifact. Show a card explaining what was detected
+            // with yes/maybe/no buttons (the buttons are in the action area above).
+            if (state == ScanState.ARTIFACT_CONFIRM) {
+                item {
+                    DarkCard(modifier = Modifier.fillMaxWidth(), accent = Warning) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Filled.HelpOutline,
+                                contentDescription = null,
+                                tint = Warning,
+                                modifier = Modifier.size(22.dp),
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    "Is this a prehistoric artifact?",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    "Our AI thinks this might be a prehistoric artifact (${artifactDetectConfidence}% confidence) — like an arrowhead, tool, bead, or pottery — rather than a natural rock or mineral.\n\n" +
+                                        "• \u2705 Yes — search the artifact database\n" +
+                                        "• \u2753 Maybe — try the artifact database\n" +
+                                        "• \u274c No — continue with rock & mineral ID",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = DarkTextMid,
+                                    lineHeight = 18.sp,
+                                )
+                            }
                         }
                     }
                 }
@@ -1348,8 +1434,10 @@ fun IdentifyScreen(navController: NavController) {
                         onClick = {
                             // Run a rock-material pass on the same photo.
                             // Reset artifact matches and run the normal flow.
+                            // skipArtifactDetect=true so the backend doesn't
+                            // re-detect the artifact and show the popup again.
                             artifactMatches = emptyList()
-                            startIdentification(searchMode = "rocks")
+                            startIdentification(searchMode = "rocks", skipArtifactDetect = true)
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(14.dp),

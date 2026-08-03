@@ -69,6 +69,7 @@ export async function handleIdentify(
       }>;
       entitlement?: string;
       searchMode?: string;
+      skipArtifactDetect?: boolean;
     };
 
     // Parse images array, falling back to legacy single imageBase64
@@ -82,6 +83,7 @@ export async function handleIdentify(
 
     const tier = ((body.entitlement ?? "free") as string).toLowerCase();
     const searchMode = (body.searchMode ?? "rocks").toLowerCase();
+    const skipArtifactDetect = !!body.skipArtifactDetect;
 
     // ── Explicit artifact search mode ────────────────────────────────────
     if (searchMode === "artifacts") {
@@ -107,14 +109,35 @@ export async function handleIdentify(
     // ── Step 1: Combined describe + artifact detection (one Haiku call) ──
     // Haiku examines ALL photos + descriptions and returns BOTH a combined
     // description AND an artifact-detection verdict in a single JSON response.
+    // If skipArtifactDetect is true (user said "No" on the confirmation popup),
+    // we still run the combined call for the description but ignore the artifact
+    // verdict and proceed with the rock pipeline.
     const describeResult = await callDescribeAndDetect(
       toolkitUrl, toolkitSecret, images,
     );
 
-    // If artifact detected (>= 70% confidence), route to artifact pipeline
-    if (describeResult?.isArtifact && describeResult.artifactConfidence >= 70) {
+    // If artifact detected (>= 70% confidence) and user hasn't explicitly
+    // skipped detection, return the detection result so the client can show
+    // the yes/maybe/no confirmation popup. The client will re-call with
+    // searchMode=artifacts (yes/maybe) or skipArtifactDetect=true (no).
+    if (
+      describeResult?.isArtifact &&
+      describeResult.artifactConfidence >= 70 &&
+      !skipArtifactDetect
+    ) {
       modelsUsed.push("haiku-describe-artifact-detect");
-      return await identifyArtifact(env, cors, images, tier);
+      const detectResponse: IdentifyResponse = {
+        matches: [],
+        summary: "The AI detected that this may be a prehistoric artifact rather than a natural rock or mineral.",
+        needsClarification: false,
+        clarificationQuestions: [],
+        webReferences: [],
+        modelsUsed,
+        visualReferenceUsed: false,
+        artifactDetected: true,
+        artifactConfidence: describeResult.artifactConfidence,
+      };
+      return Response.json(detectResponse, { headers: responseHeaders });
     }
 
     const photoDescription = describeResult?.description ?? "";
@@ -376,11 +399,22 @@ async function identifyArtifact(
       modelsUsed.push("haiku-artifact");
     }
 
+    // ── Artifact web context search ───────────────────────────────────
+    // Search authoritative archaeological and museum sites for context on
+    // the top artifact candidates. Feeds into the visual comparison prompt.
+    const artifactWebContext = await fetchArtifactContext(
+      toolkitUrl, toolkitSecret, parsed.matches,
+    );
+    if (artifactWebContext.text) {
+      modelsUsed.push("web-search-artifact");
+    }
+
     const visualMaxCandidates = usedEmbeddingFlow
       ? (useSonnet ? 20 : 25)
       : (useSonnet ? 12 : 15);
     const visualResult = await callArtifactVisualComparison(
       toolkitUrl, toolkitSecret, imageData, mimeType, parsed.matches, useSonnet, visualMaxCandidates,
+      artifactWebContext.text,
     );
 
     let finalMatches = parsed.matches;
@@ -450,7 +484,12 @@ async function identifyArtifact(
       clarificationQuestions = await generateArtifactClarificationQuestions(
         toolkitUrl, toolkitSecret, finalMatches, finalSummary,
       );
-      webReferences = await searchWebReferences(toolkitUrl, toolkitSecret, finalMatches);
+      webReferences = await searchWebReferences(toolkitUrl, toolkitSecret, finalMatches, true);
+    }
+
+    // Always fetch web references for artifacts — museums, archaeological sites
+    if (webReferences.length === 0 && finalMatches.length > 0) {
+      webReferences = await searchWebReferences(toolkitUrl, toolkitSecret, finalMatches, true);
     }
 
     const uncertainArtifact = !visualShortCircuit && finalTopConfidence < 55;
@@ -660,6 +699,7 @@ async function callArtifactVisualComparison(
   preliminaryMatches: MatchResult[],
   useSonnet: boolean,
   maxCandidates: number = 12,
+  webContext: string = "",
 ): Promise<IdentificationResult | null> {
   if (preliminaryMatches.length === 0) return null;
 
@@ -685,10 +725,14 @@ async function callArtifactVisualComparison(
 
   const refList = refs.map((r, i) => `${i + 1}. ${r.name} (id: ${r.id})`).join("\n");
 
+  const webContextBlock = webContext
+    ? `\n\nPublished archaeological data for top candidates:\n${webContext}\n\nUse BOTH the visual similarity AND the published archaeological data (typology, period, cultural affiliation, diagnostic features) to rank candidates. If the published data contradicts the visual appearance, note the discrepancy in your reasoning.`
+    : "";
+
   const prompt = `You are comparing a user's artifact photo against database reference images.
 
 The first image is the user's unknown artifact. The following images are reference photos for these candidates:
-${refList}
+${refList}${webContextBlock}
 
 Visually compare the user's photo against each reference image. Focus on:
 - Overall shape and silhouette match
@@ -2170,15 +2214,49 @@ async function searchWebReferences(
   toolkitUrl: string,
   secret: string,
   matches: MatchResult[],
+  isArtifact: boolean = false,
 ): Promise<WebReference[]> {
   if (matches.length === 0) return [];
 
   const topMatch = matches[0];
   const secondMatch = matches[1];
 
-  const query = secondMatch
-    ? `${topMatch.name} vs ${secondMatch.name} identification mineralogy distinguishing features`
-    : `${topMatch.name} mineral identification properties`;
+  const query = isArtifact
+    ? (secondMatch
+        ? `${topMatch.name} vs ${secondMatch.name} artifact identification archaeology distinguishing features`
+        : `${topMatch.name} artifact identification archaeology type`)
+    : (secondMatch
+        ? `${topMatch.name} vs ${secondMatch.name} identification mineralogy distinguishing features`
+        : `${topMatch.name} mineral identification properties`);
+
+  const domains = isArtifact
+    ? [
+        "wikipedia.org",
+        "archaeology.org",
+        "sha.org",
+        "saa.org",
+        "antiquity.ac.uk",
+        "britishmuseum.org",
+        "metmuseum.org",
+        "amnh.org",
+        "si.edu",
+        "nps.gov",
+        "txsh-09.org",
+        "lithiccastinglab.com",
+        "projectilepoints.net",
+        "indiana.edu",
+        "umass.edu",
+      ]
+    : [
+        "mindat.org",
+        "webmineral.com",
+        "minerals.net",
+        "geology.com",
+        "handbookofmineralogy.org",
+        "rruff.info",
+        "minsocam.org",
+        "wikipedia.org",
+      ];
 
   try {
     const exaUrl = `${toolkitUrl}/v2/exa/search`;
@@ -2192,16 +2270,7 @@ async function searchWebReferences(
         query,
         numResults: 4,
         useAutoprompt: true,
-        includeDomains: [
-          "mindat.org",
-          "webmineral.com",
-          "minerals.net",
-          "geology.com",
-          "handbookofmineralogy.org",
-          "rruff.info",
-          "minsocam.org",
-          "wikipedia.org",
-        ],
+        includeDomains: domains,
         contents: {
           text: { maxCharacters: 500 },
           highlights: { numSentences: 2, highlightsPerUrl: 1 },
@@ -2322,6 +2391,91 @@ async function fetchMineralogyContext(
     return { text, references };
   } catch (err) {
     console.error("Mineralogy context fetch error:", String(err));
+    return { text: "", references: [] };
+  }
+}
+
+/** Fetch archaeological context from authoritative museum and archaeological
+ *  sites to feed into the artifact visual comparison prompt. Searches for
+ *  typology, period, cultural affiliation, and diagnostic features for the
+ *  top artifact candidates. Returns a formatted text block for the prompt
+ *  plus web references for the response. */
+async function fetchArtifactContext(
+  toolkitUrl: string,
+  secret: string,
+  matches: MatchResult[],
+): Promise<{ text: string; references: WebReference[] }> {
+  if (matches.length === 0) return { text: "", references: [] };
+
+  const topCandidates = matches.slice(0, 3);
+  const candidateNames = topCandidates.map(m => m.name).join(" vs ");
+  const query = `${candidateNames} artifact typology period culture diagnostic features archaeology`;
+
+  try {
+    const exaUrl = `${toolkitUrl}/v2/exa/search`;
+    const response = await fetch(exaUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${secret}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query,
+        numResults: 6,
+        useAutoprompt: true,
+        includeDomains: [
+          "wikipedia.org",
+          "archaeology.org",
+          "sha.org",
+          "saa.org",
+          "antiquity.ac.uk",
+          "britishmuseum.org",
+          "metmuseum.org",
+          "amnh.org",
+          "si.edu",
+          "nps.gov",
+          "projectilepoints.net",
+          "lithiccastinglab.com",
+          "indiana.edu",
+          "umass.edu",
+        ],
+        contents: {
+          text: { maxCharacters: 500 },
+          highlights: { numSentences: 2, highlightsPerUrl: 1 },
+        },
+        type: "neural",
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("Artifact context search error:", response.status);
+      return { text: "", references: [] };
+    }
+
+    const data = await response.json() as ExaSearchResponse;
+    if (!data.results || !Array.isArray(data.results)) return { text: "", references: [] };
+
+    const contextLines: string[] = [];
+    for (let i = 0; i < Math.min(data.results.length, 6); i++) {
+      const r = data.results[i];
+      const title = r.title ?? "";
+      const text = r.text ?? "";
+      const source = extractDomain(r.url ?? "");
+      const snippet = text.slice(0, 300);
+      contextLines.push(`[${title}] (${source}): ${snippet}`);
+    }
+
+    const text = contextLines.join("\n");
+    const references = data.results.slice(0, 4).map((r, i): WebReference => ({
+      title: r.title ?? `Reference ${i + 1}`,
+      url: r.url ?? "",
+      snippet: r.text?.slice(0, 300) ?? (r.highlight ? r.highlight[0] : ""),
+      source: extractDomain(r.url ?? ""),
+    }));
+
+    return { text, references };
+  } catch (err) {
+    console.error("Artifact context fetch error:", String(err));
     return { text: "", references: [] };
   }
 }
@@ -2633,6 +2787,8 @@ interface IdentifyResponse {
   visualReferenceUsed?: boolean;
   assemblage?: AssemblageResult;
   uncertainArtifact?: boolean;
+  artifactDetected?: boolean;
+  artifactConfidence?: number;
 }
 
 interface ExaSearchResult {

@@ -34,6 +34,10 @@ data class IdentifyRequest(
     /** Multi-angle images array — 1-3 photos with per-angle descriptions.
      *  When non-empty, the backend uses this instead of `imageBase64`. */
     val images: List<AngleImage> = emptyList(),
+    /** When true, the backend skips artifact detection and runs the rock ID
+     *  pipeline even if the combined describe call detects an artifact.
+     *  Set when the user taps "No" on the artifact confirmation popup. */
+    val skipArtifactDetect: Boolean = false,
 )
 
 @Serializable
@@ -84,6 +88,8 @@ data class IdentifyResponse(
     val modelsUsed: List<String> = emptyList(),
     val assemblage: AssemblageResult? = null,
     val uncertainArtifact: Boolean = false,
+    val artifactDetected: Boolean = false,
+    val artifactConfidence: Int = 0,
 )
 
 @Serializable
@@ -166,6 +172,7 @@ object IdentifyApi {
         angleImages: List<AngleImage>,
         entitlement: String = "free",
         searchMode: String = "rocks",
+        skipArtifactDetect: Boolean = false,
     ): IdentifyResponse {
         val response = identifyClient.post("$BASE_URL/identify") {
             contentType(ContentType.Application.Json)
@@ -177,6 +184,7 @@ object IdentifyApi {
                         images = angleImages,
                         entitlement = entitlement,
                         searchMode = searchMode,
+                        skipArtifactDetect = skipArtifactDetect,
                     ),
                 )
             )
