@@ -1608,6 +1608,19 @@ fun IdentifyScreen(navController: NavController) {
 
         // Reply email dialog — shown after user picks a museum to email
         emailTargetMuseum?.let { museum ->
+            // Collect current GPS coordinates and reverse-geocode them so
+            // the expert email includes both a readable location and raw coords.
+            val currentCoords = AppRepository.instance.currentLocation.value
+            val profile = AppRepository.instance.profile.value
+            var expertLocationText by remember { mutableStateOf("") }
+            LaunchedEffect(museum) {
+                expertLocationText = com.rork.rockscout.data.GeoUtils.emailLocationString(
+                    context = context,
+                    lat = currentCoords.first,
+                    lng = currentCoords.second,
+                    homeRegion = profile.homeRegion,
+                )
+            }
             ReplyEmailDialog(
                 museum = museum,
                 museums = emailTargetMuseums,
@@ -1616,6 +1629,7 @@ fun IdentifyScreen(navController: NavController) {
                 artifactConfidences = artifactMatches.map { it.second.confidence },
                 aiSummary = aiSummary,
                 capturedBitmap = angleCaptures.firstOrNull { it.bitmap != null }?.bitmap,
+                userLocationText = expertLocationText,
             )
         }
 

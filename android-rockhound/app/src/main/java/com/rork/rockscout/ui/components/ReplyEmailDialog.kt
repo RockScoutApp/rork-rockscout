@@ -842,6 +842,7 @@ private fun launchEmailDraft(
         appendLine("You can reply to me at: $replyEmail")
         if (userLocationText.isNotBlank()) {
             appendLine("Approximate location: $userLocationText")
+            appendLine()
         }
         appendLine()
         appendLine("Thank you for your time and expertise.")
