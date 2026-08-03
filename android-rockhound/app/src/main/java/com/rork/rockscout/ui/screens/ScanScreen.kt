@@ -828,6 +828,41 @@ private fun HunterCard(
                         color = DarkTextMid,
                         maxLines = 1,
                     )
+                    // Last-active indicator
+                    if (h.last_location_update > 0L) {
+                        val activeText = remember(h.last_location_update) {
+                            val elapsedMs = System.currentTimeMillis() - h.last_location_update
+                            val mins = elapsedMs / 60_000L
+                            when {
+                                mins < 1L -> "Active just now"
+                                mins < 60L -> "Active ${mins}m ago"
+                                mins < 24 * 60L -> "Active ${mins / 60L}h ago"
+                                else -> "Active ${mins / (24 * 60L)}d ago"
+                            }
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (h.last_location_update > System.currentTimeMillis() - 300_000L) Success
+                                        else if (h.last_location_update > System.currentTimeMillis() - 3_600_000L) Citrine
+                                        else TextLow
+                                    ),
+                            )
+                            Text(
+                                activeText,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = DarkTextMid,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                            )
+                        }
+                    }
                 }
                 SculptedIconButton(
                     icon = Icons.Filled.Flag,

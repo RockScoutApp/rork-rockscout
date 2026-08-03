@@ -45,6 +45,9 @@ class SocialRepository private constructor() {
         val wishlist_count: Int = 0,
         val favorite_spots_count: Int = 0,
         val last_location_update: Long = 0L,
+        val gender: String = "rather_not_say",
+        val birthday_millis: Long? = null,
+        val birthday_public: Boolean = false,
     )
 
     /** Result of a scan: the hunter + coarse distance bucket (mi). */
@@ -165,6 +168,9 @@ class SocialRepository private constructor() {
                 club_enabled = profile.clubEnabled,
                 scan_radius_miles = profile.scanRadiusMiles,
                 last_location_update = users.getOrNull(idx)?.last_location_update ?: 0L,
+                gender = profile.gender,
+                birthday_millis = profile.birthdayMillis,
+                birthday_public = profile.birthdayPublic,
             )
             if (idx >= 0) users[idx] = updated else users.add(updated)
             LocalDataStore.setTable(LocalDataStore.KEY_USERS, users)

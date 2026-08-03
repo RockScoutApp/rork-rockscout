@@ -2280,6 +2280,16 @@ private fun LongPressSaveDialog(
                             val result = saveImageToGalleryAndCollection(context, imageUrl)
                             saveMessage = result
                             showToast = true
+                            // Show snackbar toast for successful save
+                            if (result?.contains("saved", ignoreCase = true) == true || result == null) {
+                                android.widget.Toast.makeText(
+                                    context,
+                                    "Image saved to gallery",
+                                    android.widget.Toast.LENGTH_SHORT,
+                                ).show()
+                            }
+                            kotlinx.coroutines.delay(2500)
+                            showToast = false
                         }
                     },
                     accent = Citrine,
@@ -2292,23 +2302,6 @@ private fun LongPressSaveDialog(
             dismissButton = {
                 TextButton(onClick = onDismiss) {
                     Text("Cancel", color = DarkTextMid)
-                }
-            },
-            containerColor = Slate900,
-        )
-    } else {
-        AlertDialog(
-            onDismissRequest = { showToast = false; onDismiss() },
-            title = null,
-            text = {
-                Text(
-                    text = saveMessage ?: "Saved",
-                    color = TextHigh,
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = { showToast = false; onDismiss() }) {
-                    Text("OK", color = Aqua)
                 }
             },
             containerColor = Slate900,

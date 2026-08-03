@@ -43,6 +43,12 @@ data class LocalUser(
     val deleted_at: Long? = null,
     /** Timestamp (millis) when the admin restored the account (null if never restored). */
     val restored_at: Long? = null,
+    /** User's gender: "male", "female", or "rather_not_say". Shown on public profile. */
+    val gender: String = "rather_not_say",
+    /** Birthday as epoch millis (00:00 UTC). Null = not set / rather not say. */
+    val birthday_millis: Long? = null,
+    /** Whether the birthday is shown publicly. */
+    val birthday_public: Boolean = false,
 ) {
     /** Convert to the HunterProfile shape used by scan results + friend lists. */
     fun toHunterProfile(): SocialRepository.HunterProfile = SocialRepository.HunterProfile(
@@ -59,5 +65,8 @@ data class LocalUser(
         wishlist_count = wishlist_ids.size,
         favorite_spots_count = favorite_spot_ids.size,
         last_location_update = last_location_update,
+        gender = gender,
+        birthday_millis = if (birthday_public) birthday_millis else null,
+        birthday_public = birthday_public,
     )
 }

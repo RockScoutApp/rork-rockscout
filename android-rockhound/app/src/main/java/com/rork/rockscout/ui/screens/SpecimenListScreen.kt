@@ -373,13 +373,6 @@ fun SpecimenListScreen(navController: NavController) {
                     onClick = { showSubmitDialog = true },
                 )
             }
-            Text(
-                "Browse every rock, mineral, crystal, and fossil in the database — filter by class or search by name. Tap any specimen for full details, photos, and where to find it.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextMid,
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
-            )
-
             // Category filter tabs
             CategoryFilterRow(
                 selectedFilter = selectedFilter,
@@ -388,10 +381,11 @@ fun SpecimenListScreen(navController: NavController) {
                 onNavigate = { navController.navigate(Routes.ROCKS_ARE_AMAZING) },
             )
 
-            // Recently Added filter chip
+            // Recently Added filter chip + search bar — combined in one row
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.Start,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 val toggleShape = RoundedCornerShape(12.dp)
                 val toggleAccent = Citrine
@@ -408,50 +402,51 @@ fun SpecimenListScreen(navController: NavController) {
                         style = MaterialTheme.typography.labelLarge,
                         color = if (showRecentlyAddedOnly) Color(0xFF1A1306) else toggleAccent,
                         fontWeight = if (showRecentlyAddedOnly) FontWeight.Bold else FontWeight.Medium,
+                        maxLines = 1,
                     )
                 }
-            }
-            TextField(
-                value = query,
-                onValueChange = { query = it },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Slate800.copy(alpha = 0.6f))
-                    .glowingBorder(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(16.dp)).noAutoFocus(),
-                placeholder = {
-                    Text(
-                        "Search by name, category, color, location…",
-                        color = TextLow,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                },
-                leadingIcon = {
-                    Icon(Icons.Filled.Search, contentDescription = "Search", tint = TextLow)
-                },
-                trailingIcon = {
-                    if (query.isNotEmpty()) {
-                        Icon(
-                            Icons.Filled.Clear,
-                            contentDescription = "Clear",
-                            tint = TextLow,
-                            modifier = Modifier.clickable { query = "" },
+                TextField(
+                    value = query,
+                    onValueChange = { query = it },
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Slate800.copy(alpha = 0.6f))
+                        .glowingBorder(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(16.dp)).noAutoFocus(),
+                    placeholder = {
+                        Text(
+                            "Search…",
+                            color = TextLow,
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1,
                         )
-                    }
-                },
-                singleLine = true,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    cursorColor = Citrine,
-                ),
-                textStyle = MaterialTheme.typography.bodyMedium,
-            )
+                    },
+                    leadingIcon = {
+                        Icon(Icons.Filled.Search, contentDescription = "Search", tint = TextLow)
+                    },
+                    trailingIcon = {
+                        if (query.isNotEmpty()) {
+                            Icon(
+                                Icons.Filled.Clear,
+                                contentDescription = "Clear",
+                                tint = TextLow,
+                                modifier = Modifier.clickable { query = "" },
+                            )
+                        }
+                    },
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        cursorColor = Citrine,
+                    ),
+                    textStyle = MaterialTheme.typography.bodyMedium,
+                )
+            }
 
             // ARTIFACTS chip — swap list source (the ONLY specimen-DB connection point).
             // Specimen data, filter, and card are NOT touched — this is a screen-level

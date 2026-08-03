@@ -145,6 +145,26 @@ fun RockScoutsMapScreen(navController: NavController) {
     var showDownloadSheet by remember { mutableStateOf(false) }
     var showShareConfirmDialog by remember { mutableStateOf(false) }
     var selectedSharedPing by remember { mutableStateOf<SocialRepository.SharedPingRow?>(null) }
+    var showRemovePingConfirm by remember { mutableStateOf(false) }
+    var showColorPicker by remember { mutableStateOf(false) }
+
+    // Safety banner persistence: load dismissed state on entry, clear on dispose
+    // so the banner reappears next time the user opens the screen.
+    DisposableEffect(Unit) {
+        showSafetyNote = !com.rork.rockscout.data.LocalDataStore.getBoolean("safety_banner_dismissed")
+        onDispose {
+            com.rork.rockscout.data.LocalDataStore.setBoolean("safety_banner_dismissed", false)
+        }
+    }
+
+    // Ping marker color — stored locally, used for the user's ping marker.
+    var pingColorArgb by remember {
+        mutableStateOf(
+            com.rork.rockscout.data.LocalDataStore.getString("ping_marker_color")
+                ?.toLongOrNull()?.let { Color(it.toULong()) }
+                ?: Citrine
+        )
+    }
 
     BackHandler(enabled = showSafetyNote) { showSafetyNote = false }
 
@@ -175,13 +195,13 @@ fun RockScoutsMapScreen(navController: NavController) {
     // Render my ping marker + shared pings on the map. Only my own ping
     // is shown by default — shared pings (received via Messenger) appear
     // in a different color with a directions button.
-    LaunchedEffect(pings, sharedPings, mapView) {
+    LaunchedEffect(pings, sharedPings, mapView, pingColorArgb) {
         val mv = mapView ?: return@LaunchedEffect
         try {
             withContext(Dispatchers.IO) {
                 if (!isActive) return@withContext
                 mv.overlays.removeAll { it is Marker && it.id?.startsWith("ping_") == true }
-                // My ping — citrine/Success color
+                // My ping — uses the user's chosen color
                 pings.forEach { ping ->
                     if (!isActive) return@withContext
                     val marker = PingMarker(
@@ -193,6 +213,7 @@ fun RockScoutsMapScreen(navController: NavController) {
                         displayName = "You",
                         avatarEmoji = "\u26CF\uFE0F",
                         onOpenThread = { {} },
+                        markerColor = pingColorArgb,
                     )
                     marker.id = "ping_${ping.id}"
                     mv.overlays.add(marker)
@@ -356,6 +377,24 @@ fun RockScoutsMapScreen(navController: NavController) {
                     fontWeight = FontWeight.Bold,
                 )
             }
+            Spacer(Modifier.width(8.dp))
+            // Ping color picker button
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(pingColorArgb.copy(alpha = 0.25f))
+                    .glowingBorder(2.dp, pingColorArgb, CircleShape)
+                    .clickable { showColorPicker = true },
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(16.dp)
+                        .clip(CircleShape)
+                        .background(pingColorArgb),
+                )
+            }
         }
 
         // Zoom controls — compact shared component, raised well above the bottom
@@ -407,7 +446,10 @@ fun RockScoutsMapScreen(navController: NavController) {
                                 accent = Citrine,
                                 shadowElevation = 3.dp,
                                 circular = true,
-                                onClick = { showSafetyNote = false },
+                                onClick = {
+                                    showSafetyNote = false
+                                    com.rork.rockscout.data.LocalDataStore.setBoolean("safety_banner_dismissed", true)
+                                },
                             )
                             .clip(CircleShape)
                             .background(Color.Black),
@@ -506,12 +548,7 @@ fun RockScoutsMapScreen(navController: NavController) {
                         )
                         SculptedButton(
                             text = "Remove ping",
-                            onClick = {
-                                scope.launch {
-                                    runCatching { social.clearMyPing() }
-                                    runCatching { social.loadVisiblePings() }
-                                }
-                            },
+                            onClick = { showRemovePingConfirm = true },
                             modifier = Modifier.weight(1f),
                             accent = Aqua,
                             containerColor = Color(0xFF3A3830),
@@ -673,6 +710,57 @@ fun RockScoutsMapScreen(navController: NavController) {
             )
         }
 
+        // Remove ping confirmation dialog
+        if (showRemovePingConfirm) {
+            AlertDialog(
+                onDismissRequest = { showRemovePingConfirm = false },
+                containerColor = Color(0xFF1C1A14),
+                titleContentColor = DarkTextHigh,
+                textContentColor = DarkTextHigh,
+                title = { Text("Stop sharing your location?") },
+                text = {
+                    Text("Other hunters will no longer be able to find you nearby. You can set a new ping anytime.")
+                },
+                confirmButton = {
+                    SculptedButton(
+                        text = "Stop sharing",
+                        onClick = {
+                            showRemovePingConfirm = false
+                            scope.launch {
+                                runCatching { social.clearMyPing() }
+                                runCatching { social.loadVisiblePings() }
+                            }
+                        },
+                        accent = Danger,
+                        containerColor = Danger,
+                        textColor = Color.White,
+                    )
+                },
+                dismissButton = {
+                    SculptedOutlinedButton(
+                        text = "Cancel",
+                        onClick = { showRemovePingConfirm = false },
+                        accent = Aqua,
+                        textColor = DarkTextHigh,
+                    )
+                },
+            )
+        }
+
+        // Ping color picker dialog
+        if (showColorPicker) {
+            PingColorPickerDialog(
+                currentColor = pingColorArgb,
+                onSelect = { color ->
+                    pingColorArgb = color
+                    com.rork.rockscout.data.LocalDataStore.setString("ping_marker_color", color.value.toString())
+                    showColorPicker = false
+                    scope.launch { social.loadVisiblePings() }
+                },
+                onDismiss = { showColorPicker = false },
+            )
+        }
+
         // Ping confirmation dialog
         if (showPingConfirmDialog) {
             val center = mapView?.mapCenter
@@ -781,13 +869,17 @@ private class PingMarker(
     private val displayName: String,
     private val avatarEmoji: String,
     private val onOpenThread: () -> Unit,
+    markerColor: Color = Citrine,
 ) : Marker(mapView) {
     init {
         position = GeoPoint(lat, lng)
         title = if (isMine) "Your ping" else displayName
         snippet = label
         setAnchor(ANCHOR_CENTER, ANCHOR_BOTTOM)
-        icon = createPingIcon(mapView.context, if (isMine) Citrine else Aqua, avatarEmoji)
+        icon = createPingIcon(mapView.context, markerColor, avatarEmoji)
+        // Note: the caller's chosen color is applied at the call site by passing
+        // it through the PingMarker constructor — see the LaunchedEffect that
+        // creates markers for the actual color used.
         setOnMarkerClickListener { _, _ ->
             if (!isMine) onOpenThread()
             true
@@ -838,4 +930,69 @@ private fun createPingIcon(
         canvas.drawCircle(cx, cy, r * 0.35f, paint)
     }
     return android.graphics.drawable.BitmapDrawable(context.resources, bmp)
+}
+
+/** 30 easily-distinguishable colors for the ping marker color picker. */
+private val PING_COLORS = listOf(
+    Color(0xFFFF3B30), Color(0xFFFF9500), Color(0xFFFFCC00), Color(0xFFFF2D55), Color(0xFFE8A33D), Color(0xFFD9B26A),
+    Color(0xFF34C759), Color(0xFF5CC98C), Color(0xFF00C7BE), Color(0xFF30B0C7), Color(0xFF32ADE6), Color(0xFF007AFF),
+    Color(0xFF5856D6), Color(0xFF9B7BD8), Color(0xFFAF52DE), Color(0xFFB08BFF), Color(0xFFFF6B3D), Color(0xFFFF5E3A),
+    Color(0xFF00E5C9), Color(0xFF4FC3F7), Color(0xFF6FA8C7), Color(0xFF7CB5EC), Color(0xFF8BBF6A), Color(0xFF6FBF8A),
+    Color(0xFFB87333), Color(0xFFC97B4A), Color(0xFFE2574C), Color(0xFF1B3A4B), Color(0xFF44AACC), Color(0xFFC0C0C0),
+)
+
+@Composable
+private fun PingColorPickerDialog(
+    currentColor: Color,
+    onSelect: (Color) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF1C1A14),
+        titleContentColor = DarkTextHigh,
+        textContentColor = DarkTextHigh,
+        title = { Text("Ping marker color", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    "Choose the color of your ping marker on other hunters' maps.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = DarkTextMid,
+                )
+                Spacer(Modifier.height(12.dp))
+                PING_COLORS.chunked(6).forEach { row ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+                    ) {
+                        row.forEach { color ->
+                            val isSelected = color == currentColor
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(color)
+                                    .glowingBorder(
+                                        if (isSelected) 3.dp else 1.dp,
+                                        if (isSelected) Color.White else Color.White.copy(alpha = 0.2f),
+                                        CircleShape,
+                                    )
+                                    .clickable { onSelect(color) },
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(10.dp))
+                }
+            }
+        },
+        confirmButton = {
+            SculptedOutlinedButton(
+                text = "Close",
+                onClick = onDismiss,
+                accent = Aqua,
+                textColor = DarkTextHigh,
+            )
+        },
+    )
 }

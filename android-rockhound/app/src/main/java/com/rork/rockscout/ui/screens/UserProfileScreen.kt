@@ -329,6 +329,61 @@ fun UserProfileScreen(
                                     modifier = Modifier.weight(1f),
                                 )
                             }
+                            // Gender + Birthday from fullUser
+                            val genderLabel = when (fullUser?.gender) {
+                                "male" -> "Male"
+                                "female" -> "Female"
+                                else -> null
+                            }
+                            val birthdayText = fullUser?.birthday_millis?.let { millis ->
+                                val bCal = java.util.Calendar.getInstance().apply { timeInMillis = millis }
+                                "%02d/%02d/%04d".format(
+                                    bCal.get(java.util.Calendar.MONTH) + 1,
+                                    bCal.get(java.util.Calendar.DAY_OF_MONTH),
+                                    bCal.get(java.util.Calendar.YEAR),
+                                )
+                            }
+                            if (genderLabel != null || birthdayText != null) {
+                                Spacer(Modifier.height(4.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    if (genderLabel != null) {
+                                        Text(
+                                            genderLabel,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = DarkTextMid,
+                                            fontWeight = FontWeight.SemiBold,
+                                        )
+                                    }
+                                    if (genderLabel != null && birthdayText != null) {
+                                        Text("·", style = MaterialTheme.typography.labelMedium, color = DarkTextMid)
+                                    }
+                                    if (birthdayText != null) {
+                                        Text(
+                                            birthdayText,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = DarkTextMid,
+                                            fontWeight = FontWeight.SemiBold,
+                                        )
+                                    }
+                                    val fu = fullUser
+                                    if (fu?.birthday_millis != null && fu.birthday_public) {
+                                        Text(
+                                            "(Public)",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = DarkTextMid.copy(alpha = 0.5f),
+                                        )
+                                    } else if (fu?.birthday_millis != null && !fu.birthday_public) {
+                                        Text(
+                                            "Private",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = DarkTextMid.copy(alpha = 0.5f),
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                     Spacer(Modifier.height(14.dp))

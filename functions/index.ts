@@ -19,6 +19,7 @@ import { handleEntitlement } from "./entitlement";
 import { handleSettingsBackup } from "./settings-backup";
 import { handleImageProxy, buildProxyCors } from "./image-proxy";
 import { handleErrorReport } from "./error-report";
+import { handleSendErrorEmail } from "./send-error-email";
 import {
   buildCorsHeaders,
   guardEndpoint,
@@ -308,6 +309,19 @@ export default {
           EXPO_PUBLIC_RORK_APP_KEY?: string;
           EXPO_PUBLIC_SUPABASE_URL?: string;
           SUPABASE_SERVICE_ROLE_KEY?: string;
+        },
+        cors,
+      );
+    }
+
+    // Fatal error email — called by the PostgreSQL trigger on rockscout_error_logs
+    // when a new fatal error is inserted. App-key auth (same as /error-report).
+    if (url.pathname === "/send-error-email" && request.method === "POST") {
+      return handleSendErrorEmail(
+        request,
+        env as unknown as {
+          EXPO_PUBLIC_RORK_APP_KEY?: string;
+          RESEND_API_KEY?: string;
         },
         cors,
       );

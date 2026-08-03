@@ -357,7 +357,9 @@ fun TripCalendarScreen(navController: NavController) {
                 // Build the full grid: leading blanks + all days, then chunk into weeks of 7.
                 // We fill leading/trailing cells with previous/next month dates so the grid
                 // is always complete and never has empty dead-space cells.
-                val totalCells = firstDayOfWeek + daysInMonth
+                // Pad totalCells up to the next multiple of 7 so every week row is full.
+                val rawCells = firstDayOfWeek + daysInMonth
+                val totalCells = ((rawCells + 6) / 7) * 7
                 val weeks = (0 until totalCells).chunked(7)
                 val prevMonth = (currentMonth.clone() as Calendar).apply { add(Calendar.MONTH, -1) }
                 val prevDaysInMonth = prevMonth.getActualMaximum(Calendar.DAY_OF_MONTH)

@@ -52,6 +52,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.OutlinedButton
+import com.rork.rockscout.ui.theme.DarkTextMid
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -146,6 +148,7 @@ fun SocialSettingsScreen(
     // POST_NOTIFICATIONS. Pre-TIRAMISU devices are always treated as granted.
     var pendingNotifToggle by remember { mutableStateOf<String?>(null) }
     var showDeleteAccountConfirm by remember { mutableStateOf(false) }
+    var showStopSharingConfirm by remember { mutableStateOf(false) }
     val permissionsLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) { results ->
@@ -240,7 +243,7 @@ fun SocialSettingsScreen(
                         permissionsLauncher.launch(perms.toTypedArray())
                         repo.setLocationMonitoring(enabled)
                     } else {
-                        repo.setLocationMonitoring(enabled)
+                        showStopSharingConfirm = true
                     }
                 },
             )
@@ -1045,6 +1048,42 @@ fun SocialSettingsScreen(
 
             Spacer(Modifier.height(40.dp))
         }
+    }
+
+    // Stop sharing confirmation
+    if (showStopSharingConfirm) {
+        AlertDialog(
+            onDismissRequest = { showStopSharingConfirm = false },
+            containerColor = Color(0xFF1E1C16),
+            titleContentColor = Color.White,
+            textContentColor = DarkTextMid,
+            title = { Text("Stop sharing your location?", color = Color.White, fontWeight = FontWeight.Bold) },
+            text = {
+                Text(
+                    "Other hunters will no longer be able to find you nearby. You can turn it back on anytime.",
+                    color = DarkTextMid,
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showStopSharingConfirm = false
+                        repo.setLocationMonitoring(false)
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFE2574C),
+                        contentColor = Color.White,
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                ) { Text("Stop sharing", fontWeight = FontWeight.Bold) }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { showStopSharingConfirm = false },
+                    shape = RoundedCornerShape(12.dp),
+                ) { Text("Cancel", color = DarkTextMid) }
+            },
+        )
     }
 
     // Account deletion confirmation

@@ -103,6 +103,12 @@ data class UserProfile(
      *  When set, the AuroraAlertWorker fires notifications when Kp reaches this value
      *  instead of the computed latitude threshold. Range 0.0–9.0 in 0.5 steps. */
     val auroraKpThreshold: Float? = null,
+    /** User's gender: "male", "female", or "rather_not_say". Shown on public profile. */
+    val gender: String = "rather_not_say",
+    /** Birthday as epoch millis (00:00 UTC of the birth date). Null = not set / rather not say. */
+    val birthdayMillis: Long? = null,
+    /** Whether the birthday is shown publicly. When false, public profiles show "Private". */
+    val birthdayPublic: Boolean = false,
 )
 
 /**

@@ -119,6 +119,11 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import java.util.Calendar
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import com.rork.rockscout.data.RegionData
@@ -546,6 +551,49 @@ fun ProfileScreen(
                                             color = Citrine,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis,
+                                        )
+                                    }
+                                }
+                                // Gender + birthday info row
+                                Spacer(Modifier.height(6.dp))
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    val genderLabel = when (profile.gender) {
+                                        "male" -> "Male"
+                                        "female" -> "Female"
+                                        else -> null
+                                    }
+                                    if (genderLabel != null) {
+                                        Text(
+                                            genderLabel,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = DarkTextMid,
+                                            fontWeight = FontWeight.SemiBold,
+                                        )
+                                    }
+                                    if (profile.birthdayMillis != null) {
+                                        val bMillis = profile.birthdayMillis!!
+                                        val bCal = java.util.Calendar.getInstance().apply { timeInMillis = bMillis }
+                                        val bText = "%02d/%02d/%04d".format(
+                                            bCal.get(java.util.Calendar.MONTH) + 1,
+                                            bCal.get(java.util.Calendar.DAY_OF_MONTH),
+                                            bCal.get(java.util.Calendar.YEAR),
+                                        )
+                                        if (genderLabel != null) {
+                                            Text("·", style = MaterialTheme.typography.labelMedium, color = DarkTextMid)
+                                        }
+                                        Text(
+                                            bText,
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = if (profile.birthdayPublic) DarkTextMid else DarkTextMid.copy(alpha = 0.5f),
+                                            fontWeight = FontWeight.SemiBold,
+                                        )
+                                        Text(
+                                            if (profile.birthdayPublic) "(Public)" else "(Private)",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = DarkTextMid.copy(alpha = 0.5f),
                                         )
                                     }
                                 }
@@ -1184,8 +1232,11 @@ fun ProfileScreen(
             backgroundImagePath = profile.backgroundImagePath,
             pendingBackgroundPath = profile.pendingBackgroundPath,
             currentUserId = currentUid,
+            gender = profile.gender,
+            birthdayMillis = profile.birthdayMillis,
+            birthdayPublic = profile.birthdayPublic,
             onDismiss = { showEditSheet = false },
-            onSave = { newName, newRegion, newBio, newAvatar, newBgPath ->
+            onSave = { newName, newRegion, newBio, newAvatar, newBgPath, newGender, newBirthday, newBirthdayPublic ->
                 // Block save if the display name is already taken by another user.
                 if (SocialRepository.instance.isDisplayNameTaken(newName, excludeUserId = currentUid)) {
                     return@EditProfileSheetContainer
@@ -1196,6 +1247,9 @@ fun ProfileScreen(
                         homeRegion = newRegion,
                         bio = ProfanityFilter.filter(newBio),
                         avatarEmoji = newAvatar,
+                        gender = newGender,
+                        birthdayMillis = newBirthday,
+                        birthdayPublic = newBirthdayPublic,
                     )
                 }
                 if (newBgPath != profile.backgroundImagePath) {
@@ -1298,8 +1352,11 @@ private fun EditProfileSheetContainer(
     backgroundImagePath: String?,
     pendingBackgroundPath: String?,
     currentUserId: String?,
+    gender: String,
+    birthdayMillis: Long?,
+    birthdayPublic: Boolean,
     onDismiss: () -> Unit,
-    onSave: (String, String, String, String, String?) -> Unit,
+    onSave: (String, String, String, String, String?, String, Long?, Boolean) -> Unit,
     onBackgroundSelected: (Uri) -> Unit,
     onRemoveBackground: () -> Unit,
 ) {
@@ -1317,6 +1374,9 @@ private fun EditProfileSheetContainer(
             backgroundImagePath = backgroundImagePath,
             pendingBackgroundPath = pendingBackgroundPath,
             currentUserId = currentUserId,
+            gender = gender,
+            birthdayMillis = birthdayMillis,
+            birthdayPublic = birthdayPublic,
             onSave = onSave,
             onBackgroundSelected = onBackgroundSelected,
             onRemoveBackground = onRemoveBackground,
@@ -1334,7 +1394,10 @@ private fun EditProfileSheet(
     backgroundImagePath: String?,
     pendingBackgroundPath: String?,
     currentUserId: String?,
-    onSave: (String, String, String, String, String?) -> Unit,
+    gender: String,
+    birthdayMillis: Long?,
+    birthdayPublic: Boolean,
+    onSave: (String, String, String, String, String?, String, Long?, Boolean) -> Unit,
     onBackgroundSelected: (Uri) -> Unit,
     onRemoveBackground: () -> Unit,
 ) {
@@ -1342,6 +1405,10 @@ private fun EditProfileSheet(
     var editBio by remember { mutableStateOf(bio) }
     var editAvatar by remember { mutableStateOf(avatarEmoji) }
     var editRegion by remember { mutableStateOf(homeRegion) }
+    var editGender by remember { mutableStateOf(gender) }
+    var editBirthday by remember { mutableStateOf(birthdayMillis) }
+    var editBirthdayPublic by remember { mutableStateOf(birthdayPublic) }
+    var showBirthdayPicker by remember { mutableStateOf(false) }
     var nameError by remember { mutableStateOf<String?>(null) }
     var bgModerating by remember { mutableStateOf(false) }
     var bgRejected by remember { mutableStateOf<String?>(null) }
@@ -1470,6 +1537,127 @@ private fun EditProfileSheet(
             )
         }
         HomeRegionPicker(editRegion) { v -> editRegion = v }
+
+        // ── Gender dropdown ──
+        Column {
+            Text("Gender", style = MaterialTheme.typography.labelMedium, color = Aqua, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(6.dp))
+            val genderOptions = listOf("male" to "Male", "female" to "Female", "rather_not_say" to "Rather not say")
+            var genderExpanded by remember { mutableStateOf(false) }
+            val selectedGenderLabel = genderOptions.firstOrNull { it.first == editGender }?.second ?: "Rather not say"
+            ExposedDropdownMenuBox(
+                expanded = genderExpanded,
+                onExpandedChange = { genderExpanded = it },
+            ) {
+                OutlinedTextField(
+                    value = selectedGenderLabel,
+                    onValueChange = {},
+                    readOnly = true,
+                    modifier = Modifier.fillMaxWidth().menuAnchor().noAutoFocus(),
+                    singleLine = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = genderExpanded) },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Slate800,
+                        unfocusedContainerColor = Slate800,
+                        focusedIndicatorColor = Citrine,
+                        unfocusedIndicatorColor = StoneLine,
+                        focusedTextColor = TextHigh,
+                        unfocusedTextColor = TextHigh,
+                        cursorColor = Citrine,
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                )
+                ExposedDropdownMenu(
+                    expanded = genderExpanded,
+                    onDismissRequest = { genderExpanded = false },
+                ) {
+                    genderOptions.forEach { (value, label) ->
+                        DropdownMenuItem(
+                            text = { Text(label, color = TextHigh) },
+                            onClick = { editGender = value; genderExpanded = false },
+                        )
+                    }
+                }
+            }
+        }
+
+        // ── Birthday picker ──
+        Column {
+            Text("Birthday", style = MaterialTheme.typography.labelMedium, color = Aqua, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(6.dp))
+            val birthdayText = editBirthday?.let { millis ->
+                val cal = Calendar.getInstance().apply { timeInMillis = millis }
+                "%02d/%02d/%04d".format(cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.YEAR))
+            } ?: "Rather not say"
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                OutlinedTextField(
+                    value = birthdayText,
+                    onValueChange = {},
+                    readOnly = true,
+                    modifier = Modifier.weight(1f).noAutoFocus(),
+                    singleLine = true,
+                    trailingIcon = {
+                        Icon(
+                            Icons.Filled.CalendarMonth,
+                            contentDescription = "Pick birthday",
+                            tint = Citrine,
+                            modifier = Modifier.clickable { showBirthdayPicker = true },
+                        )
+                    },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Slate800,
+                        unfocusedContainerColor = Slate800,
+                        focusedIndicatorColor = Citrine,
+                        unfocusedIndicatorColor = StoneLine,
+                        focusedTextColor = TextHigh,
+                        unfocusedTextColor = TextHigh,
+                        cursorColor = Citrine,
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                )
+            }
+            // Long-press privacy toggle
+            Spacer(Modifier.height(8.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text("Private", style = MaterialTheme.typography.labelMedium, color = if (!editBirthdayPublic) Citrine else DarkTextMid, fontWeight = FontWeight.Bold)
+                val toggleShape = RoundedCornerShape(50.dp)
+                Box(
+                    modifier = Modifier
+                        .clip(toggleShape)
+                        .background(if (editBirthdayPublic) Citrine.copy(alpha = 0.25f) else Slate800)
+                        .glowingBorder(2.dp, if (editBirthdayPublic) Citrine else StoneLine, toggleShape)
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onLongPress = { editBirthdayPublic = !editBirthdayPublic },
+                            )
+                        }
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        if (editBirthdayPublic) "Public" else "Private",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = if (editBirthdayPublic) Ink else TextMid,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+                Text("Public", style = MaterialTheme.typography.labelMedium, color = if (editBirthdayPublic) Citrine else DarkTextMid, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.weight(1f))
+                Text(
+                    "Long-press to toggle",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = DarkTextMid,
+                )
+            }
+        }
+
         ProfileField("Bio", editBio) { v -> editBio = v }
         Text("Choose an avatar", style = MaterialTheme.typography.labelMedium, color = Aqua, fontWeight = FontWeight.Bold)
         Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -1487,7 +1675,7 @@ private fun EditProfileSheet(
             }
         }
         Button(
-            onClick = { onSave(editName, editRegion, editBio, editAvatar, backgroundImagePath) },
+            onClick = { onSave(editName, editRegion, editBio, editAvatar, backgroundImagePath, editGender, editBirthday, editBirthdayPublic) },
             modifier = Modifier.fillMaxWidth(),
             enabled = nameError == null && editName.trim().isNotBlank(),
             colors = ButtonDefaults.buttonColors(
@@ -1518,6 +1706,255 @@ private fun EditProfileSheet(
             },
         )
     }
+
+    if (showBirthdayPicker) {
+        BirthdayPickerDialog(
+            initialMillis = editBirthday,
+            onDismiss = { showBirthdayPicker = false },
+            onSelect = { millis ->
+                editBirthday = millis
+                showBirthdayPicker = false
+            },
+            onRatherNotSay = {
+                editBirthday = null
+                showBirthdayPicker = false
+            },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BirthdayPickerDialog(
+    initialMillis: Long?,
+    onDismiss: () -> Unit,
+    onSelect: (Long?) -> Unit,
+    onRatherNotSay: () -> Unit,
+) {
+    val now = Calendar.getInstance()
+    val minAgeCal = Calendar.getInstance().apply { add(Calendar.YEAR, -18) }
+    val initial = initialMillis?.let { Calendar.getInstance().apply { timeInMillis = it } }
+    var pickYear by remember { mutableStateOf(initial?.get(Calendar.YEAR) ?: minAgeCal.get(Calendar.YEAR)) }
+    var pickMonth by remember { mutableStateOf(initial?.get(Calendar.MONTH) ?: 0) }
+    var yearExpanded by remember { mutableStateOf(false) }
+    var monthExpanded by remember { mutableStateOf(false) }
+
+    val monthNames = listOf("January","February","March","April","May","June","July","August","September","October","November","December")
+    val yearsList = remember { (1900..minAgeCal.get(Calendar.YEAR)).toList().reversed() }
+    val daysInMonth = remember(pickYear, pickMonth) {
+        Calendar.getInstance().apply { set(Calendar.YEAR, pickYear); set(Calendar.MONTH, pickMonth); set(Calendar.DAY_OF_MONTH, 1) }
+            .getActualMaximum(Calendar.DAY_OF_MONTH)
+    }
+    val firstDayOfWeek = remember(pickYear, pickMonth) {
+        Calendar.getInstance().apply { set(Calendar.YEAR, pickYear); set(Calendar.MONTH, pickMonth); set(Calendar.DAY_OF_MONTH, 1) }
+            .get(Calendar.DAY_OF_WEEK) - 1
+    }
+    val selectedDay = remember { mutableStateOf<Int?>(initial?.get(Calendar.DAY_OF_MONTH)) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF1E1C16),
+        titleContentColor = Color.White,
+        textContentColor = DarkTextMid,
+        title = { Text("Birthday", color = Color.White, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // Rather not say button
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Slate800)
+                        .clickable { onRatherNotSay() }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("Rather not say", color = Aqua, fontWeight = FontWeight.Bold)
+                }
+                Spacer(Modifier.height(12.dp))
+
+                // Month + Year dropdowns
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    // Month dropdown
+                    ExposedDropdownMenuBox(
+                        expanded = monthExpanded,
+                        onExpandedChange = { monthExpanded = it },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        OutlinedTextField(
+                            value = monthNames[pickMonth],
+                            onValueChange = {},
+                            readOnly = true,
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth().menuAnchor().noAutoFocus(),
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = monthExpanded) },
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Slate800,
+                                unfocusedContainerColor = Slate800,
+                                focusedIndicatorColor = Citrine,
+                                unfocusedIndicatorColor = StoneLine,
+                                focusedTextColor = TextHigh,
+                                unfocusedTextColor = TextHigh,
+                                cursorColor = Citrine,
+                            ),
+                            shape = RoundedCornerShape(10.dp),
+                            textStyle = MaterialTheme.typography.bodySmall,
+                        )
+                        ExposedDropdownMenu(
+                            expanded = monthExpanded,
+                            onDismissRequest = { monthExpanded = false },
+                        ) {
+                            monthNames.forEachIndexed { idx, name ->
+                                DropdownMenuItem(
+                                    text = { Text(name, color = TextHigh) },
+                                    onClick = { pickMonth = idx; selectedDay.value = null; monthExpanded = false },
+                                )
+                            }
+                        }
+                    }
+                    // Year dropdown
+                    ExposedDropdownMenuBox(
+                        expanded = yearExpanded,
+                        onExpandedChange = { yearExpanded = it },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        OutlinedTextField(
+                            value = pickYear.toString(),
+                            onValueChange = {},
+                            readOnly = true,
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth().menuAnchor().noAutoFocus(),
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = yearExpanded) },
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Slate800,
+                                unfocusedContainerColor = Slate800,
+                                focusedIndicatorColor = Citrine,
+                                unfocusedIndicatorColor = StoneLine,
+                                focusedTextColor = TextHigh,
+                                unfocusedTextColor = TextHigh,
+                                cursorColor = Citrine,
+                            ),
+                            shape = RoundedCornerShape(10.dp),
+                            textStyle = MaterialTheme.typography.bodySmall,
+                        )
+                        ExposedDropdownMenu(
+                            expanded = yearExpanded,
+                            onDismissRequest = { yearExpanded = false },
+                        ) {
+                            yearsList.forEach { yr ->
+                                DropdownMenuItem(
+                                    text = { Text(yr.toString(), color = TextHigh) },
+                                    onClick = { pickYear = yr; selectedDay.value = null; yearExpanded = false },
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                // Day grid — 7 columns, Sunday-start
+                val dayNames = listOf("S","M","T","W","T","F","S")
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    dayNames.forEach { d ->
+                        Text(d, style = MaterialTheme.typography.labelSmall, color = DarkTextMid, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                val totalCells = ((firstDayOfWeek + daysInMonth + 6) / 7) * 7
+                (0 until totalCells).chunked(7).forEach { week ->
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        week.forEach { cellIdx ->
+                            val day = cellIdx - firstDayOfWeek + 1
+                            val isCurrentMonth = day in 1..daysInMonth
+                            val isSelected = isCurrentMonth && selectedDay.value == day
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(2.dp)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(if (isSelected) Citrine.copy(alpha = 0.30f) else Color.Transparent)
+                                    .then(if (isCurrentMonth) Modifier.clickable { selectedDay.value = day } else Modifier)
+                                    .padding(vertical = 6.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = if (isCurrentMonth) day.toString() else "",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = if (isSelected) Citrine else TextHigh,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Age validation warning
+                selectedDay.value?.let { d ->
+                    val chosen = Calendar.getInstance().apply {
+                        set(Calendar.YEAR, pickYear)
+                        set(Calendar.MONTH, pickMonth)
+                        set(Calendar.DAY_OF_MONTH, d)
+                        set(Calendar.HOUR_OF_DAY, 0)
+                        set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    }
+                    if (chosen.after(minAgeCal)) {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "You must be at least 18 years old.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Danger,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            val d = selectedDay.value
+            val valid = d != null && run {
+                val chosen = Calendar.getInstance().apply {
+                    set(Calendar.YEAR, pickYear)
+                    set(Calendar.MONTH, pickMonth)
+                    set(Calendar.DAY_OF_MONTH, d!!)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                !chosen.after(minAgeCal)
+            }
+            Button(
+                onClick = {
+                    val day = selectedDay.value ?: return@Button
+                    val chosen = Calendar.getInstance().apply {
+                        set(Calendar.YEAR, pickYear)
+                        set(Calendar.MONTH, pickMonth)
+                        set(Calendar.DAY_OF_MONTH, day)
+                        set(Calendar.HOUR_OF_DAY, 0)
+                        set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    }
+                    onSelect(chosen.timeInMillis)
+                },
+                enabled = valid,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Citrine,
+                    contentColor = Ink,
+                    disabledContainerColor = Citrine.copy(alpha = 0.3f),
+                ),
+            ) { Text("Set", fontWeight = FontWeight.Bold) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel", color = DarkTextMid) }
+        },
+    )
 }
 
 @Composable

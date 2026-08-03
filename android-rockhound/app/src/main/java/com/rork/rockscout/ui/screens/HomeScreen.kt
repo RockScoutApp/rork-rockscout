@@ -473,34 +473,48 @@ fun HomeScreen(navController: NavController) {
     )
 
     val infoTiles = listOf(
+        // 1. Rocks Are Amazing (RAA)
         HomeTile("Rocks Are Amazing", "${RocksAreAmazingSpecimens.allAmazing.size} wonders · Earth's most stunning formations", Icons.Filled.CollectionsBookmark, Color(0xFF44AACC), Routes.ROCKS_ARE_AMAZING,
             SpecimenImages.urls["bismuth-crystal"]?.firstOrNull()),
-        HomeTile("Exploring Geology", "Learn how rocks, minerals & gems form", Icons.Filled.MenuBook, Color(0xFFD9B26A), Routes.ROCK_INFO,
-            SpecimenImages.urls["granite"]?.firstOrNull()),
-        HomeTile("Exploring Paleontology", "Fossils, eras & deep-time history", Icons.Filled.Nature, Color(0xFFC9A87C), Routes.PALEONTOLOGY,
-            SpecimenImages.urls["ammonite"]?.firstOrNull()),
-        HomeTile("Exploring Prehistoric Organisms", "Dinosaurs, birds, ancient flora & more", Icons.Filled.Nature, Color(0xFF8BBF6A), Routes.PREHISTORIC_ORGANISMS,
-            SpecimenImages.urls["dinosaur-bone"]?.firstOrNull()),
-        HomeTile("Dinosaur Dictionary", "200+ dinosaurs & Ice Age animals with silhouettes", Icons.Filled.Pets, Color(0xFF6FBF8A), Routes.DINOSAUR_DICTIONARY,
-            DinoImageMap.imageUri("tyrannosaurus")),
-        HomeTile("Tectonics & Volcanoes", "Plate movement, magma & where rocks form", Icons.Filled.LocalFireDepartment, Color(0xFFE2574C), Routes.TECTONIC_VOLCANIC,
-            "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/13d72c22-f574-47c4-a23c-a6a9ae6b65bb.png"),
-        HomeTile("Periodic Table", "118 elements · Where each element appears in rocks & gems", Icons.Filled.Science, Color(0xFF7CB5EC), Routes.PERIODIC_TABLE,
-            "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/040be3bf-71ab-46d0-b6be-4598df22a18b.png"),
-        HomeTile("Mineral Care & Cleaning", "Don't ruin your finds · Safe cleaning for every mineral type", Icons.Filled.CleaningServices, Color(0xFF5CC98C), Routes.MINERAL_CARE,
-            "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/263c5833-c668-4d2a-a4b5-e45cb5148679.png"),
-        HomeTile("Fluorescence & UV", "Which minerals glow under UV light & what colors", Icons.Filled.Lightbulb, Color(0xFF9B7BD8), Routes.FLUORESCENCE_UV,
-            SpecimenImages.urls["uv-tile"]?.firstOrNull()),
-        HomeTile("Crystal Systems", "The 7 crystal shapes with visual examples", Icons.Filled.Diamond, Color(0xFF6FA8C7), Routes.CRYSTAL_SYSTEMS,
-            SpecimenImages.urls["herkimer"]?.firstOrNull()),
-        HomeTile("Lapidary Basics", "Cut, polish & cab your finds into jewelry", Icons.Filled.Construction, Color(0xFFE8A33D), Routes.LAPIDARY_BASICS,
-            SpecimenImages.urls["lapidary-tile"]?.firstOrNull()),
+        // 2. Artifacts
         HomeTile("Artifacts", "Arrowheads, hand axes, beads & stone tools", Icons.Filled.AccountBalance, Color(0xFFB87333), Routes.ARTIFACTS,
             "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/ca44cafb-2e4f-4d3b-9334-174ceedf713b.png"),
+        // 3. Natural Wonders
         HomeTile("Natural Wonders", "World-famous geological sites & what to find there", Icons.Filled.Public, Color(0xFF1B3A4B), Routes.NATURAL_WONDERS,
             NATURAL_WONDERS_TILE_WAVE),
+        // 4. Crystal Systems
+        HomeTile("Crystal Systems", "The 7 crystal shapes with visual examples", Icons.Filled.Diamond, Color(0xFF6FA8C7), Routes.CRYSTAL_SYSTEMS,
+            SpecimenImages.urls["herkimer"]?.firstOrNull()),
+        // 5. Fluorescence & UV
+        HomeTile("Fluorescence & UV", "Which minerals glow under UV light & what colors", Icons.Filled.Lightbulb, Color(0xFF9B7BD8), Routes.FLUORESCENCE_UV,
+            SpecimenImages.urls["uv-tile"]?.firstOrNull()),
+        // 6. Dino Dictionary
+        HomeTile("Dinosaur Dictionary", "200+ dinosaurs & Ice Age animals with silhouettes", Icons.Filled.Pets, Color(0xFF6FBF8A), Routes.DINOSAUR_DICTIONARY,
+            DinoImageMap.imageUri("tyrannosaurus")),
+        // 7. Explore Organisms (Exploring Prehistoric Organisms)
+        HomeTile("Exploring Prehistoric Organisms", "Dinosaurs, birds, ancient flora & more", Icons.Filled.Nature, Color(0xFF8BBF6A), Routes.PREHISTORIC_ORGANISMS,
+            SpecimenImages.urls["dinosaur-bone"]?.firstOrNull()),
+        // 8. Exploring Paleontology
+        HomeTile("Exploring Paleontology", "Fossils, eras & deep-time history", Icons.Filled.Nature, Color(0xFFC9A87C), Routes.PALEONTOLOGY,
+            SpecimenImages.urls["ammonite"]?.firstOrNull()),
+        // 9. Exploring Geology
+        HomeTile("Exploring Geology", "Learn how rocks, minerals & gems form", Icons.Filled.MenuBook, Color(0xFFD9B26A), Routes.ROCK_INFO,
+            SpecimenImages.urls["granite"]?.firstOrNull()),
+        // 10. Tectonics & Volcanoes
+        HomeTile("Tectonics & Volcanoes", "Plate movement, magma & where rocks form", Icons.Filled.LocalFireDepartment, Color(0xFFE2574C), Routes.TECTONIC_VOLCANIC,
+            "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/13d72c22-f574-47c4-a23c-a6a9ae6b65bb.png"),
+        // 11. Explore the Stars
         HomeTile("Explore the Stars", "88 constellations, stars, planets & deep sky objects", Icons.Filled.Star, Color(0xFF00E5C9), Routes.STARS_LANDING,
             "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/923312d6-4c0c-4855-8e00-827426991a2f.png"),
+        // 12. Periodic Table
+        HomeTile("Periodic Table", "118 elements · Where each element appears in rocks & gems", Icons.Filled.Science, Color(0xFF7CB5EC), Routes.PERIODIC_TABLE,
+            "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/040be3bf-71ab-46d0-b6be-4598df22a18b.png"),
+        // 13. Mineral Care & Cleaning
+        HomeTile("Mineral Care & Cleaning", "Don't ruin your finds · Safe cleaning for every mineral type", Icons.Filled.CleaningServices, Color(0xFF5CC98C), Routes.MINERAL_CARE,
+            "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/263c5833-c668-4d2a-a4b5-e45cb5148679.png"),
+        // 14. Lapidary Basics
+        HomeTile("Lapidary Basics", "Cut, polish & cab your finds into jewelry", Icons.Filled.Construction, Color(0xFFE8A33D), Routes.LAPIDARY_BASICS,
+            SpecimenImages.urls["lapidary-tile"]?.firstOrNull()),
     )
 
     // Field-guide tiles live in the field kit grid (same square format as the
