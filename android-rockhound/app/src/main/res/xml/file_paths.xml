@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
     <cache-path name="captured_photos" path="photos/" />
+    <files-path name="email_draft_photos" path="email_draft_photos/" />
     <cache-path name="shares" path="shares/" />
     <cache-path name="reports" path="reports/" />
     <cache-path name="csv_exports" path="csv_exports/" />

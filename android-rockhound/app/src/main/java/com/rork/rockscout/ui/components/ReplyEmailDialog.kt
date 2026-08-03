@@ -33,6 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -55,6 +56,8 @@ import com.rork.rockscout.data.ImageModerator
 import com.rork.rockscout.data.ImageUtils
 import com.rork.rockscout.data.ModerationTriState
 import coil3.compose.AsyncImage
+import com.rork.rockscout.data.EmailComposerDraft
+import com.rork.rockscout.data.EmailComposerDraftStore
 import com.rork.rockscout.data.Museum
 import com.rork.rockscout.data.SavedImage
 import com.rork.rockscout.ui.theme.Aqua
@@ -84,7 +87,7 @@ private const val MAX_TOTAL_ATTACHMENT_BYTES = 18L * 1024L * 1024L
  * A recompressed attachment: the shareable [uri] (via FileProvider) and
  * its on-disk [bytes] for total-size accounting.
  */
-private data class Attachment(val uri: Uri, val bytes: Long)
+private data class Attachment(val uri: Uri, val bytes: Long, val draftPath: String? = null)
 
 /**
  * Small dialog that lets the user enter or edit their reply-to email
@@ -150,18 +153,68 @@ fun ReplyEmailDialog(
     var showSavedImagePicker by remember { mutableStateOf(false) }
     var totalSizeError by remember { mutableStateOf<String?>(null) }
 
+    // --- Draft persistence state ---
+    var effectiveMuseums by remember { mutableStateOf(if (museums.isNotEmpty()) museums else listOf(museum)) }
+    var effectiveMatchNames by remember { mutableStateOf(artifactMatchNames) }
+    var effectiveConfidences by remember { mutableStateOf(artifactConfidences) }
+    var effectiveSummary by remember { mutableStateOf(aiSummary) }
+    var effectiveLocation by remember { mutableStateOf(userLocationText) }
+    var draftInitialized by remember { mutableStateOf(false) }
+    var showRestorePrompt by remember { mutableStateOf(false) }
+    var capturedDraftPath by remember { mutableStateOf<String?>(null) }
+    var restoredCapturedBitmap by remember { mutableStateOf<Bitmap?>(null) }
+    val effectiveCapturedBitmap = restoredCapturedBitmap ?: capturedBitmap
+
+    val saveCurrentDraft: () -> Unit = {
+        if (draftInitialized) {
+            EmailComposerDraftStore.save(
+                EmailComposerDraft(
+                    recipients = effectiveMuseums,
+                    replyEmail = replyEmail,
+                    includeCapturedPhoto = includeCapturedPhoto,
+                    capturedPhotoPath = if (includeCapturedPhoto) capturedDraftPath else null,
+                    extraPhotoPaths = extraAttachments.mapNotNull { it.draftPath },
+                    savedAtMs = System.currentTimeMillis(),
+                    artifactMatchNames = effectiveMatchNames,
+                    artifactConfidences = effectiveConfidences,
+                    aiSummary = effectiveSummary,
+                    userLocationText = effectiveLocation,
+                )
+            )
+        }
+    }
+
     // --- Pending removal state for confirmation dialogs ---
     var pendingRemoveCapturedPhoto by remember { mutableStateOf(false) }
     var pendingRemoveAttachmentIdx by remember { mutableStateOf<Int?>(null) }
 
-    val capturedCount = if (includeCapturedPhoto && capturedBitmap != null) 1 else 0
+    val capturedCount = if (includeCapturedPhoto && effectiveCapturedBitmap != null) 1 else 0
     val totalPhotos = capturedCount + extraAttachments.size
     val canAddMore = totalPhotos < maxImages
 
     // Running total of extra attachment sizes (captured bitmap estimated at ~2 MB)
-    val capturedEstimateBytes = if (includeCapturedPhoto && capturedBitmap != null) 2_000_000L else 0L
+    val capturedEstimateBytes = if (includeCapturedPhoto && effectiveCapturedBitmap != null) 2_000_000L else 0L
     val extraTotalBytes = extraAttachments.sumOf { it.bytes }
     val runningTotalBytes = capturedEstimateBytes + extraTotalBytes
+
+    // --- Draft persistence: check for saved draft on open ---
+    LaunchedEffect(Unit) {
+        val existing = EmailComposerDraftStore.load()
+        if (existing != null && (existing.recipients.isNotEmpty() || existing.replyEmail.isNotBlank() || existing.extraPhotoPaths.isNotEmpty())) {
+            showRestorePrompt = true
+        } else {
+            if (capturedBitmap != null) {
+                capturedDraftPath = EmailComposerDraftStore.saveCapturedPhoto(capturedBitmap)
+            }
+            draftInitialized = true
+        }
+    }
+
+    // Auto-save draft when state changes
+    LaunchedEffect(replyEmail, includeCapturedPhoto, extraAttachments.size, effectiveMuseums, draftInitialized) {
+        if (!draftInitialized) return@LaunchedEffect
+        saveCurrentDraft()
+    }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -194,7 +247,8 @@ fun ReplyEmailDialog(
 
             val attachment = recompressToPhotosCache(context, uri)
             if (attachment != null) {
-                extraAttachments.add(attachment)
+                val draftP = EmailComposerDraftStore.copyUriToDraftDir(context, attachment.uri)
+                extraAttachments.add(attachment.copy(draftPath = draftP))
             } else {
                 Toast.makeText(context, "Could not save image. Please try again.", Toast.LENGTH_SHORT).show()
             }
@@ -240,7 +294,8 @@ fun ReplyEmailDialog(
 
                     val attachment = recompressToPhotosCache(context, sourceUri)
                     if (attachment != null) {
-                        extraAttachments.add(attachment)
+                        val draftP = EmailComposerDraftStore.copyUriToDraftDir(context, attachment.uri)
+                        extraAttachments.add(attachment.copy(draftPath = draftP))
                     } else {
                         Toast.makeText(context, "Could not save image. Please try again.", Toast.LENGTH_SHORT).show()
                     }
@@ -249,8 +304,107 @@ fun ReplyEmailDialog(
         )
     }
 
+    // --- Restore draft prompt ---
+    if (showRestorePrompt) {
+        AlertDialog(
+            onDismissRequest = {
+                EmailComposerDraftStore.delete()
+                if (capturedBitmap != null) {
+                    capturedDraftPath = EmailComposerDraftStore.saveCapturedPhoto(capturedBitmap)
+                }
+                draftInitialized = true
+                showRestorePrompt = false
+            },
+            containerColor = Color(0xFF1E1C16),
+            titleContentColor = DarkTextHigh,
+            textContentColor = DarkTextMid,
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Filled.Email,
+                        contentDescription = null,
+                        tint = Citrine,
+                        modifier = Modifier.padding(end = 8.dp),
+                    )
+                    Text("Restore unsent draft?", color = DarkTextHigh, fontWeight = FontWeight.Bold)
+                }
+            },
+            text = {
+                Text(
+                    "You started composing an expert email but didn't send it. Restore your recipients, photos, and reply email?",
+                    color = DarkTextMid,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            },
+            confirmButton = {
+                SculptedTextButton(
+                    text = "Restore",
+                    accent = Citrine,
+                    textColor = Citrine,
+                    onClick = {
+                        val draft = EmailComposerDraftStore.load()
+                        if (draft != null) {
+                            effectiveMuseums = draft.recipients
+                            replyEmail = draft.replyEmail
+                            effectiveMatchNames = draft.artifactMatchNames
+                            effectiveConfidences = draft.artifactConfidences
+                            effectiveSummary = draft.aiSummary
+                            effectiveLocation = draft.userLocationText
+                            if (draft.includeCapturedPhoto && draft.capturedPhotoPath != null) {
+                                val bmp = EmailComposerDraftStore.loadBitmap(draft.capturedPhotoPath)
+                                if (bmp != null) {
+                                    restoredCapturedBitmap = bmp
+                                    capturedDraftPath = draft.capturedPhotoPath
+                                    includeCapturedPhoto = true
+                                } else {
+                                    includeCapturedPhoto = false
+                                }
+                            } else {
+                                includeCapturedPhoto = false
+                            }
+                            extraAttachments.clear()
+                            draft.extraPhotoPaths.forEach { path ->
+                                val file = File(path)
+                                if (file.exists()) {
+                                    val shareUri = FileProvider.getUriForFile(
+                                        context,
+                                        "${context.packageName}.fileprovider",
+                                        file,
+                                    )
+                                    extraAttachments.add(Attachment(shareUri, file.length(), path))
+                                }
+                            }
+                        }
+                        draftInitialized = true
+                        showRestorePrompt = false
+                    },
+                )
+            },
+            dismissButton = {
+                SculptedTextButton(
+                    text = "Start fresh",
+                    accent = DarkTextMid,
+                    textColor = DarkTextMid,
+                    onClick = {
+                        EmailComposerDraftStore.delete()
+                        if (capturedBitmap != null) {
+                            capturedDraftPath = EmailComposerDraftStore.saveCapturedPhoto(capturedBitmap)
+                        }
+                        draftInitialized = true
+                        showRestorePrompt = false
+                    },
+                )
+            },
+        )
+    }
+
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            if (!showRestorePrompt) {
+                saveCurrentDraft()
+                onDismiss()
+            }
+        },
         containerColor = Color(0xFF1E1C16),
         title = {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -305,13 +459,13 @@ fun ReplyEmailDialog(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     // Original captured photo thumbnail
-                    if (includeCapturedPhoto && capturedBitmap != null) {
+                    if (includeCapturedPhoto && effectiveCapturedBitmap != null) {
                         AttachmentThumbnail(
                             modifier = Modifier.size(56.dp),
                             onRemove = { pendingRemoveCapturedPhoto = true },
                         ) {
                             Image(
-                                bitmap = capturedBitmap.asImageBitmap(),
+                                bitmap = effectiveCapturedBitmap.asImageBitmap(),
                                 contentDescription = "Original ID photo",
                                 modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(10.dp)),
                                 contentScale = ContentScale.Crop,
@@ -412,8 +566,8 @@ fun ReplyEmailDialog(
                     val attachmentUris = mutableListOf<Uri>()
                     var totalBytes = 0L
 
-                    if (includeCapturedPhoto && capturedBitmap != null) {
-                        val captured = writeBitmapToPhotosCache(context, capturedBitmap)
+                    if (includeCapturedPhoto && effectiveCapturedBitmap != null) {
+                        val captured = writeBitmapToPhotosCache(context, effectiveCapturedBitmap)
                         if (captured != null) {
                             attachmentUris.add(captured.uri)
                             totalBytes += captured.bytes
@@ -433,15 +587,16 @@ fun ReplyEmailDialog(
 
                     launchEmailDraft(
                         context = context,
-                        museum = museum,
-                        museums = museums,
+                        museum = effectiveMuseums.firstOrNull() ?: museum,
+                        museums = effectiveMuseums,
                         replyEmail = replyEmail,
-                        artifactMatchNames = artifactMatchNames,
-                        artifactConfidences = artifactConfidences,
-                        aiSummary = aiSummary,
+                        artifactMatchNames = effectiveMatchNames,
+                        artifactConfidences = effectiveConfidences,
+                        aiSummary = effectiveSummary,
                         attachmentUris = attachmentUris,
-                        userLocationText = userLocationText,
+                        userLocationText = effectiveLocation,
                     )
+                    EmailComposerDraftStore.delete()
                     onDismiss()
                 },
                 accent = Citrine,
@@ -451,7 +606,10 @@ fun ReplyEmailDialog(
         dismissButton = {
             SculptedTextButton(
                 text = "Cancel",
-                onClick = onDismiss,
+                onClick = {
+                    saveCurrentDraft()
+                    onDismiss()
+                },
                 accent = DarkTextMid,
                 textColor = DarkTextMid,
             )

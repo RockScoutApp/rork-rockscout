@@ -3,6 +3,7 @@ package com.rork.rockscout.data
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -26,6 +27,11 @@ data class EmailComposerDraft(
     val capturedPhotoPath: String? = null,
     val extraPhotoPaths: List<String> = emptyList(),
     val savedAtMs: Long = 0L,
+    // Email body context — needed to rebuild the email on restore
+    val artifactMatchNames: List<String> = emptyList(),
+    val artifactConfidences: List<Int> = emptyList(),
+    val aiSummary: String = "",
+    val userLocationText: String = "",
 )
 
 object EmailComposerDraftStore {
@@ -101,6 +107,26 @@ object EmailComposerDraftStore {
         return try {
             val photoDir = File(appContext.filesDir, PHOTO_DIR).apply { mkdirs() }
             val file = File(photoDir, "captured_${System.currentTimeMillis()}.jpg")
+            FileOutputStream(file).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+            }
+            file.absolutePath
+        } catch (_: Throwable) {
+            null
+        }
+    }
+
+    /** Copy a content URI to the draft photo dir and return its absolute path.
+     *  The URI is read via [ContentResolver] and the bitmap is recompressed to
+     *  JPEG 90 to bound the size. Returns null on any I/O or decode failure. */
+    fun copyUriToDraftDir(context: Context, uri: Uri): String? {
+        if (!::appContext.isInitialized) return null
+        return try {
+            val bitmap = BitmapFactory.decodeStream(
+                context.contentResolver.openInputStream(uri)
+            ) ?: return null
+            val photoDir = File(appContext.filesDir, PHOTO_DIR).apply { mkdirs() }
+            val file = File(photoDir, "extra_${System.currentTimeMillis()}.jpg")
             FileOutputStream(file).use { out ->
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
             }
