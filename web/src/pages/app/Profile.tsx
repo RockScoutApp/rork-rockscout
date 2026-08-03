@@ -24,6 +24,7 @@ import {
   Sparkles,
   Gift,
   Check,
+  Calendar,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTier } from "@/hooks/useTier";
@@ -72,6 +73,28 @@ interface ProfileData {
   tokens: number;
   bio?: string;
   home_region?: string;
+  gender?: string;
+  birthday?: string;
+  birthday_private?: boolean;
+  favorite_rock?: string;
+}
+
+const GENDER_OPTIONS = [
+  { value: "rather_not_say", label: "Rather not say" },
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+];
+
+const MONTHS = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+function formatBirthday(dateStr: string): string {
+  if (!dateStr) return "";
+  const parts = dateStr.split("-");
+  if (parts.length !== 3) return dateStr;
+  return `${parts[1]}/${parts[2]}/${parts[0]}`;
 }
 
 /** XP required to reach the next level from a given level. */
@@ -101,6 +124,15 @@ export default function Profile() {
   const [editBio, setEditBio] = useState("");
   const [editRegion, setEditRegion] = useState("");
   const [editStatus, setEditStatus] = useState("off");
+  const [editGender, setEditGender] = useState("rather_not_say");
+  const [editBirthday, setEditBirthday] = useState("");
+  const [editBirthdayPrivate, setEditBirthdayPrivate] = useState(true);
+  const [editFavoriteRock, setEditFavoriteRock] = useState("");
+  const [showBirthdayPicker, setShowBirthdayPicker] = useState(false);
+  const [pickerMonth, setPickerMonth] = useState(0);
+  const [pickerYear, setPickerYear] = useState(2000);
+  const [showMonthScroll, setShowMonthScroll] = useState(false);
+  const [showYearScroll, setShowYearScroll] = useState(false);
 
   // ── Profile data ──
   const { data: profile } = useQuery<ProfileData>({
@@ -109,7 +141,7 @@ export default function Profile() {
       if (!user) return null;
       const { data } = await supabase
         .from("rockscout_profiles")
-        .select("id, display_name, avatar_emoji, status, level, xp, is_pro, pro_badge, tokens")
+        .select("id, display_name, avatar_emoji, status, level, xp, is_pro, pro_badge, tokens, bio, home_region, gender, birthday, birthday_private, favorite_rock")
         .eq("id", user.id)
         .maybeSingle();
       return (data as ProfileData) ?? null;
@@ -179,6 +211,17 @@ export default function Profile() {
       setEditName(profile.display_name || "");
       setEditEmoji(profile.avatar_emoji || "💎");
       setEditStatus(profile.status || "off");
+      setEditGender(profile.gender || "rather_not_say");
+      setEditBirthday(profile.birthday || "");
+      setEditBirthdayPrivate(profile.birthday_private ?? true);
+      setEditFavoriteRock(profile.favorite_rock || "");
+      if (profile.birthday) {
+        const parts = profile.birthday.split("-");
+        if (parts.length === 3) {
+          setPickerMonth(parseInt(parts[1]) - 1);
+          setPickerYear(parseInt(parts[0]));
+        }
+      }
     }
   }, [profile]);
 
@@ -192,6 +235,10 @@ export default function Profile() {
           display_name: (editName.trim() || user.email?.split("@")[0]) ?? "Rockhound",
           avatar_emoji: editEmoji,
           status: editStatus,
+          gender: editGender,
+          birthday: editBirthday || null,
+          birthday_private: editBirthdayPrivate,
+          favorite_rock: editFavoriteRock.trim() || null,
         })
         .eq("id", user.id);
       if (error) throw error;
@@ -363,7 +410,41 @@ export default function Profile() {
             <Mail className="h-3.5 w-3.5" />
             {user.email}
           </p>
+
+          {/* Gender */}
+          {profile?.gender && profile.gender !== "rather_not_say" && (
+            <div className="mt-2 flex items-center gap-1.5">
+              <span className="text-sm font-medium text-[hsl(var(--text-mid))]">
+                {GENDER_OPTIONS.find((g) => g.value === profile.gender)?.label ?? "Rather not say"}
+              </span>
+            </div>
+          )}
+
+          {/* Birthday */}
+          {profile?.birthday && (
+            <div className="mt-1 flex items-center gap-1.5">
+              <span className="text-xs font-medium text-[hsl(var(--text-mid))]">
+                {profile.birthday_private ? "Birthday: Private" : `Birthday: ${formatBirthday(profile.birthday)}`}
+              </span>
+            </div>
+          )}
         </div>
+
+        {/* Favorite Rock — bottom of profile card */}
+        {profile?.favorite_rock && (
+          <div
+            className="flex items-center gap-2 px-5 py-3"
+            style={{
+              background: `linear-gradient(90deg, hsl(${CITRINE_HEX} / 0.12), hsl(${AQUA_HEX} / 0.08))`,
+              borderTop: `1px solid hsl(${CITRINE_HEX} / 0.2)`,
+            }}
+          >
+            <Gem className="h-4 w-4 shrink-0" style={{ color: `hsl(${CITRINE_HEX})` }} />
+            <span className="text-sm font-bold text-foreground">
+              Favorite Rock: <span style={{ color: `hsl(${CITRINE_HEX})` }}>{profile.favorite_rock}</span>
+            </span>
+          </div>
+        )}
       </SculptedCard>
 
       {/* ── Level / XP / streak card ── */}
@@ -684,7 +765,7 @@ export default function Profile() {
       {/* ── Version footer ── */}
       <div className="pt-2 text-center">
         <p className="text-xs text-muted-foreground">
-          RockScout v1.1.6 · {isPremium ? "Premium" : "Free"} account
+          RockScout v1.1.9 · {isPremium ? "Premium" : "Free"} account
         </p>
       </div>
 
@@ -780,6 +861,169 @@ export default function Profile() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Gender dropdown */}
+            <div className="mb-4">
+              <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
+                Gender
+              </label>
+              <select
+                value={editGender}
+                onChange={(e) => setEditGender(e.target.value)}
+                className="w-full dark-card sculpted-raised rounded-xl px-4 py-2.5 text-sm text-foreground focus:border-primary focus:outline-none"
+              >
+                {GENDER_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value} className="bg-background text-foreground">
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Birthday picker */}
+            <div className="mb-4">
+              <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
+                Birthday
+              </label>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowBirthdayPicker(!showBirthdayPicker)}
+                  className="dark-card sculpted-raised flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm text-foreground"
+                >
+                  <Calendar className="h-4 w-4" style={{ color: `hsl(${CITRINE_HEX})` }} />
+                  {editBirthday ? formatBirthday(editBirthday) : "Set birthday"}
+                </button>
+                {editBirthday && (
+                  <button
+                    onClick={() => { setEditBirthday(""); setShowBirthdayPicker(false); }}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+
+              {/* Public/Private toggle */}
+              <div className="mt-2 flex items-center gap-2">
+                <button
+                  onClick={() => setEditBirthdayPrivate(!editBirthdayPrivate)}
+                  onContextMenu={(e) => { e.preventDefault(); setEditBirthdayPrivate(!editBirthdayPrivate); }}
+                  className={`rounded-full px-3 py-1.5 text-xs font-bold transition-all ${
+                    editBirthdayPrivate
+                      ? "border border-border text-muted-foreground"
+                      : "ring-2 ring-primary bg-primary/10 text-primary"
+                  }`}
+                  title="Long press to toggle"
+                >
+                  {editBirthdayPrivate ? "🔒 Private" : "👁 Public"}
+                </button>
+                <span className="text-xs text-muted-foreground">Long press to change</span>
+              </div>
+
+              {/* Birthday calendar popup */}
+              {showBirthdayPicker && (
+                <div className="mt-3 dark-card sculpted-raised rounded-xl p-4">
+                  {/* Rather not say */}
+                  <button
+                    onClick={() => { setEditBirthday(""); setShowBirthdayPicker(false); }}
+                    className="mb-3 w-full rounded-lg px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted/50"
+                  >
+                    Rather not say
+                  </button>
+
+                  {/* Month/Year selectors */}
+                  <div className="mb-3 flex items-center gap-2">
+                    <button
+                      onClick={() => { setShowMonthScroll(!showMonthScroll); setShowYearScroll(false); }}
+                      className="dark-card sculpted-raised rounded-lg px-3 py-2 text-sm text-foreground"
+                    >
+                      {MONTHS[pickerMonth]}
+                    </button>
+                    <button
+                      onClick={() => { setShowYearScroll(!showYearScroll); setShowMonthScroll(false); }}
+                      className="dark-card sculpted-raised rounded-lg px-3 py-2 text-sm text-foreground"
+                    >
+                      {pickerYear}
+                    </button>
+                  </div>
+
+                  {/* Month scroll dropdown */}
+                  {showMonthScroll && (
+                    <div className="mb-3 max-h-32 overflow-y-auto rounded-lg border border-border">
+                      {MONTHS.map((m, idx) => (
+                        <button
+                          key={m}
+                          onClick={() => { setPickerMonth(idx); setShowMonthScroll(false); }}
+                          className={`block w-full px-3 py-1.5 text-left text-sm ${
+                            idx === pickerMonth ? "bg-primary/20 text-primary" : "text-foreground hover:bg-muted/50"
+                          }`}
+                        >
+                          {m}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Year scroll dropdown */}
+                  {showYearScroll && (
+                    <div className="mb-3 max-h-32 overflow-y-auto rounded-lg border border-border">
+                      {Array.from({ length: 100 }, (_, i) => 2025 - i).map((yr) => (
+                        <button
+                          key={yr}
+                          onClick={() => { setPickerYear(yr); setShowYearScroll(false); }}
+                          className={`block w-full px-3 py-1.5 text-left text-sm ${
+                            yr === pickerYear ? "bg-primary/20 text-primary" : "text-foreground hover:bg-muted/50"
+                          }`}
+                        >
+                          {yr}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Day grid */}
+                  {!showMonthScroll && !showYearScroll && (
+                    <>
+                      <div className="mb-1 grid grid-cols-7 gap-1 text-center text-xs text-muted-foreground">
+                        {['S','M','T','W','T','F','S'].map((d, i) => <div key={i}>{d}</div>)}
+                      </div>
+                      <div className="grid grid-cols-7 gap-1">
+                        {Array.from({ length: new Date(pickerYear, pickerMonth + 1, 0).getDate() }, (_, i) => i + 1).map((day) => {
+                          const dateStr = `${pickerYear}-${String(pickerMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                          const isSelected = editBirthday === dateStr;
+                          return (
+                            <button
+                              key={day}
+                              onClick={() => { setEditBirthday(dateStr); setShowBirthdayPicker(false); }}
+                              className={`flex h-8 items-center justify-center rounded text-sm ${
+                                isSelected ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted/50"
+                              }`}
+                            >
+                              {day}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Favorite Rock */}
+            <div className="mb-4">
+              <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
+                Favorite Rock
+              </label>
+              <input
+                type="text"
+                value={editFavoriteRock}
+                onChange={(e) => setEditFavoriteRock(e.target.value)}
+                maxLength={40}
+                placeholder="e.g. Quartz, Amethyst, Fluorite..."
+                className="w-full dark-card sculpted-raised rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
+              />
             </div>
 
             {/* Save / Cancel */}
