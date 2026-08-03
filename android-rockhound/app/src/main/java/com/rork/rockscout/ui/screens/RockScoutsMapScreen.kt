@@ -147,7 +147,6 @@ fun RockScoutsMapScreen(navController: NavController) {
     var selectedSharedPing by remember { mutableStateOf<SocialRepository.SharedPingRow?>(null) }
     var showRemovePingConfirm by remember { mutableStateOf(false) }
     var showColorPicker by remember { mutableStateOf(false) }
-    var showStopLocationConfirm by remember { mutableStateOf(false) }
 
     // Safety banner persistence: load dismissed state on entry, clear on dispose
     // so the banner reappears next time the user opens the screen.
@@ -557,18 +556,6 @@ fun RockScoutsMapScreen(navController: NavController) {
                             shape = RoundedCornerShape(24.dp),
                         )
                     }
-                    Spacer(Modifier.height(10.dp))
-                    // Stop sharing location — turns off location monitoring so
-                    // the user is no longer visible to other hunters scanning
-                    // nearby. Confirmation dialog prevents accidental taps.
-                    SculptedOutlinedButton(
-                        text = "Stop sharing location",
-                        onClick = { showStopLocationConfirm = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        accent = Danger,
-                        textColor = Danger,
-                        icon = Icons.Filled.Close,
-                    )
                 } else {
                     Text(
                         "Drag the map to position your pin, then tap Set ping. Your ping is private — share it with whoever you choose via Messenger.",
@@ -771,45 +758,6 @@ fun RockScoutsMapScreen(navController: NavController) {
                     scope.launch { social.loadVisiblePings() }
                 },
                 onDismiss = { showColorPicker = false },
-            )
-        }
-
-        // Stop sharing location confirmation dialog — turns off location
-        // monitoring entirely so the user is no longer discoverable.
-        if (showStopLocationConfirm) {
-            AlertDialog(
-                onDismissRequest = { showStopLocationConfirm = false },
-                containerColor = Color(0xFF1C1A14),
-                titleContentColor = DarkTextHigh,
-                textContentColor = DarkTextHigh,
-                title = { Text("Stop sharing your location?") },
-                text = {
-                    Text("Other hunters will no longer be able to find you nearby. Your ping will also be removed. You can turn it back on anytime.")
-                },
-                confirmButton = {
-                    SculptedButton(
-                        text = "Stop sharing",
-                        onClick = {
-                            showStopLocationConfirm = false
-                            scope.launch {
-                                runCatching { social.clearMyPing() }
-                                runCatching { repo.setLocationMonitoring(false) }
-                                runCatching { social.loadVisiblePings() }
-                            }
-                        },
-                        accent = Danger,
-                        containerColor = Danger,
-                        textColor = Color.White,
-                    )
-                },
-                dismissButton = {
-                    SculptedOutlinedButton(
-                        text = "Cancel",
-                        onClick = { showStopLocationConfirm = false },
-                        accent = Aqua,
-                        textColor = DarkTextHigh,
-                    )
-                },
             )
         }
 
