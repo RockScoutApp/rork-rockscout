@@ -4,13 +4,15 @@ import {
   Download,
   Crown,
   CheckCircle2,
-  Smartphone,
-  Monitor,
-  Tablet,
-  ArrowRight,
   Share,
   MoreVertical,
   MonitorDown,
+  Monitor,
+  ArrowRight,
+  BookOpen,
+  Sparkles,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";
 import { InstallAppButton } from "@/components/InstallAppButton";
@@ -19,27 +21,38 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTier } from "@/hooks/useTier";
 import { usePwaInstall, type Platform } from "@/hooks/usePwaInstall";
 import { SITE } from "@/content/legal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+
+interface InstallPWAProps {
+  mode: "free" | "premium";
+}
 
 /**
- * Minimal PWA install page.
+ * Dedicated PWA install page.
  *
- * Both the "Free PWA" and "Premium PWA" navbar buttons land here. The page
- * shows a single install button — no marketing content, no tier comparison
- * cards, no feature lists.
+ * Two distinct entry points:
+ *  - `/install/free` — install the free PWA, no account required.
+ *  - `/install/premium` — install the Premium PWA; sign-in and an active
+ *    Premium entitlement are required so the installed app can sync.
  *
- * - Not signed in: "Install Free PWA" button + a small "Premium? Sign in" link
- * - Signed in + Premium: "Install Premium PWA" button
- * - Signed in + Free: "Install Free PWA" button + "Upgrade to Premium" link
- *
- * Platform-specific install instructions are shown in a collapsible section
- * below the button — needed for iOS Safari and manual install flows.
+ * The legacy `/install` route redirects to `/install/free`.
  */
-export default function InstallPWA() {
-  const { user } = useAuth();
-  const { isPremium } = useTier();
+export default function InstallPWA({ mode }: InstallPWAProps) {
+  const { user, isLoading: authLoading } = useAuth();
+  const { isPremium, isLoading: tierLoading } = useTier();
   const { platform } = usePwaInstall();
   const [searchParams] = useSearchParams();
   const [justVerified, setJustVerified] = useState<boolean>(false);
+  const [authDialogOpen, setAuthDialogOpen] = useState<boolean>(false);
 
   useEffect(() => {
     const verified = searchParams.get("verified");
@@ -56,24 +69,35 @@ export default function InstallPWA() {
     }
   }, [searchParams]);
 
+  const isPremiumMode = mode === "premium";
+  const isLoading = authLoading || tierLoading;
+
+  const title = isPremiumMode
+    ? `Install Premium PWA · ${SITE.name}`
+    : `Install Free PWA · ${SITE.name}`;
+  const description = isPremiumMode
+    ? "Install RockScout Premium as a PWA for the full feature set, synced across your devices."
+    : "Install the free RockScout PWA for read-only exploration, no account required.";
+
   return (
-    <Layout
-      title={`Install RockScout PWA · ${SITE.name}`}
-      description="Install RockScout as a Progressive Web App on your desktop, laptop, or tablet."
-    >
+    <Layout title={title} description={description}>
       <section className="relative overflow-hidden border-b border-border/40">
         <div className="geode-gradient pointer-events-none absolute inset-0 opacity-30" />
         <div className="relative mx-auto max-w-xl px-4 py-16 text-center sm:px-6 sm:py-24 md:py-28">
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/15 ring-1 ring-primary/30">
-            <Download className="h-8 w-8 text-primary" />
+            {isPremiumMode ? (
+              <Crown className="h-8 w-8 text-amber-500" />
+            ) : (
+              <Download className="h-8 w-8 text-primary" />
+            )}
           </div>
           <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-            Install RockScout
+            {isPremiumMode ? "Install Premium PWA" : "Install Free PWA"}
           </h1>
           <p className="mx-auto mt-3 max-w-sm text-balance text-sm text-muted-foreground sm:text-base">
-            {isPremium
-              ? "Install the full Premium PWA with all features unlocked."
-              : "Install RockScout on your desktop or tablet — it takes seconds."}
+            {isPremiumMode
+              ? "Premium unlocks AI ID, social features, and sync across devices."
+              : "Explore the specimen database, maps, and guides — no account needed."}
           </p>
 
           {justVerified && (
@@ -83,49 +107,386 @@ export default function InstallPWA() {
             </div>
           )}
 
-          {/* Install button */}
           <div className="mt-8 flex flex-col items-center gap-4">
-            <div className="scale-125">
-              <InstallAppButton />
-            </div>
-
-            {/* Tier-aware secondary action */}
-            {!user && (
-              <div className="flex flex-col items-center gap-1.5">
-                <p className="text-xs text-muted-foreground">
-                  Have a Premium account?
-                </p>
-                <div className="scale-110">
-                  <AuthPill />
-                </div>
+            {isLoading ? (
+              <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-2 text-sm font-medium text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Checking account…
+              </span>
+            ) : isPremiumMode ? (
+              <PremiumInstallState
+                user={user}
+                isPremium={isPremium}
+                onSignIn={() => setAuthDialogOpen(true)}
+              />
+            ) : (
+              <div className="scale-125">
+                <InstallAppButton mode="free" />
               </div>
             )}
-            {user && !isPremium && (
-              <Link
-                to="/app/paywall"
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500/20 to-primary/20 border border-amber-500/40 px-5 py-2.5 text-sm font-semibold text-amber-600 transition-all hover:border-amber-500 hover:shadow-sm dark:text-amber-400"
-              >
-                <Crown className="h-4 w-4" />
-                Upgrade to Premium
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+
+            {/* Switch-flow links */}
+            {!isLoading && (
+              <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
+                {isPremiumMode ? (
+                  <>
+                    <p>Just want the free learning app?</p>
+                    <Link
+                      to="/install/free"
+                      className="inline-flex items-center gap-1.5 font-medium text-primary hover:underline"
+                    >
+                      <BookOpen className="h-4 w-4" />
+                      Install Free PWA
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <p>Have a Premium account?</p>
+                    <Link
+                      to="/install/premium"
+                      className="inline-flex items-center gap-1.5 font-medium text-amber-600 hover:underline dark:text-amber-400"
+                    >
+                      <Crown className="h-4 w-4" />
+                      Install Premium PWA
+                    </Link>
+                  </>
+                )}
+              </div>
             )}
           </div>
         </div>
       </section>
 
-      {/* Collapsible platform instructions */}
       <section className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
         <PlatformInstructions platform={platform} />
       </section>
+
+      {/* Inline sign-in dialog for the Premium install page */}
+      <SignInDialog
+        open={authDialogOpen}
+        onOpenChange={setAuthDialogOpen}
+      />
     </Layout>
   );
 }
 
+function PremiumInstallState({
+  user,
+  isPremium,
+  onSignIn,
+}: {
+  user: ReturnType<typeof useAuth>["user"];
+  isPremium: boolean;
+  onSignIn: () => void;
+}) {
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center gap-4">
+        <p className="max-w-sm text-sm text-muted-foreground">
+          Sign in with your Premium account to install the Premium PWA. Your
+          subscription syncs across all devices.
+        </p>
+        <Button
+          onClick={onSignIn}
+          size="lg"
+          className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 text-base font-semibold text-stone-950 hover:bg-amber-400"
+        >
+          <Crown className="h-5 w-5" />
+          Sign in to install Premium PWA
+        </Button>
+        <div className="scale-110">
+          <AuthPill />
+        </div>
+      </div>
+    );
+  }
+
+  if (!isPremium) {
+    return (
+      <div className="flex flex-col items-center gap-4">
+        <p className="max-w-sm text-sm text-muted-foreground">
+          Your account is on the Free tier. Upgrade to Premium to install the
+          Premium PWA and unlock everything.
+        </p>
+        <Link
+          to="/app/paywall"
+          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500/20 to-primary/20 border border-amber-500/40 px-6 py-3 text-base font-semibold text-amber-600 transition-all hover:border-amber-500 hover:shadow-sm dark:text-amber-400"
+        >
+          <Crown className="h-5 w-5" />
+          Upgrade to Premium
+          <ArrowRight className="h-5 w-5" />
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="scale-125">
+      <InstallAppButton mode="premium" />
+    </div>
+  );
+}
+
 /**
- * Platform-specific install instructions. Shown as a simple, collapsible
- * section — needed for iOS Safari (no native prompt) and manual install flows.
+ * Minimal sign-in dialog embedded on the Premium install page.
+ * Mirrors the AuthPill flow without leaving the page.
  */
+function SignInDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { signIn, signUp, error, clearError, setPremiumConfirmed } = useAuth();
+  const { isPremium } = useTier();
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [verificationMsg, setVerificationMsg] = useState<string | null>(null);
+  const [awaitingCode, setAwaitingCode] = useState(false);
+  const [codeInput, setCodeInput] = useState("");
+  const [codeError, setCodeError] = useState<string | null>(null);
+  const [codeSending, setCodeSending] = useState(false);
+  const [confirmedEmail, setConfirmedEmail] = useState("");
+  const [pendingPassword, setPendingPassword] = useState("");
+
+  const resetForm = () => {
+    setEmail("");
+    setPassword("");
+    setVerificationMsg(null);
+    setAwaitingCode(false);
+    setCodeInput("");
+    setCodeError(null);
+    setPendingPassword("");
+    clearError();
+  };
+
+  const requestCode = async (emailToSend: string, purpose: "signup" | "premium") => {
+    setCodeSending(true);
+    setCodeError(null);
+    try {
+      const { sendVerificationCode } = await import("@/lib/emailVerification");
+      const outcome = await sendVerificationCode(emailToSend);
+      if (!outcome.ok) {
+        setCodeError(outcome.error ?? "Could not send verification code.");
+        return false;
+      }
+      setAwaitingCode(true);
+      setConfirmedEmail(emailToSend);
+      setVerificationMsg(
+        purpose === "signup"
+          ? `We sent a 6-digit code to ${emailToSend}. Enter it to activate your account.`
+          : "Premium account detected! Enter the 6-digit code sent to your email to confirm.",
+      );
+      return true;
+    } finally {
+      setCodeSending(false);
+    }
+  };
+
+  const verifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setCodeError(null);
+    try {
+      const { verifyEmailCode } = await import("@/lib/emailVerification");
+      const outcome = await verifyEmailCode(confirmedEmail, codeInput);
+      if (!outcome.ok || !outcome.verified) {
+        setCodeError(outcome.error ?? "Invalid code. Try again.");
+        setSubmitting(false);
+        return;
+      }
+      if (mode === "signup") {
+        try {
+          await signIn(confirmedEmail, pendingPassword);
+        } catch {
+          setCodeError("Email verified. Please sign in with your new password to continue.");
+          setSubmitting(false);
+          return;
+        }
+      } else {
+        setPremiumConfirmed(Date.now());
+      }
+      onOpenChange(false);
+      resetForm();
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setVerificationMsg(null);
+    clearError();
+    try {
+      if (mode === "signup") {
+        await signUp(email, password);
+        setPendingPassword(password);
+        await requestCode(email, "signup");
+      } else {
+        await signIn(email, password);
+        setConfirmedEmail(email);
+        setTimeout(() => {
+          if (isPremium) {
+            void requestCode(email, "premium");
+          } else {
+            onOpenChange(false);
+            resetForm();
+          }
+        }, 400);
+      }
+    } catch {
+      // error is set in the hook
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(open) => {
+        onOpenChange(open);
+        if (!open) resetForm();
+      }}
+    >
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 font-display text-xl">
+            <Crown className="h-5 w-5 text-primary" />
+            {mode === "signin" ? "Sign in to Premium" : "Create account"}
+          </DialogTitle>
+          <DialogDescription>
+            Verify your Premium account to install the RockScout Premium PWA
+            on 2 more devices.
+          </DialogDescription>
+        </DialogHeader>
+
+        {verificationMsg && (
+          <div className="rounded-lg border border-primary/30 bg-primary/10 p-3 text-sm text-primary">
+            {verificationMsg}
+          </div>
+        )}
+
+        {error && (
+          <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {awaitingCode ? (
+          <form onSubmit={verifyCode} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="install-code">Verification code</Label>
+              <Input
+                id="install-code"
+                type="text"
+                required
+                maxLength={6}
+                value={codeInput}
+                onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, ""))}
+                placeholder="6-digit code"
+                autoComplete="one-time-code"
+                className="text-center text-lg tracking-widest"
+              />
+            </div>
+            {codeError && (
+              <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{codeError}</span>
+              </div>
+            )}
+            <Button type="submit" disabled={submitting || codeInput.length !== 6} className="w-full" size="lg">
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify code"}
+            </Button>
+            <button
+              type="button"
+              onClick={() => requestCode(confirmedEmail, mode === "signup" ? "signup" : "premium")}
+              disabled={codeSending}
+              className="w-full text-center text-xs text-muted-foreground hover:text-foreground"
+            >
+              {codeSending ? "Sending…" : "Resend code"}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="install-email">Email</Label>
+              <Input
+                id="install-email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                autoComplete="email"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="install-password">Password</Label>
+              <Input
+                id="install-password"
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 6 characters"
+                autoComplete={mode === "signin" ? "current-password" : "new-password"}
+              />
+            </div>
+            <Button type="submit" disabled={submitting} className="w-full" size="lg">
+              {submitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : mode === "signin" ? (
+                "Sign in"
+              ) : (
+                "Create account"
+              )}
+            </Button>
+          </form>
+        )}
+
+        <div className="text-center text-sm text-muted-foreground">
+          {mode === "signin" ? (
+            <>
+              Don&apos;t have an account?{" "}
+              <button
+                onClick={() => {
+                  setMode("signup");
+                  clearError();
+                  setVerificationMsg(null);
+                }}
+                className="font-medium text-primary hover:underline"
+              >
+                Sign up
+              </button>
+            </>
+          ) : (
+            <>
+              Already have an account?{" "}
+              <button
+                onClick={() => {
+                  setMode("signin");
+                  clearError();
+                  setVerificationMsg(null);
+                }}
+                className="font-medium text-primary hover:underline"
+              >
+                Sign in
+              </button>
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function PlatformInstructions({ platform }: { platform: Platform }) {
   const [open, setOpen] = useState<boolean>(false);
 

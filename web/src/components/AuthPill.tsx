@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import {
   Crown,
   LogOut,
@@ -12,7 +11,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/lib/supabase";
+import { useTier } from "@/hooks/useTier";
 import { sendVerificationCode, verifyEmailCode } from "@/lib/emailVerification";
 import {
   Dialog,
@@ -34,23 +33,22 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-interface Profile {
-  is_pro: boolean;
-}
-
 /**
  * Navbar sign-in pill. Lets website visitors sign in to verify their Premium
- * status — which is required to install the RockScout PWA on 2 more devices.
- * The pill is clearly labelled so its purpose is obvious at a glance.
+ * status — which is required to install the RockScout Premium PWA on 2 more
+ * devices and keep data synced. The pill uses the same tier source as the rest
+ * of the app so its label is always consistent with the actual entitlement.
  *
  * States:
- *  - Signed out: "Sign in" pill → opens a sign-in/sign-up dialog.
+ *  - Signed out: "Premium PWA" pill → opens a sign-in/sign-up dialog, then
+ *    leads to the Premium install page.
  *  - Signed in + Premium: amber "Premium" pill with a crown + dropdown.
  *  - Signed in + Free: outline pill with email + dropdown (upgrade prompt).
  */
 export function AuthPill() {
-  const { user, session, isLoading, signIn, signUp, signOut, error, clearError, setPremiumConfirmed } =
+  const { user, isLoading, signIn, signUp, signOut, error, clearError, setPremiumConfirmed } =
     useAuth();
+  const { isPremium: isPro, isLoading: tierLoading } = useTier();
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
@@ -67,25 +65,6 @@ export function AuthPill() {
   const [confirmedEmail, setConfirmedEmail] = useState("");
   const [codePurpose, setCodePurpose] = useState<"signup" | "premium">("premium");
   const [pendingPassword, setPendingPassword] = useState("");
-
-  // Only query premium status when we have a session (avoids unnecessary
-  // requests on the marketing site for anonymous visitors).
-  const { data: profile } = useQuery<Profile>({
-    queryKey: ["auth-pill-profile", user?.id],
-    queryFn: async () => {
-      if (!user) return { is_pro: false };
-      const { data } = await supabase
-        .from("rockscout_profiles")
-        .select("is_pro")
-        .eq("id", user.id)
-        .maybeSingle();
-      return (data as Profile) ?? { is_pro: false };
-    },
-    enabled: !!user && !!session,
-    staleTime: 60_000,
-  });
-
-  const isPro = profile?.is_pro ?? false;
 
   const resetForm = () => {
     setEmail("");
@@ -178,25 +157,18 @@ export function AuthPill() {
         await requestCode(email, "signup");
       } else {
         await signIn(email, password);
-        // After sign-in, check if the user is premium — if so, require email-code confirmation
-        // before closing the dialog. Free users get frictionless sign-in.
-        // The profile query will refresh; we check is_pro after a brief delay.
+        // After sign-in, check if the user is premium — if so, require email-code
+        // confirmation before closing the dialog. Free users get frictionless sign-in.
+        // We wait a tick so the shared tier query can load.
         setConfirmedEmail(email);
-        // Give the profile query time to load, then check premium status
-        setTimeout(async () => {
-          const { data: profileData } = await supabase
-            .from("rockscout_profiles")
-            .select("is_pro")
-            .eq("id", user?.id ?? "")
-            .maybeSingle();
-          // If we can't determine yet, skip confirmation (fail open)
-          if (profileData?.is_pro === true) {
-            await requestCode(email, "premium");
+        setTimeout(() => {
+          if (isPro) {
+            void requestCode(email, "premium");
           } else {
             setDialogOpen(false);
             resetForm();
           }
-        }, 500);
+        }, 400);
       }
     } catch {
       // error is set in the hook
@@ -209,8 +181,8 @@ export function AuthPill() {
     await signOut();
   };
 
-  // Loading state while the session is being restored.
-  if (isLoading) {
+  // Loading state while the session and tier are being restored.
+  if (isLoading || tierLoading) {
     return (
       <span
         aria-disabled
@@ -227,7 +199,7 @@ export function AuthPill() {
     return (
       <>
         <Link
-          to="/install"
+          to="/install/premium"
           title="Install the Premium PWA with all features unlocked"
           className="group inline-flex items-center gap-1.5 rounded-full border border-amber-500/50 bg-gradient-to-br from-amber-500/10 to-primary/10 px-3.5 py-1.5 text-xs font-semibold text-amber-600 transition-all hover:border-amber-500 hover:shadow-sm sm:px-4 sm:py-2 sm:text-sm dark:text-amber-400"
         >

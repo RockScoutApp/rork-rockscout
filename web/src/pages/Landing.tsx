@@ -10,6 +10,7 @@ import {
   Download,
   Monitor,
   Smartphone,
+  Crown,
   Check,
   Mountain,
   Compass,
@@ -946,12 +947,21 @@ const CTA = () => (
             </span>
           </span>
           <Link
-            to="/install"
+            to="/install/free"
             className="inline-flex h-14 w-56 items-center justify-center gap-2.5 rounded-full border border-primary/40 bg-primary/10 px-5 font-semibold text-primary/80 transition-transform hover:scale-[1.02] active:scale-[0.98]"
           >
             <Monitor className="h-5 w-5 shrink-0" />
             <span className="text-center leading-tight">
-              Install Desktop PWA
+              Install Free PWA
+            </span>
+          </Link>
+          <Link
+            to="/install/premium"
+            className="inline-flex h-14 w-56 items-center justify-center gap-2.5 rounded-full border border-amber-500/50 bg-gradient-to-br from-amber-500/15 to-primary/15 px-5 font-semibold text-amber-600 transition-transform hover:scale-[1.02] active:scale-[0.98] dark:text-amber-400"
+          >
+            <Crown className="h-5 w-5 shrink-0" />
+            <span className="text-center leading-tight">
+              Install Premium PWA
             </span>
           </Link>
           <span

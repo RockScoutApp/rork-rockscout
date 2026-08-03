@@ -1,5 +1,6 @@
 import createContextHook from "@nkzw/create-context-hook";
 import { useEffect, useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase, supabaseUrl } from "@/lib/supabase";
 import { syncEntitlement } from "@/lib/entitlement";
@@ -60,6 +61,7 @@ const DEFAULT_AUTH_STATE: AuthState = {
 };
 
 function useAuthState() {
+  const queryClient = useQueryClient();
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(!SCREENSHOT_MODE);
   const [error, setError] = useState<string | null>(null);
@@ -185,9 +187,13 @@ function useAuthState() {
         throw err;
       }
       // Sync RevenueCat entitlement to Supabase is_pro so the web sees
-      // Premium status immediately if the user bought on Android/iOS.
+      // Premium status immediately if the user bought on Android/iOS, then
+      // refresh the shared tier queries so the UI updates right away.
       if (data.user?.id) {
-        void syncEntitlement(data.user.id);
+        const ok = await syncEntitlement(data.user.id);
+        if (ok) {
+          queryClient.invalidateQueries({ queryKey: ["tier-profile", data.user.id] });
+        }
       }
     } catch (err) {
       // Translate the browser's generic "Failed to fetch" into something

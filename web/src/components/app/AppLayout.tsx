@@ -235,7 +235,7 @@ export default function AppLayout() {
   const syncToastShown = useRef(false);
 
   useEffect(() => {
-    if (!user?.id || !isPremium) return;
+    if (!user?.id) return;
     let cancelled = false;
     setSyncState("syncing");
     syncEntitlement(user.id).then((ok) => {
@@ -248,7 +248,7 @@ export default function AppLayout() {
       }
     });
     return () => { cancelled = true; };
-  }, [user?.id, isPremium]);
+  }, [user?.id]);
 
   const syncConfig = {
     synced: { icon: CloudCheck, color: "text-emerald-500", label: "Synced" },

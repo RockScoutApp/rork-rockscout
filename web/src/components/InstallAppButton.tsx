@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Download, Crown, CheckCircle2, Share, MoreVertical, MonitorDown } from "lucide-react";
+import { Download, Crown, CheckCircle2, Share, MoreVertical, MonitorDown, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useTier } from "@/hooks/useTier";
 import { usePwaInstall, type Platform } from "@/hooks/usePwaInstall";
@@ -20,12 +21,6 @@ interface InstallGuide {
   steps: string[];
 }
 
-/**
- * Manual "Add to Home Screen" instructions, used when the browser never fires
- * `beforeinstallprompt` (iOS Safari always, Firefox, and Chrome before the
- * engagement heuristic fires). Without these the install button was a dead
- * control — tapping it called a prompt that did not exist.
- */
 const INSTALL_GUIDES: Record<Exclude<Platform, "unsupported">, InstallGuide> = {
   ios: {
     heading: "Add RockScout to your Home Screen",
@@ -68,18 +63,33 @@ function GuideIcon({ platform }: { platform: Exclude<Platform, "unsupported"> })
   return <MonitorDown className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />;
 }
 
+export interface InstallAppButtonProps {
+  /** Force the button into a specific tier mode. If omitted, it follows the signed-in user's tier. */
+  mode?: "free" | "premium";
+  /** Visual size variant. */
+  size?: "sm" | "md" | "lg";
+  /** Called when the inline install guide is toggled. */
+  onGuideToggle?: (open: boolean) => void;
+}
+
 /**
  * Tier-aware PWA install button.
  *
- * - Free user: "Install free PWA" — unlimited installs, no device tracking.
- * - Premium user: "Install Premium PWA" — up to 2 additional devices, tracked.
- *   When the limit is reached, shows a "Device limit reached" badge.
- * - Already installed: shows a "PWA installed" check.
+ * - Free mode: always renders an “Install Free PWA” action. No account required.
+ * - Premium mode: requires the user to be signed in and have an active Premium
+ *   entitlement. If not signed in, it links to the Premium install page. If
+ *   signed in but not Premium, it links to the paywall.
+ * - Auto mode (no `mode` prop): follows the current user's tier.
  *
- * When the browser exposes no native install prompt, the button expands
- * step-by-step instructions instead of doing nothing.
+ * When the browser exposes no native install prompt, the button expands the
+ * platform-specific “Add to Home Screen” instructions instead of silently doing
+ * nothing.
  */
-export const InstallAppButton = () => {
+export const InstallAppButton = ({
+  mode,
+  size = "sm",
+  onGuideToggle,
+}: InstallAppButtonProps) => {
   const { user } = useAuth();
   const { isPremium } = useTier();
   const { canInstall, install, installed, platform, hasNativePrompt } = usePwaInstall();
@@ -87,6 +97,10 @@ export const InstallAppButton = () => {
   const [showGuide, setShowGuide] = useState<boolean>(false);
   const queryClient = useQueryClient();
   const deviceRegisteredRef = useRef<boolean>(false);
+
+  // Resolve the effective tier mode. Explicit prop wins; otherwise use the
+  // signed-in user's tier (free when signed out).
+  const effectiveMode: "free" | "premium" = mode ?? (isPremium ? "premium" : "free");
 
   const { data: deviceCount = 0 } = useQuery<number>({
     queryKey: ["device-count", user?.id],
@@ -99,14 +113,13 @@ export const InstallAppButton = () => {
       if (error) return 0;
       return count ?? 0;
     },
-    enabled: !!user && isPremium,
+    enabled: !!user && effectiveMode === "premium",
     staleTime: 60_000,
   });
 
   // Register the device in Supabase when a premium user installs the PWA.
-  // This tracks their 2-device allowance. Runs once per install event.
   useEffect(() => {
-    if (!installed || !user || !isPremium || deviceRegisteredRef.current) return;
+    if (!installed || !user || effectiveMode !== "premium" || deviceRegisteredRef.current) return;
     deviceRegisteredRef.current = true;
     const fp = getDeviceFingerprint();
     const label = getDeviceLabel();
@@ -124,7 +137,7 @@ export const InstallAppButton = () => {
         // Best-effort — the install still succeeded even if tracking fails.
       }
     })();
-  }, [installed, user, isPremium, queryClient]);
+  }, [installed, user, effectiveMode, queryClient]);
 
   if (installed) {
     return (
@@ -139,49 +152,82 @@ export const InstallAppButton = () => {
     return null;
   }
 
-  // Premium users past their device allowance get a manage link instead.
-  if (isPremium && deviceCount >= MAX_DEVICES) {
+  // Premium mode guard: must be signed in with an active Premium entitlement.
+  if (effectiveMode === "premium" && !user) {
     return (
-      <a
-        href="/app/manage-devices"
+      <Link
+        to="/install/premium"
+        className="inline-flex items-center gap-2 rounded-full border border-amber-500/50 bg-gradient-to-br from-amber-500/15 to-primary/15 px-3.5 py-1.5 text-xs font-semibold text-amber-600 transition-all hover:border-amber-500 hover:shadow-sm dark:text-amber-400"
+      >
+        <Crown className="h-3.5 w-3.5" aria-hidden="true" />
+        Install Premium PWA
+      </Link>
+    );
+  }
+
+  if (effectiveMode === "premium" && user && !isPremium) {
+    return (
+      <Link
+        to="/app/paywall"
+        className="inline-flex items-center gap-2 rounded-full border border-amber-500/50 bg-gradient-to-br from-amber-500/15 to-primary/15 px-3.5 py-1.5 text-xs font-semibold text-amber-600 transition-all hover:border-amber-500 hover:shadow-sm dark:text-amber-400"
+      >
+        <Crown className="h-3.5 w-3.5" aria-hidden="true" />
+        Upgrade to Premium
+        <ArrowRight className="h-3 w-3" aria-hidden="true" />
+      </Link>
+    );
+  }
+
+  // Premium users past their device allowance get a manage link instead.
+  if (effectiveMode === "premium" && deviceCount >= MAX_DEVICES) {
+    return (
+      <Link
+        to="/app/manage-devices"
         className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/50"
       >
         <Crown className="h-3.5 w-3.5" aria-hidden="true" />
         Device limit reached ({deviceCount}/{MAX_DEVICES}) — Manage
-      </a>
+      </Link>
     );
   }
 
   const guide = INSTALL_GUIDES[platform];
 
   const handleClick = async () => {
-    // No native prompt available (iOS Safari, Firefox, pre-heuristic Chrome):
-    // surface the manual steps rather than silently doing nothing.
     if (!hasNativePrompt) {
-      setShowGuide((v) => !v);
+      setShowGuide((v) => {
+        const next = !v;
+        onGuideToggle?.(next);
+        return next;
+      });
       return;
     }
     setInstalling(true);
     try {
       await install();
     } catch {
-      // The prompt can be dismissed or rejected by the browser — fall back to
-      // showing the manual steps so the user is never left stuck.
       setShowGuide(true);
+      onGuideToggle?.(true);
     } finally {
       setInstalling(false);
     }
   };
 
+  const isPremiumMode = effectiveMode === "premium";
   const label = installing
     ? "Installing…"
-    : isPremium
+    : isPremiumMode
       ? `Install Premium PWA (${deviceCount}/${MAX_DEVICES})`
-      : "Install free PWA";
+      : "Install Free PWA";
 
-  const buttonClass = isPremium
-    ? "inline-flex items-center gap-2 rounded-full border border-amber-500/50 bg-gradient-to-br from-amber-500/15 to-primary/15 px-3.5 py-1.5 text-xs font-semibold text-amber-600 transition-all hover:border-amber-500 hover:shadow-sm disabled:opacity-50 dark:text-amber-400"
-    : "inline-flex items-center gap-2 rounded-full border border-primary/50 bg-primary/10 px-3.5 py-1.5 text-xs font-semibold text-primary transition-all hover:border-primary hover:bg-primary/15 hover:shadow-sm disabled:opacity-50";
+  const sizeClass =
+    size === "lg"
+      ? "h-14 w-56 items-center justify-center gap-2.5 px-5 text-base"
+      : "gap-2 px-3.5 py-1.5 text-xs";
+
+  const buttonClass = isPremiumMode
+    ? `inline-flex rounded-full ${sizeClass} border border-amber-500/50 bg-gradient-to-br from-amber-500/15 to-primary/15 font-semibold text-amber-600 transition-all hover:border-amber-500 hover:shadow-sm disabled:opacity-50 dark:text-amber-400`
+    : `inline-flex rounded-full ${sizeClass} border border-primary/50 bg-primary/10 font-semibold text-primary transition-all hover:border-primary hover:bg-primary/15 hover:shadow-sm disabled:opacity-50`;
 
   return (
     <div className="flex flex-col items-start gap-2">
@@ -192,7 +238,7 @@ export const InstallAppButton = () => {
         aria-expanded={hasNativePrompt ? undefined : showGuide}
         className={buttonClass}
       >
-        {isPremium ? (
+        {isPremiumMode ? (
           <Crown className="h-3.5 w-3.5" aria-hidden="true" />
         ) : (
           <Download className="h-3.5 w-3.5" aria-hidden="true" />

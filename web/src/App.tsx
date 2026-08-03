@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -167,7 +167,9 @@ const App = () => (
         <Route path="/safety" element={<Safety />} />
         <Route path="/cookies" element={<Cookies />} />
         <Route path="/press" element={<Press />} />
-        <Route path="/install" element={<InstallPWA />} />
+        <Route path="/install" element={<Navigate to="/install/free" replace />} />
+        <Route path="/install/free" element={<InstallPWA mode="free" />} />
+        <Route path="/install/premium" element={<InstallPWA mode="premium" />} />
 
         {/* PWA app routes — free content is open; auth only triggers for
             personal-data (bookmarks) or premium features. */}
