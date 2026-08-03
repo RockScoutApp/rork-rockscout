@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import {
   Users,
   MapPin,
@@ -15,6 +16,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
+import { useSafeBack } from "@/hooks/useSafeBack";
 import { toast } from "sonner";
 import { SculptedCard, SculptedButton, ScreenScaffold } from "@/components/sculpted";
 
@@ -34,6 +36,8 @@ interface ProfileSettings {
 export default function SocialSettings() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const goBack = useSafeBack();
   const [scanRadius, setScanRadius] = useState(25);
 
   const { data: settings } = useQuery<ProfileSettings>({
@@ -99,7 +103,7 @@ export default function SocialSettings() {
 
   if (!user) {
     return (
-      <ScreenScaffold title="Social Settings" onBack={() => window.history.back()}>
+      <ScreenScaffold title="Social Settings" onBack={goBack}>
         <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-center">
           <Users className="h-10 w-10 text-muted-foreground" />
           <p className="text-muted-foreground">Sign in to manage social settings</p>
@@ -111,7 +115,7 @@ export default function SocialSettings() {
   const isSharingLocation = settings?.coarse_lat != null;
 
   return (
-    <ScreenScaffold title="Social Settings" onBack={() => window.history.back()}>
+    <ScreenScaffold title="Social Settings" onBack={goBack}>
       <div className="space-y-5 px-4 pb-8">
         <p className="text-sm text-muted-foreground">
           Manage your connections, visibility, and location sharing
@@ -236,7 +240,7 @@ export default function SocialSettings() {
             Quick Actions
           </h2>
           <SculptedCard accent="aqua" interactive className="overflow-hidden"
-            onClick={() => window.history.back()}>
+            onClick={() => navigate("/app/friends")}>
             <div className="flex items-center gap-3 p-4">
               <div className="icon-badge flex h-10 w-10 items-center justify-center rounded-xl"
                 style={{ ["--badge-accent" as string]: AQUA_HEX, color: `hsl(${AQUA_HEX})` }}>
@@ -250,7 +254,7 @@ export default function SocialSettings() {
           </SculptedCard>
 
           <SculptedCard accent="citrine" interactive className="overflow-hidden"
-            onClick={() => window.history.back()}>
+            onClick={() => navigate("/app/discover-hunters")}>
             <div className="flex items-center gap-3 p-4">
               <div className="icon-badge flex h-10 w-10 items-center justify-center rounded-xl"
                 style={{ ["--badge-accent" as string]: CITRINE_HEX, color: `hsl(${CITRINE_HEX})` }}>
@@ -264,7 +268,7 @@ export default function SocialSettings() {
           </SculptedCard>
 
           <SculptedCard accent="cyan" interactive className="overflow-hidden"
-            onClick={() => window.history.back()}>
+            onClick={() => navigate("/app/rockscouts-map")}>
             <div className="flex items-center gap-3 p-4">
               <div className="icon-badge flex h-10 w-10 items-center justify-center rounded-xl"
                 style={{ ["--badge-accent" as string]: CYAN_HEX, color: `hsl(${CYAN_HEX})` }}>

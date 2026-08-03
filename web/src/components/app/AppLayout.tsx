@@ -28,6 +28,7 @@ import { useBackGuard } from "@/hooks/useBackGuard";
 import { syncEntitlement } from "@/lib/entitlement";
 import IosBetaBanner from "@/components/app/IosBetaBanner";
 import FieldCameraDialog from "@/components/app/FieldCameraDialog";
+import { RouteErrorBoundary } from "@/components/RouteErrorBoundary";
 import { cn } from "@/lib/utils";
 
 interface NavItem {
@@ -310,6 +311,32 @@ export default function AppLayout() {
           )}
         </div>
 
+        {/* Sign-in / Sign-out — top of sidebar, above nav */}
+        <div className="border-b border-border px-3 pb-3">
+          {user ? (
+            <div className="space-y-1">
+              <div className="truncate px-3 text-xs text-muted-foreground">
+                {user.email}
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+              >
+                <LogOut className="h-5 w-5" />
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleSignIn}
+              className="flex w-full items-center gap-3 rounded-lg bg-primary/10 px-3 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/15"
+            >
+              <LogIn className="h-5 w-5" />
+              Sign in
+            </button>
+          )}
+        </div>
+
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 pb-4">
           {navSections.map((section) => (
             <div key={section.label} className="mt-3 first:mt-0">
@@ -338,40 +365,14 @@ export default function AppLayout() {
           ))}
         </nav>
 
-        <div className="space-y-1 border-t border-border p-3">
-          {user ? (
-            <div className="mb-1 truncate px-3 text-xs text-muted-foreground">
-              {user.email}
-            </div>
-          ) : (
-            <div className="mb-1 px-3 text-xs text-muted-foreground">
-              Free preview mode
-            </div>
-          )}
-          {user ? (
-            <button
-              onClick={handleSignOut}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-            >
-              <LogOut className="h-5 w-5" />
-              Sign out
-            </button>
-          ) : (
-            <button
-              onClick={handleSignIn}
-              className="flex w-full items-center gap-3 rounded-lg bg-primary/10 px-3 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/15"
-            >
-              <LogIn className="h-5 w-5" />
-              Sign in
-            </button>
-          )}
-        </div>
       </aside>
 
       {/* Main content — wider on large/desktop screens for multi-column grids */}
       <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
         <div className="mx-auto w-full max-w-5xl px-4 py-6 md:px-8 md:py-8 xl:max-w-6xl 2xl:max-w-7xl">
-          <Outlet />
+          <RouteErrorBoundary>
+            <Outlet />
+          </RouteErrorBoundary>
         </div>
       </main>
 

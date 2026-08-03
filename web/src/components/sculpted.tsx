@@ -4,6 +4,7 @@
  * glowing mineral borders, and press-down sink animations.
  */
 import { forwardRef, type ButtonHTMLAttributes, type HTMLAttributes } from "react";
+import { useSafeBack } from "@/hooks/useSafeBack";
 import { cn } from "@/lib/utils";
 
 type RockClass = "igneous" | "sedimentary" | "metamorphic" | "fossil" | "mineral" | "crystal";
@@ -272,7 +273,8 @@ DashboardTile.displayName = "DashboardTile";
 
 interface ScreenScaffoldProps {
   title: string;
-  onBack: () => void;
+  /** Back button handler. Defaults to safe back navigation that won't close the PWA. */
+  onBack?: () => void;
   children: React.ReactNode;
   actions?: React.ReactNode;
   className?: string;
@@ -285,13 +287,15 @@ export function ScreenScaffold({
   actions,
   className,
 }: ScreenScaffoldProps) {
+  const safeBack = useSafeBack();
+  const handleBack = onBack ?? safeBack;
   return (
     <div className={cn("flex min-h-full flex-col", className)}>
       <div className="flex items-center gap-2 px-2 pt-8 pb-2 md:pt-4">
         <SculptedIconButton
           accent="aqua"
           size="sm"
-          onClick={onBack}
+          onClick={handleBack}
           aria-label="Back"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
