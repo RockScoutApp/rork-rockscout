@@ -34,6 +34,7 @@ object BugLogger {
         val screen: String,
         val appVersion: String,
         val isFatal: Boolean,
+        val userId: String? = null,
     )
 
     private val _entries = MutableStateFlow<List<BugEntry>>(emptyList())
@@ -41,6 +42,7 @@ object BugLogger {
 
     private var initialized = false
     private var appVersionName: String = "unknown"
+    private var currentUserId: String? = null
     private lateinit var appContext: Context
 
     /** Must be called once from Application.onCreate. */
@@ -56,6 +58,11 @@ object BugLogger {
         appContext = context.applicationContext
         loadFromDisk(context)
         installGlobalExceptionHandler()
+    }
+
+    /** Set the current user ID so errors can be attributed post-auth. */
+    fun setUserId(userId: String?) {
+        currentUserId = userId
     }
 
     /** Log a non-fatal error from a catch block or recovery path. */
@@ -84,6 +91,7 @@ object BugLogger {
             screen = screen,
             appVersion = appVersionName,
             isFatal = isFatal,
+            userId = currentUserId,
         )
         prependEntry(context, entry)
     }
@@ -168,6 +176,7 @@ object BugLogger {
             screen = screen,
             appVersion = appVersionName,
             isFatal = isFatal,
+            userId = currentUserId,
         )
         prependEntry(context, entry)
     }

@@ -1728,17 +1728,27 @@ private fun ReportGroupCard(
 private fun BugLogTab() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val entries by BugLogger.entries.collectAsState()
+    val allEntries by BugLogger.entries.collectAsState()
     val discoveredSites by DigSiteDiscoveryStore.sites.collectAsState()
     val customCount by CustomDigLocationStore.locations.collectAsState()
     var expandedId by remember { mutableStateOf<String?>(null) }
     var confirmClear by remember { mutableStateOf(false) }
+    var bugSearchQuery by remember { mutableStateOf("") }
 
     BackHandler(enabled = expandedId != null) { expandedId = null }
     var confirmClearDiscovered by remember { mutableStateOf(false) }
     var selectedIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     var acceptMessage by remember { mutableStateOf<String?>(null) }
     var pendingDenySites by remember { mutableStateOf<List<com.rork.rockscout.data.DigSiteDiscoveryStore.DiscoveredSite>?>(null) }
+
+    // Filter bug entries by user_id or error message text
+    val bugSearchLower = bugSearchQuery.trim().lowercase()
+    val entries = if (bugSearchLower.isBlank()) allEntries else allEntries.filter {
+        it.message.lowercase().contains(bugSearchLower) ||
+            it.exceptionType.lowercase().contains(bugSearchLower) ||
+            it.screen.lowercase().contains(bugSearchLower) ||
+            (it.userId?.lowercase()?.contains(bugSearchLower) == true)
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().navigationBarsPadding(),
@@ -1761,12 +1771,13 @@ private fun BugLogTab() {
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
-                        "${entries.size} entr${if (entries.size == 1) "y" else "ies"} captured",
+                        "${allEntries.size} entr${if (allEntries.size == 1) "y" else "ies"} captured" +
+                            if (bugSearchLower.isNotBlank() && entries.size != allEntries.size) " · ${entries.size} matching" else "",
                         style = MaterialTheme.typography.bodyMedium,
                         color = textOnDarkMuted,
                     )
                 }
-                if (entries.isNotEmpty()) {
+                if (allEntries.isNotEmpty()) {
                     // Filled with a dark surface so the danger text stays legible
                     // over the agate background.
                     OutlinedButton(
@@ -1788,6 +1799,40 @@ private fun BugLogTab() {
             }
         }
 
+        // Search bar for filtering by user_id or error message
+        if (allEntries.isNotEmpty()) {
+            item {
+                OutlinedTextField(
+                    value = bugSearchQuery,
+                    onValueChange = { bugSearchQuery = it },
+                    modifier = Modifier.fillMaxWidth().noAutoFocus(),
+                    placeholder = { Text("Filter by user ID, error type, screen, or message…", color = DarkTextMid, maxLines = 1) },
+                    leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = DarkTextMid) },
+                    trailingIcon = {
+                        if (bugSearchQuery.isNotEmpty()) {
+                            SculptedTextButton(
+                                text = "Clear",
+                                onClick = { bugSearchQuery = "" },
+                                accent = Aqua,
+                                textColor = DarkTextMid,
+                            )
+                        }
+                    },
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFF2A2820),
+                        unfocusedContainerColor = Color(0xFF2A2820),
+                        focusedTextColor = DarkTextHigh,
+                        unfocusedTextColor = DarkTextHigh,
+                        focusedIndicatorColor = Citrine,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        cursorColor = Citrine,
+                    ),
+                    shape = RoundedCornerShape(14.dp),
+                )
+            }
+        }
+
         if (entries.isEmpty()) {
             item {
                 Box(
@@ -1796,8 +1841,8 @@ private fun BugLogTab() {
                 ) {
                     EmptyState(
                         icon = Icons.Filled.BugReport,
-                        title = "No bugs logged",
-                        subtitle = "Everything looks healthy for now.",
+                        title = if (bugSearchLower.isNotBlank()) "No bugs match your filter" else "No bugs logged",
+                        subtitle = if (bugSearchLower.isNotBlank()) "Try a different search term" else "Everything looks healthy for now.",
                     )
                 }
             }
@@ -1842,7 +1887,8 @@ private fun BugLogTab() {
                                 )
                                 Spacer(Modifier.height(3.dp))
                                 Text(
-                                    "${entry.screen} · $time · v${entry.appVersion}${if (entry.isFatal) " · FATAL" else ""}",
+                                    "${entry.screen} · $time · v${entry.appVersion}${if (entry.isFatal) " · FATAL" else ""}" +
+                                        (entry.userId?.let { " · user: ${it.take(8)}" } ?: ""),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = DarkTextMid.copy(alpha = 0.7f),
                                 )

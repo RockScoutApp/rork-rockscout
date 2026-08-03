@@ -68,12 +68,7 @@ export default function DinosaurDictionary() {
   return (
     <ScreenScaffold title="Dinosaur Dictionary" onBack={() => window.history.back()}>
       <div className="space-y-5 px-4 pb-8">
-        {/* Stats */}
-        <p className="text-sm text-muted-foreground">
-          {DINO_ENTRIES.length} dinosaurs & prehistoric animals from all eras
-        </p>
-
-        {/* Search */}
+        {/* Search — compact, at the top */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -83,6 +78,11 @@ export default function DinosaurDictionary() {
             className="pl-9"
           />
         </div>
+
+        {/* Stats */}
+        <p className="text-sm text-muted-foreground">
+          {DINO_ENTRIES.length} dinosaurs & prehistoric animals from all eras
+        </p>
 
         {/* Era filter */}
         <div className="flex flex-wrap gap-2">

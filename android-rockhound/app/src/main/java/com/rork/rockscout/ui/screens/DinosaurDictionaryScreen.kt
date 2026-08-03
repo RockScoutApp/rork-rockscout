@@ -319,6 +319,37 @@ fun DinosaurDictionaryScreen(navController: NavController) {
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 40.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            // Search bar with filter toggle — at the very top
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text("Search dinosaurs, eras, locations…", color = DarkTextLow, maxLines = 1) },
+                        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = Aqua) },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(Icons.Filled.Close, contentDescription = "Clear", tint = Aqua)
+                                }
+                            }
+                        },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions.Default,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(16.dp),
+                    )
+                    FilterToggleButton(
+                        active = showFilters || hasActiveFilters,
+                        onClick = { showFilters = !showFilters },
+                    )
+                }
+            }
+
             // Hero intro card
             item {
                 Box(
@@ -345,37 +376,6 @@ fun DinosaurDictionaryScreen(navController: NavController) {
                             TagChip("All continents", color = Color(0xFF5090B0))
                         }
                     }
-                }
-            }
-
-            // Search bar with filter toggle
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        placeholder = { Text("Search dinosaurs, eras, locations…", color = DarkTextLow) },
-                        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = Aqua) },
-                        trailingIcon = {
-                            if (searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { searchQuery = "" }) {
-                                    Icon(Icons.Filled.Close, contentDescription = "Clear", tint = Aqua)
-                                }
-                            }
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions.Default,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(16.dp),
-                    )
-                    FilterToggleButton(
-                        active = showFilters || hasActiveFilters,
-                        onClick = { showFilters = !showFilters },
-                    )
                 }
             }
 

@@ -93,6 +93,8 @@ object ErrorReporter {
     /** Set the current user ID so errors can be attributed post-auth. */
     fun setUserId(userId: String?) {
         currentUserId = userId
+        // Keep BugLogger in sync so local bug entries also carry the user ID
+        BugLogger.setUserId(userId)
     }
 
     /** Set the last user action for breadcrumb tracing. */
@@ -159,6 +161,23 @@ object ErrorReporter {
             fingerprint = fingerprint,
         )
 
+        // Also log locally to BugLogger so it shows up in the dev tools bug section
+        if (autoHealed) {
+            BugLogger.logMessage(
+                context = context,
+                screen = screen,
+                message = "[Auto-healed: $healAction] $message",
+                isFatal = isFatal,
+            )
+        } else {
+            BugLogger.log(
+                context = context,
+                screen = screen,
+                throwable = throwable,
+                isFatal = isFatal,
+            )
+        }
+
         scope.launch {
             reportMutex.withLock {
                 runCatching { upload(payload) }
@@ -192,6 +211,14 @@ object ErrorReporter {
             autoHealed = false,
             healAction = null,
             fingerprint = fingerprint,
+        )
+
+        // Also log locally to BugLogger so it shows up in the dev tools bug section
+        BugLogger.logMessage(
+            context = null,
+            screen = screen,
+            message = message,
+            isFatal = isFatal,
         )
 
         scope.launch {
