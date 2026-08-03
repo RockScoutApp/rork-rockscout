@@ -61,7 +61,10 @@ class SocialRepository private constructor() {
     private val _scanError = MutableStateFlow<String?>(null)
     val scanError: StateFlow<String?> = _scanError.asStateFlow()
 
-    /** Run a scan for nearby hunters within [radiusMiles].
+/** Run a scan for nearby hunters within [radiusMiles].
+     *  Only returns users who are in the caller's connections list — the scan
+     *  populates a card list of connected RockScout Friends within range.
+     *  It does NOT show anyone on the ping map (pings are private).
      *  Returns the results list (also pushed into [scanResults]). */
     suspend fun scan(
         myLat: Double,
@@ -73,9 +76,13 @@ class SocialRepository private constructor() {
         return runCatching {
             val me = currentUserId() ?: error("Not signed in")
             val blocks = FriendRepository.instance
+            // Ensure connections are loaded so we can filter by them.
+            if (_connections.value.isEmpty()) loadConnections()
+            val connIds = _connections.value.toSet()
             val users = LocalDataStore.getTable<LocalUser>(LocalDataStore.KEY_USERS)
             val results = users.mapNotNull { u ->
                 if (u.id == me) return@mapNotNull null
+                if (u.id !in connIds) return@mapNotNull null // Only connected users.
                 if (!u.club_enabled) return@mapNotNull null
                 if (u.status == "off") return@mapNotNull null
                 if (blocks.isBlocked(u.id)) return@mapNotNull null
@@ -633,13 +640,12 @@ class SocialRepository private constructor() {
     }
 
     /**
-     * Load all live pings visible to me:
-     *  - mine
-     *  - my connections' pings
-     *  - nearby hunters' pings (any non-blocked user within [radiusMiles] of
-     *    the caller's current location, provided the caller passed a location).
+     * Load the current user's own live pings only. Pings are private — they
+     * never appear on anyone else's map. The user shares their ping location
+     * manually through the Android share sheet (Messenger, SMS, etc.).
      *
-     *  Blocked users are excluded — their pings are never shown.
+     * The [myLat], [myLng], and [radiusMiles] parameters are accepted for
+     * backward compatibility but no longer affect visibility.
      */
     suspend fun loadVisiblePings(
         myLat: Double? = null,
@@ -649,20 +655,10 @@ class SocialRepository private constructor() {
         return runCatching {
             val me = currentUserId() ?: error("Not signed in")
             val now = java.time.OffsetDateTime.now()
-            val blocks = FriendRepository.instance
             val all = LocalDataStore.getTable<LocalPing>(LocalDataStore.KEY_PINGS)
-            val active = all.filter {
+            val visible = all.filter {
+                it.user_id == me &&
                 runCatching { java.time.OffsetDateTime.parse(it.expires_at).isAfter(now) }.getOrDefault(false)
-            }.filter { !blocks.isBlocked(it.user_id) }
-            val visible = active.filter { ping ->
-                when {
-                    ping.user_id == me -> true
-                    _connections.value.contains(ping.user_id) -> true
-                    myLat != null && myLng != null && radiusMiles > 0 -> {
-                        haversineMiles(myLat, myLng, ping.lat, ping.lng) <= radiusMiles
-                    }
-                    else -> false
-                }
             }.map { PingRow(it.id, it.user_id, it.lat, it.lng, it.label, it.expires_at, it.created_at) }
             _pings.value = visible
             visible

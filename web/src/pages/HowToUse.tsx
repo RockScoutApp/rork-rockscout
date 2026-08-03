@@ -176,7 +176,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
     category: "social-trade",
     steps: [
       `Your RockScout account is required to use the app — it's free and your collections, captures, and friends carry over to any device.`,
-      `Open the RockScouts Map to see live pings from other hunters. Drop your own ping to share your location.`,
+      `Open the RockScouts Map to set a private ping at your location. Your ping is only visible to you — share it with someone via Messenger, SMS, or any app using the Share button.`,
       `Send friend requests from the RockScout Friends screen or by tapping another user's profile.`,
       `Use the Discover Hunters screen (from your Profile) to browse and search every discoverable RockScout hunter worldwide — filter by status, level, or collection size and tap any result to view their public profile.`,
       `The message icon (envelope, next to the notification bell) shows a count badge for all unread messages and pending message requests. Tap it to open the unified RockScout Friends screen.`,

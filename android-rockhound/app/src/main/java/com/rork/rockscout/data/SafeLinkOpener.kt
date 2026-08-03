@@ -172,6 +172,24 @@ object SafeLinkOpener {
     }
 
     /**
+     * Share a ping location via the Android share sheet. Opens a chooser
+     * with a pre-filled message containing a Google Maps link to the
+     * ping coordinates. The user picks Messenger (or any app) to send it
+     * privately to whoever they choose.
+     */
+    fun sharePingLocation(context: Context, lat: Double, lng: Double, label: String) {
+        val mapsUrl = "https://www.google.com/maps?q=$lat,$lng"
+        val shareText = "My RockScout ping: $label\nMaps: $mapsUrl"
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_SUBJECT, "RockScout ping location")
+            putExtra(Intent.EXTRA_TEXT, shareText)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        openShareChooser(context, shareIntent, "Share ping via…")
+    }
+
+    /**
      * Core launch helper — catches [ActivityNotFoundException] and any other
      * exception, showing a toast instead of letting the app crash or freeze.
      */

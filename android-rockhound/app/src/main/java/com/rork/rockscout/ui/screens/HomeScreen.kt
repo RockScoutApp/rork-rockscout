@@ -2468,7 +2468,7 @@ private fun RockScoutSocialBanner(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "* Does not reveal your location \u2014 only populates a list of nearby hunters. The only thing that reveals your location is setting a ping.",
+                        text = "* Does not reveal your location \u2014 only populates a list of connected hunters. Pings are private \u2014 only you see yours. Share via Messenger.",
                         style = MaterialTheme.typography.bodySmall.copy(
                             shadow = Shadow(
                                 color = Color.Black.copy(alpha = 0.7f),
@@ -2525,7 +2525,7 @@ private fun RockScoutSocialBanner(
             } else if (!isSignedIn) {
                 Spacer(Modifier.height(10.dp))
                 Text(
-                    "Sign in under the profile tab to be discoverable to other users, scan for nearby hunters, use the ping/meetup option, and more!",
+                    "Sign in under the profile tab to be discoverable to other users, scan for connected RockScouts, use the ping/meetup option, and more!",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         shadow = Shadow(
                             color = Color.Black.copy(alpha = 0.7f),
@@ -2813,7 +2813,7 @@ fun LocationAndSocialBox(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "* Does not reveal your location \u2014 only populates a list of nearby hunters. The only thing that reveals your location is setting a ping.",
+                        text = "* Does not reveal your location \u2014 only populates a list of connected hunters. Pings are private \u2014 only you see yours. Share via Messenger.",
                         style = MaterialTheme.typography.bodySmall.copy(
                             shadow = Shadow(
                                 color = Color.Black.copy(alpha = 0.7f),
@@ -2870,7 +2870,7 @@ fun LocationAndSocialBox(
             } else if (!isSignedIn) {
                 Spacer(Modifier.height(10.dp))
                 Text(
-                    "Sign in under the profile tab to be discoverable to other users, scan for nearby hunters, use the ping/meetup option, and more!",
+                    "Sign in under the profile tab to be discoverable to other users, scan for connected RockScouts, use the ping/meetup option, and more!",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         shadow = Shadow(
                             color = Color.Black.copy(alpha = 0.7f),

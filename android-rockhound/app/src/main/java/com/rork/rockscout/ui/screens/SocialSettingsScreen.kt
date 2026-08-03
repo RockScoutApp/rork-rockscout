@@ -198,8 +198,8 @@ fun SocialSettingsScreen(
                 icon = Icons.Filled.Group,
                 title = if (profile.clubEnabled) "RockScout Social ON" else "RockScout Social OFF",
                 helper = if (profile.clubEnabled)
-                    "Discoverable to nearby hunters — scan, message & ping."
-                else "Turn on to scan for nearby RockScouts, message, and ping.",
+                    "Discoverable to connected RockScouts — scan, message & ping."
+                else "Turn on to scan for connected RockScouts, message, and ping.",
                 accent = if (profile.clubEnabled) Citrine else TextLow,
                 checked = profile.clubEnabled,
                 onCheckedChange = { enabled ->

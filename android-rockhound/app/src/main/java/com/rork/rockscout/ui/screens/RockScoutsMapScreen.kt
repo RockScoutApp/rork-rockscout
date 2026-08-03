@@ -29,7 +29,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Directions
+
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MyLocation
@@ -72,6 +72,7 @@ import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Ink
 import com.rork.rockscout.ui.theme.Success
 import com.rork.rockscout.ui.theme.Warning
+import androidx.compose.material.icons.filled.Share
 import com.rork.rockscout.data.SessionStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
@@ -99,15 +100,17 @@ import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 /**
- * RockScouts Map — shows live pings from you, your connected RockScout Friends,
- * and nearby hunters in your scan radius. Strangers outside the radius never
- * appear here. Supports a draggable preview pin + "Set Ping" confirmation before
- * broadcasting your location.
+ * RockScouts Map — shows YOUR ping only. Pings are private — nobody else's
+ * ping appears here. Use the Share button to send your ping location to
+ * someone via Messenger, SMS, or any app.
+ *
+ * Scan for nearby hunters (the Scan screen) only populates a card list of
+ * connected RockScout Friends within your search radius — it does NOT show
+ * anyone on this map.
  *
  * Requires: RockScout Friends ON (auth is mandatory for all users).
- * Auto-switches to satellite-style
- * tiles at close zoom (street level) so users can see streets, parking lots,
- * and trailheads clearly.
+ * Auto-switches to satellite-style tiles at close zoom (street level) so
+ * users can see streets, parking lots, and trailheads clearly.
  */
 @Composable
 fun RockScoutsMapScreen(navController: NavController) {
@@ -128,44 +131,30 @@ fun RockScoutsMapScreen(navController: NavController) {
         accessManager.isSocialLocked(isPremium)
     }
 
-    val connections by social.connections.collectAsStateWithLifecycle()
     val pings by social.pings.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     var mapView by remember { mutableStateOf<MapView?>(null) }
     var myPingId by remember { mutableStateOf<String?>(null) }
-    var hunterCache by remember { mutableStateOf<Map<String, SocialRepository.HunterProfile>>(emptyMap()) }
     var showSafetyNote by remember { mutableStateOf(true) }
     var showPingConfirmDialog by remember { mutableStateOf(false) }
     var showDownloadSheet by remember { mutableStateOf(false) }
 
     BackHandler(enabled = showSafetyNote) { showSafetyNote = false }
 
-    // Load connections + pings on open.
+    // Load my pings on open. Pings are private — only mine show here.
     LaunchedEffect(isSignedIn, profile.clubEnabled) {
         if (isSignedIn && profile.clubEnabled) {
-            social.loadConnections()
-            social.loadVisiblePings(current.first, current.second, profile.scanRadiusMiles)
-        }
-    }
-
-    // Fetch hunter profiles for connection partners (for pin pop-ups).
-    LaunchedEffect(connections) {
-        if (connections.isNotEmpty()) {
-            val fetched = mutableMapOf<String, SocialRepository.HunterProfile>()
-            connections.chunked(50).forEach { chunk ->
-                social.fetchProfiles(chunk).forEach { fetched[it.id] = it }
-            }
-            hunterCache = fetched
+            social.loadVisiblePings()
         }
     }
 
     // Refresh pings periodically (~30s) while the screen is open.
-    LaunchedEffect(profile.clubEnabled, current) {
+    LaunchedEffect(profile.clubEnabled) {
         while (profile.clubEnabled) {
             kotlinx.coroutines.delay(30_000)
-            social.loadVisiblePings(current.first, current.second, profile.scanRadiusMiles)
+            social.loadVisiblePings()
         }
     }
 
@@ -175,33 +164,25 @@ fun RockScoutsMapScreen(navController: NavController) {
         myPingId = pings.firstOrNull { it.user_id == auth.currentUserId }?.id
     }
 
-    // Render ping markers when the ping list or map changes.
-    // Uses withContext (tied to this LaunchedEffect's coroutine) instead of
-    // scope.launch so the work is properly cancelled before the MapView is
-    // detached during disposal — prevents the race-condition crash that
-    // occurred when navigating away (e.g. tapping "Open Profile").
-    LaunchedEffect(pings, hunterCache, mapView) {
+    // Render my ping marker on the map. Only my own ping is shown —
+    // pings are private, nobody else's appears here.
+    LaunchedEffect(pings, mapView) {
         val mv = mapView ?: return@LaunchedEffect
         try {
             withContext(Dispatchers.IO) {
                 if (!isActive) return@withContext
-                // Remove old ping markers (keep the preview + overlays).
                 mv.overlays.removeAll { it is Marker && it.id?.startsWith("ping_") == true }
                 pings.forEach { ping ->
                     if (!isActive) return@withContext
-                    val isMine = ping.user_id == auth.currentUserId
-                    val hunter = if (!isMine) hunterCache[ping.user_id] else null
                     val marker = PingMarker(
                         mv,
                         ping.lat,
                         ping.lng,
                         ping.label,
-                        isMine,
-                        hunter?.display_name ?: "You",
-                        hunter?.avatar_emoji ?: "\u26CF\uFE0F",
-                        onOpenThread = if (!isMine) {
-                            { navController.navigate(Routes.messengerThread(ping.user_id)) }
-                        } else ({ {} }),
+                        isMine = true,
+                        displayName = "You",
+                        avatarEmoji = "\u26CF\uFE0F",
+                        onOpenThread = { {} },
                     )
                     marker.id = "ping_${ping.id}"
                     mv.overlays.add(marker)
@@ -212,9 +193,9 @@ fun RockScoutsMapScreen(navController: NavController) {
                 }
             }
         } catch (_: kotlinx.coroutines.CancellationException) {
-            // Expected when navigating away — don't touch the MapView.
+            // Expected when navigating away.
         } catch (_: Throwable) {
-            // MapView may have been detached concurrently; swallow to avoid crash.
+            // MapView may have been detached concurrently.
         }
     }
 
@@ -243,7 +224,7 @@ fun RockScoutsMapScreen(navController: NavController) {
         MapLockedState(
             emoji = "\uD83E\uDD1D",
             title = "Turn on RockScout Friends",
-            message = "Enable the RockScout Friends toggle in your Profile to use the RockScouts Map and ping your connections.",
+            message = "Enable the RockScout Friends toggle in your Profile to set a ping and share your location.",
             buttonLabel = "Open Profile",
             onButton = { navController.navigate(Routes.PROFILE) },
         )
@@ -251,8 +232,6 @@ fun RockScoutsMapScreen(navController: NavController) {
     }
 
     val myPing = pings.firstOrNull { it.user_id == auth.currentUserId }
-    // Show directions pill whenever my ping is live alongside any other ping.
-    val showPingDirections = myPing != null && pings.any { it.user_id != auth.currentUserId }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Map
@@ -334,18 +313,18 @@ fun RockScoutsMapScreen(navController: NavController) {
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f),
             )
-            // Connections count badge
+            // Private badge — pings are private
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Aqua.copy(alpha = 0.20f))
-                    .glowingBorder(2.dp, Aqua.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
+                    .background(Warning.copy(alpha = 0.20f))
+                    .glowingBorder(2.dp, Warning.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
                     .padding(horizontal = 8.dp, vertical = 4.dp),
             ) {
                 Text(
-                    "${connections.size} connected",
+                    "Private",
                     style = MaterialTheme.typography.labelMedium,
-                    color = Aqua,
+                    color = Warning,
                     fontWeight = FontWeight.Bold,
                 )
             }
@@ -367,7 +346,7 @@ fun RockScoutsMapScreen(navController: NavController) {
                 .navigationBarsPadding(),
         )
 
-        // Safety note (dismissible)
+        // Safety / privacy note (dismissible)
         AnimatedVisibility(
             visible = showSafetyNote,
             enter = fadeIn(),
@@ -386,7 +365,7 @@ fun RockScoutsMapScreen(navController: NavController) {
                     Text("\uD83D\uDEE1\uFE0F", style = MaterialTheme.typography.titleMedium)
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        "Feel free to move your ping to a safe meet-up spot. Safety first, always.",
+                        "Your ping is private — only you see it. Use Share to send it to someone via Messenger. Move it to a safe meet-up spot before sharing.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = DarkTextHigh,
                         modifier = Modifier.weight(1f),
@@ -431,27 +410,6 @@ fun RockScoutsMapScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                // Directions pill (above the ping controls) — shown when 2 pings are visible
-                if (showPingDirections) {
-                    SculptedOutlinedButton(
-                        text = "Directions to other ping",
-                        onClick = {
-                            val otherPing = pings.firstOrNull { it.user_id != auth.currentUserId }
-                            if (otherPing != null && myPing != null) {
-                                SafeLinkOpener.openPointToPointDirections(
-                                    context,
-                                    Pair(myPing.lat, myPing.lng),
-                                    Pair(otherPing.lat, otherPing.lng),
-                                )
-                            }
-                        },
-                        accent = Aqua,
-                        textColor = Aqua,
-                        icon = Icons.Filled.Directions,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Spacer(Modifier.height(10.dp))
-                }
                 // Download Map button — uses the centered pin's coordinates (map center)
                 SculptedOutlinedButton(
                     text = "Download offline maps",
@@ -463,7 +421,7 @@ fun RockScoutsMapScreen(navController: NavController) {
                 )
                 Spacer(Modifier.height(10.dp))
                 if (myPing != null) {
-                    // Live ping — show info + Set Ping (update) / Remove
+                    // Live ping — show info + Share / Set Ping (update) / Remove
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -481,9 +439,23 @@ fun RockScoutsMapScreen(navController: NavController) {
                         Spacer(Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text("Your ping is live", style = MaterialTheme.typography.titleMedium, color = DarkTextHigh, fontWeight = FontWeight.Bold)
-                            Text("Visible to your friends and nearby hunters · expires in ${if (isPremium) "24h" else "12h"}", style = MaterialTheme.typography.bodySmall, color = DarkTextMid)
+                            Text("Private — share via Messenger to show someone · expires in ${if (isPremium) "24h" else "12h"}", style = MaterialTheme.typography.bodySmall, color = DarkTextMid)
                         }
                     }
+                    Spacer(Modifier.height(10.dp))
+                    // Share button — opens Android share sheet with maps link
+                    SculptedButton(
+                        text = "Share ping location",
+                        onClick = {
+                            SafeLinkOpener.sharePingLocation(context, myPing.lat, myPing.lng, myPing.label)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        accent = Citrine,
+                        containerColor = Citrine,
+                        textColor = Ink,
+                        icon = Icons.Filled.Share,
+                        shape = RoundedCornerShape(24.dp),
+                    )
                     Spacer(Modifier.height(10.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -516,7 +488,7 @@ fun RockScoutsMapScreen(navController: NavController) {
                     }
                 } else {
                     Text(
-                        "Drag the map to position your pin, then tap Set ping.",
+                        "Drag the map to position your pin, then tap Set ping. Your ping is private — share it with whoever you choose via Messenger.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = DarkTextHigh,
                         fontWeight = FontWeight.SemiBold,
@@ -561,7 +533,7 @@ fun RockScoutsMapScreen(navController: NavController) {
                 text = {
                     Column {
                         Text(
-                            "Set your ping at the current map center? Your RockScout friends and nearby hunters will see this location for ${if (isPremium) "24 hours" else "12 hours"}.",
+                            "Set your ping at the current map center? This ping is private — only you can see it. Share it with someone via Messenger after it's set. It stays live for ${if (isPremium) "24 hours" else "12 hours"}.",
                         )
                         if (center != null) {
                             Spacer(Modifier.height(8.dp))

@@ -283,9 +283,11 @@ export default function SocialSettings() {
             <div>
               <p className="text-xs font-semibold text-foreground">Privacy</p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Your exact location is never shared. Only an approximate area
-                (rounded to ~7 miles) is visible to other hunters when you enable
-                location sharing. Pings on the map expire after 4 hours automatically.
+                Pings are private — only you can see your own ping on the map.
+                Share your ping location with someone via Messenger, SMS, or any
+                app using the Share button. Scan for nearby hunters only
+                populates a card list of connected RockScout Friends — it does
+                not show anyone on the map. Pings expire after 4 hours.
               </p>
             </div>
           </div>
