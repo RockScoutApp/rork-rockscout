@@ -48,8 +48,9 @@ interface ProfileRow {
  *
  * States:
  *  - Signed out: "Premium PWA" pill → opens a sign-in/sign-up dialog. After
- *    sign-in, if the user is Premium, a 6-digit code is sent. Once verified,
- *    an "Install Premium PWA" button appears at the bottom of the dialog.
+ *    sign-in, if the user is Premium and their email is already confirmed in
+ *    Supabase, the "Install Premium PWA" button appears immediately. If the
+ *    email is not confirmed, a 6-digit code is sent first.
  *  - Signed in + Premium: amber "Premium" pill with a crown + dropdown that
  *    includes an "Install Premium PWA" action.
  *  - Signed in + Free: outline pill with email + dropdown (upgrade prompt).
@@ -174,7 +175,17 @@ export function AuthPill() {
         // avoid the stale isPro closure value.
         const userPremium = await checkUserPremiumDirect();
         if (userPremium) {
-          await requestCode(email, "premium");
+          // If the email is already confirmed in Supabase, skip the 6-digit
+          // code and show the install button immediately.
+          const { data: authData } = await supabase.auth.getUser();
+          const emailConfirmed = !!authData.user?.email_confirmed_at;
+          if (emailConfirmed) {
+            setPremiumConfirmed(Date.now());
+            setPremiumVerified(true);
+            setVerificationMsg("Premium verified! You can now install the Premium PWA.");
+          } else {
+            await requestCode(email, "premium");
+          }
         } else {
           // Free-tier user — show upgrade message, keep dialog open
           setFreeTierMsg(true);

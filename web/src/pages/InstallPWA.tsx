@@ -233,9 +233,9 @@ function PremiumInstallState({
  * Sign-in dialog embedded on the Premium install page.
  *
  * After sign-in, the user's Premium status is checked directly from Supabase
- * (avoiding the stale-closure issue with useTier). If Premium, a 6-digit code
- * is sent. Once verified, an "Install Premium PWA" button appears at the
- * bottom of the dialog.
+ * (avoiding the stale-closure issue with useTier). If Premium and the email is
+ * already confirmed in Supabase, the "Install Premium PWA" button appears
+ * immediately. If the email is not confirmed, a 6-digit code is sent first.
  */
 function SignInDialog({
   open,
@@ -360,7 +360,17 @@ function SignInDialog({
         // Check premium status directly from Supabase to avoid stale closure
         const userPremium = await checkUserPremiumDirect();
         if (userPremium) {
-          await requestCode(email, "premium");
+          // If the email is already confirmed in Supabase, skip the 6-digit
+          // code and show the install button immediately.
+          const { data: authData } = await supabase.auth.getUser();
+          const emailConfirmed = !!authData.user?.email_confirmed_at;
+          if (emailConfirmed) {
+            setPremiumConfirmed(Date.now());
+            setPremiumVerified(true);
+            setVerificationMsg("Premium verified! You can now install the Premium PWA.");
+          } else {
+            await requestCode(email, "premium");
+          }
         } else {
           setFreeTierMsg(true);
           setVerificationMsg(
