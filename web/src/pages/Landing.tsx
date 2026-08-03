@@ -937,7 +937,7 @@ const CTA = () => (
         </p>
         <div className="mt-7 flex flex-col items-center justify-center gap-3">
           <a
-            href="/download/rockscout-1.1.9-premium.apk"
+            href="https://github.com/RockScoutApp/rork-rockscout/releases/download/v1.1.9/rockscout-1.1.9-premium.apk"
             className="inline-flex h-14 w-56 items-center justify-center gap-2.5 rounded-full bg-primary px-5 font-semibold text-primary-foreground transition-transform hover:scale-[1.02] active:scale-[0.98]"
           >
             <Download className="h-5 w-5 shrink-0" />

@@ -28,6 +28,9 @@ lerna-debug.log*
 !.vscode/extensions.json
 .idea
 
+# APK binaries — hosted on GitHub Releases, not Pages (25 MiB limit)
+public/download/*.apk
+
 # macOS
 .DS_Store
 *.suo

@@ -28,7 +28,8 @@ const IOS_STORE_URL = "https://apps.apple.com/app/rockscout/id0000000000";
  * that serves it with a stable URL and correct byte length. Leave empty to
  * fall back to the Play Store listing.
  */
-const APK_URL = "https://jvns5dfy7fpytx79a2tb3-web.rork.live/download/rockscout-1.1.9-trial.apk";
+const APK_URL = "https://github.com/RockScoutApp/rork-rockscout/releases/download/v1.1.9/rockscout-1.1.9-trial.apk";
+const PREMIUM_APK_URL = "https://github.com/RockScoutApp/rork-rockscout/releases/download/v1.1.9/rockscout-1.1.9-premium.apk";
 const CHANGELOG =
   "1.1.9: Fixed every specimen-card detail so user-submitted RAA/community specimens never show 'Specimen not found.' Also replaced the push-notification icon with a faceted diamond.";
 

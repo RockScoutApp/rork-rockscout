@@ -1,5 +1,11 @@
+# Redirect old /download/*.apk URLs to GitHub Releases (APKs moved off Pages
+# because Cloudflare Pages rejects files > 25 MiB; GitHub Releases allows 2 GB).
+/download/rockscout-1.1.9-trial.apk    https://github.com/RockScoutApp/rork-rockscout/releases/download/v1.1.9/rockscout-1.1.9-trial.apk    302
+/download/rockscout-1.1.9-premium.apk  https://github.com/RockScoutApp/rork-rockscout/releases/download/v1.1.9/rockscout-1.1.9-premium.apk  302
+/download/rockscout-1.1.8-trial.apk    https://github.com/RockScoutApp/rork-rockscout/releases/download/v1.1.8/rockscout-1.1.8-trial.apk    302
+/download/rockscout-1.1.8-premium.apk  https://github.com/RockScoutApp/rork-rockscout/releases/download/v1.1.8/rockscout-1.1.8-premium.apk  302
+
 # Single Page App rewrites for Cloudflare Pages.
 # Ensures client-side React Router routes (e.g. /privacy, /support)
 # resolve to index.html instead of 404 on direct visits and refreshes.
 /* /index.html 200
-
