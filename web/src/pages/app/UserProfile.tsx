@@ -29,6 +29,8 @@ import {
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { filterProfanity } from "@/lib/profanity-filter";
+import { ensureUniqueUsername } from "@/lib/username-resolver";
 
 interface Profile {
   id: string;
@@ -89,7 +91,7 @@ export default function UserProfile() {
             .from("rockscout_profiles")
             .insert({
               id: user.id,
-              display_name: user.email?.split("@")[0] ?? "Rockhound",
+              display_name: filterProfanity(user.email?.split("@")[0] ?? "Rockhound").filteredText,
             })
             .select("*")
             .single();
@@ -156,13 +158,14 @@ export default function UserProfile() {
   const saveProfile = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Sign in to edit your profile");
+      const uniqueName = await ensureUniqueUsername(filterProfanity(form.display_name).filteredText, user.id);
       const { error } = await supabase
         .from("rockscout_profiles")
         .update({
-          display_name: form.display_name,
+          display_name: uniqueName,
           avatar_emoji: form.avatar_emoji,
           home_region: form.home_region,
-          bio: form.bio,
+          bio: filterProfanity(form.bio).filteredText,
         })
         .eq("id", user.id);
       if (error) throw error;

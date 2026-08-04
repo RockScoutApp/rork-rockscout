@@ -29,6 +29,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { CompactSearchPill } from "@/components/CompactSearchPill";
 import { SculptedCard } from "@/components/sculpted";
+import { filterProfanity } from "@/lib/profanity-filter";
 
 interface Post {
   id: string;
@@ -285,9 +286,9 @@ export default function Community() {
       const { error } = await supabase.from("rockscout_posts").insert({
         user_id: user.id,
         source_type: "journal",
-        title: form.title,
-        caption: form.caption,
-        location_text: form.location_text,
+        title: filterProfanity(form.title).filteredText,
+        caption: filterProfanity(form.caption).filteredText,
+        location_text: filterProfanity(form.location_text).filteredText,
       });
       if (error) throw error;
     },
@@ -348,7 +349,7 @@ export default function Community() {
         .insert({
           post_id: expandedPost,
           user_id: user.id,
-          body: commentText.trim(),
+          body: filterProfanity(commentText.trim()).filteredText,
         });
       if (error) throw error;
     },
@@ -368,8 +369,8 @@ export default function Community() {
       const chatId = `gc-${crypto.randomUUID()}`;
       const { error: cErr } = await supabase.from("group_chats").insert({
         id: chatId,
-        name: groupForm.name.trim(),
-        subject: groupForm.subject.trim(),
+        name: filterProfanity(groupForm.name.trim()).filteredText,
+        subject: filterProfanity(groupForm.subject.trim()).filteredText,
         creator_id: user.id,
         max_members: groupForm.max_members || null,
         profanity_filter_level: groupForm.profanity_filter_level,

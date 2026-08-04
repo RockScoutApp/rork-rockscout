@@ -5,6 +5,7 @@ import android.graphics.Canvas as AndroidCanvas
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.drawable.BitmapDrawable
+import com.rork.rockscout.data.ProfanityFilter
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -1236,7 +1237,7 @@ private fun AddMuseumDialog(
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = { name = ProfanityFilter.filter(it) },
                     label = { Text("Museum name *") },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
@@ -1253,7 +1254,7 @@ private fun AddMuseumDialog(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = city,
-                        onValueChange = { city = it },
+                        onValueChange = { city = ProfanityFilter.filter(it) },
                         label = { Text("City") },
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -1270,7 +1271,7 @@ private fun AddMuseumDialog(
                     )
                     OutlinedTextField(
                         value = state,
-                        onValueChange = { state = it },
+                        onValueChange = { state = ProfanityFilter.filter(it) },
                         label = { Text("State") },
                         singleLine = true,
                         modifier = Modifier.weight(1f),

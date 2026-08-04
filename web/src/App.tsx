@@ -1,3 +1,4 @@
+import { useEffect, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
@@ -8,6 +9,8 @@ import { TierProvider } from "@/hooks/useTier";
 import { OfflineSyncProvider } from "@/hooks/useOfflineSyncContext";
 import { PremiumGate } from "@/components/app/PremiumGate";
 import { UpdateBanner } from "@/components/UpdateBanner";
+import { initOfflineMessageQueue, setRetryFunction } from "@/lib/offline-message-queue";
+import { supabase } from "@/lib/supabase";
 
 import Landing from "./pages/Landing";
 import HowToUse from "./pages/HowToUse";
@@ -119,7 +122,6 @@ import UserAchievements from "./pages/app/UserAchievements";
 import UserCollection from "./pages/app/UserCollection";
 import BlmDetail from "./pages/app/BlmDetail";
 import AccountDeletedAppeal from "./pages/app/AccountDeletedAppeal";
-import type { ReactNode } from "react";
 
 const queryClient = new QueryClient();
 
@@ -135,6 +137,37 @@ const queryClient = new QueryClient();
  * the root is safe for anonymous visitors.
  */
 export function Providers({ children }: { children: ReactNode }) {
+  // Initialize offline message queue — listens for online events and drains pending messages
+  useEffect(() => {
+    initOfflineMessageQueue();
+    // Set up the retry function that sends queued messages when connectivity is restored
+    setRetryFunction(async (msg) => {
+      if (msg.isGroup) {
+        const { error } = await supabase.from("group_messages").insert({
+          group_chat_id: msg.chatId,
+          body: msg.body,
+          image_url: msg.imageUrl,
+          reply_to_message_id: msg.replyToMessageId,
+          tagged_user_ids: msg.taggedUserIds,
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("rockscout_messages").insert({
+          thread_id: msg.chatId,
+          body: msg.body,
+          image_url: msg.imageUrl,
+          reply_to_message_id: msg.replyToMessageId,
+          tagged_user_ids: msg.taggedUserIds,
+        });
+        if (error) throw error;
+        await supabase
+          .from("rockscout_threads")
+          .update({ last_message_at: new Date().toISOString() })
+          .eq("id", msg.chatId);
+      }
+    });
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

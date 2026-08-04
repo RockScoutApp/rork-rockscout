@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import com.rork.rockscout.data.ProfanityFilter
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -128,7 +129,7 @@ fun CreateGroupChatDialog(
             Spacer(Modifier.height(6.dp))
             OutlinedTextField(
                 value = name,
-                onValueChange = { name = it },
+                onValueChange = { name = ProfanityFilter.filter(it) },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("e.g. Pacific Northwest Rockhounds", color = DarkTextMid) },
                 singleLine = true,
@@ -143,7 +144,7 @@ fun CreateGroupChatDialog(
             Spacer(Modifier.height(6.dp))
             OutlinedTextField(
                 value = subject,
-                onValueChange = { subject = it },
+                onValueChange = { subject = ProfanityFilter.filter(it) },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("e.g. Agate hunting, gem cutting, field trips", color = DarkTextMid) },
                 singleLine = true,

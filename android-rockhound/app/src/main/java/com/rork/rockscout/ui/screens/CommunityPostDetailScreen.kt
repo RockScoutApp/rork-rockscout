@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import com.rork.rockscout.data.ProfanityFilter
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -757,7 +758,7 @@ fun CommunityPostDetailScreen(
             text = {
                 androidx.compose.material3.OutlinedTextField(
                     value = postEditBody,
-                    onValueChange = { postEditBody = it },
+                    onValueChange = { postEditBody = ProfanityFilter.filter(it) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2,
                     maxLines = 6,
@@ -969,7 +970,7 @@ private fun DetailCommentRow(
             text = {
                 androidx.compose.material3.OutlinedTextField(
                     value = editBody,
-                    onValueChange = { editBody = it },
+                    onValueChange = { editBody = ProfanityFilter.filter(it) },
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 2,
                     maxLines = 5,

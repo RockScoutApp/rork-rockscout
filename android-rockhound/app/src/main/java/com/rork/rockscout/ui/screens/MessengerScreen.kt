@@ -104,6 +104,8 @@ import com.rork.rockscout.ui.theme.MyBubbleBg
 import com.rork.rockscout.ui.theme.OtherBubbleBg
 import com.rork.rockscout.ui.theme.Success
 import com.rork.rockscout.ui.theme.TextMid
+import com.rork.rockscout.data.OfflineMessageQueue
+import com.rork.rockscout.data.PendingMessage
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -440,8 +442,19 @@ fun MessengerScreen(
                     if (text.isNotBlank() && gcId != null) {
                         val memberIds = SupabaseMessagingRepository.groupChatMemberIds(gcId)
                         val taggedIds = parseTaggedUserIds(replyBody, memberIds, hunterCache)
+                        val replyToSnapshot = replyToMessageId
                         scope.launch {
-                            SupabaseMessagingRepository.sendGroupMessage(gcId, text, null, replyToMessageId, taggedIds)
+                            val result = SupabaseMessagingRepository.sendGroupMessage(gcId, text, null, replyToSnapshot, taggedIds)
+                            if (result.isFailure) {
+                                OfflineMessageQueue.enqueue(PendingMessage(
+                                    id = "pending-" + java.util.UUID.randomUUID(),
+                                    chatId = gcId,
+                                    body = text,
+                                    replyToMessageId = replyToSnapshot,
+                                    taggedUserIds = taggedIds,
+                                    isGroup = true,
+                                ))
+                            }
                             replyBody = ""
                             replyToMessageId = null
                             replyToSenderName = null

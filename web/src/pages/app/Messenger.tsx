@@ -17,6 +17,12 @@ import { toast } from "sonner";
 import { SculptedCard, SculptedButton, ScreenScaffold } from "@/components/sculpted";
 import { CompactSearchPill } from "@/components/CompactSearchPill";
 import { filterProfanity, parseTaggedUserIds } from "@/lib/profanity-filter";
+import {
+  enqueueMessage,
+  getPendingForChat,
+  drainMessageQueue,
+  type PendingWebMessage,
+} from "@/lib/offline-message-queue";
 
 const CITRINE_HEX = "36 80% 58%";
 const AQUA_HEX = "20 62% 65%";
@@ -168,6 +174,9 @@ export default function Messenger() {
   // Profanity warning
   const [showProfanityWarning, setShowProfanityWarning] = useState(false);
   const [pendingFilteredText, setPendingFilteredText] = useState("");
+
+  // Pending offline messages for the current chat (shown as greyed-out bubbles)
+  const [pendingOfflineMsgs, setPendingOfflineMsgs] = useState<PendingWebMessage[]>([]);
 
   // ── Load threads ──
   const { data: threads, isLoading } = useQuery<ThreadWithMeta[]>({
@@ -435,6 +444,18 @@ export default function Messenger() {
     setReplyToBody(null);
   }, [chatView]);
 
+  // ── Load pending offline messages for the current chat ──
+  useEffect(() => {
+    const chatId =
+      chatView.type === "thread" ? chatView.thread.id :
+      chatView.type === "group" ? chatView.group.id : null;
+    if (!chatId) {
+      setPendingOfflineMsgs([]);
+      return;
+    }
+    getPendingForChat(chatId).then(setPendingOfflineMsgs).catch(() => setPendingOfflineMsgs([]));
+  }, [chatView]);
+
   // ── Send message ──
   const sendMessage = useMutation({
     mutationFn: async (rawText: string) => {
@@ -488,7 +509,27 @@ export default function Messenger() {
         queryClient.invalidateQueries({ queryKey: ["group-messages", chatView.group.id] });
       }
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => {
+      // Queue the message for offline retry instead of just showing a toast
+      const chatId = chatView.type === "thread" ? chatView.thread.id : chatView.type === "group" ? chatView.group.id : "";
+      const isGroup = chatView.type === "group";
+      if (chatId && user) {
+        const pendingMsg: PendingWebMessage = {
+          id: `pending-${crypto.randomUUID()}`,
+          chatId,
+          body: messageText.trim(),
+          imageUrl: null,
+          replyToMessageId,
+          taggedUserIds: null,
+          isGroup,
+          queuedAt: Date.now(),
+          attempts: 0,
+        };
+        enqueueMessage(pendingMsg).catch(() => {});
+        setPendingOfflineMsgs((prev) => [...prev, pendingMsg]);
+      }
+      toast.error(err.message || "Failed to send \u2014 message queued for retry");
+    },
   });
 
   // ── Send image ──

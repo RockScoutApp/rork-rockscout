@@ -37,6 +37,8 @@ import {
 } from "@/components/sculpted";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { filterProfanity } from "@/lib/profanity-filter";
+import { ensureUniqueUsername } from "@/lib/username-resolver";
 
 /* ── Constants ── */
 const CITRINE_HEX = "36 80% 58%";
@@ -229,16 +231,18 @@ export default function Profile() {
   const saveProfile = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Not signed in");
+      const baseName = filterProfanity((editName.trim() || user.email?.split("@")[0]) ?? "Rockhound").filteredText;
+      const uniqueName = await ensureUniqueUsername(baseName, user.id);
       const { error } = await supabase
         .from("rockscout_profiles")
         .update({
-          display_name: (editName.trim() || user.email?.split("@")[0]) ?? "Rockhound",
+          display_name: uniqueName,
           avatar_emoji: editEmoji,
           status: editStatus,
           gender: editGender,
           birthday: editBirthday || null,
           birthday_private: editBirthdayPrivate,
-          favorite_rock: editFavoriteRock.trim() || null,
+          favorite_rock: filterProfanity(editFavoriteRock.trim()).filteredText || null,
         })
         .eq("id", user.id);
       if (error) throw error;

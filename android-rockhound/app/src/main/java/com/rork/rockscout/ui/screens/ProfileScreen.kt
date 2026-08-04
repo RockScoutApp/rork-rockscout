@@ -137,6 +137,7 @@ import com.rork.rockscout.data.PersistenceManager
 import com.rork.rockscout.data.UserDateFormatter
 import androidx.compose.material3.LinearProgressIndicator
 import com.rork.rockscout.data.ProfanityFilter
+import com.rork.rockscout.data.UsernameResolver
 import com.rork.rockscout.data.ImageModerator
 import com.rork.rockscout.data.ModerationResult
 import com.rork.rockscout.data.ModerationTriState
@@ -1272,34 +1273,35 @@ fun ProfileScreen(
             favoriteRock = profile.favoriteRock,
             onDismiss = { showEditSheet = false },
             onSave = { newName, newRegion, newBio, newAvatar, newBgPath, newGender, newBirthday, newBirthdayPublic, newFavoriteRock ->
-                // Block save if the display name is already taken by another user.
-                if (SocialRepository.instance.isDisplayNameTaken(newName, excludeUserId = currentUid)) {
-                    return@EditProfileSheetContainer
-                }
-                repo.updateProfile {
-                    it.copy(
-                        name = ProfanityFilter.filter(newName),
-                        homeRegion = newRegion,
-                        bio = ProfanityFilter.filter(newBio),
-                        avatarEmoji = newAvatar,
-                        gender = newGender,
-                        birthdayMillis = newBirthday,
-                        birthdayPublic = newBirthdayPublic,
-                        favoriteRock = ProfanityFilter.filter(newFavoriteRock),
-                    )
-                }
-                if (newBgPath != profile.backgroundImagePath) {
-                    if (newBgPath == null) {
-                        repo.setBackgroundImagePath(null)
+                val filteredName = ProfanityFilter.filter(newName)
+                coroutineScope2.launch {
+                    // Async uniqueness check against both local + Supabase profiles.
+                    val uniqueName = UsernameResolver.ensureUnique(filteredName, currentUid)
+                    repo.updateProfile {
+                        it.copy(
+                            name = uniqueName,
+                            homeRegion = newRegion,
+                            bio = ProfanityFilter.filter(newBio),
+                            avatarEmoji = newAvatar,
+                            gender = newGender,
+                            birthdayMillis = newBirthday,
+                            birthdayPublic = newBirthdayPublic,
+                            favoriteRock = ProfanityFilter.filter(newFavoriteRock),
+                        )
                     }
+                    if (newBgPath != profile.backgroundImagePath) {
+                        if (newBgPath == null) {
+                            repo.setBackgroundImagePath(null)
+                        }
+                    }
+                    repo.saveProfileChanges()
+                    if (profile.locationMonitoring) {
+                        WorkScheduler.runProximityCheckNow(
+                            navController.context.applicationContext
+                        )
+                    }
+                    showEditSheet = false
                 }
-                repo.saveProfileChanges()
-                if (profile.locationMonitoring) {
-                    WorkScheduler.runProximityCheckNow(
-                        navController.context.applicationContext
-                    )
-                }
-                showEditSheet = false
             },
             onBackgroundSelected = { uri ->
                 coroutineScope2.launch {

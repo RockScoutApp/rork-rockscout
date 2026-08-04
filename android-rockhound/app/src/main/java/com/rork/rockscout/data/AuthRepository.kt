@@ -554,10 +554,11 @@ class AuthRepository private constructor() {
                 LocalDataStore.setBoolean(LocalDataStore.KEY_LOCAL_AUTH_MIGRATED, true)
                 _needsMigration.value = false
 
-                // Upsert profile.
+                // Upsert profile with a unique display name.
                 scope.launch {
+                    val uniqueName = UsernameResolver.ensureUnique("Rock Scout", userId)
                     SupabaseAuthClient.upsertProfile(
-                        auth.access_token, userId, "Rock Scout", "\uD83E\uDD20"
+                        auth.access_token, userId, uniqueName, "\uD83E\uDD20"
                     )
                 }
 
@@ -642,9 +643,10 @@ class AuthRepository private constructor() {
                 return@runCatching Unit
             }
 
-            // Upsert profile (ensures the user has a row for web/other platforms).
+            // Upsert profile with a unique display name.
             scope.launch {
-                SupabaseAuthClient.upsertProfile(auth.access_token, userId, "Rock Scout", "\uD83E\uDD20")
+                val uniqueName = UsernameResolver.ensureUnique("Rock Scout", userId)
+                SupabaseAuthClient.upsertProfile(auth.access_token, userId, uniqueName, "\uD83E\uDD20")
             }
 
             _sessionStatus.value = SessionStatus.Authenticated(

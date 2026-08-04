@@ -27,6 +27,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { filterProfanity } from "@/lib/profanity-filter";
 
 interface TradeListing {
   id: string;
@@ -120,10 +121,10 @@ export default function TradeBoard() {
         .insert({
           owner_user_id: user.id,
           type: form.type,
-          specimen_name: form.specimen_name,
-          condition: form.condition,
-          description: form.description,
-          want_in_return: form.want_in_return,
+          specimen_name: filterProfanity(form.specimen_name).filteredText,
+          condition: filterProfanity(form.condition).filteredText,
+          description: filterProfanity(form.description).filteredText,
+          want_in_return: filterProfanity(form.want_in_return).filteredText,
           tags: [],
         });
       if (error) throw error;

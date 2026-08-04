@@ -251,6 +251,21 @@ class RockScoutApplication : Application() {
             com.rork.rockscout.data.ChatDraftStore.initialize(this)
         }
 
+        safeInit("offline-message-queue") {
+            com.rork.rockscout.data.OfflineMessageQueue.initialize(this)
+            com.rork.rockscout.data.OfflineMessageQueue.setRetryCallback { msg ->
+                if (msg.isGroup) {
+                    com.rork.rockscout.data.SupabaseMessagingRepository.sendGroupMessage(
+                        msg.chatId, msg.body, msg.imageUrl, msg.replyToMessageId, msg.taggedUserIds
+                    )
+                } else {
+                    com.rork.rockscout.data.SupabaseMessagingRepository.sendPrivateMessage(
+                        msg.chatId, msg.body, msg.imageUrl, msg.replyToMessageId, msg.taggedUserIds
+                    )
+                }
+            }
+        }
+
         safeInit("user-museum-store") {
             com.rork.rockscout.data.UserMuseumStore.initialize(this)
         }

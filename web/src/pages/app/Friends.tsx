@@ -19,6 +19,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { filterProfanity } from "@/lib/profanity-filter";
 
 interface Profile {
   id: string;
@@ -280,7 +281,7 @@ export default function Friends() {
         .insert({
           thread_id: activeThread,
           sender_id: user.id,
-          body: messageText.trim(),
+          body: filterProfanity(messageText.trim()).filteredText,
         });
       if (error) throw error;
 

@@ -14,6 +14,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { SculptedCard, SculptedButton, ScreenScaffold, StatTile } from "@/components/sculpted";
+import { filterProfanity } from "@/lib/profanity-filter";
 
 const AQUA_HEX = "20 62% 65%";
 const CITRINE_HEX = "36 80% 58%";
@@ -49,7 +50,7 @@ export default function Referral() {
           .from("rockscout_profiles")
           .insert({
             id: user.id,
-            display_name: user.email?.split("@")[0] ?? "Rockhound",
+            display_name: filterProfanity(user.email?.split("@")[0] ?? "Rockhound").filteredText,
             referral_code: code,
           })
           .select("id, display_name, referral_code, referred_by, xp, level")

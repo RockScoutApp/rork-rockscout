@@ -15,6 +15,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { CompactSearchPill } from "@/components/CompactSearchPill";
+import { filterProfanity } from "@/lib/profanity-filter";
 
 type Tab = "websites" | "museums";
 
@@ -122,10 +123,10 @@ export default function ResourceLinks() {
       if (!museumForm.name.trim()) throw new Error("Museum name is required");
       if (!museumForm.state) throw new Error("State is required");
       const { error } = await supabase.from("rockscout_museums").insert({
-        name: museumForm.name.trim(),
+        name: filterProfanity(museumForm.name.trim()).filteredText,
         state: museumForm.state,
-        city: museumForm.city.trim() || null,
-        description: museumForm.description.trim() || null,
+        city: filterProfanity(museumForm.city.trim()).filteredText || null,
+        description: filterProfanity(museumForm.description.trim()).filteredText || null,
         website_url: museumForm.website_url.trim() || null,
         submitted_by: user.id,
         approved: false,
