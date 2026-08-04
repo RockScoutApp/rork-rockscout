@@ -237,6 +237,9 @@ private val howToSections: List<HowToSection> = listOf(
             "Send images through the messenger by tapping the image icon next to the text field. All images are scanned by the profanity filter.",
             "Long messages show a \"More\" pill — tap it to expand and read the full text.",
             "Use the Report button inside any message tile to flag inappropriate content. A confirmation popup appears before submitting.",
+            "A typing indicator appears at the bottom of any chat when the other person is composing a message — three animated dots let you know they're about to reply.",
+            "Long-press any user's screen name in a chat message to jump straight to their profile card — works in private chats, group chats, and the chat header.",
+            "Use the Block button on any user's profile card to block them — blocked users can't send you messages or friend requests. The button sits next to the Report button.",
         ),
     ),
     HowToSection(
@@ -410,6 +413,7 @@ private val howToSections: List<HowToSection> = listOf(
             "Level up to unlock new tiers with unique emojis and brag-worthy celebration pop-ups.",
             "Share level-up and badge-earn cards to your profile feed or straight to social media.",
             "Customize your profile with a background image and display name.",
+            "Set a custom highlight color for your profile page — choose from 30 colors in the profile editor, and the color appears as an accent border and header tint that other users see when they view your profile.",
         ),
     ),
     HowToSection(

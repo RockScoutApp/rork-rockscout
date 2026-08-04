@@ -50,7 +50,7 @@ import {
 } from "@/components/ui/dialog";
 import { Share2, Brush, BookOpen, Lightbulb, Hammer, RefreshCw, Layers, FlaskConical, Skull, Bone, BarChart3, TreePine, Compass } from "lucide-react";
 
-type HowToCategory =
+export type HowToCategory =
   | "identify-collect"
   | "social-trade"
   | "trip-planning"
@@ -61,7 +61,7 @@ type HowToCategory =
   | "expert-reports"
   | "tools-misc";
 
-type HowToSection = {
+export type HowToSection = {
   icon: React.ComponentType<{ className?: string }>;
   accent: string;
   title: string;
@@ -70,7 +70,7 @@ type HowToSection = {
   steps: string[];
 };
 
-const CATEGORY_LABELS: { key: HowToCategory; label: string; accent: string }[] = [
+export const CATEGORY_LABELS: { key: HowToCategory; label: string; accent: string }[] = [
   { key: "identify-collect", label: "Identify & Collect", accent: "hsl(48 86% 70%)" },
   { key: "social-trade", label: "Social & Trade", accent: "hsl(270 50% 70%)" },
   { key: "trip-planning", label: "Trip Planning", accent: "hsl(36 80% 58%)" },
@@ -83,7 +83,7 @@ const CATEGORY_LABELS: { key: HowToCategory; label: string; accent: string }[] =
 ];
 
 // Mirrors the app's howToSections list (HowToUseScreen.kt) section-for-section.
-const HOW_TO_SECTIONS: HowToSection[] = [
+export const HOW_TO_SECTIONS: HowToSection[] = [
   {
     icon: Camera,
     accent: "hsl(48 86% 70%)",
@@ -593,7 +593,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
       `Free for 7 days: full app access including AI identification (5 tokens to spend at your own pace), RockScout Friends, Trade Board, My Rocks, Wishlist, Field Captures, Trip Planner, and Field Journal.`,
       `After the trial, these stay FREE forever: browsing the full specimen database & geology guides, the Field Camera (saves to Saved Images), NWS severe weather alerts, and browsing dig sites & offline maps.`,
       `After the trial, these require Premium or a donation: AI identification & ID tokens, RockScout Friends/Messenger/Community, Trade Board & Discover Hunters, My Rocks/Wishlist/Field Captures/Favorite Spots, and Trip Planner/Field Journal/specimen submissions.`,
-      `Two ways to keep identifying free: watch 2 short rock-related videos to earn 1 ID token (no weekly cap), or make a donation of any amount for tokens plus a temporary full-feature unlock (2 days up to 1 month).`,
+      `Two ways to keep identifying free: watch 2 short rock-related videos to earn 1 ID token (no weekly cap), or make a donation of any amount for tokens plus a temporary full-feature unlock (2 days up to 5 days).`,
       `The free tier is recommended for everyone. Premium is recommended for users 18+ because it unlocks the social layer (friends, messaging, trade, community). Safety is the first, second, and third rule.`,
       `Premium ($5.99/mo) unlocks everything: unlimited AI identifies with all 5 sources (database comparison + Haiku + Sonnet + Gemini 2.5 Pro + web cross-check), ad-free, 250-mile nearby radius, 24-hour pings, premium gem badge, and early access to new features.`,
       `Check your token balance anytime via the Token Bank icon in the home header.`,
