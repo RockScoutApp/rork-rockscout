@@ -38,7 +38,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { filterProfanity } from "@/lib/profanity-filter";
-import { ensureUniqueUsername } from "@/lib/username-resolver";
+import { isUsernameTaken } from "@/lib/username-resolver";
 
 /* ── Constants ── */
 const CITRINE_HEX = "36 80% 58%";
@@ -232,11 +232,14 @@ export default function Profile() {
     mutationFn: async () => {
       if (!user) throw new Error("Not signed in");
       const baseName = filterProfanity((editName.trim() || user.email?.split("@")[0]) ?? "Rockhound").filteredText;
-      const uniqueName = await ensureUniqueUsername(baseName, user.id);
+      const taken = await isUsernameTaken(baseName, user.id);
+      if (taken) {
+        throw new Error("That username is already in use. Try adding a couple numbers to make it unique.");
+      }
       const { error } = await supabase
         .from("rockscout_profiles")
         .update({
-          display_name: uniqueName,
+          display_name: baseName,
           avatar_emoji: editEmoji,
           status: editStatus,
           gender: editGender,

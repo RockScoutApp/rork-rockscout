@@ -169,6 +169,10 @@ object SupabaseMessagingRepository {
     /** Map of group chat ID → unread message count for the current user. */
     val groupChatUnreadCounts: StateFlow<Map<String, Int>> = _groupChatUnreadCounts.asStateFlow()
 
+    private val _creatorNames = MutableStateFlow<Map<String, String>>(emptyMap())
+    /** Map of creator user ID → display name for group chat cards. */
+    val creatorNames: StateFlow<Map<String, String>> = _creatorNames.asStateFlow()
+
     private fun groupLastReadKey(chatId: String) = "group_last_read_$chatId"
 
     /** Save the current timestamp as the last-read time for a group chat. */
@@ -514,6 +518,60 @@ object SupabaseMessagingRepository {
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e(TAG, "loadGroupChats failed", e)
+            Result.failure(e)
+        }
+    }
+
+    /** Fetch display names for all group chat creators from Supabase profiles. */
+    suspend fun fetchCreatorNames(): Result<Unit> {
+        val token = accessToken() ?: return Result.failure(Exception("Not authenticated"))
+        val creatorIds = _groupChats.value.map { it.creator_id }.distinct().filter { it.isNotBlank() }
+        if (creatorIds.isEmpty()) return Result.success(Unit)
+        return try {
+            val idsParam = creatorIds.joinToString(",") { "\"$it\"" }
+            val resp = client.get("${baseUrl()}/rest/v1/rockscout_profiles?id=in.($idsParam)&select=id,display_name") {
+                header("apikey", anonKey())
+                header("Authorization", "Bearer $token")
+            }
+            if (resp.status.isSuccess()) {
+                val raw = resp.body<String>()
+                val arr = json.parseToJsonElement(raw).jsonArray
+                val nameMap = mutableMapOf<String, String>()
+                arr.forEach { obj ->
+                    val id = obj.jsonObject["id"]?.jsonPrimitive?.contentOrNull ?: return@forEach
+                    val name = obj.jsonObject["display_name"]?.jsonPrimitive?.contentOrNull ?: "Unknown"
+                    nameMap[id] = name
+                }
+                _creatorNames.value = nameMap
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "fetchCreatorNames failed", e)
+            Result.failure(e)
+        }
+    }
+
+    /** Join a public group chat directly (no invite needed). */
+    suspend fun joinGroupChat(groupChatId: String): Result<Unit> {
+        val token = accessToken() ?: return Result.failure(Exception("Not authenticated"))
+        val uid = userId() ?: return Result.failure(Exception("No user ID"))
+        return try {
+            val payload = buildJsonObject {
+                put("group_chat_id", groupChatId)
+                put("user_id", uid)
+                put("role", "member")
+            }.toString()
+            val resp = client.post("${baseUrl()}/rest/v1/group_chat_members") {
+                header("apikey", anonKey())
+                header("Authorization", "Bearer $token")
+                header("Content-Type", "application/json")
+                header("Prefer", "return=minimal")
+                setBody(payload)
+            }
+            if (!resp.status.isSuccess()) return Result.failure(Exception("Failed to join: ${resp.status}"))
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "joinGroupChat failed", e)
             Result.failure(e)
         }
     }

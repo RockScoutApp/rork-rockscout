@@ -30,7 +30,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { filterProfanity } from "@/lib/profanity-filter";
-import { ensureUniqueUsername } from "@/lib/username-resolver";
+import { isUsernameTaken } from "@/lib/username-resolver";
 
 interface Profile {
   id: string;
@@ -158,11 +158,15 @@ export default function UserProfile() {
   const saveProfile = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Sign in to edit your profile");
-      const uniqueName = await ensureUniqueUsername(filterProfanity(form.display_name).filteredText, user.id);
+      const cleanName = filterProfanity(form.display_name).filteredText;
+      const taken = await isUsernameTaken(cleanName, user.id);
+      if (taken) {
+        throw new Error("That username is already in use. Try adding a couple numbers to make it unique.");
+      }
       const { error } = await supabase
         .from("rockscout_profiles")
         .update({
-          display_name: uniqueName,
+          display_name: cleanName,
           avatar_emoji: form.avatar_emoji,
           home_region: form.home_region,
           bio: filterProfanity(form.bio).filteredText,

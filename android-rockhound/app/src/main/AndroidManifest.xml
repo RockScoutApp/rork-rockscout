@@ -88,6 +88,7 @@
                 <data android:scheme="rockscout" android:host="contact_us" />
                 <data android:scheme="rockscout" android:host="notifications" />
                 <data android:scheme="rockscout" android:host="user_profile" />
+                <data android:scheme="rockscout" android:host="group_chat" />
                 <data android:scheme="rockscout" android:host="spot" />
                 <data android:scheme="rockscout" android:host="ping" />
                 <data android:scheme="rockscout" android:host="verify_email" />

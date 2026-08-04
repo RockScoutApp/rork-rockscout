@@ -12,6 +12,8 @@ import {
   MessageSquare,
   Group as GroupIcon,
   Zap,
+  Share2,
+  User as UserIcon,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -278,6 +280,27 @@ export default function Community() {
       return result;
     },
     enabled: !!user && !!groupChats && groupChats.length > 0 && activeTab === "groups",
+  });
+
+  // ── Group chat creator names ──
+  const { data: creatorNames } = useQuery<Record<string, string>>({
+    queryKey: ["group-creator-names", groupChats?.map((g) => g.creator_id).join(",")],
+    queryFn: async () => {
+      if (!groupChats || groupChats.length === 0) return {};
+      const creatorIds = [...new Set(groupChats.map((g) => g.creator_id).filter(Boolean))];
+      if (creatorIds.length === 0) return {};
+      const { data, error } = await supabase
+        .from("rockscout_profiles")
+        .select("id, display_name")
+        .in("id", creatorIds);
+      if (error || !data) return {};
+      const map: Record<string, string> = {};
+      (data as Array<{ id: string; display_name: string }>).forEach((r) => {
+        map[r.id] = r.display_name || "Unknown";
+      });
+      return map;
+    },
+    enabled: !!groupChats && groupChats.length > 0 && activeTab === "groups",
   });
 
   const createPost = useMutation({
@@ -662,6 +685,8 @@ export default function Community() {
                 })
                 .map((gc) => {
                   const gUnread = groupUnreadCounts?.[gc.id] ?? 0;
+                  const creatorName = creatorNames?.[gc.creator_id] ?? "Unknown";
+                  const deepLink = `rockscout://group_chat/${gc.id}`;
                   return (
                   <SculptedCard
                     key={gc.id}
@@ -670,25 +695,28 @@ export default function Community() {
                     className="overflow-hidden"
                   >
                     <div className="flex items-center gap-3 p-3.5">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xl ring-1 ring-primary/25">
+                      {/* Header image or icon — 56px to match trade listing cards */}
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/15 ring-1 ring-primary/25">
                         {gc.header_image_url ? (
                           <img
                             src={gc.header_image_url}
                             alt={gc.name}
-                            className="h-full w-full rounded-full object-cover"
+                            className="h-full w-full object-cover"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src =
                                 "/placeholder.svg";
                             }}
                           />
                         ) : (
-                          "👥"
+                          <GroupIcon className="h-6 w-6 text-primary" />
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
+                        {/* Row 1: Creator name + unread badge */}
                         <div className="flex items-center gap-2">
-                          <p className="truncate text-sm font-bold text-foreground">
-                            {gc.name}
+                          <UserIcon className="h-3 w-3 shrink-0 text-aqua" />
+                          <p className="truncate text-xs font-bold text-aqua">
+                            {creatorName}
                           </p>
                           {gUnread > 0 && (
                             <span
@@ -702,15 +730,41 @@ export default function Community() {
                             </span>
                           )}
                         </div>
+                        {/* Row 2: Group chat name (title) */}
+                        <p className="truncate text-sm font-bold text-foreground">
+                          {gc.name}
+                        </p>
+                        {/* Row 3: Subject + member count */}
                         <p className="truncate text-xs text-muted-foreground">
                           {gc.subject || "No subject"}
                           {gc.max_members && ` · ${gc.member_count}/${gc.max_members} members`}
                           {!gc.max_members && ` · ${gc.member_count} members`}
                         </p>
                       </div>
-                      <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                        {gc.profanity_filter_level === "strict" ? "Strict" : "Normal"}
-                      </span>
+                      <div className="flex shrink-0 flex-col items-end gap-1.5">
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                          {gc.profanity_filter_level === "strict" ? "Strict" : "Normal"}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (navigator.share) {
+                              navigator.share({
+                                title: `Join my group chat: ${gc.name}`,
+                                text: `Join our group chat "${gc.name}" on RockScout!`,
+                                url: deepLink,
+                              }).catch(() => {});
+                            } else {
+                              navigator.clipboard?.writeText(deepLink);
+                              toast.success("Group chat link copied!");
+                            }
+                          }}
+                          className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary/20"
+                          title="Share group chat link"
+                        >
+                          <Share2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </SculptedCard>
                   );

@@ -415,6 +415,14 @@ private fun handleDeepLink(uri: Uri, navController: NavController) {
                 navController.navigate(Routes.SIGN_IN)
             }
         }
+        "group_chat" -> {
+            val id = segments.firstOrNull()
+            if (id != null && isSignedIn) {
+                navController.navigate(Routes.messengerThread("group:$id"))
+            } else {
+                navController.navigate(Routes.SIGN_IN)
+            }
+        }
         else -> { /* unknown — stay on home */ }
     }
 }

@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -1069,10 +1070,12 @@ private fun GroupChatsTabContent(
     navController: NavController,
 ) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
     val groupChats by SupabaseMessagingRepository.groupChats.collectAsStateWithLifecycle()
     val groupChatMembers by SupabaseMessagingRepository.groupChatMembers.collectAsStateWithLifecycle()
     val pendingInvites by SupabaseMessagingRepository.pendingGroupInvites.collectAsStateWithLifecycle()
     val unreadCounts by SupabaseMessagingRepository.groupChatUnreadCounts.collectAsStateWithLifecycle()
+    val creatorNames by SupabaseMessagingRepository.creatorNames.collectAsStateWithLifecycle()
     var showCreateDialog by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
 
@@ -1080,6 +1083,7 @@ private fun GroupChatsTabContent(
         SupabaseMessagingRepository.loadGroupChats()
         SupabaseMessagingRepository.loadPendingInvites()
         SupabaseMessagingRepository.refreshGroupChatUnreadCounts()
+        SupabaseMessagingRepository.fetchCreatorNames()
     }
 
     LazyColumn(
@@ -1183,7 +1187,7 @@ private fun GroupChatsTabContent(
             )
         }
 
-        // Group chat cards
+        // Group chat cards — sized to match trade listing entries
         if (groupChats.isEmpty()) {
             item {
                 Box(
@@ -1204,90 +1208,28 @@ private fun GroupChatsTabContent(
                 it.name.contains(searchQuery, ignoreCase = true) || it.subject.contains(searchQuery, ignoreCase = true)
             }
             items(filteredChats, key = { it.id }) { chat ->
-                val memberCount = SupabaseMessagingRepository.groupChatMemberCount(chat.id)
-                DarkCard(
-                    modifier = Modifier.fillMaxWidth().clickable {
-                        // Navigate to group chat in MessengerScreen
+                GroupChatListingCard(
+                    chat = chat,
+                    creatorName = creatorNames[chat.creator_id] ?: "Unknown",
+                    memberCount = SupabaseMessagingRepository.groupChatMemberCount(chat.id),
+                    unreadCount = unreadCounts[chat.id] ?: 0,
+                    onTap = {
                         navController.navigate(Routes.messengerThread("group:${chat.id}"))
                     },
-                    accent = Aqua,
-                ) {
-                    Row(verticalAlignment = Alignment.Top) {
-                        // Header image or icon
-                        if (chat.header_image_url != null) {
-                            AsyncImage(
-                                model = chat.header_image_url,
-                                contentDescription = chat.name,
-                                modifier = Modifier.size(56.dp).clip(RoundedCornerShape(10.dp)),
-                                contentScale = ContentScale.Crop,
-                            )
-                            Spacer(Modifier.width(10.dp))
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .size(56.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(Aqua.copy(alpha = 0.18f))
-                                    .glowingBorder(1.dp, Aqua.copy(alpha = 0.35f), RoundedCornerShape(10.dp)),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Icon(Icons.Filled.Group, contentDescription = null, tint = Aqua, modifier = Modifier.size(24.dp))
-                            }
-                            Spacer(Modifier.width(10.dp))
+                    onShare = {
+                        val deepLink = "rockscout://group_chat/${chat.id}"
+                        val shareIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(android.content.Intent.EXTRA_SUBJECT, "Join my group chat: ${chat.name}")
+                            putExtra(android.content.Intent.EXTRA_TEXT, "Join our group chat \"${chat.name}\" on RockScout!\n\n$deepLink")
                         }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(chat.name, style = MaterialTheme.typography.titleSmall, color = DarkTextHigh, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                                val unread = unreadCounts[chat.id] ?: 0
-                                if (unread > 0) {
-                                    Spacer(Modifier.width(6.dp))
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(CircleShape)
-                                            .background(Citrine)
-                                            .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), CircleShape)
-                                            .size(20.dp),
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        Text(
-                                            if (unread > 99) "99+" else unread.toString(),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = Ink,
-                                            fontWeight = FontWeight.Bold,
-                                        )
-                                    }
-                                }
-                            }
-                            if (chat.subject.isNotBlank()) {
-                                Spacer(Modifier.height(2.dp))
-                                Text(chat.subject, style = MaterialTheme.typography.bodySmall, color = DarkTextMid, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            }
-                            Spacer(Modifier.height(4.dp))
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    "$memberCount member${if (memberCount != 1) "s" else ""}${if (chat.max_members != null) " / ${chat.max_members} max" else ""}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = Aqua,
-                                )
-                                Spacer(Modifier.weight(1f))
-                                // Profanity filter badge
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(if (chat.profanity_filter_level == "strict") Danger.copy(alpha = 0.18f) else Citrine.copy(alpha = 0.18f))
-                                        .padding(horizontal = 6.dp, vertical = 2.dp),
-                                ) {
-                                    Text(
-                                        if (chat.profanity_filter_level == "strict") "Strict" else "Normal",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = if (chat.profanity_filter_level == "strict") Danger else Citrine,
-                                        fontWeight = FontWeight.Bold,
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+                        com.rork.rockscout.data.SafeLinkOpener.openShareChooser(
+                            context,
+                            shareIntent,
+                            "Share Group Chat",
+                        )
+                    },
+                )
             }
         }
         item { Spacer(Modifier.height(20.dp)) }
@@ -1305,5 +1247,164 @@ private fun GroupChatsTabContent(
                 navController.navigate(Routes.messengerThread("group:$chatId"))
             },
         )
+    }
+}
+
+/**
+ * Trade-listing-sized card for group chat entries in the Community board.
+ * Shows creator name, header image (if applicable), title, and subject.
+ * Tapping the card opens the full group chat screen.
+ */
+@Composable
+private fun GroupChatListingCard(
+    chat: SupabaseMessagingRepository.GroupChatDto,
+    creatorName: String,
+    memberCount: Int,
+    unreadCount: Int,
+    onTap: () -> Unit,
+    onShare: () -> Unit,
+) {
+    DarkCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onTap),
+        accent = Aqua,
+        contentPadding = PaddingValues(12.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // Header image or icon — fixed 56dp, same as trade listing cards
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFF1A1812))
+                    .glowingBorder(1.dp, Color(0xFF1A1812).copy(alpha = 0.35f), RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (chat.header_image_url != null) {
+                    AsyncImage(
+                        model = chat.header_image_url,
+                        contentDescription = chat.name,
+                        modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Crop,
+                    )
+                } else {
+                    Icon(Icons.Filled.Group, contentDescription = null, tint = Aqua, modifier = Modifier.size(24.dp))
+                }
+            }
+            Spacer(Modifier.width(10.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                // Row 1: creator name + unread badge
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clip(CircleShape)
+                            .background(Aqua.copy(alpha = 0.18f))
+                            .glowingBorder(1.dp, Aqua.copy(alpha = 0.35f), CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("⛏️", style = MaterialTheme.typography.labelSmall)
+                    }
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        creatorName,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Aqua,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (unreadCount > 0) {
+                        Spacer(Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .background(Citrine)
+                                .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), CircleShape)
+                                .size(20.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                if (unreadCount > 99) "99+" else unreadCount.toString(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Ink,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+                // Row 2: group chat name (title)
+                Text(
+                    chat.name,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = DarkTextHigh,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                // Row 3: subject + member count + badges
+                if (chat.subject.isNotBlank()) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        chat.subject,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = DarkTextMid,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "$memberCount member${if (memberCount != 1) "s" else ""}${if (chat.max_members != null) " / ${chat.max_members} max" else ""}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Aqua,
+                    )
+                    Spacer(Modifier.weight(1f))
+                    // Profanity filter badge
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (chat.profanity_filter_level == "strict") Danger.copy(alpha = 0.18f) else Citrine.copy(alpha = 0.18f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                    ) {
+                        Text(
+                            if (chat.profanity_filter_level == "strict") "Strict" else "Normal",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (chat.profanity_filter_level == "strict") Danger else Citrine,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                    Spacer(Modifier.width(6.dp))
+                    // Share button
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF2A2820))
+                            .glowingBorder(1.dp, Aqua.copy(alpha = 0.35f), CircleShape)
+                            .clickable(onClick = onShare),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            Icons.Filled.Share,
+                            contentDescription = "Share group chat link",
+                            tint = Aqua,
+                            modifier = Modifier.size(14.dp),
+                        )
+                    }
+                }
+            }
+        }
     }
 }

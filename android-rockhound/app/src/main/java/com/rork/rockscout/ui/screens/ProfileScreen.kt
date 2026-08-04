@@ -1275,11 +1275,19 @@ fun ProfileScreen(
             onSave = { newName, newRegion, newBio, newAvatar, newBgPath, newGender, newBirthday, newBirthdayPublic, newFavoriteRock ->
                 val filteredName = ProfanityFilter.filter(newName)
                 coroutineScope2.launch {
-                    // Async uniqueness check against both local + Supabase profiles.
-                    val uniqueName = UsernameResolver.ensureUnique(filteredName, currentUid)
+                    // Check uniqueness — if taken, block save and show error toast.
+                    val isTaken = UsernameResolver.isTaken(filteredName, excludeUserId = currentUid)
+                    if (isTaken) {
+                        android.widget.Toast.makeText(
+                            context,
+                            "That username is already in use. Try adding a couple numbers to make it unique.",
+                            android.widget.Toast.LENGTH_LONG,
+                        ).show()
+                        return@launch
+                    }
                     repo.updateProfile {
                         it.copy(
-                            name = uniqueName,
+                            name = filteredName,
                             homeRegion = newRegion,
                             bio = ProfanityFilter.filter(newBio),
                             avatarEmoji = newAvatar,
@@ -1461,6 +1469,7 @@ private fun EditProfileSheet(
     val coroutineScope = rememberCoroutineScope()
 
     // Live duplicate check — re-validate whenever the name changes.
+    // Checks both local users and Supabase profiles for true uniqueness.
     LaunchedEffect(editName) {
         val trimmed = editName.trim()
         nameError = if (trimmed.isBlank()) {
@@ -1468,9 +1477,15 @@ private fun EditProfileSheet(
         } else if (trimmed.equals(originalName, ignoreCase = true)) {
             null // User kept their own name — always allowed.
         } else if (SocialRepository.instance.isDisplayNameTaken(trimmed, excludeUserId = currentUserId)) {
-            "That display name is already taken. Try another."
+            "That username is already in use. Try adding a couple numbers to make it unique."
         } else {
-            null
+            // Also check Supabase profiles (async) for cross-platform uniqueness.
+            val takenOnSupabase = UsernameResolver.isTaken(trimmed, excludeUserId = currentUserId)
+            if (takenOnSupabase) {
+                "That username is already in use. Try adding a couple numbers to make it unique."
+            } else {
+                null
+            }
         }
     }
 
