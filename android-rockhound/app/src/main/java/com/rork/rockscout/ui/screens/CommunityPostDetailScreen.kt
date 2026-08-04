@@ -246,6 +246,10 @@ fun CommunityPostDetailScreen(
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.clickable(
+                            enabled = !isMe,
+                            onClick = { navController.navigate(Routes.userProfile(post.user_id)) },
+                        ),
                     )
                     val category = CommunityRepository.resolveCategory(post.category)
                     val categoryAccent = when (category) {
@@ -465,6 +469,7 @@ fun CommunityPostDetailScreen(
                     onDelete = { scope.launch { repo.deleteComment(comment.id) } },
                     onEdit = { newBody -> scope.launch { repo.editComment(comment.id, newBody) } },
                     onImageClick = { url -> viewerImageUrl = url },
+                    onAuthorClick = { uid -> navController.navigate(Routes.userProfile(uid)) },
                 )
             }
 
@@ -488,6 +493,7 @@ fun CommunityPostDetailScreen(
                         onDelete = { scope.launch { repo.deleteComment(firstReply.id) } },
                         onEdit = { newBody -> scope.launch { repo.editComment(firstReply.id, newBody) } },
                         onImageClick = { url -> viewerImageUrl = url },
+                        onAuthorClick = { uid -> navController.navigate(Routes.userProfile(uid)) },
                     )
                     if (firstReplying) {
                         Spacer(Modifier.height(6.dp))
@@ -589,6 +595,7 @@ fun CommunityPostDetailScreen(
                                         onDelete = { scope.launch { repo.deleteComment(reply.id) } },
                                         onEdit = { newBody -> scope.launch { repo.editComment(reply.id, newBody) } },
                                         onImageClick = { url -> viewerImageUrl = url },
+                                        onAuthorClick = { uid -> navController.navigate(Routes.userProfile(uid)) },
                                     )
                                     if (replyReplying) {
                                         Spacer(Modifier.height(6.dp))
@@ -831,6 +838,7 @@ private fun DetailCommentRow(
     onDelete: (() -> Unit)? = null,
     onEdit: ((newBody: String) -> Unit)? = null,
     onImageClick: ((String) -> Unit)? = null,
+    onAuthorClick: ((String) -> Unit)? = null,
 ) {
     val accent = if (isMine) Citrine else Aqua
     val commentShape = RoundedCornerShape(10.dp)
@@ -904,6 +912,10 @@ private fun DetailCommentRow(
                 style = MaterialTheme.typography.labelMedium,
                 color = accent,
                 fontWeight = FontWeight.Bold,
+                modifier = Modifier.clickable(
+                    enabled = !isMine && onAuthorClick != null,
+                    onClick = { onAuthorClick?.invoke(comment.user_id) },
+                ),
             )
             Spacer(Modifier.height(2.dp))
             Text(comment.body, style = MaterialTheme.typography.bodyMedium, color = DarkTextHigh)

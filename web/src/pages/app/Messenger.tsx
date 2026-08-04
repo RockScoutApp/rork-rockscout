@@ -795,7 +795,19 @@ export default function Messenger() {
           </button>
           <span className="text-2xl">{headerEmoji}</span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold text-foreground">{headerName}</p>
+            <button
+              className="block truncate text-left text-sm font-bold text-foreground hover:text-primary hover:underline"
+              onClick={() => {
+                const profileId = isGroup
+                  ? chatView.group?.creator_id
+                  : chatView.thread?.other_user_id;
+                if (profileId && profileId !== user.id) {
+                  navigate(`/app/profile/${profileId}`);
+                }
+              }}
+            >
+              {headerName}
+            </button>
             {isGroup && (
               <p className="truncate text-xs text-muted-foreground">
                 {memberCount} member{memberCount !== 1 ? "s" : ""}
@@ -885,51 +897,31 @@ export default function Messenger() {
                 >
                   {isGroup && !isMine && (
                     <button
-                      className="mb-1 block text-xs font-bold"
+                      className="mb-1 block text-xs font-bold hover:underline"
                       style={{ color: `hsl(${CITRINE_HEX})` }}
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (msg.sender_id !== user.id) {
-                          navigate(`/app/profile/${msg.sender_id}`);
-                        }
-                      }}
                       onClick={(e) => {
                         e.stopPropagation();
-                      }}
-                      onDoubleClick={(e) => {
-                        e.stopPropagation();
                         if (msg.sender_id !== user.id) {
                           navigate(`/app/profile/${msg.sender_id}`);
                         }
                       }}
-                      title="Double-click or right-click to view profile"
+                      title="Click to view profile"
                     >
                       {profileMap.get(msg.sender_id)?.avatar_emoji ?? "💎"} {senderName}
                     </button>
                   )}
-                  {/* Private chat: long-press sender name to open profile */}
+                  {/* Private chat: click sender name to open profile */}
                   {!isGroup && !isMine && (
                     <button
-                      className="mb-1 block text-[10px] font-bold opacity-70"
+                      className="mb-1 block text-[10px] font-bold opacity-70 hover:underline"
                       style={{ color: `hsl(${AQUA_HEX})` }}
-                      onContextMenu={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (msg.sender_id !== user.id) {
-                          navigate(`/app/profile/${msg.sender_id}`);
-                        }
-                      }}
                       onClick={(e) => {
                         e.stopPropagation();
-                      }}
-                      onDoubleClick={(e) => {
-                        e.stopPropagation();
                         if (msg.sender_id !== user.id) {
                           navigate(`/app/profile/${msg.sender_id}`);
                         }
                       }}
-                      title="Double-click or right-click to view profile"
+                      title="Click to view profile"
                     >
                       {senderName}
                     </button>

@@ -142,9 +142,12 @@ export default function CommunityPostDetail() {
         <div className="flex items-center gap-3 p-4">
           <span className="text-2xl">{post.owner_emoji ?? "🧗"}</span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold text-foreground">
+            <button
+              className="text-left text-sm font-semibold text-foreground hover:text-primary hover:underline"
+              onClick={() => navigate(`/app/profile/${post.user_id}`)}
+            >
               {post.owner_name ?? "Anonymous"}
-            </p>
+            </button>
             <p className="text-xs text-muted-foreground">
               {formatTime(post.created_at)}
             </p>
@@ -207,9 +210,12 @@ export default function CommunityPostDetail() {
               >
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{comment.author_emoji ?? "🧗"}</span>
-                  <span className="text-sm font-medium text-foreground">
+                  <button
+                    className="text-left text-sm font-medium text-foreground hover:text-primary hover:underline"
+                    onClick={() => navigate(`/app/profile/${comment.user_id}`)}
+                  >
                     {comment.author_name ?? "Anonymous"}
-                  </span>
+                  </button>
                   <span className="ml-auto text-xs text-muted-foreground">
                     {formatTime(comment.created_at)}
                   </span>

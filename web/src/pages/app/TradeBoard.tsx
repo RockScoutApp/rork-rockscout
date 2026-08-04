@@ -329,7 +329,12 @@ export default function TradeBoard() {
                     <span className="text-base">
                       {listing.owner?.avatar_emoji ?? "💎"}
                     </span>
-                    {listing.owner?.display_name ?? "Unknown"}
+                    <button
+                      className="font-medium text-foreground hover:text-primary hover:underline"
+                      onClick={() => navigate(`/app/profile/${listing.owner_user_id}`)}
+                    >
+                      {listing.owner?.display_name ?? "Unknown"}
+                    </button>
                     <span>·</span>
                     {formatTime(listing.created_at)}
                   </div>

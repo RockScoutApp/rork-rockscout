@@ -336,6 +336,7 @@ fun CommunityScreen(navController: NavController) {
                     commentCount = (postComments[post.id] ?: emptyList()).size,
                     hoursUntilExpiry = hoursLeft,
                     onTap = { navController.navigate(Routes.communityPostDetail(post.id)) },
+                    onAuthorClick = { uid -> navController.navigate(Routes.userProfile(uid)) },
                     onLike = { scope.launch { repo.toggleLike(post.id) } },
                     onRepost = if (post.user_id != myUserId) {
                         { repostTarget = post }
@@ -809,6 +810,7 @@ private fun CompactCommunityCard(
     commentCount: Int,
     hoursUntilExpiry: Long,
     onTap: () -> Unit,
+    onAuthorClick: ((String) -> Unit)? = null,
     onLike: () -> Unit,
     onRepost: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
@@ -866,7 +868,12 @@ private fun CompactCommunityCard(
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable(
+                                enabled = !isMe && onAuthorClick != null,
+                                onClick = { onAuthorClick?.invoke(post.user_id) },
+                            ),
                     )
                     if (onDelete != null) {
                         Box(

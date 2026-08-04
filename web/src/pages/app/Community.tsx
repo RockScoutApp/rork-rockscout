@@ -561,9 +561,12 @@ export default function Community() {
                       <div className="flex items-center gap-2">
                         <span className="text-2xl">{post.owner_emoji}</span>
                         <div>
-                          <p className="text-sm font-semibold text-foreground">
+                          <button
+                            className="text-left text-sm font-semibold text-foreground hover:text-primary hover:underline"
+                            onClick={() => navigate(`/app/profile/${post.user_id}`)}
+                          >
                             {post.owner_name}
-                          </p>
+                          </button>
                           <p className="text-xs text-muted-foreground">
                             {formatTime(post.created_at)}
                             {post.location_text && ` · ${post.location_text}`}
@@ -638,9 +641,12 @@ export default function Community() {
                                 <span className="text-base">{c.author_emoji}</span>
                                 <div className="min-w-0 flex-1">
                                   <p className="text-sm">
-                                    <span className="font-medium text-foreground">
+                                    <button
+                                      className="font-medium text-foreground hover:text-primary hover:underline"
+                                      onClick={() => navigate(`/app/profile/${c.user_id}`)}
+                                    >
                                       {c.author_name}
-                                    </span>{" "}
+                                    </button>{" "}
                                     <span className="text-muted-foreground">
                                       {c.body}
                                     </span>
@@ -761,9 +767,12 @@ export default function Community() {
                         {/* Row 1: Creator name + unread badge */}
                         <div className="flex items-center gap-2">
                           <UserIcon className="h-3 w-3 shrink-0 text-aqua" />
-                          <p className="truncate text-xs font-bold text-aqua">
+                          <button
+                            className="truncate text-xs font-bold text-aqua hover:underline"
+                            onClick={() => navigate(`/app/profile/${gc.creator_id}`)}
+                          >
                             {creatorName}
-                          </p>
+                          </button>
                           {gUnread > 0 && (
                             <span
                               className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-bold"

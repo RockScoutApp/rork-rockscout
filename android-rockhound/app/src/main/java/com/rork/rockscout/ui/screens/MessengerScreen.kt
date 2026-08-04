@@ -318,6 +318,7 @@ fun MessengerScreen(
             timestamp = formatRelative(activeReq.created_at),
             onBack = { activeRequestId = null },
             senderId = activeReq.sender_id,
+            onOpenUserProfile = { uid -> navController.navigate(Routes.userProfile(uid)) },
             onAccept = {
                 scope.launch {
                     social.acceptRequest(activeReq)
@@ -974,7 +975,12 @@ private fun ThreadView(
                     style = MaterialTheme.typography.titleLarge,
                     color = DarkTextHigh,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(
+                            enabled = !isGroupChat && otherUserId != null,
+                            onClick = { otherUserId?.let { onOpenUserProfile(it) } },
+                        ),
                 )
                 Spacer(Modifier.width(8.dp))
                 SculptedOutlinedButton(
@@ -1609,6 +1615,7 @@ fun RequestChatView(
     onDeny: () -> Unit,
     onBlock: () -> Unit,
     senderId: String = "",
+    onOpenUserProfile: ((String) -> Unit)? = null,
 ) {
     var showBlockConfirm by remember { mutableStateOf(false) }
     var showReportConfirm by remember { mutableStateOf(false) }
@@ -1658,7 +1665,12 @@ fun RequestChatView(
                     style = MaterialTheme.typography.titleLarge,
                     color = DarkTextHigh,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(
+                            enabled = senderId.isNotBlank() && onOpenUserProfile != null,
+                            onClick = { if (senderId.isNotBlank()) onOpenUserProfile?.invoke(senderId) },
+                        ),
                 )
             }
             HorizontalDivider(color = Color(0x22FFFFFF), thickness = 1.dp)
