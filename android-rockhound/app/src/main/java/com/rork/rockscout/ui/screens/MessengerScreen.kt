@@ -185,6 +185,8 @@ fun MessengerScreen(
             activeGroupChatId = gcId
             scope.launch {
                 SupabaseMessagingRepository.loadGroupMessages(gcId)
+                SupabaseMessagingRepository.saveGroupLastRead(gcId)
+                SupabaseMessagingRepository.refreshGroupChatUnreadCounts()
                 // Find group chat name
                 val gc = SupabaseMessagingRepository.groupChats.value.firstOrNull { it.id == gcId }
                 activeGroupChatName = gc?.name ?: "Group Chat"
@@ -340,6 +342,8 @@ fun MessengerScreen(
             if (replyBody.isNotBlank()) {
                 ChatDraftStore.saveDraft(gcId!!, activeGroupChatName ?: "Group Chat", replyBody, isGroup = true)
             }
+            SupabaseMessagingRepository.saveGroupLastRead(gcId!!)
+            scope.launch { SupabaseMessagingRepository.refreshGroupChatUnreadCounts() }
             activeGroupChatId = null
             activeGroupChatName = null
             replyBody = ""
@@ -399,6 +403,8 @@ fun MessengerScreen(
                 if (replyBody.isNotBlank()) {
                     ChatDraftStore.saveDraft(gcId!!, activeGroupChatName ?: "Group Chat", replyBody, isGroup = true)
                 }
+                SupabaseMessagingRepository.saveGroupLastRead(gcId!!)
+                scope.launch { SupabaseMessagingRepository.refreshGroupChatUnreadCounts() }
                 activeGroupChatId = null
                 activeGroupChatName = null
                 replyBody = ""

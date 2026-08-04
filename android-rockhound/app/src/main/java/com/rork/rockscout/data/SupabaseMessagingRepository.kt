@@ -165,6 +165,63 @@ object SupabaseMessagingRepository {
     private val _warningCount = MutableStateFlow(0)
     val warningCount: StateFlow<Int> = _warningCount.asStateFlow()
 
+    private val _groupChatUnreadCounts = MutableStateFlow<Map<String, Int>>(emptyMap())
+    /** Map of group chat ID → unread message count for the current user. */
+    val groupChatUnreadCounts: StateFlow<Map<String, Int>> = _groupChatUnreadCounts.asStateFlow()
+
+    private fun groupLastReadKey(chatId: String) = "group_last_read_$chatId"
+
+    /** Save the current timestamp as the last-read time for a group chat. */
+    fun saveGroupLastRead(chatId: String) {
+        LocalDataStore.setString(groupLastReadKey(chatId), java.time.OffsetDateTime.now().toString())
+    }
+
+    /** Get the last-read timestamp for a group chat, or null if never opened. */
+    fun getGroupLastRead(chatId: String): String? =
+        LocalDataStore.getString(groupLastReadKey(chatId))
+
+    /** Fetch messages from all the user's group chats (not sent by the user)
+     *  and compute per-chat unread counts based on stored last-read timestamps. */
+    suspend fun refreshGroupChatUnreadCounts(): Result<Unit> {
+        val token = accessToken() ?: return Result.failure(Exception("Not authenticated"))
+        val uid = userId() ?: return Result.failure(Exception("No user ID"))
+        val chatIds = _groupChats.value.map { it.id }
+        if (chatIds.isEmpty()) {
+            _groupChatUnreadCounts.value = emptyMap()
+            return Result.success(Unit)
+        }
+        return try {
+            val idsParam = chatIds.joinToString(",") { "\"$it\"" }
+            // Use the oldest last-read among all chats (or 30 days ago) as a
+            // lower bound to keep the payload small.
+            val oldestRelevant = chatIds.mapNotNull { getGroupLastRead(it) }.minByOrNull { it }
+                ?: java.time.OffsetDateTime.now().minusDays(30).toString()
+            val resp = client.get("${baseUrl()}/rest/v1/group_messages?group_chat_id=in.($idsParam)&sender_id=neq.$uid&created_at=gt.$oldestRelevant&select=id,group_chat_id,created_at&order=created_at.desc") {
+                header("apikey", anonKey())
+                header("Authorization", "Bearer $token")
+            }
+            if (resp.status.isSuccess()) {
+                val raw = resp.body<String>()
+                val arr = json.parseToJsonElement(raw).jsonArray
+                val counts = mutableMapOf<String, Int>()
+                for (chatId in chatIds) {
+                    val lastRead = getGroupLastRead(chatId)
+                    val unread = arr.count { el ->
+                        val obj = el.jsonObject
+                        obj["group_chat_id"]?.jsonPrimitive?.contentOrNull == chatId &&
+                        (lastRead == null || (obj["created_at"]?.jsonPrimitive?.contentOrNull ?: "") > lastRead)
+                    }
+                    if (unread > 0) counts[chatId] = unread
+                }
+                _groupChatUnreadCounts.value = counts
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "refreshGroupChatUnreadCounts failed", e)
+            Result.failure(e)
+        }
+    }
+
     // ─── Private Chats ─────────────────────────────────────────────────
 
     /** Create a private chat thread between the current user and [otherUserId]. */

@@ -1072,12 +1072,14 @@ private fun GroupChatsTabContent(
     val groupChats by SupabaseMessagingRepository.groupChats.collectAsStateWithLifecycle()
     val groupChatMembers by SupabaseMessagingRepository.groupChatMembers.collectAsStateWithLifecycle()
     val pendingInvites by SupabaseMessagingRepository.pendingGroupInvites.collectAsStateWithLifecycle()
+    val unreadCounts by SupabaseMessagingRepository.groupChatUnreadCounts.collectAsStateWithLifecycle()
     var showCreateDialog by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         SupabaseMessagingRepository.loadGroupChats()
         SupabaseMessagingRepository.loadPendingInvites()
+        SupabaseMessagingRepository.refreshGroupChatUnreadCounts()
     }
 
     LazyColumn(
@@ -1234,7 +1236,28 @@ private fun GroupChatsTabContent(
                             Spacer(Modifier.width(10.dp))
                         }
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(chat.name, style = MaterialTheme.typography.titleSmall, color = DarkTextHigh, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(chat.name, style = MaterialTheme.typography.titleSmall, color = DarkTextHigh, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                                val unread = unreadCounts[chat.id] ?: 0
+                                if (unread > 0) {
+                                    Spacer(Modifier.width(6.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(CircleShape)
+                                            .background(Citrine)
+                                            .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), CircleShape)
+                                            .size(20.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Text(
+                                            if (unread > 99) "99+" else unread.toString(),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Ink,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                    }
+                                }
+                            }
                             if (chat.subject.isNotBlank()) {
                                 Spacer(Modifier.height(2.dp))
                                 Text(chat.subject, style = MaterialTheme.typography.bodySmall, color = DarkTextMid, maxLines = 1, overflow = TextOverflow.Ellipsis)

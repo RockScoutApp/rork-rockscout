@@ -255,6 +255,30 @@ export default function Community() {
     enabled: !!user && activeTab === "groups",
   });
 
+  // ── Group chat unread counts (localStorage last-read tracking) ──
+  const { data: groupUnreadCounts } = useQuery<Record<string, number>>({
+    queryKey: ["community-group-unread", user?.id, groupChats?.map((g) => g.id).join(",")],
+    queryFn: async () => {
+      if (!user || !groupChats || groupChats.length === 0) return {};
+      const result: Record<string, number> = {};
+      for (const gc of groupChats) {
+        const lastRead = localStorage.getItem(`group_last_read_${gc.id}`);
+        let query = supabase
+          .from("group_messages")
+          .select("id", { count: "exact", head: true })
+          .eq("group_chat_id", gc.id)
+          .neq("sender_id", user.id);
+        if (lastRead) {
+          query = query.gt("created_at", lastRead);
+        }
+        const { count } = await query;
+        if (count && count > 0) result[gc.id] = count;
+      }
+      return result;
+    },
+    enabled: !!user && !!groupChats && groupChats.length > 0 && activeTab === "groups",
+  });
+
   const createPost = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Sign in to post");
@@ -635,7 +659,9 @@ export default function Community() {
                     gc.subject?.toLowerCase().includes(q)
                   );
                 })
-                .map((gc) => (
+                .map((gc) => {
+                  const gUnread = groupUnreadCounts?.[gc.id] ?? 0;
+                  return (
                   <SculptedCard
                     key={gc.id}
                     accent="aqua"
@@ -659,9 +685,22 @@ export default function Community() {
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-bold text-foreground">
-                          {gc.name}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-sm font-bold text-foreground">
+                            {gc.name}
+                          </p>
+                          {gUnread > 0 && (
+                            <span
+                              className="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[10px] font-bold"
+                              style={{
+                                backgroundColor: "hsl(36 80% 58%)",
+                                color: "hsl(30 30% 12%)",
+                              }}
+                            >
+                              {gUnread > 99 ? "99+" : gUnread}
+                            </span>
+                          )}
+                        </div>
                         <p className="truncate text-xs text-muted-foreground">
                           {gc.subject || "No subject"}
                           {gc.max_members && ` · ${gc.member_count}/${gc.max_members} members`}
@@ -673,7 +712,8 @@ export default function Community() {
                       </span>
                     </div>
                   </SculptedCard>
-                ))}
+                  );
+                })}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
