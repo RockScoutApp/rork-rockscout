@@ -1061,17 +1061,26 @@ export default function Profile() {
                       }}
                       draggable={false}
                     />
-                    {/* 75px crop frame overlay (centered) */}
+                    {/* 75px crop frame with grid overlay + corner brackets */}
                     <div
-                      className="pointer-events-none absolute left-1/2 top-1/2 rounded-xl border-2"
+                      className="pointer-events-none absolute left-1/2 top-1/2"
                       style={{
-                        borderColor: `hsl(${CITRINE_HEX})`,
                         width: "75px",
                         height: "75px",
                         transform: "translate(-50%, -50%)",
                         boxShadow: `0 0 0 9999px rgba(0,0,0,0.35)`,
                       }}
-                    />
+                    >
+                      <div className="absolute inset-0 rounded-xl" style={{ border: `1px solid hsl(${CITRINE_HEX} / 0.7)` }} />
+                      <div className="absolute left-1/3 top-0 h-full w-px" style={{ background: "rgba(255,255,255,0.25)" }} />
+                      <div className="absolute left-2/3 top-0 h-full w-px" style={{ background: "rgba(255,255,255,0.25)" }} />
+                      <div className="absolute top-1/3 left-0 w-full h-px" style={{ background: "rgba(255,255,255,0.25)" }} />
+                      <div className="absolute top-2/3 left-0 w-full h-px" style={{ background: "rgba(255,255,255,0.25)" }} />
+                      <div className="absolute left-0 top-0 h-3 w-3 rounded-tl-lg" style={{ borderLeft: `2px solid hsl(${CITRINE_HEX})`, borderTop: `2px solid hsl(${CITRINE_HEX})` }} />
+                      <div className="absolute right-0 top-0 h-3 w-3 rounded-tr-lg" style={{ borderRight: `2px solid hsl(${CITRINE_HEX})`, borderTop: `2px solid hsl(${CITRINE_HEX})` }} />
+                      <div className="absolute left-0 bottom-0 h-3 w-3 rounded-bl-lg" style={{ borderLeft: `2px solid hsl(${CITRINE_HEX})`, borderBottom: `2px solid hsl(${CITRINE_HEX})` }} />
+                      <div className="absolute right-0 bottom-0 h-3 w-3 rounded-br-lg" style={{ borderRight: `2px solid hsl(${CITRINE_HEX})`, borderBottom: `2px solid hsl(${CITRINE_HEX})` }} />
+                    </div>
                     {/* Tap-to-expand badge */}
                     <button
                       onClick={() => setShowFullScreenAvatarEditor(true)}
@@ -1544,17 +1553,26 @@ export default function Profile() {
               />
             </div>
 
-            {/* Dimming overlay: dark everywhere except the centered 75px crop square */}
+            {/* Crop frame: dark outside + grid overlay + corner brackets */}
             <div
-              className="pointer-events-none absolute left-1/2 top-1/2 rounded-xl border-[3px]"
+              className="pointer-events-none absolute left-1/2 top-1/2"
               style={{
-                borderColor: `hsl(${CITRINE_HEX})`,
                 width: "75px",
                 height: "75px",
                 transform: "translate(-50%, -50%)",
                 boxShadow: "0 0 0 9999px rgba(0,0,0,0.6)",
               }}
-            />
+            >
+              <div className="absolute inset-0 rounded-xl" style={{ border: `1px solid hsl(${CITRINE_HEX} / 0.7)` }} />
+              <div className="absolute left-1/3 top-0 h-full w-px" style={{ background: "rgba(255,255,255,0.3)" }} />
+              <div className="absolute left-2/3 top-0 h-full w-px" style={{ background: "rgba(255,255,255,0.3)" }} />
+              <div className="absolute top-1/3 left-0 w-full h-px" style={{ background: "rgba(255,255,255,0.3)" }} />
+              <div className="absolute top-2/3 left-0 w-full h-px" style={{ background: "rgba(255,255,255,0.3)" }} />
+              <div className="absolute left-0 top-0 h-3.5 w-3.5 rounded-tl-lg" style={{ borderLeft: `3px solid hsl(${CITRINE_HEX})`, borderTop: `3px solid hsl(${CITRINE_HEX})` }} />
+              <div className="absolute right-0 top-0 h-3.5 w-3.5 rounded-tr-lg" style={{ borderRight: `3px solid hsl(${CITRINE_HEX})`, borderTop: `3px solid hsl(${CITRINE_HEX})` }} />
+              <div className="absolute left-0 bottom-0 h-3.5 w-3.5 rounded-bl-lg" style={{ borderLeft: `3px solid hsl(${CITRINE_HEX})`, borderBottom: `3px solid hsl(${CITRINE_HEX})` }} />
+              <div className="absolute right-0 bottom-0 h-3.5 w-3.5 rounded-br-lg" style={{ borderRight: `3px solid hsl(${CITRINE_HEX})`, borderBottom: `3px solid hsl(${CITRINE_HEX})` }} />
+            </div>
           </div>
 
           {/* Bottom bar: instructions + zoom + reset + done */}

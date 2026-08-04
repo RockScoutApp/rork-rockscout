@@ -335,7 +335,9 @@ object ImageUtils {
         return try {
             val bitmap = decodeSampledBitmap(context, uri, 1024) ?: return null
             val cropped = cropAvatarSquare(bitmap, userScale, offsetX, offsetY, boxSizePx)
-            val resized = resizeBitmap(cropped, 300)
+            // Force output to 300x300, upscaling low-resolution crops with bilinear
+            // filtering so profile pictures always render crisp and clear.
+            val resized = Bitmap.createScaledBitmap(cropped, 300, 300, true)
             val dir = File(context.filesDir, "avatars").apply { mkdirs() }
             val fileName = "avatar_${System.currentTimeMillis()}.jpg"
             val destFile = File(dir, fileName)

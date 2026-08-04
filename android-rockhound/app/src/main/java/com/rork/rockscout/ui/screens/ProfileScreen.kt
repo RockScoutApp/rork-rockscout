@@ -1509,6 +1509,13 @@ private fun EditProfileSheet(
     var avatarPreviewSizePx by remember { mutableStateOf(0) }
     var cropping by remember { mutableStateOf(false) }
     var showFullScreenAvatarEditor by remember { mutableStateOf(false) }
+    var isInteracting by remember { mutableStateOf(false) }
+    LaunchedEffect(isInteracting) {
+        if (isInteracting) {
+            kotlinx.coroutines.delay(800)
+            isInteracting = false
+        }
+    }
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -1985,6 +1992,7 @@ private fun EditProfileSheet(
                     .glowingBorder(2.dp, Citrine.copy(alpha = 0.45f), RoundedCornerShape(16.dp))
                     .pointerInput(editAvatarImagePath) {
                         detectTransformGestures { _, pan, zoom, _ ->
+                            isInteracting = true
                             avatarScale = (avatarScale * zoom).coerceIn(1f, 5f)
                             val maxOff = previewSizePx * (avatarScale - 1f)
                             avatarOffsetX = (avatarOffsetX + pan.x).coerceIn(-maxOff, maxOff)
@@ -2006,13 +2014,40 @@ private fun EditProfileSheet(
                         ),
                     contentScale = ContentScale.Crop,
                 )
-                // Overlay: 75dp square crop frame indicator centered on the box
+                // Overlay: 75dp square crop frame with grid + corner brackets
                 Box(
                     modifier = Modifier
                         .size(75.dp)
-                        .border(2.dp, Citrine, RoundedCornerShape(12.dp))
                         .pointerInput(Unit) { /* pass-through, no-op */ },
-                ) { /* visual crop frame overlay */ }
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .border(1.dp, Citrine.copy(alpha = 0.6f), RoundedCornerShape(10.dp)),
+                    )
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val w = size.width
+                        val h = size.height
+                        val gridAlpha = if (isInteracting) 0.5f else 0.25f
+                        val gridColor = Color.White.copy(alpha = gridAlpha)
+                        val gridStroke = 1.dp.toPx()
+                        drawLine(gridColor, androidx.compose.ui.geometry.Offset(w / 3, 0f), androidx.compose.ui.geometry.Offset(w / 3, h), gridStroke)
+                        drawLine(gridColor, androidx.compose.ui.geometry.Offset(2 * w / 3, 0f), androidx.compose.ui.geometry.Offset(2 * w / 3, h), gridStroke)
+                        drawLine(gridColor, androidx.compose.ui.geometry.Offset(0f, h / 3), androidx.compose.ui.geometry.Offset(w, h / 3), gridStroke)
+                        drawLine(gridColor, androidx.compose.ui.geometry.Offset(0f, 2 * h / 3), androidx.compose.ui.geometry.Offset(w, 2 * h / 3), gridStroke)
+                        val bracketLen = 10.dp.toPx()
+                        val bracketStroke = 2.5.dp.toPx()
+                        val bc = Citrine
+                        drawLine(bc, androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Offset(bracketLen, 0f), bracketStroke)
+                        drawLine(bc, androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Offset(0f, bracketLen), bracketStroke)
+                        drawLine(bc, androidx.compose.ui.geometry.Offset(w, 0f), androidx.compose.ui.geometry.Offset(w - bracketLen, 0f), bracketStroke)
+                        drawLine(bc, androidx.compose.ui.geometry.Offset(w, 0f), androidx.compose.ui.geometry.Offset(w, bracketLen), bracketStroke)
+                        drawLine(bc, androidx.compose.ui.geometry.Offset(0f, h), androidx.compose.ui.geometry.Offset(bracketLen, h), bracketStroke)
+                        drawLine(bc, androidx.compose.ui.geometry.Offset(0f, h), androidx.compose.ui.geometry.Offset(0f, h - bracketLen), bracketStroke)
+                        drawLine(bc, androidx.compose.ui.geometry.Offset(w, h), androidx.compose.ui.geometry.Offset(w - bracketLen, h), bracketStroke)
+                        drawLine(bc, androidx.compose.ui.geometry.Offset(w, h), androidx.compose.ui.geometry.Offset(w, h - bracketLen), bracketStroke)
+                    }
+                }
                 // Tap-to-expand hint badge
                 Box(
                     modifier = Modifier
@@ -2250,6 +2285,7 @@ private fun EditProfileSheet(
                         .fillMaxSize()
                         .pointerInput(editAvatarImagePath) {
                             detectTransformGestures { _, pan, zoom, _ ->
+                                isInteracting = true
                                 avatarScale = (avatarScale * zoom).coerceIn(1f, 8f)
                                 val maxOff = screenHPx * (avatarScale - 1f)
                                 avatarOffsetX = (avatarOffsetX + pan.x).coerceIn(-maxOff, maxOff)
@@ -2295,14 +2331,41 @@ private fun EditProfileSheet(
                     drawRect(dimColor, topLeft = androidx.compose.ui.geometry.Offset(right, top), size = androidx.compose.ui.geometry.Size(canvasW - right, cropPx))
                 }
 
-                // Crop frame border (75dp, centered)
+                // Crop frame with grid overlay + corner brackets (75dp, centered)
                 Box(
                     modifier = Modifier
                         .align(Alignment.Center)
                         .size(75.dp)
-                        .border(3.dp, Citrine, RoundedCornerShape(12.dp))
                         .pointerInput(Unit) { /* pass-through, no-op */ },
-                ) { /* visual crop frame overlay */ }
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .border(1.dp, Citrine.copy(alpha = 0.7f), RoundedCornerShape(10.dp)),
+                    )
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val w = size.width
+                        val h = size.height
+                        val gridAlpha = if (isInteracting) 0.6f else 0.3f
+                        val gridColor = Color.White.copy(alpha = gridAlpha)
+                        val gridStroke = 1.dp.toPx()
+                        drawLine(gridColor, androidx.compose.ui.geometry.Offset(w / 3, 0f), androidx.compose.ui.geometry.Offset(w / 3, h), gridStroke)
+                        drawLine(gridColor, androidx.compose.ui.geometry.Offset(2 * w / 3, 0f), androidx.compose.ui.geometry.Offset(2 * w / 3, h), gridStroke)
+                        drawLine(gridColor, androidx.compose.ui.geometry.Offset(0f, h / 3), androidx.compose.ui.geometry.Offset(w, h / 3), gridStroke)
+                        drawLine(gridColor, androidx.compose.ui.geometry.Offset(0f, 2 * h / 3), androidx.compose.ui.geometry.Offset(w, 2 * h / 3), gridStroke)
+                        val bracketLen = 14.dp.toPx()
+                        val bracketStroke = 3.dp.toPx()
+                        val bc = Citrine
+                        drawLine(bc, androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Offset(bracketLen, 0f), bracketStroke)
+                        drawLine(bc, androidx.compose.ui.geometry.Offset(0f, 0f), androidx.compose.ui.geometry.Offset(0f, bracketLen), bracketStroke)
+                        drawLine(bc, androidx.compose.ui.geometry.Offset(w, 0f), androidx.compose.ui.geometry.Offset(w - bracketLen, 0f), bracketStroke)
+                        drawLine(bc, androidx.compose.ui.geometry.Offset(w, 0f), androidx.compose.ui.geometry.Offset(w, bracketLen), bracketStroke)
+                        drawLine(bc, androidx.compose.ui.geometry.Offset(0f, h), androidx.compose.ui.geometry.Offset(bracketLen, h), bracketStroke)
+                        drawLine(bc, androidx.compose.ui.geometry.Offset(0f, h), androidx.compose.ui.geometry.Offset(0f, h - bracketLen), bracketStroke)
+                        drawLine(bc, androidx.compose.ui.geometry.Offset(w, h), androidx.compose.ui.geometry.Offset(w - bracketLen, h), bracketStroke)
+                        drawLine(bc, androidx.compose.ui.geometry.Offset(w, h), androidx.compose.ui.geometry.Offset(w, h - bracketLen), bracketStroke)
+                    }
+                }
 
                 // Top bar: title + close
                 Row(
