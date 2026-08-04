@@ -14,6 +14,9 @@ import {
   Award,
   MapPin,
   Crown,
+  Ban,
+  Flag,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -65,6 +68,9 @@ export default function UserProfile() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showEditor, setShowEditor] = useState(false);
+  const [showBlockConfirm, setShowBlockConfirm] = useState(false);
+  const [showReportConfirm, setShowReportConfirm] = useState(false);
+  const [reportSubmitted, setReportSubmitted] = useState(false);
   const [form, setForm] = useState({
     display_name: "",
     avatar_emoji: "💎",
@@ -181,6 +187,78 @@ export default function UserProfile() {
     },
     onError: (err) =>
       toast.error(err instanceof Error ? err.message : "Failed to update profile"),
+  });
+
+  const { data: isBlocked } = useQuery<boolean>({
+    queryKey: ["is-blocked", user?.id, profileId],
+    queryFn: async () => {
+      if (!user || !profileId || isOwnProfile) return false;
+      const { data, error } = await supabase
+        .from("rockscout_blocks")
+        .select("id")
+        .eq("blocker_id", user.id)
+        .eq("blocked_id", profileId)
+        .maybeSingle();
+      if (error) return false;
+      return !!data;
+    },
+    enabled: !!user && !!profileId && !isOwnProfile,
+  });
+
+  const toggleBlock = useMutation({
+    mutationFn: async () => {
+      if (!user || !profileId) throw new Error("Not signed in");
+      if (isBlocked) {
+        const { error } = await supabase
+          .from("rockscout_blocks")
+          .delete()
+          .eq("blocker_id", user.id)
+          .eq("blocked_id", profileId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("rockscout_blocks")
+          .insert({ blocker_id: user.id, blocked_id: profileId });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success(isBlocked ? "User unblocked" : "User blocked");
+      queryClient.invalidateQueries({ queryKey: ["is-blocked", user?.id, profileId] });
+      queryClient.invalidateQueries({ queryKey: ["friends"] });
+      queryClient.invalidateQueries({ queryKey: ["connections"] });
+      setShowBlockConfirm(false);
+    },
+    onError: (err) =>
+      toast.error(err instanceof Error ? err.message : "Failed to block user"),
+  });
+
+  const reportUser = useMutation({
+    mutationFn: async () => {
+      if (!user || !profileId) throw new Error("Not signed in");
+      const reason = `Manual report from user profile by ${user.email?.split("@")[0] ?? "unknown"}`;
+      const resp = await fetch(
+        `${import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL}/report-notification-email`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reportedUserId: profileId,
+            reporterId: user.id,
+            reportReason: reason,
+            reportCount: 1,
+            source: "manual",
+          }),
+        },
+      );
+      if (!resp.ok) throw new Error("Failed to submit report");
+    },
+    onSuccess: () => {
+      setReportSubmitted(true);
+      setShowReportConfirm(false);
+    },
+    onError: (err) =>
+      toast.error(err instanceof Error ? err.message : "Failed to report user"),
   });
 
   const sendFriendRequest = useMutation({
@@ -303,26 +381,50 @@ export default function UserProfile() {
               <Save className="h-4 w-4" />
               Edit profile
             </Button>
-          ) : isFriend ? (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => navigate("/app/friends")}
-              className="gap-2"
-            >
-              <MessageSquare className="h-4 w-4" />
-              Message
-            </Button>
           ) : (
-            <Button
-              size="sm"
-              onClick={() => sendFriendRequest.mutate()}
-              disabled={sendFriendRequest.isPending}
-              className="gap-2"
-            >
-              <UserPlus className="h-4 w-4" />
-              Add friend
-            </Button>
+            <>
+              <div className="flex flex-row gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowBlockConfirm(true)}
+                  className={`gap-1.5 ${isBlocked ? "border-destructive/50 text-destructive" : ""}`}
+                >
+                  <Ban className="h-3.5 w-3.5" />
+                  {isBlocked ? "Unblock" : "Block"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowReportConfirm(true)}
+                  className="gap-1.5"
+                >
+                  <Flag className="h-3.5 w-3.5" />
+                  Report
+                </Button>
+              </div>
+              {isFriend ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate("/app/friends")}
+                  className="gap-2"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  Message
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={() => sendFriendRequest.mutate()}
+                  disabled={sendFriendRequest.isPending}
+                  className="gap-2"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  Add friend
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -372,6 +474,97 @@ export default function UserProfile() {
           <ArrowLeft className="h-4 w-4 rotate-180 text-muted-foreground" />
         </button>
       )}
+
+      {/* Block confirmation dialog */}
+      <Dialog open={showBlockConfirm} onOpenChange={setShowBlockConfirm}>
+        <DialogContent aria-describedby={undefined} className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Ban className="h-5 w-5 text-destructive" />
+              {isBlocked ? `Unblock ${profile?.display_name}?` : `Block ${profile?.display_name}?`}
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {isBlocked
+              ? "This user will be able to see your profile, send you friend requests, and message you again."
+              : "This user will no longer be able to see your profile, send you requests, or message you. The block is immediate and symmetric — you both become hidden from each other."}
+          </p>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowBlockConfirm(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => toggleBlock.mutate()}
+              disabled={toggleBlock.isPending}
+              className="gap-2"
+            >
+              {toggleBlock.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Ban className="h-4 w-4" />
+              )}
+              {isBlocked ? "Confirm Unblock" : "Confirm Block"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report confirmation dialog */}
+      <Dialog open={showReportConfirm} onOpenChange={setShowReportConfirm}>
+        <DialogContent aria-describedby={undefined} className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Flag className="h-5 w-5 text-destructive" />
+              Report {profile?.display_name}?
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Help keep RockScout safe and family-friendly. Report this user for
+            inappropriate behavior, profanity, or content that violates our
+            community guidelines. The user will be notified via bell
+            notification and email.
+          </p>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowReportConfirm(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => reportUser.mutate()}
+              disabled={reportUser.isPending}
+              className="gap-2"
+            >
+              {reportUser.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Flag className="h-4 w-4" />
+              )}
+              Report
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Report submitted confirmation */}
+      <Dialog open={reportSubmitted} onOpenChange={setReportSubmitted}>
+        <DialogContent aria-describedby={undefined} className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Report Submitted
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Your report has been filed. The user has been notified via bell
+            notification and email. Our moderation team reviews all reports and
+            takes appropriate action within 36 hours.
+          </p>
+          <DialogFooter>
+            <Button onClick={() => setReportSubmitted(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Profile editor */}
       <Dialog open={showEditor} onOpenChange={setShowEditor}>
