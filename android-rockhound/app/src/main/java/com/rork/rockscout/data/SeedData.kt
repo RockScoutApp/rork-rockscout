@@ -5361,17 +5361,70 @@ object SeedData {
             CustomSpecimenStore.specimens.value.filter { it.id !in excludedFromMainDatabase && seen.add(it.id) }
     }
 
-    /** O(1) lookup map for specimen by ID — avoids linear scans across 900+ entries. */
-    private val specimenMap: Map<String, Specimen> by lazy {
-        allSpecimens.associateBy { it.id }
+/**
+     * Comprehensive lookup map that includes EVERY specimen from EVERY source,
+     * regardless of whether it's excluded from the main specimen database listing.
+     * This ensures [specimenById] can resolve any specimen that a user might
+     * navigate to (e.g. from a community post, collection entry, or deep link),
+     * even if it was excluded from `allSpecimens` for deduplication purposes.
+     */
+    private val allSpecimensById: Map<String, Specimen> by lazy {
+        val map = mutableMapOf<String, Specimen>()
+        fun addAll(list: List<Specimen>) { list.forEach { map.putIfAbsent(it.id, it) } }
+        addAll(specimens)
+        addAll(RocksAreAmazingSpecimens.allAmazing)
+        addAll(RaaTypeVarietySpecimens.specimens)
+        addAll(ExpandedSpecimens.specimens)
+        addAll(MeteoriteSpecimens.specimens)
+        addAll(AssemblageSpecimens.specimens)
+        addAll(AdditionalSpecimens.specimens)
+        addAll(JasperSpecimens.specimens)
+        addAll(ExpandedVarieties.specimens)
+        addAll(ImpactGlassSpecimens.specimens)
+        addAll(FossilSpecimens.specimens)
+        addAll(MassiveExpansion.specimens)
+        addAll(ExpansionGarnets.specimens)
+        addAll(ExpansionTourmalines.specimens)
+        addAll(ExpansionGemstones.specimens)
+        addAll(ExpansionSilicates.specimens)
+        addAll(ExpansionMinerals.specimens)
+        addAll(ExpansionBatch15.specimens)
+        addAll(ExpansionBatch2.specimens)
+        addAll(ExpansionBatch3.specimens)
+        addAll(ExpansionBatch4.specimens)
+        addAll(ExpansionBatch5.specimens)
+        addAll(ExpansionBatch6.specimens)
+        addAll(ExpansionBatch7.specimens)
+        addAll(ExpansionBatch8.specimens)
+        addAll(ExpansionBatch9.specimens)
+        addAll(ExpansionBatch10.specimens)
+        addAll(ExpansionBatch11.specimens)
+        addAll(ExpansionBatch12.specimens)
+        addAll(ExpansionBatch13.specimens)
+        addAll(ExpansionBatch14.specimens)
+        addAll(PrehistoricOrganisms.specimens)
+        addAll(NewSpecimens.specimens)
+        addAll(AragoniteHeleniteSpecimens.specimens)
+        addAll(BotryoidalLepidoliteSpecimen.specimens)
+        addAll(OpaliteSpecimen.specimens)
+        addAll(KimberliteSpecimen.specimens)
+        addAll(JaspilliteSpecimen.specimens)
+        addAll(AlabasterSpecimen.specimens)
+        addAll(DatabaseOverhaulSpecimens.specimens)
+        addAll(MasterBuildSpecimens.specimens)
+        addAll(ExpansionBatch16.specimens)
+        addAll(ExpansionBatch17.specimens)
+        addAll(ExpansionBatch18.specimens)
+        addAll(ExpansionBatch19.specimens)
+        addAll(ExpansionBatch20.specimens)
+        addAll(ExpansionBatch21.specimens)
+        addAll(CustomSpecimenStore.specimens.value)
+        addAll(CustomSpecimenStore.raaSpecimens.value)
+        map
     }
 
     fun specimenById(id: String): Specimen? =
-        specimenMap[id]
-            ?: RocksAreAmazingSpecimens.allAmazing.find { it.id == id }
-            ?: PrehistoricOrganisms.specimens.find { it.id == id }
-            ?: CustomSpecimenStore.specimens.value.find { it.id == id }
-            ?: CustomSpecimenStore.raaSpecimens.value.find { it.id == id }
+        allSpecimensById[id]
 
     fun locationById(id: String): DigLocation? = allLocations.firstOrNull { it.id == id }
     fun guideById(id: String): RockGuide? = guides.firstOrNull { it.id == id }
