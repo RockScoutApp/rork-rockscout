@@ -48,9 +48,15 @@ interface Connection {
 
 interface Thread {
   id: string;
-  user_a: string;
-  user_b: string;
   last_message_at: string;
+  created_at: string;
+}
+
+interface ThreadParticipant {
+  id: string;
+  thread_id: string;
+  user_id: string;
+  joined_at: string;
 }
 
 interface Message {
@@ -152,35 +158,69 @@ export default function Friends() {
     enabled: !!user,
   });
 
-  // ── Message threads ──
+  // ── Message threads (chat_threads + chat_thread_participants) ──
   const { data: threads } = useQuery<ThreadWithMeta[]>({
     queryKey: ["threads", user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase
-        .from("rockscout_threads")
+      // Get thread IDs where the current user is a participant
+      const { data: myParts, error: partsErr } = await supabase
+        .from("chat_thread_participants")
+        .select("thread_id")
+        .eq("user_id", user.id);
+      if (partsErr) throw partsErr;
+      const threadIds = (myParts ?? []).map((p) => p.thread_id);
+      if (threadIds.length === 0) return [];
+
+      const { data: threadRows, error: threadErr } = await supabase
+        .from("chat_threads")
         .select("*")
+        .in("id", threadIds)
         .order("last_message_at", { ascending: false });
-      if (error) throw error;
-      const rows = (data ?? []) as unknown as Thread[];
+      if (threadErr) throw threadErr;
+      const rows = (threadRows ?? []) as unknown as Thread[];
       if (rows.length === 0) return [];
 
-      const friendIds = rows.map((r) =>
-        r.user_a === user.id ? r.user_b : r.user_a,
-      );
-      const { data: profiles } = await supabase
-        .from("rockscout_profiles")
-        .select("id, display_name, avatar_emoji, level, is_pro")
-        .in("id", friendIds);
-      const profileMap = new Map(
-        (profiles ?? []).map((p) => [p.id as string, p as Profile]),
-      );
-      return rows.map((r) => ({
-        ...r,
-        friend: profileMap.get(
-          r.user_a === user.id ? r.user_b : r.user_a,
-        ),
-      }));
+      // Fetch ALL participants for these threads to find the other user
+      const { data: allParts } = await supabase
+        .from("chat_thread_participants")
+        .select("*")
+        .in("thread_id", threadIds);
+      const partsMap = new Map<string, ThreadParticipant[]>();
+      (allParts ?? []).forEach((p: ThreadParticipant) => {
+        const list = partsMap.get(p.thread_id) ?? [];
+        list.push(p);
+        partsMap.set(p.thread_id, list);
+      });
+
+      // Collect other user IDs
+      const otherIds: string[] = [];
+      rows.forEach((t) => {
+        const parts = partsMap.get(t.id) ?? [];
+        const other = parts.find((p) => p.user_id !== user.id);
+        if (other) otherIds.push(other.user_id);
+      });
+
+      let profileMap = new Map<string, Profile>();
+      if (otherIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("rockscout_profiles")
+          .select("id, display_name, avatar_emoji, level, is_pro")
+          .in("id", otherIds);
+        profileMap = new Map(
+          (profiles ?? []).map((p) => [p.id as string, p as Profile]),
+        );
+      }
+
+      return rows.map((r) => {
+        const parts = partsMap.get(r.id) ?? [];
+        const otherPart = parts.find((p) => p.user_id !== user.id);
+        const friendId = otherPart?.user_id ?? "";
+        return {
+          ...r,
+          friend: profileMap.get(friendId),
+        };
+      });
     },
     enabled: !!user && tab === "messages",
   });
@@ -191,7 +231,7 @@ export default function Friends() {
     queryFn: async () => {
       if (!activeThread) return [];
       const { data, error } = await supabase
-        .from("rockscout_messages")
+        .from("chat_messages")
         .select("*")
         .eq("thread_id", activeThread)
         .order("created_at", { ascending: true });
@@ -277,7 +317,7 @@ export default function Friends() {
     mutationFn: async () => {
       if (!user || !activeThread || !messageText.trim()) return;
       const { error } = await supabase
-        .from("rockscout_messages")
+        .from("chat_messages")
         .insert({
           thread_id: activeThread,
           sender_id: user.id,
@@ -286,7 +326,7 @@ export default function Friends() {
       if (error) throw error;
 
       await supabase
-        .from("rockscout_threads")
+        .from("chat_threads")
         .update({ last_message_at: new Date().toISOString() })
         .eq("id", activeThread);
     },
@@ -301,23 +341,35 @@ export default function Friends() {
 
   const startThread = async (friendId: string): Promise<string> => {
     if (!user) throw new Error("Not signed in");
-    const userA = [user.id, friendId].sort()[0];
-    const userB = [user.id, friendId].sort()[1];
-    const { data: existing } = await supabase
-      .from("rockscout_threads")
-      .select("id")
-      .eq("user_a", userA)
-      .eq("user_b", userB)
-      .maybeSingle();
-    if (existing) return existing.id as string;
+    // Check if a thread already exists with this friend via participants
+    const { data: myParts } = await supabase
+      .from("chat_thread_participants")
+      .select("thread_id")
+      .eq("user_id", user.id);
+    const myThreadIds = (myParts ?? []).map((p) => p.thread_id);
+    if (myThreadIds.length > 0) {
+      const { data: friendParts } = await supabase
+        .from("chat_thread_participants")
+        .select("thread_id, user_id")
+        .in("thread_id", myThreadIds)
+        .eq("user_id", friendId)
+        .maybeSingle();
+      if (friendParts) return friendParts.thread_id as string;
+    }
 
-    const { data: created, error } = await supabase
-      .from("rockscout_threads")
-      .insert({ user_a: userA, user_b: userB })
-      .select("id")
-      .single();
-    if (error) throw error;
-    return created.id as string;
+    // Create a new thread + add both participants
+    const threadId = `thread-${crypto.randomUUID()}`;
+    const { error: threadErr } = await supabase
+      .from("chat_threads")
+      .insert({ id: threadId });
+    if (threadErr) throw threadErr;
+    await supabase
+      .from("chat_thread_participants")
+      .insert([
+        { thread_id: threadId, user_id: user.id },
+        { thread_id: threadId, user_id: friendId },
+      ]);
+    return threadId;
   };
 
   const handleMessageFriend = async (friendId: string) => {

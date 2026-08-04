@@ -229,7 +229,7 @@ export default function AddLocationDialog({
             <div className="flex flex-wrap gap-2">
               {photos.map((photo, i) => (
                 <div key={i} className="relative h-20 w-20 overflow-hidden rounded-lg">
-                  <img src={photo} alt="" className="h-full w-full object-cover" />
+                  <img src={photo} alt="" className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                   <button
                     onClick={() => setPhotos((prev) => prev.filter((_, idx) => idx !== i))}
                     className="absolute right-0 top-0 flex h-5 w-5 items-center justify-center rounded-bl-lg bg-black/60 text-white"

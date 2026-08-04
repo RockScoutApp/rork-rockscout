@@ -32,10 +32,15 @@ const BUBBLE_OTHER = "226 16% 30%";
 
 interface Thread {
   id: string;
-  user_a: string;
-  user_b: string;
   last_message_at: string;
   created_at: string;
+}
+
+interface ThreadParticipant {
+  id: string;
+  thread_id: string;
+  user_id: string;
+  joined_at: string;
 }
 
 interface Message {
@@ -194,29 +199,61 @@ export default function Messenger() {
     queryKey: ["messenger-threads", user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase
-        .from("rockscout_threads")
+      // Get thread IDs where the current user is a participant
+      const { data: myParts, error: partsErr } = await supabase
+        .from("chat_thread_participants")
+        .select("thread_id")
+        .eq("user_id", user.id);
+      if (partsErr) throw partsErr;
+      const threadIds = (myParts ?? []).map((p) => p.thread_id);
+      if (threadIds.length === 0) return [];
+
+      // Fetch thread data
+      const { data: threadRows, error: threadErr } = await supabase
+        .from("chat_threads")
         .select("*")
-        .or(`user_a.eq.${user.id},user_b.eq.${user.id}`)
+        .in("id", threadIds)
         .order("last_message_at", { ascending: false });
-      if (error) throw error;
-      const rows = (data ?? []) as Thread[];
+      if (threadErr) throw threadErr;
+      const rows = (threadRows ?? []) as Thread[];
+      if (rows.length === 0) return [];
 
-      const otherIds = rows.map((t) => (t.user_a === user.id ? t.user_b : t.user_a));
-      if (otherIds.length === 0) return [];
+      // Fetch ALL participants for these threads to find the other user
+      const { data: allParts } = await supabase
+        .from("chat_thread_participants")
+        .select("*")
+        .in("thread_id", threadIds);
+      const partsMap = new Map<string, ThreadParticipant[]>();
+      (allParts ?? []).forEach((p: ThreadParticipant) => {
+        const list = partsMap.get(p.thread_id) ?? [];
+        list.push(p);
+        partsMap.set(p.thread_id, list);
+      });
 
-      const { data: profiles } = await supabase
-        .from("rockscout_profiles")
-        .select("id, display_name, avatar_emoji")
-        .in("id", otherIds);
+      // Collect other user IDs (participants who aren't the current user)
+      const otherIds: string[] = [];
+      rows.forEach((t) => {
+        const parts = partsMap.get(t.id) ?? [];
+        const other = parts.find((p) => p.user_id !== user.id);
+        if (other) otherIds.push(other.user_id);
+      });
 
-      const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+      let profileMap = new Map<string, Profile>();
+      if (otherIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("rockscout_profiles")
+          .select("id, display_name, avatar_emoji")
+          .in("id", otherIds);
+        profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+      }
 
       const threadsWithMeta: ThreadWithMeta[] = [];
       for (const t of rows) {
-        const otherId = t.user_a === user.id ? t.user_b : t.user_a;
+        const parts = partsMap.get(t.id) ?? [];
+        const otherPart = parts.find((p) => p.user_id !== user.id);
+        const otherId = otherPart?.user_id ?? "";
         const { data: lastMsg } = await supabase
-          .from("rockscout_messages")
+          .from("chat_messages")
           .select("*")
           .eq("thread_id", t.id)
           .order("created_at", { ascending: false })
@@ -225,7 +262,7 @@ export default function Messenger() {
 
         // Count unread messages from the other user
         const { count: unreadCount } = await supabase
-          .from("rockscout_messages")
+          .from("chat_messages")
           .select("id", { count: "exact", head: true })
           .eq("thread_id", t.id)
           .neq("sender_id", user.id)
@@ -298,7 +335,7 @@ export default function Messenger() {
     queryFn: async () => {
       if (!activeThreadId) return [];
       const { data, error } = await supabase
-        .from("rockscout_messages")
+        .from("chat_messages")
         .select("*")
         .eq("thread_id", activeThreadId)
         .order("created_at", { ascending: true });
@@ -362,7 +399,7 @@ export default function Messenger() {
     const unread = messages.filter((m) => m.sender_id !== user.id && !m.read_at);
     if (unread.length === 0) return;
     supabase
-      .from("rockscout_messages")
+      .from("chat_messages")
       .update({ read_at: new Date().toISOString() })
       .in("id", unread.map((m) => m.id))
       .then(() =>
@@ -400,7 +437,7 @@ export default function Messenger() {
         .channel(`thread-${chatView.thread.id}`)
         .on(
           "postgres_changes",
-          { event: "INSERT", schema: "public", table: "rockscout_messages", filter: `thread_id=eq.${chatView.thread.id}` },
+          { event: "INSERT", schema: "public", table: "chat_messages", filter: `thread_id=eq.${chatView.thread.id}` },
           () => {
             queryClient.invalidateQueries({ queryKey: ["thread-messages", chatView.thread.id] });
             queryClient.invalidateQueries({ queryKey: ["messenger-threads", user?.id] });
@@ -562,7 +599,7 @@ export default function Messenger() {
         const taggedIds = otherName && rawText.toLowerCase().includes(`@${otherName.toLowerCase()}`)
           ? [chatView.thread.other_user_id]
           : [];
-        const { error } = await supabase.from("rockscout_messages").insert({
+        const { error } = await supabase.from("chat_messages").insert({
           thread_id: chatView.thread.id,
           sender_id: user.id,
           body: rawText.trim(),
@@ -571,7 +608,7 @@ export default function Messenger() {
         });
         if (error) throw error;
         await supabase
-          .from("rockscout_threads")
+          .from("chat_threads")
           .update({ last_message_at: new Date().toISOString() })
           .eq("id", chatView.thread.id);
       } else if (chatView.type === "group" && chatView.group) {
@@ -646,7 +683,7 @@ export default function Messenger() {
       const imageUrl = urlData.publicUrl;
 
       if (chatView.type === "thread" && chatView.thread) {
-        const { error } = await supabase.from("rockscout_messages").insert({
+        const { error } = await supabase.from("chat_messages").insert({
           thread_id: chatView.thread.id,
           sender_id: user.id,
           body: "",
@@ -655,7 +692,7 @@ export default function Messenger() {
         });
         if (error) throw error;
         await supabase
-          .from("rockscout_threads")
+          .from("chat_threads")
           .update({ last_message_at: new Date().toISOString() })
           .eq("id", chatView.thread.id);
       } else if (chatView.type === "group" && chatView.group) {

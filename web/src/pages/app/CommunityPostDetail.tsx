@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { filterProfanity } from "@/lib/profanity-filter";
 import NotFound from "@/pages/NotFound";
 
 interface Post {
@@ -70,28 +71,84 @@ export default function CommunityPostDetail() {
     queryKey: ["community-post", postId],
     queryFn: async () => {
       if (!postId) return null;
-      const { data, error } = await supabase
+      const { data: postData, error: postErr } = await supabase
         .from("rockscout_posts")
-        .select("*, like_count, liked_by_me, comment_count")
+        .select("*")
         .eq("id", postId)
         .maybeSingle();
-      if (error) throw error;
-      return data as PostWithMeta | null;
+      if (postErr) throw postErr;
+      if (!postData) return null;
+
+      const rawPost = postData as Post;
+
+      // Fetch owner profile
+      const { data: ownerProfile } = await supabase
+        .from("rockscout_profiles")
+        .select("id, display_name, avatar_emoji")
+        .eq("id", rawPost.user_id)
+        .maybeSingle();
+
+      // Fetch likes
+      const { data: likes } = await supabase
+        .from("rockscout_post_likes")
+        .select("user_id")
+        .eq("post_id", postId);
+
+      // Fetch comment count
+      const { count: commentCount } = await supabase
+        .from("rockscout_post_comments")
+        .select("id", { count: "exact", head: true })
+        .eq("post_id", postId);
+
+      const likeList = likes ?? [];
+      const likedByMe = user ? likeList.some((l) => l.user_id === user.id) : false;
+
+      return {
+        ...rawPost,
+        owner_emoji: ownerProfile?.avatar_emoji ?? "💎",
+        owner_name: ownerProfile?.display_name ?? "Rockhound",
+        like_count: likeList.length,
+        liked_by_me: likedByMe,
+        comment_count: commentCount ?? 0,
+      } as PostWithMeta;
     },
     enabled: !!postId,
   });
 
   const { data: comments } = useQuery<Comment[]>({
-    queryKey: ["post-comments", postId],
+    queryKey: ["post-comments-detail", postId],
     queryFn: async () => {
       if (!postId) return [];
-      const { data, error } = await supabase
-        .from("rockscout_comments")
-        .select("*, author_emoji, author_name")
+      const { data: commentRows, error } = await supabase
+        .from("rockscout_post_comments")
+        .select("id, post_id, user_id, body, created_at")
         .eq("post_id", postId)
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return (data ?? []) as Comment[];
+      const rows = commentRows ?? [];
+      if (rows.length === 0) return [];
+
+      const userIds = [...new Set(rows.map((r) => r.user_id))];
+      const { data: profiles } = await supabase
+        .from("rockscout_profiles")
+        .select("id, display_name, avatar_emoji")
+        .in("id", userIds);
+      const profileMap = new Map(
+        (profiles ?? []).map((p) => [p.id as string, p]),
+      );
+
+      return rows.map((r) => {
+        const p = profileMap.get(r.user_id);
+        return {
+          id: r.id,
+          post_id: r.post_id,
+          user_id: r.user_id,
+          body: r.body,
+          created_at: r.created_at,
+          author_emoji: p?.avatar_emoji ?? "💎",
+          author_name: p?.display_name ?? "Rockhound",
+        } as Comment;
+      });
     },
     enabled: !!postId,
   });
@@ -99,20 +156,63 @@ export default function CommunityPostDetail() {
   const addComment = useMutation({
     mutationFn: async () => {
       if (!user || !postId || !commentBody.trim()) return;
-      const { error } = await supabase.from("rockscout_comments").insert({
+      const { filteredText } = filterProfanity(commentBody.trim());
+      const { error } = await supabase.from("rockscout_post_comments").insert({
         post_id: postId,
         user_id: user.id,
-        body: commentBody.trim(),
+        body: filteredText,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       setCommentBody("");
-      queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
+      queryClient.invalidateQueries({ queryKey: ["post-comments-detail", postId] });
       queryClient.invalidateQueries({ queryKey: ["community-post", postId] });
+      queryClient.invalidateQueries({ queryKey: ["community-posts"] });
       toast.success("Comment added");
     },
     onError: () => toast.error("Failed to add comment"),
+  });
+
+  const toggleLike = useMutation({
+    mutationFn: async () => {
+      if (!user || !postId) return;
+      if (post?.liked_by_me) {
+        const { error } = await supabase
+          .from("rockscout_post_likes")
+          .delete()
+          .eq("post_id", postId)
+          .eq("user_id", user.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("rockscout_post_likes")
+          .insert({ post_id: postId, user_id: user.id });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["community-post", postId] });
+      queryClient.invalidateQueries({ queryKey: ["community-posts"] });
+    },
+    onError: (err) =>
+      toast.error(err instanceof Error ? err.message : "Failed to toggle like"),
+  });
+
+  const deletePost = useMutation({
+    mutationFn: async () => {
+      if (!postId) return;
+      const { error } = await supabase
+        .from("rockscout_posts")
+        .delete()
+        .eq("id", postId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Post deleted");
+      navigate("/app/community");
+    },
+    onError: () => toast.error("Failed to delete post"),
   });
 
   if (isLoading) {
@@ -152,6 +252,17 @@ export default function CommunityPostDetail() {
               {formatTime(post.created_at)}
             </p>
           </div>
+          {user?.id === post.user_id && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+              onClick={() => deletePost.mutate()}
+              disabled={deletePost.isPending}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
         {post.image_uri && (
@@ -160,6 +271,9 @@ export default function CommunityPostDetail() {
               src={post.image_uri}
               alt={post.title}
               className="max-h-[400px] w-full object-contain"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "/placeholder.svg";
+              }}
             />
           </div>
         )}
@@ -183,8 +297,14 @@ export default function CommunityPostDetail() {
           )}
 
           <div className="mt-3 flex items-center gap-4 border-t border-border pt-3">
-            <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary">
-              <Heart className="h-4 w-4" />
+            <button
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary"
+              onClick={() => toggleLike.mutate()}
+              disabled={!user || toggleLike.isPending}
+            >
+              <Heart
+                className={`h-4 w-4 ${post.liked_by_me ? "fill-primary text-primary" : ""}`}
+              />
               {post.like_count ?? 0}
             </button>
             <span className="flex items-center gap-1.5 text-sm text-muted-foreground">

@@ -151,7 +151,7 @@ export default function DeepSkyObjects() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="relative h-56 overflow-hidden">
-                <img src={selected.imageUrl} alt={selected.commonName} className="h-full w-full object-cover" />
+                <img src={selected.imageUrl} alt={selected.commonName} className="h-full w-full object-cover" onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg"; }} />
                 <div className="absolute inset-0 bg-gradient-to-t from-[hsl(30_10%_7%)] to-transparent" />
                 <button
                   onClick={() => setSelected(null)}
