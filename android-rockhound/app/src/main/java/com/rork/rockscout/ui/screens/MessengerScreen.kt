@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import com.rork.rockscout.ui.components.glowingBorder
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -359,20 +360,28 @@ fun MessengerScreen(
                     image_uri = gm.image_url,
                     read_at = null,
                     created_at = gm.created_at,
+                    reply_to_message_id = gm.reply_to_message_id,
+                    tagged_user_ids = gm.tagged_user_ids,
                 )
             },
             myUserId = auth.currentUserId,
             replyBody = replyBody,
             onReplyChange = { replyBody = it },
             onSend = {
-                val result = ProfanityFilter.filterWithWarning(replyBody, strict = false)
+                // Use the group's profanity filter level
+                val gc = SupabaseMessagingRepository.groupChats.value.firstOrNull { it.id == gcId }
+                val strict = gc?.profanity_filter_level == "strict"
+                val result = ProfanityFilter.filterWithWarning(replyBody, strict = strict)
                 val filtered = result.filteredText
                 if (result.hasExplicitContent) {
                     pendingFilteredText = filtered
                     showProfanityWarning = true
                 } else if (filtered.isNotBlank() && gcId != null) {
+                    // Parse @username tags from the input text
+                    val memberIds = SupabaseMessagingRepository.groupChatMemberIds(gcId)
+                    val taggedIds = parseTaggedUserIds(replyBody, memberIds, hunterCache)
                     scope.launch {
-                        SupabaseMessagingRepository.sendGroupMessage(gcId, filtered, null, replyToMessageId)
+                        SupabaseMessagingRepository.sendGroupMessage(gcId, filtered, null, replyToMessageId, taggedIds)
                         replyBody = ""
                         replyToMessageId = null
                         replyToSenderName = null
@@ -405,6 +414,17 @@ fun MessengerScreen(
                 replyToSenderName = null
                 replyToBody = null
             },
+            onLongPressMessage = { msg ->
+                replyToMessageId = msg.id
+                val senderName = hunterCache[msg.sender_id]?.display_name ?: "RockScout"
+                replyToSenderName = senderName
+                replyToBody = msg.body.ifBlank { "[image]" }
+                // Insert @username into the input box
+                if (replyBody.isBlank() || !replyBody.contains("@$senderName")) {
+                    replyBody = "@$senderName " + replyBody
+                }
+            },
+            hunterCache = hunterCache,
         )
         if (showProfanityWarning) {
             ProfanityWarningDialog(
@@ -412,8 +432,10 @@ fun MessengerScreen(
                     showProfanityWarning = false
                     val text = pendingFilteredText
                     if (text.isNotBlank() && gcId != null) {
+                        val memberIds = SupabaseMessagingRepository.groupChatMemberIds(gcId)
+                        val taggedIds = parseTaggedUserIds(replyBody, memberIds, hunterCache)
                         scope.launch {
-                            SupabaseMessagingRepository.sendGroupMessage(gcId, text, null, replyToMessageId)
+                            SupabaseMessagingRepository.sendGroupMessage(gcId, text, null, replyToMessageId, taggedIds)
                             replyBody = ""
                             replyToMessageId = null
                             replyToSenderName = null
@@ -460,8 +482,13 @@ fun MessengerScreen(
                     pendingFilteredText = filtered
                     showProfanityWarning = true
                 } else if (filtered.isNotBlank() && threadId != null) {
+                    // For private chats, tag the other user if their name appears
+                    val taggedIds = activeOtherId?.let { oid ->
+                        val otherName = activeOtherName ?: ""
+                        if (replyBody.contains("@$otherName", ignoreCase = true)) listOf(oid) else emptyList()
+                    } ?: emptyList()
                     scope.launch {
-                        social.sendMessage(threadId, filtered)
+                        social.sendMessage(threadId, filtered, null, replyToMessageId, taggedIds)
                         replyBody = ""
                         replyToMessageId = null
                         replyToSenderName = null
@@ -472,7 +499,7 @@ fun MessengerScreen(
             },
             onSendImage = { imageUri ->
                 if (threadId != null) {
-                    scope.launch { social.sendMessage(threadId, "", imageUri) }
+                    scope.launch { social.sendMessage(threadId, "", imageUri, replyToMessageId) }
                 }
             },
             onBack = {
@@ -498,6 +525,21 @@ fun MessengerScreen(
                 replyToSenderName = null
                 replyToBody = null
             },
+            onLongPressMessage = { msg ->
+                replyToMessageId = msg.id
+                val senderName = if (msg.sender_id == auth.currentUserId) {
+                    AppRepository.instance.profile.value.name
+                } else {
+                    hunterCache[msg.sender_id]?.display_name ?: activeOtherName ?: "RockScout"
+                }
+                replyToSenderName = senderName
+                replyToBody = msg.body.ifBlank { "[image]" }
+                // Insert @username into the input box
+                if (replyBody.isBlank() || !replyBody.contains("@$senderName")) {
+                    replyBody = "@$senderName " + replyBody
+                }
+            },
+            hunterCache = hunterCache,
         )
         if (showProfanityWarning) {
             ProfanityWarningDialog(
@@ -505,8 +547,12 @@ fun MessengerScreen(
                     showProfanityWarning = false
                     val text = pendingFilteredText
                     if (text.isNotBlank() && threadId != null) {
+                        val taggedIds = activeOtherId?.let { oid ->
+                            val otherName = activeOtherName ?: ""
+                            if (replyBody.contains("@$otherName", ignoreCase = true)) listOf(oid) else emptyList()
+                        } ?: emptyList()
                         scope.launch {
-                            social.sendMessage(threadId, text)
+                            social.sendMessage(threadId, text, null, replyToMessageId, taggedIds)
                             replyBody = ""
                             replyToMessageId = null
                             replyToSenderName = null
@@ -576,6 +622,8 @@ private fun ThreadView(
     replyToSenderName: String? = null,
     replyToBody: String? = null,
     onCancelReply: () -> Unit = {},
+    onLongPressMessage: (SocialRepository.MessageRow) -> Unit = {},
+    hunterCache: Map<String, SocialRepository.HunterProfile> = emptyMap(),
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -856,13 +904,45 @@ private fun ThreadView(
                 }
                 items(messages, key = { it.id }) { msg ->
                     val isMe = msg.sender_id == myUserId
-                    ChatBubble(
-                        text = msg.body,
-                        timestamp = formatTime(msg.created_at),
-                        isMe = isMe,
-                        imageUri = msg.image_uri,
-                        isRead = msg.read_at != null,
-                    )
+                    // Resolve reply-to sender name for display
+                    val replySenderName = if (msg.reply_to_message_id != null) {
+                        val repliedMsg = messages.firstOrNull { it.id == msg.reply_to_message_id }
+                        repliedMsg?.sender_id?.let { rid ->
+                            if (rid == myUserId) {
+                                AppRepository.instance.profile.value.name
+                            } else {
+                                hunterCache[rid]?.display_name ?: otherName
+                            }
+                        }
+                    } else null
+                    val replyBodyText = if (msg.reply_to_message_id != null) {
+                        messages.firstOrNull { it.id == msg.reply_to_message_id }?.body?.ifBlank { "[image]" }
+                    } else null
+                    // Resolve tagged user names from IDs
+                    val taggedNames = msg.tagged_user_ids.mapNotNull { tid ->
+                        if (tid == myUserId) {
+                            AppRepository.instance.profile.value.name
+                        } else {
+                            hunterCache[tid]?.display_name
+                        }
+                    }
+                    Box(
+                        modifier = Modifier.combinedClickable(
+                            onClick = {},
+                            onLongClick = { onLongPressMessage(msg) },
+                        ),
+                    ) {
+                        ChatBubble(
+                            text = msg.body,
+                            timestamp = formatTime(msg.created_at),
+                            isMe = isMe,
+                            imageUri = msg.image_uri,
+                            isRead = msg.read_at != null,
+                            replyToSenderName = replySenderName,
+                            replyToBody = replyBodyText,
+                            taggedUserNames = taggedNames,
+                        )
+                    }
                 }
             }
 
@@ -1803,4 +1883,25 @@ private fun formatTime(ts: String): String {
     val t = parseIso(ts)
     if (t == 0L) return ""
     return SimpleDateFormat("h:mm a", Locale.US).format(Date(t))
+}
+
+/**
+ * Parse @username patterns from the input text and match them against known
+ * member user IDs. Returns the list of user IDs that were tagged.
+ */
+private fun parseTaggedUserIds(
+    text: String,
+    memberIds: List<String>,
+    hunterCache: Map<String, SocialRepository.HunterProfile>,
+): List<String> {
+    if (memberIds.isEmpty() || text.isBlank()) return emptyList()
+    val tagged = mutableListOf<String>()
+    for (userId in memberIds) {
+        val name = hunterCache[userId]?.display_name ?: continue
+        val pattern = "@$name"
+        if (text.contains(pattern, ignoreCase = true)) {
+            tagged.add(userId)
+        }
+    }
+    return tagged.distinct()
 }

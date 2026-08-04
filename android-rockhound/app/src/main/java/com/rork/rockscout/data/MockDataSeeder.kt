@@ -76,6 +76,8 @@ object MockDataSeeder {
         val image_uri: String? = null,
         val read_at: String? = null,
         val created_at: String,
+        val reply_to_message_id: String? = null,
+        val tagged_user_ids: List<String> = emptyList(),
     )
 
     @Serializable

@@ -432,6 +432,8 @@ class SocialRepository private constructor() {
         val image_uri: String? = null,
         val read_at: String? = null,
         val created_at: String,
+        val reply_to_message_id: String? = null,
+        val tagged_user_ids: List<String> = emptyList(),
     )
 
     private val _threads = MutableStateFlow<List<ThreadRow>>(emptyList())
@@ -500,7 +502,7 @@ class SocialRepository private constructor() {
             _messages.value = rows
                 .filter { it.thread_id == threadId }
                 .sortedBy { it.created_at }
-                .map { MessageRow(it.id, it.thread_id, it.sender_id, it.body, it.image_uri, it.read_at, it.created_at) }
+                .map { MessageRow(it.id, it.thread_id, it.sender_id, it.body, it.image_uri, it.read_at, it.created_at, it.reply_to_message_id, it.tagged_user_ids) }
             updateMessageCounts()
         }.onFailure { Log.w("SocialRepository", "loadMessages failed", it) }
     }
@@ -512,7 +514,7 @@ class SocialRepository private constructor() {
             .filter { it.thread_id == threadId }
             .sortedByDescending { it.created_at }
             .firstOrNull()
-            ?.let { MessageRow(it.id, it.thread_id, it.sender_id, it.body, it.image_uri, it.read_at, it.created_at) }
+            ?.let { MessageRow(it.id, it.thread_id, it.sender_id, it.body, it.image_uri, it.read_at, it.created_at, it.reply_to_message_id, it.tagged_user_ids) }
     }
 
     /** Count unread messages in a thread for the current user. */
@@ -524,7 +526,13 @@ class SocialRepository private constructor() {
 
     /** Send a message in [threadId]. Also creates a notification for the
      *  other participant so they know there's a new message. */
-    suspend fun sendMessage(threadId: String, body: String, imageUri: String? = null): Result<Unit> {
+    suspend fun sendMessage(
+        threadId: String,
+        body: String,
+        imageUri: String? = null,
+        replyToMessageId: String? = null,
+        taggedUserIds: List<String> = emptyList(),
+    ): Result<Unit> {
         val me = currentUserId() ?: return Result.failure(IllegalStateException("Not signed in"))
         return runCatching {
             if (body.isBlank() && imageUri.isNullOrBlank()) return@runCatching
@@ -537,6 +545,8 @@ class SocialRepository private constructor() {
                 body = body.trim(),
                 image_uri = imageUri,
                 created_at = now,
+                reply_to_message_id = replyToMessageId,
+                tagged_user_ids = taggedUserIds,
             ))
             LocalDataStore.setTable(LocalDataStore.KEY_MESSAGES, rows)
             // Bump thread last_message_at.

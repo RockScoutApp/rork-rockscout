@@ -996,6 +996,124 @@ const HOW_TO_SECTIONS: HowToSection[] = [
       `Tap the bookmark icon on any park to save it to Favorite Spots for quick access.`,
     ],
   },
+  {
+    icon: Users,
+    accent: "hsl(270 50% 70%)",
+    title: "Group Chats",
+    shortLabel: "Group Chats",
+    category: "social-trade",
+    steps: [
+      `Open the Community screen and switch to the "Group Chats" tab to browse your existing group chats.`,
+      `Tap "Start a New Group Chat" to create one — enter a name, subject, max member count, profanity filter level (normal or strict), and an optional header image.`,
+      `Set a default scroll speed for the group: Normal (instant auto-scroll), Half (4-second delay), or Stop (no auto-scroll).`,
+      `Invite friends from your connections list — they get a popup to accept or decline the invite.`,
+      `Once accepted, they're added as a member and can send messages, images, and replies just like a private chat.`,
+      `The group creator can delete the group at any time — all members are notified and the chat is soft-deleted.`,
+      `Group chats support all the same features as private chats: image sending, reply threading, user tagging, and scroll speed controls.`,
+    ],
+  },
+  {
+    icon: MessageSquare,
+    accent: "hsl(48 86% 70%)",
+    title: "Reply Threading & User Tagging",
+    shortLabel: "Reply & Tag",
+    category: "social-trade",
+    steps: [
+      `Long-press any message in a private or group chat to reply to it.`,
+      `The original comment appears in a preview bar above your input box, showing who you're replying to and a snippet of their message.`,
+      `The tagged username (@username) is automatically inserted into your input box so the person knows they got a reply.`,
+      `Your reply shows indented under the original comment in the chat — both the sender and recipient see the threaded format.`,
+      `Type @username in any message to tag someone — their name appears in a bright Citrine pill so they know they were mentioned.`,
+      `Tags work in both private and group chats. In group chats, @username tags are matched against the member list.`,
+      `Tap the X on the reply preview bar to cancel a reply at any time before sending.`,
+    ],
+  },
+  {
+    icon: Zap,
+    accent: "hsl(190 90% 55%)",
+    title: "Scroll Speed Controls",
+    shortLabel: "Scroll Speed",
+    category: "social-trade",
+    steps: [
+      `In any chat (private or group), use the scroll speed controls below the message list.`,
+      `Normal: new messages auto-scroll instantly to the bottom.`,
+      `Half: new messages auto-scroll after a 4-second delay — useful when you're reading older messages.`,
+      `Stop: no auto-scroll — new messages appear but the view stays where you are.`,
+      `When you're scrolled up reading older messages, a "Current" button appears — tap it to jump instantly to the latest message.`,
+      `Each user's scroll speed preference is remembered per chat.`,
+    ],
+  },
+  {
+    icon: Bell,
+    accent: "hsl(4 70% 62%)",
+    title: "Drafts in Notifications",
+    shortLabel: "Drafts",
+    category: "account-premium",
+    steps: [
+      `When you're composing a message or email and navigate away without sending, RockScout automatically saves your draft.`,
+      `Unfinished chat drafts and email drafts appear as a notification row in the messages notification popup.`,
+      `Tap a draft notification to resume right where you left off — your text, recipients, and attachments are all preserved.`,
+      `Chat drafts are saved per thread, so you can have multiple drafts going at once.`,
+      `Email drafts (from the Ask an Expert flow) include selected museums, attached photos, and message body.`,
+      `Drafts are automatically deleted when you send the message or email.`,
+    ],
+  },
+  {
+    icon: Search,
+    accent: "hsl(210 76% 71%)",
+    title: "Compact Search Bars",
+    shortLabel: "Compact Search",
+    category: "tools-misc",
+    steps: [
+      `Search bars across the app collapse into compact single-row pills that expand on tap.`,
+      `This saves screen space while keeping search always accessible — no more tall search bars taking up half the screen.`,
+      `Tap the pill to expand the search field, type your query, and results update in real-time.`,
+      `Found on Community, Messenger, Specimens, Natural Wonders, Glossary, Dinosaur Dictionary, and more.`,
+    ],
+  },
+  {
+    icon: ShieldCheck,
+    accent: "hsl(4 70% 62%)",
+    title: "Profanity Warning System",
+    shortLabel: "Profanity Filter",
+    category: "social-trade",
+    steps: [
+      `RockScout uses a two-tier profanity filter to keep chat family-friendly.`,
+      `Tier 1 (common profanity): words like "fuck" are silently asterisked — no warning, just asterisks.`,
+      `Tier 2 (explicit language): explicit words are asterisked AND trigger a warning popup.`,
+      `The warning popup lets you know your message was censored and provides a support email (support@rockscout.app) for false positives.`,
+      `Three warnings automatically report the user. Five warnings trigger a second report. Six warnings result in a ban.`,
+      `Group chats can set a profanity filter level: "normal" or "strict" — strict catches more words.`,
+    ],
+  },
+  {
+    icon: Landmark,
+    accent: "hsl(30 52% 51%)",
+    title: "Museum Directory & Add Button",
+    shortLabel: "Museums",
+    category: "maps-locations",
+    steps: [
+      `Open the Rock & Gem Resources screen and switch to the "Museums" tab to browse a directory of rock, gem, and mineral museums.`,
+      `Filter museums by state, or use the compact search pill to find a museum by name.`,
+      `Each museum card shows the name, location, and a button for directions.`,
+      `Found a museum that isn't listed? Tap the "Add a Museum" button on the Museums tab to submit it.`,
+      `Enter the museum name, state, city, and any additional info — after review, it appears in the museum directory for every RockScout user to discover.`,
+    ],
+  },
+  {
+    icon: Users,
+    accent: "hsl(142 52% 54%)",
+    title: "Add Users to Private Chats",
+    shortLabel: "Add to Chat",
+    category: "social-trade",
+    steps: [
+      `In a private chat, tap the "Add User" icon (person with a plus) in the chat header.`,
+      `Select up to 5 users to add to the conversation from your friends list.`,
+      `Each invited user gets an accept/cancel popup — once they accept, they're part of the conversation.`,
+      `Added users get full messaging, image sharing, and reply threading support within the chat.`,
+      `The 5-user max keeps private chats intimate — for larger groups, create a Group Chat instead.`,
+    ],
+  },
 ];
 
 const HowToUse = () => {
@@ -1051,64 +1169,6 @@ const HowToUse = () => {
               Welcome to {SITE.name}! This guide walks you through every feature of the app — from AI rock identification to trading, social features, trip planning, and more. Tap any section below to read its step-by-step instructions.
             </p>
           </div>
-
-          {/* ── Icon Index — static visual reference ── */}
-          <div className="mt-8 rounded-2xl border border-border/60 bg-card/40 p-4 sm:mt-10 sm:p-6">
-            <h2 className="font-display text-lg font-bold text-foreground">
-              Icon Index
-            </h2>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Every button icon in the app with its name. Use the detailed guides below for step-by-step instructions.
-            </p>
-
-            {groupedSections.map(({ key, label, accent, sections }) => (
-              <div key={`icon-index-${key}`} className="mt-5">
-                {/* Category label */}
-                <div className="flex items-center gap-2">
-                  <span
-                    className="h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: accent }}
-                  />
-                  <span
-                    className="text-xs font-bold uppercase tracking-wide"
-                    style={{ color: accent }}
-                  >
-                    {label}
-                  </span>
-                </div>
-                {/* Static icon chips grid */}
-                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                  {sections.map((section) => (
-                    <div
-                      key={`icon-${section.title}`}
-                      className="flex items-center gap-2.5 rounded-lg border px-3 py-2.5"
-                      style={{
-                        borderColor: `color-mix(in srgb, ${section.accent} 22%, transparent)`,
-                        backgroundColor: `color-mix(in srgb, ${section.accent} 5%, transparent)`,
-                      }}
-                    >
-                      <span
-                        className="grid h-8 w-8 shrink-0 place-items-center rounded-lg ring-1"
-                        style={{
-                          backgroundColor: `color-mix(in srgb, ${section.accent} 15%, transparent)`,
-                          color: section.accent,
-                          boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${section.accent} 30%, transparent)`,
-                        }}
-                      >
-                        <section.icon className="h-4 w-4" />
-                      </span>
-                      <span className="text-xs font-semibold text-foreground">
-                        {section.shortLabel}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Divider */}
-          <hr className="mt-10 border-border/40" />
 
           {/* ── Detailed sections grouped by category ── */}
           {groupedSections.map(({ key, label, accent, sections }) => (

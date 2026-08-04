@@ -100,33 +100,6 @@ const FEATURES = [
   },
 ];
 
-const STEPS = [
-  {
-    n: "01",
-    icon: Camera,
-    title: "Snap a specimen",
-    body: "Open the field camera and point it at any rock, crystal, or mineral. No prep, no perfect lighting required.",
-  },
-  {
-    n: "02",
-    icon: Atom,
-    title: "Get a 5-source ID",
-    body: "The 5-source pipeline — database visual comparison, Claude Haiku, Claude Sonnet, Gemini 2.5 Pro, and web cross-check — all weigh in to give you a best-effort match in seconds."
-  },
-  {
-    n: "03",
-    icon: Gem,
-    title: "Save to your collection",
-    body: "Tag it with location, notes, and rarity. Build a wishlist of what you're hunting next. Level up as your catalog grows.",
-  },
-  {
-    n: "04",
-    icon: MessageCircle,
-    title: "Trade with the community",
-    body: "List duplicates on the trade board, message other collectors, and swap specimens — all in a moderated, family-friendly space.",
-  },
-];
-
 const STATS = [
   { value: "900+", label: "Specimens in the database" },
   { value: "50", label: "US states & territories mapped" },
@@ -656,39 +629,57 @@ const FEATURES_LIST = [
     desc: "When a signing conflict is detected during an update, a friendly dialog explains that the old version must be uninstalled and offers a button to trigger the system uninstall flow. After reinstalling and signing back in, all your settings are restored from the cloud exactly as they were. A confirmation dialog on the logout button prevents accidental sign-outs, and your collections, captures, friends, and achievements are tied to your account — not your device.",
     items: ["Signing conflict dialog", "Settings restored after reinstall", "Logout confirmation", "Account-tied data"],
   },
+
+  // ── Group Chats & Messaging ──
+  {
+    icon: MessageCircle,
+    title: "Group chats",
+    desc: "Create group chats with a name, subject, member cap, header image, and profanity filter level (normal or strict). Invite friends — they get a popup to accept or decline. The creator can delete the group at any time. Group chats support all the same features as private chats: image sending, reply threading, user tagging, and scroll speed controls.",
+    items: ["Create & name groups", "Subject & header image", "Member caps", "Profanity filter levels", "Invite accept/decline", "Creator delete"],
+  },
+  {
+    icon: Send,
+    title: "Reply threading & user tagging",
+    desc: "Long-press any message to reply to it — the original comment appears in a preview bar above your input, and your reply shows indented under the original. Type @username to tag someone — their name appears in a bright Citrine pill so they know they got a reply. Tags work in both private and group chats.",
+    items: ["Long-press to reply", "Reply preview bar", "Indented reply format", "@username tagging", "Citrine pill highlights"],
+  },
+  {
+    icon: Zap,
+    title: "Scroll speed controls",
+    desc: "Control how the chat auto-scrolls to new messages: Normal (instant), Half (4-second delay), or Stop (no auto-scroll). When you're scrolled up reading older messages, a Current button jumps you to the latest message instantly.",
+    items: ["Normal / Half / Stop", "Current jump button", "Per-user preference"],
+  },
+  {
+    icon: Bell,
+    title: "Drafts in notifications",
+    desc: "Unfinished email and chat drafts are automatically saved and appear as a notification row. Tap a draft to resume right where you left off — never lose a half-typed message again.",
+    items: ["Auto-saved chat drafts", "Email draft persistence", "Resume from notifications"],
+  },
+  {
+    icon: HelpCircle,
+    title: "Compact search bars",
+    desc: "Search bars across the app collapse into compact single-row pills that expand on tap — saving screen space while keeping search always accessible. Found on Community, Messenger, Specimens, Natural Wonders, Glossary, Dinosaur Dictionary, and more.",
+    items: ["Collapsible pills", "Tap to expand", "Saves screen space"],
+  },
+  {
+    icon: ShieldCheck,
+    title: "Profanity warning system",
+    desc: "A two-tier profanity filter keeps chat family-friendly. Common profanity is silently asterisked. Explicit language is asterisked and triggers a warning popup. Three warnings auto-report the user, five trigger a second report, and six result in a ban. False positives can be reported via support email.",
+    items: ["Two-tier filter", "Silent asterisks", "Warning popups", "Auto-report at 3", "Ban at 6", "False-positive support"],
+  },
+  {
+    icon: Landmark,
+    title: "Museum add button",
+    desc: "Browse a directory of rock, gem, and mineral museums across the country. Found a museum that isn't listed? Use the Add a Museum button on the Museums tab to submit it — after review, it appears in the museum directory for every RockScout user to discover.",
+    items: ["Museum directory", "State filter", "Add a Museum button", "User-submitted", "Reviewed before going live"],
+  },
+  {
+    icon: Users,
+    title: "Add users to private chats",
+    desc: "Add up to 5 users to a private chat thread. The invited user gets an accept/cancel popup — once accepted, they're part of the conversation with full messaging, image sharing, and reply threading support.",
+    items: ["5-user max", "Accept/cancel popup", "Full messaging support"],
+  },
 ];
-
-const HowItWorks = () => (
-  <section className="relative border-y border-border/40 bg-card/20 py-16 sm:py-24">
-    <div className="mx-auto max-w-6xl px-4 sm:px-6">
-      <div className="max-w-2xl">
-        <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-          <span className="h-px w-8 bg-primary/50" /> How it works
-        </span>
-        <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-          From pocket to collection in 4 taps
-        </h2>
-      </div>
-
-      <ol className="mt-10 grid gap-4 sm:mt-14 sm:gap-6 md:grid-cols-4">
-        {STEPS.map((s) => (
-          <li key={s.n} className="relative">
-            <div className="field-border rounded-3xl bg-background/40 p-5 transition-colors hover:border-primary/40 sm:p-6">
-              <div className="flex items-center gap-3">
-                <span className="step-numeral font-display text-4xl font-black leading-none sm:text-5xl">{s.n}</span>
-                <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/25 sm:h-10 sm:w-10">
-                  <s.icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                </span>
-              </div>
-              <h3 className="mt-4 font-display text-lg font-semibold sm:text-xl">{s.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </div>
-  </section>
-);
 
 const ScreenshotStrip = () => (
   <section className="py-16 sm:py-24">
@@ -1019,9 +1010,6 @@ const Landing = () => {
       <Hero />
       <SpecimenMarquee />
       <Features />
-      <SpecimenMarquee reverse />
-      <HowItWorks />
-      <SpecimenMarquee />
       <ScreenshotStrip />
       <SpecimenMarquee reverse />
       <FieldStories />

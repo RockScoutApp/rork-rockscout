@@ -9,6 +9,9 @@ import {
   X,
   Loader2,
   Send,
+  MessageSquare,
+  Group as GroupIcon,
+  Zap,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,6 +27,8 @@ import {
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { CompactSearchPill } from "@/components/CompactSearchPill";
+import { SculptedCard } from "@/components/sculpted";
 
 interface Post {
   id: string;
@@ -56,6 +61,28 @@ interface Comment {
   author_name: string;
 }
 
+interface GroupChat {
+  id: string;
+  name: string;
+  subject: string;
+  creator_id: string;
+  max_members: number | null;
+  profanity_filter_level: string;
+  header_image_url: string | null;
+  scroll_speed_setting: string;
+  created_at: string;
+}
+
+interface GroupChatMember {
+  id: string;
+  group_chat_id: string;
+  user_id: string;
+  joined_at: string;
+  role: string;
+}
+
+type Tab = "posts" | "groups";
+
 const formatTime = (iso: string): string => {
   const d = new Date(iso);
   const diff = Date.now() - d.getTime();
@@ -72,10 +99,22 @@ const formatTime = (iso: string): string => {
 export default function Community() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState<Tab>("posts");
   const [showEditor, setShowEditor] = useState(false);
   const [form, setForm] = useState({ title: "", caption: "", location_text: "" });
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
   const [commentText, setCommentText] = useState("");
+  const [search, setSearch] = useState("");
+
+  // Group chat state
+  const [showGroupCreate, setShowGroupCreate] = useState(false);
+  const [groupForm, setGroupForm] = useState({
+    name: "",
+    subject: "",
+    max_members: 20,
+    profanity_filter_level: "normal" as "normal" | "strict",
+    scroll_speed_setting: "normal" as "normal" | "half" | "stop",
+  });
 
   const { data: posts, isLoading } = useQuery<PostWithMeta[]>({
     queryKey: ["community-posts", user?.id],
@@ -175,6 +214,47 @@ export default function Community() {
     enabled: !!expandedPost,
   });
 
+  // ── Group chats query ──
+  const { data: groupChats, isLoading: groupsLoading } = useQuery<
+    (GroupChat & { member_count: number })[]
+  >({
+    queryKey: ["group-chats", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data: memberships, error: mErr } = await supabase
+        .from("group_chat_members")
+        .select("group_chat_id")
+        .eq("user_id", user.id);
+      if (mErr) throw mErr;
+      const chatIds = (memberships ?? []).map((m) => m.group_chat_id);
+      if (chatIds.length === 0) return [];
+
+      const { data: chats, error: cErr } = await supabase
+        .from("group_chats")
+        .select("*")
+        .in("id", chatIds)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
+      if (cErr) throw cErr;
+
+      const { data: members } = await supabase
+        .from("group_chat_members")
+        .select("group_chat_id")
+        .in("group_chat_id", chatIds);
+
+      const countMap = new Map<string, number>();
+      (members ?? []).forEach((m) => {
+        countMap.set(m.group_chat_id, (countMap.get(m.group_chat_id) ?? 0) + 1);
+      });
+
+      return (chats ?? []).map((c) => ({
+        ...(c as GroupChat),
+        member_count: countMap.get((c as GroupChat).id) ?? 0,
+      }));
+    },
+    enabled: !!user && activeTab === "groups",
+  });
+
   const createPost = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Sign in to post");
@@ -257,6 +337,46 @@ export default function Community() {
       toast.error(err instanceof Error ? err.message : "Failed to comment"),
   });
 
+  const createGroupChat = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Sign in to create a group chat");
+      if (!groupForm.name.trim()) throw new Error("Group name is required");
+      const chatId = `gc-${crypto.randomUUID()}`;
+      const { error: cErr } = await supabase.from("group_chats").insert({
+        id: chatId,
+        name: groupForm.name.trim(),
+        subject: groupForm.subject.trim(),
+        creator_id: user.id,
+        max_members: groupForm.max_members || null,
+        profanity_filter_level: groupForm.profanity_filter_level,
+        scroll_speed_setting: groupForm.scroll_speed_setting,
+      });
+      if (cErr) throw cErr;
+      const { error: mErr } = await supabase
+        .from("group_chat_members")
+        .insert({
+          group_chat_id: chatId,
+          user_id: user.id,
+          role: "creator",
+        });
+      if (mErr) throw mErr;
+    },
+    onSuccess: () => {
+      toast.success("Group chat created!");
+      queryClient.invalidateQueries({ queryKey: ["group-chats"] });
+      setShowGroupCreate(false);
+      setGroupForm({
+        name: "",
+        subject: "",
+        max_members: 20,
+        profanity_filter_level: "normal",
+        scroll_speed_setting: "normal",
+      });
+    },
+    onError: (err) =>
+      toast.error(err instanceof Error ? err.message : "Failed to create group"),
+  });
+
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
@@ -277,163 +397,303 @@ export default function Community() {
             Share your finds and connect with fellow rockhounds
           </p>
         </div>
-        <Button size="sm" onClick={() => setShowEditor(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Post
-        </Button>
-      </div>
-
-      {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        </div>
-      ) : posts && posts.length > 0 ? (
-        <div className="space-y-4">
-          {posts.map((post) => (
-            <div
-              key={post.id}
-              className="space-y-3 dark-card sculpted-raised rounded-xl p-4"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">{post.owner_emoji}</span>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">
-                      {post.owner_name}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatTime(post.created_at)}
-                      {post.location_text && ` · ${post.location_text}`}
-                    </p>
-                  </div>
-                </div>
-                {post.user_id === user.id && (
-                  <button
-                    onClick={() => deletePost.mutate(post.id)}
-                    className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                    aria-label="Delete post"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-
-              {post.title && (
-                <h3 className="font-display text-base font-semibold text-foreground">
-                  {post.title}
-                </h3>
-              )}
-
-              {post.caption && (
-                <p className="text-sm leading-relaxed text-foreground/80">
-                  {post.caption}
-                </p>
-              )}
-
-              {post.image_uri && (
-                <img
-                  src={post.image_uri}
-                  alt={post.title || "Community post"}
-                  className="max-h-80 w-full rounded-lg object-cover"
-                />
-              )}
-
-              <div className="flex items-center gap-4 border-t border-border pt-2">
-                <button
-                  onClick={() => toggleLike.mutate(post)}
-                  className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-primary"
-                >
-                  <Heart
-                    className={`h-4 w-4 ${
-                      post.liked_by_me ? "fill-primary text-primary" : ""
-                    }`}
-                  />
-                  {post.like_count > 0 && post.like_count}
-                </button>
-                <button
-                  onClick={() =>
-                    setExpandedPost(
-                      expandedPost === post.id ? null : post.id,
-                    )
-                  }
-                  className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  {post.comment_count > 0 && post.comment_count}
-                </button>
-              </div>
-
-              {expandedPost === post.id && (
-                <div className="space-y-3 border-t border-border pt-3">
-                  {comments && comments.length > 0 ? (
-                    <div className="space-y-2">
-                      {comments.map((c) => (
-                        <div key={c.id} className="flex gap-2">
-                          <span className="text-base">{c.author_emoji}</span>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm">
-                              <span className="font-medium text-foreground">
-                                {c.author_name}
-                              </span>{" "}
-                              <span className="text-muted-foreground">
-                                {c.body}
-                              </span>
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatTime(c.created_at)}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-muted-foreground">
-                      No comments yet.
-                    </p>
-                  )}
-                  <div className="flex gap-2">
-                    <Input
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          addComment.mutate();
-                        }
-                      }}
-                      placeholder="Write a comment..."
-                      className="flex-1"
-                    />
-                    <Button
-                      size="sm"
-                      onClick={() => addComment.mutate()}
-                      disabled={!commentText.trim() || addComment.isPending}
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
-          <Users className="h-8 w-8 text-muted-foreground" />
-          <p className="max-w-sm text-sm text-muted-foreground">
-            No posts yet. Share a find, a field trip story, or a specimen you're
-            proud of with the community.
-          </p>
+        {activeTab === "posts" ? (
+          <Button size="sm" onClick={() => setShowEditor(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Post
+          </Button>
+        ) : (
           <Button
-            variant="outline"
             size="sm"
-            onClick={() => setShowEditor(true)}
+            onClick={() => setShowGroupCreate(true)}
             className="gap-2"
           >
             <Plus className="h-4 w-4" />
-            Share a post
+            New Group Chat
           </Button>
-        </div>
+        )}
+      </div>
+
+      {/* Tab switcher */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setActiveTab("posts")}
+          className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+            activeTab === "posts"
+              ? "bg-primary/15 text-primary ring-1 ring-primary/30"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <MessageSquare className="h-4 w-4" />
+          Posts
+        </button>
+        <button
+          onClick={() => setActiveTab("groups")}
+          className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all ${
+            activeTab === "groups"
+              ? "bg-primary/15 text-primary ring-1 ring-primary/30"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <GroupIcon className="h-4 w-4" />
+          Group Chats
+        </button>
+      </div>
+
+      {/* Compact search */}
+      <CompactSearchPill
+        value={search}
+        onChange={setSearch}
+        placeholder={
+          activeTab === "posts" ? "Search posts…" : "Search group chats…"
+        }
+      />
+
+      {activeTab === "posts" ? (
+        <>
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : posts && posts.length > 0 ? (
+            <div className="space-y-4">
+              {posts
+                .filter((p) => {
+                  if (!search) return true;
+                  const q = search.toLowerCase();
+                  return (
+                    p.title?.toLowerCase().includes(q) ||
+                    p.caption?.toLowerCase().includes(q) ||
+                    p.owner_name?.toLowerCase().includes(q)
+                  );
+                })
+                .map((post) => (
+                  <div
+                    key={post.id}
+                    className="space-y-3 dark-card sculpted-raised rounded-xl p-4"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">{post.owner_emoji}</span>
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">
+                            {post.owner_name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatTime(post.created_at)}
+                            {post.location_text && ` · ${post.location_text}`}
+                          </p>
+                        </div>
+                      </div>
+                      {post.user_id === user.id && (
+                        <button
+                          onClick={() => deletePost.mutate(post.id)}
+                          className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          aria-label="Delete post"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+
+                    {post.title && (
+                      <h3 className="font-display text-base font-semibold text-foreground">
+                        {post.title}
+                      </h3>
+                    )}
+
+                    {post.caption && (
+                      <p className="text-sm leading-relaxed text-foreground/80">
+                        {post.caption}
+                      </p>
+                    )}
+
+                    {post.image_uri && (
+                      <img
+                        src={post.image_uri}
+                        alt={post.title || "Community post"}
+                        className="max-h-80 w-full rounded-lg object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/placeholder.svg";
+                        }}
+                      />
+                    )}
+
+                    <div className="flex items-center gap-4 border-t border-border pt-2">
+                      <button
+                        onClick={() => toggleLike.mutate(post)}
+                        className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-primary"
+                      >
+                        <Heart
+                          className={`h-4 w-4 ${
+                            post.liked_by_me ? "fill-primary text-primary" : ""
+                          }`}
+                        />
+                        {post.like_count > 0 && post.like_count}
+                      </button>
+                      <button
+                        onClick={() =>
+                          setExpandedPost(
+                            expandedPost === post.id ? null : post.id,
+                          )
+                        }
+                        className="flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        {post.comment_count > 0 && post.comment_count}
+                      </button>
+                    </div>
+
+                    {expandedPost === post.id && (
+                      <div className="space-y-3 border-t border-border pt-3">
+                        {comments && comments.length > 0 ? (
+                          <div className="space-y-2">
+                            {comments.map((c) => (
+                              <div key={c.id} className="flex gap-2">
+                                <span className="text-base">{c.author_emoji}</span>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm">
+                                    <span className="font-medium text-foreground">
+                                      {c.author_name}
+                                    </span>{" "}
+                                    <span className="text-muted-foreground">
+                                      {c.body}
+                                    </span>
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatTime(c.created_at)}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">
+                            No comments yet.
+                          </p>
+                        )}
+                        <div className="flex gap-2">
+                          <Input
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                addComment.mutate();
+                              }
+                            }}
+                            placeholder="Write a comment..."
+                            className="flex-1"
+                          />
+                          <Button
+                            size="sm"
+                            onClick={() => addComment.mutate()}
+                            disabled={!commentText.trim() || addComment.isPending}
+                          >
+                            <Send className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
+              <Users className="h-8 w-8 text-muted-foreground" />
+              <p className="max-w-sm text-sm text-muted-foreground">
+                No posts yet. Share a find, a field trip story, or a specimen
+                you're proud of with the community.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowEditor(true)}
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Share a post
+              </Button>
+            </div>
+          )}
+        </>
+      ) : (
+        /* ── Group Chats tab ── */
+        <>
+          {groupsLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : groupChats && groupChats.length > 0 ? (
+            <div className="space-y-2">
+              {groupChats
+                .filter((gc) => {
+                  if (!search) return true;
+                  const q = search.toLowerCase();
+                  return (
+                    gc.name?.toLowerCase().includes(q) ||
+                    gc.subject?.toLowerCase().includes(q)
+                  );
+                })
+                .map((gc) => (
+                  <SculptedCard
+                    key={gc.id}
+                    accent="aqua"
+                    interactive
+                    className="overflow-hidden"
+                  >
+                    <div className="flex items-center gap-3 p-3.5">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xl ring-1 ring-primary/25">
+                        {gc.header_image_url ? (
+                          <img
+                            src={gc.header_image_url}
+                            alt={gc.name}
+                            className="h-full w-full rounded-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src =
+                                "/placeholder.svg";
+                            }}
+                          />
+                        ) : (
+                          "👥"
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold text-foreground">
+                          {gc.name}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {gc.subject || "No subject"}
+                          {gc.max_members && ` · ${gc.member_count}/${gc.max_members} members`}
+                          {!gc.max_members && ` · ${gc.member_count} members`}
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                        {gc.profanity_filter_level === "strict" ? "Strict" : "Normal"}
+                      </span>
+                    </div>
+                  </SculptedCard>
+                ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
+              <GroupIcon className="h-8 w-8 text-muted-foreground" />
+              <p className="max-w-sm text-sm text-muted-foreground">
+                No group chats yet. Create one to start a group conversation
+                with fellow rockhounds.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowGroupCreate(true)}
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Start a Group Chat
+              </Button>
+            </div>
+          )}
+        </>
       )}
 
       {/* Post editor */}
@@ -492,6 +752,107 @@ export default function Community() {
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 "Post"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Group chat creator */}
+      <Dialog open={showGroupCreate} onOpenChange={setShowGroupCreate}>
+        <DialogContent aria-describedby={undefined} className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Start a New Group Chat</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="gc-name">Group Name</Label>
+              <Input
+                id="gc-name"
+                value={groupForm.name}
+                onChange={(e) =>
+                  setGroupForm((f) => ({ ...f, name: e.target.value }))
+                }
+                placeholder="e.g. Arizona Rockhounds"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="gc-subject">Subject (optional)</Label>
+              <Input
+                id="gc-subject"
+                value={groupForm.subject}
+                onChange={(e) =>
+                  setGroupForm((f) => ({ ...f, subject: e.target.value }))
+                }
+                placeholder="e.g. Quartz collecting trips"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="gc-max">Max Members</Label>
+                <Input
+                  id="gc-max"
+                  type="number"
+                  value={groupForm.max_members}
+                  onChange={(e) =>
+                    setGroupForm((f) => ({
+                      ...f,
+                      max_members: parseInt(e.target.value) || 0,
+                    }))
+                  }
+                  min={2}
+                  max={100}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="gc-filter">Profanity Filter</Label>
+                <select
+                  id="gc-filter"
+                  value={groupForm.profanity_filter_level}
+                  onChange={(e) =>
+                    setGroupForm((f) => ({
+                      ...f,
+                      profanity_filter_level: e.target.value as "normal" | "strict",
+                    }))
+                  }
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm text-foreground"
+                >
+                  <option value="normal">Normal</option>
+                  <option value="strict">Strict</option>
+                </select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="gc-scroll">Default Scroll Speed</Label>
+              <select
+                id="gc-scroll"
+                value={groupForm.scroll_speed_setting}
+                onChange={(e) =>
+                  setGroupForm((f) => ({
+                    ...f,
+                    scroll_speed_setting: e.target.value as "normal" | "half" | "stop",
+                  }))
+                }
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm text-foreground"
+              >
+                <option value="normal">Normal (instant)</option>
+                <option value="half">Half (4s delay)</option>
+                <option value="stop">Stop (no auto-scroll)</option>
+              </select>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowGroupCreate(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => createGroupChat.mutate()}
+              disabled={createGroupChat.isPending || !groupForm.name.trim()}
+            >
+              {createGroupChat.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Create Group Chat"
               )}
             </Button>
           </DialogFooter>

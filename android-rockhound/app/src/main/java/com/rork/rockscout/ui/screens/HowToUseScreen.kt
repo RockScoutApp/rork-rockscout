@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Diamond
@@ -1025,6 +1026,124 @@ private val howToSections: List<HowToSection> = listOf(
             "Browse over 250 national and state parks — including all 62 US National Parks — that are dig-friendly or geologically significant.",
             "Each park shows what rocks and minerals you can find there, plus visitor info and common wildlife.",
             "Tap the bookmark icon on any park to save it to Favorite Spots for quick access.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Group,
+        accent = Amethyst,
+        title = "Group Chats",
+        shortLabel = "Group Chats",
+        category = HowToCategory.SOCIAL_TRADE,
+        steps = listOf(
+            "Open the Community screen and switch to the \"Group Chats\" tab to browse your existing group chats.",
+            "Tap \"Start a New Group Chat\" to create one — enter a name, subject, max member count, profanity filter level (normal or strict), and an optional header image.",
+            "Set a default scroll speed for the group: Normal (instant auto-scroll), Half (4-second delay), or Stop (no auto-scroll).",
+            "Invite friends from your connections list — they get a popup to accept or decline the invite.",
+            "Once accepted, they're added as a member and can send messages, images, and replies just like a private chat.",
+            "The group creator can delete the group at any time — all members are notified and the chat is soft-deleted.",
+            "Group chats support all the same features as private chats: image sending, reply threading, user tagging, and scroll speed controls.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Forum,
+        accent = Citrine,
+        title = "Reply Threading & User Tagging",
+        shortLabel = "Reply & Tag",
+        category = HowToCategory.SOCIAL_TRADE,
+        steps = listOf(
+            "Long-press any message in a private or group chat to reply to it.",
+            "The original comment appears in a preview bar above your input box, showing who you're replying to and a snippet of their message.",
+            "The tagged username (@username) is automatically inserted into your input box so the person knows they got a reply.",
+            "Your reply shows indented under the original comment in the chat — both the sender and recipient see the threaded format.",
+            "Type @username in any message to tag someone — their name appears in a bright Citrine pill so they know they were mentioned.",
+            "Tags work in both private and group chats. In group chats, @username tags are matched against the member list.",
+            "Tap the X on the reply preview bar to cancel a reply at any time before sending.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Bolt,
+        accent = Color(0xFF4FC3F7),
+        title = "Scroll Speed Controls",
+        shortLabel = "Scroll Speed",
+        category = HowToCategory.SOCIAL_TRADE,
+        steps = listOf(
+            "In any chat (private or group), use the scroll speed controls below the message list.",
+            "Normal: new messages auto-scroll instantly to the bottom.",
+            "Half: new messages auto-scroll after a 4-second delay — useful when you're reading older messages.",
+            "Stop: no auto-scroll — new messages appear but the view stays where you are.",
+            "When you're scrolled up reading older messages, a \"Current\" button appears — tap it to jump instantly to the latest message.",
+            "Each user's scroll speed preference is remembered per chat.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Notifications,
+        accent = Color(0xFFE2574C),
+        title = "Drafts in Notifications",
+        shortLabel = "Drafts",
+        category = HowToCategory.ACCOUNT_PREMIUM,
+        steps = listOf(
+            "When you're composing a message or email and navigate away without sending, RockScout automatically saves your draft.",
+            "Unfinished chat drafts and email drafts appear as a notification row in the messages notification popup.",
+            "Tap a draft notification to resume right where you left off — your text, recipients, and attachments are all preserved.",
+            "Chat drafts are saved per thread, so you can have multiple drafts going at once.",
+            "Email drafts (from the Ask an Expert flow) include selected museums, attached photos, and message body.",
+            "Drafts are automatically deleted when you send the message or email.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Search,
+        accent = Color(0xFF7CB5EC),
+        title = "Compact Search Bars",
+        shortLabel = "Compact Search",
+        category = HowToCategory.TOOLS_MISC,
+        steps = listOf(
+            "Search bars across the app collapse into compact single-row pills that expand on tap.",
+            "This saves screen space while keeping search always accessible — no more tall search bars taking up half the screen.",
+            "Tap the pill to expand the search field, type your query, and results update in real-time.",
+            "Found on Community, Messenger, Specimens, Natural Wonders, Glossary, Dinosaur Dictionary, and more.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Security,
+        accent = Color(0xFFE2574C),
+        title = "Profanity Warning System",
+        shortLabel = "Profanity Filter",
+        category = HowToCategory.SOCIAL_TRADE,
+        steps = listOf(
+            "RockScout uses a two-tier profanity filter to keep chat family-friendly.",
+            "Tier 1 (common profanity): words like \"fuck\" are silently asterisked — no warning, just asterisks.",
+            "Tier 2 (explicit language): explicit words are asterisked AND trigger a warning popup.",
+            "The warning popup lets you know your message was censored and provides a support email (support@rockscout.app) for false positives.",
+            "Three warnings automatically report the user. Five warnings trigger a second report. Six warnings result in a ban.",
+            "Group chats can set a profanity filter level: \"normal\" or \"strict\" — strict catches more words.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.AccountBox,
+        accent = Color(0xFFB87333),
+        title = "Museum Directory & Add Button",
+        shortLabel = "Museums",
+        category = HowToCategory.MAPS_LOCATIONS,
+        steps = listOf(
+            "Open the Rock & Gem Resources screen and switch to the \"Museums\" tab to browse a directory of rock, gem, and mineral museums.",
+            "Filter museums by state, or use the compact search pill to find a museum by name.",
+            "Each museum card shows the name, location, and a button for directions.",
+            "Found a museum that isn't listed? Tap the \"Add a Museum\" button on the Museums tab to submit it.",
+            "Enter the museum name, state, city, and any additional info — after review, it appears in the museum directory for every RockScout user to discover.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.PersonAdd,
+        accent = Success,
+        title = "Add Users to Private Chats",
+        shortLabel = "Add to Chat",
+        category = HowToCategory.SOCIAL_TRADE,
+        steps = listOf(
+            "In a private chat, tap the \"Add User\" icon (person with a plus) in the chat header.",
+            "Select up to 5 users to add to the conversation from your friends list.",
+            "Each invited user gets an accept/cancel popup — once they accept, they're part of the conversation.",
+            "Added users get full messaging, image sharing, and reply threading support within the chat.",
+            "The 5-user max keeps private chats intimate — for larger groups, create a Group Chat instead.",
         ),
     ),
 )

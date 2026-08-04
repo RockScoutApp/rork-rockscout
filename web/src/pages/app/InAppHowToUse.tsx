@@ -23,6 +23,10 @@ import {
   CloudUpload,
   RefreshCw,
   ShieldCheck,
+  MessageSquare,
+  Search,
+  Landmark,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -131,6 +135,46 @@ const SECTIONS: { title: string; icon: typeof Camera; body: string }[] = [
     title: "Search Near Me",
     icon: Locate,
     body: "Tap \"Search Near Me\" on the Dig Sites section to run a web search for rock-related places near your GPS location. Searches 50 miles first, then expands to 100 miles automatically. Results open in your browser.",
+  },
+  {
+    title: "Group Chats",
+    icon: Users,
+    body: "Create group chats with a name, subject, member cap, header image, and profanity filter level (normal or strict). Invite friends from your connections — they get a popup to accept or decline. The creator can delete the group at any time. Group chats support image sending, reply threading, user tagging, and scroll speed controls.",
+  },
+  {
+    title: "Reply Threading & User Tagging",
+    icon: MessageSquare,
+    body: "Long-press any message to reply to it — the original comment appears in a preview bar above your input, and the tagged username (@username) is inserted automatically. Your reply shows indented under the original. Type @username in any message to tag someone — their name appears in a bright Citrine pill so they know they were mentioned.",
+  },
+  {
+    title: "Scroll Speed Controls",
+    icon: Zap,
+    body: "Control how the chat auto-scrolls to new messages: Normal (instant), Half (4-second delay), or Stop (no auto-scroll). When you're scrolled up reading older messages, a Current button jumps you to the latest message instantly.",
+  },
+  {
+    title: "Drafts in Notifications",
+    icon: Clock,
+    body: "Unfinished email and chat drafts are automatically saved and appear as a notification row. Tap a draft to resume right where you left off — your text, recipients, and attachments are all preserved. Drafts are deleted when you send the message.",
+  },
+  {
+    title: "Compact Search Bars",
+    icon: Search,
+    body: "Search bars across the app collapse into compact single-row pills that expand on tap — saving screen space while keeping search always accessible. Found on Community, Messenger, Specimens, Natural Wonders, Glossary, Dinosaur Dictionary, and more.",
+  },
+  {
+    title: "Profanity Warning System",
+    icon: ShieldCheck,
+    body: "A two-tier profanity filter keeps chat family-friendly. Common profanity is silently asterisked. Explicit language is asterisked and triggers a warning popup. Three warnings auto-report the user, five trigger a second report, and six result in a ban. False positives can be reported via support@rockscout.app.",
+  },
+  {
+    title: "Museum Directory & Add Button",
+    icon: Landmark,
+    body: "Browse a directory of rock, gem, and mineral museums on the Museums tab of Rock & Gem Resources. Filter by state or search by name. Found a museum that isn't listed? Tap the Add a Museum button to submit it — after review, it appears in the directory for every RockScout user.",
+  },
+  {
+    title: "Add Users to Private Chats",
+    icon: Users,
+    body: "Add up to 5 users to a private chat thread. Tap the Add User icon in the chat header, select friends from your list, and each invited user gets an accept/cancel popup. Once accepted, they're part of the conversation with full messaging, image sharing, and reply threading support.",
   },
 ];
 

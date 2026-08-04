@@ -2,7 +2,7 @@
 // Caches the app shell so the site still loads with no connection.
 // Network-first for navigation requests (fresh content when online),
 // cache-first for static assets.
-const CACHE_NAME = "rockscout-v17";
+const CACHE_NAME = "rockscout-v18";
 const TILE_CACHE = "rockscout-tiles-v1";
 const IMAGE_CACHE = "rockscout-images-v1";
 const LOCAL_IMAGE_CACHE = "rockscout-local-images-v1";
@@ -21,6 +21,8 @@ const SHELL_ASSETS = [
   "/pwa-192.png",
   "/pwa-512.png",
   "/images/app-icon.webp",
+  "/images/rockscout-hero-logo.webp",
+  "/placeholder.svg",
 ];
 const TILE_HOSTS = [
   "tile.openstreetmap.org",
