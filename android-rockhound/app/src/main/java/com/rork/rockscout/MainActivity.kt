@@ -30,6 +30,7 @@ import androidx.compose.runtime.LaunchedEffect
 class MainActivity : ComponentActivity() {
 
     private val deepLinkState = mutableStateOf<Uri?>(null)
+    private val sharedImageState = mutableStateOf<Uri?>(null)
 
     /**
      * Android 13+ drops every notification the app posts until POST_NOTIFICATIONS
@@ -61,6 +62,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         requestNotificationPermissionIfNeeded()
         deepLinkState.value = intent?.data
+        handleSharedImageIntent(intent)
         setContent {
             AppTheme {
                 val showSplash = rememberSaveable { mutableStateOf(true) }
@@ -71,7 +73,9 @@ class MainActivity : ComponentActivity() {
                 } else {
                     AppNavigation(
                         deepLinkUri = deepLinkState.value,
+                        sharedImageUri = sharedImageState.value,
                         onDeepLinkConsumed = { deepLinkState.value = null },
+                        onSharedImageConsumed = { sharedImageState.value = null },
                     )
                 }
             }
@@ -126,5 +130,27 @@ class MainActivity : ComponentActivity() {
         // (including NavController state), which causes the app to freeze
         // when returning from an external browser/app via the back button.
         intent.data?.let { deepLinkState.value = it }
+        handleSharedImageIntent(intent)
+    }
+
+    /** Extract an image URI from an ACTION_SEND intent (share-to-app from
+     *  external apps like email, Facebook, Messages, etc.). */
+    private fun handleSharedImageIntent(intent: Intent?) {
+        if (intent?.action == Intent.ACTION_SEND) {
+            val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+            if (uri != null) {
+                // Grant persistent read permission so we can copy the file later
+                try {
+                    contentResolver.takePersistableUriPermission(
+                        uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                    )
+                } catch (_: SecurityException) {
+                    // Some providers don't support persistable permissions —
+                    // the temporary grant from the share sheet is sufficient.
+                }
+                sharedImageState.value = uri
+            }
+        }
     }
 }

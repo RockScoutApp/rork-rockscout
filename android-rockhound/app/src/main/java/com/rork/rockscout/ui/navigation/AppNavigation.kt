@@ -51,6 +51,7 @@ import com.rork.rockscout.ui.screens.RocksAreAmazingScreen
 import com.rork.rockscout.ui.screens.ArtifactsScreen
 import com.rork.rockscout.ui.screens.ArtifactDetailScreen
 import com.rork.rockscout.ui.screens.SavedImagesScreen
+import com.rork.rockscout.ui.screens.ImageEnhancerScreen
 import com.rork.rockscout.ui.screens.MeteoriteHuntingScreen
 import com.rork.rockscout.ui.screens.ContactUsScreen
 import com.rork.rockscout.ui.screens.PaywallScreen
@@ -88,6 +89,7 @@ import kotlinx.coroutines.launch
 import com.rork.rockscout.ui.components.AccountDeletedPopup
 import com.rork.rockscout.ui.components.NightModeOverlay
 import com.rork.rockscout.ui.components.ReportWarningDialog
+import com.rork.rockscout.ui.components.SharedImageDialog
 import com.rork.rockscout.ui.screens.DeveloperConsoleScreen
 import com.rork.rockscout.ui.screens.DiscoverHuntersScreen
 import com.rork.rockscout.ui.screens.SignInScreen
@@ -148,6 +150,7 @@ object Routes {
     const val ROCKS_ARE_AMAZING = "rocks_are_amazing"
     const val GEAR_GUIDE = "gear_guide"
     const val SAVED_IMAGES = "saved_images"
+    const val IMAGE_ENHANCER = "image_enhancer"
     const val METEORITE_HUNTING = "meteorite_hunting"
     const val CONTACT_US = "contact_us"
     const val PAYWALL = "paywall"
@@ -430,7 +433,9 @@ private fun handleDeepLink(uri: Uri, navController: NavController) {
 @Composable
 fun AppNavigation(
     deepLinkUri: Uri? = null,
+    sharedImageUri: Uri? = null,
     onDeepLinkConsumed: () -> Unit = {},
+    onSharedImageConsumed: () -> Unit = {},
 ) {
     val navController = rememberNavController()
 
@@ -622,6 +627,7 @@ fun AppNavigation(
         }
         composable(Routes.GEAR_GUIDE) { GearGuideScreen(navController) }
         composable(Routes.SAVED_IMAGES) { SavedImagesScreen(navController) }
+        composable(Routes.IMAGE_ENHANCER) { ImageEnhancerScreen(navController) }
         composable(Routes.METEORITE_HUNTING) { MeteoriteHuntingScreen(navController) }
         composable(Routes.SEARCH) { SearchScreen(navController) }
         composable(Routes.PERIODIC_TABLE) { PeriodicTableScreen(navController) }
@@ -913,5 +919,13 @@ fun AppNavigation(
         // Night-mode red overlay sits on top of the entire NavHost so it
         // covers every screen, sheet, and dialog when the toggle is on.
         NightModeOverlay()
+    }
+
+    // Share-to-app dialog — shown when an image is shared from an external app
+    if (sharedImageUri != null) {
+        SharedImageDialog(
+            imageUri = sharedImageUri,
+            onDismiss = { onSharedImageConsumed() },
+        )
     }
 }

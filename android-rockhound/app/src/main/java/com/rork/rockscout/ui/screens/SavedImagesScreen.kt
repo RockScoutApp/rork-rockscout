@@ -1,5 +1,12 @@
 package com.rork.rockscout.ui.screens
 
+import android.net.Uri
+import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -8,7 +15,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,16 +27,20 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,11 +59,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.rork.rockscout.data.AppRepository
+import com.rork.rockscout.data.ImageEnhancerService
+import com.rork.rockscout.data.ImageUtils
 import com.rork.rockscout.data.SavedImage
 import com.rork.rockscout.data.ScreenPdfExporter
 import com.rork.rockscout.data.ScreenPdfItem
+import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.components.FullScreenImageViewer
 import com.rork.rockscout.ui.components.LongPressableImage
 import com.rork.rockscout.ui.components.RockBackground
@@ -86,6 +101,35 @@ fun SavedImagesScreen(navController: NavController) {
     var pendingDeleteImage by remember { mutableStateOf<SavedImage?>(null) }
     var isExportingPdf by remember { mutableStateOf(false) }
 
+    // Per-image enhancement state — tracks which image is being enhanced and its progress
+    var enhancingImageId by remember { mutableStateOf<String?>(null) }
+    var enhanceProgress by remember { mutableFloatStateOf(0f) }
+    var enhanceTileText by remember { mutableStateOf("") }
+
+    fun runEnhanceOnImage(image: SavedImage) {
+        if (enhancingImageId != null) return
+        enhancingImageId = image.id
+        enhanceProgress = 0f
+        enhanceTileText = "Preparing..."
+        val originalUrl = image.url
+        scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                ImageEnhancerService.enhance(context, Uri.parse(originalUrl)) { current, total ->
+                    enhanceProgress = current.toFloat() / total.toFloat()
+                    enhanceTileText = "Processing tile $current of $total"
+                }
+            }
+            if (result != null) {
+                // Store the original URL for undo, then update the image URL to the enhanced version
+                repo.setEnhancedUrl(image.id, result.enhancedUrl, originalUrl)
+                Toast.makeText(context, "Image enhanced 4x!", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Enhancement failed. Try a different image.", Toast.LENGTH_SHORT).show()
+            }
+            enhancingImageId = null
+        }
+    }
+
     RockBackground {
         Column(modifier = Modifier.fillMaxSize()) {
             Row(
@@ -108,6 +152,12 @@ fun SavedImagesScreen(navController: NavController) {
                     color = Aqua,
                     modifier = Modifier.weight(1f),
                 )
+                // Enhance pill button — opens the full enhancer screen
+                EnhancePillButton(
+                    onClick = { navController.navigate(Routes.IMAGE_ENHANCER) },
+                    enabled = enhancingImageId == null,
+                )
+                Spacer(Modifier.width(8.dp))
                 Text(
                     text = "${savedImages.size}",
                     style = MaterialTheme.typography.titleLarge,
@@ -165,6 +215,9 @@ fun SavedImagesScreen(navController: NavController) {
                     items(savedImages, key = { it.id }) { image ->
                         SavedImageCard(
                             image = image,
+                            isEnhancing = enhancingImageId == image.id,
+                            enhanceProgress = enhanceProgress,
+                            enhanceTileText = enhanceTileText,
                             onClick = {
                                 viewerUrls = savedImages.map { it.url }
                                 viewerInitialPage = savedImages.indexOf(it)
@@ -174,7 +227,7 @@ fun SavedImagesScreen(navController: NavController) {
                                 scope.launch {
                                     val bitmap = ShareCardImage.loadDownsampled(
                                         context,
-                                        android.net.Uri.parse(url),
+                                        Uri.parse(url),
                                     )
                                     ShareCardImage.share(
                                         context = context,
@@ -184,6 +237,12 @@ fun SavedImagesScreen(navController: NavController) {
                                         photoBitmap = bitmap,
                                         caption = "Check out this rock specimen I found on RockScout!",
                                     )
+                                }
+                            },
+                            onEnhance = { runEnhanceOnImage(it) },
+                            onUndo = {
+                                if (repo.undoEnhancement(image.id)) {
+                                    Toast.makeText(context, "Reverted to original", Toast.LENGTH_SHORT).show()
                                 }
                             },
                         )
@@ -214,27 +273,78 @@ fun SavedImagesScreen(navController: NavController) {
     }
 }
 
+/**
+ * Compact pill button with a sparkles icon and "Enhance" text.
+ * Uses Citrine accent to stand out as a distinct AI action.
+ */
+@Composable
+private fun EnhancePillButton(
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                if (enabled) Citrine.copy(alpha = 0.15f) else Citrine.copy(alpha = 0.05f)
+            )
+            .glowingBorder(
+                1.5.dp,
+                Citrine.copy(alpha = if (enabled) 0.6f else 0.2f),
+                RoundedCornerShape(20.dp),
+            )
+            .clickable(enabled = enabled) { onClick() }
+            .padding(horizontal = 12.dp, vertical = 7.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Filled.AutoAwesome,
+                contentDescription = "Enhance",
+                tint = if (enabled) Citrine else Citrine.copy(alpha = 0.3f),
+                modifier = Modifier.size(16.dp),
+            )
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = "Enhance",
+                style = MaterialTheme.typography.labelMedium,
+                color = if (enabled) Citrine else Citrine.copy(alpha = 0.3f),
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+            )
+        }
+    }
+}
+
 @Composable
 private fun SavedImageCard(
     image: SavedImage,
+    isEnhancing: Boolean = false,
+    enhanceProgress: Float = 0f,
+    enhanceTileText: String = "",
     onClick: (SavedImage) -> Unit,
     onDelete: (SavedImage) -> Unit,
     onShare: (String) -> Unit = {},
+    onEnhance: (SavedImage) -> Unit = {},
+    onUndo: () -> Unit = {},
 ) {
     val formatter = remember { SimpleDateFormat("MMM d, yyyy · h:mm a", Locale.getDefault()) }
     val repo = AppRepository.instance
     val savedImages by repo.savedImages.collectAsStateWithLifecycle()
     val isLiked = savedImages.any { it.id == image.id && it.liked }
+    val canUndo = image.originalUrl != null
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
             .background(Slate800.copy(alpha = 0.75f))
             .glowingBorder(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(18.dp))
-            .clickable { onClick(image) }
+            .clickable(enabled = !isEnhancing) { onClick(image) }
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // Thumbnail with progress overlay when enhancing
         Box(
             modifier = Modifier
                 .size(88.dp)
@@ -250,13 +360,51 @@ private fun SavedImageCard(
                 contentScale = ContentScale.Crop,
                 allowSave = false,
             )
+
+            // Progress bar overlay on the thumbnail during enhancement
+            if (isEnhancing) {
+                Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.Black.copy(alpha = 0.80f))
+                            .padding(horizontal = 4.dp, vertical = 4.dp),
+                    ) {
+                        Text(
+                            text = enhanceTileText,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Citrine,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        val animatedProgress by animateFloatAsState(
+                            targetValue = enhanceProgress,
+                            animationSpec = tween(300),
+                            label = "thumbProgress",
+                        )
+                        LinearProgressIndicator(
+                            progress = { animatedProgress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(3.dp)
+                                .clip(RoundedCornerShape(1.5.dp)),
+                            color = Citrine,
+                            trackColor = Color.White.copy(alpha = 0.15f),
+                        )
+                    }
+                }
+            }
         }
         Spacer(Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Saved image",
+                text = if (canUndo) "Enhanced image" else "Saved image",
                 style = MaterialTheme.typography.titleMedium,
-                color = Color.White,
+                color = if (canUndo) Citrine else Color.White,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -267,6 +415,32 @@ private fun SavedImageCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = DarkTextMid,
             )
+            // Undo button — only visible if the image has been enhanced
+            if (canUndo && !isEnhancing) {
+                Spacer(Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Aqua.copy(alpha = 0.12f))
+                        .clickable { onUndo() }
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Undo,
+                        contentDescription = "Undo enhancement",
+                        tint = Aqua,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = "Undo",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Aqua,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
         }
         CardHeart(
             active = isLiked,
@@ -277,20 +451,34 @@ private fun SavedImageCard(
         )
         Spacer(Modifier.width(8.dp))
         CardPlusDropdown(
-            actions = listOf(
-                CardAction.Item(
+            actions = buildList {
+                add(CardAction.Item(
+                    label = "Enhance 4x",
+                    icon = Icons.Filled.AutoAwesome,
+                    iconTint = Citrine,
+                    onClick = { onEnhance(image) },
+                ))
+                add(CardAction.Item(
                     label = "Share",
                     icon = Icons.Filled.Share,
                     iconTint = Aqua,
                     onClick = { onShare(image.url) },
-                ),
-                CardAction.Item(
+                ))
+                if (canUndo) {
+                    add(CardAction.Item(
+                        label = "Undo Enhance",
+                        icon = Icons.AutoMirrored.Filled.Undo,
+                        iconTint = Aqua,
+                        onClick = { onUndo() },
+                    ))
+                }
+                add(CardAction.Item(
                     label = "Delete",
                     icon = Icons.Filled.Delete,
                     iconTint = Color(0xFFE2574C),
                     onClick = { onDelete(image) },
-                ),
-            ),
+                ))
+            },
             accent = Aqua,
             size = 36.dp,
         )

@@ -136,5 +136,6 @@ dependencies {
     implementation(libs.media3.ui)
     implementation(libs.media3.common)
     implementation(libs.media3.datasource)
+    implementation(libs.tensorflow.lite)
     debugImplementation(libs.androidx.ui.tooling)
 }

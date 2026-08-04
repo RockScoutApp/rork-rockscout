@@ -956,6 +956,33 @@ class AppRepository {
 
     fun isSavedImage(url: String): Boolean = _savedImages.value.any { it.url == url }
 
+    /** Returns the SavedImage with the given id, or null. */
+    fun getSavedImage(id: String): SavedImage? =
+        _savedImages.value.firstOrNull { it.id == id }
+
+    /** Replaces a saved image's URL with the enhanced [newUrl] and stores the
+     *  original URL in [originalUrl] so the user can undo the enhancement. */
+    fun setEnhancedUrl(imageId: String, newUrl: String, originalUrl: String) {
+        _savedImages.value = _savedImages.value.map {
+            if (it.id == imageId) it.copy(url = newUrl, originalUrl = originalUrl) else it
+        }
+        persistSavedImages()
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.SAVED_IMAGES, imageId)
+    }
+
+    /** Reverts an enhanced image back to its original URL. Returns true if the
+     *  image was found and had an originalUrl to restore. */
+    fun undoEnhancement(imageId: String): Boolean {
+        val image = _savedImages.value.firstOrNull { it.id == imageId } ?: return false
+        val original = image.originalUrl ?: return false
+        _savedImages.value = _savedImages.value.map {
+            if (it.id == imageId) it.copy(url = original, originalUrl = null) else it
+        }
+        persistSavedImages()
+        SyncQueueManager.enqueue(SyncQueueManager.SyncTable.SAVED_IMAGES, imageId)
+        return true
+    }
+
     fun toggleSavedImageLike(id: String) {
         _savedImages.value = _savedImages.value.map {
             if (it.id == id) it.copy(liked = !it.liked) else it

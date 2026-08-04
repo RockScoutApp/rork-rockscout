@@ -8,4 +8,7 @@
     <cache-path name="zip_exports" path="zip_exports/" />
     <!-- Downloaded update APKs shared with the system package installer. -->
     <cache-path name="updates" path="updates/" />
+    <files-path name="enhanced" path="enhanced/" />
+    <files-path name="enhanced_originals" path="enhanced_originals/" />
+    <files-path name="shared_images" path="shared_images/" />
 </paths>
