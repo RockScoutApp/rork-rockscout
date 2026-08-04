@@ -174,7 +174,22 @@ const SECTIONS: { title: string; icon: typeof Camera; body: string }[] = [
   {
     title: "Add Users to Private Chats",
     icon: Users,
-    body: "Add up to 5 users to a private chat thread. Tap the Add User icon in the chat header, select friends from your list, and each invited user gets an accept/cancel popup. Once accepted, they're part of the conversation with full messaging, image sharing, and reply threading support.",
+    body: "Add up to 10 users to a private chat thread. Tap the Add User icon in the chat header, select friends from your list, and each invited user gets an accept/cancel popup. Once accepted, they're part of the conversation with full messaging, image sharing, and reply threading support.",
+  },
+  {
+    title: "Self-Harm Phrase Detection",
+    icon: ShieldCheck,
+    body: "Phrases like 'kill yourself' or 'go die' are automatically detected in all chat messages. When detected, the phrase is asterisked immediately. 1st offense: a mandatory warning popup you must acknowledge. 2nd offense: an automatic report is filed and you're notified via bell and email. The system catches leetspeak variants too.",
+  },
+  {
+    title: "Report from Group Chats",
+    icon: ShieldCheck,
+    body: "In any group chat, tap the Flag/Report icon in the chat header to report the group. You can also long-press a specific message and select 'Report Message'. A confirmation popup appears, and on confirm, a screenshot is captured and a report is filed with your email composer pre-filled.",
+  },
+  {
+    title: "Email + Bell Notifications for Reports",
+    icon: Mail,
+    body: "Any time a user is reported — whether manually or automatically by the profanity/self-harm system — they receive both a bell notification and an email with the report details and a link to appeal. Escalating reports trigger stronger consequences: 2 reports = 2-week social block, 3+ = permanent termination.",
   },
 ];
 

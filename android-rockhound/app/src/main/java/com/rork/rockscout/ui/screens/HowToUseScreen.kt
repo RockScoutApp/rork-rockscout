@@ -67,6 +67,7 @@ import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Nature
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -1035,13 +1036,16 @@ private val howToSections: List<HowToSection> = listOf(
         shortLabel = "Group Chats",
         category = HowToCategory.SOCIAL_TRADE,
         steps = listOf(
-            "Open the Community screen and switch to the \"Group Chats\" tab to browse your existing group chats.",
-            "Tap \"Start a New Group Chat\" to create one — enter a name, subject, max member count, profanity filter level (normal or strict), and an optional header image.",
+            "Open the Community screen and switch to the \"Group Chats\" tab to browse all public group chats.",
+            "Group chats are public to join — any user can tap a group chat card and join instantly without needing an invite.",
+            "Tap \"New Group\" to create one — enter a name, subject, max member count (or leave unlimited), profanity filter level (normal or strict), and an optional header image.",
             "Set a default scroll speed for the group: Normal (instant auto-scroll), Half (4-second delay), or Stop (no auto-scroll).",
-            "Invite friends from your connections list — they get a popup to accept or decline the invite.",
-            "Once accepted, they're added as a member and can send messages, images, and replies just like a private chat.",
+            "The creator can also invite specific friends — they get a popup to accept or decline the invite.",
+            "Once joined, members can send messages, images, and replies just like a private chat.",
+            "Respect the member cap: if a group is full, the Join button shows \"Full\" and no new members can join until someone leaves.",
             "The group creator can delete the group at any time — all members are notified and the chat is soft-deleted.",
             "Group chats support all the same features as private chats: image sending, reply threading, user tagging, and scroll speed controls.",
+            "Use the Share button on any group chat card to generate a rockscout://group_chat deep link — share it via Messenger, text, or any app so friends can join directly.",
         ),
     ),
     HowToSection(
@@ -1140,10 +1144,53 @@ private val howToSections: List<HowToSection> = listOf(
         category = HowToCategory.SOCIAL_TRADE,
         steps = listOf(
             "In a private chat, tap the \"Add User\" icon (person with a plus) in the chat header.",
-            "Select up to 5 users to add to the conversation from your friends list.",
+            "Select up to 10 users to add to the conversation from your friends list.",
             "Each invited user gets an accept/cancel popup — once they accept, they're part of the conversation.",
             "Added users get full messaging, image sharing, and reply threading support within the chat.",
-            "The 5-user max keeps private chats intimate — for larger groups, create a Group Chat instead.",
+            "The 10-user max keeps private chats manageable — for larger groups, create a Group Chat instead.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Security,
+        accent = Color(0xFFE2574C),
+        title = "Self-Harm Phrase Detection",
+        shortLabel = "Self-Harm Filter",
+        category = HowToCategory.SOCIAL_TRADE,
+        steps = listOf(
+            "Phrases like \"kill yourself\" or \"go die\" are automatically detected in all chat messages.",
+            "When detected, the phrase is asterisked immediately — the offensive text is replaced with asterisks of the same length.",
+            "1st offense: a mandatory warning popup appears — you must tap \"I understand\" to close it. The message is not sent.",
+            "2nd offense: an automatic report is filed against your account. You are notified via both the notification bell and email.",
+            "The system catches common leetspeak variants (k!ll, k1ll, d!e) and normalizes text before matching.",
+            "This system runs BEFORE the regular profanity filter — self-harm phrases are the highest priority.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Flag,
+        accent = Color(0xFFE2574C),
+        title = "Report from Group Chats",
+        shortLabel = "Report Chat",
+        category = HowToCategory.SOCIAL_TRADE,
+        steps = listOf(
+            "In any group chat, tap the Flag/Report icon in the chat header to report the group.",
+            "You can also long-press a specific message and select \"Report Message\" from the context menu.",
+            "A confirmation popup appears: \"Report this group chat? A screenshot will be captured…\" — tap Report to proceed.",
+            "On confirm, RockScout captures a screenshot of the current screen (showing the offending text), files a report, and launches your email composer with the report details pre-filled.",
+            "The screenshot is attached to the email so moderators have full context of the violation.",
+        ),
+    ),
+    HowToSection(
+        icon = Icons.Filled.Mail,
+        accent = Color(0xFFE8C547),
+        title = "Email + Bell Notifications for Reports",
+        shortLabel = "Report Alerts",
+        category = HowToCategory.ACCOUNT_PREMIUM,
+        steps = listOf(
+            "Any time a user is reported — whether manually by another user or automatically by the profanity/self-harm system — they receive TWO notifications.",
+            "1. Bell notification: a notification appears in the Notification Center with the report reason and a link to appeal.",
+            "2. Email notification: an email is sent to the reported user's registered email address with the report details and a link to appeal via the Contact Us page.",
+            "Escalating reports trigger stronger consequences: 2 reports = 2-week social feature block, 3+ reports = permanent social feature termination.",
+            "Users can appeal any report through the Contact Us screen — appeals are reviewed within 36 hours.",
         ),
     ),
 )

@@ -924,7 +924,7 @@ private fun ThreadView(
                     textColor = Aqua,
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                 )
-                // Add User button (private chats only, max 5 users)
+                // Add User button (private chats only, max 10 users)
                 if (!isGroupChat && otherUserId != null) {
                     SculptedIconButton(
                         icon = Icons.Filled.PersonAdd,
