@@ -144,6 +144,14 @@ object SupabaseMessagingRepository {
     private val _groupChats = MutableStateFlow<List<GroupChatDto>>(emptyList())
     val groupChats: StateFlow<List<GroupChatDto>> = _groupChats.asStateFlow()
 
+    private val _publicGroupChats = MutableStateFlow<List<GroupChatDto>>(emptyList())
+    /** All non-deleted group chats (publicly browsable). */
+    val publicGroupChats: StateFlow<List<GroupChatDto>> = _publicGroupChats.asStateFlow()
+
+    private val _myGroupChatIds = MutableStateFlow<Set<String>>(emptySet())
+    /** Set of group chat IDs the current user is a member of. */
+    val myGroupChatIds: StateFlow<Set<String>> = _myGroupChatIds.asStateFlow()
+
     private val _groupChatMembers = MutableStateFlow<List<GroupChatMemberDto>>(emptyList())
     val groupChatMembers: StateFlow<List<GroupChatMemberDto>> = _groupChatMembers.asStateFlow()
 
@@ -477,6 +485,25 @@ object SupabaseMessagingRepository {
         }
     }
 
+    /** Load all publicly browsable group chats (non-deleted). */
+    suspend fun loadPublicGroupChats(): Result<Unit> {
+        val token = accessToken() ?: return Result.failure(Exception("Not authenticated"))
+        return try {
+            val resp = client.get("${baseUrl()}/rest/v1/group_chats?deleted_at=is.null&select=*&order=created_at.desc") {
+                header("apikey", anonKey())
+                header("Authorization", "Bearer $token")
+            }
+            if (resp.status.isSuccess()) {
+                val raw = resp.body<String>()
+                _publicGroupChats.value = json.decodeFromString(raw)
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "loadPublicGroupChats failed", e)
+            Result.failure(e)
+        }
+    }
+
     /** Load all group chats the current user is a member of. */
     suspend fun loadGroupChats(): Result<Unit> {
         val token = accessToken() ?: return Result.failure(Exception("Not authenticated"))
@@ -497,6 +524,7 @@ object SupabaseMessagingRepository {
                 return Result.success(Unit)
             }
             val idsParam = chatIds.joinToString(",") { "\"$it\"" }
+            _myGroupChatIds.value = chatIds.toSet()
             // Fetch chat data (only non-deleted)
             val chatsResp = client.get("${baseUrl()}/rest/v1/group_chats?id=in.($idsParam)&deleted_at=is.null&select=*&order=created_at.desc") {
                 header("apikey", anonKey())
@@ -514,6 +542,28 @@ object SupabaseMessagingRepository {
             if (membersResp.status.isSuccess()) {
                 val membersRaw = membersResp.body<String>()
                 _groupChatMembers.value = json.decodeFromString(membersRaw)
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "loadGroupChats failed", e)
+            Result.failure(e)
+        }
+    }
+
+    /** Refresh the set of group chat IDs the current user belongs to. */
+    suspend fun refreshMyGroupChatIds(): Result<Unit> {
+        val token = accessToken() ?: return Result.failure(Exception("Not authenticated"))
+        val uid = userId() ?: return Result.failure(Exception("No user ID"))
+        return try {
+            val resp = client.get("${baseUrl()}/rest/v1/group_chat_members?user_id=eq.$uid&select=group_chat_id") {
+                header("apikey", anonKey())
+                header("Authorization", "Bearer $token")
+            }
+            if (resp.status.isSuccess()) {
+                val raw = resp.body<String>()
+                val arr = json.parseToJsonElement(raw).jsonArray
+                val ids = arr.mapNotNull { it.jsonObject["group_chat_id"]?.jsonPrimitive?.contentOrNull }.toSet()
+                _myGroupChatIds.value = ids
             }
             Result.success(Unit)
         } catch (e: Exception) {

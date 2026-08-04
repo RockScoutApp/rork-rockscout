@@ -197,10 +197,16 @@ fun CommunityScreen(navController: NavController) {
         },
     ) {
         // ── Tab switcher: Posts | Group Chats ──
-        CommunityTabSwitcher(
-            selectedTab = selectedTab,
-            onTabSelected = { selectedTab = it },
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 8.dp),
+        ) {
+            CommunityTabSwitcher(
+                selectedTab = selectedTab,
+                onTabSelected = { selectedTab = it },
+            )
+        }
 
         if (selectedTab == 1) {
             // Group Chats tab
@@ -1071,15 +1077,18 @@ private fun GroupChatsTabContent(
 ) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val groupChats by SupabaseMessagingRepository.groupChats.collectAsStateWithLifecycle()
+    val groupChats by SupabaseMessagingRepository.publicGroupChats.collectAsStateWithLifecycle()
+    val myGroupChatIds by SupabaseMessagingRepository.myGroupChatIds.collectAsStateWithLifecycle()
     val groupChatMembers by SupabaseMessagingRepository.groupChatMembers.collectAsStateWithLifecycle()
     val pendingInvites by SupabaseMessagingRepository.pendingGroupInvites.collectAsStateWithLifecycle()
     val unreadCounts by SupabaseMessagingRepository.groupChatUnreadCounts.collectAsStateWithLifecycle()
     val creatorNames by SupabaseMessagingRepository.creatorNames.collectAsStateWithLifecycle()
     var showCreateDialog by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+    var joinError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
+        SupabaseMessagingRepository.loadPublicGroupChats()
         SupabaseMessagingRepository.loadGroupChats()
         SupabaseMessagingRepository.loadPendingInvites()
         SupabaseMessagingRepository.refreshGroupChatUnreadCounts()
@@ -1208,13 +1217,30 @@ private fun GroupChatsTabContent(
                 it.name.contains(searchQuery, ignoreCase = true) || it.subject.contains(searchQuery, ignoreCase = true)
             }
             items(filteredChats, key = { it.id }) { chat ->
+                val isMember = myGroupChatIds.contains(chat.id)
+                val memberCount = SupabaseMessagingRepository.groupChatMemberCount(chat.id)
+                val isFull = chat.max_members != null && memberCount >= chat.max_members
                 GroupChatListingCard(
                     chat = chat,
                     creatorName = creatorNames[chat.creator_id] ?: "Unknown",
-                    memberCount = SupabaseMessagingRepository.groupChatMemberCount(chat.id),
-                    unreadCount = unreadCounts[chat.id] ?: 0,
+                    memberCount = memberCount,
+                    unreadCount = if (isMember) unreadCounts[chat.id] ?: 0 else 0,
+                    isMember = isMember,
+                    isFull = isFull,
                     onTap = {
-                        navController.navigate(Routes.messengerThread("group:${chat.id}"))
+                        if (isMember) {
+                            navController.navigate(Routes.messengerThread("group:${chat.id}"))
+                        } else if (!isFull) {
+                            scope.launch {
+                                SupabaseMessagingRepository.joinGroupChat(chat.id).onSuccess {
+                                    SupabaseMessagingRepository.loadGroupChats()
+                                    SupabaseMessagingRepository.refreshMyGroupChatIds()
+                                    navController.navigate(Routes.messengerThread("group:${chat.id}"))
+                                }.onFailure { e ->
+                                    joinError = e.message ?: "Could not join group chat"
+                                }
+                            }
+                        }
                     },
                     onShare = {
                         val deepLink = "rockscout://group_chat/${chat.id}"
@@ -1233,6 +1259,25 @@ private fun GroupChatsTabContent(
             }
         }
         item { Spacer(Modifier.height(20.dp)) }
+    }
+
+    joinError?.let { message ->
+        AlertDialog(
+            onDismissRequest = { joinError = null },
+            containerColor = Color(0xFF1E1C16),
+            titleContentColor = DarkTextHigh,
+            textContentColor = DarkTextMid,
+            title = { Text("Could not join", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+            text = { Text(message, style = MaterialTheme.typography.bodyMedium, color = DarkTextMid) },
+            confirmButton = {
+                SculptedTextButton(
+                    text = "OK",
+                    onClick = { joinError = null },
+                    accent = Citrine,
+                    textColor = Citrine,
+                )
+            },
+        )
     }
 
     // Create group chat dialog
@@ -1261,6 +1306,8 @@ private fun GroupChatListingCard(
     creatorName: String,
     memberCount: Int,
     unreadCount: Int,
+    isMember: Boolean,
+    isFull: Boolean,
     onTap: () -> Unit,
     onShare: () -> Unit,
 ) {
@@ -1371,6 +1418,30 @@ private fun GroupChatListingCard(
                         color = Aqua,
                     )
                     Spacer(Modifier.weight(1f))
+                    // Membership status / Join action
+                    if (!isMember) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    if (isFull) Color(0xFF2A2820) else Aqua.copy(alpha = 0.18f)
+                                )
+                                .glowingBorder(
+                                    1.dp,
+                                    if (isFull) DarkTextMid.copy(alpha = 0.35f) else Aqua.copy(alpha = 0.85f),
+                                    RoundedCornerShape(8.dp),
+                                )
+                                .padding(horizontal = 8.dp, vertical = 3.dp),
+                        ) {
+                            Text(
+                                if (isFull) "Full" else "Join",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (isFull) DarkTextMid else Aqua,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                        Spacer(Modifier.width(6.dp))
+                    }
                     // Profanity filter badge
                     Box(
                         modifier = Modifier

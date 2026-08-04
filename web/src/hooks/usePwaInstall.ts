@@ -5,6 +5,13 @@ type BeforeInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
+// Module-level singleton so the captured prompt survives navigation between
+// marketing pages (e.g. navbar → /install/free). Chrome only fires
+// beforeinstallprompt once per page load, so a fresh component instance would
+// otherwise lose it and fall back to instructions.
+let globalDeferredPrompt: BeforeInstallPromptEvent | null = null;
+let globalHasNativePrompt = false;
+
 export type Platform =
   | "ios"
   | "android-chrome"
@@ -53,42 +60,54 @@ function isStandalone(): boolean {
  * - `installed`: true once the app has been installed / is running standalone
  */
 export function usePwaInstall() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [platform] = useState<Platform>(() => detectPlatform());
   const [installed, setInstalled] = useState<boolean>(() => isStandalone());
-  // Whether the browser has actually raised beforeinstallprompt (i.e. the
-  // native one-tap install prompt is available). On iOS and on browsers that
-  // never fire the event, this stays false and the UI falls back to
-  // menu-driven instructions instead of being hidden entirely.
-  const [hasNativePrompt, setHasNativePrompt] = useState<boolean>(false);
+  // Sync with the singleton so this component re-renders when the prompt is
+  // captured by any instance on the same page.
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(globalDeferredPrompt);
+  const [hasNativePrompt, setHasNativePrompt] = useState<boolean>(globalHasNativePrompt);
 
   useEffect(() => {
     const handler = (e: Event) => {
       // Suppress the automatic browser install prompt; we'll trigger it ourselves.
       e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      globalDeferredPrompt = e as BeforeInstallPromptEvent;
+      globalHasNativePrompt = true;
+      setDeferredPrompt(globalDeferredPrompt);
       setHasNativePrompt(true);
     };
     const installedHandler = () => {
       setInstalled(true);
+      globalDeferredPrompt = null;
+      globalHasNativePrompt = false;
       setDeferredPrompt(null);
+      setHasNativePrompt(false);
     };
+    // If a singleton prompt was already captured before this component mounted,
+    // reflect it immediately.
+    if (globalDeferredPrompt && !hasNativePrompt) {
+      setDeferredPrompt(globalDeferredPrompt);
+      setHasNativePrompt(true);
+    }
     window.addEventListener("beforeinstallprompt", handler);
     window.addEventListener("appinstalled", installedHandler);
     return () => {
       window.removeEventListener("beforeinstallprompt", handler);
       window.removeEventListener("appinstalled", installedHandler);
     };
-  }, []);
+  }, [hasNativePrompt]);
 
   const install = useCallback(async (): Promise<boolean> => {
-    if (!deferredPrompt) return false;
-    await deferredPrompt.prompt();
-    const choice = await deferredPrompt.userChoice;
+    const prompt = deferredPrompt ?? globalDeferredPrompt;
+    if (!prompt) return false;
+    await prompt.prompt();
+    const choice = await prompt.userChoice;
     const accepted = choice.outcome === "accepted";
     if (accepted) {
       setInstalled(true);
     }
+    globalDeferredPrompt = null;
+    globalHasNativePrompt = false;
     setDeferredPrompt(null);
     setHasNativePrompt(false);
     return accepted;

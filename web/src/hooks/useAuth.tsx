@@ -108,6 +108,16 @@ function useAuthState() {
       .getSession()
       .then(({ data }) => {
         setSession(data.session);
+        // If the user is already signed in (e.g. returning to the PWA), sync
+        // their RevenueCat entitlement to Supabase so the web tier query sees
+        // Premium status bought on Android/iOS without requiring a fresh sign-in.
+        if (data.session?.user?.id) {
+          syncEntitlement(data.session.user.id).then((isPremium) => {
+            if (isPremium) {
+              queryClient.invalidateQueries({ queryKey: ["tier-profile", data.session?.user?.id] });
+            }
+          });
+        }
       })
       .catch(() => {
         // Env vars missing or network error — treat as no session.
@@ -125,7 +135,7 @@ function useAuthState() {
     return () => {
       listener.subscription.unsubscribe();
     };
-  }, []);
+  }, [queryClient]);
 
   const signUp = useCallback(
     async (email: string, password: string) => {

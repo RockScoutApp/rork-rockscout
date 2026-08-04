@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Users,
@@ -74,6 +75,7 @@ interface GroupChat {
   header_image_url: string | null;
   scroll_speed_setting: string;
   created_at: string;
+  is_member?: boolean;
 }
 
 interface GroupChatMember {
@@ -102,6 +104,7 @@ const formatTime = (iso: string): string => {
 export default function Community() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>("posts");
   const [showEditor, setShowEditor] = useState(false);
   const [form, setForm] = useState({ title: "", caption: "", location_text: "" });
@@ -217,45 +220,57 @@ export default function Community() {
     enabled: !!expandedPost,
   });
 
-  // ── Group chats query ──
+  // ── Group chats query (all public group chats, browsable by everyone) ──
   const { data: groupChats, isLoading: groupsLoading } = useQuery<
     (GroupChat & { member_count: number })[]
   >({
-    queryKey: ["group-chats", user?.id],
+    queryKey: ["public-group-chats", user?.id],
     queryFn: async () => {
       if (!user) return [];
-      const { data: memberships, error: mErr } = await supabase
-        .from("group_chat_members")
-        .select("group_chat_id")
-        .eq("user_id", user.id);
-      if (mErr) throw mErr;
-      const chatIds = (memberships ?? []).map((m) => m.group_chat_id);
-      if (chatIds.length === 0) return [];
-
       const { data: chats, error: cErr } = await supabase
         .from("group_chats")
         .select("*")
-        .in("id", chatIds)
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
       if (cErr) throw cErr;
 
+      const chatIds = (chats ?? []).map((c) => (c as GroupChat).id);
+      if (chatIds.length === 0) return [];
+
       const { data: members } = await supabase
         .from("group_chat_members")
-        .select("group_chat_id")
+        .select("group_chat_id, user_id")
         .in("group_chat_id", chatIds);
 
       const countMap = new Map<string, number>();
+      const memberSet = new Set<string>();
       (members ?? []).forEach((m) => {
         countMap.set(m.group_chat_id, (countMap.get(m.group_chat_id) ?? 0) + 1);
+        if (m.user_id === user.id) memberSet.add(m.group_chat_id);
       });
 
       return (chats ?? []).map((c) => ({
         ...(c as GroupChat),
         member_count: countMap.get((c as GroupChat).id) ?? 0,
+        is_member: memberSet.has((c as GroupChat).id),
       }));
     },
     enabled: !!user && activeTab === "groups",
+  });
+
+  // ── My group chat memberships (for quick re-checks after joining) ──
+  const { data: myGroupIds } = useQuery<string[]>({
+    queryKey: ["my-group-chat-ids", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from("group_chat_members")
+        .select("group_chat_id")
+        .eq("user_id", user.id);
+      if (error) throw error;
+      return (data ?? []).map((d) => d.group_chat_id);
+    },
+    enabled: !!user,
   });
 
   // ── Group chat unread counts (localStorage last-read tracking) ──
@@ -411,7 +426,8 @@ export default function Community() {
     },
     onSuccess: () => {
       toast.success("Group chat created!");
-      queryClient.invalidateQueries({ queryKey: ["group-chats"] });
+      queryClient.invalidateQueries({ queryKey: ["public-group-chats"] });
+      queryClient.invalidateQueries({ queryKey: ["my-group-chat-ids"] });
       setShowGroupCreate(false);
       setGroupForm({
         name: "",
@@ -423,6 +439,27 @@ export default function Community() {
     },
     onError: (err) =>
       toast.error(err instanceof Error ? err.message : "Failed to create group"),
+  });
+
+  const joinGroupChat = useMutation({
+    mutationFn: async (groupChatId: string) => {
+      if (!user) throw new Error("Sign in to join a group chat");
+      const { error } = await supabase.from("group_chat_members").insert({
+        group_chat_id: groupChatId,
+        user_id: user.id,
+        role: "member",
+      });
+      if (error) throw error;
+    },
+    onSuccess: (_, groupChatId) => {
+      toast.success("Joined group chat");
+      queryClient.invalidateQueries({ queryKey: ["public-group-chats"] });
+      queryClient.invalidateQueries({ queryKey: ["my-group-chat-ids"] });
+      // Open the group chat after joining
+      navigate(`/app/messenger?thread=group:${groupChatId}`);
+    },
+    onError: (err) =>
+      toast.error(err instanceof Error ? err.message : "Failed to join group chat"),
   });
 
   if (!user) {
@@ -687,12 +724,21 @@ export default function Community() {
                   const gUnread = groupUnreadCounts?.[gc.id] ?? 0;
                   const creatorName = creatorNames?.[gc.creator_id] ?? "Unknown";
                   const deepLink = `rockscout://group_chat/${gc.id}`;
+                  const isMember = gc.is_member || myGroupIds?.includes(gc.id) || false;
+                  const isFull = gc.max_members != null && gc.member_count >= gc.max_members;
                   return (
                   <SculptedCard
                     key={gc.id}
                     accent="aqua"
                     interactive
                     className="overflow-hidden"
+                    onClick={() => {
+                      if (isMember) {
+                        navigate(`/app/messenger?thread=group:${gc.id}`);
+                      } else if (!isFull) {
+                        joinGroupChat.mutate(gc.id);
+                      }
+                    }}
                   >
                     <div className="flex items-center gap-3 p-3.5">
                       {/* Header image or icon — 56px to match trade listing cards */}
@@ -742,6 +788,17 @@ export default function Community() {
                         </p>
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-1.5">
+                        {!isMember && (
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                              isFull
+                                ? "bg-muted text-muted-foreground"
+                                : "bg-aqua/15 text-aqua"
+                            }`}
+                          >
+                            {isFull ? "Full" : "Join"}
+                          </span>
+                        )}
                         <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
                           {gc.profanity_filter_level === "strict" ? "Strict" : "Normal"}
                         </span>
