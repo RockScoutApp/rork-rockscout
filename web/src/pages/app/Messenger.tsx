@@ -16,7 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { SculptedCard, SculptedButton, ScreenScaffold } from "@/components/sculpted";
 import { CompactSearchPill } from "@/components/CompactSearchPill";
-import { filterProfanity, parseTaggedUserIds } from "@/lib/profanity-filter";
+import { filterProfanity, filterSelfHarm, parseTaggedUserIds } from "@/lib/profanity-filter";
 import {
   enqueueMessage,
   getPendingForChat,
@@ -171,9 +171,12 @@ export default function Messenger() {
   const [isUserScrolling, setIsUserScrolling] = useState(false);
   const lastAutoScrollRef = useRef(0);
 
-  // Profanity warning
+  // Profanity + self-harm warning
   const [showProfanityWarning, setShowProfanityWarning] = useState(false);
   const [pendingFilteredText, setPendingFilteredText] = useState("");
+  const [showSelfHarmWarning, setShowSelfHarmWarning] = useState(false);
+  const [selfHarmFilteredText, setSelfHarmFilteredText] = useState("");
+  const [selfHarmOffenseCount, setSelfHarmOffenseCount] = useState(0);
 
   // Pending offline messages for the current chat (shown as greyed-out bubbles)
   const [pendingOfflineMsgs, setPendingOfflineMsgs] = useState<PendingWebMessage[]>([]);
@@ -522,6 +525,7 @@ export default function Messenger() {
           replyToMessageId,
           taggedUserIds: null,
           isGroup,
+          senderId: user.id,
           queuedAt: Date.now(),
           attempts: 0,
         };
@@ -585,15 +589,60 @@ export default function Messenger() {
   const handleSend = useCallback(() => {
     if (!messageText.trim()) return;
     const isGroup = chatView.type === "group";
-    const strict = isGroup && chatView.group?.profanity_filter_level === "strict";
-    const { filteredText, hasExplicitContent } = filterProfanity(messageText, strict);
+    const strict = isGroup && chatView.type === "group" && chatView.group?.profanity_filter_level === "strict";
+    const chatId = chatView.type === "group" ? chatView.group?.id : chatView.type === "thread" ? chatView.thread?.id : "";
+
+    // Step 1: Check for self-harm phrases FIRST (before regular profanity)
+    const selfHarmResult = filterSelfHarm(messageText);
+    const textToFilter = selfHarmResult.filteredText;
+
+    if (selfHarmResult.hasSelfHarm) {
+      const newCount = selfHarmOffenseCount + 1;
+      setSelfHarmOffenseCount(newCount);
+      setSelfHarmFilteredText(selfHarmResult.filteredText);
+      // 1st offense = warning popup, 2nd offense = auto-report
+      if (newCount >= 2) {
+        // Auto-file a report for 2nd self-harm offense
+        if (user) {
+          fetch(`${import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL}/report-notification-email`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              reportedUserId: user.id,
+              reportedEmail: user.email,
+              reportReason: `Self-harm language detected: ${selfHarmResult.matchedPhrases.join(", ")}`,
+              reportCount: newCount,
+              source: "auto_self_harm",
+            }),
+          }).catch(() => {});
+        }
+      }
+      setShowSelfHarmWarning(true);
+      return; // Block send — user must acknowledge warning first
+    }
+
+    // Step 2: Regular profanity filter on the (possibly self-harm-asterisked) text
+    const { filteredText, hasExplicitContent } = filterProfanity(textToFilter, strict);
     if (hasExplicitContent) {
       setPendingFilteredText(filteredText);
       setShowProfanityWarning(true);
+      // Record warning server-side
+      if (user) {
+        fetch(`${import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL}/profanity-warning`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: user.id,
+            reason: "Explicit language in message",
+            source: isGroup ? "group_chat" : "chat",
+            sourceId: chatId,
+          }),
+        }).catch(() => {});
+      }
     } else {
       sendMessage.mutate(filteredText);
     }
-  }, [messageText, sendMessage, chatView]);
+  }, [messageText, sendMessage, chatView, user, selfHarmOffenseCount]);
 
   const handleLongPressReply = (msgId: string, msgBody: string, senderId: string, senderName: string) => {
     setReplyToMessageId(msgId);
@@ -861,6 +910,45 @@ export default function Messenger() {
           </SculptedButton>
         </div>
 
+        {/* Self-harm warning dialog */}
+        {showSelfHarmWarning && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+            <div className="dark-card sculpted-raised mx-4 max-w-sm rounded-xl p-5">
+              <div className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+                <h3 className="font-bold text-destructive">Self-Harm Language Detected</h3>
+              </div>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Your message contains language related to self-harm. This is a
+                serious violation of our community guidelines. The phrase has been
+                censored.
+              </p>
+              {selfHarmOffenseCount >= 2 && (
+                <p className="mt-2 text-sm font-semibold text-destructive">
+                  This is your {selfHarmOffenseCount}rd offense. An automatic report
+                  has been filed and you will be notified via email and notifications.
+                </p>
+              )}
+              <p className="mt-2 text-xs text-muted-foreground">
+                If you or someone you know is struggling, please contact the
+                988 Suicide & Crisis Lifeline by dialing 988.
+              </p>
+              <div className="mt-4 flex justify-end">
+                <SculptedButton
+                  accent="citrine"
+                  onClick={() => {
+                    setShowSelfHarmWarning(false);
+                    sendMessage.mutate(selfHarmFilteredText);
+                    setSelfHarmFilteredText("");
+                  }}
+                >
+                  I Understand
+                </SculptedButton>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Profanity warning dialog */}
         {showProfanityWarning && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
@@ -873,10 +961,10 @@ export default function Messenger() {
                 Your message contains language that was censored. If you believe
                 we're censoring a word by mistake, email{" "}
                 <a
-                  href="mailto:support@rockscout.app"
+                  href="mailto:support@rockscout.net"
                   className="text-primary underline"
                 >
-                  support@rockscout.app
+                  support@rockscout.net
                 </a>{" "}
                 to get it cleared up.
               </p>

@@ -85,6 +85,86 @@ export function filterProfanity(text: string, strict = false): FilterResult {
  * Parse @username patterns from text and match against known member names.
  * Returns the list of user IDs that were tagged.
  */
+// ─── Self-Harm Phrase Detection ──────────────────────────────────────
+// Phrases that indicate self-harm or encouraging self-harm.
+// 1st offense = warning popup, 2nd offense = auto-report + bell + email.
+const SELF_HARM_PHRASES: string[] = [
+  "kill yourself", "kill urself", "kys", "go kill yourself",
+  "kill myself", "end your life", "end ur life", "end my life",
+  "end it all", "hurt myself", "hurt urself", "cut myself", "cut urself",
+  "suicide", "suicidal", "kill me", "you should kill yourself",
+  "u should kill yourself", "you should kill urself", "u should kill urself",
+  "go die", "die already", "nobody would miss you",
+  "nobody would care if you died",
+];
+
+// Leetspeak normalization map
+const LEET_MAP: Record<string, string> = {
+  "1": "i", "3": "e", "4": "a", "5": "s", "6": "g",
+  "7": "t", "8": "b", "0": "o", "$": "s", "@": "a",
+  "!": "i", "+": "t", "#": "h", "9": "g",
+};
+
+function normalizeLeet(input: string): string {
+  return input
+    .toLowerCase()
+    .split("")
+    .map((ch) => LEET_MAP[ch] ?? ch)
+    .join("");
+}
+
+function buildLeetInsensitivePattern(phrase: string): string {
+  const replacements: Record<string, string> = {
+    i: "[i1!]", e: "[e3]", a: "[a4@]", s: "[s5$]",
+    g: "[g69]", t: "[t7+]", b: "[b8]", o: "[o0]", h: "[h#]",
+  };
+  return phrase
+    .split("")
+    .map((ch) => {
+      const lower = ch.toLowerCase();
+      return replacements[lower] ?? ch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    })
+    .join("");
+}
+
+export interface SelfHarmFilterResult {
+  filteredText: string;
+  hasSelfHarm: boolean;
+  matchedPhrases: string[];
+}
+
+/** Check for self-harm phrases in text. Returns asterisked text and matched phrases. */
+export function filterSelfHarm(text: string): SelfHarmFilterResult {
+  if (!text || !text.trim()) {
+    return { filteredText: text, hasSelfHarm: false, matchedPhrases: [] };
+  }
+
+  let result = text;
+  const matched: string[] = [];
+  const lower = text.toLowerCase();
+  const normalizedText = normalizeLeet(lower);
+
+  for (const phrase of SELF_HARM_PHRASES) {
+    const normalizedPhrase = normalizeLeet(phrase);
+
+    if (lower.includes(phrase)) {
+      const regex = new RegExp(
+        phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+        "gi",
+      );
+      result = result.replace(regex, (match) => "*".repeat(match.length));
+      if (!matched.includes(phrase)) matched.push(phrase);
+    } else if (normalizedText.includes(normalizedPhrase)) {
+      const pattern = buildLeetInsensitivePattern(phrase);
+      const regex = new RegExp(pattern, "gi");
+      result = result.replace(regex, (match) => "*".repeat(match.length));
+      if (!matched.includes(phrase)) matched.push(phrase);
+    }
+  }
+
+  return { filteredText: result, hasSelfHarm: matched.length > 0, matchedPhrases: matched };
+}
+
 export function parseTaggedUserIds(
   text: string,
   members: { id: string; display_name: string }[],

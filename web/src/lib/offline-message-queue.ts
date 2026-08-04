@@ -21,6 +21,7 @@ export interface PendingWebMessage {
   replyToMessageId: string | null;
   taggedUserIds: string[] | null;
   isGroup: boolean;
+  senderId: string;
   queuedAt: number;
   attempts: number;
 }

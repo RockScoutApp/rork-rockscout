@@ -11,6 +11,7 @@ import kotlinx.coroutines.withContext
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlinx.serialization.Serializable
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 
 /**
  * Family-friendly reporting system.
@@ -128,6 +129,30 @@ class ReportRepository private constructor() {
                     body = body,
                     deepLinkTarget = "contact_us",
                 )
+
+                // Send email notification to the reported user via Cloudflare Worker
+                val reporterEmail = AuthRepository.instance.currentUserEmail
+                try {
+                    val apiUrl = BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", BuildSecrets.RORK_FUNCTIONS_URL)
+                    val appKey = BuildSecrets.resolve("EXPO_PUBLIC_RORK_APP_KEY", BuildSecrets.RORK_APP_KEY)
+                    val client = okhttp3.OkHttpClient()
+                    val json = org.json.JSONObject().apply {
+                        put("reportedUserId", reportedUserId)
+                        put("reporterId", me)
+                        put("reportReason", reason)
+                        put("reportCount", newCount)
+                        put("source", "manual")
+                    }
+                    val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+                    val req = okhttp3.Request.Builder()
+                        .url("$apiUrl/report-notification-email")
+                        .post(okhttp3.RequestBody.create(mediaType, json.toString()))
+                        .addHeader("Content-Type", "application/json")
+                        .addHeader("Authorization", "Bearer $appKey")
+                        .build()
+                    client.newCall(req).execute()
+                } catch (_: Exception) { /* best-effort — bell notification already sent */ }
+
                 newCount
             }
         }

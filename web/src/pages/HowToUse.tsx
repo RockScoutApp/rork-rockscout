@@ -1081,7 +1081,7 @@ const HOW_TO_SECTIONS: HowToSection[] = [
       `RockScout uses a two-tier profanity filter to keep chat family-friendly.`,
       `Tier 1 (common profanity): words like "fuck" are silently asterisked — no warning, just asterisks.`,
       `Tier 2 (explicit language): explicit words are asterisked AND trigger a warning popup.`,
-      `The warning popup lets you know your message was censored and provides a support email (support@rockscout.app) for false positives.`,
+      `The warning popup lets you know your message was censored and provides a support email (support@rockscout.net) for false positives.`,
       `Three warnings automatically report the user. Five warnings trigger a second report. Six warnings result in a ban.`,
       `Group chats can set a profanity filter level: "normal" or "strict" — strict catches more words.`,
     ],
@@ -1169,6 +1169,56 @@ const HowToUse = () => {
               Welcome to {SITE.name}! This guide walks you through every feature of the app — from AI rock identification to trading, social features, trip planning, and more. Tap any section below to read its step-by-step instructions.
             </p>
           </div>
+
+          {/* ── Icon Index ── */}
+          <div className="mt-8 rounded-2xl border border-border/60 bg-card/40 p-4 fade-rise sm:mt-10 sm:p-6">
+            <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">Icon Index</h2>
+            <p className="mt-1 text-xs text-muted-foreground">Every feature at a glance — tap any icon to read its full guide.</p>
+            <div className="mt-4 space-y-5">
+              {groupedSections.map(({ key, label, accent, sections }) => (
+                <div key={`index-${key}`}>
+                  <div className="flex items-center gap-2">
+                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: accent }} />
+                    <span className="text-sm font-bold" style={{ color: accent }}>{label}</span>
+                  </div>
+                  <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+                    {sections.map((section) => {
+                      const idx = HOW_TO_SECTIONS.indexOf(section);
+                      return (
+                        <button
+                          key={`idx-${section.title}`}
+                          type="button"
+                          onClick={() => setSelectedIdx(idx)}
+                          className="flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-center transition-all hover:-translate-y-0.5 hover:shadow-sm"
+                          style={{
+                            borderColor: `color-mix(in srgb, ${section.accent} 25%, transparent)`,
+                            backgroundColor: `color-mix(in srgb, ${section.accent} 5%, transparent)`,
+                          }}
+                        >
+                          <span
+                            className="grid h-9 w-9 place-items-center rounded-lg ring-1 transition-transform hover:scale-110"
+                            style={{
+                              backgroundColor: `color-mix(in srgb, ${section.accent} 15%, transparent)`,
+                              color: section.accent,
+                              boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${section.accent} 30%, transparent)`,
+                            }}
+                          >
+                            <section.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                          </span>
+                          <span className="text-[10px] font-semibold leading-tight text-foreground sm:text-xs">
+                            {section.shortLabel}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── Divider ── */}
+          <div className="mt-8 h-px w-full bg-border/40" />
 
           {/* ── Detailed sections grouped by category ── */}
           {groupedSections.map(({ key, label, accent, sections }) => (

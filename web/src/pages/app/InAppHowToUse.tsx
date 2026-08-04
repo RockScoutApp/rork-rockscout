@@ -164,7 +164,7 @@ const SECTIONS: { title: string; icon: typeof Camera; body: string }[] = [
   {
     title: "Profanity Warning System",
     icon: ShieldCheck,
-    body: "A two-tier profanity filter keeps chat family-friendly. Common profanity is silently asterisked. Explicit language is asterisked and triggers a warning popup. Three warnings auto-report the user, five trigger a second report, and six result in a ban. False positives can be reported via support@rockscout.app.",
+    body: "A two-tier profanity filter keeps chat family-friendly. Common profanity is silently asterisked. Explicit language is asterisked and triggers a warning popup. Three warnings auto-report the user, five trigger a second report, and six result in a ban. False positives can be reported via support@rockscout.net.",
   },
   {
     title: "Museum Directory & Add Button",
@@ -209,11 +209,34 @@ export default function InAppHowToUse() {
         </div>
       </div>
 
+      {/* ── Icon Index ── */}
+      <div className="dark-card sculpted-raised rounded-xl p-4">
+        <h2 className="text-sm font-bold text-foreground">Icon Index</h2>
+        <p className="mt-0.5 text-xs text-muted-foreground">Every feature at a glance.</p>
+        <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-5 md:grid-cols-6">
+          {SECTIONS.map((section, idx) => (
+            <a
+              key={`icon-${idx}`}
+              href={`#section-${idx}`}
+              className="flex flex-col items-center gap-1.5 rounded-lg border border-border/40 bg-card/30 px-2 py-2.5 text-center transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-card/60"
+            >
+              <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20">
+                <section.icon className="h-4 w-4" />
+              </span>
+              <span className="text-[10px] font-semibold leading-tight text-foreground">
+                {section.title}
+              </span>
+            </a>
+          ))}
+        </div>
+      </div>
+
       <div className="space-y-3">
-        {SECTIONS.map((section) => (
+        {SECTIONS.map((section, idx) => (
           <div
             key={section.title}
-            className="dark-card sculpted-raised rounded-xl p-4"
+            id={`section-${idx}`}
+            className="dark-card sculpted-raised rounded-xl p-4 scroll-mt-4"
           >
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
               <section.icon className="h-4 w-4 text-primary" />

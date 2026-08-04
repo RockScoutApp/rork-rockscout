@@ -145,6 +145,7 @@ export function Providers({ children }: { children: ReactNode }) {
       if (msg.isGroup) {
         const { error } = await supabase.from("group_messages").insert({
           group_chat_id: msg.chatId,
+          sender_id: msg.senderId,
           body: msg.body,
           image_url: msg.imageUrl,
           reply_to_message_id: msg.replyToMessageId,
@@ -152,8 +153,9 @@ export function Providers({ children }: { children: ReactNode }) {
         });
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("rockscout_messages").insert({
+        const { error } = await supabase.from("chat_messages").insert({
           thread_id: msg.chatId,
+          sender_id: msg.senderId,
           body: msg.body,
           image_url: msg.imageUrl,
           reply_to_message_id: msg.replyToMessageId,
@@ -161,7 +163,7 @@ export function Providers({ children }: { children: ReactNode }) {
         });
         if (error) throw error;
         await supabase
-          .from("rockscout_threads")
+          .from("chat_threads")
           .update({ last_message_at: new Date().toISOString() })
           .eq("id", msg.chatId);
       }

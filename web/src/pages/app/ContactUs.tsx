@@ -28,10 +28,10 @@ export default function ContactUs() {
         `${message}\n\n---\nFrom: ${user?.email ?? "Unknown"}\nAccount ID: ${user?.id ?? "N/A"}`,
       );
       const subjectEnc = encodeURIComponent(`RockScout Support: ${subject}`);
-      window.location.href = `mailto:support@rockscout.app?subject=${subjectEnc}&body=${body}`;
+      window.location.href = `mailto:support@rockscout.net?subject=${subjectEnc}&body=${body}`;
       toast.success("Opening your email app...");
     } catch {
-      toast.error("Could not open email app. Email support@rockscout.app directly.");
+      toast.error("Could not open email app. Email support@rockscout.net directly.");
     } finally {
       setSending(false);
     }
@@ -55,7 +55,7 @@ export default function ContactUs() {
               </div>
               <div>
                 <p className="text-sm font-bold text-foreground">Email</p>
-                <p className="text-sm text-[hsl(var(--text-mid))]">support@rockscout.app</p>
+                <p className="text-sm text-[hsl(var(--text-mid))]">support@rockscout.net</p>
               </div>
             </div>
           </SculptedCard>

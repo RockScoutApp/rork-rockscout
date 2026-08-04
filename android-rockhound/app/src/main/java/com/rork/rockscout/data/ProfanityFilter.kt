@@ -190,4 +190,86 @@ object ProfanityFilter {
 
     /** Quick check to tell callers whether a string contains any filtered word. */
     fun hasFilteredWord(text: String): Boolean = filter(text) != text
+
+    // ─── Self-Harm Phrase Detection ──────────────────────────────────────
+    /** Phrases that indicate self-harm or encouraging self-harm — auto-asterisked,
+     *  1st offense = warning popup, 2nd offense = auto-report + bell + email. */
+    private val selfHarmPhrases = listOf(
+        "kill yourself", "kill urself", "kys", "go kill yourself", "go k!ll yourself",
+        "kill yourself.", "kill yourself!", "kill urself.", "kill urself!",
+        "go kill urself", "kill myself", "kill urself", "kys.", "kys!",
+        "end your life", "end ur life", "end my life", "end it all",
+        "hurt myself", "hurt urself", "cut myself", "cut urself",
+        "suicide", "suicidal", "kill me", "kill urself now",
+        "you should kill yourself", "u should kill yourself",
+        "you should kill urself", "u should kill urself",
+        "go die", "go d!e", "die already", "d!e already",
+        "nobody would miss you", "nobody would care if you died",
+    )
+
+    /** Leetspeak variants of self-harm phrases. */
+    private val selfHarmLeetMap = mapOf(
+        '1' to 'i', '3' to 'e', '4' to 'a', '5' to 's', '6' to 'g',
+        '7' to 't', '8' to 'b', '0' to 'o', '$' to 's', '@' to 'a',
+        '!' to 'i', '+' to 't', '#' to 'h', '9' to 'g',
+    )
+
+    data class SelfHarmResult(
+        val filteredText: String,
+        val hasSelfHarm: Boolean,
+        val matchedPhrases: List<String>,
+    )
+
+    /** Check for self-harm phrases in [text]. Returns asterisked text and matched phrases. */
+    fun filterSelfHarm(text: String): SelfHarmResult {
+        if (text.isBlank()) return SelfHarmResult(text, false, emptyList())
+
+        var result = text
+        val matched = mutableListOf<String>()
+        val lower = text.lowercase()
+
+        for (phrase in selfHarmPhrases) {
+            // Check both the original and leet-normalized versions
+            val normalizedPhrase = normalizeSelfHarm(phrase)
+            val normalizedText = normalizeSelfHarm(lower)
+
+            if (lower.contains(phrase)) {
+                // Found in original text — asterisk it
+                val pattern = Regex(Regex.escape(phrase), RegexOption.IGNORE_CASE)
+                result = pattern.replace(result) { match ->
+                    "*".repeat(match.value.length)
+                }
+                if (phrase !in matched) matched.add(phrase)
+            } else if (normalizedText.contains(normalizedPhrase)) {
+                // Found in leet-normalized text — find and asterisk the original
+                val leetPattern = buildLeetInsensitivePattern(phrase)
+                val regex = Regex(leetPattern, RegexOption.IGNORE_CASE)
+                result = regex.replace(result) { match ->
+                    "*".repeat(match.value.length)
+                }
+                if (phrase !in matched) matched.add(phrase)
+            }
+        }
+
+        return SelfHarmResult(result, matched.isNotEmpty(), matched)
+    }
+
+    private fun normalizeSelfHarm(input: String): String {
+        return input.lowercase().map { selfHarmLeetMap[it] ?: it }.joinToString("")
+    }
+
+    private fun buildLeetInsensitivePattern(phrase: String): String {
+        // Build a regex that allows leet substitutions for each character
+        val leetReplacements = mapOf(
+            'i' to "[i1!]", 'e' to "[e3]", 'a' to "[a4@]", 's' to "[s5$]",
+            'g' to "[g69]", 't' to "[t7+]", 'b' to "[b8]", 'o' to "[o0]",
+            'h' to "[h#]",
+        )
+        val sb = StringBuilder()
+        for (ch in phrase) {
+            val lower = ch.lowercaseChar()
+            sb.append(leetReplacements[lower] ?: Regex.escape(ch.toString()))
+        }
+        return sb.toString()
+    }
 }

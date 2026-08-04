@@ -21,6 +21,7 @@ import { handleImageProxy, buildProxyCors } from "./image-proxy";
 import { handleErrorReport } from "./error-report";
 import { handleSendErrorEmail } from "./send-error-email";
 import { handleProfanityWarning } from "./profanity-warning";
+import { handleReportNotificationEmail } from "./report-notification-email";
 import {
   buildCorsHeaders,
   guardEndpoint,
@@ -61,7 +62,7 @@ export default {
     if (url.pathname === "/app-version" && request.method === "GET") {
       const guard = guardEndpoint(request, env, "/app-version", cors, env.RATE_LIMIT_KV);
       if (guard) return guard;
-      return handleAppVersion(request);
+      return handleAppVersion(request, env);
     }
 
     // Protected AI endpoints — auth + rate limit.
@@ -335,6 +336,22 @@ export default {
       return handleProfanityWarning(
         request,
         env as unknown as {
+          EXPO_PUBLIC_SUPABASE_URL?: string;
+          SUPABASE_SERVICE_ROLE_KEY?: string;
+          EXPO_PUBLIC_RORK_APP_KEY?: string;
+        },
+        cors,
+      );
+    }
+
+    // Report notification email — sends email + bell notification to a reported user.
+    if (url.pathname === "/report-notification-email" && request.method === "POST") {
+      const guard = guardEndpoint(request, env, "/report-notification-email", cors, env.RATE_LIMIT_KV);
+      if (guard) return guard;
+      return handleReportNotificationEmail(
+        request,
+        env as unknown as {
+          RESEND_API_KEY?: string;
           EXPO_PUBLIC_SUPABASE_URL?: string;
           SUPABASE_SERVICE_ROLE_KEY?: string;
           EXPO_PUBLIC_RORK_APP_KEY?: string;

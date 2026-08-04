@@ -113,6 +113,7 @@ import java.util.Locale
 import java.util.TimeZone
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Mail
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 
 /**
  * Messenger screen — used for deep-linking into specific conversation threads
@@ -159,6 +160,9 @@ fun MessengerScreen(
     var activeRequestId by remember { mutableStateOf<String?>(openRequestId) }
     var showProfanityWarning by remember { mutableStateOf(false) }
     var pendingFilteredText by remember { mutableStateOf("") }
+    var showSelfHarmWarning by remember { mutableStateOf(false) }
+    var selfHarmFilteredText by remember { mutableStateOf("") }
+    var selfHarmOffenseCount by remember { mutableStateOf(0) }
     var activeGroupChatId by remember { mutableStateOf<String?>(null) }
     var activeGroupChatName by remember { mutableStateOf<String?>(null) }
     var replyToMessageId by remember { mutableStateOf<String?>(null) }
@@ -377,11 +381,58 @@ fun MessengerScreen(
                 // Use the group's profanity filter level
                 val gc = SupabaseMessagingRepository.groupChats.value.firstOrNull { it.id == gcId }
                 val strict = gc?.profanity_filter_level == "strict"
-                val result = ProfanityFilter.filterWithWarning(replyBody, strict = strict)
+                // Step 1: Check for self-harm phrases FIRST
+                val selfHarmResult = ProfanityFilter.filterSelfHarm(replyBody)
+                if (selfHarmResult.hasSelfHarm) {
+                    selfHarmOffenseCount += 1
+                    selfHarmFilteredText = selfHarmResult.filteredText
+                    if (selfHarmOffenseCount >= 2 && auth.currentUserId != null) {
+                        // Auto-file a report on 2nd offense
+                        scope.launch {
+                            ReportRepository.instance.reportUser(
+                                reportedUserId = auth.currentUserId!!,
+                                reason = "Self-harm language: ${selfHarmResult.matchedPhrases.joinToString(", ")}",
+                                screenshotPath = null,
+                                reporterName = null,
+                                reportedName = profile.name,
+                                reportedAvatar = profile.avatarEmoji,
+                            )
+                        }
+                    }
+                    showSelfHarmWarning = true
+                    return@ThreadView
+                }
+                // Step 2: Regular profanity filter on the (possibly self-harm-asterisked) text
+                val result = ProfanityFilter.filterWithWarning(selfHarmResult.filteredText, strict = strict)
                 val filtered = result.filteredText
                 if (result.hasExplicitContent) {
                     pendingFilteredText = filtered
                     showProfanityWarning = true
+                    // Record warning server-side via Cloudflare Worker
+                    val uid = auth.currentUserId
+                    if (uid != null) {
+                        scope.launch {
+                            try {
+                                val apiUrl = com.rork.rockscout.data.BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", com.rork.rockscout.data.BuildSecrets.RORK_FUNCTIONS_URL)
+                                val appKey = com.rork.rockscout.data.BuildSecrets.resolve("EXPO_PUBLIC_RORK_APP_KEY", com.rork.rockscout.data.BuildSecrets.RORK_APP_KEY)
+                                val client = okhttp3.OkHttpClient()
+                                val json = org.json.JSONObject().apply {
+                                    put("userId", uid)
+                                    put("reason", "Explicit language in group chat")
+                                    put("source", "group_chat")
+                                    put("sourceId", gcId)
+                                }
+                                val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+                                val req = okhttp3.Request.Builder()
+                                    .url("$apiUrl/profanity-warning")
+                                    .post(okhttp3.RequestBody.create(mediaType, json.toString()))
+                                    .addHeader("Content-Type", "application/json")
+                                    .addHeader("Authorization", "Bearer $appKey")
+                                    .build()
+                                client.newCall(req).execute()
+                            } catch (_: Exception) { /* best-effort */ }
+                        }
+                    }
                 } else if (filtered.isNotBlank() && gcId != null) {
                     // Parse @username tags from the input text
                     val memberIds = SupabaseMessagingRepository.groupChatMemberIds(gcId)
@@ -434,6 +485,28 @@ fun MessengerScreen(
             },
             hunterCache = hunterCache,
         )
+        if (showSelfHarmWarning) {
+            SelfHarmWarningDialog(
+                offenseCount = selfHarmOffenseCount,
+                onConfirm = {
+                    showSelfHarmWarning = false
+                    val text = selfHarmFilteredText
+                    if (text.isNotBlank() && gcId != null) {
+                        val memberIds = SupabaseMessagingRepository.groupChatMemberIds(gcId)
+                        val taggedIds = parseTaggedUserIds(replyBody, memberIds, hunterCache)
+                        val replyToSnapshot = replyToMessageId
+                        scope.launch {
+                            SupabaseMessagingRepository.sendGroupMessage(gcId, text, null, replyToSnapshot, taggedIds)
+                            replyBody = ""
+                            replyToMessageId = null
+                            replyToSenderName = null
+                            replyToBody = null
+                            ChatDraftStore.deleteDraft(gcId)
+                        }
+                    }
+                },
+            )
+        }
         if (showProfanityWarning) {
             ProfanityWarningDialog(
                 onConfirm = {
@@ -495,11 +568,56 @@ fun MessengerScreen(
             replyBody = replyBody,
             onReplyChange = { replyBody = it },
             onSend = {
-                val result = ProfanityFilter.filterWithWarning(replyBody, strict = false)
+                // Step 1: Check for self-harm phrases FIRST
+                val selfHarmResult = ProfanityFilter.filterSelfHarm(replyBody)
+                if (selfHarmResult.hasSelfHarm) {
+                    selfHarmOffenseCount += 1
+                    selfHarmFilteredText = selfHarmResult.filteredText
+                    if (selfHarmOffenseCount >= 2 && auth.currentUserId != null) {
+                        scope.launch {
+                            ReportRepository.instance.reportUser(
+                                reportedUserId = auth.currentUserId!!,
+                                reason = "Self-harm language: ${selfHarmResult.matchedPhrases.joinToString(", ")}",
+                                screenshotPath = null,
+                                reporterName = null,
+                                reportedName = profile.name,
+                                reportedAvatar = profile.avatarEmoji,
+                            )
+                        }
+                    }
+                    showSelfHarmWarning = true
+                    return@ThreadView
+                }
+                // Step 2: Regular profanity filter
+                val result = ProfanityFilter.filterWithWarning(selfHarmResult.filteredText, strict = false)
                 val filtered = result.filteredText
                 if (result.hasExplicitContent) {
                     pendingFilteredText = filtered
                     showProfanityWarning = true
+                    val uid = auth.currentUserId
+                    if (uid != null) {
+                        scope.launch {
+                            try {
+                                val apiUrl = com.rork.rockscout.data.BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", com.rork.rockscout.data.BuildSecrets.RORK_FUNCTIONS_URL)
+                                val appKey = com.rork.rockscout.data.BuildSecrets.resolve("EXPO_PUBLIC_RORK_APP_KEY", com.rork.rockscout.data.BuildSecrets.RORK_APP_KEY)
+                                val client = okhttp3.OkHttpClient()
+                                val json = org.json.JSONObject().apply {
+                                    put("userId", uid)
+                                    put("reason", "Explicit language in private chat")
+                                    put("source", "chat")
+                                    put("sourceId", threadId)
+                                }
+                                val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+                                val req = okhttp3.Request.Builder()
+                                    .url("$apiUrl/profanity-warning")
+                                    .post(okhttp3.RequestBody.create(mediaType, json.toString()))
+                                    .addHeader("Content-Type", "application/json")
+                                    .addHeader("Authorization", "Bearer $appKey")
+                                    .build()
+                                client.newCall(req).execute()
+                            } catch (_: Exception) { }
+                        }
+                    }
                 } else if (filtered.isNotBlank() && threadId != null) {
                     // For private chats, tag the other user if their name appears
                     val taggedIds = activeOtherId?.let { oid ->
@@ -560,6 +678,29 @@ fun MessengerScreen(
             },
             hunterCache = hunterCache,
         )
+        if (showSelfHarmWarning) {
+            SelfHarmWarningDialog(
+                offenseCount = selfHarmOffenseCount,
+                onConfirm = {
+                    showSelfHarmWarning = false
+                    val text = selfHarmFilteredText
+                    if (text.isNotBlank() && threadId != null) {
+                        val taggedIds = activeOtherId?.let { oid ->
+                            val otherName = activeOtherName ?: ""
+                            if (replyBody.contains("@$otherName", ignoreCase = true)) listOf(oid) else emptyList()
+                        } ?: emptyList()
+                        scope.launch {
+                            social.sendMessage(threadId, text, null, replyToMessageId, taggedIds)
+                            replyBody = ""
+                            replyToMessageId = null
+                            replyToSenderName = null
+                            replyToBody = null
+                            ChatDraftStore.deleteDraft(threadId)
+                        }
+                    }
+                },
+            )
+        }
         if (showProfanityWarning) {
             ProfanityWarningDialog(
                 onConfirm = {
@@ -1226,7 +1367,7 @@ private fun ProfanityWarningDialog(
         },
         text = {
             Text(
-                "Your message contains language that was censored. If you believe we're censoring a word by mistake, email support@rockscout.app to get it cleared up.",
+                "Your message contains language that was censored. If you believe we're censoring a word by mistake, email support@rockscout.net to get it cleared up.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = DarkTextMid,
             )
@@ -1234,6 +1375,61 @@ private fun ProfanityWarningDialog(
         confirmButton = {
             com.rork.rockscout.ui.components.SculptedButton(
                 text = "OK",
+                onClick = onConfirm,
+                accent = Danger,
+                containerColor = Danger,
+                textColor = Color.White,
+            )
+        },
+    )
+}
+
+/* ── Self-harm warning dialog ────────────────────────────────────────────── */
+
+@Composable
+private fun SelfHarmWarningDialog(
+    offenseCount: Int,
+    onConfirm: () -> Unit,
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onConfirm,
+        containerColor = Color(0xFF1E1C16),
+        titleContentColor = Danger,
+        textContentColor = DarkTextMid,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Warning, contentDescription = null, tint = Danger, modifier = Modifier.size(22.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Self-Harm Language Detected", color = Danger, fontWeight = FontWeight.Bold)
+            }
+        },
+        text = {
+            Column {
+                Text(
+                    "Your message contains language related to self-harm. This is a serious violation of our community guidelines. The phrase has been censored.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = DarkTextMid,
+                )
+                if (offenseCount >= 2) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "This is your ${offenseCount}th offense. An automatic report has been filed and you will be notified via email and notifications.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Danger,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "If you or someone you know is struggling, please contact the 988 Suicide & Crisis Lifeline by dialing 988.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = DarkTextMid,
+                )
+            }
+        },
+        confirmButton = {
+            com.rork.rockscout.ui.components.SculptedButton(
+                text = "I Understand",
                 onClick = onConfirm,
                 accent = Danger,
                 containerColor = Danger,
