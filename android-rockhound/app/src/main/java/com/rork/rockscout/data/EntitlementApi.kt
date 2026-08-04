@@ -34,7 +34,10 @@ object EntitlementApi {
     private val client = NetworkClient.client
 
     @Serializable
-    private data class EntitlementRequest(val userId: String)
+    private data class EntitlementRequest(
+        val userId: String,
+        val forcePremium: Boolean = false,
+    )
 
     @Serializable
     private data class EntitlementResponse(
@@ -48,7 +51,7 @@ object EntitlementApi {
      * Silently fails on network errors — this is a best-effort sync.
      * Returns true if the sync succeeded, false otherwise.
      */
-    suspend fun syncEntitlement(userId: String): Boolean {
+    suspend fun syncEntitlement(userId: String, forcePremium: Boolean = false): Boolean {
         if (userId.isBlank()) return false
         return try {
             val baseUrl = BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", BuildSecrets.RORK_FUNCTIONS_URL)
@@ -58,7 +61,7 @@ object EntitlementApi {
             val response = client.post("$baseUrl/entitlement") {
                 contentType(ContentType.Application.Json)
                 if (appKey.isNotBlank()) header("X-App-Key", appKey)
-                setBody(json.encodeToString(EntitlementRequest.serializer(), EntitlementRequest(userId)))
+                setBody(json.encodeToString(EntitlementRequest.serializer(), EntitlementRequest(userId, forcePremium)))
             }
 
             val body = response.body<String>()

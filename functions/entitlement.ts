@@ -49,6 +49,7 @@ interface EntitlementEnv {
   REVENUECAT_SECRET_API_KEY?: string;
   SUPABASE_SERVICE_ROLE_KEY?: string;
   EXPO_PUBLIC_SUPABASE_URL?: string;
+  EXPO_PUBLIC_RORK_APP_KEY?: string;
 }
 
 /**
@@ -154,7 +155,7 @@ export async function handleEntitlement(
     );
   }
 
-  let body: { userId?: string } = {};
+  let body: { userId?: string; forcePremium?: boolean } = {};
   try {
     const text = await request.text();
     if (text) body = JSON.parse(text) as typeof body;
@@ -173,11 +174,30 @@ export async function handleEntitlement(
     );
   }
 
-  // 1. Check RevenueCat for active entitlements.
-  const isPremium = await checkRevenueCatEntitlements(
-    env.REVENUECAT_SECRET_API_KEY,
-    userId,
-  );
+  // FORCE_PREMIUM path: the Android premium APK bypasses RevenueCat entirely,
+  // so it has no RevenueCat entitlement. When the app sends forcePremium=true
+  // (authenticated via X-App-Key), skip RevenueCat and set is_pro=true directly.
+  const forcePremium = body.forcePremium === true;
+
+  let isPremium: boolean;
+  if (forcePremium) {
+    // Verify the request is app-key authenticated before honoring forcePremium.
+    const expectedKey = env.EXPO_PUBLIC_RORK_APP_KEY;
+    const providedKey = request.headers.get("x-app-key");
+    if (!expectedKey || providedKey !== expectedKey) {
+      return Response.json(
+        { ok: false, error: "unauthorized" },
+        { status: 401, headers },
+      );
+    }
+    isPremium = true;
+  } else {
+    // 1. Check RevenueCat for active entitlements.
+    isPremium = await checkRevenueCatEntitlements(
+      env.REVENUECAT_SECRET_API_KEY,
+      userId,
+    );
+  }
 
   // 2. Write the result back to Supabase so the web PWA sees it.
   const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);

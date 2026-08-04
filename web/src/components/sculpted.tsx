@@ -215,13 +215,15 @@ export const DashboardTile = forwardRef<HTMLButtonElement, DashboardTileProps>(
           ["--breathe-delay" as string]: `${label.split("").reduce((a, c) => a + c.charCodeAt(0), 0) % 800}ms`,
         }}
       >
-        {/* Photo header with color wash */}
-        <div className="absolute inset-x-0 top-0 h-24 overflow-hidden">
+        {/* Photo area with icon + title overlay at top-left */}
+        <div className="absolute inset-x-0 top-0 h-28 overflow-hidden">
           {imageUrl ? (
             <img
               src={imageUrl}
               alt=""
-              className="h-full w-full object-cover"
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             />
           ) : (
             <div
@@ -229,40 +231,47 @@ export const DashboardTile = forwardRef<HTMLButtonElement, DashboardTileProps>(
               style={{ ["--breathe-duration" as string]: "3s" }}
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[hsl(30_10%_7%)]" />
+          {/* Scrim for icon + title readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-[hsl(30_10%_7%)]" />
         </div>
 
-        {/* Bottom content area */}
-        <div className="relative mt-auto p-3.5">
+        {/* Icon badge — top-left, overlaid on photo */}
+        <div className="relative p-3">
           <div
-            className="icon-badge glowing-border mb-2 flex h-10 w-10 items-center justify-center rounded-xl"
+            className="icon-badge glowing-border flex h-10 w-10 items-center justify-center rounded-xl"
             style={{ ["--badge-accent" as string]: accentVar, ["--glow-color" as string]: accentVar }}
           >
             {icon}
           </div>
+          {/* Tile title — below icon, overlaid on photo */}
           <p
-            className="text-sm font-bold leading-tight"
+            className="mt-2 text-sm font-bold leading-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]"
             style={{ color: `hsl(${accentVar})` }}
           >
             {label}
           </p>
-          {subtitle && (
-            <p className="mt-0.5 text-xs font-medium text-[hsl(var(--text-mid))] line-clamp-1">
+        </div>
+
+        {/* Description — bottom of tile, 2-line clamp */}
+        {subtitle && (
+          <div className="relative mt-auto p-3 pt-0">
+            <p className="text-xs font-medium leading-snug text-[hsl(var(--text-mid))] line-clamp-2">
               {subtitle}
             </p>
-          )}
-          {count !== undefined && count > 0 && (
-            <span
-              className="absolute right-3 top-3 rounded-full px-2 py-0.5 text-xs font-bold"
-              style={{
-                backgroundColor: `hsl(${accentVar} / 0.2)`,
-                color: `hsl(${accentVar})`,
-              }}
-            >
-              {count}
-            </span>
-          )}
-        </div>
+          </div>
+        )}
+
+        {count !== undefined && count > 0 && (
+          <span
+            className="absolute right-3 top-3 rounded-full px-2 py-0.5 text-xs font-bold backdrop-blur-sm"
+            style={{
+              backgroundColor: `hsl(${accentVar} / 0.25)`,
+              color: `hsl(${accentVar})`,
+            }}
+          >
+            {count}
+          </span>
+        )}
       </button>
     );
   },

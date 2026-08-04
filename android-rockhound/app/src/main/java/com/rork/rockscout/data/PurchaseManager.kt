@@ -504,7 +504,11 @@ class PurchaseManager {
      * and carry over across devices.
      */
     suspend fun linkRevenueCatUser(userId: String) {
-        if (com.rork.rockscout.BuildConfig.FORCE_PREMIUM) return
+        if (com.rork.rockscout.BuildConfig.FORCE_PREMIUM) {
+            // Premium APK: still sync is_pro to Supabase so the web PWA sees premium.
+            syncEntitlementToBackend()
+            return
+        }
         try {
             val result = Purchases.sharedInstance.awaitLogIn(userId)
             updatePremiumStatus(result.customerInfo)
@@ -543,15 +547,11 @@ class PurchaseManager {
      * [linkRevenueCatUser], so the backend can look up the entitlement by ID.
      */
     private fun syncEntitlementToBackend() {
-        if (com.rork.rockscout.BuildConfig.FORCE_PREMIUM) {
-            _syncStatus.value = SyncStatus.SYNCED
-            _entitlementSynced.value = true
-            return
-        }
         val userId = AuthRepository.instance.currentUserId ?: return
+        val forcePremium = com.rork.rockscout.BuildConfig.FORCE_PREMIUM
         _syncStatus.value = SyncStatus.SYNCING
         scope.launch {
-            val ok = EntitlementApi.syncEntitlement(userId)
+            val ok = EntitlementApi.syncEntitlement(userId, forcePremium)
             if (ok) {
                 _syncStatus.value = SyncStatus.SYNCED
                 _entitlementSynced.value = true
