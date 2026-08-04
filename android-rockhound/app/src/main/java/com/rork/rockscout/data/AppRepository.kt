@@ -113,6 +113,8 @@ data class UserProfile(
     val favoriteRock: String = "",
     /** Custom highlight color for the profile page (hex string like "#FF3B30"). Null = default. */
     val highlightColor: String? = null,
+    /** Optional photo avatar URI (file:// or content://). When set, shown instead of the emoji avatar. */
+    val avatarImagePath: String? = null,
 )
 
 /**

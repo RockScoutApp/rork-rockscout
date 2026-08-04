@@ -1158,7 +1158,7 @@ Planned with RockScout""".trimIndent()
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = ProfanityFilter.filter(it) },
-                    label = { Text("Trip name") },
+                    label = { Text("Trip name *") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next),
                     modifier = Modifier.fillMaxWidth().noAutoFocus(),

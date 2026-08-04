@@ -378,7 +378,7 @@ export default function TradingFloor() {
               {/* Specimen name */}
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
-                  Specimen Name
+                  Specimen Name <span className="text-red-500">*</span>
                 </label>
                 <Input
                   value={formName}

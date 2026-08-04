@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -25,6 +25,10 @@ import {
   Gift,
   Check,
   Calendar,
+  Camera,
+  ImageIcon,
+  Loader2,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTier } from "@/hooks/useTier";
@@ -76,6 +80,7 @@ interface ProfileData {
   id: string;
   display_name: string;
   avatar_emoji: string;
+  avatar_image_path?: string | null;
   status: string;
   level: number;
   xp: number;
@@ -146,6 +151,14 @@ export default function Profile() {
   const [pickerYear, setPickerYear] = useState(2000);
   const [showMonthScroll, setShowMonthScroll] = useState(false);
   const [showYearScroll, setShowYearScroll] = useState(false);
+  const [editAvatarImage, setEditAvatarImage] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [nameChecking, setNameChecking] = useState(false);
+  const [originalName, setOriginalName] = useState("");
+  const nameCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const avatarFileRef = useRef<HTMLInputElement>(null);
+  const avatarCameraRef = useRef<HTMLInputElement>(null);
 
   // ── Profile data ──
   const { data: profile } = useQuery<ProfileData>({
@@ -154,7 +167,7 @@ export default function Profile() {
       if (!user) return null;
       const { data } = await supabase
         .from("rockscout_profiles")
-        .select("id, display_name, avatar_emoji, status, level, xp, is_pro, pro_badge, tokens, bio, home_region, gender, birthday, birthday_private, favorite_rock, highlight_color")
+        .select("id, display_name, avatar_emoji, avatar_image_path, status, level, xp, is_pro, pro_badge, tokens, bio, home_region, gender, birthday, birthday_private, favorite_rock, highlight_color")
         .eq("id", user.id)
         .maybeSingle();
       return (data as ProfileData) ?? null;
@@ -222,7 +235,9 @@ export default function Profile() {
   useEffect(() => {
     if (profile) {
       setEditName(profile.display_name || "");
+      setOriginalName(profile.display_name || "");
       setEditEmoji(profile.avatar_emoji || "💎");
+      setEditAvatarImage(profile.avatar_image_path ?? null);
       setEditStatus(profile.status || "off");
       setEditGender(profile.gender || "rather_not_say");
       setEditBirthday(profile.birthday || "");
@@ -239,6 +254,87 @@ export default function Profile() {
     }
   }, [profile]);
 
+  // ── Debounced real-time name validation ──
+  const checkNameAvailability = useCallback(
+    async (name: string) => {
+      const trimmed = name.trim();
+      if (!trimmed) {
+        setNameError("Display name cannot be empty.");
+        setNameChecking(false);
+        return;
+      }
+      if (trimmed.toLowerCase() === originalName.trim().toLowerCase()) {
+        setNameError(null);
+        setNameChecking(false);
+        return;
+      }
+      setNameChecking(true);
+      try {
+        const taken = await isUsernameTaken(trimmed, user?.id);
+        setNameError(taken ? "That username is already taken. Add numbers to make it unique." : null);
+      } catch {
+        setNameError(null);
+      }
+      setNameChecking(false);
+    },
+    [originalName, user?.id],
+  );
+
+  useEffect(() => {
+    if (!showEditSheet) return;
+    if (nameCheckTimer.current) clearTimeout(nameCheckTimer.current);
+    setNameChecking(true);
+    nameCheckTimer.current = setTimeout(() => {
+      checkNameAvailability(editName);
+    }, 500);
+    return () => {
+      if (nameCheckTimer.current) clearTimeout(nameCheckTimer.current);
+    };
+  }, [editName, showEditSheet, checkNameAvailability]);
+
+  // ── Avatar upload handler ──
+  const handleAvatarFile = useCallback(
+    async (file: File) => {
+      if (!user) return;
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("Image must be under 5 MB.");
+        return;
+      }
+      setAvatarUploading(true);
+      try {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const dataUrl = reader.result as string;
+          // Upload to Supabase Storage
+          const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+          const path = `avatars/${user.id}/avatar_${Date.now()}.${ext}`;
+          const { error: uploadErr } = await supabase.storage
+            .from("rockscout-avatars")
+            .upload(path, file, { upsert: true });
+          if (uploadErr) {
+            // Fallback: store the data URL directly in the profile
+            setEditAvatarImage(dataUrl);
+          } else {
+            const { data: urlData } = supabase.storage
+              .from("rockscout-avatars")
+              .getPublicUrl(path);
+            setEditAvatarImage(urlData.publicUrl || dataUrl);
+          }
+          setAvatarUploading(false);
+        };
+        reader.onerror = () => {
+          setAvatarUploading(false);
+          toast.error("Failed to read image file.");
+        };
+        reader.readAsDataURL(file);
+      } catch {
+        setAvatarUploading(false);
+        toast.error("Failed to upload avatar.");
+      }
+    },
+    [user],
+  );
+
   // ── Save profile edits ──
   const saveProfile = useMutation({
     mutationFn: async () => {
@@ -253,6 +349,7 @@ export default function Profile() {
         .update({
           display_name: baseName,
           avatar_emoji: editEmoji,
+          avatar_image_path: editAvatarImage,
           status: editStatus,
           gender: editGender,
           birthday: editBirthday || null,
@@ -262,11 +359,15 @@ export default function Profile() {
         })
         .eq("id", user.id);
       if (error) throw error;
+      // Force invalidate all profile-dependent queries so other devices
+      // and tabs pick up the changes immediately via React Query refetch.
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["friends"] });
       setShowEditSheet(false);
-      toast.success("Profile updated");
+      toast.success("Profile updated & synced");
     },
     onError: (err: Error) => toast.error(err.message || "Failed to save"),
   });
@@ -818,29 +919,96 @@ export default function Profile() {
               </button>
             </div>
 
-            {/* Avatar picker */}
+            {/* Avatar picker — photo + emoji */}
             <div className="mb-4">
               <label className="mb-2 block text-xs font-semibold text-muted-foreground">
-                Avatar
+                Avatar <span className="text-red-500">*</span>
               </label>
-              <div className="mb-2 flex items-center gap-3">
+              <div className="mb-3 flex items-center gap-3">
+                {/* Avatar preview */}
                 <div
-                  className="glowing-border flex h-14 w-14 items-center justify-center rounded-full text-2xl"
+                  className="glowing-border relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full text-2xl"
                   style={{ ["--glow-color" as string]: CITRINE_HEX }}
                 >
-                  {editEmoji}
+                  {avatarUploading ? (
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  ) : editAvatarImage ? (
+                    <img
+                      src={editAvatarImage}
+                      alt="Avatar"
+                      className="h-full w-full rounded-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    editEmoji
+                  )}
                 </div>
-                <span className="text-sm text-muted-foreground">
-                  Tap an emoji below
-                </span>
+                {/* Camera + Gallery buttons */}
+                <div className="flex flex-1 flex-col gap-2">
+                  <button
+                    onClick={() => avatarCameraRef.current?.click()}
+                    className="sculpted-button sculpted-raised dark-card flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-bold"
+                    style={{ ["--sculpted-accent" as string]: CITRINE_HEX, color: `hsl(${CITRINE_HEX})` }}
+                  >
+                    <Camera className="h-4 w-4" />
+                    Take Photo
+                  </button>
+                  <button
+                    onClick={() => avatarFileRef.current?.click()}
+                    className="sculpted-button sculpted-raised dark-card flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-bold"
+                    style={{ ["--sculpted-accent" as string]: AQUA_HEX, color: `hsl(${AQUA_HEX})` }}
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                    Choose from Gallery
+                  </button>
+                  {editAvatarImage && (
+                    <button
+                      onClick={() => setEditAvatarImage(null)}
+                      className="flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-red-400 hover:bg-red-500/10"
+                    >
+                      <X className="h-3 w-3" />
+                      Remove Photo
+                    </button>
+                  )}
+                </div>
               </div>
+              {/* Hidden file inputs */}
+              <input
+                ref={avatarFileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleAvatarFile(file);
+                  e.target.value = "";
+                }}
+              />
+              <input
+                ref={avatarCameraRef}
+                type="file"
+                accept="image/*"
+                capture="user"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleAvatarFile(file);
+                  e.target.value = "";
+                }}
+              />
+              <p className="mb-2 text-xs text-muted-foreground">Or pick an emoji:</p>
               <div className="grid grid-cols-8 gap-2 sm:grid-cols-10">
                 {AVATAR_OPTIONS.map((emoji) => (
                   <button
                     key={emoji}
-                    onClick={() => setEditEmoji(emoji)}
+                    onClick={() => {
+                      setEditEmoji(emoji);
+                      setEditAvatarImage(null);
+                    }}
                     className={`flex h-9 w-9 items-center justify-center rounded-lg text-lg transition-all ${
-                      editEmoji === emoji
+                      editEmoji === emoji && !editAvatarImage
                         ? "ring-2 ring-primary"
                         : "hover:bg-muted/50"
                     }`}
@@ -851,10 +1019,10 @@ export default function Profile() {
               </div>
             </div>
 
-            {/* Display name */}
+            {/* Display name — mandatory with real-time validation */}
             <div className="mb-4">
               <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
-                Display Name
+                Display Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -862,8 +1030,28 @@ export default function Profile() {
                 onChange={(e) => setEditName(e.target.value)}
                 maxLength={30}
                 placeholder="Your hunter name"
-                className="w-full dark-card sculpted-raised rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
+                className={`w-full dark-card sculpted-raised rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none ${
+                  nameError ? "border-2 border-red-500" : "focus:border-primary"
+                }`}
               />
+              {/* Real-time validation indicator */}
+              {nameChecking && (
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">Checking availability…</span>
+                </div>
+              )}
+              {!nameChecking && !nameError && editName.trim() && editName.trim().toLowerCase() !== originalName.trim().toLowerCase() && (
+                <div className="mt-1.5 flex items-center gap-1.5">
+                  <Check className="h-3 w-3 text-green-500" />
+                  <span className="text-xs font-semibold text-green-500">Name is available</span>
+                </div>
+              )}
+              {nameError && (
+                <div className="mt-1.5 text-xs font-semibold text-red-500">
+                  {nameError}
+                </div>
+              )}
             </div>
 
             {/* Status selector */}

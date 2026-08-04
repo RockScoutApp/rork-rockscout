@@ -1192,7 +1192,7 @@ internal fun ListingEditorDialog(
                 OutlinedTextField(
                     value = specimenName,
                     onValueChange = { specimenName = it },
-                    label = { Text("Specimen name") },
+                    label = { Text("Specimen name *") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Next),
                     modifier = Modifier.fillMaxWidth().noAutoFocus(),

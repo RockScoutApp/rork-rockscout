@@ -367,7 +367,7 @@ object SupabaseDataSync {
     }
 
     private suspend fun pullProfile(url: String, key: String, token: String, uid: String) {
-        val response = client.get("$url/rest/v1/rockscout_profiles?id=eq.$uid&select=display_name,avatar_emoji,status,club_enabled,scan_radius_miles,highlight_color") {
+        val response = client.get("$url/rest/v1/rockscout_profiles?id=eq.$uid&select=display_name,avatar_emoji,status,club_enabled,scan_radius_miles,highlight_color,avatar_image_path") {
             header("apikey", key)
             header(HttpHeaders.Authorization, "Bearer $token")
         }
@@ -382,6 +382,8 @@ object SupabaseDataSync {
         val current = AppRepository.instance.profile.value
         val highlightColorEl = obj["highlight_color"]
         val highlightColor = if (highlightColorEl is JsonPrimitive && highlightColorEl.content.isNotEmpty()) highlightColorEl.content else null
+        val avatarImagePathEl = obj["avatar_image_path"]
+        val avatarImagePath = if (avatarImagePathEl is JsonPrimitive && avatarImagePathEl.content.isNotEmpty()) avatarImagePathEl.content else null
         if (displayName.isNotBlank() && displayName != current.name) {
             AppRepository.instance.updateProfile { it.copy(name = displayName, avatarEmoji = avatarEmoji) }
             Log.d(TAG, "Pulled profile: name=$displayName")
@@ -390,6 +392,11 @@ object SupabaseDataSync {
             val cleaned = highlightColor?.takeIf { it.isNotBlank() }
             AppRepository.instance.updateProfile { it.copy(highlightColor = cleaned) }
             Log.d(TAG, "Pulled profile: highlight_color=$highlightColor")
+        }
+        if (avatarImagePath != current.avatarImagePath) {
+            val cleaned = avatarImagePath?.takeIf { it.isNotBlank() }
+            AppRepository.instance.updateProfile { it.copy(avatarImagePath = cleaned) }
+            Log.d(TAG, "Pulled profile: avatar_image_path=$avatarImagePath")
         }
     }
 
@@ -570,6 +577,7 @@ object SupabaseDataSync {
                     "club_enabled" to profile.clubEnabled.toString(),
                     "scan_radius_miles" to profile.scanRadiusMiles.toString(),
                     "highlight_color" to (profile.highlightColor ?: ""),
+                    "avatar_image_path" to (profile.avatarImagePath ?: ""),
                 ))
             }
         } catch (e: Exception) {

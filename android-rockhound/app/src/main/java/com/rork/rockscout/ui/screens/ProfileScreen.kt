@@ -131,6 +131,12 @@ import com.rork.rockscout.data.LevelTier
 import com.rork.rockscout.data.SocialRepository
 import com.rork.rockscout.data.WorkScheduler
 import com.rork.rockscout.data.SettingsBackupWorker
+import com.rork.rockscout.data.SupabaseDataSync
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.core.content.FileProvider
+import java.io.File
+import java.util.UUID
 import com.rork.rockscout.data.LocalDataStore
 import com.rork.rockscout.data.SettingsBackupApi
 import com.rork.rockscout.data.PersistenceManager
@@ -1265,6 +1271,7 @@ fun ProfileScreen(
             homeRegion = profile.homeRegion,
             bio = profile.bio,
             avatarEmoji = profile.avatarEmoji,
+            avatarImagePath = profile.avatarImagePath,
             backgroundImagePath = profile.backgroundImagePath,
             pendingBackgroundPath = profile.pendingBackgroundPath,
             currentUserId = currentUid,
@@ -1274,7 +1281,7 @@ fun ProfileScreen(
             favoriteRock = profile.favoriteRock,
             highlightColor = profile.highlightColor,
             onDismiss = { showEditSheet = false },
-            onSave = { newName, newRegion, newBio, newAvatar, newBgPath, newGender, newBirthday, newBirthdayPublic, newFavoriteRock, newHighlightColor ->
+            onSave = { newName, newRegion, newBio, newAvatar, newBgPath, newGender, newBirthday, newBirthdayPublic, newFavoriteRock, newHighlightColor, newAvatarImagePath ->
                 val filteredName = ProfanityFilter.filter(newName)
                 coroutineScope2.launch {
                     // Check uniqueness — if taken, block save and show error toast.
@@ -1303,6 +1310,7 @@ fun ProfileScreen(
                             birthdayPublic = newBirthdayPublic,
                             favoriteRock = ProfanityFilter.filter(newFavoriteRock),
                             highlightColor = newHighlightColor,
+                            avatarImagePath = newAvatarImagePath,
                         )
                     }
                     if (newBgPath != profile.backgroundImagePath) {
@@ -1311,6 +1319,9 @@ fun ProfileScreen(
                         }
                     }
                     repo.saveProfileChanges()
+                    // Force background data sync so profile changes are immediately
+                    // cached and reflected across other devices.
+                    SupabaseDataSync.syncInBackground()
                     if (profile.locationMonitoring) {
                         WorkScheduler.runProximityCheckNow(
                             navController.context.applicationContext
@@ -1403,6 +1414,7 @@ private fun EditProfileSheetContainer(
     homeRegion: String,
     bio: String,
     avatarEmoji: String,
+    avatarImagePath: String?,
     backgroundImagePath: String?,
     pendingBackgroundPath: String?,
     currentUserId: String?,
@@ -1412,7 +1424,7 @@ private fun EditProfileSheetContainer(
     favoriteRock: String,
     highlightColor: String?,
     onDismiss: () -> Unit,
-    onSave: (String, String, String, String, String?, String, Long?, Boolean, String, String?) -> Unit,
+    onSave: (String, String, String, String, String?, String, Long?, Boolean, String, String?, String?) -> Unit,
     onBackgroundSelected: (Uri) -> Unit,
     onRemoveBackground: () -> Unit,
 ) {
@@ -1427,6 +1439,7 @@ private fun EditProfileSheetContainer(
             homeRegion = homeRegion,
             bio = bio,
             avatarEmoji = avatarEmoji,
+            avatarImagePath = avatarImagePath,
             backgroundImagePath = backgroundImagePath,
             pendingBackgroundPath = pendingBackgroundPath,
             currentUserId = currentUserId,
@@ -1449,6 +1462,7 @@ private fun EditProfileSheet(
     homeRegion: String,
     bio: String,
     avatarEmoji: String,
+    avatarImagePath: String?,
     backgroundImagePath: String?,
     pendingBackgroundPath: String?,
     currentUserId: String?,
@@ -1457,13 +1471,14 @@ private fun EditProfileSheet(
     birthdayPublic: Boolean,
     favoriteRock: String,
     highlightColor: String?,
-    onSave: (String, String, String, String, String?, String, Long?, Boolean, String, String?) -> Unit,
+    onSave: (String, String, String, String, String?, String, Long?, Boolean, String, String?, String?) -> Unit,
     onBackgroundSelected: (Uri) -> Unit,
     onRemoveBackground: () -> Unit,
 ) {
     var editName by remember { mutableStateOf(name) }
     var editBio by remember { mutableStateOf(bio) }
     var editAvatar by remember { mutableStateOf(avatarEmoji) }
+    var editAvatarImagePath by remember { mutableStateOf(avatarImagePath) }
     var editRegion by remember { mutableStateOf(homeRegion) }
     var editGender by remember { mutableStateOf(gender) }
     var editBirthday by remember { mutableStateOf(birthdayMillis) }
@@ -1472,34 +1487,122 @@ private fun EditProfileSheet(
     var editHighlightColor by remember { mutableStateOf(highlightColor) }
     var showBirthdayPicker by remember { mutableStateOf(false) }
     var nameError by remember { mutableStateOf<String?>(null) }
+    var nameChecking by remember { mutableStateOf(false) }
     var bgModerating by remember { mutableStateOf(false) }
     var bgRejected by remember { mutableStateOf<String?>(null) }
     var showImageSourcePicker by remember { mutableStateOf(false) }
-    // Track the original name so we know whether the user actually changed it
-    // (needed to avoid blocking the save when they kept their own name).
+    var showAvatarSourcePicker by remember { mutableStateOf(false) }
+    var cameraAvatarUri by remember { mutableStateOf<Uri?>(null) }
+    var avatarModerating by remember { mutableStateOf(false) }
     val originalName = remember { name.trim() }
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
-    // Live duplicate check — re-validate whenever the name changes.
-    // Checks both local users and Supabase profiles for true uniqueness.
+    // Gallery launcher for avatar photo
+    val avatarGalleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+    ) { uri: Uri? ->
+        if (uri != null) {
+            coroutineScope.launch {
+                avatarModerating = true
+                val base64 = ImageUtils.uriToModerationBase64(context, uri)
+                if (base64 == null) {
+                    avatarModerating = false
+                    return@launch
+                }
+                val verdict = ImageModerator.scan(base64, "image/jpeg")
+                when (verdict.triState) {
+                    ModerationTriState.CLEAN -> {
+                        val persistentPath = ImageUtils.copyUriToInternalStorage(context, uri, "avatars")
+                        editAvatarImagePath = persistentPath ?: uri.toString()
+                    }
+                    ModerationTriState.EXPLICIT -> {
+                        android.widget.Toast.makeText(
+                            context,
+                            "Image rejected: inappropriate content detected.",
+                            android.widget.Toast.LENGTH_LONG,
+                        ).show()
+                    }
+                    ModerationTriState.QUESTIONABLE -> {
+                        val persistentPath = ImageUtils.copyUriToInternalStorage(context, uri, "avatars")
+                        editAvatarImagePath = persistentPath ?: uri.toString()
+                    }
+                }
+                avatarModerating = false
+            }
+        }
+    }
+
+    // Camera launcher for avatar photo
+    val avatarCameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture(),
+    ) { success ->
+        if (success && cameraAvatarUri != null) {
+            val capturedUri = cameraAvatarUri!!
+            coroutineScope.launch {
+                avatarModerating = true
+                val base64 = ImageUtils.uriToModerationBase64(context, capturedUri)
+                if (base64 != null) {
+                    val verdict = ImageModerator.scan(base64, "image/jpeg")
+                    when (verdict.triState) {
+                        ModerationTriState.CLEAN -> {
+                            val persistentPath = ImageUtils.copyUriToInternalStorage(context, capturedUri, "avatars")
+                            editAvatarImagePath = persistentPath ?: capturedUri.toString()
+                        }
+                        ModerationTriState.EXPLICIT -> {
+                            android.widget.Toast.makeText(
+                                context,
+                                "Image rejected: inappropriate content detected.",
+                                android.widget.Toast.LENGTH_LONG,
+                            ).show()
+                        }
+                        ModerationTriState.QUESTIONABLE -> {
+                            val persistentPath = ImageUtils.copyUriToInternalStorage(context, capturedUri, "avatars")
+                            editAvatarImagePath = persistentPath ?: capturedUri.toString()
+                        }
+                    }
+                }
+                avatarModerating = false
+            }
+        }
+    }
+
+    // Debounced real-time name validation — checks while typing with a small delay
+    // to avoid spamming network requests on every keystroke.
     LaunchedEffect(editName) {
         val trimmed = editName.trim()
         val liveOriginalName = AppRepository.instance.profile.value.name.trim()
-        nameError = if (trimmed.isBlank()) {
-            "Display name cannot be empty."
-        } else if (trimmed.equals(originalName, ignoreCase = true) || trimmed.equals(liveOriginalName, ignoreCase = true)) {
-            null // User kept their own name — always allowed.
-        } else if (SocialRepository.instance.isDisplayNameTaken(trimmed, excludeUserId = currentUserId)) {
+        if (trimmed.isBlank()) {
+            nameError = "Display name cannot be empty."
+            nameChecking = false
+            return@LaunchedEffect
+        }
+        if (trimmed.equals(originalName, ignoreCase = true) || trimmed.equals(liveOriginalName, ignoreCase = true)) {
+            nameError = null
+            nameChecking = false
+            return@LaunchedEffect
+        }
+        // Show checking indicator immediately for local check
+        nameChecking = true
+        // Debounce: wait for typing to pause before hitting the network
+        kotlinx.coroutines.delay(500)
+        // Re-check that the name hasn't changed during the delay
+        if (editName.trim() != trimmed) return@LaunchedEffect
+        // Fast local check first
+        if (SocialRepository.instance.isDisplayNameTaken(trimmed, excludeUserId = currentUserId)) {
+            nameError = "That username is already taken. Add numbers to make it unique."
+            nameChecking = false
+            return@LaunchedEffect
+        }
+        // Async Supabase check for cross-platform uniqueness
+        val takenOnSupabase = UsernameResolver.isTaken(trimmed, excludeUserId = currentUserId)
+        if (editName.trim() != trimmed) return@LaunchedEffect
+        nameError = if (takenOnSupabase) {
             "That username is already taken. Add numbers to make it unique."
         } else {
-            // Also check Supabase profiles (async) for cross-platform uniqueness.
-            val takenOnSupabase = UsernameResolver.isTaken(trimmed, excludeUserId = currentUserId)
-            if (takenOnSupabase) {
-                "That username is already taken. Add numbers to make it unique."
-            } else {
-                null
-            }
+            null
         }
+        nameChecking = false
     }
 
     Column(
@@ -1574,9 +1677,12 @@ private fun EditProfileSheet(
                 fontWeight = FontWeight.SemiBold,
             )
         }
-        // Display name field with fully visible error
+        // Display name field (mandatory) with fully visible error + checking indicator
         Column {
-            Text("Display name", style = MaterialTheme.typography.labelMedium, color = Aqua, fontWeight = FontWeight.Bold)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Display name", style = MaterialTheme.typography.labelMedium, color = Aqua, fontWeight = FontWeight.Bold)
+                Text(" *", style = MaterialTheme.typography.labelMedium, color = Danger, fontWeight = FontWeight.Bold)
+            }
             Spacer(Modifier.height(6.dp))
             OutlinedTextField(
                 value = editName,
@@ -1596,6 +1702,39 @@ private fun EditProfileSheet(
                 ),
                 shape = RoundedCornerShape(12.dp),
             )
+            if (nameChecking) {
+                Spacer(Modifier.height(6.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.material3.CircularProgressIndicator(
+                        modifier = Modifier.size(14.dp),
+                        strokeWidth = 2.dp,
+                        color = Aqua,
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "Checking availability…",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Aqua,
+                    )
+                }
+            } else if (nameError == null && editName.trim().isNotBlank() && !editName.trim().equals(originalName, ignoreCase = true)) {
+                Spacer(Modifier.height(6.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = null,
+                        tint = Success,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "Name is available",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Success,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+            }
             if (nameError != null) {
                 Spacer(Modifier.height(6.dp))
                 Text(
@@ -1759,17 +1898,118 @@ private fun EditProfileSheet(
             )
         }
 
-        Text("Choose an avatar", style = MaterialTheme.typography.labelMedium, color = Aqua, fontWeight = FontWeight.Bold)
+        // ── Avatar section: photo avatar + emoji picker ──
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Avatar", style = MaterialTheme.typography.labelMedium, color = Aqua, fontWeight = FontWeight.Bold)
+            Text(" *", style = MaterialTheme.typography.labelMedium, color = Danger, fontWeight = FontWeight.Bold)
+        }
+        // Current avatar preview + camera/gallery buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Avatar preview
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(CircleShape)
+                    .background(Brush.linearGradient(listOf(Citrine.copy(alpha = 0.5f), Aqua.copy(alpha = 0.3f))))
+                    .glowingBorder(2.dp, Citrine.copy(alpha = 0.45f), CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (editAvatarImagePath != null && avatarModerating.not()) {
+                    AsyncImage(
+                        model = editAvatarImagePath,
+                        contentDescription = "Avatar photo",
+                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                        contentScale = ContentScale.Crop,
+                    )
+                } else if (avatarModerating) {
+                    androidx.compose.material3.CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp,
+                        color = Citrine,
+                    )
+                } else {
+                    Text(editAvatar, style = MaterialTheme.typography.headlineMedium)
+                }
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                // Camera button
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Citrine.copy(alpha = 0.15f))
+                        .glowingBorder(2.dp, Citrine.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+                        .clickable {
+                            val photoFile = File(context.cacheDir, "photos/avatar_${UUID.randomUUID()}.jpg")
+                            photoFile.parentFile?.mkdirs()
+                            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile)
+                            cameraAvatarUri = uri
+                            avatarCameraLauncher.launch(uri)
+                        }
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.PhotoCamera, contentDescription = null, tint = Citrine, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Take Photo", style = MaterialTheme.typography.labelLarge, color = Citrine, fontWeight = FontWeight.Bold)
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                // Gallery button
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Aqua.copy(alpha = 0.12f))
+                        .glowingBorder(2.dp, Aqua.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                        .clickable { avatarGalleryLauncher.launch("image/*") }
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.PhotoLibrary, contentDescription = null, tint = Aqua, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text("Choose from Gallery", style = MaterialTheme.typography.labelLarge, color = Aqua, fontWeight = FontWeight.Bold)
+                    }
+                }
+                if (editAvatarImagePath != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Danger.copy(alpha = 0.12f))
+                            .glowingBorder(2.dp, Danger.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                            .clickable { editAvatarImagePath = null }
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text("Remove Photo", style = MaterialTheme.typography.labelMedium, color = Danger, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        Text("Or pick an emoji:", style = MaterialTheme.typography.labelSmall, color = DarkTextMid)
+        Spacer(Modifier.height(6.dp))
         Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             avatarOptions.forEach { emoji ->
-                val selected = emoji == editAvatar
+                val selected = emoji == editAvatar && editAvatarImagePath == null
                 Box(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
                         .background(if (selected) Citrine.copy(alpha = 0.3f) else Color(0xFF3A3830))
                         .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), CircleShape)
-                        .clickable { editAvatar = emoji },
+                        .clickable {
+                            editAvatar = emoji
+                            editAvatarImagePath = null
+                        },
                     contentAlignment = Alignment.Center,
                 ) { Text(emoji, style = MaterialTheme.typography.titleLarge) }
             }
@@ -1804,9 +2044,9 @@ private fun EditProfileSheet(
         }
 
         Button(
-            onClick = { onSave(editName, editRegion, editBio, editAvatar, backgroundImagePath, editGender, editBirthday, editBirthdayPublic, editFavoriteRock.trim(), editHighlightColor) },
+            onClick = { onSave(editName, editRegion, editBio, editAvatar, backgroundImagePath, editGender, editBirthday, editBirthdayPublic, editFavoriteRock.trim(), editHighlightColor, editAvatarImagePath) },
             modifier = Modifier.fillMaxWidth(),
-            enabled = nameError == null && editName.trim().isNotBlank(),
+            enabled = nameError == null && editName.trim().isNotBlank() && !nameChecking && !avatarModerating,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Citrine,
                 contentColor = Ink,

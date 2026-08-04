@@ -323,7 +323,7 @@ export default function MyTrades() {
               </div>
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
-                  Specimen Name
+                  Specimen Name <span className="text-red-500">*</span>
                 </label>
                 <Input value={formName} onChange={(e) => setFormName(e.target.value)}
                   placeholder="e.g. Polished Agate Slice" maxLength={80} />
