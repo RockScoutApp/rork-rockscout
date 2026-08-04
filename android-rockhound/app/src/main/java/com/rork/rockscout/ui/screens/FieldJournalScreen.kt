@@ -632,7 +632,13 @@ private fun JournalEditorScreen(
                         modifier = Modifier.weight(1f).noAutoFocus(),
                     )
                     Spacer(Modifier.width(8.dp))
-                    SculptedIconButton(icon = Icons.Filled.Add, contentDescription = "Pick dig site", onClick = { showLocationPicker = true }, accent = Citrine, iconTint = Citrine, size = 44.dp)
+                    SculptedOutlinedButton(
+                        text = "Dig site",
+                        icon = Icons.Filled.Add,
+                        onClick = { showLocationPicker = true },
+                        accent = Citrine,
+                        textColor = Citrine,
+                    )
                 }
                 Spacer(Modifier.height(8.dp))
                 if (selectedDigSiteId != null) {
@@ -726,20 +732,20 @@ private fun JournalEditorScreen(
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Box(
-                            modifier = Modifier.size(64.dp).clip(RoundedCornerShape(10.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                                .glowingBorder(2.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(10.dp))
-                                .clickable { galleryLauncher.launch("image/*") },
-                            contentAlignment = Alignment.Center,
-                        ) { Icon(Icons.Filled.Add, "Add photo", tint = Citrine) }
-                        Box(
-                            modifier = Modifier.size(64.dp).clip(RoundedCornerShape(10.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                                .glowingBorder(2.dp, Citrine.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
-                                .clickable { showImageSourcePicker = true },
-                            contentAlignment = Alignment.Center,
-                        ) { Icon(Icons.Filled.Download, "Saved images", tint = Citrine) }
+                        SculptedOutlinedButton(
+                            text = "Add photo",
+                            icon = Icons.Filled.Add,
+                            onClick = { galleryLauncher.launch("image/*") },
+                            accent = Citrine,
+                            textColor = Citrine,
+                        )
+                        SculptedOutlinedButton(
+                            text = "Saved images",
+                            icon = Icons.Filled.Download,
+                            onClick = { showImageSourcePicker = true },
+                            accent = Citrine,
+                            textColor = Citrine,
+                        )
                     }
                 }
 

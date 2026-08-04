@@ -1373,15 +1373,14 @@ Planned with RockScout""".trimIndent()
                         modifier = Modifier.weight(1f).noAutoFocus(),
                     )
                     Spacer(Modifier.width(8.dp))
-                    SculptedIconButton(
+                    SculptedOutlinedButton(
+                        text = "Add",
                         icon = Icons.Filled.Add,
-                        contentDescription = "Add",
                         onClick = {
                             if (newSpecimen.isNotBlank()) { targetSpecimens.add(newSpecimen.trim()); newSpecimen = "" }
                         },
                         accent = Citrine,
-                        iconTint = Citrine,
-                        size = 44.dp,
+                        textColor = Citrine,
                     )
                 }
 
@@ -1408,15 +1407,14 @@ Planned with RockScout""".trimIndent()
                         modifier = Modifier.weight(1f).noAutoFocus(),
                     )
                     Spacer(Modifier.width(8.dp))
-                    SculptedIconButton(
+                    SculptedOutlinedButton(
+                        text = "Add",
                         icon = Icons.Filled.Add,
-                        contentDescription = "Add",
                         onClick = {
                             if (newGear.isNotBlank()) { gearChecklist.add(newGear.trim()); newGear = "" }
                         },
                         accent = Citrine,
-                        iconTint = Citrine,
-                        size = 44.dp,
+                        textColor = Citrine,
                     )
                 }
 

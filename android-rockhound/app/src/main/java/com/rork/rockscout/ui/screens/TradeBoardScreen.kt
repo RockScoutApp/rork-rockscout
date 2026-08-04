@@ -77,8 +77,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
@@ -940,19 +942,47 @@ internal fun ListingEditorDialog(
         }
     }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        modifier = Modifier.fillMaxWidth().padding(8.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
-        title = {
-            Text(
-                if (isEdit) "Edit Listing" else if (type == ListingType.HAVE) "New Have Listing" else "New Want Listing",
-                style = MaterialTheme.typography.headlineSmall,
-            )
-        },
-        text = {
-            Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).imePadding()) {
+    fun saveListing() {
+        val listing = TradeListing(
+            id = initial?.id ?: UUID.randomUUID().toString(),
+            type = type,
+            listingMode = listingMode,
+            price = if (listingMode == ListingMode.SELLING || listingMode == ListingMode.BUYING) ProfanityFilter.filter(price.trim()) else "",
+            specimenName = ProfanityFilter.filter(specimenName.ifBlank { "Untitled specimen" }),
+            condition = ProfanityFilter.filter(condition.trim()),
+            description = ProfanityFilter.filter(description.trim()),
+            wantInReturn = if (type == ListingType.HAVE && listingMode == ListingMode.SWAP) ProfanityFilter.filter(wantInReturn.trim()) else "",
+            photoUri = photoUri,
+            tags = tags.map { ProfanityFilter.filter(it) },
+            sourceCaptureId = sourceCaptureId,
+            sourceCollectionSpecimenId = sourceCollectionSpecimenId,
+            sourceWishlistSpecimenId = sourceWishlistSpecimenId,
+            status = initial?.status ?: "active",
+            createdAt = initial?.createdAt ?: System.currentTimeMillis(),
+            expiresAt = initial?.expiresAt ?: (System.currentTimeMillis() + 14L * 24 * 60 * 60 * 1000),
+        )
+        onSave(listing)
+    }
+
+    ScreenScaffold(
+        title = if (isEdit) "Edit Listing" else if (type == ListingType.HAVE) "New Have Listing" else "New Want Listing",
+        onBack = onDismiss,
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
+            ) {
                 // Type toggle
+                Text(
+                    "Listing type",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
+                Spacer(Modifier.height(6.dp))
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -968,11 +998,11 @@ internal fun ListingEditorDialog(
                         label = { Text("Want") },
                     )
                 }
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(16.dp))
 
-                // Listing mode chips — swap / selling / buying for HAVE, swap / buying for WANT.
+                // Listing mode chips
                 Text(
-                    "Listing type",
+                    "Transaction",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onBackground,
@@ -1016,73 +1046,82 @@ internal fun ListingEditorDialog(
                         modifier = Modifier.fillMaxWidth().noAutoFocus(),
                     )
                 }
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(16.dp))
 
                 // Source picker
-                Text(
-                    if (type == ListingType.HAVE) "Source specimen" else "Source specimen",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-                Spacer(Modifier.height(6.dp))
                 if (type == ListingType.HAVE) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(5.dp),
-                    ) {
-                        SourceButton(
-                            label = "Field",
-                            icon = Icons.Filled.PhotoLibrary,
-                            onClick = { showCapturePicker = true },
-                            modifier = Modifier.weight(1f),
-                        )
-                        SourceButton(
-                            label = "My Rocks",
-                            icon = Icons.Filled.Collections,
-                            onClick = { showCollectionPicker = true },
-                            modifier = Modifier.weight(1f),
-                        )
-                        SourceButton(
-                            label = "Photo",
-                            icon = Icons.Filled.Download,
-                            onClick = { showImageSourcePicker = true },
-                            modifier = Modifier.weight(1f),
-                        )
-                        SourceButton(
-                            label = "Database",
-                            icon = Icons.Filled.Collections,
-                            onClick = { showDatabasePicker = true },
-                            modifier = Modifier.weight(1f),
-                        )
-                        SourceButton(
-                            label = "Gallery",
-                            icon = Icons.Filled.Bookmarks,
-                            onClick = { galleryLauncher.launch("image/*") },
-                            modifier = Modifier.weight(1f),
-                        )
-                        SourceButton(
-                            label = "Camera",
-                            icon = Icons.Filled.CameraAlt,
-                            onClick = {
-                                val photoFile = File(context.cacheDir, "photos/${UUID.randomUUID()}.jpg")
-                                photoFile.parentFile?.mkdirs()
-                                val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile)
-                                cameraUri = uri
-                                cameraLauncher.launch(uri)
-                            },
-                            modifier = Modifier.weight(1f),
-                        )
+                    Text(
+                        "Source specimen",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "Tap a source to pre-fill the listing from a capture, collection, database, or photo.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextLow,
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            SourceButton(
+                                label = "Field",
+                                icon = Icons.Filled.PhotoLibrary,
+                                onClick = { showCapturePicker = true },
+                                modifier = Modifier.weight(1f),
+                            )
+                            SourceButton(
+                                label = "My Rocks",
+                                icon = Icons.Filled.Collections,
+                                onClick = { showCollectionPicker = true },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            SourceButton(
+                                label = "Saved Image",
+                                icon = Icons.Filled.Download,
+                                onClick = { showImageSourcePicker = true },
+                                modifier = Modifier.weight(1f),
+                            )
+                            SourceButton(
+                                label = "Database",
+                                icon = Icons.Filled.Collections,
+                                onClick = { showDatabasePicker = true },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            SourceButton(
+                                label = "Gallery",
+                                icon = Icons.Filled.Bookmarks,
+                                onClick = { galleryLauncher.launch("image/*") },
+                                modifier = Modifier.weight(1f),
+                            )
+                            SourceButton(
+                                label = "Camera",
+                                icon = Icons.Filled.CameraAlt,
+                                onClick = {
+                                    val photoFile = File(context.cacheDir, "photos/${UUID.randomUUID()}.jpg")
+                                    photoFile.parentFile?.mkdirs()
+                                    val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile)
+                                    cameraUri = uri
+                                    cameraLauncher.launch(uri)
+                                },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
                     }
                 } else {
-                    OutlinedButton(
+                    SculptedOutlinedButton(
+                        text = "Pick from Wishlist",
+                        icon = Icons.Filled.Bookmarks,
                         onClick = { showWishlistPicker = true },
+                        accent = Aqua,
+                        textColor = Aqua,
                         modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Icon(Icons.Filled.Bookmarks, null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Pick from Wishlist")
-                    }
+                    )
                 }
                 // Current source attribution
                 if (sourceCaptureId != null) {
@@ -1239,40 +1278,33 @@ internal fun ListingEditorDialog(
                         onClick = { if (newTag.isNotBlank()) { tags.add(newTag.trim().lowercase()); newTag = "" } },
                     ) { Icon(Icons.Filled.Add, "Add", tint = Citrine) }
                 }
+                Spacer(Modifier.height(8.dp))
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val listing = TradeListing(
-                        id = initial?.id ?: UUID.randomUUID().toString(),
-                        type = type,
-                        listingMode = listingMode,
-                        price = if (listingMode == ListingMode.SELLING || listingMode == ListingMode.BUYING) ProfanityFilter.filter(price.trim()) else "",
-                        specimenName = ProfanityFilter.filter(specimenName.ifBlank { "Untitled specimen" }),
-                        condition = ProfanityFilter.filter(condition.trim()),
-                        description = ProfanityFilter.filter(description.trim()),
-                        wantInReturn = if (type == ListingType.HAVE && listingMode == ListingMode.SWAP) ProfanityFilter.filter(wantInReturn.trim()) else "",
-                        photoUri = photoUri,
-                        tags = tags.map { ProfanityFilter.filter(it) },
-                        sourceCaptureId = sourceCaptureId,
-                        sourceCollectionSpecimenId = sourceCollectionSpecimenId,
-                        sourceWishlistSpecimenId = sourceWishlistSpecimenId,
-                        status = initial?.status ?: "active",
-                        createdAt = initial?.createdAt ?: System.currentTimeMillis(),
-                        expiresAt = initial?.expiresAt ?: (System.currentTimeMillis() + 14L * 24 * 60 * 60 * 1000),
-                    )
-                    onSave(listing)
-                },
-                colors = ButtonDefaults.buttonColors(
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                SculptedTextButton(
+                    text = "Cancel",
+                    onClick = onDismiss,
+                    accent = Citrine,
+                    textColor = Citrine,
+                    modifier = Modifier.weight(1f),
+                )
+                SculptedButton(
+                    text = if (isEdit) "Save Changes" else "Post Listing",
+                    onClick = { saveListing() },
+                    accent = if (type == ListingType.HAVE) Citrine else Aqua,
                     containerColor = if (type == ListingType.HAVE) Citrine else Aqua,
-                    contentColor = Color.Black,
-                ),
-                enabled = specimenName.isNotBlank(),
-            ) { Text(if (isEdit) "Save Changes" else "Post Listing") }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
-    )
+                    textColor = Color.Black,
+                    modifier = Modifier.weight(1.5f),
+                    enabled = specimenName.isNotBlank(),
+                )
+            }
+        }
+    }
 
     pendingRemoveTag?.let { tag ->
         AlertDialog(
@@ -1426,25 +1458,26 @@ private fun DatabasePickerSheet(
 @Composable
 private fun SourceButton(
     label: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    OutlinedButton(
-        onClick = onClick,
-        modifier = modifier.height(38.dp),
-        border = BorderStroke(1.dp, Aqua),
-        shape = RoundedCornerShape(50.dp),
-        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .border(1.dp, Aqua, RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 14.dp, horizontal = 10.dp),
     ) {
-        Icon(icon, null, modifier = Modifier.size(13.dp), tint = Aqua)
-        Spacer(Modifier.width(3.dp))
+        Icon(icon, null, modifier = Modifier.size(26.dp), tint = Aqua)
+        Spacer(Modifier.height(8.dp))
         Text(
             label,
-            maxLines = 1,
-            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, lineHeight = 12.sp),
+            style = MaterialTheme.typography.labelMedium,
             color = Aqua,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center,
         )
     }
 }
