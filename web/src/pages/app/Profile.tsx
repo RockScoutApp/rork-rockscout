@@ -450,7 +450,7 @@ export default function Profile() {
           <div className="flex items-center gap-3">
             {/* Avatar circle */}
             <div
-              className="glowing-border flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-3xl"
+              className="glowing-border flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-2xl text-3xl"
               style={{
                 background: `radial-gradient(circle, hsl(${CITRINE_HEX} / 0.3), hsl(${AQUA_HEX} / 0.1))`,
                 ["--glow-color" as string]: CITRINE_HEX,
@@ -927,7 +927,7 @@ export default function Profile() {
               <div className="mb-3 flex items-center gap-3">
                 {/* Avatar preview */}
                 <div
-                  className="glowing-border relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full text-2xl"
+                  className="glowing-border relative flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-2xl text-2xl"
                   style={{ ["--glow-color" as string]: CITRINE_HEX }}
                 >
                   {avatarUploading ? (
@@ -936,7 +936,7 @@ export default function Profile() {
                     <img
                       src={editAvatarImage}
                       alt="Avatar"
-                      className="h-full w-full rounded-full object-cover"
+                      className="h-full w-full rounded-2xl object-cover"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = "none";
                       }}

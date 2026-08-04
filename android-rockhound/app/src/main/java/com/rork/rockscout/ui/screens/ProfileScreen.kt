@@ -441,17 +441,17 @@ fun ProfileScreen(
                                 ) {
                                     Box(
                                         modifier = Modifier
-                                            .size(64.dp)
-                                            .clip(CircleShape)
+                                            .size(72.dp)
+                                            .clip(RoundedCornerShape(16.dp))
                                             .background(Brush.linearGradient(listOf(Citrine.copy(alpha = 0.5f), Aqua.copy(alpha = 0.3f))))
-                                            .glowingBorder(3.dp, profileBorderColor(profile.hunterStatus), CircleShape),
-                                        contentAlignment = Alignment.BottomCenter,
+                                            .glowingBorder(3.dp, profileBorderColor(profile.hunterStatus), RoundedCornerShape(16.dp)),
+                                        contentAlignment = Alignment.Center,
                                     ) {
                                         AnimatedAvatarIcon(
                                             emoji = profile.avatarEmoji,
-                                            size = 64.dp,
+                                            size = 72.dp,
                                             style = MaterialTheme.typography.displaySmall,
-                                            contentAlignment = Alignment.BottomCenter,
+                                            contentAlignment = Alignment.Center,
                                         )
                                     }
                                     BadgeIconButton(
@@ -471,11 +471,11 @@ fun ProfileScreen(
                                     Spacer(Modifier.weight(1f))
                                     // Right-side column: Social Settings pill + compact Status Update dropdown.
                                     // Both are constrained to the same height and the total column never exceeds
-                                    // the 64.dp avatar, so the status dropdown never drops below the profile icon.
+                                    // the 72.dp avatar, so the status dropdown never drops below the profile icon.
                                     Column(
                                         horizontalAlignment = Alignment.End,
                                         modifier = Modifier
-                                            .height(64.dp)
+                                            .height(72.dp)
                                             .width(IntrinsicSize.Max),
                                         verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
                                     ) {
@@ -1912,17 +1912,17 @@ private fun EditProfileSheet(
             // Avatar preview
             Box(
                 modifier = Modifier
-                    .size(64.dp)
-                    .clip(CircleShape)
+                    .size(72.dp)
+                    .clip(RoundedCornerShape(16.dp))
                     .background(Brush.linearGradient(listOf(Citrine.copy(alpha = 0.5f), Aqua.copy(alpha = 0.3f))))
-                    .glowingBorder(2.dp, Citrine.copy(alpha = 0.45f), CircleShape),
+                    .glowingBorder(2.dp, Citrine.copy(alpha = 0.45f), RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center,
             ) {
                 if (editAvatarImagePath != null && avatarModerating.not()) {
                     AsyncImage(
                         model = editAvatarImagePath,
                         contentDescription = "Avatar photo",
-                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                        modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp)),
                         contentScale = ContentScale.Crop,
                     )
                 } else if (avatarModerating) {
