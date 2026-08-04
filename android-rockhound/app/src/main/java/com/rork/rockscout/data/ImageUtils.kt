@@ -273,6 +273,81 @@ object ImageUtils {
      * @param subdir subdirectory under app files dir (e.g. "backgrounds", "specimens")
      * @return a stable file:// URI string, or null on failure
      */
+    /**
+     * Crop a square avatar region from a bitmap based on the user's pan/zoom
+     * state in the profile editor preview box.
+     *
+     * The preview renders the image with ContentScale.Crop (equivalent to
+     * object-fit: cover on web), then applies the user's pinch-zoom scale
+     * and pan offset via GraphicsLayer.
+     *
+     * @param bitmap     The source bitmap
+     * @param userScale  User's pinch-zoom scale (clamped to >= 1f)
+     * @param offsetX    User's pan offset X in preview-box pixels
+     * @param offsetY    User's pan offset Y in preview-box pixels
+     * @param boxSizePx  The preview box size in pixels
+     * @return A square-cropped bitmap suitable for avatar use
+     */
+    fun cropAvatarSquare(
+        bitmap: Bitmap,
+        userScale: Float,
+        offsetX: Float,
+        offsetY: Float,
+        boxSizePx: Int,
+    ): Bitmap {
+        val bmpW = bitmap.width
+        val bmpH = bitmap.height
+        val cropScale = maxOf(boxSizePx.toFloat() / bmpW, boxSizePx.toFloat() / bmpH)
+        val imgLeft = (boxSizePx - bmpW * cropScale) / 2f
+        val imgTop = (boxSizePx - bmpH * cropScale) / 2f
+        val us = userScale.coerceAtLeast(1f)
+        val visSize = boxSizePx / (cropScale * us)
+        val cx = (boxSizePx / 2f - imgLeft - offsetX / us) / cropScale
+        val cy = (boxSizePx / 2f - imgTop - offsetY / us) / cropScale
+        val half = visSize / 2f
+        val left = (cx - half).coerceIn(0f, (bmpW - visSize).coerceAtLeast(0f))
+        val top = (cy - half).coerceIn(0f, (bmpH - visSize).coerceAtLeast(0f))
+        val size = visSize.toInt().coerceIn(1, minOf(bmpW, bmpH))
+        return Bitmap.createBitmap(
+            bitmap,
+            left.toInt().coerceIn(0, (bmpW - size).coerceAtLeast(0)),
+            top.toInt().coerceIn(0, (bmpH - size).coerceAtLeast(0)),
+            size,
+            size,
+        )
+    }
+
+    /**
+     * Decode a URI to a bitmap, crop a square avatar region based on the
+     * user's pan/zoom state, resize to 300px, and save the result to internal
+     * storage as a JPEG.
+     *
+     * @return A stable file:// URI string, or null on failure
+     */
+    fun cropAndSaveAvatar(
+        context: Context,
+        uri: Uri,
+        userScale: Float,
+        offsetX: Float,
+        offsetY: Float,
+        boxSizePx: Int,
+    ): String? {
+        return try {
+            val bitmap = decodeSampledBitmap(context, uri, 1024) ?: return null
+            val cropped = cropAvatarSquare(bitmap, userScale, offsetX, offsetY, boxSizePx)
+            val resized = resizeBitmap(cropped, 300)
+            val dir = File(context.filesDir, "avatars").apply { mkdirs() }
+            val fileName = "avatar_${System.currentTimeMillis()}.jpg"
+            val destFile = File(dir, fileName)
+            FileOutputStream(destFile).use { out ->
+                resized.compress(Bitmap.CompressFormat.JPEG, 90, out)
+            }
+            "file://${destFile.absolutePath}"
+        } catch (_: Throwable) {
+            null
+        }
+    }
+
     fun copyUriToInternalStorage(context: Context, uri: Uri, subdir: String = "images"): String? {
         return try {
             val scheme = uri.scheme

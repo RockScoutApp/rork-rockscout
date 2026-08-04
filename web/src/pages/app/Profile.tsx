@@ -153,6 +153,13 @@ export default function Profile() {
   const [showYearScroll, setShowYearScroll] = useState(false);
   const [editAvatarImage, setEditAvatarImage] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarScale, setAvatarScale] = useState(1);
+  const [avatarOffset, setAvatarOffset] = useState({ x: 0, y: 0 });
+  const avatarPreviewRef = useRef<HTMLDivElement>(null);
+  const avatarImgRef = useRef<HTMLImageElement>(null);
+  const avatarDragStart = useRef<{ x: number; y: number } | null>(null);
+  const avatarPinchDist = useRef<number | null>(null);
+  const avatarPinchScale = useRef<number>(1);
   const [nameError, setNameError] = useState<string | null>(null);
   const [nameChecking, setNameChecking] = useState(false);
   const [originalName, setOriginalName] = useState("");
@@ -335,6 +342,43 @@ export default function Profile() {
     [user],
   );
 
+  // ── Crop avatar image based on pan/zoom state ──
+  const cropAvatarFromPreview = useCallback(async (): Promise<string | null> => {
+    if (!editAvatarImage) return null;
+    if (avatarScale === 1 && avatarOffset.x === 0 && avatarOffset.y === 0) {
+      return editAvatarImage;
+    }
+    const img = avatarImgRef.current;
+    const previewEl = avatarPreviewRef.current;
+    if (!img || !previewEl) return editAvatarImage;
+    try {
+      const naturalW = img.naturalWidth;
+      const naturalH = img.naturalHeight;
+      const boxPx = previewEl.clientWidth;
+      const cropScale = Math.max(boxPx / naturalW, boxPx / naturalH);
+      const imgLeft = (boxPx - naturalW * cropScale) / 2;
+      const imgTop = (boxPx - naturalH * cropScale) / 2;
+      const us = Math.max(1, avatarScale);
+      const visSize = boxPx / (cropScale * us);
+      const cx = (boxPx / 2 - imgLeft - avatarOffset.x / us) / cropScale;
+      const cy = (boxPx / 2 - imgTop - avatarOffset.y / us) / cropScale;
+      const half = visSize / 2;
+      const left = Math.max(0, Math.min(cx - half, naturalW - visSize));
+      const top = Math.max(0, Math.min(cy - half, naturalH - visSize));
+      const size = Math.min(naturalW, naturalH, visSize);
+      const canvas = document.createElement("canvas");
+      const outSize = 300;
+      canvas.width = outSize;
+      canvas.height = outSize;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return editAvatarImage;
+      ctx.drawImage(img, left, top, size, size, 0, 0, outSize, outSize);
+      return canvas.toDataURL("image/jpeg", 0.9);
+    } catch {
+      return editAvatarImage;
+    }
+  }, [editAvatarImage, avatarScale, avatarOffset]);
+
   // ── Save profile edits ──
   const saveProfile = useMutation({
     mutationFn: async () => {
@@ -344,12 +388,17 @@ export default function Profile() {
       if (taken) {
         throw new Error("That username is already in use. Try adding a couple numbers to make it unique.");
       }
+      // Crop avatar if user adjusted pan/zoom
+      let finalAvatarImage = editAvatarImage;
+      if (editAvatarImage && (avatarScale !== 1 || avatarOffset.x !== 0 || avatarOffset.y !== 0)) {
+        finalAvatarImage = await cropAvatarFromPreview();
+      }
       const { error } = await supabase
         .from("rockscout_profiles")
         .update({
           display_name: baseName,
           avatar_emoji: editEmoji,
-          avatar_image_path: editAvatarImage,
+          avatar_image_path: finalAvatarImage,
           status: editStatus,
           gender: editGender,
           birthday: editBirthday || null,
@@ -450,7 +499,7 @@ export default function Profile() {
           <div className="flex items-center gap-3">
             {/* Avatar circle */}
             <div
-              className="glowing-border flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-2xl text-3xl"
+              className="glowing-border flex h-[75px] w-[75px] shrink-0 items-center justify-center rounded-2xl text-3xl"
               style={{
                 background: `radial-gradient(circle, hsl(${CITRINE_HEX} / 0.3), hsl(${AQUA_HEX} / 0.1))`,
                 ["--glow-color" as string]: CITRINE_HEX,
@@ -924,56 +973,134 @@ export default function Profile() {
               <label className="mb-2 block text-xs font-semibold text-muted-foreground">
                 Avatar <span className="text-red-500">*</span>
               </label>
-              <div className="mb-3 flex items-center gap-3">
-                {/* Avatar preview */}
+              <p className="mb-2 text-xs text-muted-foreground/70">
+                Drag to pan and pinch to zoom. The square preview shows what others will see.
+              </p>
+              {/* Camera + Gallery buttons (side-by-side) */}
+              <div className="mb-3 flex gap-2">
+                <button
+                  onClick={() => avatarCameraRef.current?.click()}
+                  className="sculpted-button sculpted-raised dark-card flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-xs font-bold"
+                  style={{ ["--sculpted-accent" as string]: CITRINE_HEX, color: `hsl(${CITRINE_HEX})` }}
+                >
+                  <Camera className="h-4 w-4" />
+                  Take Photo
+                </button>
+                <button
+                  onClick={() => avatarFileRef.current?.click()}
+                  className="sculpted-button sculpted-raised dark-card flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-xs font-bold"
+                  style={{ ["--sculpted-accent" as string]: AQUA_HEX, color: `hsl(${AQUA_HEX})` }}
+                >
+                  <ImageIcon className="h-4 w-4" />
+                  Choose from Gallery
+                </button>
+              </div>
+              {/* Pan/zoom preview or fallback */}
+              {avatarUploading ? (
                 <div
-                  className="glowing-border relative flex h-[72px] w-[72px] shrink-0 items-center justify-center overflow-hidden rounded-2xl text-2xl"
+                  className="glowing-border mb-3 flex h-[200px] items-center justify-center rounded-2xl"
                   style={{ ["--glow-color" as string]: CITRINE_HEX }}
                 >
-                  {avatarUploading ? (
-                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                  ) : editAvatarImage ? (
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              ) : editAvatarImage ? (
+                <div className="mb-3">
+                  <div
+                    ref={avatarPreviewRef}
+                    className="glowing-border relative flex h-[200px] w-full items-center justify-center overflow-hidden rounded-2xl"
+                    style={{
+                      ["--glow-color" as string]: CITRINE_HEX,
+                      touchAction: "none",
+                      cursor: avatarScale > 1 ? "grab" : "default",
+                    }}
+                    onPointerDown={(e) => {
+                      if (avatarScale <= 1) return;
+                      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+                      avatarDragStart.current = { x: e.clientX - avatarOffset.x, y: e.clientY - avatarOffset.y };
+                    }}
+                    onPointerMove={(e) => {
+                      if (!avatarDragStart.current) return;
+                      const previewEl = avatarPreviewRef.current;
+                      if (!previewEl) return;
+                      const boxPx = previewEl.clientWidth;
+                      const maxOff = boxPx * (avatarScale - 1) / 2;
+                      const newX = e.clientX - avatarDragStart.current.x;
+                      const newY = e.clientY - avatarDragStart.current.y;
+                      setAvatarOffset({
+                        x: Math.max(-maxOff, Math.min(maxOff, newX)),
+                        y: Math.max(-maxOff, Math.min(maxOff, newY)),
+                      });
+                    }}
+                    onPointerUp={() => { avatarDragStart.current = null; }}
+                    onPointerCancel={() => { avatarDragStart.current = null; }}
+                    onWheel={(e) => {
+                      e.preventDefault();
+                      const delta = -e.deltaY * 0.002;
+                      setAvatarScale((s) => Math.max(1, Math.min(5, s + delta)));
+                    }}
+                  >
                     <img
+                      ref={avatarImgRef}
                       src={editAvatarImage}
-                      alt="Avatar"
-                      className="h-full w-full rounded-2xl object-cover"
+                      alt="Avatar preview"
+                      className="h-full w-full object-cover"
+                      style={{
+                        transform: `scale(${avatarScale}) translate(${avatarOffset.x / avatarScale}px, ${avatarOffset.y / avatarScale}px)`,
+                        transformOrigin: "center",
+                        userSelect: "none",
+                        pointerEvents: "none",
+                      }}
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = "none";
                       }}
+                      draggable={false}
                     />
-                  ) : (
-                    editEmoji
-                  )}
-                </div>
-                {/* Camera + Gallery buttons */}
-                <div className="flex flex-1 flex-col gap-2">
-                  <button
-                    onClick={() => avatarCameraRef.current?.click()}
-                    className="sculpted-button sculpted-raised dark-card flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-bold"
-                    style={{ ["--sculpted-accent" as string]: CITRINE_HEX, color: `hsl(${CITRINE_HEX})` }}
-                  >
-                    <Camera className="h-4 w-4" />
-                    Take Photo
-                  </button>
-                  <button
-                    onClick={() => avatarFileRef.current?.click()}
-                    className="sculpted-button sculpted-raised dark-card flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-bold"
-                    style={{ ["--sculpted-accent" as string]: AQUA_HEX, color: `hsl(${AQUA_HEX})` }}
-                  >
-                    <ImageIcon className="h-4 w-4" />
-                    Choose from Gallery
-                  </button>
-                  {editAvatarImage && (
+                    {/* 75px crop frame overlay (centered) */}
+                    <div
+                      className="pointer-events-none absolute left-1/2 top-1/2 rounded-xl border-2"
+                      style={{
+                        borderColor: `hsl(${CITRINE_HEX})`,
+                        width: "75px",
+                        height: "75px",
+                        transform: "translate(-50%, -50%)",
+                        boxShadow: `0 0 0 9999px rgba(0,0,0,0.35)`,
+                      }}
+                    />
+                  </div>
+                  <div className="mt-1.5 flex items-center justify-between">
+                    <span className="text-xs font-semibold" style={{ color: `hsl(${AQUA_HEX})` }}>
+                      Zoom: {avatarScale.toFixed(1)}x
+                    </span>
                     <button
-                      onClick={() => setEditAvatarImage(null)}
-                      className="flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-red-400 hover:bg-red-500/10"
+                      onClick={() => { setAvatarScale(1); setAvatarOffset({ x: 0, y: 0 }); }}
+                      className="rounded-lg px-3 py-1 text-xs font-bold transition-all"
+                      style={{
+                        background: `hsl(${CITRINE_HEX} / 0.12)`,
+                        color: `hsl(${CITRINE_HEX})`,
+                      }}
                     >
-                      <X className="h-3 w-3" />
-                      Remove Photo
+                      Reset
                     </button>
-                  )}
+                  </div>
+                  <button
+                    onClick={() => { setEditAvatarImage(null); setAvatarScale(1); setAvatarOffset({ x: 0, y: 0 }); }}
+                    className="mt-2 flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-red-400 hover:bg-red-500/10"
+                  >
+                    <X className="h-3 w-3" />
+                    Remove Photo
+                  </button>
                 </div>
-              </div>
+              ) : (
+                <div
+                  className="glowing-border mb-3 flex h-[120px] w-full items-center justify-center rounded-2xl text-5xl"
+                  style={{
+                    background: `radial-gradient(circle, hsl(${CITRINE_HEX} / 0.15), hsl(${AQUA_HEX} / 0.08))`,
+                    ["--glow-color" as string]: CITRINE_HEX,
+                  }}
+                >
+                  {editEmoji}
+                </div>
+              )}
               {/* Hidden file inputs */}
               <input
                 ref={avatarFileRef}
@@ -982,7 +1109,11 @@ export default function Profile() {
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) handleAvatarFile(file);
+                  if (file) {
+                    setAvatarScale(1);
+                    setAvatarOffset({ x: 0, y: 0 });
+                    handleAvatarFile(file);
+                  }
                   e.target.value = "";
                 }}
               />
@@ -994,7 +1125,11 @@ export default function Profile() {
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) handleAvatarFile(file);
+                  if (file) {
+                    setAvatarScale(1);
+                    setAvatarOffset({ x: 0, y: 0 });
+                    handleAvatarFile(file);
+                  }
                   e.target.value = "";
                 }}
               />

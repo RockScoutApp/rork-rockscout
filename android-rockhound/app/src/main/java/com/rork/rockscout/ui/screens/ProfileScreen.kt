@@ -121,7 +121,9 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.graphicsLayer
 import java.util.Calendar
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ModalBottomSheet
@@ -1495,6 +1497,11 @@ private fun EditProfileSheet(
     var cameraAvatarUri by remember { mutableStateOf<Uri?>(null) }
     var avatarModerating by remember { mutableStateOf(false) }
     val originalName = remember { name.trim() }
+    var avatarScale by remember { mutableStateOf(1f) }
+    var avatarOffsetX by remember { mutableStateOf(0f) }
+    var avatarOffsetY by remember { mutableStateOf(0f) }
+    var avatarPreviewSizePx by remember { mutableStateOf(0) }
+    var cropping by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -1562,6 +1569,9 @@ private fun EditProfileSheet(
                         }
                     }
                 }
+                avatarScale = 1f
+                avatarOffsetX = 0f
+                avatarOffsetY = 0f
                 avatarModerating = false
             }
         }
@@ -1903,95 +1913,172 @@ private fun EditProfileSheet(
             Text("Avatar", style = MaterialTheme.typography.labelMedium, color = Aqua, fontWeight = FontWeight.Bold)
             Text(" *", style = MaterialTheme.typography.labelMedium, color = Danger, fontWeight = FontWeight.Bold)
         }
-        // Current avatar preview + camera/gallery buttons
+        Spacer(Modifier.height(6.dp))
+        Text("Drag to pan and pinch to zoom. The square preview shows what others will see.",
+            style = MaterialTheme.typography.bodySmall, color = DarkTextMid)
+        Spacer(Modifier.height(8.dp))
+        // Camera & Gallery buttons (side-by-side)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            // Avatar preview
+            // Camera button
             Box(
                 modifier = Modifier
-                    .size(72.dp)
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Citrine.copy(alpha = 0.15f))
+                    .glowingBorder(2.dp, Citrine.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+                    .clickable {
+                        val photoFile = File(context.cacheDir, "photos/avatar_${UUID.randomUUID()}.jpg")
+                        photoFile.parentFile?.mkdirs()
+                        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile)
+                        cameraAvatarUri = uri
+                        avatarCameraLauncher.launch(uri)
+                    }
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.PhotoCamera, contentDescription = null, tint = Citrine, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Take Photo", style = MaterialTheme.typography.labelLarge, color = Citrine, fontWeight = FontWeight.Bold)
+                }
+            }
+            // Gallery button
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Aqua.copy(alpha = 0.12f))
+                    .glowingBorder(2.dp, Aqua.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                    .clickable { avatarGalleryLauncher.launch("image/*") }
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.PhotoLibrary, contentDescription = null, tint = Aqua, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Choose from Gallery", style = MaterialTheme.typography.labelLarge, color = Aqua, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        // Full-width pan/zoom preview
+        if (editAvatarImagePath != null && avatarModerating.not()) {
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            val previewSizeDp = 200.dp
+            val previewSizePx = with(density) { previewSizeDp.toPx().toInt() }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(previewSizeDp)
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Brush.linearGradient(listOf(Citrine.copy(alpha = 0.5f), Aqua.copy(alpha = 0.3f))))
+                    .background(Color(0xFF1A1812))
+                    .glowingBorder(2.dp, Citrine.copy(alpha = 0.45f), RoundedCornerShape(16.dp))
+                    .pointerInput(editAvatarImagePath) {
+                        detectTransformGestures { _, pan, zoom, _ ->
+                            avatarScale = (avatarScale * zoom).coerceIn(1f, 5f)
+                            val maxOff = previewSizePx * (avatarScale - 1f)
+                            avatarOffsetX = (avatarOffsetX + pan.x).coerceIn(-maxOff, maxOff)
+                            avatarOffsetY = (avatarOffsetY + pan.y).coerceIn(-maxOff, maxOff)
+                        }
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                AsyncImage(
+                    model = editAvatarImagePath,
+                    contentDescription = "Avatar photo preview",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer(
+                            scaleX = avatarScale,
+                            scaleY = avatarScale,
+                            translationX = avatarOffsetX,
+                            translationY = avatarOffsetY,
+                        ),
+                    contentScale = ContentScale.Crop,
+                )
+                // Overlay: 75dp square crop frame indicator centered on the box
+                Box(
+                    modifier = Modifier
+                        .size(75.dp)
+                        .border(2.dp, Citrine, RoundedCornerShape(12.dp))
+                        .pointerInput(Unit) { /* pass-through, no-op */ },
+                ) { /* visual crop frame overlay */ }
+            }
+            Spacer(Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "Zoom: ${"%.1f".format(avatarScale)}x",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Aqua,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Citrine.copy(alpha = 0.12f))
+                        .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+                        .clickable {
+                            avatarScale = 1f
+                            avatarOffsetX = 0f
+                            avatarOffsetY = 0f
+                        }
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                ) {
+                    Text("Reset", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Bold)
+                }
+            }
+            // Hidden state to carry the box size into the crop call
+            LaunchedEffect(previewSizePx) {
+                avatarPreviewSizePx = previewSizePx
+            }
+            Spacer(Modifier.height(8.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Danger.copy(alpha = 0.12f))
+                    .glowingBorder(2.dp, Danger.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                    .clickable { editAvatarImagePath = null }
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("Remove Photo", style = MaterialTheme.typography.labelMedium, color = Danger, fontWeight = FontWeight.Bold)
+            }
+        } else if (avatarModerating) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFF1A1812))
                     .glowingBorder(2.dp, Citrine.copy(alpha = 0.45f), RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center,
             ) {
-                if (editAvatarImagePath != null && avatarModerating.not()) {
-                    AsyncImage(
-                        model = editAvatarImagePath,
-                        contentDescription = "Avatar photo",
-                        modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp)),
-                        contentScale = ContentScale.Crop,
-                    )
-                } else if (avatarModerating) {
-                    androidx.compose.material3.CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp,
-                        color = Citrine,
-                    )
-                } else {
-                    Text(editAvatar, style = MaterialTheme.typography.headlineMedium)
-                }
+                androidx.compose.material3.CircularProgressIndicator(
+                    modifier = Modifier.size(28.dp),
+                    strokeWidth = 3.dp,
+                    color = Citrine,
+                )
             }
-            Column(modifier = Modifier.weight(1f)) {
-                // Camera button
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Citrine.copy(alpha = 0.15f))
-                        .glowingBorder(2.dp, Citrine.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
-                        .clickable {
-                            val photoFile = File(context.cacheDir, "photos/avatar_${UUID.randomUUID()}.jpg")
-                            photoFile.parentFile?.mkdirs()
-                            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile)
-                            cameraAvatarUri = uri
-                            avatarCameraLauncher.launch(uri)
-                        }
-                        .padding(horizontal = 14.dp, vertical = 10.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.PhotoCamera, contentDescription = null, tint = Citrine, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Take Photo", style = MaterialTheme.typography.labelLarge, color = Citrine, fontWeight = FontWeight.Bold)
-                    }
-                }
-                Spacer(Modifier.height(8.dp))
-                // Gallery button
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Aqua.copy(alpha = 0.12f))
-                        .glowingBorder(2.dp, Aqua.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
-                        .clickable { avatarGalleryLauncher.launch("image/*") }
-                        .padding(horizontal = 14.dp, vertical = 10.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.PhotoLibrary, contentDescription = null, tint = Aqua, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text("Choose from Gallery", style = MaterialTheme.typography.labelLarge, color = Aqua, fontWeight = FontWeight.Bold)
-                    }
-                }
-                if (editAvatarImagePath != null) {
-                    Spacer(Modifier.height(8.dp))
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Danger.copy(alpha = 0.12f))
-                            .glowingBorder(2.dp, Danger.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
-                            .clickable { editAvatarImagePath = null }
-                            .padding(horizontal = 14.dp, vertical = 8.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text("Remove Photo", style = MaterialTheme.typography.labelMedium, color = Danger, fontWeight = FontWeight.Bold)
-                    }
-                }
+        } else {
+            // Emoji-only fallback preview (75dp square)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Brush.linearGradient(listOf(Citrine.copy(alpha = 0.15f), Aqua.copy(alpha = 0.08f))))
+                    .glowingBorder(2.dp, Citrine.copy(alpha = 0.35f), RoundedCornerShape(16.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(editAvatar, style = MaterialTheme.typography.displayMedium)
             }
         }
         Spacer(Modifier.height(8.dp))
@@ -2044,9 +2131,30 @@ private fun EditProfileSheet(
         }
 
         Button(
-            onClick = { onSave(editName, editRegion, editBio, editAvatar, backgroundImagePath, editGender, editBirthday, editBirthdayPublic, editFavoriteRock.trim(), editHighlightColor, editAvatarImagePath) },
+            onClick = {
+                // If the user has a photo avatar with pan/zoom adjustments,
+                // crop the square region before saving.
+                val finalAvatarPath = editAvatarImagePath
+                if (finalAvatarPath != null && avatarPreviewSizePx > 0 && (avatarScale != 1f || avatarOffsetX != 0f || avatarOffsetY != 0f)) {
+                    cropping = true
+                    coroutineScope.launch {
+                        val croppedPath = ImageUtils.cropAndSaveAvatar(
+                            context,
+                            Uri.parse(finalAvatarPath),
+                            avatarScale,
+                            avatarOffsetX,
+                            avatarOffsetY,
+                            avatarPreviewSizePx,
+                        )
+                        cropping = false
+                        onSave(editName, editRegion, editBio, editAvatar, backgroundImagePath, editGender, editBirthday, editBirthdayPublic, editFavoriteRock.trim(), editHighlightColor, croppedPath ?: finalAvatarPath)
+                    }
+                } else {
+                    onSave(editName, editRegion, editBio, editAvatar, backgroundImagePath, editGender, editBirthday, editBirthdayPublic, editFavoriteRock.trim(), editHighlightColor, editAvatarImagePath)
+                }
+            },
             modifier = Modifier.fillMaxWidth(),
-            enabled = nameError == null && editName.trim().isNotBlank() && !nameChecking && !avatarModerating,
+            enabled = nameError == null && editName.trim().isNotBlank() && !nameChecking && !avatarModerating && !cropping,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Citrine,
                 contentColor = Ink,
