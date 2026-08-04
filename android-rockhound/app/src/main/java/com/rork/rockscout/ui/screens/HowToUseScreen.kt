@@ -71,11 +71,14 @@ import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Nature
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -1204,6 +1207,7 @@ fun HowToUseScreen(navController: NavController) {
     BackHandler { navController.popBackStack() }
 
     var selectedSectionIndex by remember { mutableIntStateOf(-1) }
+    var searchQuery by remember { mutableStateOf("") }
 
     // Pre-compute grouped sections by category
     val groupedSections = remember {
@@ -1211,6 +1215,22 @@ fun HowToUseScreen(navController: NavController) {
             howToSections.filter { it.category == cat }
         }
     }
+
+    // Filtered sections based on search query — matches title, shortLabel, category label, and step text
+    val filteredSections = remember(searchQuery) {
+        if (searchQuery.isBlank()) {
+            emptyList()
+        } else {
+            val query = searchQuery.lowercase().trim()
+            howToSections.filter { section ->
+                section.title.lowercase().contains(query) ||
+                    section.shortLabel.lowercase().contains(query) ||
+                    section.category.label.lowercase().contains(query) ||
+                    section.steps.any { it.lowercase().contains(query) }
+            }
+        }
+    }
+    val isSearching = searchQuery.isNotBlank()
 
     RockBackground {
         LazyColumn(
@@ -1246,6 +1266,97 @@ fun HowToUseScreen(navController: NavController) {
                     )
                 }
             }
+            // ── Search bar ──
+            item {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = {
+                        Text(
+                            text = "Search 72 sections…",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = TextLow,
+                            ),
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.Search,
+                            contentDescription = "Search",
+                            tint = Aqua,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    },
+                    trailingIcon = {
+                        if (isSearching) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "Clear search",
+                                tint = TextMid,
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clickable { searchQuery = "" },
+                            )
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Aqua.copy(alpha = 0.5f),
+                        unfocusedBorderColor = TextLow.copy(alpha = 0.2f),
+                        focusedContainerColor = Slate800,
+                        unfocusedContainerColor = Slate800.copy(alpha = 0.7f),
+                        cursorColor = Aqua,
+                        focusedTextColor = TextHigh,
+                        unfocusedTextColor = TextHigh,
+                    ),
+                )
+            }
+            // ── Search results (when searching) ──
+            if (isSearching) {
+                if (filteredSections.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 40.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = "No sections match \"$searchQuery\"",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = TextMid,
+                                    textAlign = TextAlign.Center,
+                                ),
+                            )
+                        }
+                    }
+                } else {
+                    item {
+                        Text(
+                            text = "${filteredSections.size} result${if (filteredSections.size == 1) "" else "s"}",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = TextLow,
+                            ),
+                            modifier = Modifier.padding(bottom = 4.dp),
+                        )
+                    }
+                    filteredSections.forEach { section ->
+                        val globalIdx = howToSections.indexOf(section)
+                        item {
+                            HowToSearchResultRow(
+                                section = section,
+                                index = globalIdx,
+                                onClick = { selectedSectionIndex = globalIdx },
+                            )
+                        }
+                    }
+                }
+            }
+            // ── Normal content (when not searching) ──
+            if (!isSearching) {
             item {
                 // Intro card
                 Box(
@@ -1411,6 +1522,7 @@ fun HowToUseScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                 )
             }
+            } // end !isSearching
         }
 
         // Full-screen section popup dialog
@@ -1419,6 +1531,71 @@ fun HowToUseScreen(navController: NavController) {
                 section = howToSections[selectedSectionIndex],
                 index = selectedSectionIndex,
                 onDismiss = { selectedSectionIndex = -1 },
+            )
+        }
+    }
+}
+
+/** A search result row showing the icon, number, title, and a snippet of matching step text. */
+@Composable
+private fun HowToSearchResultRow(
+    section: HowToSection,
+    index: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(Slate800.copy(alpha = 0.85f))
+            .glowingBorder(1.5.dp, section.accent.copy(alpha = 0.3f), RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(CircleShape)
+                .background(section.accent.copy(alpha = 0.15f))
+                .glowingBorder(1.dp, section.accent.copy(alpha = 0.5f), CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = section.icon,
+                contentDescription = null,
+                tint = section.accent,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = String.format("%02d", index + 1),
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = TextLow.copy(alpha = 0.6f),
+                ),
+            )
+            Text(
+                text = section.title,
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = TextHigh,
+                ),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = section.category.label,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    color = section.accent,
+                    fontWeight = FontWeight.Medium,
+                ),
             )
         }
     }
