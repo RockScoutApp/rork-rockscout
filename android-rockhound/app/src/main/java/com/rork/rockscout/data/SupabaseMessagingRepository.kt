@@ -181,6 +181,10 @@ object SupabaseMessagingRepository {
     /** Map of creator user ID → display name for group chat cards. */
     val creatorNames: StateFlow<Map<String, String>> = _creatorNames.asStateFlow()
 
+    private val _typingUsers = MutableStateFlow<Map<String, String>>(emptyMap())
+    /** Map of user ID → display name for users currently typing in the active chat. */
+    val typingUsers: StateFlow<Map<String, String>> = _typingUsers.asStateFlow()
+
     private fun groupLastReadKey(chatId: String) = "group_last_read_$chatId"
 
     /** Save the current timestamp as the last-read time for a group chat. */
@@ -832,6 +836,83 @@ object SupabaseMessagingRepository {
     fun groupChatMemberCount(groupChatId: String): Int =
         _groupChatMembers.value.count { it.group_chat_id == groupChatId }
 
+    // ─── Typing Status ──────────────────────────────────────────────────
+
+    /** Upsert the current user's typing status for a chat (thread or group). */
+    suspend fun setTypingStatus(chatId: String, isTyping: Boolean): Result<Unit> {
+        val token = accessToken() ?: return Result.failure(Exception("Not authenticated"))
+        val uid = userId() ?: return Result.failure(Exception("No user ID"))
+        return try {
+            val payload = buildJsonObject {
+                put("chat_id", chatId)
+                put("user_id", uid)
+                put("is_typing", isTyping)
+                put("updated_at", java.time.OffsetDateTime.now().toString())
+            }.toString()
+            val resp = client.post("${baseUrl()}/rest/v1/chat_typing_status?on_conflict=chat_id,user_id") {
+                header("apikey", anonKey())
+                header("Authorization", "Bearer $token")
+                header("Content-Type", "application/json")
+                header("Prefer", "resolution=merge-duplicates,return=minimal")
+                setBody(payload)
+            }
+            if (!resp.status.isSuccess()) {
+                Log.w(TAG, "setTypingStatus failed: ${resp.status}")
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "setTypingStatus failed", e)
+            Result.failure(e)
+        }
+    }
+
+    /** Poll typing status for a chat. Returns map of userId → isTyping for other users.
+     *  Only returns users who were typing in the last 5 seconds. */
+    suspend fun pollTypingStatus(chatId: String): Result<Map<String, Boolean>> {
+        val token = accessToken() ?: return Result.failure(Exception("Not authenticated"))
+        val uid = userId() ?: return Result.failure(Exception("No user ID"))
+        return try {
+            val cutoff = java.time.OffsetDateTime.now().minusSeconds(5).toString()
+            val resp = client.get("${baseUrl()}/rest/v1/chat_typing_status?chat_id=eq.$chatId&user_id=neq.$uid&is_typing=eq.true&updated_at=gt.$cutoff&select=user_id,is_typing") {
+                header("apikey", anonKey())
+                header("Authorization", "Bearer $token")
+            }
+            if (resp.status.isSuccess()) {
+                val raw = resp.body<String>()
+                val arr = json.parseToJsonElement(raw).jsonArray
+                val result = mutableMapOf<String, Boolean>()
+                arr.forEach { el ->
+                    val obj = el.jsonObject
+                    val userId = obj["user_id"]?.jsonPrimitive?.contentOrNull ?: return@forEach
+                    val isTyping = obj["is_typing"]?.jsonPrimitive?.contentOrNull == "true"
+                    if (isTyping) result[userId] = true
+                }
+                Result.success(result)
+            } else {
+                Result.success(emptyMap())
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "pollTypingStatus failed", e)
+            Result.failure(e)
+        }
+    }
+
+    /** Clear the current user's typing status for a chat. */
+    suspend fun clearTypingStatus(chatId: String): Result<Unit> {
+        val token = accessToken() ?: return Result.failure(Exception("Not authenticated"))
+        val uid = userId() ?: return Result.failure(Exception("No user ID"))
+        return try {
+            client.delete("${baseUrl()}/rest/v1/chat_typing_status?chat_id=eq.$chatId&user_id=eq.$uid") {
+                header("apikey", anonKey())
+                header("Authorization", "Bearer $token")
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "clearTypingStatus failed", e)
+            Result.failure(e)
+        }
+    }
+
     // ─── Warnings ──────────────────────────────────────────────────────
 
     /** Load the current user's warning count. */
@@ -851,6 +932,35 @@ object SupabaseMessagingRepository {
         } catch (e: Exception) {
             Log.e(TAG, "loadWarningCount failed", e)
             Result.failure(e)
+        }
+    }
+
+    /** Fetch display names for a set of user IDs from Supabase profiles. */
+    suspend fun fetchProfileNames(userIds: List<String>): Map<String, String> {
+        if (userIds.isEmpty()) return emptyMap()
+        val token = accessToken() ?: return emptyMap()
+        return try {
+            val idsParam = userIds.joinToString(",") { "\"$it\"" }
+            val resp = client.get("${baseUrl()}/rest/v1/rockscout_profiles?id=in.($idsParam)&select=id,display_name") {
+                header("apikey", anonKey())
+                header("Authorization", "Bearer $token")
+            }
+            if (resp.status.isSuccess()) {
+                val raw = resp.body<String>()
+                val arr = json.parseToJsonElement(raw).jsonArray
+                val nameMap = mutableMapOf<String, String>()
+                arr.forEach { obj ->
+                    val id = obj.jsonObject["id"]?.jsonPrimitive?.contentOrNull ?: return@forEach
+                    val name = obj.jsonObject["display_name"]?.jsonPrimitive?.contentOrNull ?: "Unknown"
+                    nameMap[id] = name
+                }
+                nameMap
+            } else {
+                emptyMap()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "fetchProfileNames failed", e)
+            emptyMap()
         }
     }
 

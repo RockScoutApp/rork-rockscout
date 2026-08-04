@@ -49,6 +49,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -348,6 +353,7 @@ fun MessengerScreen(
             if (replyBody.isNotBlank()) {
                 ChatDraftStore.saveDraft(gcId!!, activeGroupChatName ?: "Group Chat", replyBody, isGroup = true)
             }
+            gcId?.let { scope.launch { SupabaseMessagingRepository.clearTypingStatus(it) } }
             SupabaseMessagingRepository.saveGroupLastRead(gcId!!)
             scope.launch { SupabaseMessagingRepository.refreshGroupChatUnreadCounts() }
             activeGroupChatId = null
@@ -377,6 +383,8 @@ fun MessengerScreen(
             myUserId = auth.currentUserId,
             replyBody = replyBody,
             onReplyChange = { replyBody = it },
+            chatId = gcId ?: "",
+            onOpenUserProfile = { uid -> navController.navigate(Routes.userProfile(uid)) },
             onSend = {
                 // Use the group's profanity filter level
                 val gc = SupabaseMessagingRepository.groupChats.value.firstOrNull { it.id == gcId }
@@ -456,6 +464,7 @@ fun MessengerScreen(
                 if (replyBody.isNotBlank()) {
                     ChatDraftStore.saveDraft(gcId!!, activeGroupChatName ?: "Group Chat", replyBody, isGroup = true)
                 }
+                gcId?.let { scope.launch { SupabaseMessagingRepository.clearTypingStatus(it) } }
                 SupabaseMessagingRepository.saveGroupLastRead(gcId!!)
                 scope.launch { SupabaseMessagingRepository.refreshGroupChatUnreadCounts() }
                 activeGroupChatId = null
@@ -548,6 +557,7 @@ fun MessengerScreen(
             if (replyBody.isNotBlank() && threadId != null) {
                 ChatDraftStore.saveDraft(threadId, activeOtherName ?: "RockScout", replyBody)
             }
+            threadId?.let { scope.launch { SupabaseMessagingRepository.clearTypingStatus(it) } }
             activeThreadId = null
             activeOtherId = null
             replyBody = ""
@@ -567,6 +577,8 @@ fun MessengerScreen(
             myUserId = auth.currentUserId,
             replyBody = replyBody,
             onReplyChange = { replyBody = it },
+            chatId = threadId ?: "",
+            onOpenUserProfile = { uid -> navController.navigate(Routes.userProfile(uid)) },
             onSend = {
                 // Step 1: Check for self-harm phrases FIRST
                 val selfHarmResult = ProfanityFilter.filterSelfHarm(replyBody)
@@ -643,6 +655,7 @@ fun MessengerScreen(
                 if (replyBody.isNotBlank() && threadId != null) {
                     ChatDraftStore.saveDraft(threadId, activeOtherName ?: "RockScout", replyBody)
                 }
+                threadId?.let { scope.launch { SupabaseMessagingRepository.clearTypingStatus(it) } }
                 activeThreadId = null
                 activeOtherId = null
                 replyBody = ""
@@ -784,6 +797,8 @@ private fun ThreadView(
     onCancelReply: () -> Unit = {},
     onLongPressMessage: (SocialRepository.MessageRow) -> Unit = {},
     hunterCache: Map<String, SocialRepository.HunterProfile> = emptyMap(),
+    chatId: String = "",
+    onOpenUserProfile: (String) -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -796,6 +811,51 @@ private fun ThreadView(
     var scrollSpeed by remember { mutableStateOf("normal") } // normal, half, stop
     var isUserScrolling by remember { mutableStateOf(false) }
     var lastAutoScrollMs by remember { mutableStateOf(0L) }
+
+    // ── Typing indicator state ──
+    var typingUsers by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    var lastTypingSent by remember { mutableStateOf(0L) }
+    var wasTyping by remember { mutableStateOf(false) }
+
+    // Poll typing status every 2.5 seconds while chat is open
+    LaunchedEffect(chatId) {
+        if (chatId.isNotBlank()) {
+            while (true) {
+                kotlinx.coroutines.delay(2500L)
+                val result = SupabaseMessagingRepository.pollTypingStatus(chatId)
+                if (result.isSuccess) {
+                    val typingIds = result.getOrDefault(emptyMap()).keys.toList()
+                    if (typingIds.isNotEmpty()) {
+                        val names = SupabaseMessagingRepository.fetchProfileNames(typingIds)
+                        typingUsers = names.filterKeys { it in typingIds }
+                    } else {
+                        typingUsers = emptyMap()
+                    }
+                }
+            }
+        }
+    }
+
+    // Send typing status when replyBody changes
+    LaunchedEffect(replyBody) {
+        if (chatId.isBlank()) return@LaunchedEffect
+        val now = System.currentTimeMillis()
+        if (replyBody.isNotBlank()) {
+            if (!wasTyping || now - lastTypingSent > 3000L) {
+                wasTyping = true
+                lastTypingSent = now
+                scope.launch { SupabaseMessagingRepository.setTypingStatus(chatId, true) }
+            }
+        } else if (wasTyping) {
+            wasTyping = false
+            scope.launch { SupabaseMessagingRepository.setTypingStatus(chatId, false) }
+        }
+    }
+
+    // Clear typing status when leaving chat
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.awaitCancellation()
+    }
 
     LaunchedEffect(listState.isScrollInProgress) {
         if (listState.isScrollInProgress) {
@@ -1086,10 +1146,23 @@ private fun ThreadView(
                             hunterCache[tid]?.display_name
                         }
                     }
+                    // Sender display name for long-press profile
+                    val senderDisplayName = if (isMe) {
+                        AppRepository.instance.profile.value.name
+                    } else {
+                        hunterCache[msg.sender_id]?.display_name ?: otherName
+                    }
                     Box(
                         modifier = Modifier.combinedClickable(
                             onClick = {},
-                            onLongClick = { onLongPressMessage(msg) },
+                            onLongClick = {
+                                // Long-press opens user profile (not self)
+                                if (!isMe && msg.sender_id.isNotBlank()) {
+                                    onOpenUserProfile(msg.sender_id)
+                                } else {
+                                    onLongPressMessage(msg)
+                                }
+                            },
                         ),
                     ) {
                         ChatBubble(
@@ -1101,7 +1174,15 @@ private fun ThreadView(
                             replyToSenderName = replySenderName,
                             replyToBody = replyBodyText,
                             taggedUserNames = taggedNames,
+                            senderName = if (isGroupChat && !isMe) senderDisplayName else null,
+                            senderEmoji = if (isGroupChat && !isMe) hunterCache[msg.sender_id]?.avatar_emoji else null,
                         )
+                    }
+                }
+                // Typing indicator at the bottom of the message list
+                if (typingUsers.isNotEmpty()) {
+                    item {
+                        TypingIndicatorRow(typingNames = typingUsers.values.toList())
                     }
                 }
             }
@@ -1759,6 +1840,8 @@ fun ChatBubble(
     replyToSenderName: String? = null,
     replyToBody: String? = null,
     taggedUserNames: List<String> = emptyList(),
+    senderName: String? = null,
+    senderEmoji: String? = null,
 ) {
     val bubbleBg = if (isMe) MyBubbleBg else OtherBubbleBg
     val bubbleShape = RoundedCornerShape(
@@ -1780,6 +1863,16 @@ fun ChatBubble(
                 .padding(horizontal = 14.dp, vertical = 10.dp),
         ) {
             Column {
+                // Sender name (group chats only, for other users' messages)
+                if (senderName != null && senderEmoji != null) {
+                    Text(
+                        "$senderEmoji $senderName",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Citrine,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                }
                 // Reply threading — show original comment above the reply
                 if (replyToSenderName != null && replyToBody != null) {
                     Column(
@@ -1857,6 +1950,53 @@ fun ChatBubble(
                 }
             }
         }
+    }
+}
+
+/* ── Typing indicator row ─────────────────────────────────────────────────── */
+
+@Composable
+private fun TypingIndicatorRow(typingNames: List<String>) {
+    val label = when {
+        typingNames.size == 1 -> "${typingNames[0]} is typing…"
+        typingNames.size == 2 -> "${typingNames[0]} and ${typingNames[1]} are typing…"
+        typingNames.size > 2 -> "${typingNames[0]} and ${typingNames.size - 1} others are typing…"
+        else -> "Someone is typing…"
+    }
+    val infiniteTransition = rememberInfiniteTransition(label = "typing")
+    val dotAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "dot_alpha",
+    )
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, top = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // Pulsing dots
+        Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            repeat(3) { i ->
+                Box(
+                    modifier = Modifier
+                        .size(5.dp)
+                        .clip(CircleShape)
+                        .background(Aqua.copy(alpha = dotAlpha)),
+                )
+            }
+        }
+        Spacer(Modifier.width(8.dp))
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = Aqua,
+            fontWeight = FontWeight.Medium,
+        )
     }
 }
 

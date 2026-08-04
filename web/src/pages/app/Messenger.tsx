@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import {
   MessageCircle,
   Loader2,
@@ -154,12 +155,19 @@ function TaggedText({ text, taggedNames }: { text: string; taggedNames: string[]
 
 export default function Messenger() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [chatView, setChatView] = useState<ChatView>({ type: "list" });
   const [messageText, setMessageText] = useState("");
   const [search, setSearch] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Typing indicator state
+  const [typingUsers, setTypingUsers] = useState<Record<string, string>>({});
+  const lastTypingSentRef = useRef(0);
+  const wasTypingRef = useRef(false);
+  const typingPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Reply state
   const [replyToMessageId, setReplyToMessageId] = useState<string | null>(null);
@@ -415,6 +423,92 @@ export default function Messenger() {
       return () => { supabase.removeChannel(channel); };
     }
   }, [chatView, queryClient, user]);
+
+  // ── Typing indicator: poll typing status for active chat ──
+  const activeChatId = chatView.type === "thread" ? chatView.thread.id : chatView.type === "group" ? chatView.group.id : null;
+  useEffect(() => {
+    if (!activeChatId || !user) {
+      setTypingUsers({});
+      return;
+    }
+    const poll = async () => {
+      const cutoff = new Date(Date.now() - 5000).toISOString();
+      const { data } = await supabase
+        .from("chat_typing_status")
+        .select("user_id")
+        .eq("chat_id", activeChatId)
+        .neq("user_id", user.id)
+        .eq("is_typing", true)
+        .gt("updated_at", cutoff);
+      const typingIds = (data ?? []).map((r: { user_id: string }) => r.user_id);
+      if (typingIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("rockscout_profiles")
+          .select("id, display_name")
+          .in("id", typingIds);
+        const map: Record<string, string> = {};
+        (profiles ?? []).forEach((p: { id: string; display_name: string }) => {
+          map[p.id] = p.display_name;
+        });
+        setTypingUsers(map);
+      } else {
+        setTypingUsers({});
+      }
+    };
+    poll();
+    typingPollRef.current = setInterval(poll, 2500);
+    return () => {
+      if (typingPollRef.current) {
+        clearInterval(typingPollRef.current);
+        typingPollRef.current = null;
+      }
+      setTypingUsers({});
+    };
+  }, [activeChatId, user]);
+
+  // ── Send typing status when messageText changes ──
+  useEffect(() => {
+    if (!activeChatId || !user) return;
+    const now = Date.now();
+    if (messageText.trim()) {
+      if (!wasTypingRef.current || now - lastTypingSentRef.current > 3000) {
+        wasTypingRef.current = true;
+        lastTypingSentRef.current = now;
+        supabase
+          .from("chat_typing_status")
+          .upsert({
+            chat_id: activeChatId,
+            user_id: user.id,
+            is_typing: true,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: "chat_id,user_id" })
+          .then(() => {});
+      }
+    } else if (wasTypingRef.current) {
+      wasTypingRef.current = false;
+      supabase
+        .from("chat_typing_status")
+        .delete()
+        .eq("chat_id", activeChatId)
+        .eq("user_id", user.id)
+        .then(() => {});
+    }
+  }, [messageText, activeChatId, user]);
+
+  // ── Clear typing status when leaving chat ──
+  useEffect(() => {
+    return () => {
+      if (activeChatId && user && wasTypingRef.current) {
+        supabase
+          .from("chat_typing_status")
+          .delete()
+          .eq("chat_id", activeChatId)
+          .eq("user_id", user.id)
+          .then(() => {});
+        wasTypingRef.current = false;
+      }
+    };
+  }, [activeChatId, user]);
 
   // ── Save draft on unmount/navigation ──
   useEffect(() => {
@@ -723,6 +817,26 @@ export default function Messenger() {
               </p>
             </div>
           )}
+          {Object.keys(typingUsers).length > 0 && (
+            <div className="flex items-center gap-2 px-2 py-1">
+              <span className="flex gap-1">
+                {[0, 1, 2].map((i) => (
+                  <span
+                    key={i}
+                    className="typing-dot"
+                    style={{ animationDelay: `${i * 0.2}s` }}
+                  />
+                ))}
+              </span>
+              <span className="text-xs font-medium" style={{ color: `hsl(${AQUA_HEX})` }}>
+                {Object.values(typingUsers).length === 1
+                  ? `${Object.values(typingUsers)[0]} is typing…`
+                  : Object.values(typingUsers).length === 2
+                    ? `${Object.values(typingUsers)[0]} and ${Object.values(typingUsers)[1]} are typing…`
+                    : `${Object.values(typingUsers)[0]} and ${Object.values(typingUsers).length - 1} others are typing…`}
+              </span>
+            </div>
+          )}
           {currentMessages.map((msg) => {
             const isMine = msg.sender_id === user.id;
             const senderName = isMine
@@ -767,12 +881,58 @@ export default function Messenger() {
                   onDoubleClick={() =>
                     handleLongPressReply(msg.id, msg.body, msg.sender_id, senderName)
                   }
-                  title="Right-click or double-click to reply"
+                  title="Right-click or double-click to reply. Long-press sender name to view profile."
                 >
                   {isGroup && !isMine && (
-                    <p className="mb-1 text-xs font-bold" style={{ color: `hsl(${CITRINE_HEX})` }}>
+                    <button
+                      className="mb-1 block text-xs font-bold"
+                      style={{ color: `hsl(${CITRINE_HEX})` }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (msg.sender_id !== user.id) {
+                          navigate(`/app/profile/${msg.sender_id}`);
+                        }
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                      onDoubleClick={(e) => {
+                        e.stopPropagation();
+                        if (msg.sender_id !== user.id) {
+                          navigate(`/app/profile/${msg.sender_id}`);
+                        }
+                      }}
+                      title="Double-click or right-click to view profile"
+                    >
                       {profileMap.get(msg.sender_id)?.avatar_emoji ?? "💎"} {senderName}
-                    </p>
+                    </button>
+                  )}
+                  {/* Private chat: long-press sender name to open profile */}
+                  {!isGroup && !isMine && (
+                    <button
+                      className="mb-1 block text-[10px] font-bold opacity-70"
+                      style={{ color: `hsl(${AQUA_HEX})` }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (msg.sender_id !== user.id) {
+                          navigate(`/app/profile/${msg.sender_id}`);
+                        }
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                      onDoubleClick={(e) => {
+                        e.stopPropagation();
+                        if (msg.sender_id !== user.id) {
+                          navigate(`/app/profile/${msg.sender_id}`);
+                        }
+                      }}
+                      title="Double-click or right-click to view profile"
+                    >
+                      {senderName}
+                    </button>
                   )}
                   {/* Reply threading preview */}
                   {replySender && replyBodyText && (
