@@ -5368,6 +5368,7 @@ object SeedData {
 
     fun specimenById(id: String): Specimen? =
         specimenMap[id]
+            ?: RocksAreAmazingSpecimens.allAmazing.find { it.id == id }
             ?: PrehistoricOrganisms.specimens.find { it.id == id }
             ?: CustomSpecimenStore.specimens.value.find { it.id == id }
             ?: CustomSpecimenStore.raaSpecimens.value.find { it.id == id }

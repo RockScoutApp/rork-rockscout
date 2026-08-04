@@ -567,11 +567,9 @@ private fun AmazingSpecimenCard(
     val imageUrls = SpecimenImages.urls[specimen.id] ?: specimen.imageUrls
     val accent = Color(specimen.colorHex)
     val isFluorescent = specimen.category == "Fluorescent & Phosphorescent Minerals"
-    val thumbnailUrl = if (isFluorescent) {
-        imageUrls.drop(1).firstOrNull() ?: imageUrls.firstOrNull()
-    } else {
-        imageUrls.firstOrNull()
-    }
+    // For fluorescent specimens the first image is always the UV/fluorescent
+    // photo — use it as the thumbnail so the card shows the glow.
+    val thumbnailUrl = imageUrls.firstOrNull()
 
     SpecimenListItem(
         specimen = specimen,

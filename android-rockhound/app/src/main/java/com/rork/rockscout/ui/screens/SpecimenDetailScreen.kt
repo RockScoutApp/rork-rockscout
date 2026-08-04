@@ -185,6 +185,9 @@ fun SpecimenDetailScreen(
                 val labels = when (spec.id) {
                     "amazing-fluorescent-hackmanite" -> hackmanitePhotoLabels
                     "amazing-squid-game-calcite", "calcite-squid-game" -> squidGameCalciteLabels
+                    "amazing-fluorescent-hyalite" -> hyaliteFluorescentLabels
+                    "amazing-fluorescent-benitoite" -> benitoiteFluorescentLabels
+                    "amazing-fluorescent-tugtupite" -> tugtupiteFluorescentLabels
                     "amethyst" -> amethystPhotoLabels
                     in fluorescentSpecimenIds -> fluorescentPhotoLabels
                     else -> photoLabels
@@ -540,6 +543,9 @@ private val fluorescentSpecimenIds = setOf(
     "amazing-squid-game-calcite",
     "calcite-squid-game",
     "syenite-fluorescent",
+    "amazing-fluorescent-hyalite",
+    "amazing-fluorescent-benitoite",
+    "amazing-fluorescent-tugtupite",
 )
 
 /** UV-wavelength labels for fluorescent mineral photo sets. */
@@ -548,6 +554,26 @@ private val fluorescentPhotoLabels = listOf(
     "Longwave UV",
     "Midwave UV",
     "Shortwave UV",
+)
+
+/** Labels for fluorescent Hyalite Opal — LW-first gallery (3 images). */
+private val hyaliteFluorescentLabels = listOf(
+    "Longwave UV",
+    "Natural Light",
+    "In the Wild",
+)
+
+/** Labels for fluorescent Benitoite — SW-first gallery (3 images). */
+private val benitoiteFluorescentLabels = listOf(
+    "Shortwave UV",
+    "Natural Light",
+    "Daylight Crystal",
+)
+
+/** Labels for fluorescent Tugtupite — SW-first gallery (2 images). */
+private val tugtupiteFluorescentLabels = listOf(
+    "Shortwave UV",
+    "Natural Light",
 )
 
 /** Labels for Squid Game Calcite — shortwave-focused gallery. */
