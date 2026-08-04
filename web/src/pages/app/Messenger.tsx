@@ -1114,7 +1114,7 @@ export default function Messenger() {
               </p>
               {selfHarmOffenseCount >= 2 && (
                 <p className="mt-2 text-sm font-semibold text-destructive">
-                  This is your {selfHarmOffenseCount}rd offense. An automatic report
+                  This is your {selfHarmOffenseCount}{selfHarmOffenseCount === 2 ? "nd" : selfHarmOffenseCount === 3 ? "rd" : "th"} offense. An automatic report
                   has been filed and you will be notified via email and notifications.
                 </p>
               )}
