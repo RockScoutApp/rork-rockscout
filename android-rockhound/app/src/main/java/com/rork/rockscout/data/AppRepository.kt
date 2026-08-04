@@ -111,6 +111,8 @@ data class UserProfile(
     val birthdayPublic: Boolean = false,
     /** User's favorite rock — free text shown on the profile card. */
     val favoriteRock: String = "",
+    /** Custom highlight color for the profile page (hex string like "#FF3B30"). Null = default. */
+    val highlightColor: String? = null,
 )
 
 /**

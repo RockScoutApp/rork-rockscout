@@ -51,6 +51,8 @@ data class LocalUser(
     val birthday_public: Boolean = false,
     /** User's favorite rock — free text shown on the profile card. */
     val favorite_rock: String = "",
+    /** Custom highlight color for the profile page (hex string like "#FF3B30"). Null = default. */
+    val highlight_color: String? = null,
 ) {
     /** Convert to the HunterProfile shape used by scan results + friend lists. */
     fun toHunterProfile(): SocialRepository.HunterProfile = SocialRepository.HunterProfile(
@@ -71,5 +73,6 @@ data class LocalUser(
         birthday_millis = if (birthday_public) birthday_millis else null,
         birthday_public = birthday_public,
         favorite_rock = favorite_rock,
+        highlight_color = highlight_color,
     )
 }

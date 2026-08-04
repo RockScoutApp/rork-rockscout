@@ -360,11 +360,12 @@ fun ProfileScreen(
                 Box(modifier = Modifier.fillMaxWidth()) {
                     // Two-zone profile card: background image on top, solid gradient below.
                     val cardShape = RoundedCornerShape(20.dp)
+                    val highlightColor = parseHexColor(profile.highlightColor) ?: Citrine
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(cardShape)
-                            .glowingBorder(3.dp, Citrine.copy(alpha = 0.55f), cardShape)
+                            .glowingBorder(3.dp, highlightColor.copy(alpha = 0.55f), cardShape)
                             .clickable { showEditSheet = true },
                     ) {
                         Column(modifier = Modifier.fillMaxWidth()) {
@@ -386,7 +387,7 @@ fun ProfileScreen(
                                         .height(120.dp)
                                         .background(
                                             Brush.verticalGradient(
-                                                listOf(Citrine.copy(alpha = 0.25f), Aqua.copy(alpha = 0.15f), Color(0xFF1A1812))
+                                                listOf(highlightColor.copy(alpha = 0.25f), Aqua.copy(alpha = 0.15f), Color(0xFF1A1812))
                                             )
                                         ),
                                     contentAlignment = Alignment.Center,
@@ -1271,8 +1272,9 @@ fun ProfileScreen(
             birthdayMillis = profile.birthdayMillis,
             birthdayPublic = profile.birthdayPublic,
             favoriteRock = profile.favoriteRock,
+            highlightColor = profile.highlightColor,
             onDismiss = { showEditSheet = false },
-            onSave = { newName, newRegion, newBio, newAvatar, newBgPath, newGender, newBirthday, newBirthdayPublic, newFavoriteRock ->
+            onSave = { newName, newRegion, newBio, newAvatar, newBgPath, newGender, newBirthday, newBirthdayPublic, newFavoriteRock, newHighlightColor ->
                 val filteredName = ProfanityFilter.filter(newName)
                 coroutineScope2.launch {
                     // Check uniqueness — if taken, block save and show error toast.
@@ -1295,6 +1297,7 @@ fun ProfileScreen(
                             birthdayMillis = newBirthday,
                             birthdayPublic = newBirthdayPublic,
                             favoriteRock = ProfanityFilter.filter(newFavoriteRock),
+                            highlightColor = newHighlightColor,
                         )
                     }
                     if (newBgPath != profile.backgroundImagePath) {
@@ -1402,8 +1405,9 @@ private fun EditProfileSheetContainer(
     birthdayMillis: Long?,
     birthdayPublic: Boolean,
     favoriteRock: String,
+    highlightColor: String?,
     onDismiss: () -> Unit,
-    onSave: (String, String, String, String, String?, String, Long?, Boolean, String) -> Unit,
+    onSave: (String, String, String, String, String?, String, Long?, Boolean, String, String?) -> Unit,
     onBackgroundSelected: (Uri) -> Unit,
     onRemoveBackground: () -> Unit,
 ) {
@@ -1425,6 +1429,7 @@ private fun EditProfileSheetContainer(
             birthdayMillis = birthdayMillis,
             birthdayPublic = birthdayPublic,
             favoriteRock = favoriteRock,
+            highlightColor = highlightColor,
             onSave = onSave,
             onBackgroundSelected = onBackgroundSelected,
             onRemoveBackground = onRemoveBackground,
@@ -1446,7 +1451,8 @@ private fun EditProfileSheet(
     birthdayMillis: Long?,
     birthdayPublic: Boolean,
     favoriteRock: String,
-    onSave: (String, String, String, String, String?, String, Long?, Boolean, String) -> Unit,
+    highlightColor: String?,
+    onSave: (String, String, String, String, String?, String, Long?, Boolean, String, String?) -> Unit,
     onBackgroundSelected: (Uri) -> Unit,
     onRemoveBackground: () -> Unit,
 ) {
@@ -1458,6 +1464,7 @@ private fun EditProfileSheet(
     var editBirthday by remember { mutableStateOf(birthdayMillis) }
     var editBirthdayPublic by remember { mutableStateOf(birthdayPublic) }
     var editFavoriteRock by remember { mutableStateOf(favoriteRock) }
+    var editHighlightColor by remember { mutableStateOf(highlightColor) }
     var showBirthdayPicker by remember { mutableStateOf(false) }
     var nameError by remember { mutableStateOf<String?>(null) }
     var bgModerating by remember { mutableStateOf(false) }
@@ -1758,8 +1765,37 @@ private fun EditProfileSheet(
                 ) { Text(emoji, style = MaterialTheme.typography.titleLarge) }
             }
         }
+
+        // ── Profile highlight color picker (30 colors) ──
+        Text("Profile highlight color", style = MaterialTheme.typography.labelMedium, color = Aqua, fontWeight = FontWeight.Bold)
+        Text(
+            "Pick a color that others will see on your profile page.",
+            style = MaterialTheme.typography.bodySmall,
+            color = DarkTextMid,
+        )
+        Spacer(Modifier.height(8.dp))
+        ProfileHighlightColorPicker(
+            selectedColor = editHighlightColor,
+            onColorSelected = { editHighlightColor = it },
+        )
+        Spacer(Modifier.height(8.dp))
+        // Clear color button
+        if (editHighlightColor != null) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Danger.copy(alpha = 0.12f))
+                    .glowingBorder(1.dp, Danger.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+                    .clickable { editHighlightColor = null }
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("Reset to default", style = MaterialTheme.typography.labelMedium, color = Danger, fontWeight = FontWeight.Bold)
+            }
+        }
+
         Button(
-            onClick = { onSave(editName, editRegion, editBio, editAvatar, backgroundImagePath, editGender, editBirthday, editBirthdayPublic, editFavoriteRock.trim()) },
+            onClick = { onSave(editName, editRegion, editBio, editAvatar, backgroundImagePath, editGender, editBirthday, editBirthdayPublic, editFavoriteRock.trim(), editHighlightColor) },
             modifier = Modifier.fillMaxWidth(),
             enabled = nameError == null && editName.trim().isNotBlank(),
             colors = ButtonDefaults.buttonColors(
@@ -2974,6 +3010,78 @@ private fun AchievementRow(
                 modifier = Modifier.width(64.dp),
                 textAlign = androidx.compose.ui.text.style.TextAlign.End,
             )
+        }
+    }
+}
+
+/** 30 easily-distinguishable colors for the profile highlight picker. */
+private val PROFILE_HIGHLIGHT_COLORS = listOf(
+    Color(0xFFFF3B30), Color(0xFFFF9500), Color(0xFFFFCC00), Color(0xFFFF2D55), Color(0xFFE8A33D), Color(0xFFD9B26A),
+    Color(0xFF34C759), Color(0xFF5CC98C), Color(0xFF00C7BE), Color(0xFF30B0C7), Color(0xFF32ADE6), Color(0xFF007AFF),
+    Color(0xFF5856D6), Color(0xFF9B7BD8), Color(0xFFAF52DE), Color(0xFFB08BFF), Color(0xFFFF6B3D), Color(0xFFFF5E3A),
+    Color(0xFF00E5C9), Color(0xFF4FC3F7), Color(0xFF6FA8C7), Color(0xFF7CB5EC), Color(0xFF8BBF6A), Color(0xFF6FBF8A),
+    Color(0xFFB87333), Color(0xFFC97B4A), Color(0xFFE2574C), Color(0xFF1B3A4B), Color(0xFF44AACC), Color(0xFFC0C0C0),
+)
+
+/** Convert a Color to a hex string like "#FF3B30". */
+private fun Color.toHex(): String {
+    val r = (red * 255).toInt()
+    val g = (green * 255).toInt()
+    val b = (blue * 255).toInt()
+    return "#${r.toString(16).padStart(2, '0').uppercase()}${g.toString(16).padStart(2, '0').uppercase()}${b.toString(16).padStart(2, '0').uppercase()}"
+}
+
+/** Parse a hex string like "#FF3B30" into a Color. Returns null on failure. */
+fun parseHexColor(hex: String?): Color? {
+    if (hex.isNullOrBlank()) return null
+    val clean = hex.removePrefix("#").removePrefix("0x")
+    return runCatching {
+        val r = clean.substring(0, 2).toInt(16)
+        val g = clean.substring(2, 4).toInt(16)
+        val b = clean.substring(4, 6).toInt(16)
+        Color(red = r / 255f, green = g / 255f, blue = b / 255f)
+    }.getOrNull()
+}
+
+@Composable
+private fun ProfileHighlightColorPicker(
+    selectedColor: String?,
+    onColorSelected: (String?) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        PROFILE_HIGHLIGHT_COLORS.chunked(6).forEach { row ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+            ) {
+                row.forEach { color ->
+                    val hex = color.toHex()
+                    val isSelected = hex == selectedColor
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(color)
+                            .glowingBorder(
+                                if (isSelected) 3.dp else 1.dp,
+                                if (isSelected) Color.White else Color.White.copy(alpha = 0.2f),
+                                CircleShape,
+                            )
+                            .clickable { onColorSelected(hex) },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Filled.Check,
+                                contentDescription = "Selected",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
+                }
+            }
+            Spacer(Modifier.height(10.dp))
         }
     }
 }

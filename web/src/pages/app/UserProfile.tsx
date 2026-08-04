@@ -45,6 +45,7 @@ interface Profile {
   is_pro: boolean;
   home_region: string;
   bio: string;
+  highlight_color?: string | null;
 }
 
 interface CollectionCount {
@@ -330,8 +331,22 @@ export default function UserProfile() {
       )}
 
       {/* Profile header */}
-      <div className="flex flex-col items-center gap-4 dark-card sculpted-raised rounded-xl p-6 text-center sm:flex-row sm:text-left">
-        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-primary/10 text-4xl">
+      <div
+        className="flex flex-col items-center gap-4 dark-card sculpted-raised rounded-xl p-6 text-center sm:flex-row sm:text-left"
+        style={profile.highlight_color ? {
+          ["--sculpted-accent" as string]: profile.highlight_color,
+          ["--glow-color" as string]: profile.highlight_color,
+          boxShadow: `0 0 16px ${profile.highlight_color}33`,
+          borderColor: `${profile.highlight_color}55`,
+        } : undefined}
+      >
+        <div
+          className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full text-4xl"
+          style={profile.highlight_color ? {
+            background: `radial-gradient(circle, ${profile.highlight_color}40, transparent)`,
+            boxShadow: `0 0 12px ${profile.highlight_color}44`,
+          } : { background: "hsl(var(--primary) / 0.1)" }}
+        >
           {profile.avatar_emoji}
         </div>
         <div className="min-w-0 flex-1">

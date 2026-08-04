@@ -55,6 +55,15 @@ const AVATAR_OPTIONS = [
   "🦎", "☄️", "✨", "⭐", "🔥", "❄️", "🧊", "🗿",
 ];
 
+/** 30 easily-distinguishable colors for the profile highlight picker. */
+const PROFILE_HIGHLIGHT_COLORS = [
+  "#FF3B30", "#FF9500", "#FFCC00", "#FF2D55", "#E8A33D", "#D9B26A",
+  "#34C759", "#5CC98C", "#00C7BE", "#30B0C7", "#32ADE6", "#007AFF",
+  "#5856D6", "#9B7BD8", "#AF52DE", "#B08BFF", "#FF6B3D", "#FF5E3A",
+  "#00E5C9", "#4FC3F7", "#6FA8C7", "#7CB5EC", "#8BBF6A", "#6FBF8A",
+  "#B87333", "#C97B4A", "#E2574C", "#1B3A4B", "#44AACC", "#C0C0C0",
+];
+
 const HUNTER_STATUS_OPTIONS = [
   { value: "off", label: "Invisible", icon: "👻" },
   { value: "hunting", label: "Out Hunting", icon: "⛏️" },
@@ -79,6 +88,7 @@ interface ProfileData {
   birthday?: string;
   birthday_private?: boolean;
   favorite_rock?: string;
+  highlight_color?: string | null;
 }
 
 const GENDER_OPTIONS = [
@@ -130,6 +140,7 @@ export default function Profile() {
   const [editBirthday, setEditBirthday] = useState("");
   const [editBirthdayPrivate, setEditBirthdayPrivate] = useState(true);
   const [editFavoriteRock, setEditFavoriteRock] = useState("");
+  const [editHighlightColor, setEditHighlightColor] = useState<string | null>(null);
   const [showBirthdayPicker, setShowBirthdayPicker] = useState(false);
   const [pickerMonth, setPickerMonth] = useState(0);
   const [pickerYear, setPickerYear] = useState(2000);
@@ -143,7 +154,7 @@ export default function Profile() {
       if (!user) return null;
       const { data } = await supabase
         .from("rockscout_profiles")
-        .select("id, display_name, avatar_emoji, status, level, xp, is_pro, pro_badge, tokens, bio, home_region, gender, birthday, birthday_private, favorite_rock")
+        .select("id, display_name, avatar_emoji, status, level, xp, is_pro, pro_badge, tokens, bio, home_region, gender, birthday, birthday_private, favorite_rock, highlight_color")
         .eq("id", user.id)
         .maybeSingle();
       return (data as ProfileData) ?? null;
@@ -217,6 +228,7 @@ export default function Profile() {
       setEditBirthday(profile.birthday || "");
       setEditBirthdayPrivate(profile.birthday_private ?? true);
       setEditFavoriteRock(profile.favorite_rock || "");
+      setEditHighlightColor(profile.highlight_color ?? null);
       if (profile.birthday) {
         const parts = profile.birthday.split("-");
         if (parts.length === 3) {
@@ -246,6 +258,7 @@ export default function Profile() {
           birthday: editBirthday || null,
           birthday_private: editBirthdayPrivate,
           favorite_rock: filterProfanity(editFavoriteRock.trim()).filteredText || null,
+          highlight_color: editHighlightColor || null,
         })
         .eq("id", user.id);
       if (error) throw error;
@@ -300,20 +313,26 @@ export default function Profile() {
 
       {/* ── Profile header card ── */}
       <SculptedCard
-        accent="citrine"
+        accent={profile?.highlight_color ? undefined : "citrine"}
         glowing
         className="overflow-hidden"
+        style={profile?.highlight_color ? {
+          ["--sculpted-accent" as string]: profile.highlight_color,
+          ["--glow-color" as string]: profile.highlight_color,
+        } : undefined}
       >
         {/* Background gradient band */}
         <div
           className="relative flex h-32 items-center justify-center overflow-hidden"
           style={{
-            background: `linear-gradient(180deg, hsl(${CITRINE_HEX} / 0.25), hsl(${AQUA_HEX} / 0.15), hsl(30 10% 9%))`,
+            background: profile?.highlight_color
+              ? `linear-gradient(180deg, ${profile.highlight_color}40, hsl(${AQUA_HEX} / 0.15), hsl(30 10% 9%))`
+              : `linear-gradient(180deg, hsl(${CITRINE_HEX} / 0.25), hsl(${AQUA_HEX} / 0.15), hsl(30 10% 9%))`,
           }}
         >
           <Sparkles
             className="absolute left-4 top-4 h-5 w-5"
-            style={{ color: `hsl(${CITRINE_HEX} / 0.4)` }}
+            style={{ color: profile?.highlight_color ? `${profile.highlight_color}66` : `hsl(${CITRINE_HEX} / 0.4)` }}
           />
           <Star
             className="absolute bottom-4 right-4 h-4 w-4"
@@ -1031,6 +1050,43 @@ export default function Profile() {
                 placeholder="e.g. Quartz, Amethyst, Fluorite..."
                 className="w-full dark-card sculpted-raised rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none"
               />
+            </div>
+
+            {/* Profile Highlight Color */}
+            <div className="mb-4">
+              <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
+                Profile Highlight Color
+              </label>
+              <p className="mb-2 text-xs text-muted-foreground/70">
+                Pick a color others will see on your profile page.
+              </p>
+              <div className="grid grid-cols-6 gap-2 sm:grid-cols-10">
+                {PROFILE_HIGHLIGHT_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    onClick={() => setEditHighlightColor(color === editHighlightColor ? null : color)}
+                    className={`flex h-8 w-8 items-center justify-center rounded-full transition-all ${
+                      editHighlightColor === color
+                        ? "ring-2 ring-white ring-offset-2 ring-offset-background"
+                        : "hover:scale-110"
+                    }`}
+                    style={{ backgroundColor: color }}
+                    aria-label={`Select ${color}`}
+                  >
+                    {editHighlightColor === color && (
+                      <Check className="h-4 w-4 text-white" />
+                    )}
+                  </button>
+                ))}
+              </div>
+              {editHighlightColor && (
+                <button
+                  onClick={() => setEditHighlightColor(null)}
+                  className="mt-2 text-xs font-medium text-muted-foreground hover:text-foreground"
+                >
+                  Reset to default
+                </button>
+              )}
             </div>
 
             {/* Save / Cancel */}

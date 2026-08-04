@@ -49,6 +49,7 @@ class SocialRepository private constructor() {
         val birthday_millis: Long? = null,
         val birthday_public: Boolean = false,
         val favorite_rock: String = "",
+        val highlight_color: String? = null,
     )
 
     /** Result of a scan: the hunter + coarse distance bucket (mi). */

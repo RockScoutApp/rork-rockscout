@@ -367,7 +367,7 @@ object SupabaseDataSync {
     }
 
     private suspend fun pullProfile(url: String, key: String, token: String, uid: String) {
-        val response = client.get("$url/rest/v1/rockscout_profiles?id=eq.$uid&select=display_name,avatar_emoji,status,club_enabled,scan_radius_miles") {
+        val response = client.get("$url/rest/v1/rockscout_profiles?id=eq.$uid&select=display_name,avatar_emoji,status,club_enabled,scan_radius_miles,highlight_color") {
             header("apikey", key)
             header(HttpHeaders.Authorization, "Bearer $token")
         }
@@ -380,9 +380,16 @@ object SupabaseDataSync {
         val avatarEmoji = obj["avatar_emoji"]?.jsonPrimitive?.content ?: "\uD83E\uDD20"
         // Update the local profile with the Supabase display name + avatar if they differ.
         val current = AppRepository.instance.profile.value
+        val highlightColorEl = obj["highlight_color"]
+        val highlightColor = if (highlightColorEl is JsonPrimitive && highlightColorEl.content.isNotEmpty()) highlightColorEl.content else null
         if (displayName.isNotBlank() && displayName != current.name) {
             AppRepository.instance.updateProfile { it.copy(name = displayName, avatarEmoji = avatarEmoji) }
             Log.d(TAG, "Pulled profile: name=$displayName")
+        }
+        if (highlightColor != current.highlightColor) {
+            val cleaned = highlightColor?.takeIf { it.isNotBlank() }
+            AppRepository.instance.updateProfile { it.copy(highlightColor = cleaned) }
+            Log.d(TAG, "Pulled profile: highlight_color=$highlightColor")
         }
     }
 
@@ -562,6 +569,7 @@ object SupabaseDataSync {
                     "status" to profile.hunterStatus.name.lowercase(),
                     "club_enabled" to profile.clubEnabled.toString(),
                     "scan_radius_miles" to profile.scanRadiusMiles.toString(),
+                    "highlight_color" to (profile.highlightColor ?: ""),
                 ))
             }
         } catch (e: Exception) {

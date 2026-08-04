@@ -253,16 +253,17 @@ fun UserProfileScreen(
             contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 40.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            // Profile header card
+            // Profile header card — uses the viewed user's custom highlight color
+            val highlightColor = parseHexColor(h.highlight_color) ?: Citrine
             item {
-                DarkCard(modifier = Modifier.fillMaxWidth(), accent = statusAccent) {
+                DarkCard(modifier = Modifier.fillMaxWidth(), accent = highlightColor) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
                                 .size(72.dp)
                                 .clip(CircleShape)
-                                .background(Brush.linearGradient(listOf(statusAccent.copy(alpha = 0.5f), Aqua.copy(alpha = 0.3f))))
-                                .glowingBorder(3.dp, profileBorderColor(status), CircleShape),
+                                .background(Brush.linearGradient(listOf(highlightColor.copy(alpha = 0.5f), Aqua.copy(alpha = 0.3f))))
+                                .glowingBorder(3.dp, highlightColor, CircleShape),
                             contentAlignment = Alignment.Center,
                         ) { Text(h.avatar_emoji, style = MaterialTheme.typography.displaySmall) }
                         Spacer(Modifier.width(16.dp))
