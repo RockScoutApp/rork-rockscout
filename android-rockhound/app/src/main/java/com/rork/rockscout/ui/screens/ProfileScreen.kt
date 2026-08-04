@@ -1278,11 +1278,16 @@ fun ProfileScreen(
                 val filteredName = ProfanityFilter.filter(newName)
                 coroutineScope2.launch {
                     // Check uniqueness — if taken, block save and show error toast.
-                    val isTaken = UsernameResolver.isTaken(filteredName, excludeUserId = currentUid)
+                    val liveOriginalName = AppRepository.instance.profile.value.name.trim()
+                    val isTaken = if (filteredName.equals(liveOriginalName, ignoreCase = true)) {
+                        false
+                    } else {
+                        UsernameResolver.isTaken(filteredName, excludeUserId = currentUid)
+                    }
                     if (isTaken) {
                         android.widget.Toast.makeText(
                             context,
-                            "That username is already in use. Try adding a couple numbers to make it unique.",
+                            "That username is already taken. Add numbers to make it unique.",
                             android.widget.Toast.LENGTH_LONG,
                         ).show()
                         return@launch
@@ -1479,17 +1484,18 @@ private fun EditProfileSheet(
     // Checks both local users and Supabase profiles for true uniqueness.
     LaunchedEffect(editName) {
         val trimmed = editName.trim()
+        val liveOriginalName = AppRepository.instance.profile.value.name.trim()
         nameError = if (trimmed.isBlank()) {
             "Display name cannot be empty."
-        } else if (trimmed.equals(originalName, ignoreCase = true)) {
+        } else if (trimmed.equals(originalName, ignoreCase = true) || trimmed.equals(liveOriginalName, ignoreCase = true)) {
             null // User kept their own name — always allowed.
         } else if (SocialRepository.instance.isDisplayNameTaken(trimmed, excludeUserId = currentUserId)) {
-            "That username is already in use. Try adding a couple numbers to make it unique."
+            "That username is already taken. Add numbers to make it unique."
         } else {
             // Also check Supabase profiles (async) for cross-platform uniqueness.
             val takenOnSupabase = UsernameResolver.isTaken(trimmed, excludeUserId = currentUserId)
             if (takenOnSupabase) {
-                "That username is already in use. Try adding a couple numbers to make it unique."
+                "That username is already taken. Add numbers to make it unique."
             } else {
                 null
             }
@@ -1568,7 +1574,7 @@ private fun EditProfileSheet(
                 fontWeight = FontWeight.SemiBold,
             )
         }
-        // Display name field with inline error
+        // Display name field with fully visible error
         Column {
             Text("Display name", style = MaterialTheme.typography.labelMedium, color = Aqua, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(6.dp))
@@ -1578,27 +1584,30 @@ private fun EditProfileSheet(
                 modifier = Modifier.fillMaxWidth().noAutoFocus(),
                 singleLine = true,
                 isError = nameError != null,
-                supportingText = {
-                    if (nameError != null) {
-                        Text(
-                            nameError!!,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
-                },
                 keyboardOptions = KeyboardOptions.Default,
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Slate800,
                     unfocusedContainerColor = Slate800,
                     focusedIndicatorColor = if (nameError != null) MaterialTheme.colorScheme.error else Citrine,
-                    unfocusedIndicatorColor = StoneLine,
+                    unfocusedIndicatorColor = if (nameError != null) MaterialTheme.colorScheme.error else StoneLine,
                     focusedTextColor = TextHigh,
                     unfocusedTextColor = TextHigh,
                     cursorColor = Citrine,
                 ),
                 shape = RoundedCornerShape(12.dp),
             )
+            if (nameError != null) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    nameError!!,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.error,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         }
         HomeRegionPicker(editRegion) { v -> editRegion = v }
 

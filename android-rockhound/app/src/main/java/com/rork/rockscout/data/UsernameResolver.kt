@@ -41,16 +41,19 @@ object UsernameResolver {
         val token = accessToken() ?: return emptySet()
         return try {
             val ilikeParam = desiredName.replace("'", "''")
-            val resp = client.get("${baseUrl()}/rest/v1/rockscout_profiles?display_name=ilike.${ilikeParam}&select=display_name") {
+            val resp = client.get("${baseUrl()}/rest/v1/rockscout_profiles?display_name=ilike.${ilikeParam}&select=id,display_name") {
                 header("apikey", anonKey())
                 header(HttpHeaders.Authorization, "Bearer $token")
             }
             if (!resp.status.isSuccess()) return emptySet()
             val raw = resp.body<String>()
             val arr = json.parseToJsonElement(raw).jsonArray
-            arr.mapNotNull { it.jsonObject["display_name"]?.jsonPrimitive?.contentOrNull }
-                .filterNot { it == excludeUserId }
-                .toSet()
+            arr.mapNotNull { row ->
+                val obj = row.jsonObject
+                val id = obj["id"]?.jsonPrimitive?.contentOrNull
+                val displayName = obj["display_name"]?.jsonPrimitive?.contentOrNull
+                if (id == null || id == excludeUserId) null else displayName
+            }.toSet()
         } catch (e: Exception) {
             Log.w(TAG, "findExistingNames failed", e)
             emptySet()
