@@ -160,6 +160,12 @@ export default function Profile() {
   const avatarDragStart = useRef<{ x: number; y: number } | null>(null);
   const avatarPinchDist = useRef<number | null>(null);
   const avatarPinchScale = useRef<number>(1);
+  const [showFullScreenAvatarEditor, setShowFullScreenAvatarEditor] = useState(false);
+  const fullScreenAvatarRef = useRef<HTMLDivElement>(null);
+  const fullScreenAvatarImgRef = useRef<HTMLImageElement>(null);
+  const fullScreenDragStart = useRef<{ x: number; y: number } | null>(null);
+  const fullScreenPinchDist = useRef<number | null>(null);
+  const fullScreenPinchScale = useRef<number>(1);
   const [nameError, setNameError] = useState<string | null>(null);
   const [nameChecking, setNameChecking] = useState(false);
   const [originalName, setOriginalName] = useState("");
@@ -1066,6 +1072,15 @@ export default function Profile() {
                         boxShadow: `0 0 0 9999px rgba(0,0,0,0.35)`,
                       }}
                     />
+                    {/* Tap-to-expand badge */}
+                    <button
+                      onClick={() => setShowFullScreenAvatarEditor(true)}
+                      className="absolute bottom-2 right-2 flex items-center gap-1 rounded-lg bg-black/70 px-2.5 py-1 text-xs font-semibold transition-all hover:bg-black/85"
+                      style={{ color: `hsl(${CITRINE_HEX})` }}
+                    >
+                      <Edit3 className="h-3 w-3" />
+                      Tap to expand
+                    </button>
                   </div>
                   <div className="mt-1.5 flex items-center justify-between">
                     <span className="text-xs font-semibold" style={{ color: `hsl(${AQUA_HEX})` }}>
@@ -1432,6 +1447,146 @@ export default function Profile() {
               >
                 <Check className="h-4 w-4" />
                 {saveProfile.isPending ? "Saving…" : "Save"}
+              </SculptedButton>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Full-screen avatar editor overlay ── */}
+      {showFullScreenAvatarEditor && editAvatarImage && (
+        <div
+          className="fixed inset-0 z-[90] flex flex-col bg-[#0D0C0A]"
+          style={{ touchAction: "none" }}
+        >
+          {/* Top bar: title + close */}
+          <div className="flex items-center justify-between px-4 py-3 pt-[env(safe-area-inset-top)]">
+            <h3 className="font-display text-lg font-bold text-foreground">
+              Adjust Avatar
+            </h3>
+            <button
+              onClick={() => setShowFullScreenAvatarEditor(false)}
+              className="flex h-10 w-10 items-center justify-center rounded-full"
+              style={{
+                background: "#2A2820",
+                border: `2px solid hsl(${CITRINE_HEX} / 0.5)`,
+                color: `hsl(${CITRINE_HEX})`,
+              }}
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Full-screen image area with pan/zoom */}
+          <div className="relative flex flex-1 items-center justify-center overflow-hidden">
+            <div
+              ref={fullScreenAvatarRef}
+              className="absolute inset-0 flex items-center justify-center"
+              style={{ touchAction: "none", cursor: avatarScale > 1 ? "grab" : "default" }}
+              onPointerDown={(e) => {
+                if (avatarScale <= 1) return;
+                (e.target as HTMLElement).setPointerCapture(e.pointerId);
+                fullScreenDragStart.current = { x: e.clientX - avatarOffset.x, y: e.clientY - avatarOffset.y };
+              }}
+              onPointerMove={(e) => {
+                if (!fullScreenDragStart.current) return;
+                const el = fullScreenAvatarRef.current;
+                if (!el) return;
+                const boxPx = Math.max(el.clientWidth, el.clientHeight);
+                const maxOff = boxPx * (avatarScale - 1) / 2;
+                const newX = e.clientX - fullScreenDragStart.current.x;
+                const newY = e.clientY - fullScreenDragStart.current.y;
+                setAvatarOffset({
+                  x: Math.max(-maxOff, Math.min(maxOff, newX)),
+                  y: Math.max(-maxOff, Math.min(maxOff, newY)),
+                });
+              }}
+              onPointerUp={() => { fullScreenDragStart.current = null; }}
+              onPointerCancel={() => { fullScreenDragStart.current = null; }}
+              onWheel={(e) => {
+                e.preventDefault();
+                const delta = -e.deltaY * 0.002;
+                setAvatarScale((s) => Math.max(1, Math.min(8, s + delta)));
+              }}
+              onTouchStart={(e) => {
+                if (e.touches.length === 2) {
+                  const dx = e.touches[0].clientX - e.touches[1].clientX;
+                  const dy = e.touches[0].clientY - e.touches[1].clientY;
+                  fullScreenPinchDist.current = Math.hypot(dx, dy);
+                  fullScreenPinchScale.current = avatarScale;
+                }
+              }}
+              onTouchMove={(e) => {
+                if (e.touches.length === 2 && fullScreenPinchDist.current !== null) {
+                  e.preventDefault();
+                  const dx = e.touches[0].clientX - e.touches[1].clientX;
+                  const dy = e.touches[0].clientY - e.touches[1].clientY;
+                  const dist = Math.hypot(dx, dy);
+                  const ratio = dist / fullScreenPinchDist.current;
+                  setAvatarScale(Math.max(1, Math.min(8, fullScreenPinchScale.current * ratio)));
+                }
+              }}
+              onTouchEnd={() => { fullScreenPinchDist.current = null; }}
+            >
+              <img
+                ref={fullScreenAvatarImgRef}
+                src={editAvatarImage}
+                alt="Full-screen avatar editor"
+                className="h-full w-full object-cover"
+                style={{
+                  transform: `scale(${avatarScale}) translate(${avatarOffset.x / avatarScale}px, ${avatarOffset.y / avatarScale}px)`,
+                  transformOrigin: "center",
+                  userSelect: "none",
+                  pointerEvents: "none",
+                }}
+                draggable={false}
+              />
+            </div>
+
+            {/* Dimming overlay: dark everywhere except the centered 75px crop square */}
+            <div
+              className="pointer-events-none absolute left-1/2 top-1/2 rounded-xl border-[3px]"
+              style={{
+                borderColor: `hsl(${CITRINE_HEX})`,
+                width: "75px",
+                height: "75px",
+                transform: "translate(-50%, -50%)",
+                boxShadow: "0 0 0 9999px rgba(0,0,0,0.6)",
+              }}
+            />
+          </div>
+
+          {/* Bottom bar: instructions + zoom + reset + done */}
+          <div className="space-y-2.5 px-5 py-4 pb-[env(safe-area-inset-bottom)]">
+            <p className="text-center text-xs text-muted-foreground/70">
+              Drag to pan · Pinch to zoom · The square shows your avatar
+            </p>
+            <div className="flex items-center gap-2.5">
+              <span
+                className="flex-1 text-xs font-semibold"
+                style={{ color: `hsl(${AQUA_HEX})` }}
+              >
+                Zoom: {avatarScale.toFixed(1)}x
+              </span>
+              <button
+                onClick={() => { setAvatarScale(1); setAvatarOffset({ x: 0, y: 0 }); }}
+                className="rounded-lg px-4 py-2 text-xs font-bold transition-all"
+                style={{
+                  background: `hsl(${CITRINE_HEX} / 0.12)`,
+                  color: `hsl(${CITRINE_HEX})`,
+                }}
+              >
+                Reset
+              </button>
+              <SculptedButton
+                accent="citrine"
+                size="sm"
+                glowing
+                onClick={() => setShowFullScreenAvatarEditor(false)}
+              >
+                <Check className="h-4 w-4" />
+                Done
               </SculptedButton>
             </div>
           </div>

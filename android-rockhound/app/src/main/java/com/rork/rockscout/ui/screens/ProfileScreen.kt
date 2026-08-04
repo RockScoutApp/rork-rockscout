@@ -87,6 +87,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import coil3.compose.AsyncImage
 import android.net.Uri
@@ -128,6 +129,11 @@ import java.util.Calendar
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.Canvas
 import com.rork.rockscout.data.RegionData
 import com.rork.rockscout.data.LevelTier
 import com.rork.rockscout.data.SocialRepository
@@ -1502,6 +1508,7 @@ private fun EditProfileSheet(
     var avatarOffsetY by remember { mutableStateOf(0f) }
     var avatarPreviewSizePx by remember { mutableStateOf(0) }
     var cropping by remember { mutableStateOf(false) }
+    var showFullScreenAvatarEditor by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -1964,7 +1971,7 @@ private fun EditProfileSheet(
             }
         }
         Spacer(Modifier.height(10.dp))
-        // Full-width pan/zoom preview
+        // Full-width pan/zoom preview — tap to open full-screen editor
         if (editAvatarImagePath != null && avatarModerating.not()) {
             val density = androidx.compose.ui.platform.LocalDensity.current
             val previewSizeDp = 200.dp
@@ -2006,6 +2013,22 @@ private fun EditProfileSheet(
                         .border(2.dp, Citrine, RoundedCornerShape(12.dp))
                         .pointerInput(Unit) { /* pass-through, no-op */ },
                 ) { /* visual crop frame overlay */ }
+                // Tap-to-expand hint badge
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xAA000000))
+                        .clickable { showFullScreenAvatarEditor = true }
+                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.Edit, contentDescription = null, tint = Citrine, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Tap to expand", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.SemiBold)
+                    }
+                }
             }
             Spacer(Modifier.height(6.dp))
             Row(
@@ -2197,6 +2220,176 @@ private fun EditProfileSheet(
                 showBirthdayPicker = false
             },
         )
+    }
+
+    // ── Full-screen avatar editor ──
+    // Opens when the user taps the avatar preview. Gives them the entire
+    // screen to pan and zoom precisely before saving.
+    if (showFullScreenAvatarEditor && editAvatarImagePath != null) {
+        val density = androidx.compose.ui.platform.LocalDensity.current
+        val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+        val screenHPx = with(density) { configuration.screenHeightDp.dp.toPx() }
+        val cropSizePx = with(density) { 75.dp.toPx() }
+        Dialog(
+            onDismissRequest = { showFullScreenAvatarEditor = false },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false,
+                dismissOnBackPress = true,
+                dismissOnClickOutside = false,
+            ),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFF0D0C0A))
+                    .systemBarsPadding(),
+            ) {
+                // Full-screen image with pan/zoom
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(editAvatarImagePath) {
+                            detectTransformGestures { _, pan, zoom, _ ->
+                                avatarScale = (avatarScale * zoom).coerceIn(1f, 8f)
+                                val maxOff = screenHPx * (avatarScale - 1f)
+                                avatarOffsetX = (avatarOffsetX + pan.x).coerceIn(-maxOff, maxOff)
+                                avatarOffsetY = (avatarOffsetY + pan.y).coerceIn(-maxOff, maxOff)
+                            }
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    AsyncImage(
+                        model = editAvatarImagePath,
+                        contentDescription = "Full-screen avatar editor",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .graphicsLayer(
+                                scaleX = avatarScale,
+                                scaleY = avatarScale,
+                                translationX = avatarOffsetX,
+                                translationY = avatarOffsetY,
+                            ),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+
+                // Dimming overlay: dark everywhere except the centered 75dp crop square
+                val dimColor = Color(0x99000000)
+                Canvas(
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    val canvasW = size.width
+                    val canvasH = size.height
+                    val cropPx = cropSizePx
+                    val left = (canvasW - cropPx) / 2f
+                    val top = (canvasH - cropPx) / 2f
+                    val right = (canvasW + cropPx) / 2f
+                    val bottom = (canvasH + cropPx) / 2f
+                    // Top strip
+                    drawRect(dimColor, topLeft = androidx.compose.ui.geometry.Offset(0f, 0f), size = androidx.compose.ui.geometry.Size(canvasW, top))
+                    // Bottom strip
+                    drawRect(dimColor, topLeft = androidx.compose.ui.geometry.Offset(0f, bottom), size = androidx.compose.ui.geometry.Size(canvasW, canvasH - bottom))
+                    // Left strip (between top and bottom)
+                    drawRect(dimColor, topLeft = androidx.compose.ui.geometry.Offset(0f, top), size = androidx.compose.ui.geometry.Size(left, cropPx))
+                    // Right strip
+                    drawRect(dimColor, topLeft = androidx.compose.ui.geometry.Offset(right, top), size = androidx.compose.ui.geometry.Size(canvasW - right, cropPx))
+                }
+
+                // Crop frame border (75dp, centered)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(75.dp)
+                        .border(3.dp, Citrine, RoundedCornerShape(12.dp))
+                        .pointerInput(Unit) { /* pass-through, no-op */ },
+                ) { /* visual crop frame overlay */ }
+
+                // Top bar: title + close
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "Adjust Avatar",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(Color(0xFF2A2820))
+                            .glowingBorder(2.dp, Citrine.copy(alpha = 0.5f), CircleShape)
+                            .clickable { showFullScreenAvatarEditor = false }
+                            .size(40.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.Filled.Close, contentDescription = "Close", tint = Citrine, modifier = Modifier.size(22.dp))
+                    }
+                }
+
+                // Bottom bar: instructions + zoom indicator + reset + done
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Text(
+                        "Drag to pan · Pinch to zoom · The square shows your avatar",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = DarkTextMid,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            "Zoom: ${"%.1f".format(avatarScale)}x",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Aqua,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Citrine.copy(alpha = 0.12f))
+                                .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+                                .clickable {
+                                    avatarScale = 1f
+                                    avatarOffsetX = 0f
+                                    avatarOffsetY = 0f
+                                }
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                        ) {
+                            Text("Reset", style = MaterialTheme.typography.labelMedium, color = Citrine, fontWeight = FontWeight.Bold)
+                        }
+                        Button(
+                            onClick = { showFullScreenAvatarEditor = false },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Citrine,
+                                contentColor = Ink,
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                        ) {
+                            Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text("Done", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
