@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Mail
@@ -74,7 +75,10 @@ import com.rork.rockscout.data.NotificationRepository
 import com.rork.rockscout.data.ReportRepository
 import com.rork.rockscout.data.ReportScreenshotHelper
 import com.rork.rockscout.data.SessionStatus
+import com.rork.rockscout.data.ChatDraftStore
+import com.rork.rockscout.data.EmailComposerDraftStore
 import com.rork.rockscout.data.SocialRepository
+import com.rork.rockscout.ui.components.CompactSearchPill
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.GlobalSearchBar
 import com.rork.rockscout.ui.components.GlobalSearchSection
@@ -487,6 +491,12 @@ private fun MessagesPage(
     scope: kotlinx.coroutines.CoroutineScope,
 ) {
     var searchQuery by remember { mutableStateOf("") }
+    var showDraftsPopup by remember { mutableStateOf(false) }
+    val chatDrafts by ChatDraftStore.drafts.collectAsStateWithLifecycle()
+    val totalDraftCount = remember(chatDrafts) {
+        val emailCount = if (EmailComposerDraftStore.exists()) 1 else 0
+        chatDrafts.size + emailCount
+    }
 
     val filteredThreads = remember(threads, searchQuery, hunterCache) {
         if (searchQuery.isBlank()) threads
@@ -506,11 +516,66 @@ private fun MessagesPage(
     ) {
         // ── Search bar ──
         item {
-            GlobalSearchBar(
+            CompactSearchPill(
                 query = searchQuery,
                 onQueryChange = { searchQuery = it },
-                placeholder = "Search conversations\u2026",
+                placeholder = "Search conversations…",
+                accent = Aqua,
+                modifier = Modifier.fillMaxWidth(),
             )
+        }
+
+        // ── Drafts notification row ──
+        if (totalDraftCount > 0) {
+            item {
+                DarkCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showDraftsPopup = true },
+                    accent = Citrine,
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Citrine.copy(alpha = 0.18f))
+                                .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), CircleShape),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                androidx.compose.material.icons.Icons.Filled.Edit,
+                                contentDescription = "Drafts",
+                                tint = Citrine,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "You have $totalDraftCount unfinished draft${if (totalDraftCount != 1) "s" else ""}",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = Citrine,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                "Tap to resume where you left off",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = DarkTextMid,
+                            )
+                        }
+                        Icon(
+                            androidx.compose.material.icons.Icons.Filled.KeyboardArrowDown,
+                            contentDescription = "View drafts",
+                            tint = DarkTextMid,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                }
+            }
         }
 
         // ── Message Requests section (expandable) ──
@@ -626,6 +691,136 @@ private fun MessagesPage(
                         scope.launch { runCatching { social.deleteThread(thread.id) } }
                     },
                 )
+            }
+        }
+    }
+
+    // Drafts popup
+    if (showDraftsPopup) {
+        DraftsListPopup(
+            chatDrafts = chatDrafts,
+            onDismiss = { showDraftsPopup = false },
+            onOpenChatDraft = { draftId ->
+                showDraftsPopup = false
+                navController.navigate(Routes.messengerThread(draftId))
+            },
+            onDeleteChatDraft = { draftId ->
+                ChatDraftStore.deleteDraft(draftId)
+            },
+            onOpenEmailDraft = {
+                showDraftsPopup = false
+                navController.navigate(Routes.IDENTIFY)
+            },
+            onDeleteEmailDraft = {
+                EmailComposerDraftStore.delete()
+            },
+        )
+    }
+}
+
+/* ── Drafts list popup ───────────────────────────────────────────────────── */
+
+@Composable
+private fun DraftsListPopup(
+    chatDrafts: List<com.rork.rockscout.data.ChatDraftEntry>,
+    onDismiss: () -> Unit,
+    onOpenChatDraft: (String) -> Unit,
+    onDeleteChatDraft: (String) -> Unit,
+    onOpenEmailDraft: () -> Unit,
+    onDeleteEmailDraft: () -> Unit,
+) {
+    val emailDraftExists = EmailComposerDraftStore.exists()
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF1E1C16),
+        titleContentColor = DarkTextHigh,
+        textContentColor = DarkTextMid,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Edit, contentDescription = null, tint = Citrine, modifier = Modifier.size(22.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Unfinished Drafts", color = DarkTextHigh, fontWeight = FontWeight.Bold)
+            }
+        },
+        text = {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                // Email draft
+                if (emailDraftExists) {
+                    item {
+                        DraftRow(
+                            icon = "\u2709\uFE0F",
+                            label = "Email to Expert",
+                            preview = "Tap to resume your Ask an Expert email",
+                            onClick = onOpenEmailDraft,
+                            onDelete = onDeleteEmailDraft,
+                        )
+                    }
+                }
+                // Chat drafts
+                items(chatDrafts, key = { it.id }) { draft ->
+                    DraftRow(
+                        icon = if (draft.isGroup) "\uD83D\uDCAC" else "\uD83D\uDCE8",
+                        label = "Draft to ${draft.recipientName}",
+                        preview = draft.body.take(40) + if (draft.body.length > 40) "\u2026" else "",
+                        onClick = { onOpenChatDraft(draft.id) },
+                        onDelete = { onDeleteChatDraft(draft.id) },
+                    )
+                }
+                if (chatDrafts.isEmpty() && !emailDraftExists) {
+                    item {
+                        Text("No drafts.", style = MaterialTheme.typography.bodyMedium, color = DarkTextMid)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            com.rork.rockscout.ui.components.SculptedTextButton(
+                text = "Close",
+                onClick = onDismiss,
+                accent = DarkTextMid,
+                textColor = DarkTextMid,
+            )
+        },
+    )
+}
+
+@Composable
+private fun DraftRow(
+    icon: String,
+    label: String,
+    preview: String,
+    onClick: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    DarkCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        accent = Citrine,
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(icon, style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(label, style = MaterialTheme.typography.titleSmall, color = Citrine, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(preview, style = MaterialTheme.typography.bodySmall, color = DarkTextMid, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF2A2820))
+                    .glowingBorder(1.dp, Color(0xFF2A2820).copy(alpha = 0.35f), CircleShape)
+                    .clickable(onClick = onDelete),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(Icons.Filled.Close, contentDescription = "Delete draft", tint = DarkTextMid, modifier = Modifier.size(14.dp))
             }
         }
     }

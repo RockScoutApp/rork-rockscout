@@ -98,60 +98,12 @@ fun GlossaryScreen(navController: NavController) {
         onBack = { navController.popBackStack() },
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Search bar — rounded pill matching the app's existing search inputs.
-            OutlinedTextField(
-                value = query,
-                onValueChange = { query = it },
-                placeholder = {
-                    Text(
-                        "Search terms, abbreviations, definitions…",
-                        color = DarkTextMid,
-                    )
-                },
-                leadingIcon = {
-                    Icon(
-                        Icons.Filled.Search,
-                        contentDescription = null,
-                        tint = GlossaryAccent,
-                    )
-                },
-                trailingIcon = {
-                    if (query.isNotEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .sculpted(
-                                    shape = CircleShape,
-                                    accent = DarkTextMid,
-                                    shadowElevation = 2.dp,
-                                    circular = true,
-                                    onClick = { query = "" },
-                                )
-                                .background(Color.Black),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                Icons.Filled.Clear,
-                                contentDescription = "Clear search",
-                                tint = DarkTextHigh,
-                                modifier = Modifier.size(16.dp),
-                            )
-                        }
-                    }
-                },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                shape = RoundedCornerShape(24.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = DarkTextHigh,
-                    unfocusedTextColor = DarkTextHigh,
-                    cursorColor = GlossaryAccent,
-                    focusedBorderColor = GlossaryAccent,
-                    unfocusedBorderColor = GlossaryAccent.copy(alpha = 0.4f),
-                    focusedContainerColor = Color(0xFF1E1C16),
-                    unfocusedContainerColor = Color(0xFF1E1C16),
-                ),
+            // Compact search pill
+            com.rork.rockscout.ui.components.CompactSearchPill(
+                query = query,
+                onQueryChange = { query = it },
+                placeholder = "Search terms, abbreviations, definitions…",
+                accent = GlossaryAccent,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 8.dp),

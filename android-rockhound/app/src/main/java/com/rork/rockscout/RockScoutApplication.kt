@@ -247,6 +247,14 @@ class RockScoutApplication : Application() {
             EmailComposerDraftStore.initialize(this)
         }
 
+        safeInit("chat-draft-store") {
+            com.rork.rockscout.data.ChatDraftStore.initialize(this)
+        }
+
+        safeInit("user-museum-store") {
+            com.rork.rockscout.data.UserMuseumStore.initialize(this)
+        }
+
         safeInit("sync-queue-manager") {
             SyncQueueManager.initialize(this)
         }

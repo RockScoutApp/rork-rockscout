@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmarks
 import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
@@ -71,6 +72,7 @@ import com.rork.rockscout.ui.components.SculptedButton
 import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.SculptedOutlinedButton
 import com.rork.rockscout.ui.components.SculptedTextButton
+import com.rork.rockscout.ui.components.CompactSearchPill
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.ShareToProfileComposer
 import com.rork.rockscout.ui.components.glowingBorder
@@ -80,6 +82,9 @@ import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Danger
 import com.rork.rockscout.ui.theme.Ink
+import com.rork.rockscout.data.SupabaseMessagingRepository
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import kotlinx.coroutines.launch
 
 /**
@@ -128,6 +133,7 @@ fun CommunityScreen(navController: NavController) {
     }
 
     // ─── UI state ───
+    var selectedTab by remember { mutableStateOf(0) } // 0=Posts, 1=Group Chats
     var sortMode by remember { mutableStateOf(CommunityRepository.SortMode.Newest) }
     var selectedCategory by remember { mutableStateOf<CommunityRepository.Category?>(null) }
     var showComposer by remember { mutableStateOf(false) }
@@ -157,6 +163,7 @@ fun CommunityScreen(navController: NavController) {
     BackHandler(enabled = showComposer) { showComposer = false }
     BackHandler(enabled = showExpiredPopup) { showExpiredPopup = false }
     BackHandler(enabled = showDeleteConfirm) { showDeleteConfirm = false }
+    BackHandler(enabled = selectedTab == 1) { selectedTab = 0 }
     BackHandler(enabled = reportTargetPost != null && !showReportConfirm) {
         reportTargetPost = null
     }
@@ -169,23 +176,37 @@ fun CommunityScreen(navController: NavController) {
         title = "Community",
         onBack = { navController.popBackStack() },
         actions = {
-            // Archived Posts button — top-right corner
-            SculptedIconButton(
-                icon = Icons.Filled.Bookmarks,
-                contentDescription = "Archived Posts",
-                onClick = {
-                    scope.launch { repo.loadExpiredPosts() }
-                    showExpiredPopup = true
-                },
-                modifier = Modifier.size(40.dp),
-                accent = Citrine,
-                iconTint = Citrine,
-                backgroundColor = Color(0xFF2A2820),
-                size = 40.dp,
-                shadowElevation = 3.dp,
-            )
+            // Archived Posts button — top-right corner (only on Posts tab)
+            if (selectedTab == 0) {
+                SculptedIconButton(
+                    icon = Icons.Filled.Bookmarks,
+                    contentDescription = "Archived Posts",
+                    onClick = {
+                        scope.launch { repo.loadExpiredPosts() }
+                        showExpiredPopup = true
+                    },
+                    modifier = Modifier.size(40.dp),
+                    accent = Citrine,
+                    iconTint = Citrine,
+                    backgroundColor = Color(0xFF2A2820),
+                    size = 40.dp,
+                    shadowElevation = 3.dp,
+                )
+            }
         },
     ) {
+        // ── Tab switcher: Posts | Group Chats ──
+        CommunityTabSwitcher(
+            selectedTab = selectedTab,
+            onTabSelected = { selectedTab = it },
+        )
+
+        if (selectedTab == 1) {
+            // Group Chats tab
+            GroupChatsTabContent(navController = navController)
+            return@ScreenScaffold
+        }
+
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
@@ -989,5 +1010,277 @@ private fun CompactCommunityCard(
                 }
             }
         }
+    }
+}
+
+/* ── Community tab switcher: Posts | Group Chats ─────────────────────────── */
+
+@Composable
+private fun CommunityTabSwitcher(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val pills = listOf("Posts" to 0, "Group Chats" to 1)
+        pills.forEach { (label, tab) ->
+            val isActive = selectedTab == tab
+            val accent = if (tab == 0) Citrine else Aqua
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(if (isActive) accent.copy(alpha = 0.18f) else Color.Transparent)
+                    .glowingBorder(1.5.dp, if (isActive) accent else Color(0x33FFFFFF), RoundedCornerShape(24.dp))
+                    .clickable { onTabSelected(tab) }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        if (tab == 0) Icons.Filled.Forum else Icons.Filled.Group,
+                        contentDescription = null,
+                        tint = if (isActive) accent else DarkTextMid,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = if (isActive) accent else DarkTextMid,
+                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.Medium,
+                    )
+                }
+            }
+            if (tab < 1) Spacer(Modifier.width(12.dp))
+        }
+    }
+}
+
+/* ── Group chats tab content ─────────────────────────────────────────────── */
+
+@Composable
+private fun GroupChatsTabContent(
+    navController: NavController,
+) {
+    val scope = rememberCoroutineScope()
+    val groupChats by SupabaseMessagingRepository.groupChats.collectAsStateWithLifecycle()
+    val groupChatMembers by SupabaseMessagingRepository.groupChatMembers.collectAsStateWithLifecycle()
+    val pendingInvites by SupabaseMessagingRepository.pendingGroupInvites.collectAsStateWithLifecycle()
+    var showCreateDialog by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        SupabaseMessagingRepository.loadGroupChats()
+        SupabaseMessagingRepository.loadPendingInvites()
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        // Search bar + Create button
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CompactSearchPill(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    placeholder = "Search group chats…",
+                    accent = Aqua,
+                    modifier = Modifier.weight(1f),
+                )
+                Spacer(Modifier.width(8.dp))
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(23.dp))
+                        .background(Aqua.copy(alpha = 0.18f))
+                        .glowingBorder(2.dp, Aqua.copy(alpha = 0.85f), RoundedCornerShape(23.dp))
+                        .clickable { showCreateDialog = true }
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = "Create", tint = Aqua, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("New Group", style = MaterialTheme.typography.labelLarge, color = Aqua, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        // Pending invites
+        if (pendingInvites.isNotEmpty()) {
+            item {
+                Text(
+                    "Pending Invites (${pendingInvites.size})",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = Citrine,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+            items(pendingInvites, key = { it.id }) { invite ->
+                val chat = groupChats.firstOrNull { it.id == invite.group_chat_id }
+                DarkCard(modifier = Modifier.fillMaxWidth(), accent = Citrine) {
+                    Column(modifier = Modifier.fillMaxWidth().padding(4.dp)) {
+                        Text(
+                            chat?.name ?: "Group Chat",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = DarkTextHigh,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        if (chat != null && chat.subject.isNotBlank()) {
+                            Text(chat.subject, style = MaterialTheme.typography.bodySmall, color = DarkTextMid)
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            SculptedButton(
+                                text = "Accept",
+                                onClick = {
+                                    scope.launch {
+                                        SupabaseMessagingRepository.acceptGroupInvite(invite.id, invite.group_chat_id)
+                                        SupabaseMessagingRepository.loadGroupChats()
+                                        SupabaseMessagingRepository.loadPendingInvites()
+                                    }
+                                },
+                                modifier = Modifier.weight(1f),
+                                accent = com.rork.rockscout.ui.theme.Success,
+                                containerColor = com.rork.rockscout.ui.theme.Success,
+                                textColor = Ink,
+                            )
+                            SculptedOutlinedButton(
+                                text = "Decline",
+                                onClick = {
+                                    scope.launch {
+                                        SupabaseMessagingRepository.declineGroupInvite(invite.id)
+                                        SupabaseMessagingRepository.loadPendingInvites()
+                                    }
+                                },
+                                modifier = Modifier.weight(1f),
+                                accent = Danger,
+                                textColor = DarkTextMid,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Group chat count
+        item {
+            Text(
+                "${groupChats.size} group chat${if (groupChats.size != 1) "s" else ""}",
+                style = MaterialTheme.typography.labelMedium,
+                color = DarkTextMid,
+            )
+        }
+
+        // Group chat cards
+        if (groupChats.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Filled.Group, contentDescription = null, tint = Aqua.copy(alpha = 0.5f), modifier = Modifier.size(48.dp))
+                        Spacer(Modifier.height(12.dp))
+                        Text("No group chats yet.", style = MaterialTheme.typography.bodyLarge, color = DarkTextMid, textAlign = TextAlign.Center)
+                        Spacer(Modifier.height(4.dp))
+                        Text("Start one to bring hunters together!", style = MaterialTheme.typography.bodyMedium, color = DarkTextMid, textAlign = TextAlign.Center)
+                    }
+                }
+            }
+        } else {
+            val filteredChats = if (searchQuery.isBlank()) groupChats else groupChats.filter {
+                it.name.contains(searchQuery, ignoreCase = true) || it.subject.contains(searchQuery, ignoreCase = true)
+            }
+            items(filteredChats, key = { it.id }) { chat ->
+                val memberCount = SupabaseMessagingRepository.groupChatMemberCount(chat.id)
+                DarkCard(
+                    modifier = Modifier.fillMaxWidth().clickable {
+                        // Navigate to group chat in MessengerScreen
+                        navController.navigate(Routes.messengerThread("group:${chat.id}"))
+                    },
+                    accent = Aqua,
+                ) {
+                    Row(verticalAlignment = Alignment.Top) {
+                        // Header image or icon
+                        if (chat.header_image_url != null) {
+                            AsyncImage(
+                                model = chat.header_image_url,
+                                contentDescription = chat.name,
+                                modifier = Modifier.size(56.dp).clip(RoundedCornerShape(10.dp)),
+                                contentScale = ContentScale.Crop,
+                            )
+                            Spacer(Modifier.width(10.dp))
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Aqua.copy(alpha = 0.18f))
+                                    .glowingBorder(1.dp, Aqua.copy(alpha = 0.35f), RoundedCornerShape(10.dp)),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Icon(Icons.Filled.Group, contentDescription = null, tint = Aqua, modifier = Modifier.size(24.dp))
+                            }
+                            Spacer(Modifier.width(10.dp))
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(chat.name, style = MaterialTheme.typography.titleSmall, color = DarkTextHigh, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            if (chat.subject.isNotBlank()) {
+                                Spacer(Modifier.height(2.dp))
+                                Text(chat.subject, style = MaterialTheme.typography.bodySmall, color = DarkTextMid, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    "$memberCount member${if (memberCount != 1) "s" else ""}${if (chat.max_members != null) " / ${chat.max_members} max" else ""}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Aqua,
+                                )
+                                Spacer(Modifier.weight(1f))
+                                // Profanity filter badge
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(if (chat.profanity_filter_level == "strict") Danger.copy(alpha = 0.18f) else Citrine.copy(alpha = 0.18f))
+                                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                                ) {
+                                    Text(
+                                        if (chat.profanity_filter_level == "strict") "Strict" else "Normal",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (chat.profanity_filter_level == "strict") Danger else Citrine,
+                                        fontWeight = FontWeight.Bold,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        item { Spacer(Modifier.height(20.dp)) }
+    }
+
+    // Create group chat dialog
+    if (showCreateDialog) {
+        CreateGroupChatDialog(
+            onDismiss = { showCreateDialog = false },
+            onCreated = { chatId ->
+                showCreateDialog = false
+                scope.launch {
+                    SupabaseMessagingRepository.loadGroupChats()
+                }
+                navController.navigate(Routes.messengerThread("group:$chatId"))
+            },
+        )
     }
 }

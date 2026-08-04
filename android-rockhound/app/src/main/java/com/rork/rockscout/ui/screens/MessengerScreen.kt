@@ -37,6 +37,10 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.FastForward
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -60,6 +64,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -74,7 +79,9 @@ import com.rork.rockscout.data.ProfanityFilter
 import com.rork.rockscout.data.ReportRepository
 import com.rork.rockscout.data.ReportScreenshotHelper
 import com.rork.rockscout.data.SessionStatus
+import com.rork.rockscout.data.ChatDraftStore
 import com.rork.rockscout.data.SocialRepository
+import com.rork.rockscout.data.SupabaseMessagingRepository
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.ReportSubmittedDialog
 import com.rork.rockscout.ui.components.ImageSourcePickerDialog
@@ -147,6 +154,13 @@ fun MessengerScreen(
     var replyBody by remember { mutableStateOf("") }
     var hunterCache by remember { mutableStateOf<Map<String, SocialRepository.HunterProfile>>(emptyMap()) }
     var activeRequestId by remember { mutableStateOf<String?>(openRequestId) }
+    var showProfanityWarning by remember { mutableStateOf(false) }
+    var pendingFilteredText by remember { mutableStateOf("") }
+    var activeGroupChatId by remember { mutableStateOf<String?>(null) }
+    var activeGroupChatName by remember { mutableStateOf<String?>(null) }
+    var replyToMessageId by remember { mutableStateOf<String?>(null) }
+    var replyToSenderName by remember { mutableStateOf<String?>(null) }
+    var replyToBody by remember { mutableStateOf<String?>(null) }
 
     // Message request dialog state
     var showRequestDialog by remember { mutableStateOf(false) }
@@ -163,10 +177,24 @@ fun MessengerScreen(
         }
     }
 
+    // If opened with a group chat target (prefix "group:"), load group chat
+    LaunchedEffect(openThreadWith) {
+        if (openThreadWith != null && openThreadWith.startsWith("group:")) {
+            val gcId = openThreadWith.removePrefix("group:")
+            activeGroupChatId = gcId
+            scope.launch {
+                SupabaseMessagingRepository.loadGroupMessages(gcId)
+                // Find group chat name
+                val gc = SupabaseMessagingRepository.groupChats.value.firstOrNull { it.id == gcId }
+                activeGroupChatName = gc?.name ?: "Group Chat"
+            }
+        }
+    }
+
     // If opened with a target user, open the thread directly (if connected)
     // or show a message request dialog (if not connected).
     LaunchedEffect(openThreadWith, threads, connections) {
-        if (openThreadWith != null && activeThreadId == null && !showRequestDialog) {
+        if (openThreadWith != null && !openThreadWith.startsWith("group:") && activeThreadId == null && !showRequestDialog) {
             val thread = threads.firstOrNull {
                 val other = if (it.user_a == auth.currentUserId) it.user_b else it.user_a
                 other == openThreadWith
@@ -303,12 +331,115 @@ fun MessengerScreen(
         return
     }
 
+    // Group chat view
+    if (activeGroupChatId != null) {
+        val gcId = activeGroupChatId
+        val groupMessages by SupabaseMessagingRepository.groupMessages.collectAsStateWithLifecycle()
+        BackHandler {
+            if (replyBody.isNotBlank()) {
+                ChatDraftStore.saveDraft(gcId!!, activeGroupChatName ?: "Group Chat", replyBody, isGroup = true)
+            }
+            activeGroupChatId = null
+            activeGroupChatName = null
+            replyBody = ""
+            replyToMessageId = null
+            replyToSenderName = null
+            replyToBody = null
+        }
+        ThreadView(
+            otherName = activeGroupChatName ?: "Group Chat",
+            otherEmoji = "\uD83D\uDC65",
+            otherUserId = null,
+            messages = groupMessages.map { gm ->
+                SocialRepository.MessageRow(
+                    id = gm.id,
+                    thread_id = gcId ?: "",
+                    sender_id = gm.sender_id,
+                    body = gm.body,
+                    image_uri = gm.image_url,
+                    read_at = null,
+                    created_at = gm.created_at,
+                )
+            },
+            myUserId = auth.currentUserId,
+            replyBody = replyBody,
+            onReplyChange = { replyBody = it },
+            onSend = {
+                val result = ProfanityFilter.filterWithWarning(replyBody, strict = false)
+                val filtered = result.filteredText
+                if (result.hasExplicitContent) {
+                    pendingFilteredText = filtered
+                    showProfanityWarning = true
+                } else if (filtered.isNotBlank() && gcId != null) {
+                    scope.launch {
+                        SupabaseMessagingRepository.sendGroupMessage(gcId, filtered, null, replyToMessageId)
+                        replyBody = ""
+                        replyToMessageId = null
+                        replyToSenderName = null
+                        replyToBody = null
+                        ChatDraftStore.deleteDraft(gcId)
+                    }
+                }
+            },
+            onSendImage = { imageUri ->
+                if (gcId != null) {
+                    scope.launch { SupabaseMessagingRepository.sendGroupMessage(gcId, "", imageUri, replyToMessageId) }
+                }
+            },
+            onBack = {
+                if (replyBody.isNotBlank()) {
+                    ChatDraftStore.saveDraft(gcId!!, activeGroupChatName ?: "Group Chat", replyBody, isGroup = true)
+                }
+                activeGroupChatId = null
+                activeGroupChatName = null
+                replyBody = ""
+                replyToMessageId = null
+                replyToSenderName = null
+                replyToBody = null
+            },
+            isGroupChat = true,
+            replyToSenderName = replyToSenderName,
+            replyToBody = replyToBody,
+            onCancelReply = {
+                replyToMessageId = null
+                replyToSenderName = null
+                replyToBody = null
+            },
+        )
+        if (showProfanityWarning) {
+            ProfanityWarningDialog(
+                onConfirm = {
+                    showProfanityWarning = false
+                    val text = pendingFilteredText
+                    if (text.isNotBlank() && gcId != null) {
+                        scope.launch {
+                            SupabaseMessagingRepository.sendGroupMessage(gcId, text, null, replyToMessageId)
+                            replyBody = ""
+                            replyToMessageId = null
+                            replyToSenderName = null
+                            replyToBody = null
+                            ChatDraftStore.deleteDraft(gcId)
+                        }
+                    }
+                },
+            )
+        }
+        return
+    }
+
     // Thread view (when a thread is open).
     if (activeThreadId != null && activeOtherId != null) {
         val threadId = activeThreadId
         BackHandler {
+            if (replyBody.isNotBlank() && threadId != null) {
+                ChatDraftStore.saveDraft(threadId, activeOtherName ?: "RockScout", replyBody)
+            }
             activeThreadId = null
             activeOtherId = null
+            replyBody = ""
+            replyToMessageId = null
+            replyToSenderName = null
+            replyToBody = null
             scope.launch {
                 threadId?.let { social.markThreadRead(it) }
                 social.loadThreads()
@@ -323,30 +454,69 @@ fun MessengerScreen(
             replyBody = replyBody,
             onReplyChange = { replyBody = it },
             onSend = {
-                val filtered = ProfanityFilter.filter(replyBody)
-                val tid = activeThreadId
-                if (filtered.isNotBlank() && tid != null) {
+                val result = ProfanityFilter.filterWithWarning(replyBody, strict = false)
+                val filtered = result.filteredText
+                if (result.hasExplicitContent) {
+                    pendingFilteredText = filtered
+                    showProfanityWarning = true
+                } else if (filtered.isNotBlank() && threadId != null) {
                     scope.launch {
-                        social.sendMessage(tid, filtered)
+                        social.sendMessage(threadId, filtered)
                         replyBody = ""
+                        replyToMessageId = null
+                        replyToSenderName = null
+                        replyToBody = null
+                        ChatDraftStore.deleteDraft(threadId)
                     }
                 }
             },
             onSendImage = { imageUri ->
-                val tid = activeThreadId
-                if (tid != null) {
-                    scope.launch { social.sendMessage(tid, "", imageUri) }
+                if (threadId != null) {
+                    scope.launch { social.sendMessage(threadId, "", imageUri) }
                 }
             },
             onBack = {
+                if (replyBody.isNotBlank() && threadId != null) {
+                    ChatDraftStore.saveDraft(threadId, activeOtherName ?: "RockScout", replyBody)
+                }
                 activeThreadId = null
                 activeOtherId = null
+                replyBody = ""
+                replyToMessageId = null
+                replyToSenderName = null
+                replyToBody = null
                 scope.launch {
                     threadId?.let { social.markThreadRead(it) }
                     social.loadThreads()
                 }
             },
+            isGroupChat = false,
+            replyToSenderName = replyToSenderName,
+            replyToBody = replyToBody,
+            onCancelReply = {
+                replyToMessageId = null
+                replyToSenderName = null
+                replyToBody = null
+            },
         )
+        if (showProfanityWarning) {
+            ProfanityWarningDialog(
+                onConfirm = {
+                    showProfanityWarning = false
+                    val text = pendingFilteredText
+                    if (text.isNotBlank() && threadId != null) {
+                        scope.launch {
+                            social.sendMessage(threadId, text)
+                            replyBody = ""
+                            replyToMessageId = null
+                            replyToSenderName = null
+                            replyToBody = null
+                            ChatDraftStore.deleteDraft(threadId)
+                        }
+                    }
+                },
+            )
+        }
         return
     }
 
@@ -402,6 +572,10 @@ private fun ThreadView(
     onSend: () -> Unit,
     onSendImage: (String) -> Unit,
     onBack: () -> Unit,
+    isGroupChat: Boolean = false,
+    replyToSenderName: String? = null,
+    replyToBody: String? = null,
+    onCancelReply: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -410,6 +584,16 @@ private fun ThreadView(
     var imageModerating by remember { mutableStateOf(false) }
     var moderationError by remember { mutableStateOf<String?>(null) }
     var showImageSourcePicker by remember { mutableStateOf(false) }
+
+    var scrollSpeed by remember { mutableStateOf("normal") } // normal, half, stop
+    var isUserScrolling by remember { mutableStateOf(false) }
+    var lastAutoScrollMs by remember { mutableStateOf(0L) }
+
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (listState.isScrollInProgress) {
+            isUserScrolling = true
+        }
+    }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -471,8 +655,17 @@ private fun ThreadView(
     }
 
     LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) listState.animateScrollToItem(messages.lastIndex)
+        if (messages.isNotEmpty() && scrollSpeed != "stop" && !isUserScrolling) {
+            val now = System.currentTimeMillis()
+            val delayMs = if (scrollSpeed == "half") 4000L else 0L
+            if (now - lastAutoScrollMs >= delayMs) {
+                listState.animateScrollToItem(messages.lastIndex)
+                lastAutoScrollMs = now
+            }
+        }
     }
+
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -483,7 +676,7 @@ private fun ThreadView(
             ),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Header
+            // Header with close button (X) in top-right
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -497,7 +690,7 @@ private fun ThreadView(
                         .clickable(onClick = onBack),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = DarkTextHigh)
+                    Icon(Icons.Filled.Close, contentDescription = "Close", tint = DarkTextHigh)
                 }
                 Spacer(Modifier.width(8.dp))
                 Box(
@@ -523,6 +716,19 @@ private fun ThreadView(
                     textColor = Aqua,
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                 )
+                // Add User button (private chats only, max 5 users)
+                if (!isGroupChat && otherUserId != null) {
+                    SculptedIconButton(
+                        icon = Icons.Filled.PersonAdd,
+                        contentDescription = "Add user to chat",
+                        onClick = { /* TODO: opens friend picker */ },
+                        accent = Aqua,
+                        iconTint = Aqua,
+                        size = 40.dp,
+                        shadowElevation = 3.dp,
+                    )
+                    Spacer(Modifier.width(6.dp))
+                }
                 if (otherUserId != null) {
                     var showReportConfirm by remember { mutableStateOf(false) }
                     var showReportDialog by remember { mutableStateOf(false) }
@@ -662,6 +868,85 @@ private fun ThreadView(
 
             // Reply bar
             HorizontalDivider(color = Color(0x22FFFFFF), thickness = 1.dp)
+            // Reply-to preview bar
+            if (replyToSenderName != null && replyToBody != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFF2A2820))
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            "Replying to $replyToSenderName",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Citrine,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            replyToBody.take(60) + if (replyToBody.length > 60) "\u2026" else "",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = DarkTextMid,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    Icon(
+                        Icons.Filled.Close,
+                        contentDescription = "Cancel reply",
+                        tint = DarkTextMid,
+                        modifier = Modifier.size(18.dp).clickable(onClick = onCancelReply),
+                    )
+                }
+            }
+            // Scroll speed controls
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                // Speed control icons
+                SpeedControlButton(
+                    label = "Normal",
+                    isActive = scrollSpeed == "normal",
+                    onClick = { scrollSpeed = "normal"; isUserScrolling = false },
+                )
+                SpeedControlButton(
+                    label = "Half",
+                    isActive = scrollSpeed == "half",
+                    onClick = { scrollSpeed = "half"; isUserScrolling = false },
+                )
+                SpeedControlButton(
+                    label = "Stop",
+                    isActive = scrollSpeed == "stop",
+                    onClick = { scrollSpeed = "stop" },
+                )
+                Spacer(Modifier.weight(1f))
+                // Current button — jump to newest messages
+                if (isUserScrolling || scrollSpeed == "stop") {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Aqua.copy(alpha = 0.18f))
+                            .glowingBorder(1.dp, Aqua.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                            .clickable {
+                                isUserScrolling = false
+                                if (messages.isNotEmpty()) {
+                                    scope.launch { listState.animateScrollToItem(messages.lastIndex) }
+                                }
+                            }
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(Icons.Filled.FastForward, contentDescription = "Jump to latest", tint = Aqua, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Current", style = MaterialTheme.typography.labelSmall, color = Aqua, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -793,6 +1078,70 @@ private fun ThreadView(
             },
         )
     }
+}
+
+/* ── Scroll speed control button ──────────────────────────────────────────── */
+
+@Composable
+private fun SpeedControlButton(
+    label: String,
+    isActive: Boolean,
+    onClick: () -> Unit,
+) {
+    val accent = if (isActive) Aqua else DarkTextMid
+    Row(
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isActive) Aqua.copy(alpha = 0.15f) else Color.Transparent)
+            .glowingBorder(1.dp, if (isActive) Aqua.copy(alpha = 0.5f) else Color.Transparent, RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = accent,
+            fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
+        )
+    }
+}
+
+/* ── Profanity warning dialog ─────────────────────────────────────────────── */
+
+@Composable
+private fun ProfanityWarningDialog(
+    onConfirm: () -> Unit,
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onConfirm,
+        containerColor = Color(0xFF1E1C16),
+        titleContentColor = Danger,
+        textContentColor = DarkTextMid,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Warning, contentDescription = null, tint = Danger, modifier = Modifier.size(22.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Content Warning", color = Danger, fontWeight = FontWeight.Bold)
+            }
+        },
+        text = {
+            Text(
+                "Your message contains language that was censored. If you believe we're censoring a word by mistake, email support@rockscout.app to get it cleared up.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = DarkTextMid,
+            )
+        },
+        confirmButton = {
+            com.rork.rockscout.ui.components.SculptedButton(
+                text = "OK",
+                onClick = onConfirm,
+                accent = Danger,
+                containerColor = Danger,
+                textColor = Color.White,
+            )
+        },
+    )
 }
 
 /* ── Thread preview overlay ──────────────────────────────────────────────── */
@@ -1112,6 +1461,9 @@ fun ChatBubble(
     isMe: Boolean,
     imageUri: String? = null,
     isRead: Boolean = false,
+    replyToSenderName: String? = null,
+    replyToBody: String? = null,
+    taggedUserNames: List<String> = emptyList(),
 ) {
     val bubbleBg = if (isMe) MyBubbleBg else OtherBubbleBg
     val bubbleShape = RoundedCornerShape(
@@ -1133,6 +1485,30 @@ fun ChatBubble(
                 .padding(horizontal = 14.dp, vertical = 10.dp),
         ) {
             Column {
+                // Reply threading — show original comment above the reply
+                if (replyToSenderName != null && replyToBody != null) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFF1A1812))
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                    ) {
+                        Text(
+                            "$replyToSenderName replied to your comment",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Citrine,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            replyToBody.take(80) + if (replyToBody.length > 80) "\u2026" else "",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = DarkTextMid,
+                        )
+                    }
+                    Spacer(Modifier.height(6.dp))
+                }
                 if (!imageUri.isNullOrBlank()) {
                     AsyncImage(
                         model = imageUri,
@@ -1148,11 +1524,8 @@ fun ChatBubble(
                     }
                 }
                 if (text.isNotBlank()) {
-                    Text(
-                        text,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = DarkTextHigh,
-                    )
+                    // Render text with tagged user pills inline
+                    TaggedText(text = text, taggedUserNames = taggedUserNames)
                 }
             }
         }
@@ -1340,6 +1713,65 @@ private fun MessageRequestComposeDialog(
                         icon = Icons.AutoMirrored.Filled.Send,
                     )
                 }
+            }
+        }
+    }
+}
+
+/* ── Tagged text renderer ───────────────────────────────────────────────── */
+
+/**
+ * Renders chat text with tagged usernames wrapped in bright Citrine pills.
+ * When a tagged name is found in the text, it's rendered as a pill with
+ * the username in dark text on a Citrine background.
+ */
+@Composable
+private fun TaggedText(text: String, taggedUserNames: List<String>) {
+    if (taggedUserNames.isEmpty()) {
+        Text(text, style = MaterialTheme.typography.bodyMedium, color = DarkTextHigh)
+        return
+    }
+    // Find all tagged names in the text and split into segments
+    val segments = mutableListOf<Pair<String, Boolean>>()
+    var remaining = text
+    while (remaining.isNotEmpty()) {
+        var earliestMatch: Pair<String, Int>? = null
+        for (name in taggedUserNames) {
+            val idx = remaining.indexOf(name, ignoreCase = true)
+            if (idx >= 0 && (earliestMatch == null || idx < earliestMatch!!.second)) {
+                earliestMatch = name to idx
+            }
+        }
+        if (earliestMatch == null) {
+            segments.add(remaining to false)
+            break
+        }
+        val (name, idx) = earliestMatch
+        if (idx > 0) segments.add(remaining.substring(0, idx) to false)
+        segments.add(remaining.substring(idx, idx + name.length) to true)
+        remaining = remaining.substring(idx + name.length)
+    }
+    androidx.compose.foundation.layout.FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        for ((segment, isTagged) in segments) {
+            if (isTagged) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Citrine)
+                        .padding(horizontal = 6.dp, vertical = 1.dp),
+                ) {
+                    Text(
+                        segment,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Ink,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            } else {
+                Text(segment, style = MaterialTheme.typography.bodyMedium, color = DarkTextHigh)
             }
         }
     }

@@ -20,6 +20,7 @@ import { handleSettingsBackup } from "./settings-backup";
 import { handleImageProxy, buildProxyCors } from "./image-proxy";
 import { handleErrorReport } from "./error-report";
 import { handleSendErrorEmail } from "./send-error-email";
+import { handleProfanityWarning } from "./profanity-warning";
 import {
   buildCorsHeaders,
   guardEndpoint,
@@ -322,6 +323,21 @@ export default {
         env as unknown as {
           EXPO_PUBLIC_RORK_APP_KEY?: string;
           RESEND_API_KEY?: string;
+        },
+        cors,
+      );
+    }
+
+    // Profanity warning — records a warning server-side so it can't be bypassed.
+    if (url.pathname === "/profanity-warning" && request.method === "POST") {
+      const guard = guardEndpoint(request, env, "/profanity-warning", cors, env.RATE_LIMIT_KV);
+      if (guard) return guard;
+      return handleProfanityWarning(
+        request,
+        env as unknown as {
+          EXPO_PUBLIC_SUPABASE_URL?: string;
+          SUPABASE_SERVICE_ROLE_KEY?: string;
+          EXPO_PUBLIC_RORK_APP_KEY?: string;
         },
         cors,
       );

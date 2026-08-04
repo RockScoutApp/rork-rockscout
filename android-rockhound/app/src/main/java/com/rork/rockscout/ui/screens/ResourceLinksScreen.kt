@@ -33,7 +33,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Launch
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Diamond
 import androidx.compose.material.icons.filled.EmojiNature
 import androidx.compose.material.icons.filled.ExpandMore
@@ -50,9 +52,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,10 +75,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.rork.rockscout.data.MuseumEntry
 import com.rork.rockscout.data.SafeLinkOpener
 import com.rork.rockscout.data.UsMuseums
+import com.rork.rockscout.data.UserMuseum
+import com.rork.rockscout.data.UserMuseumStore
+import com.rork.rockscout.ui.components.CompactSearchPill
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.FullscreenMapOverlay
 import com.rork.rockscout.ui.components.GEM_MINERAL_HERO_URL
@@ -96,6 +104,7 @@ import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.components.toggleSatelliteView
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
+import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Slate800
 import com.rork.rockscout.ui.theme.TextHigh
@@ -344,6 +353,8 @@ private fun MuseumsPage() {
     var expandedState by remember { mutableStateOf("") }
     var isMapView by remember { mutableStateOf(false) }
     var isFullscreenMap by remember { mutableStateOf(false) }
+    var showAddMuseumDialog by remember { mutableStateOf(false) }
+    val userMuseums by UserMuseumStore.museums.collectAsStateWithLifecycle()
 
     val filteredStates = remember(searchQuery) {
         if (searchQuery.isBlank()) {
@@ -359,41 +370,50 @@ private fun MuseumsPage() {
         }
     }
 
-    val filteredMuseums = remember(filteredStates) {
-        filteredStates.flatMap { it.museums }
+    val filteredUserMuseums = remember(searchQuery, userMuseums) {
+        if (searchQuery.isBlank()) userMuseums
+        else userMuseums.filter { m ->
+            m.name.contains(searchQuery, ignoreCase = true) ||
+                m.city.contains(searchQuery, ignoreCase = true) ||
+                m.state.contains(searchQuery, ignoreCase = true)
+        }
+    }
+
+    val filteredMuseums = remember(filteredStates, filteredUserMuseums) {
+        filteredStates.flatMap { it.museums } + filteredUserMuseums.map { um ->
+            MuseumEntry(name = um.name, city = um.city, state = um.state, website = um.website, lat = um.lat, lng = um.lng)
+        }
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // ── Search bar + map toggle ──
+        // ── Add a Museum pill + Search bar + map toggle ──
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
+            // Add a Museum pill button (Museums tab only)
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(23.dp))
+                    .background(Aqua.copy(alpha = 0.15f))
+                    .glowingBorder(1.5.dp, Aqua.copy(alpha = 0.7f), RoundedCornerShape(23.dp))
+                    .clickable { showAddMuseumDialog = true }
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = "Add Museum", tint = Aqua, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("Add", style = MaterialTheme.typography.labelMedium, color = Aqua, fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.width(8.dp))
+            CompactSearchPill(
+                query = searchQuery,
+                onQueryChange = { searchQuery = it },
+                placeholder = "Search museums…",
+                accent = Aqua,
                 modifier = Modifier.weight(1f),
-                placeholder = {
-                    Text(
-                        "Search by state, city, or museum name…",
-                        color = DarkTextMid,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                },
-                leadingIcon = {
-                    Icon(Icons.Filled.Search, contentDescription = null, tint = Aqua, modifier = Modifier.size(20.dp))
-                },
-                singleLine = true,
-                shape = RoundedCornerShape(16.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Aqua.copy(alpha = 0.5f),
-                    unfocusedBorderColor = Color(0x33FFFFFF),
-                    focusedContainerColor = Color(0xFF15130E),
-                    unfocusedContainerColor = Color(0xFF15130E),
-                    cursorColor = Aqua,
-                ),
             )
             Spacer(Modifier.width(8.dp))
             SculptedIconButton(
@@ -446,6 +466,88 @@ private fun MuseumsPage() {
                         }
                     }
                 } else {
+                    // User-added museums section
+                    if (filteredUserMuseums.isNotEmpty()) {
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Icon(Icons.Filled.Add, contentDescription = null, tint = Aqua, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(
+                                    "Your Added Museums",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = Aqua,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Spacer(Modifier.weight(1f))
+                                Text(
+                                    "${filteredUserMuseums.size}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = DarkTextMid,
+                                )
+                            }
+                        }
+                        items(filteredUserMuseums, key = { it.id }) { um ->
+                            DarkCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                accent = Aqua,
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            um.name,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            color = DarkTextHigh,
+                                            fontWeight = FontWeight.Bold,
+                                        )
+                                        if (um.city.isNotBlank() || um.state.isNotBlank()) {
+                                            Text(
+                                                listOfNotNull(um.city.takeIf { it.isNotBlank() }, um.state.takeIf { it.isNotBlank() }).joinToString(", "),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = DarkTextMid,
+                                            )
+                                        }
+                                        if (um.website.isNotBlank()) {
+                                            Text(
+                                                um.website,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = Aqua,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis,
+                                            )
+                                        }
+                                    }
+                                    if (um.website.isNotBlank()) {
+                                        SculptedIconButton(
+                                            icon = Icons.AutoMirrored.Filled.Launch,
+                                            contentDescription = "Open website",
+                                            onClick = { SafeLinkOpener.openUrl(context, um.website) },
+                                            accent = Aqua,
+                                            iconTint = Aqua,
+                                            size = 36.dp,
+                                        )
+                                    }
+                                    Box(
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF2A2820))
+                                            .glowingBorder(1.dp, Aqua.copy(alpha = 0.3f), CircleShape)
+                                            .clickable { UserMuseumStore.deleteMuseum(um.id) },
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Icon(Icons.Filled.Close, contentDescription = "Remove", tint = DarkTextMid, modifier = Modifier.size(16.dp))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // Standard museum sections by state
                     items(filteredStates, key = { it.state }) { stateGroup ->
                         MuseumStateSection(
                             stateGroup = stateGroup,
@@ -459,6 +561,28 @@ private fun MuseumsPage() {
                 }
             }
         }
+    }
+
+    // Add a Museum dialog
+    if (showAddMuseumDialog) {
+        AddMuseumDialog(
+            onDismiss = { showAddMuseumDialog = false },
+            onAdd = { name, city, state, website, lat, lng ->
+                UserMuseumStore.addMuseum(
+                    UserMuseum(
+                        id = "um-" + System.currentTimeMillis(),
+                        name = name,
+                        city = city,
+                        state = state,
+                        website = website,
+                        lat = lat,
+                        lng = lng,
+                        addedAtMs = System.currentTimeMillis(),
+                    )
+                )
+                showAddMuseumDialog = false
+            },
+        )
     }
 
     // Full-screen map overlay
@@ -1080,3 +1204,167 @@ private val resourceCategories = listOf(
         ),
     ),
 )
+
+/* ── Add a Museum dialog ───────────────────────────────────────────────────── */
+
+@Composable
+private fun AddMuseumDialog(
+    onDismiss: () -> Unit,
+    onAdd: (name: String, city: String, state: String, website: String, lat: Double, lng: Double) -> Unit,
+) {
+    var name by remember { mutableStateOf("") }
+    var city by remember { mutableStateOf("") }
+    var state by remember { mutableStateOf("") }
+    var website by remember { mutableStateOf("") }
+    var latStr by remember { mutableStateOf("") }
+    var lngStr by remember { mutableStateOf("") }
+    val canSubmit = name.isNotBlank() && latStr.isNotBlank() && lngStr.isNotBlank()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF1E1C16),
+        titleContentColor = TextHigh,
+        textContentColor = DarkTextMid,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Museum, contentDescription = null, tint = Aqua, modifier = Modifier.size(24.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Add a Museum", color = TextHigh, fontWeight = FontWeight.Bold)
+            }
+        },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Museum name *") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFF2A2820),
+                        unfocusedContainerColor = Color(0xFF2A2820),
+                        focusedBorderColor = Aqua,
+                        unfocusedBorderColor = Color(0x33FFFFFF),
+                        focusedTextColor = TextHigh,
+                        unfocusedTextColor = TextHigh,
+                        cursorColor = Aqua,
+                    ),
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = city,
+                        onValueChange = { city = it },
+                        label = { Text("City") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFF2A2820),
+                            unfocusedContainerColor = Color(0xFF2A2820),
+                            focusedBorderColor = Aqua,
+                            unfocusedBorderColor = Color(0x33FFFFFF),
+                            focusedTextColor = TextHigh,
+                            unfocusedTextColor = TextHigh,
+                            cursorColor = Aqua,
+                        ),
+                    )
+                    OutlinedTextField(
+                        value = state,
+                        onValueChange = { state = it },
+                        label = { Text("State") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFF2A2820),
+                            unfocusedContainerColor = Color(0xFF2A2820),
+                            focusedBorderColor = Aqua,
+                            unfocusedBorderColor = Color(0x33FFFFFF),
+                            focusedTextColor = TextHigh,
+                            unfocusedTextColor = TextHigh,
+                            cursorColor = Aqua,
+                        ),
+                    )
+                }
+                OutlinedTextField(
+                    value = website,
+                    onValueChange = { website = it },
+                    label = { Text("Website URL") },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFF2A2820),
+                        unfocusedContainerColor = Color(0xFF2A2820),
+                        focusedBorderColor = Aqua,
+                        unfocusedBorderColor = Color(0x33FFFFFF),
+                        focusedTextColor = TextHigh,
+                        unfocusedTextColor = TextHigh,
+                        cursorColor = Aqua,
+                    ),
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = latStr,
+                        onValueChange = { latStr = it.filter { c -> c.isDigit() || c == '.' || c == '-' } },
+                        label = { Text("Latitude *") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFF2A2820),
+                            unfocusedContainerColor = Color(0xFF2A2820),
+                            focusedBorderColor = Aqua,
+                            unfocusedBorderColor = Color(0x33FFFFFF),
+                            focusedTextColor = TextHigh,
+                            unfocusedTextColor = TextHigh,
+                            cursorColor = Aqua,
+                        ),
+                    )
+                    OutlinedTextField(
+                        value = lngStr,
+                        onValueChange = { lngStr = it.filter { c -> c.isDigit() || c == '.' || c == '-' } },
+                        label = { Text("Longitude *") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFF2A2820),
+                            unfocusedContainerColor = Color(0xFF2A2820),
+                            focusedBorderColor = Aqua,
+                            unfocusedBorderColor = Color(0x33FFFFFF),
+                            focusedTextColor = TextHigh,
+                            unfocusedTextColor = TextHigh,
+                            cursorColor = Aqua,
+                        ),
+                    )
+                }
+                Text(
+                    "You can find lat/lng on Google Maps by right-clicking a location.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = DarkTextMid,
+                )
+            }
+        },
+        confirmButton = {
+            com.rork.rockscout.ui.components.SculptedButton(
+                text = "Add Museum",
+                onClick = {
+                    val lat = latStr.toDoubleOrNull() ?: 0.0
+                    val lng = lngStr.toDoubleOrNull() ?: 0.0
+                    onAdd(name.trim(), city.trim(), state.trim(), website.trim(), lat, lng)
+                },
+                accent = Aqua,
+                containerColor = Aqua,
+                textColor = com.rork.rockscout.ui.theme.Ink,
+            )
+        },
+        dismissButton = {
+            com.rork.rockscout.ui.components.SculptedTextButton(
+                text = "Cancel",
+                onClick = onDismiss,
+                accent = DarkTextMid,
+                textColor = DarkTextMid,
+            )
+        },
+    )
+}

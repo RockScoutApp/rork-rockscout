@@ -27,11 +27,9 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  -- The Cloudflare Worker URL and app key are stored as GUC defaults.
-  -- They must be set once via: ALTER DATABASE current_database() SET rockscout_worker_url = 'https://...';
-  -- and: ALTER DATABASE current_database() SET rockscout_app_key = 'xxx';
-  worker_url := current_setting('rockscout_worker_url', true);
-  app_key := current_setting('rockscout_app_key', true);
+  -- Read config from the rockscout_config table (set once via SQL Editor).
+  SELECT value INTO worker_url FROM rockscout_config WHERE key = 'worker_url';
+  SELECT value INTO app_key FROM rockscout_config WHERE key = 'app_key';
 
   IF worker_url IS NULL OR app_key IS NULL THEN
     -- Configuration not set yet — skip silently (error is still stored in the table)

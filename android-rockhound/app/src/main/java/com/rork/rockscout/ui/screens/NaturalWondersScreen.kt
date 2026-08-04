@@ -297,23 +297,12 @@ fun NaturalWondersScreen(navController: NavController) {
                             .padding(horizontal = 14.dp, vertical = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Icon(Icons.Filled.Search, contentDescription = null, tint = TextLow, modifier = Modifier.size(20.dp))
-                        Spacer(Modifier.width(10.dp))
-                        androidx.compose.material3.OutlinedTextField(
-                            value = searchQuery,
-                            onValueChange = { searchQuery = it },
-                            placeholder = { Text("Search by name or state…", style = MaterialTheme.typography.bodyMedium, color = TextLow) },
-                            singleLine = true,
+                        com.rork.rockscout.ui.components.CompactSearchPill(
+                            query = searchQuery,
+                            onQueryChange = { searchQuery = it },
+                            placeholder = "Search by name or state…",
+                            accent = Aqua,
                             modifier = Modifier.weight(1f),
-                            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                focusedTextColor = TextHigh,
-                                unfocusedTextColor = TextHigh,
-                                focusedBorderColor = Color.Transparent,
-                                unfocusedBorderColor = Color.Transparent,
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                            ),
-                            textStyle = MaterialTheme.typography.bodyMedium,
                         )
                     }
                 }

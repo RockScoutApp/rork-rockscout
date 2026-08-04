@@ -326,22 +326,12 @@ fun DinosaurDictionaryScreen(navController: NavController) {
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        placeholder = { Text("Search dinosaurs, eras, locations…", color = DarkTextLow, maxLines = 1) },
-                        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = Aqua) },
-                        trailingIcon = {
-                            if (searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { searchQuery = "" }) {
-                                    Icon(Icons.Filled.Close, contentDescription = "Clear", tint = Aqua)
-                                }
-                            }
-                        },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions.Default,
+                    com.rork.rockscout.ui.components.CompactSearchPill(
+                        query = searchQuery,
+                        onQueryChange = { searchQuery = it },
+                        placeholder = "Search dinosaurs, eras, locations…",
+                        accent = Aqua,
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(16.dp),
                     )
                     FilterToggleButton(
                         active = showFilters || hasActiveFilters,
