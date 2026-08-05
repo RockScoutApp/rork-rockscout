@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { SculptedCard, SculptedButton, ScreenScaffold } from "@/components/sculpted";
 import { CompactSearchPill } from "@/components/CompactSearchPill";
 import { filterProfanity, filterSelfHarm, parseTaggedUserIds } from "@/lib/profanity-filter";
+import { useProfanityLevel } from "@/hooks/useProfanityLevel";
 import {
   enqueueMessage,
   getPendingForChat,
@@ -160,6 +161,7 @@ function TaggedText({ text, taggedNames }: { text: string; taggedNames: string[]
 
 export default function Messenger() {
   const { user } = useAuth();
+  const profanityLevel = useProfanityLevel();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [chatView, setChatView] = useState<ChatView>({ type: "list" });
@@ -753,7 +755,7 @@ export default function Messenger() {
     }
 
     // Step 2: Regular profanity filter on the (possibly self-harm-asterisked) text
-    const { filteredText, hasExplicitContent } = filterProfanity(textToFilter, strict);
+    const { filteredText, hasExplicitContent } = filterProfanity(textToFilter, profanityLevel, strict);
     if (hasExplicitContent) {
       setPendingFilteredText(filteredText);
       setShowProfanityWarning(true);

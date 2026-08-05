@@ -20,6 +20,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { filterProfanity } from "@/lib/profanity-filter";
+import { useProfanityLevel } from "@/hooks/useProfanityLevel";
 
 interface Profile {
   id: string;
@@ -86,6 +87,7 @@ const formatTime = (iso: string): string => {
 };
 
 export default function Friends() {
+  const profanityLevel = useProfanityLevel();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -321,7 +323,7 @@ export default function Friends() {
         .insert({
           thread_id: activeThread,
           sender_id: user.id,
-          body: filterProfanity(messageText.trim()).filteredText,
+          body: filterProfanity(messageText.trim(), profanityLevel).filteredText,
         });
       if (error) throw error;
 

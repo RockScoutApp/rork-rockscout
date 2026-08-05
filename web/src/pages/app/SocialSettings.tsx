@@ -12,6 +12,7 @@ import {
   Loader2,
   RefreshCw,
   Download,
+  MessageSquareWarning,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/lib/supabase";
@@ -31,6 +32,7 @@ interface ProfileSettings {
   coarse_lat: number | null;
   coarse_lng: number | null;
   status: string;
+  profanity_filter_level: string;
 }
 
 export default function SocialSettings() {
@@ -39,6 +41,7 @@ export default function SocialSettings() {
   const navigate = useNavigate();
   const goBack = useSafeBack();
   const [scanRadius, setScanRadius] = useState(25);
+  const [profanityLevel, setProfanityLevel] = useState<string>("low");
 
   const { data: settings } = useQuery<ProfileSettings>({
     queryKey: ["social-settings", user?.id],
@@ -46,10 +49,11 @@ export default function SocialSettings() {
       if (!user) return null;
       const { data } = await supabase
         .from("rockscout_profiles")
-        .select("club_enabled, scan_radius_miles, coarse_lat, coarse_lng, status")
+        .select("club_enabled, scan_radius_miles, coarse_lat, coarse_lng, status, profanity_filter_level")
         .eq("id", user.id)
         .maybeSingle();
       if (data) setScanRadius((data as ProfileSettings).scan_radius_miles ?? 25);
+      if (data) setProfanityLevel((data as ProfileSettings).profanity_filter_level ?? "low");
       return (data as ProfileSettings) ?? null;
     },
     enabled: !!user,
@@ -78,6 +82,11 @@ export default function SocialSettings() {
   const updateRadius = (radius: number) => {
     setScanRadius(radius);
     updateSettings.mutate({ scan_radius_miles: radius });
+  };
+
+  const updateProfanityLevel = (level: string) => {
+    setProfanityLevel(level);
+    updateSettings.mutate({ profanity_filter_level: level });
   };
 
   const shareLocation = async () => {
@@ -229,6 +238,60 @@ export default function SocialSettings() {
                     Share Approximate Location
                   </SculptedButton>
                 )}
+              </div>
+            </div>
+          </div>
+        </SculptedCard>
+
+        {/* Profanity filter level */}
+        <SculptedCard accent="citrine" className="p-5">
+          <div className="flex items-start gap-3">
+            <div
+              className="icon-badge glowing-border flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+              style={{ ["--badge-accent" as string]: CITRINE_HEX, ["--glow-color" as string]: CITRINE_HEX, color: `hsl(${CITRINE_HEX})` }}
+            >
+              <MessageSquareWarning className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-display text-sm font-bold text-foreground">
+                Profanity Filter
+              </h3>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Sexually explicit words, racial slurs, and severe terms are always filtered. Image moderation is always on.
+              </p>
+              <div className="mt-3 space-y-2">
+                {([
+                  { value: "off", label: "Off", desc: "Only explicit words, slurs, and severe terms (retard, rape) are asterisked. All other profanity is shown." },
+                  { value: "low", label: "Low (default)", desc: "Same as Off, plus \u201cfuck\u201d variants are silently asterisked. Mild profanity (shit, bitch, ass, etc.) is shown." },
+                  { value: "strict", label: "Strict", desc: "Everything except \u201chell\u201d and \u201cdamn\u201d is asterisked." },
+                ] as { value: string; label: string; desc: string }[]).map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => updateProfanityLevel(opt.value)}
+                    disabled={updateSettings.isPending}
+                    className={`flex w-full items-start gap-2.5 rounded-lg p-2.5 text-left transition-colors ${
+                      profanityLevel === opt.value
+                        ? "bg-primary/10 ring-1 ring-primary/30"
+                        : "hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                      profanityLevel === opt.value ? "border-primary bg-primary" : "border-muted-foreground/30"
+                    }`}>
+                      {profanityLevel === opt.value && (
+                        <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    <div>
+                      <div className={`text-sm font-bold ${profanityLevel === opt.value ? "text-primary" : "text-foreground"}`}>
+                        {opt.label}
+                      </div>
+                      <div className="text-xs text-muted-foreground">{opt.desc}</div>
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
           </div>

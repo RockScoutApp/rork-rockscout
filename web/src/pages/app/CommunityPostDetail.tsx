@@ -15,6 +15,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { filterProfanity } from "@/lib/profanity-filter";
+import { useProfanityLevel } from "@/hooks/useProfanityLevel";
 import NotFound from "@/pages/NotFound";
 
 interface Post {
@@ -61,6 +62,7 @@ const formatTime = (iso: string): string => {
 };
 
 export default function CommunityPostDetail() {
+  const profanityLevel = useProfanityLevel();
   const { postId } = useParams<{ postId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -156,7 +158,7 @@ export default function CommunityPostDetail() {
   const addComment = useMutation({
     mutationFn: async () => {
       if (!user || !postId || !commentBody.trim()) return;
-      const { filteredText } = filterProfanity(commentBody.trim());
+      const { filteredText } = filterProfanity(commentBody.trim(), profanityLevel);
       const { error } = await supabase.from("rockscout_post_comments").insert({
         post_id: postId,
         user_id: user.id,

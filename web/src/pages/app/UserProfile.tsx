@@ -33,6 +33,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { filterProfanity } from "@/lib/profanity-filter";
+import { useProfanityLevel } from "@/hooks/useProfanityLevel";
 import { isUsernameTaken } from "@/lib/username-resolver";
 
 interface Profile {
@@ -64,6 +65,7 @@ const levelProgress = (xp: number, level: number) => {
 };
 
 export default function UserProfile() {
+  const profanityLevel = useProfanityLevel();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -98,7 +100,7 @@ export default function UserProfile() {
             .from("rockscout_profiles")
             .insert({
               id: user.id,
-              display_name: filterProfanity(user.email?.split("@")[0] ?? "Rockhound").filteredText,
+              display_name: filterProfanity(user.email?.split("@")[0] ?? "Rockhound", profanityLevel).filteredText,
             })
             .select("*")
             .single();
@@ -165,7 +167,7 @@ export default function UserProfile() {
   const saveProfile = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Sign in to edit your profile");
-      const cleanName = filterProfanity(form.display_name).filteredText;
+      const cleanName = filterProfanity(form.display_name, profanityLevel).filteredText;
       const taken = await isUsernameTaken(cleanName, user.id);
       if (taken) {
         throw new Error("That username is already in use. Try adding a couple numbers to make it unique.");
@@ -176,7 +178,7 @@ export default function UserProfile() {
           display_name: cleanName,
           avatar_emoji: form.avatar_emoji,
           home_region: form.home_region,
-          bio: filterProfanity(form.bio).filteredText,
+          bio: filterProfanity(form.bio, profanityLevel).filteredText,
         })
         .eq("id", user.id);
       if (error) throw error;

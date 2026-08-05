@@ -84,6 +84,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import coil3.compose.AsyncImage
 import com.rork.rockscout.R
 import com.rork.rockscout.data.AppRepository
@@ -108,6 +109,7 @@ import com.rork.rockscout.data.Trip
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.Danger
+import com.rork.rockscout.ui.components.rememberSheetScrollFix
 import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Ink
@@ -1226,6 +1228,7 @@ fun CreatePostSheet(
     onPosted: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scrollFix = rememberSheetScrollFix(sheetState)
     val scope = rememberCoroutineScope()
     var phase by remember { mutableStateOf(CreatePostPhase.Categories) }
     var selectedCategory by remember { mutableStateOf<SourceCategory?>(null) }
@@ -1246,6 +1249,7 @@ fun CreatePostSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .nestedScroll(scrollFix)
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 24.dp)
                 .verticalScroll(rememberScrollState())

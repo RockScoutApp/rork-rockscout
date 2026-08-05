@@ -367,7 +367,7 @@ object SupabaseDataSync {
     }
 
     private suspend fun pullProfile(url: String, key: String, token: String, uid: String) {
-        val response = client.get("$url/rest/v1/rockscout_profiles?id=eq.$uid&select=display_name,avatar_emoji,status,club_enabled,scan_radius_miles,highlight_color,avatar_image_path") {
+        val response = client.get("$url/rest/v1/rockscout_profiles?id=eq.$uid&select=display_name,avatar_emoji,status,club_enabled,scan_radius_miles,highlight_color,avatar_image_path,profanity_filter_level") {
             header("apikey", key)
             header(HttpHeaders.Authorization, "Bearer $token")
         }
@@ -397,6 +397,12 @@ object SupabaseDataSync {
             val cleaned = avatarImagePath?.takeIf { it.isNotBlank() }
             AppRepository.instance.updateProfile { it.copy(avatarImagePath = cleaned) }
             Log.d(TAG, "Pulled profile: avatar_image_path=$avatarImagePath")
+        }
+        val profanityEl = obj["profanity_filter_level"]
+        val profanityLevel = if (profanityEl is JsonPrimitive && profanityEl.content.isNotEmpty()) profanityEl.content else "low"
+        if (profanityLevel != current.profanityFilterLevel) {
+            AppRepository.instance.updateProfile { it.copy(profanityFilterLevel = profanityLevel) }
+            Log.d(TAG, "Pulled profile: profanity_filter_level=$profanityLevel")
         }
     }
 
@@ -578,6 +584,7 @@ object SupabaseDataSync {
                     "scan_radius_miles" to profile.scanRadiusMiles.toString(),
                     "highlight_color" to (profile.highlightColor ?: ""),
                     "avatar_image_path" to (profile.avatarImagePath ?: ""),
+                    "profanity_filter_level" to profile.profanityFilterLevel,
                 ))
             }
         } catch (e: Exception) {

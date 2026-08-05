@@ -42,6 +42,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { filterProfanity } from "@/lib/profanity-filter";
+import { useProfanityLevel } from "@/hooks/useProfanityLevel";
 import { isUsernameTaken } from "@/lib/username-resolver";
 
 /* ── Constants ── */
@@ -130,6 +131,7 @@ function tierName(level: number): string {
 }
 
 export default function Profile() {
+  const profanityLevel = useProfanityLevel();
   const { user, signOut } = useAuth();
   const { isPremium } = useTier();
   const navigate = useNavigate();
@@ -389,7 +391,7 @@ export default function Profile() {
   const saveProfile = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Not signed in");
-      const baseName = filterProfanity((editName.trim() || user.email?.split("@")[0]) ?? "Rockhound").filteredText;
+      const baseName = filterProfanity((editName.trim() || user.email?.split("@")[0]) ?? "Rockhound", profanityLevel).filteredText;
       const taken = await isUsernameTaken(baseName, user.id);
       if (taken) {
         throw new Error("That username is already in use. Try adding a couple numbers to make it unique.");
@@ -409,7 +411,7 @@ export default function Profile() {
           gender: editGender,
           birthday: editBirthday || null,
           birthday_private: editBirthdayPrivate,
-          favorite_rock: filterProfanity(editFavoriteRock.trim()).filteredText || null,
+          favorite_rock: filterProfanity(editFavoriteRock.trim(), profanityLevel).filteredText || null,
           highlight_color: editHighlightColor || null,
         })
         .eq("id", user.id);

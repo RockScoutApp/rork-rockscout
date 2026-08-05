@@ -1,116 +1,88 @@
 /**
  * Web profanity filter — mirrors Android's ProfanityFilter.kt.
- * Two-tier system:
- * - Tier 1 (common profanity): silently asterisked, no warning
- * - Tier 2 (explicit language): asterisked + triggers a warning popup
+ * Three-tier system with user-selectable levels (off/low/strict):
  *
+ * - OFF: Only sexually explicit words, racial slurs, and severe terms
+ *   (retard, rape) are asterisked + trigger a warning.
+ *   All "fuck" variants and mild profanity are shown uncensored.
+ * - LOW (default): Same as OFF, plus "fuck" variants are silently
+ *   asterisked (no warning). Mild profanity is shown uncensored.
+ * - STRICT: Everything except "hell" and "damn" is asterisked.
+ *   Explicit words still trigger warnings; "fuck" and mild are silent.
+ *
+ * Self-harm detection runs independently and is always active.
  * Includes an allowlist of false-positive words that must never be censored
  * even if they contain a censored substring (e.g. "cocktail", "Dickerson").
  */
+
+export type ProfanityLevel = "off" | "low" | "strict";
 
 interface FilterResult {
   filteredText: string;
   hasExplicitContent: boolean;
 }
 
-// Common profanity — silently asterisked (tier 1)
-const COMMON_PROFANITY: string[] = [
-  "fuck",
-  "fucker",
-  "fucking",
-  "fucked",
-  "motherfucker",
-  "shit",
-  "bullshit",
-  "dumbass",
-  "asshole",
-  "damn",
-  "hell",
+/**
+ * Sexually explicit words, racial slurs, and severe harassment terms.
+ * Asterisked AND trigger a warning in ALL filter levels.
+ */
+const ALWAYS_CENSORED: string[] = [
+  "cunt", "cunts",
+  "cock", "cocks",
+  "dick", "dicks", "dickhead",
+  "pussy", "pussies", "pussys",
+  "twat", "twats",
+  "vagina", "vaginas",
+  "penis", "penises",
+  "clit", "clitoris",
+  "nigger", "niggers",
+  "faggot", "faggots",
+  "retard", "retards", "retarded",
+  "rape", "rapes", "raping", "rapist", "rapists",
 ];
 
-// Explicit language — asterisked + warning (tier 2)
-const EXPLICIT_WORDS: string[] = [
-  "cunt",
-  "cock",
-  "dick",
-  "pussy",
-  "bitch",
-  "bitches",
-  "bitching",
-  "bastard",
-  "bastards",
-  "slut",
-  "sluts",
-  "whore",
-  "whores",
-  "nigger",
-  "niggers",
-  "nigga",
-  "niggas",
-  "faggot",
-  "faggots",
-  "retard",
-  "retards",
-  "retarded",
-  "rape",
-  "rapes",
-  "raping",
-  "rapist",
-  "rapists",
+/** "fuck" variants — silently asterisked in LOW and STRICT. Shown in OFF. */
+const FUCK_VARIANTS: string[] = [
+  "fuck", "fucker", "fucking", "fucked", "fuckers", "fuckin", "fuckn",
+  "motherfucker", "motherfuckers", "motherfucking", "motherfuckin",
+  "fuckface", "fuckhead", "fuckboy", "fuckoff",
+  "fck", "fcking", "fuk", "fuuk", "phuck", "phucking",
 ];
 
-// Words that must never be censored even if they contain a censored substring.
-// Mirrors Android's ProfanityFilter.allowedWords plus additional geological /
-// paleontological / proper-noun terms relevant to RockScout.
+/**
+ * Mild profanity — shown uncensored in OFF and LOW, silently asterisked
+ * in STRICT. Never triggers a warning.
+ */
+const MILD_PROFANITY: string[] = [
+  "piss",
+  "shit", "shitty", "shits", "shitting", "bullshit",
+  "dumbass", "asshole", "assholes",
+  "bitch", "bitches", "bitching",
+  "bastard", "bastards",
+  "slut", "sluts",
+  "whore", "whores",
+  "nigga", "niggas",
+  "ass", "asses",
+  "damned",
+];
+
+/**
+ * Words that must never be censored even if they contain a censored substring.
+ * "hell" and "damn" are exempt from all filtering (including strict).
+ * Compound "-ass" words are protected so they don't get caught by "ass".
+ */
 const ALLOWED_WORDS: Set<string> = new Set([
-  "cocktail",
-  "cocktails",
-  "dickerson",
-  "dickinson",
-  "dickinsonia",
-  "dickinsoniids",
-  // Geological / mineral terms
-  "ass",
-  "asses",
-  "badass",
-  "hardass",
-  "smartass",
-  "jackass",
-  "dumbass",
-  "kickass",
-  "lass",
-  "class",
-  "grass",
-  "mass",
-  "pass",
-  "bass",
-  "glass",
-  // Additional false positives
-  "snigger",
-  "scunthorpe",
-  "penistone",
-  "lightfoot",
-  "assassin",
-  "assay",
-  "casserole",
-  "grasshopper",
-  "passerby",
-  "massive",
-  "classroom",
-  "classic",
-  "classify",
-  "crass",
-  "brass",
-  "morass",
-  "amass",
-  "stash",
-  "flash",
-  "splash",
-  "smash",
-  "password",
-  "bypass",
-  "underpass",
-  "overpass",
+  "hell", "damn",
+  "badass", "hardass", "smartass", "jackass", "kickass",
+  "lass", "class", "grass", "mass", "pass", "bass", "glass",
+  "cocktail", "cocktails",
+  "dickerson", "dickinson", "dickinsonia", "dickinsoniids",
+  "snigger", "scunthorpe", "penistone", "lightfoot",
+  "assassin", "assay", "casserole", "grasshopper",
+  "passerby", "massive", "classroom", "classic", "classify",
+  "crass", "brass", "morass", "amass",
+  "stash", "flash", "splash", "smash",
+  "password", "bypass", "underpass", "overpass",
 ]);
 
 function asteriskWord(word: string): string {
@@ -118,44 +90,53 @@ function asteriskWord(word: string): string {
   return word[0] + "*".repeat(word.length - 2) + word[word.length - 1];
 }
 
+const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 /**
- * Filter text using the two-tier profanity system.
+ * Filter text using the three-tier profanity system.
  * Returns the filtered text and whether explicit content was detected.
+ *
+ * @param userLevel The user's profanity filter level (off/low/strict).
+ * @param groupStrict When true, forces STRICT regardless of userLevel
+ *   (for group chats with strict profanity_filter_level).
  */
-export function filterProfanity(text: string, strict = false): FilterResult {
+export function filterProfanity(
+  text: string,
+  userLevel: ProfanityLevel = "low",
+  groupStrict = false,
+): FilterResult {
   let filteredText = text;
   let hasExplicitContent = false;
 
-  const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const level: ProfanityLevel = groupStrict ? "strict" : userLevel;
+
+  // Determine which words to silently asterisk (no warning)
+  const silentCensored: string[] =
+    level === "off"
+      ? []
+      : level === "low"
+        ? FUCK_VARIANTS
+        : [...FUCK_VARIANTS, ...MILD_PROFANITY];
+
+  const allCensored = [...ALWAYS_CENSORED, ...silentCensored];
 
   // Protect allowed words by temporarily replacing them with placeholders.
-  // This prevents both tier-1 and tier-2 filters from touching them, then we
-  // restore the originals after all filtering is done.
   const placeholders: string[] = [];
   for (const allowed of ALLOWED_WORDS) {
     const regex = new RegExp(`\\b${escapeRegex(allowed)}\\b`, "gi");
     filteredText = filteredText.replace(regex, (match) => {
       const idx = placeholders.length;
-      placeholders.push(match); // preserve original casing
+      placeholders.push(match);
       return `\u0000ALLOWED_${idx}\u0000`;
     });
   }
 
-  // Tier 1: common profanity — silent asterisk
-  for (const word of COMMON_PROFANITY) {
+  // Censor all matched words
+  for (const word of allCensored) {
     const regex = new RegExp(`\\b${escapeRegex(word)}\\b`, "gi");
-    filteredText = filteredText.replace(regex, (match) => asteriskWord(match));
-  }
-
-  // Tier 2: explicit language — asterisk + warning
-  const explicitList = strict
-    ? [...EXPLICIT_WORDS, "crap", "piss", "jackass", "prick"]
-    : EXPLICIT_WORDS;
-  for (const word of explicitList) {
-    const trimmed = word.trim();
-    const regex = new RegExp(`\\b${escapeRegex(trimmed)}\\b`, "gi");
     if (regex.test(filteredText)) {
-      hasExplicitContent = true;
+      const isExplicit = ALWAYS_CENSORED.includes(word);
+      if (isExplicit) hasExplicitContent = true;
       filteredText = filteredText.replace(regex, (match) =>
         asteriskWord(match),
       );
@@ -173,13 +154,7 @@ export function filterProfanity(text: string, strict = false): FilterResult {
   return { filteredText, hasExplicitContent };
 }
 
-/**
- * Parse @username patterns from text and match against known member names.
- * Returns the list of user IDs that were tagged.
- */
 // ─── Self-Harm Phrase Detection ──────────────────────────────────────
-// Phrases that indicate self-harm or encouraging self-harm.
-// 1st offense = warning popup, 2nd offense = auto-report + bell + email.
 const SELF_HARM_PHRASES: string[] = [
   "kill yourself", "kill urself", "kys", "go kill yourself",
   "kill myself", "end your life", "end ur life", "end my life",
@@ -190,7 +165,6 @@ const SELF_HARM_PHRASES: string[] = [
   "nobody would care if you died",
 ];
 
-// Leetspeak normalization map
 const LEET_MAP: Record<string, string> = {
   "1": "i", "3": "e", "4": "a", "5": "s", "6": "g",
   "7": "t", "8": "b", "0": "o", "$": "s", "@": "a",
@@ -225,7 +199,6 @@ export interface SelfHarmFilterResult {
   matchedPhrases: string[];
 }
 
-/** Check for self-harm phrases in text. Returns asterisked text and matched phrases. */
 export function filterSelfHarm(text: string): SelfHarmFilterResult {
   if (!text || !text.trim()) {
     return { filteredText: text, hasSelfHarm: false, matchedPhrases: [] };

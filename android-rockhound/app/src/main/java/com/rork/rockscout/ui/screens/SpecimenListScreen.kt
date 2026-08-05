@@ -58,6 +58,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.navigation.NavController
 import com.rork.rockscout.data.AdditionalSpecimens
 import com.rork.rockscout.data.AssemblageSpecimens
@@ -102,6 +103,7 @@ import com.rork.rockscout.ui.components.ShareToProfileComposer
 import com.rork.rockscout.ui.components.TagChip
 import com.rork.rockscout.ui.components.RarityIndicator
 import com.rork.rockscout.ui.components.rockClassColor
+import com.rork.rockscout.ui.components.rememberSheetScrollFix
 import com.rork.rockscout.ui.components.shortCategoryLabel
 import com.rork.rockscout.ui.components.sculpted
 import com.rork.rockscout.ui.navigation.Routes
@@ -574,6 +576,7 @@ fun SpecimenListScreen(navController: NavController) {
         // Bulk-download detail sheet
         if (showBulkSheet) {
             val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            val scrollFix = rememberSheetScrollFix(sheetState)
             ModalBottomSheet(
                 onDismissRequest = { showBulkSheet = false },
                 sheetState = sheetState,
@@ -582,6 +585,7 @@ fun SpecimenListScreen(navController: NavController) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .nestedScroll(scrollFix)
                         .padding(horizontal = 20.dp)
                         .padding(bottom = 28.dp)
                         .verticalScroll(rememberScrollState()),

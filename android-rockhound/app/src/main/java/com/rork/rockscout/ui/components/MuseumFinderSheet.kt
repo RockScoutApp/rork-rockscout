@@ -51,6 +51,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import com.rork.rockscout.ui.components.rememberSheetScrollFix
 import androidx.core.content.ContextCompat
 import com.rork.rockscout.data.LocationFetcher
 import com.rork.rockscout.data.Museum
@@ -97,6 +99,7 @@ fun MuseumFinderSheet(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scrollFix = rememberSheetScrollFix(sheetState)
 
     var isLoading by remember { mutableStateOf(true) }
     var museums by remember { mutableStateOf<List<Museum>>(emptyList()) }
@@ -168,6 +171,7 @@ fun MuseumFinderSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .nestedScroll(scrollFix)
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 24.dp)
                 .verticalScroll(rememberScrollState()),

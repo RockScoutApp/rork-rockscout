@@ -1,15 +1,23 @@
 package com.rork.rockscout.data
 
 /**
- * Two-tier text filter for user-generated content in RockScout (18+ app).
+ * Three-tier text filter for user-generated content in RockScout.
  *
- * Tier 1 — "fuck" variants: silently asterisked, NO warning.
- * Tier 2 — sexually explicit words: asterisked AND trigger a warning popup.
- *   3 warnings = auto-report, 5 = 2nd report, 6 = account ban.
+ * User-selectable levels (stored on profile, synced via Supabase):
+ *  - [ProfanityLevel.OFF]: Only sexually explicit words, racial slurs, and
+ *    extra-offensive terms (retard, rape) are asterisked + trigger a warning.
+ *    All "fuck" variants and mild profanity are shown uncensored.
+ *  - [ProfanityLevel.LOW] (default): Same as OFF, plus "fuck" variants are
+ *    silently asterisked (no warning popup). Mild profanity is shown uncensored.
+ *  - [ProfanityLevel.STRICT]: Everything except "hell" and "damn" is asterisked.
+ *    Explicit words still trigger warnings; "fuck" and mild words are silent.
  *
- * Light profanity (shit, bitch, damn, hell, ass) is allowed by default.
- * The "Extra Strict" mode (group chats) extends tier 2 to also catch
- * light profanity with the same warning system.
+ * The warning system is unaffected by the level: 3 warnings = auto-report,
+ * 5 = 2nd report, 6 = account ban. Only the [alwaysCensored] set triggers
+ * warnings. Self-harm detection runs independently and is always active.
+ *
+ * Group chats can override the user's personal level to STRICT via the
+ * [groupStrict] parameter on [filterWithWarning].
  *
  * The filter is case-insensitive, replaces matched words with asterisks,
  * and normalizes common leetspeak substitutions before matching.
@@ -18,16 +26,27 @@ package com.rork.rockscout.data
  */
 object ProfanityFilter {
 
-    /** "fuck" variants — silently asterisked, no warning. */
-    private val fuckVariants = setOf(
-        "fuck", "fucking", "fucked", "fucker", "fuckers", "fuckin", "fuckn",
-        "motherfucker", "motherfuckers", "motherfucking", "motherfuckin",
-        "fuckface", "fuckhead", "fuckboy", "fuckoff", "fck", "fcking",
-        "fuk", "fuuk", "phuck", "phucking",
-    )
+    /** User-selectable profanity filter level. */
+    enum class ProfanityLevel(val value: String) {
+        OFF("off"),
+        LOW("low"),
+        STRICT("strict");
 
-    /** Sexually explicit words, slurs, and severe harassment terms — asterisked AND trigger a warning. */
-    private val explicitWords = setOf(
+        companion object {
+            fun fromValue(v: String?): ProfanityLevel =
+                entries.firstOrNull { it.value == v } ?: LOW
+        }
+    }
+
+    /** Current user's filter level. Set by [AppRepository] when the profile loads. */
+    @Volatile
+    var userLevel: ProfanityLevel = ProfanityLevel.LOW
+
+    /**
+     * Sexually explicit words, racial slurs, and severe harassment terms.
+     * Asterisked AND trigger a warning in ALL filter levels (off/low/strict).
+     */
+    private val alwaysCensored = setOf(
         "pussy", "pussies", "pussys",
         "cunt", "cunts",
         "twat", "twats",
@@ -36,38 +55,48 @@ object ProfanityFilter {
         "dick", "dicks", "dickhead",
         "penis", "penises",
         "clit", "clitoris",
-        "asshole", "assholes",
-        "bitch", "bitches", "bitching",
-        "bastard", "bastards",
-        "slut", "sluts",
-        "whore", "whores",
         "nigger", "niggers",
-        "nigga", "niggas",
         "faggot", "faggots",
         "retard", "retards", "retarded",
         "rape", "rapes", "raping", "rapist", "rapists",
     )
 
-    /** Light profanity — only filtered in "Extra Strict" mode. */
-    private val lightProfanity = setOf(
-        "shit", "shitty", "shits", "shitting",
-        "damn", "damned",
-        "hell",
-        "ass", "asses",
-        "bullshit",
-        "dumbass",
+    /** "fuck" variants — silently asterisked in LOW and STRICT. Shown in OFF. */
+    private val fuckVariants = setOf(
+        "fuck", "fucking", "fucked", "fucker", "fuckers", "fuckin", "fuckn",
+        "motherfucker", "motherfuckers", "motherfucking", "motherfuckin",
+        "fuckface", "fuckhead", "fuckboy", "fuckoff", "fck", "fcking",
+        "fuk", "fuuk", "phuck", "phucking",
     )
 
-    /** Words that must never be censored even if they contain a censored substring.
-     *  Includes geological / paleontological / proper-noun terms relevant to RockScout. */
+    /**
+     * Mild profanity — shown uncensored in OFF and LOW, silently asterisked
+     * in STRICT. Never triggers a warning.
+     */
+    private val mildProfanity = setOf(
+        "piss",
+        "shit", "shitty", "shits", "shitting", "bullshit",
+        "dumbass", "asshole", "assholes",
+        "bitch", "bitches", "bitching",
+        "bastard", "bastards",
+        "slut", "sluts",
+        "whore", "whores",
+        "nigga", "niggas",
+        "ass", "asses",
+        "damned",
+    )
+
+    /**
+     * Words that must never be censored even if they contain a censored substring.
+     * "hell" and "damn" are exempt from all filtering (including strict).
+     * Compound "-ass" words are protected so they don't get caught by "ass".
+     */
     private val allowedWords = setOf(
-        "hell", "damn", "ass", "asses", "badass", "hardass", "smartass",
-        "jackass", "dumbass", "kickass", "lass", "class", "grass", "mass",
-        "pass", "bass", "glass",
-        // False-positive names and words
+        "hell", "damn",
+        "badass", "hardass", "smartass", "jackass", "kickass",
+        "lass", "class", "grass", "mass", "pass", "bass", "glass",
         "cocktail", "cocktails",
         "dickerson", "dickinson", "dickinsonia", "dickinsoniids",
-        // Geological / mineral / field terms
         "snigger", "scunthorpe", "penistone", "lightfoot",
         "assassin", "assay", "casserole", "grasshopper",
         "passerby", "massive", "classroom", "classic", "classify",
@@ -83,36 +112,35 @@ object ProfanityFilter {
         '!' to 'i', '+' to 't', '#' to 'h', '9' to 'g',
     )
 
-    /**
-     * Result of a filter pass: the censored text and whether any
-     * sexually explicit (warning-tier) words were found.
-     */
     data class FilterResult(
         val filteredText: String,
         val hasExplicitContent: Boolean,
     )
 
-    /**
-     * Filter [text] with the normal (non-strict) profanity policy.
-     * Returns the censored text. Use [filterWithWarning] if you need
-     * to know whether explicit words were found (for the warning popup).
-     */
+    /** Filter [text] with the user's current level. Returns censored text only. */
     fun filter(text: String): String {
-        return filterWithWarning(text, strict = false).filteredText
+        return filterWithWarning(text).filteredText
     }
 
     /**
      * Filter [text] and return both the censored text and whether
      * explicit (warning-tier) words were found.
      *
-     * @param strict When true, light profanity is also treated as
-     *   warning-tier (for "Extra Strict" group chats).
+     * @param groupStrict When true, the effective level is forced to STRICT
+     *   (for group chats with strict profanity_filter_level).
      */
-    fun filterWithWarning(text: String, strict: Boolean = false): FilterResult {
+    fun filterWithWarning(text: String, groupStrict: Boolean = false): FilterResult {
         if (text.isBlank()) return FilterResult(text, false)
 
-        val warningWords = if (strict) explicitWords + lightProfanity else explicitWords
-        val allCensored = fuckVariants + warningWords
+        val level = if (groupStrict) ProfanityLevel.STRICT else userLevel
+
+        val warningWords = alwaysCensored
+        val silentCensored: Set<String> = when (level) {
+            ProfanityLevel.OFF -> emptySet()
+            ProfanityLevel.LOW -> fuckVariants
+            ProfanityLevel.STRICT -> fuckVariants + mildProfanity
+        }
+        val allCensored = alwaysCensored + silentCensored
 
         // First pass: tokenize and censor whole tokens
         val pattern = Regex("([a-zA-Z0-9\\$@!+?#]+)|([^a-zA-Z0-9\\$@!+?#]+)")
@@ -148,12 +176,6 @@ object ProfanityFilter {
         return FilterResult(secondPass, foundExplicit || foundExplicit2)
     }
 
-    /**
-     * Walks [input] and, for each run of letters/digits/leet chars separated by
-     * other characters, collapses the run, normalizes leet, and checks whether
-     * the collapsed form equals a censored word. Word-boundary matching prevents
-     * false positives on innocent words.
-     */
     private fun secondPassCollapsible(
         input: String,
         censored: Set<String>,
@@ -210,8 +232,6 @@ object ProfanityFilter {
     fun hasFilteredWord(text: String): Boolean = filter(text) != text
 
     // ─── Self-Harm Phrase Detection ──────────────────────────────────────
-    /** Phrases that indicate self-harm or encouraging self-harm — auto-asterisked,
-     *  1st offense = warning popup, 2nd offense = auto-report + bell + email. */
     private val selfHarmPhrases = listOf(
         "kill yourself", "kill urself", "kys", "go kill yourself", "go k!ll yourself",
         "kill yourself.", "kill yourself!", "kill urself.", "kill urself!",
@@ -225,7 +245,6 @@ object ProfanityFilter {
         "nobody would miss you", "nobody would care if you died",
     )
 
-    /** Leetspeak variants of self-harm phrases. */
     private val selfHarmLeetMap = mapOf(
         '1' to 'i', '3' to 'e', '4' to 'a', '5' to 's', '6' to 'g',
         '7' to 't', '8' to 'b', '0' to 'o', '$' to 's', '@' to 'a',
@@ -238,7 +257,6 @@ object ProfanityFilter {
         val matchedPhrases: List<String>,
     )
 
-    /** Check for self-harm phrases in [text]. Returns asterisked text and matched phrases. */
     fun filterSelfHarm(text: String): SelfHarmResult {
         if (text.isBlank()) return SelfHarmResult(text, false, emptyList())
 
@@ -247,19 +265,16 @@ object ProfanityFilter {
         val lower = text.lowercase()
 
         for (phrase in selfHarmPhrases) {
-            // Check both the original and leet-normalized versions
             val normalizedPhrase = normalizeSelfHarm(phrase)
             val normalizedText = normalizeSelfHarm(lower)
 
             if (lower.contains(phrase)) {
-                // Found in original text — asterisk it
                 val pattern = Regex(Regex.escape(phrase), RegexOption.IGNORE_CASE)
                 result = pattern.replace(result) { match ->
                     "*".repeat(match.value.length)
                 }
                 if (phrase !in matched) matched.add(phrase)
             } else if (normalizedText.contains(normalizedPhrase)) {
-                // Found in leet-normalized text — find and asterisk the original
                 val leetPattern = buildLeetInsensitivePattern(phrase)
                 val regex = Regex(leetPattern, RegexOption.IGNORE_CASE)
                 result = regex.replace(result) { match ->
@@ -277,7 +292,6 @@ object ProfanityFilter {
     }
 
     private fun buildLeetInsensitivePattern(phrase: String): String {
-        // Build a regex that allows leet substitutions for each character
         val leetReplacements = mapOf(
             'i' to "[i1!]", 'e' to "[e3]", 'a' to "[a4@]", 's' to "[s5$]",
             'g' to "[g69]", 't' to "[t7+]", 'b' to "[b8]", 'o' to "[o0]",

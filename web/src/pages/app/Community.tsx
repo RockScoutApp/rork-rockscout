@@ -33,6 +33,7 @@ import { toast } from "sonner";
 import { CompactSearchPill } from "@/components/CompactSearchPill";
 import { SculptedCard } from "@/components/sculpted";
 import { filterProfanity } from "@/lib/profanity-filter";
+import { useProfanityLevel } from "@/hooks/useProfanityLevel";
 
 interface Post {
   id: string;
@@ -102,6 +103,7 @@ const formatTime = (iso: string): string => {
 };
 
 export default function Community() {
+  const profanityLevel = useProfanityLevel();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -324,9 +326,9 @@ export default function Community() {
       const { error } = await supabase.from("rockscout_posts").insert({
         user_id: user.id,
         source_type: "journal",
-        title: filterProfanity(form.title).filteredText,
-        caption: filterProfanity(form.caption).filteredText,
-        location_text: filterProfanity(form.location_text).filteredText,
+        title: filterProfanity(form.title, profanityLevel).filteredText,
+        caption: filterProfanity(form.caption, profanityLevel).filteredText,
+        location_text: filterProfanity(form.location_text, profanityLevel).filteredText,
       });
       if (error) throw error;
     },
@@ -387,7 +389,7 @@ export default function Community() {
         .insert({
           post_id: expandedPost,
           user_id: user.id,
-          body: filterProfanity(commentText.trim()).filteredText,
+          body: filterProfanity(commentText.trim(), profanityLevel).filteredText,
         });
       if (error) throw error;
     },
@@ -407,8 +409,8 @@ export default function Community() {
       const chatId = `gc-${crypto.randomUUID()}`;
       const { error: cErr } = await supabase.from("group_chats").insert({
         id: chatId,
-        name: filterProfanity(groupForm.name.trim()).filteredText,
-        subject: filterProfanity(groupForm.subject.trim()).filteredText,
+        name: filterProfanity(groupForm.name.trim(), profanityLevel).filteredText,
+        subject: filterProfanity(groupForm.subject.trim(), profanityLevel).filteredText,
         creator_id: user.id,
         max_members: groupForm.max_members || null,
         profanity_filter_level: groupForm.profanity_filter_level,

@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { CompactSearchPill } from "@/components/CompactSearchPill";
 import { filterProfanity } from "@/lib/profanity-filter";
+import { useProfanityLevel } from "@/hooks/useProfanityLevel";
 
 type Tab = "websites" | "museums";
 
@@ -89,6 +90,7 @@ const US_STATES = [
 ];
 
 export default function ResourceLinks() {
+  const profanityLevel = useProfanityLevel();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<Tab>("websites");
@@ -123,10 +125,10 @@ export default function ResourceLinks() {
       if (!museumForm.name.trim()) throw new Error("Museum name is required");
       if (!museumForm.state) throw new Error("State is required");
       const { error } = await supabase.from("rockscout_museums").insert({
-        name: filterProfanity(museumForm.name.trim()).filteredText,
+        name: filterProfanity(museumForm.name.trim(), profanityLevel).filteredText,
         state: museumForm.state,
-        city: filterProfanity(museumForm.city.trim()).filteredText || null,
-        description: filterProfanity(museumForm.description.trim()).filteredText || null,
+        city: filterProfanity(museumForm.city.trim(), profanityLevel).filteredText || null,
+        description: filterProfanity(museumForm.description.trim(), profanityLevel).filteredText || null,
         website_url: museumForm.website_url.trim() || null,
         submitted_by: user.id,
         approved: false,

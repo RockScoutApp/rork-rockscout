@@ -415,7 +415,7 @@ fun MessengerScreen(
                     return@ThreadView
                 }
                 // Step 2: Regular profanity filter on the (possibly self-harm-asterisked) text
-                val result = ProfanityFilter.filterWithWarning(selfHarmResult.filteredText, strict = strict)
+                val result = ProfanityFilter.filterWithWarning(selfHarmResult.filteredText, groupStrict = strict)
                 val filtered = result.filteredText
                 if (result.hasExplicitContent) {
                     pendingFilteredText = filtered
@@ -605,7 +605,7 @@ fun MessengerScreen(
                     return@ThreadView
                 }
                 // Step 2: Regular profanity filter
-                val result = ProfanityFilter.filterWithWarning(selfHarmResult.filteredText, strict = false)
+                val result = ProfanityFilter.filterWithWarning(selfHarmResult.filteredText, groupStrict = false)
                 val filtered = result.filteredText
                 if (result.hasExplicitContent) {
                     pendingFilteredText = filtered

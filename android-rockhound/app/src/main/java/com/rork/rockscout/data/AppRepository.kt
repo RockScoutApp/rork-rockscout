@@ -115,6 +115,8 @@ data class UserProfile(
     val highlightColor: String? = null,
     /** Optional photo avatar URI (file:// or content://). When set, shown instead of the emoji avatar. */
     val avatarImagePath: String? = null,
+    /** User's profanity filter level: "off", "low" (default), or "strict". Synced via Supabase. */
+    val profanityFilterLevel: String = "low",
 )
 
 /**
@@ -193,7 +195,10 @@ class AppRepository {
     private var loaded = false
 
     // ---- Bulk-load helpers called once from PersistenceManager.initialize ----
-    fun loadProfile(p: UserProfile) { _profile.value = p }
+    fun loadProfile(p: UserProfile) {
+        _profile.value = p
+        ProfanityFilter.userLevel = ProfanityFilter.ProfanityLevel.fromValue(p.profanityFilterLevel)
+    }
     fun loadCollection(entries: List<CollectionEntry>) {
         // Always set — an empty list means the user intentionally cleared
         // their collection and we must not reseed defaults on restart.
@@ -289,6 +294,7 @@ class AppRepository {
         )
         persistProfile()
         PersistenceManager.saveLocationMonitoringEnabled(_profile.value.locationMonitoring)
+        ProfanityFilter.userLevel = ProfanityFilter.ProfanityLevel.fromValue(_profile.value.profanityFilterLevel)
     }
 
     fun setLocationMonitoring(enabled: Boolean) {
@@ -427,6 +433,13 @@ class AppRepository {
         _profile.value = _profile.value.copy(scanRadiusMiles = miles)
         persistProfile()
         PersistenceManager.saveScanRadiusMiles(miles)
+    }
+
+    /** Sets the user's profanity filter level and updates the live [ProfanityFilter.userLevel]. */
+    fun setProfanityFilterLevel(level: ProfanityFilter.ProfanityLevel) {
+        _profile.value = _profile.value.copy(profanityFilterLevel = level.value)
+        ProfanityFilter.userLevel = level
+        persistProfile()
     }
 
     /** Sets the profile background image (already passed moderation). */

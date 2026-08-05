@@ -96,6 +96,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import kotlinx.coroutines.launch
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rork.rockscout.data.PurchaseManager
@@ -195,6 +196,7 @@ import com.rork.rockscout.ui.components.statusAccent
 import com.rork.rockscout.ui.components.noAutoFocus
 import com.rork.rockscout.ui.components.sculpted
 import com.rork.rockscout.ui.components.glowingBorder
+import com.rork.rockscout.ui.components.rememberSheetScrollFix
 
 private val avatarOptions = listOf(
     "\uD83E\uDD20", "\u26CF\uFE0F", "\uD83D\uDC8E", "\uD83E\uDEA8", "\uD83D\uDD2E",
@@ -1437,12 +1439,20 @@ private fun EditProfileSheetContainer(
     onRemoveBackground: () -> Unit,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scrollFix = rememberSheetScrollFix(sheetState)
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = Color(0xFF1E1C16),
     ) {
-        EditProfileSheet(
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .nestedScroll(scrollFix)
+                .verticalScroll(rememberScrollState())
+                .imePadding(),
+        ) {
+            EditProfileSheet(
             name = name,
             homeRegion = homeRegion,
             bio = bio,
@@ -1460,6 +1470,7 @@ private fun EditProfileSheetContainer(
             onBackgroundSelected = onBackgroundSelected,
             onRemoveBackground = onRemoveBackground,
         )
+        }
     }
 }
 

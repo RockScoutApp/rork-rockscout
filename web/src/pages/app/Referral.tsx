@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { SculptedCard, SculptedButton, ScreenScaffold, StatTile } from "@/components/sculpted";
 import { filterProfanity } from "@/lib/profanity-filter";
+import { useProfanityLevel } from "@/hooks/useProfanityLevel";
 
 const AQUA_HEX = "20 62% 65%";
 const CITRINE_HEX = "36 80% 58%";
@@ -29,6 +30,7 @@ interface Profile {
 }
 
 export default function Referral() {
+  const profanityLevel = useProfanityLevel();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
@@ -50,7 +52,7 @@ export default function Referral() {
           .from("rockscout_profiles")
           .insert({
             id: user.id,
-            display_name: filterProfanity(user.email?.split("@")[0] ?? "Rockhound").filteredText,
+            display_name: filterProfanity(user.email?.split("@")[0] ?? "Rockhound", profanityLevel).filteredText,
             referral_code: code,
           })
           .select("id, display_name, referral_code, referred_by, xp, level")

@@ -61,6 +61,8 @@ import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.components.SavedImagesPickerDialog
 import com.rork.rockscout.ui.components.processSavedImage
+import com.rork.rockscout.ui.components.rememberSheetScrollFix
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
@@ -82,6 +84,7 @@ fun CommunityPostComposer(
     initialPhotoUri: String? = null,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scrollFix = rememberSheetScrollFix(sheetState)
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
@@ -162,6 +165,7 @@ fun CommunityPostComposer(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .nestedScroll(scrollFix)
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 24.dp)
                 .verticalScroll(rememberScrollState())

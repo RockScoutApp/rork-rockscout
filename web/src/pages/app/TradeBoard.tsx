@@ -28,6 +28,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { filterProfanity } from "@/lib/profanity-filter";
+import { useProfanityLevel } from "@/hooks/useProfanityLevel";
 
 interface TradeListing {
   id: string;
@@ -69,6 +70,7 @@ const isExpired = (expiresAt: number): boolean =>
   expiresAt * 1000 < Date.now();
 
 export default function TradeBoard() {
+  const profanityLevel = useProfanityLevel();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -121,10 +123,10 @@ export default function TradeBoard() {
         .insert({
           owner_user_id: user.id,
           type: form.type,
-          specimen_name: filterProfanity(form.specimen_name).filteredText,
-          condition: filterProfanity(form.condition).filteredText,
-          description: filterProfanity(form.description).filteredText,
-          want_in_return: filterProfanity(form.want_in_return).filteredText,
+          specimen_name: filterProfanity(form.specimen_name, profanityLevel).filteredText,
+          condition: filterProfanity(form.condition, profanityLevel).filteredText,
+          description: filterProfanity(form.description, profanityLevel).filteredText,
+          want_in_return: filterProfanity(form.want_in_return, profanityLevel).filteredText,
           tags: [],
         });
       if (error) throw error;
