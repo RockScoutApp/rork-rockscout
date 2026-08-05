@@ -143,6 +143,7 @@ import com.rork.rockscout.data.SettingsBackupWorker
 import com.rork.rockscout.data.SupabaseDataSync
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.RestartAlt
 import androidx.core.content.FileProvider
 import java.io.File
 import java.util.UUID
@@ -1728,12 +1729,53 @@ private fun EditProfileSheet(
             .imePadding(),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text(
-            "Edit your RockScout card",
-            style = MaterialTheme.typography.titleLarge,
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "Edit your RockScout card",
+                style = MaterialTheme.typography.titleLarge,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+            )
+            // Reset-to-defaults pill — restores original avatar/background + pan/zoom
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Aqua.copy(alpha = 0.10f))
+                    .glowingBorder(1.dp, Aqua.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+                    .clickable {
+                        editAvatarImagePath = avatarImagePath
+                        editBgImagePath = backgroundImagePath
+                        avatarScale = 1f
+                        avatarOffsetX = 0f
+                        avatarOffsetY = 0f
+                        bgScale = 1f
+                        bgOffsetX = 0f
+                        bgOffsetY = 0f
+                        editAvatar = avatarEmoji
+                    }
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Filled.RestartAlt,
+                        contentDescription = null,
+                        tint = Aqua,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        "Reset",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Aqua,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+        }
         // ── Add Background pill ──
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -2281,29 +2323,58 @@ private fun EditProfileSheet(
 
         Button(
             onClick = {
-                // If the user has a photo avatar with pan/zoom adjustments,
-                // crop the square region before saving.
                 val finalAvatarPath = editAvatarImagePath
-                if (finalAvatarPath != null && avatarPreviewSizePx > 0 && (avatarScale != 1f || avatarOffsetX != 0f || avatarOffsetY != 0f)) {
+                val finalBgPath = editBgImagePath
+                val needAvatarCrop = finalAvatarPath != null && avatarPreviewSizePx > 0 &&
+                    (avatarScale != 1f || avatarOffsetX != 0f || avatarOffsetY != 0f)
+                val needBgCrop = finalBgPath != null && bgPreviewSizeWPx > 0 &&
+                    (bgScale != 1f || bgOffsetX != 0f || bgOffsetY != 0f)
+                if (needAvatarCrop || needBgCrop) {
                     cropping = true
                     coroutineScope.launch {
-                        val croppedPath = ImageUtils.cropAndSaveAvatar(
-                            context,
-                            Uri.parse(finalAvatarPath),
-                            avatarScale,
-                            avatarOffsetX,
-                            avatarOffsetY,
-                            avatarPreviewSizePx,
-                        )
+                        val croppedAvatar = if (needAvatarCrop && finalAvatarPath != null) {
+                            ImageUtils.cropAndSaveAvatar(
+                                context,
+                                Uri.parse(finalAvatarPath),
+                                avatarScale,
+                                avatarOffsetX,
+                                avatarOffsetY,
+                                avatarPreviewSizePx,
+                            )
+                        } else null
+                        val croppedBg = if (needBgCrop && finalBgPath != null) {
+                            bgCropping = true
+                            ImageUtils.cropAndSaveBackground(
+                                context,
+                                Uri.parse(finalBgPath),
+                                bgScale,
+                                bgOffsetX,
+                                bgOffsetY,
+                                bgPreviewSizeWPx,
+                                bgPreviewSizeHPx,
+                            ).also { bgCropping = false }
+                        } else null
                         cropping = false
-                        onSave(editName, editRegion, editBio, editAvatar, backgroundImagePath, editGender, editBirthday, editBirthdayPublic, editFavoriteRock.trim(), editHighlightColor, croppedPath ?: finalAvatarPath)
+                        onSave(
+                            editName, editRegion, editBio, editAvatar,
+                            croppedBg ?: finalBgPath,
+                            editGender, editBirthday, editBirthdayPublic,
+                            editFavoriteRock.trim(), editHighlightColor,
+                            croppedAvatar ?: finalAvatarPath,
+                        )
                     }
                 } else {
-                    onSave(editName, editRegion, editBio, editAvatar, backgroundImagePath, editGender, editBirthday, editBirthdayPublic, editFavoriteRock.trim(), editHighlightColor, editAvatarImagePath)
+                    onSave(
+                        editName, editRegion, editBio, editAvatar,
+                        finalBgPath,
+                        editGender, editBirthday, editBirthdayPublic,
+                        editFavoriteRock.trim(), editHighlightColor,
+                        finalAvatarPath,
+                    )
                 }
             },
             modifier = Modifier.fillMaxWidth(),
-            enabled = nameError == null && editName.trim().isNotBlank() && !nameChecking && !avatarModerating && !cropping,
+            enabled = nameError == null && editName.trim().isNotBlank() && !nameChecking && !avatarModerating && !cropping && !bgCropping,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Citrine,
                 contentColor = Ink,

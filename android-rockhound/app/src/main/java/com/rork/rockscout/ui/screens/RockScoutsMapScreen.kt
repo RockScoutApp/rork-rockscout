@@ -148,6 +148,8 @@ fun RockScoutsMapScreen(navController: NavController) {
     var selectedSharedPing by remember { mutableStateOf<SocialRepository.SharedPingRow?>(null) }
     var showRemovePingConfirm by remember { mutableStateOf(false) }
     var showColorPicker by remember { mutableStateOf(false) }
+    var mapCenterLat by remember { mutableStateOf(current.first) }
+    var mapCenterLng by remember { mutableStateOf(current.second) }
 
     // Safety banner persistence: load dismissed state on entry, clear on dispose
     // so the banner reappears next time the user opens the screen.
@@ -165,6 +167,20 @@ fun RockScoutsMapScreen(navController: NavController) {
                 ?.toLongOrNull()?.let { Color(it.toULong()) }
                 ?: Citrine
         )
+    }
+
+    // Live map-center coordinate tracking — polls the map view's center
+    // every 300ms so the coordinate chip updates as the user drags the map.
+    LaunchedEffect(mapView) {
+        while (true) {
+            val mv = mapView
+            if (mv != null) {
+                val c = mv.mapCenter
+                mapCenterLat = c.latitude
+                mapCenterLng = c.longitude
+            }
+            kotlinx.coroutines.delay(300)
+        }
     }
 
     BackHandler(enabled = showSafetyNote) { showSafetyNote = false }
@@ -233,6 +249,9 @@ fun RockScoutsMapScreen(navController: NavController) {
         }
     }
 
+    // Resolve the user's own ping from the pings list.
+    val myPing = pings.firstOrNull { it.user_id == auth.currentUserId }
+
     // Center the map on the user's existing ping location, or their GPS
     // location if no ping is set yet. This runs once after the map is ready.
     LaunchedEffect(mapView, myPing) {
@@ -287,8 +306,6 @@ fun RockScoutsMapScreen(navController: NavController) {
         return
     }
 
-    val myPing = pings.firstOrNull { it.user_id == auth.currentUserId }
-
     Box(modifier = Modifier.fillMaxSize()) {
         // Map
         Box(modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(20.dp))) {
@@ -336,6 +353,22 @@ fun RockScoutsMapScreen(navController: NavController) {
                     .clip(CircleShape)
                     .glowingBorder(1.5.dp, Success.copy(alpha = 0.6f), CircleShape),
             )
+            // Live coordinate chip — floats below the crosshair, updates as map pans
+            Box(
+                modifier = Modifier
+                    .offset(y = 44.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xDD1C1A14))
+                    .glowingBorder(1.dp, Success.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
+            ) {
+                Text(
+                    "%.5f, %.5f".format(mapCenterLat, mapCenterLng),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Success,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
         }
 
         // Top bar
@@ -551,13 +584,25 @@ fun RockScoutsMapScreen(navController: NavController) {
                         )
                     }
                 } else {
-                    Text(
-                        "Drag the map to position your pin, then tap Set ping.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = DarkTextHigh,
-                        fontWeight = FontWeight.SemiBold,
-                        textAlign = TextAlign.Center,
-                    )
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            "Drag the map to position your pin, then tap Set ping.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = DarkTextHigh,
+                            fontWeight = FontWeight.SemiBold,
+                            textAlign = TextAlign.Center,
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Lat: %.5f  \u00B7  Lng: %.5f".format(mapCenterLat, mapCenterLng),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Aqua,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
                 }
                 // Download maps + Set/Drop ping row — always visible
                 Row(
