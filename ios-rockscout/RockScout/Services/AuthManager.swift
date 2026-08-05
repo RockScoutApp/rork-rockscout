@@ -34,6 +34,9 @@ final class AuthManager {
             let restored = try await SupabaseManager.shared.client.auth.session
             session = restored
             ErrorReporter.shared.setUserId(restored.user.id.uuidString)
+            await EntitlementManager.shared.login(userId: restored.user.id.uuidString)
+            await DeviceManager.shared.registerDevice(userId: restored.user.id)
+            await DeviceManager.shared.checkDeviceAccess(userId: restored.user.id)
         } catch {
             session = nil
             ErrorReporter.shared.setUserId(nil)
@@ -78,6 +81,11 @@ final class AuthManager {
             )
             session = response.session
             ErrorReporter.shared.setUserId(response.session?.user.id.uuidString)
+            if let userId = response.session?.user.id {
+                await EntitlementManager.shared.login(userId: userId.uuidString)
+                await DeviceManager.shared.registerDevice(userId: userId)
+                await DeviceManager.shared.checkDeviceAccess(userId: userId)
+            }
         } catch {
             self.error = userFriendlyError(error)
             ErrorReporter.shared.report(screen: "SignIn", error: error)
@@ -93,6 +101,8 @@ final class AuthManager {
         } catch {
             // Best-effort — clear local state regardless
         }
+        await EntitlementManager.shared.logout()
+        DeviceManager.shared.reset()
         session = nil
         ErrorReporter.shared.setUserId(nil)
     }

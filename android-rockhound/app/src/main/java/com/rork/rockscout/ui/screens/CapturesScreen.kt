@@ -99,7 +99,7 @@ fun CapturesScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
     val accessManager = IdentifyAccessManager.instance
     val purchaseManager = PurchaseManager.instance
-    val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val isPremium by purchaseManager.effectiveIsPremium.collectAsStateWithLifecycle()
     val featureLocked = remember(isPremium) {
         accessManager.isFeatureLocked(isPremium)
     }

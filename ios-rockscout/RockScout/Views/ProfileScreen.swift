@@ -18,6 +18,8 @@ struct ProfileScreen: View {
                 VStack(spacing: 20) {
                     profileHeader
 
+                    deviceLimitBanner
+
                     premiumStatusCard
 
                     settingsSection
@@ -69,7 +71,7 @@ struct ProfileScreen: View {
                     Text(auth.currentUserEmail ?? "Rockhound")
                         .font(.headline)
                         .foregroundStyle(.rsText)
-                    if entitlement.isPremium {
+                    if entitlement.effectiveIsPremium {
                         ProBadgeView()
                     }
                 }
@@ -86,15 +88,15 @@ struct ProfileScreen: View {
     private var premiumStatusCard: some View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
-                Image(systemName: entitlement.isPremium ? "crown.fill" : "crown")
+                Image(systemName: entitlement.effectiveIsPremium ? "crown.fill" : "crown")
                     .font(.title2)
                     .foregroundStyle(.rsAccent)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(entitlement.isPremium ? "Premium Member" : "Free Tier")
+                    Text(entitlement.effectiveIsPremium ? "Premium Member" : "Free Tier")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.rsText)
-                    Text(entitlement.isPremium
+                    Text(entitlement.effectiveIsPremium
                         ? "All features unlocked"
                         : "Upgrade for unlimited access"
                     )
@@ -104,7 +106,7 @@ struct ProfileScreen: View {
 
                 Spacer()
 
-                if !entitlement.isPremium {
+                if !entitlement.effectiveIsPremium {
                     Button("Upgrade") {
                         showPaywall = true
                     }
@@ -247,6 +249,50 @@ struct ProfileScreen: View {
     private func signOut() async {
         await entitlement.logout()
         await auth.signOut()
+    }
+
+    // MARK: - Device Limit Banner
+
+    @State private var showManageDevices: Bool = false
+
+    @ViewBuilder
+    private var deviceLimitBanner: some View {
+        if entitlement.isPremium && DeviceManager.shared.deviceOverLimit {
+            Button {
+                showManageDevices = true
+            } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.title2)
+                        .foregroundStyle(Color(red: 0.91, green: 0.64, blue: 0.24))
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("3-device limit reached")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.rsText)
+                        Text("Premium is paused on this device. Tap to manage your devices.")
+                            .font(.caption)
+                            .foregroundStyle(.rsTextMuted)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.rsTextMuted)
+                }
+                .padding(14)
+                .background(Color(red: 0.91, green: 0.64, blue: 0.24).opacity(0.12), in: .rect(cornerRadius: 14))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(Color(red: 0.91, green: 0.64, blue: 0.24).opacity(0.35), lineWidth: 1)
+                }
+            }
+            .buttonStyle(.plain)
+            .navigationDestination(isPresented: $showManageDevices) {
+                ManageDevicesView()
+            }
+        }
     }
 }
 

@@ -71,7 +71,7 @@ fun FavoriteSpotsScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
     val accessManager = IdentifyAccessManager.instance
     val purchaseManager = PurchaseManager.instance
-    val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val isPremium by purchaseManager.effectiveIsPremium.collectAsStateWithLifecycle()
     val isPayingUser = isPremium
     val wishlistIds by repo.wishlist.collectAsStateWithLifecycle()
     var shareToProfileLocId by remember { mutableStateOf<String?>(null) }

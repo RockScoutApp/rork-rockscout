@@ -359,7 +359,7 @@ const PREMIUM_ONLY_ROUTES = new Set([
 
 export default function Home() {
   const navigate = useNavigate();
-  const { isFree, isPremium } = useTier();
+  const { isFree, isPremium, deviceOverLimit, rawIsPremium } = useTier();
   const { user } = useAuth();
   const [versionTaps, setVersionTaps] = useState(0);
   const versionTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -473,6 +473,20 @@ export default function Home() {
           <User className="h-5 w-5" style={{ color: `hsl(${AQUA_HEX})` }} />
         </button>
       </div>
+
+      {/* ── Device limit banner ── */}
+      {rawIsPremium && deviceOverLimit && (
+        <SculptedCard accent="citrine" interactive className="p-4" onClick={() => navigate("/app/manage-devices")}>
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-amber-500" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-foreground">3-device limit reached</p>
+              <p className="text-xs text-muted-foreground">Premium is paused on this device. Tap to manage your devices.</p>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </div>
+        </SculptedCard>
+      )}
 
       {/* ── Identify hero card (premium only) ── */}
       {isPremium && (

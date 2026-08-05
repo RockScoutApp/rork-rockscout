@@ -122,7 +122,7 @@ fun ScanScreen(navController: NavController) {
     // subscribe/donate prompt instead of the scan list.
     val accessManager = com.rork.rockscout.data.IdentifyAccessManager.instance
     val purchaseManager = com.rork.rockscout.data.PurchaseManager.instance
-    val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val isPremium by purchaseManager.effectiveIsPremium.collectAsStateWithLifecycle()
     val trialExpired by accessManager.trialExpired.collectAsStateWithLifecycle()
     val hasLocationUnlock by accessManager.hasLocationUnlock.collectAsStateWithLifecycle()
     val clubLocked = remember(isPremium, trialExpired, hasLocationUnlock) {

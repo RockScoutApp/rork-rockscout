@@ -12,6 +12,10 @@ final class EntitlementManager: NSObject {
     // MARK: - State
 
     private(set) var isPremium: Bool = false
+
+    /// Effective premium — false when device is over the 3-device limit.
+    /// Use this for feature gating. Raw `isPremium` stays for billing/badges.
+    var effectiveIsPremium: Bool { isPremium && !DeviceManager.shared.deviceOverLimit }
     private(set) var offerings: Offerings?
     private(set) var currentOffering: Offering?
     private(set) var isLoading: Bool = false

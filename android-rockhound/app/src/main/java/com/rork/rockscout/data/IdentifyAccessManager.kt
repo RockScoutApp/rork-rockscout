@@ -85,6 +85,19 @@ class IdentifyAccessManager private constructor() {
      */
     private val _premiumActive = MutableStateFlow(false)
 
+    /** Device over-limit flag — pushed by DeviceManager when the check completes. */
+    private val _deviceOverLimit = MutableStateFlow(false)
+
+    /**
+     * Push the device over-limit state into the access manager.
+     * When true, premium features are blocked even if the subscription is active.
+     */
+    fun setDeviceOverLimit(overLimit: Boolean) {
+        if (_deviceOverLimit.value == overLimit) return
+        _deviceOverLimit.value = overLimit
+        recomputeState()
+    }
+
     private lateinit var prefs: SharedPreferences
 
     /**
@@ -260,6 +273,8 @@ class IdentifyAccessManager private constructor() {
      * left untouched so the real trial state returns if the subscription lapses.
      */
     private fun applyPremiumOverride() {
+        // When device is over limit, treat premium user as free with expired trial.
+        if (_deviceOverLimit.value) return
         if (!_premiumActive.value) return
         _trialActive.value = false
         _trialExpired.value = false
@@ -272,7 +287,7 @@ class IdentifyAccessManager private constructor() {
      * Premium users always get [IdentifyAccess.UNLIMITED].
      */
     fun accessState(isPremium: Boolean): IdentifyAccess {
-        if (isPremium) return IdentifyAccess.UNLIMITED
+        if (isPremium && !_deviceOverLimit.value) return IdentifyAccess.UNLIMITED
         if (_trialActive.value && _trialUsesRemaining.value > 0) {
             return IdentifyAccess.TRIAL_AVAILABLE
         }
@@ -347,7 +362,7 @@ class IdentifyAccessManager private constructor() {
      * Premium users are never locked.
      */
     fun isLocationLocked(isPremium: Boolean): Boolean {
-        if (isPremium) return false
+        if (isPremium && !_deviceOverLimit.value) return false
         if (_hasLocationUnlock.value) return false
         return _trialExpired.value
     }
@@ -367,7 +382,7 @@ class IdentifyAccessManager private constructor() {
      * consistent across the app.
      */
     fun isFeatureLocked(isPremium: Boolean): Boolean {
-        if (isPremium) return false
+        if (isPremium && !_deviceOverLimit.value) return false
         if (_hasLocationUnlock.value) return false
         return _trialExpired.value
     }
@@ -381,7 +396,7 @@ class IdentifyAccessManager private constructor() {
      * unlocks, then lock for non-premium users. Premium is never locked.
      */
     fun isSocialLocked(isPremium: Boolean): Boolean {
-        if (isPremium) return false
+        if (isPremium && !_deviceOverLimit.value) return false
         if (_hasLocationUnlock.value) return false
         return _trialExpired.value
     }

@@ -123,7 +123,7 @@ fun CollectionScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
     val accessManager = IdentifyAccessManager.instance
     val purchaseManager = PurchaseManager.instance
-    val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val isPremium by purchaseManager.effectiveIsPremium.collectAsStateWithLifecycle()
     var shareToProfileCapture by remember { mutableStateOf<com.rork.rockscout.data.CapturedPhoto?>(null) }
     var shareToProfileSpec by remember { mutableStateOf<com.rork.rockscout.data.Specimen?>(null) }
     var searchQuery by remember { mutableStateOf("") }

@@ -94,7 +94,7 @@ fun MyTradesScreen(navController: NavController) {
     // ─── Premium gating: My Trades is a social feature ───
     val accessManager = com.rork.rockscout.data.IdentifyAccessManager.instance
     val purchaseManager = com.rork.rockscout.data.PurchaseManager.instance
-    val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val isPremium by purchaseManager.effectiveIsPremium.collectAsStateWithLifecycle()
     val clubLocked = remember(isPremium) { accessManager.isSocialLocked(isPremium) }
     if (clubLocked) {
         com.rork.rockscout.ui.components.ClubLockedState(

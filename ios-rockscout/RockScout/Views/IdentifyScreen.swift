@@ -160,7 +160,7 @@ struct IdentifyScreen: View {
                     .font(.headline)
                     .foregroundStyle(.rsText)
 
-                Text(entitlement.isPremium ? "Using premium AI models" : "Analyzing your specimen")
+                Text(entitlement.effectiveIsPremium ? "Using premium AI models" : "Analyzing your specimen")
                     .font(.caption)
                     .foregroundStyle(.rsTextMuted)
             }
@@ -250,7 +250,7 @@ struct IdentifyScreen: View {
         do {
             let response = try await IdentifyService.identify(
                 imageData: imageData,
-                isPremium: entitlement.isPremium
+                isPremium: entitlement.effectiveIsPremium
             )
             matches = response.matches
             summary = response.summary

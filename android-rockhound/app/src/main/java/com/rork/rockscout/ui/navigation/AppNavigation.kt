@@ -98,6 +98,7 @@ import com.rork.rockscout.ui.screens.BlmStateDetailScreen
 import com.rork.rockscout.ui.screens.BlmTrailheadDetailScreen
 import com.rork.rockscout.ui.screens.BlmCampgroundDetailScreen
 import com.rork.rockscout.ui.screens.SocialSettingsScreen
+import com.rork.rockscout.ui.screens.ManageDevicesScreen
 import com.rork.rockscout.ui.screens.NotificationsScreen
 import com.rork.rockscout.ui.screens.HowToUseScreen
 import com.rork.rockscout.ui.screens.ThankYouScreen
@@ -196,6 +197,7 @@ object Routes {
     const val MY_TRADES = "my_trades"
     const val TRADING_FLOOR = "trading_floor"
     const val SOCIAL_SETTINGS = "social_settings"
+    const val MANAGE_DEVICES = "manage_devices"
     const val NOTIFICATIONS = "notifications"
     const val HOW_TO_USE = "how_to_use"
     const val THANK_YOU = "thank_you/{tokens}/{days}"
@@ -675,6 +677,7 @@ fun AppNavigation(
         composable(Routes.MY_TRADES) { MyTradesScreen(navController) }
         composable(Routes.TRADING_FLOOR) { TradingFloorScreen(navController) }
         composable(Routes.SOCIAL_SETTINGS) { SocialSettingsScreen(navController) }
+        composable(Routes.MANAGE_DEVICES) { ManageDevicesScreen(navController) }
         composable(Routes.NOTIFICATIONS) { NotificationsScreen(navController) }
         composable(Routes.HOW_TO_USE) { HowToUseScreen(navController) }
         composable(

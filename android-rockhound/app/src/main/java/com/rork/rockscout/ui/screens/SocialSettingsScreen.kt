@@ -43,6 +43,9 @@ import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudUpload
 import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.ChevronRight
+import com.rork.rockscout.ui.theme.DarkTextHigh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -87,6 +90,7 @@ import com.rork.rockscout.data.WorkScheduler
 import com.rork.rockscout.data.SyncQueueManager
 import com.rork.rockscout.data.SeedData
 import com.rork.rockscout.data.UpdateManager
+import com.rork.rockscout.data.DeviceManager
 import com.rork.rockscout.data.ApkInstaller
 import com.rork.rockscout.data.PlayUpdateManager
 import com.rork.rockscout.ui.components.BulkDownloadCard
@@ -124,7 +128,7 @@ fun SocialSettingsScreen(
     val repo = AppRepository.instance
     val profile by repo.profile.collectAsStateWithLifecycle()
     val purchaseManager = PurchaseManager.instance
-    val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val isPremium by purchaseManager.effectiveIsPremium.collectAsStateWithLifecycle()
     val auth = AuthRepository.instance
     val sessionStatus by auth.sessionStatus.collectAsStateWithLifecycle()
     val isSignedIn = sessionStatus is com.rork.rockscout.data.SessionStatus.Authenticated
@@ -1108,6 +1112,53 @@ fun SocialSettingsScreen(
                         }
                     },
                 )
+            }
+
+            // ── Manage Devices ──
+            Spacer(Modifier.height(8.dp))
+            SectionHeader("Devices")
+            val deviceOverLimit by DeviceManager.deviceOverLimit.collectAsStateWithLifecycle()
+            val devices by DeviceManager.devices.collectAsStateWithLifecycle()
+            val rawIsPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+            if (isSignedIn && rawIsPremium) {
+                DarkCard(modifier = Modifier.fillMaxWidth(), accent = if (deviceOverLimit) Danger else Aqua) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { navController.navigate(Routes.MANAGE_DEVICES) }
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Icon(
+                            Icons.Filled.Devices,
+                            contentDescription = null,
+                            tint = if (deviceOverLimit) Danger else Aqua,
+                            modifier = Modifier.size(22.dp),
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                "Manage Devices",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = DarkTextHigh,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Spacer(Modifier.height(2.dp))
+                            Text(
+                                if (deviceOverLimit) "Over limit — premium paused"
+                                else "${devices.size} of 3 devices used",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (deviceOverLimit) Danger else DarkTextMid,
+                            )
+                        }
+                        Icon(
+                            Icons.Filled.ChevronRight,
+                            contentDescription = null,
+                            tint = DarkTextMid,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                }
             }
 
             // ── Update App ──

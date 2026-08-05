@@ -210,7 +210,7 @@ fun IdentifyScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
 
     val purchaseManager = PurchaseManager.instance
-    val isPremium by purchaseManager.isPremium.collectAsState()
+    val isPremium by purchaseManager.effectiveIsPremium.collectAsState()
     val isPurchasing by purchaseManager.isPurchasing.collectAsState()
     val accessManager = IdentifyAccessManager.instance
     val trialUsesRemaining by accessManager.trialUsesRemaining.collectAsState()

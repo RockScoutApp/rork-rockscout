@@ -28,6 +28,9 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 
 /**
@@ -53,6 +56,16 @@ class PurchaseManager {
 
     /** True if the user has an active Premium subscription (includes legacy Pro). */
     val hasPaidAccess: StateFlow<Boolean> = _isPremium.asStateFlow()
+
+    /**
+     * Effective premium state — false when the device is over the 3-device limit.
+     * This is what UI screens should use for feature gating. Raw [isPremium]
+     * stays unchanged for billing, badges, and referral logic.
+     */
+    val effectiveIsPremium: StateFlow<Boolean> =
+        _isPremium.combine(DeviceManager.deviceOverLimit) { premium, overLimit ->
+            premium && !overLimit
+        }.stateIn(scope, SharingStarted.Eagerly, false)
 
     private val _currentOffering = MutableStateFlow<Offering?>(null)
     val currentOffering: StateFlow<Offering?> = _currentOffering.asStateFlow()

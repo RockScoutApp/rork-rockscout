@@ -4,9 +4,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth, SCREENSHOT_MODE } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { syncEntitlement } from "@/lib/entitlement";
+import { getDeviceFingerprint } from "@/lib/deviceFingerprint";
 
 interface ProfileRow {
   is_pro: boolean;
+}
+
+interface DeviceRow {
+  id: string;
+  device_fingerprint: string;
+  installed_at: string;
 }
 
 interface TierState {
@@ -14,6 +21,9 @@ interface TierState {
   isPremium: boolean;
   isFree: boolean;
   isLoading: boolean;
+  deviceOverLimit: boolean;
+  /** Raw premium status from profile — true even when device is over limit. */
+  rawIsPremium: boolean;
 }
 
 /**
@@ -26,7 +36,11 @@ const DEFAULT_TIER_STATE: TierState = {
   isPremium: false,
   isFree: true,
   isLoading: false,
+  deviceOverLimit: false,
+  rawIsPremium: false,
 };
+
+const MAX_DEVICES = 3;
 
 function useTierState(): TierState {
   const { user, session, isLoading: authLoading } = useAuth();
@@ -50,6 +64,29 @@ function useTierState(): TierState {
     retry: 3,
   });
 
+  const rawIsPremium = SCREENSHOT_MODE ? true : (profile?.is_pro ?? false);
+
+  // Only check device limit when the user is actually premium.
+  const { data: deviceOverLimit = false } = useQuery<boolean>({
+    queryKey: ["device-limit", user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      const { data, error } = await supabase
+        .from("rockscout_installed_devices")
+        .select("id,device_fingerprint,installed_at")
+        .eq("user_id", user.id)
+        .order("installed_at", { ascending: true });
+      if (error) throw error;
+      const devices = (data as DeviceRow[]) ?? [];
+      const myFp = getDeviceFingerprint();
+      const myIndex = devices.findIndex((d) => d.device_fingerprint === myFp);
+      return myIndex >= MAX_DEVICES;
+    },
+    enabled: !SCREENSHOT_MODE && !!user && !!session && rawIsPremium,
+    staleTime: 60_000,
+    retry: 2,
+  });
+
   // If the profile says the user is not Premium, try syncing the RevenueCat
   // entitlement once. This catches users who bought Premium on Android/iOS and
   // then opened the web PWA without a fresh sign-in.
@@ -65,7 +102,8 @@ function useTierState(): TierState {
     }
   }, [user, session, profile?.is_pro, queryClient]);
 
-  const isPremium = SCREENSHOT_MODE ? true : (profile?.is_pro ?? false);
+  // Effective premium — false when device is over the 3-device limit.
+  const isPremium = SCREENSHOT_MODE ? true : rawIsPremium && !deviceOverLimit;
   const isLoading = SCREENSHOT_MODE
     ? false
     : authLoading || (!!user && profileLoading);
@@ -75,6 +113,8 @@ function useTierState(): TierState {
     isPremium,
     isFree: !isPremium,
     isLoading,
+    deviceOverLimit,
+    rawIsPremium,
   };
 }
 

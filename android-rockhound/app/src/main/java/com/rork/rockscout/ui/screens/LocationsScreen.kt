@@ -118,7 +118,7 @@ fun LocationsScreen(navController: NavController) {
     val locationRefresh by repo.locationRefreshTrigger.collectAsStateWithLifecycle()
     val wishlistIds by repo.wishlist.collectAsStateWithLifecycle()
     val purchaseManager = PurchaseManager.instance
-    val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val isPremium by purchaseManager.effectiveIsPremium.collectAsStateWithLifecycle()
     val isPayingUser = isPremium
     var filter by remember { mutableStateOf<LocationType?>(null) }
     var viewMode by remember { mutableStateOf(ViewMode.LIST) }

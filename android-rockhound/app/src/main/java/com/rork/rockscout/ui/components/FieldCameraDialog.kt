@@ -121,7 +121,7 @@ fun FieldCameraDialog(
     val scope = rememberCoroutineScope()
     val repo = AppRepository.instance
     val purchaseManager = PurchaseManager.instance
-    val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val isPremium by purchaseManager.effectiveIsPremium.collectAsStateWithLifecycle()
     val accessManager = IdentifyAccessManager.instance
     val trialExpired by accessManager.trialExpired.collectAsStateWithLifecycle()
     val hasLocationUnlock by accessManager.hasLocationUnlock.collectAsStateWithLifecycle()

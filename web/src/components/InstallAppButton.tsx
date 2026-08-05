@@ -17,7 +17,7 @@ interface DeviceRow {
   device_fingerprint: string;
 }
 
-const MAX_DEVICES = 2;
+const MAX_DEVICES = 3;
 
 interface InstallGuide {
   heading: string;
@@ -133,7 +133,7 @@ export const InstallAppButton = ({
         await supabase
           .from("rockscout_installed_devices")
           .upsert(
-            { user_id: user.id, device_fingerprint: fp, device_label: label },
+            { user_id: user.id, device_fingerprint: fp, device_label: label, device_platform: "web", last_seen_at: new Date().toISOString() },
             { onConflict: "user_id,device_fingerprint" },
           );
         queryClient.invalidateQueries({ queryKey: ["device-count", user.id] });

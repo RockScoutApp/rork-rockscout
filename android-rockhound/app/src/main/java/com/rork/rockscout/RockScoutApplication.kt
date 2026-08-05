@@ -30,6 +30,7 @@ import com.rork.rockscout.data.NotificationHelper
 import com.rork.rockscout.data.PersistenceManager
 import com.rork.rockscout.data.PurchaseManager
 import com.rork.rockscout.data.AuthRepository
+import com.rork.rockscout.data.DeviceManager
 import com.rork.rockscout.data.CustomDigLocationStore
 import com.rork.rockscout.data.DigSiteDiscoveryStore
 import com.rork.rockscout.data.UserTimezoneProvider
@@ -316,6 +317,10 @@ class RockScoutApplication : Application() {
 
         safeInit("referral-repository") {
             ReferralRepository.initialize(this)
+        }
+
+        safeInit("device-manager") {
+            DeviceManager.initialize(this)
         }
 
         safeInit("auth-repository") {

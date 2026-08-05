@@ -653,6 +653,7 @@ class AuthRepository private constructor() {
                 Session(user = UserInfo(id = userId, email = userEmail))
             )
             scope.launch { PurchaseManager.instance.linkRevenueCatUser(userId) }
+            registerAndCheckDevice(userId)
             SupabaseDataSync.syncInBackground()
 
             // Cloud-restore settings on fresh install.
@@ -675,6 +676,7 @@ class AuthRepository private constructor() {
                 SupabaseAuthClient.signOut(accessToken)
             }
             PurchaseManager.instance.logoutRevenueCatUser()
+            DeviceManager.reset()
             clearSupabaseTokens()
             LocalDataStore.setString(LocalDataStore.KEY_AUTH_EMAIL, "")
             LocalDataStore.setString(LocalDataStore.KEY_AUTH_USER_ID, "")
@@ -711,6 +713,7 @@ class AuthRepository private constructor() {
             PersistenceManager.clearAll()
             LocalDataStore.clearAll()
             PurchaseManager.instance.logoutRevenueCatUser()
+            DeviceManager.reset()
             clearSupabaseTokens()
             _sessionStatus.value = SessionStatus.NotAuthenticated()
             Unit
@@ -897,6 +900,15 @@ class AuthRepository private constructor() {
                     }
                 }
                 .onFailure { Log.w("AuthRepository", "Settings restore failed: ${it.message}") }
+        }
+    }
+
+    /** Register this device and check the 3-device limit after sign-in. */
+    private fun registerAndCheckDevice(userId: String) {
+        if (userId.isBlank()) return
+        scope.launch {
+            DeviceManager.registerDevice(userId)
+            DeviceManager.checkDeviceAccess(userId)
         }
     }
 

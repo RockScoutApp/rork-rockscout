@@ -227,6 +227,7 @@ import com.rork.rockscout.data.UpdateManager
 import com.rork.rockscout.data.ApkInstaller
 import com.rork.rockscout.data.PlayUpdateManager
 import com.rork.rockscout.ui.components.TokenBank
+import com.rork.rockscout.data.DeviceManager
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.navigation.safePopBackStack
 import com.rork.rockscout.ui.theme.Amethyst
@@ -324,7 +325,9 @@ fun HomeScreen(navController: NavController) {
 
     val purchaseManager = PurchaseManager.instance
     val isPurchasing by purchaseManager.isPurchasing.collectAsState()
-    val isPremium by purchaseManager.isPremium.collectAsState()
+    val isPremium by purchaseManager.effectiveIsPremium.collectAsState()
+    val rawIsPremium by purchaseManager.isPremium.collectAsState()
+    val deviceOverLimit by DeviceManager.deviceOverLimit.collectAsState()
     val auth = AuthRepository.instance
     val sessionStatus by auth.sessionStatus.collectAsStateWithLifecycle()
     val isSignedIn = sessionStatus is com.rork.rockscout.data.SessionStatus.Authenticated
@@ -612,6 +615,15 @@ fun HomeScreen(navController: NavController) {
                         kotlinx.coroutines.delay(6000)
                         auth.consumeJustVerifiedFromLink()
                     }
+                }
+            }
+
+            // Device limit banner — shown when premium is paused due to 3-device limit
+            if (rawIsPremium && deviceOverLimit) {
+                item {
+                    DeviceLimitBanner(
+                        onManageDevices = { navController.navigate(Routes.MANAGE_DEVICES) },
+                    )
                 }
             }
 
@@ -5525,6 +5537,56 @@ private fun TrialExpiredBanner(
                     shape = RoundedCornerShape(12.dp),
                 )
             }
+        }
+    }
+}
+
+/**
+ * Banner shown when the user's device is over the 3-device Premium limit.
+ * Premium features are paused — tapping navigates to Manage Devices.
+ */
+@Composable
+private fun DeviceLimitBanner(
+    onManageDevices: () -> Unit,
+) {
+    DarkCard(modifier = Modifier.fillMaxWidth(), accent = Color(0xFFE8A33D)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onManageDevices)
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Icon(
+                Icons.Filled.Warning,
+                contentDescription = null,
+                tint = Color(0xFFE8A33D),
+                modifier = Modifier.size(22.dp),
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "3-device limit reached",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = DarkTextHigh,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                )
+                Spacer(Modifier.height(2.dp))
+                Text(
+                    "Premium is paused on this device. Tap to manage your devices.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = DarkTextMid,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Icon(
+                Icons.Filled.ChevronRight,
+                contentDescription = null,
+                tint = DarkTextMid,
+                modifier = Modifier.size(20.dp),
+            )
         }
     }
 }

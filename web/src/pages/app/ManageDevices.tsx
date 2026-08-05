@@ -20,7 +20,7 @@ interface DeviceRow {
   last_seen_at: string;
 }
 
-const MAX_DEVICES = 2;
+const MAX_DEVICES = 3;
 
 export default function ManageDevices() {
   const { user } = useAuth();
@@ -69,6 +69,7 @@ export default function ManageDevices() {
             user_id: user.id,
             device_fingerprint: fp,
             device_label: label,
+            device_platform: "web",
             user_agent: navigator.userAgent,
             last_seen_at: new Date().toISOString(),
           },

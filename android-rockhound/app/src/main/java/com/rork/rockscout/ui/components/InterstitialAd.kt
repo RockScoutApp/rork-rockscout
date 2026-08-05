@@ -96,7 +96,7 @@ fun InterstitialAdTrigger(
     onGoPremium: () -> Unit,
 ) {
     val purchaseManager = PurchaseManager.instance
-    val isPremium by purchaseManager.isPremium.collectAsState()
+    val isPremium by purchaseManager.effectiveIsPremium.collectAsState()
     val accessManager = IdentifyAccessManager.instance
     val hasAdFreeUnlock by accessManager.hasAdFreeUnlock.collectAsState()
     val analyticsState by AdAnalyticsTracker.state.collectAsState()

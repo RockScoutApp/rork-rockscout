@@ -91,14 +91,14 @@ struct HomeScreen: View {
                     Text("Welcome back, rockhound")
                         .font(.title3.weight(.bold))
                         .foregroundStyle(.rsText)
-                    Text(entitlement.isPremium ? "Premium Member" : "Free Tier")
+                    Text(entitlement.effectiveIsPremium ? "Premium Member" : "Free Tier")
                         .font(.subheadline)
-                        .foregroundStyle(entitlement.isPremium ? .rsAccent : .rsTextMuted)
+                        .foregroundStyle(entitlement.effectiveIsPremium ? .rsAccent : .rsTextMuted)
                 }
 
                 Spacer()
 
-                if entitlement.isPremium {
+                if entitlement.effectiveIsPremium {
                     Image(systemName: "checkmark.seal.fill")
                         .foregroundStyle(.rsAccent)
                         .font(.title3)

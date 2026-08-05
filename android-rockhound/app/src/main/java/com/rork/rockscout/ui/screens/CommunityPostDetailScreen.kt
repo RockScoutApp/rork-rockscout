@@ -100,7 +100,7 @@ fun CommunityPostDetailScreen(
     val social = SocialRepository.instance
     val accessManager = IdentifyAccessManager.instance
     val purchaseManager = PurchaseManager.instance
-    val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val isPremium by purchaseManager.effectiveIsPremium.collectAsStateWithLifecycle()
     val socialLocked = remember(isPremium) { accessManager.isSocialLocked(isPremium) }
     if (socialLocked) {
         com.rork.rockscout.ui.components.ClubLockedState(

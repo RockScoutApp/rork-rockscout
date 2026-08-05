@@ -99,7 +99,7 @@ fun TokenInfoScreen(navController: NavController) {
     val trialExpired by accessManager.trialExpired.collectAsState()
     val hasLocationUnlock by accessManager.hasLocationUnlock.collectAsState()
     val hasAdFreeUnlock by accessManager.hasAdFreeUnlock.collectAsState()
-    val isPremium by purchaseManager.isPremium.collectAsState()
+    val isPremium by purchaseManager.effectiveIsPremium.collectAsState()
     val isPurchasing by purchaseManager.isPurchasing.collectAsState()
 
     var celebrationLevel by remember { mutableStateOf<CelebrationLevel?>(null) }
