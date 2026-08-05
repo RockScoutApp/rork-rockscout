@@ -297,10 +297,10 @@ object ImageUtils {
     ): Bitmap {
         val bmpW = bitmap.width
         val bmpH = bitmap.height
-        val cropScale = maxOf(boxSizePx.toFloat() / bmpW, boxSizePx.toFloat() / bmpH)
+        val cropScale = minOf(boxSizePx.toFloat() / bmpW, boxSizePx.toFloat() / bmpH)
         val imgLeft = (boxSizePx - bmpW * cropScale) / 2f
         val imgTop = (boxSizePx - bmpH * cropScale) / 2f
-        val us = userScale.coerceAtLeast(1f)
+        val us = userScale
         val visSize = boxSizePx / (cropScale * us)
         val cx = (boxSizePx / 2f - imgLeft - offsetX / us) / cropScale
         val cy = (boxSizePx / 2f - imgTop - offsetY / us) / cropScale
@@ -375,10 +375,10 @@ object ImageUtils {
     ): Bitmap {
         val bmpW = bitmap.width
         val bmpH = bitmap.height
-        val cropScale = maxOf(boxWPx.toFloat() / bmpW, boxHPx.toFloat() / bmpH)
+        val cropScale = minOf(boxWPx.toFloat() / bmpW, boxHPx.toFloat() / bmpH)
         val imgLeft = (boxWPx - bmpW * cropScale) / 2f
         val imgTop = (boxHPx - bmpH * cropScale) / 2f
-        val us = userScale.coerceAtLeast(1f)
+        val us = userScale
         val visW = boxWPx / (cropScale * us)
         val visH = boxHPx / (cropScale * us)
         val cx = (boxWPx / 2f - imgLeft - offsetX / us) / cropScale

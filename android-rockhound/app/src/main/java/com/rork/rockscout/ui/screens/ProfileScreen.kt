@@ -2126,8 +2126,8 @@ private fun EditProfileSheet(
                     .pointerInput(editAvatarImagePath) {
                         detectTransformGestures { _, pan, zoom, _ ->
                             isInteracting = true
-                            avatarScale = (avatarScale * zoom).coerceIn(1f, 5f)
-                            val maxOff = previewSizePx * (avatarScale - 1f)
+                            avatarScale = (avatarScale * zoom).coerceIn(0.3f, 5f)
+                            val maxOff = previewSizePx * (avatarScale - 1f).coerceAtLeast(0f) / 2f
                             avatarOffsetX = (avatarOffsetX + pan.x).coerceIn(-maxOff, maxOff)
                             avatarOffsetY = (avatarOffsetY + pan.y).coerceIn(-maxOff, maxOff)
                         }
@@ -2145,7 +2145,7 @@ private fun EditProfileSheet(
                             translationX = avatarOffsetX,
                             translationY = avatarOffsetY,
                         ),
-                    contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.Fit,
                 )
                 // Overlay: 75dp square crop frame with grid + corner brackets
                 Box(
@@ -2448,8 +2448,8 @@ private fun EditProfileSheet(
                         .pointerInput(editAvatarImagePath) {
                             detectTransformGestures { _, pan, zoom, _ ->
                                 isInteracting = true
-                                avatarScale = (avatarScale * zoom).coerceIn(1f, 8f)
-                                val maxOff = screenHPx * (avatarScale - 1f)
+                                avatarScale = (avatarScale * zoom).coerceIn(0.3f, 8f)
+                                val maxOff = screenHPx * (avatarScale - 1f).coerceAtLeast(0f) / 2f
                                 avatarOffsetX = (avatarOffsetX + pan.x).coerceIn(-maxOff, maxOff)
                                 avatarOffsetY = (avatarOffsetY + pan.y).coerceIn(-maxOff, maxOff)
                             }
@@ -2467,7 +2467,7 @@ private fun EditProfileSheet(
                                 translationX = avatarOffsetX,
                                 translationY = avatarOffsetY,
                             ),
-                        contentScale = ContentScale.Crop,
+                        contentScale = ContentScale.Fit,
                     )
                 }
 
