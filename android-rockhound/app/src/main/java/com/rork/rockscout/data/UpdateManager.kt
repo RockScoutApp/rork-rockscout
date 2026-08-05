@@ -36,6 +36,11 @@ object UpdateManager {
     private const val DEFAULT_PLAY_STORE_URL =
         "https://play.google.com/store/apps/details?id=com.rork.rockscout"
 
+    /** SharedPreferences key for the last version code we notified about.
+     *  Prevents spamming the user with update notifications on every onResume
+     *  and every 6-hour worker check. */
+    private const val PREF_LAST_NOTIFIED_VERSION = "last_notified_update_version"
+
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -74,12 +79,21 @@ object UpdateManager {
                             changelog = info.changelog.ifEmpty { "A new version is available — tap to update." },
                         )
                         _updateInfo.value = resolved
-                        NotificationHelper.showUpdateNotification(
-                            context = context,
-                            newVersionName = resolved.latestVersionName,
-                            storeUrl = resolved.storeUrl,
-                            changelog = resolved.changelog,
-                        )
+
+                        // Only post a notification once per version code so
+                        // repeated onResume checks and 6-hour worker runs
+                        // don't spam the user with identical notifications.
+                        val prefs = context.getSharedPreferences("rockscout_updates", Context.MODE_PRIVATE)
+                        val lastNotified = prefs.getInt(PREF_LAST_NOTIFIED_VERSION, -1)
+                        if (lastNotified != resolved.latestVersionCode) {
+                            NotificationHelper.showUpdateNotification(
+                                context = context,
+                                newVersionName = resolved.latestVersionName,
+                                storeUrl = resolved.storeUrl,
+                                changelog = resolved.changelog,
+                            )
+                            prefs.edit().putInt(PREF_LAST_NOTIFIED_VERSION, resolved.latestVersionCode).apply()
+                        }
                     } else {
                         Log.d(TAG, "App is up to date (installed=$installedVersionCode, latest=${info.latestVersionCode})")
                         _updateInfo.value = null
@@ -99,14 +113,17 @@ object UpdateManager {
     /**
      * Routes the user down the right update path for how they installed the app.
      *
-     * - **Installed from Google Play** → open the Play listing (the Play in-app
-     *   update flow is started separately from the Activity on resume, so by the
-     *   time this button is tapped the store page is the reliable action).
+     * - **Installed from Google Play** → start the Play in-app flexible update
+     *   flow (downloads in the background, prompts restart when done). Falls
+     *   back to opening the store listing if the Play flow can't start.
      * - **Sideloaded APK** → download the direct APK from [AppUpdateInfo.apkUrl]
      *   and install it over the existing app via [ApkInstaller], which validates
      *   the package and reports real failure reasons instead of the system's
      *   generic "App not installed" dialog.
      * - **No direct APK configured** → fall back to the store listing.
+     *
+     * This is called only when the user explicitly taps "Update Now" —
+     * it never auto-starts a download on its own.
      *
      * Returns true when an update flow was started.
      */
@@ -123,6 +140,10 @@ object UpdateManager {
         // Play installs must update through Play — sideloading over a Play
         // build fails on signature mismatch (Play re-signs with its own key).
         if (PlayUpdateManager.isPlayInstall(context)) {
+            // The Play flexible flow is started from the Activity because it
+            // needs an ActivityResultLauncher. We can't call it directly from
+            // here, so fall back to the store listing. The Activity's
+            // onResume already handles resuming interrupted Play updates.
             openStore(context)
             return true
         }

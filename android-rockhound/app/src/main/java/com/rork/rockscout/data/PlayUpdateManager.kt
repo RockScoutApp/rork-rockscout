@@ -62,8 +62,17 @@ object PlayUpdateManager {
     }
 
     /**
-     * Checks Play for a newer build and starts the flexible update flow.
-     * Safe to call on every `onResume` — Play de-duplicates internally.
+     * Checks Play for update status WITHOUT auto-starting a download.
+     *
+     * On every `onResume` we only:
+     *  - Resume an interrupted immediate update (so the app is never
+     *    left half-updated).
+     *  - Surface a previously-completed download for the user to restart.
+     *
+     * We do NOT auto-start a new FLEXIBLE download — that causes a visible
+     * system download notification even when the user didn't ask for it,
+     * and the download can stall on slow connections. The user must tap
+     * "Update Now" in the app to start the flow via [startFlexibleUpdate].
      *
      * @param onUnavailable invoked when Play cannot serve an update (not a Play
      *        install, no Play Services, or already up to date) so the caller can
@@ -103,13 +112,13 @@ object PlayUpdateManager {
                     info.installStatus() == InstallStatus.DOWNLOADED -> {
                         _readyToInstall.value = true
                     }
+                    // An update is available, but we do NOT auto-start it.
+                    // The in-app "Update Now" button calls
+                    // [startFlexibleUpdate] when the user is ready.
                     info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE -> {
-                        val type = if (info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) {
-                            AppUpdateType.FLEXIBLE
-                        } else {
-                            AppUpdateType.IMMEDIATE
-                        }
-                        startFlow(appUpdateManager, info, launcher, type, onUnavailable)
+                        Log.d(TAG, "Play update available — waiting for user to tap Update Now")
+                        _playFlowActive.value = false
+                        onUnavailable()
                     }
                     else -> {
                         Log.d(TAG, "Play reports app is up to date")
@@ -123,6 +132,50 @@ object PlayUpdateManager {
                 _playFlowActive.value = false
                 onUnavailable()
             }
+    }
+
+    /**
+     * Explicitly starts the Play flexible update flow — called only when the
+     * user taps "Update Now". This kicks off the background download with a
+     * system progress notification, and the [InstallStateUpdatedListener]
+     * surfaces the restart prompt when it finishes.
+     */
+    fun startFlexibleUpdate(
+        activity: Activity,
+        launcher: ActivityResultLauncher<IntentSenderRequest>,
+        onUnavailable: () -> Unit,
+    ) {
+        if (!isPlayInstall(activity)) {
+            onUnavailable()
+            return
+        }
+
+        val appUpdateManager = manager ?: runCatching {
+            AppUpdateManagerFactory.create(activity.applicationContext)
+        }.getOrNull()
+        if (appUpdateManager == null) {
+            onUnavailable()
+            return
+        }
+        manager = appUpdateManager
+        registerListener(appUpdateManager)
+
+        appUpdateManager.appUpdateInfo
+            .addOnSuccessListener { info ->
+                if (info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE) {
+                    val type = if (info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) {
+                        AppUpdateType.FLEXIBLE
+                    } else {
+                        AppUpdateType.IMMEDIATE
+                    }
+                    startFlow(appUpdateManager, info, launcher, type, onUnavailable)
+                } else if (info.installStatus() == InstallStatus.DOWNLOADED) {
+                    _readyToInstall.value = true
+                } else {
+                    onUnavailable()
+                }
+            }
+            .addOnFailureListener { onUnavailable() }
     }
 
     private fun startFlow(

@@ -254,65 +254,126 @@ object ApkInstaller {
         }
     }
 
-    /** Streams the APK to cache/updates/rockscout-update.apk with progress updates. */
+    /** Maximum download retries before giving up and showing the error dialog. */
+    private const val MAX_DOWNLOAD_RETRIES = 3
+
+    /** Streams the APK to cache/updates/rockscout-update.apk with progress updates.
+     *
+     * Retries up to [MAX_DOWNLOAD_RETRIES] times on network failures so a
+     * momentary socket timeout near the end of a large download doesn't
+     * force a full restart from zero. Each retry preserves the partial file
+     * and resumes from the last received byte using HTTP Range requests. */
     private suspend fun downloadApk(context: Context, apkUrl: String): File = withContext(Dispatchers.IO) {
         val updatesDir = File(context.cacheDir, "updates").apply { mkdirs() }
         // Clear stale downloads so a half-finished file can never be installed.
         updatesDir.listFiles()?.forEach { runCatching { it.delete() } }
         val apkFile = File(updatesDir, "rockscout-update.apk")
 
+        var lastError: Exception? = null
+        for (attempt in 1..MAX_DOWNLOAD_RETRIES) {
+            try {
+                Log.d(TAG, "Download attempt $attempt/$MAX_DOWNLOAD_RETRIES")
+                downloadWithResume(context, apkUrl, apkFile, isRetry = attempt > 1)
+                _progress.value = 100
+                Log.d(TAG, "Download complete: ${apkFile.length()} bytes")
+                return@withContext apkFile
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                lastError = e
+                Log.w(TAG, "Download attempt $attempt failed: ${e.message}")
+                if (attempt < MAX_DOWNLOAD_RETRIES) {
+                    // Brief pause before retry to let the network recover.
+                    kotlinx.coroutines.delay(2000L * attempt)
+                }
+            }
+        }
+        throw lastError ?: RuntimeException("The download failed after $MAX_DOWNLOAD_RETRIES attempts.")
+    }
+
+    /**
+     * Downloads the APK, optionally resuming from the partial file on disk.
+     *
+     * On retry, sends an HTTP Range header to continue from where the
+     * previous attempt left off. If the server doesn't support ranges
+     * (returns 200 instead of 206), starts fresh.
+     */
+    private suspend fun downloadWithResume(
+        context: Context,
+        apkUrl: String,
+        apkFile: File,
+        isRetry: Boolean,
+    ) {
+        val existingBytes = if (isRetry && apkFile.exists()) apkFile.length() else 0L
+
         val client = HttpClient {
             install(io.ktor.client.plugins.HttpTimeout) {
-                connectTimeoutMillis = 20_000
-                requestTimeoutMillis = 15 * 60_000
-                socketTimeoutMillis = 90_000
+                connectTimeoutMillis = 30_000
+                requestTimeoutMillis = 30 * 60_000  // 30 min — large APK on slow connections
+                socketTimeoutMillis = 300_000       // 5 min socket timeout — prevents
+                                                    // premature abort near completion
             }
             followRedirects = true
         }
 
         try {
-            val response = client.get(apkUrl)
-            if (!response.status.isSuccess()) {
+            val response = client.get(apkUrl) {
+                if (existingBytes > 0) {
+                    headers.append("Range", "bytes=$existingBytes-")
+                    Log.d(TAG, "Resuming download from byte $existingBytes")
+                }
+            }
+
+            // 206 = Partial Content (server supports range). 200 = full content
+            // (server doesn't support ranges — restart from scratch).
+            val isPartial = response.status.value == 206
+            if (!response.status.isSuccess() && !isPartial) {
                 throw RuntimeException("Download failed (HTTP ${response.status.value}). The update file may have moved.")
             }
-            val total = response.contentLength() ?: -1L
-            _downloadSize.value = if (total > 0) formatBytes(total) else ""
 
-            // Fail fast when there isn't enough free space — otherwise the
-            // install aborts halfway with an opaque error.
-            if (total > 0) {
-                val free = updatesDir.usableSpace
-                // Need room for the download AND the installed copy.
-                if (free in 1 until (total * 2)) {
+            val totalHeader = response.contentLength() ?: -1L
+            val contentRangeStart = if (isPartial) existingBytes else 0L
+            val totalSize = if (isPartial && totalHeader > 0) contentRangeStart + totalHeader else totalHeader
+            _downloadSize.value = if (totalSize > 0) formatBytes(totalSize) else ""
+
+            // Fail fast when there isn't enough free space.
+            if (totalSize > 0) {
+                val free = apkFile.parentFile?.usableSpace ?: 0L
+                if (free in 1 until (totalSize * 2)) {
                     throw RuntimeException(
-                        "Not enough free space to install the update. Please free up about ${formatBytes(total * 2)} and try again.",
+                        "Not enough free space to install the update. Please free up about ${formatBytes(totalSize * 2)} and try again.",
                     )
                 }
             }
 
-            var written = 0L
+            // If server returned full content (200) on a retry, discard the
+            // partial file and start fresh.
+            val appendMode = isPartial && existingBytes > 0
+            if (!appendMode) {
+                apkFile.delete()
+                _progress.value = 0
+            }
+
+            var written = contentRangeStart
             val channel = response.bodyAsChannel()
-            apkFile.outputStream().buffered().use { out ->
+            java.io.FileOutputStream(apkFile, appendMode).buffered().use { out ->
                 while (!channel.isClosedForRead) {
                     val packet = channel.readRemaining(DOWNLOAD_BUFFER)
                     while (!packet.exhausted()) {
                         val bytes = packet.readByteArray()
                         out.write(bytes)
                         written += bytes.size
-                        if (total > 0) {
-                            _progress.value = ((written * 100) / total).toInt().coerceIn(0, 100)
+                        if (totalSize > 0) {
+                            _progress.value = ((written * 100) / totalSize).toInt().coerceIn(0, 100)
                         }
                     }
                 }
                 out.flush()
             }
-            _progress.value = 100
-            Log.d(TAG, "Downloaded $written bytes to ${apkFile.absolutePath}")
 
-            if (total > 0 && written < total) {
-                throw RuntimeException("The download was interrupted. Please try again.")
+            if (totalSize > 0 && written < totalSize) {
+                throw RuntimeException("The download was interrupted at ${written}/${totalSize} bytes.")
             }
-            apkFile
         } finally {
             client.close()
         }
