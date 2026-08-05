@@ -118,4 +118,10 @@ function useTierState(): TierState {
   };
 }
 
-export const [TierProvider, useTier] = createContextHook(useTierState, DEFAULT_TIER_STATE);
+export const [TierProvider, useTierRaw] = createContextHook(useTierState, DEFAULT_TIER_STATE);
+
+/**
+ * Safe wrapper that guarantees a defined TierState even if the underlying
+ * context hook momentarily returns undefined during provider remounts.
+ */
+export const useTier = (): TierState => useTierRaw() ?? DEFAULT_TIER_STATE;

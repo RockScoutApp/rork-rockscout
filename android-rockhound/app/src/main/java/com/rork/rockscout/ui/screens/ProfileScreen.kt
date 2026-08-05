@@ -1724,9 +1724,7 @@ private fun EditProfileSheet(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp)
-            .verticalScroll(rememberScrollState())
-            .imePadding(),
+            .padding(horizontal = 20.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Row(
@@ -2417,28 +2415,30 @@ private fun EditProfileSheet(
             onClick = {
                 val finalAvatarPath = editAvatarImagePath
                 val finalBgPath = editBgImagePath
-                val needAvatarCrop = finalAvatarPath != null && avatarPreviewSizePx > 0 &&
+                val safeAvatarPath = finalAvatarPath?.takeIf { it.isNotBlank() }
+                val safeBgPath = finalBgPath?.takeIf { it.isNotBlank() }
+                val needAvatarCrop = safeAvatarPath != null && avatarPreviewSizePx > 0 &&
                     (avatarScale != 1f || avatarOffsetX != 0f || avatarOffsetY != 0f)
-                val needBgCrop = finalBgPath != null && bgPreviewSizeWPx > 0 &&
+                val needBgCrop = safeBgPath != null && bgPreviewSizeWPx > 0 &&
                     (bgScale != 1f || bgOffsetX != 0f || bgOffsetY != 0f)
                 if (needAvatarCrop || needBgCrop) {
                     cropping = true
                     coroutineScope.launch {
-                        val croppedAvatar = if (needAvatarCrop && finalAvatarPath != null) {
+                        val croppedAvatar = if (needAvatarCrop && safeAvatarPath != null) {
                             ImageUtils.cropAndSaveAvatar(
                                 context,
-                                Uri.parse(finalAvatarPath),
+                                Uri.parse(safeAvatarPath),
                                 avatarScale,
                                 avatarOffsetX,
                                 avatarOffsetY,
                                 avatarPreviewSizePx,
                             )
                         } else null
-                        val croppedBg = if (needBgCrop && finalBgPath != null) {
+                        val croppedBg = if (needBgCrop && safeBgPath != null) {
                             bgCropping = true
                             ImageUtils.cropAndSaveBackground(
                                 context,
-                                Uri.parse(finalBgPath),
+                                Uri.parse(safeBgPath),
                                 bgScale,
                                 bgOffsetX,
                                 bgOffsetY,
@@ -2449,19 +2449,19 @@ private fun EditProfileSheet(
                         cropping = false
                         onSave(
                             editName, editRegion, editBio, editAvatar,
-                            croppedBg ?: finalBgPath,
+                            croppedBg ?: safeBgPath,
                             editGender, editBirthday, editBirthdayPublic,
                             editFavoriteRock.trim(), editHighlightColor,
-                            croppedAvatar ?: finalAvatarPath,
+                            croppedAvatar ?: safeAvatarPath,
                         )
                     }
                 } else {
                     onSave(
                         editName, editRegion, editBio, editAvatar,
-                        finalBgPath,
+                        safeBgPath,
                         editGender, editBirthday, editBirthdayPublic,
                         editFavoriteRock.trim(), editHighlightColor,
-                        finalAvatarPath,
+                        safeAvatarPath,
                     )
                 }
             },

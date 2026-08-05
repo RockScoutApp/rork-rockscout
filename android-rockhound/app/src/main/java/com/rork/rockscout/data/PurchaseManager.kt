@@ -88,6 +88,14 @@ class PurchaseManager {
     private val _entitlementSynced = MutableStateFlow(false)
     val entitlementSynced: StateFlow<Boolean> = _entitlementSynced.asStateFlow()
 
+    /**
+     * Session-level flag so the entitlement-sync success toast only shows once.
+     * Survives LazyColumn scroll-driven recompositions because it lives in the
+     * singleton rather than in a `remember` local variable.
+     */
+    @Volatile
+    var entitlementSyncToastShown: Boolean = false
+
     /** Monthly Premium subscription package from the current offering. */
     val monthlyPackage: Package?
         get() = _currentOffering.value?.availablePackages?.find {

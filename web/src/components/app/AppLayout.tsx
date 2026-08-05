@@ -233,7 +233,10 @@ export default function AppLayout() {
   type SyncState = "idle" | "syncing" | "synced" | "failed";
   const [syncState, setSyncState] = useState<SyncState>("idle");
   const [showSyncToast, setShowSyncToast] = useState(false);
-  const syncToastShown = useRef(false);
+  const SYNC_TOAST_KEY = "rockscout-sync-toast-shown";
+  const syncToastShown = useRef(
+    typeof sessionStorage !== "undefined" && sessionStorage.getItem(SYNC_TOAST_KEY) === "true",
+  );
 
   useEffect(() => {
     if (!user?.id) return;
@@ -244,6 +247,11 @@ export default function AppLayout() {
       setSyncState(ok ? "synced" : "failed");
       if (ok && !syncToastShown.current) {
         syncToastShown.current = true;
+        try {
+          sessionStorage.setItem(SYNC_TOAST_KEY, "true");
+        } catch {
+          // Ignore storage errors (private mode, etc.).
+        }
         setShowSyncToast(true);
         setTimeout(() => setShowSyncToast(false), 4000);
       }

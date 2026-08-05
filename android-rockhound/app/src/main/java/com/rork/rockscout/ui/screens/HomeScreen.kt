@@ -1491,11 +1491,12 @@ private fun HomeHeader(
         socialRepo.loadThreads()
     }
 
-    // Entitlement sync confirmation toast — shown once per session when sync succeeds
-    var syncToastShown by remember { mutableStateOf(false) }
+    // Entitlement sync confirmation toast — shown once per app session. The flag
+    // lives in PurchaseManager so it survives LazyColumn scroll-driven
+    // recompositions of the header item.
     androidx.compose.runtime.LaunchedEffect(entitlementSynced) {
-        if (entitlementSynced && !syncToastShown) {
-            syncToastShown = true
+        if (entitlementSynced && !purchaseManager.entitlementSyncToastShown) {
+            purchaseManager.entitlementSyncToastShown = true
             Toast.makeText(context, "Premium entitlement synced across devices", Toast.LENGTH_SHORT).show()
         }
     }
