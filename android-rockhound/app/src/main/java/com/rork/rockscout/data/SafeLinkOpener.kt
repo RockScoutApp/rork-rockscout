@@ -178,8 +178,15 @@ object SafeLinkOpener {
      * open it directly on their ping map, plus a fallback Google Maps
      * link for users who don't have RockScout installed.
      */
-    fun sharePingLocation(context: Context, lat: Double, lng: Double, label: String, senderName: String) {
-        val deepLink = "rockscout://ping/$lat,$lng?label=${Uri.encode(label)}&from=${Uri.encode(senderName)}"
+    fun sharePingLocation(
+        context: Context,
+        lat: Double,
+        lng: Double,
+        label: String,
+        senderId: String,
+        senderName: String,
+    ) {
+        val deepLink = "rockscout://ping/$lat,$lng?label=${Uri.encode(label)}&from=${Uri.encode(senderName)}&fromId=${Uri.encode(senderId)}"
         val mapsUrl = "https://www.google.com/maps?q=$lat,$lng"
         val shareText = "My RockScout ping: $label\nOpen in RockScout: $deepLink\nMaps: $mapsUrl"
         val shareIntent = Intent(Intent.ACTION_SEND).apply {

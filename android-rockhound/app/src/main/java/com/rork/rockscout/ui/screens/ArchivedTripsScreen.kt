@@ -40,6 +40,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
@@ -50,10 +51,14 @@ import com.rork.rockscout.data.Trip
 import com.rork.rockscout.ui.components.DeleteConfirmDialog
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.components.SculptedIconButton
+import com.rork.rockscout.ui.components.ShareCardImage
+import com.rork.rockscout.ui.components.ShareToProfileComposer
 import com.rork.rockscout.ui.components.TagChip
 import com.rork.rockscout.ui.components.TripRouteMap
 import com.rork.rockscout.ui.components.sculpted
 import com.rork.rockscout.ui.components.glowingBorder
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
@@ -68,8 +73,11 @@ import java.util.Locale
 fun ArchivedTripsScreen(navController: NavController) {
     val repo = AppRepository.instance
     val archivedTrips by repo.archivedTrips.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var detailTrip by remember { mutableStateOf<Trip?>(null) }
+    var shareToProfileTrip by remember { mutableStateOf<Trip?>(null) }
     var pendingDeleteTrip by remember { mutableStateOf<Trip?>(null) }
+    val scope = rememberCoroutineScope()
 
     ScreenScaffold(
         title = "Archived Trips",
@@ -168,8 +176,35 @@ fun ArchivedTripsScreen(navController: NavController) {
                 detailTrip = null
                 navController.navigate(Routes.location(locId))
             },
-            onShare = {},
-            onShareToProfile = {},
+            onShare = {
+                scope.launch {
+                    ShareCardImage.share(
+                        context = context,
+                        title = trip.name,
+                        subtitle = "Trip on " + SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(trip.date)) +
+                            "  \u2022  ${trip.stops.size} stop${if (trip.stops.size != 1) "s" else ""}",
+                        body = trip.stops.joinToString(" \u2192 ") { it.locationName } +
+                            if (trip.targetSpecimens.isNotEmpty()) "\nHunting: " + trip.targetSpecimens.joinToString(", ") else "",
+                        accentHex = 0xFFE8A33D,
+                        photoBitmap = null,
+                        caption = "Planned with RockScout",
+                        fileName = "rockscout_trip_${trip.id}",
+                    )
+                }
+            },
+            onShareToProfile = { shareToProfileTrip = trip },
+        )
+    }
+
+    shareToProfileTrip?.let { trip ->
+        ShareToProfileComposer(
+            sourceType = "trip",
+            title = trip.name,
+            tagline = SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(trip.date)) +
+                "  \u2022  ${trip.stops.size} stop${if (trip.stops.size != 1) "s" else ""}",
+            imageUri = null,
+            locationText = trip.stops.joinToString(" \u2192 ") { it.locationName }.ifBlank { "" },
+            onDismiss = { shareToProfileTrip = null },
         )
     }
 

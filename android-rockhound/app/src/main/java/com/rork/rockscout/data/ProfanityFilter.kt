@@ -26,7 +26,7 @@ object ProfanityFilter {
         "fuk", "fuuk", "phuck", "phucking",
     )
 
-    /** Sexually explicit words — asterisked AND trigger a warning. */
+    /** Sexually explicit words, slurs, and severe harassment terms — asterisked AND trigger a warning. */
     private val explicitWords = setOf(
         "pussy", "pussies", "pussys",
         "cunt", "cunts",
@@ -37,15 +37,25 @@ object ProfanityFilter {
         "penis", "penises",
         "clit", "clitoris",
         "asshole", "assholes",
+        "bitch", "bitches", "bitching",
+        "bastard", "bastards",
+        "slut", "sluts",
+        "whore", "whores",
+        "nigger", "niggers",
+        "nigga", "niggas",
+        "faggot", "faggots",
+        "retard", "retards", "retarded",
+        "rape", "rapes", "raping", "rapist", "rapists",
     )
 
     /** Light profanity — only filtered in "Extra Strict" mode. */
     private val lightProfanity = setOf(
         "shit", "shitty", "shits", "shitting",
-        "bitch", "bitches", "bitching",
         "damn", "damned",
         "hell",
         "ass", "asses",
+        "bullshit",
+        "dumbass",
     )
 
     /** Words that must never be censored even if they contain a censored substring.

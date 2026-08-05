@@ -549,9 +549,10 @@ class PurchaseManager {
     private fun syncEntitlementToBackend() {
         val userId = AuthRepository.instance.currentUserId ?: return
         val forcePremium = com.rork.rockscout.BuildConfig.FORCE_PREMIUM
+        val premiumSource = if (forcePremium) "apk" else "revenuecat"
         _syncStatus.value = SyncStatus.SYNCING
         scope.launch {
-            val ok = EntitlementApi.syncEntitlement(userId, forcePremium)
+            val ok = EntitlementApi.syncEntitlement(userId, forcePremium, premiumSource)
             if (ok) {
                 _syncStatus.value = SyncStatus.SYNCED
                 _entitlementSynced.value = true

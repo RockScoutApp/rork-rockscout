@@ -363,7 +363,7 @@ private fun handleDeepLink(uri: Uri, navController: NavController) {
             }
         }
         "ping" -> {
-            // Format: rockscout://ping/<lat>,<lng>?label=<encoded>&from=<sender>
+            // Format: rockscout://ping/<lat>,<lng>?label=<encoded>&from=<sender>&fromId=<senderId>
             // Stores a shared ping so it appears on the ping map in a
             // distinct color with a directions button.
             val coordSegment = segments.firstOrNull()
@@ -375,9 +375,10 @@ private fun handleDeepLink(uri: Uri, navController: NavController) {
                     if (lat != null && lng != null) {
                         val label = uri.getQueryParameter("label") ?: "Shared ping"
                         val from = uri.getQueryParameter("from") ?: "A fellow hunter"
+                        val fromId = uri.getQueryParameter("fromId")
                         // Store the shared ping asynchronously, then navigate to the map.
                         kotlinx.coroutines.MainScope().launch {
-                            SocialRepository.instance.addSharedPing(lat, lng, label, from)
+                            SocialRepository.instance.addSharedPing(lat, lng, label, fromId, from)
                         }
                         navController.navigate(Routes.ROCKSCOUTS_MAP)
                     }

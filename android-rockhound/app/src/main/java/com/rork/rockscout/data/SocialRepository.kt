@@ -294,7 +294,9 @@ class SocialRepository private constructor() {
         }.onFailure { Log.w("SocialRepository", "createConnectionFromReferral failed", it) }
     }
 
-    /** Remove a connection (reciprocal — deletes the single row). */
+    /** Remove a connection (reciprocal — deletes the single row).
+     *  Does not hide the user from nearby scans; only removes any shared
+     *  pings that came from this user so they no longer appear on the map. */
     suspend fun removeConnection(otherId: String) {
         val me = currentUserId() ?: return
         runCatching {
@@ -305,6 +307,7 @@ class SocialRepository private constructor() {
             }
             LocalDataStore.setTable(LocalDataStore.KEY_CONNECTIONS, filtered)
             _connections.value = _connections.value - otherId
+            removeSharedPingsFromSender(otherId)
         }.onFailure { Log.w("SocialRepository", "removeConnection failed", it) }
     }
 
@@ -667,6 +670,7 @@ class SocialRepository private constructor() {
         val lat: Double,
         val lng: Double,
         val label: String,
+        val senderId: String?,
         val senderName: String,
         val receivedAt: String,
         val expiresAt: String,
@@ -676,16 +680,22 @@ class SocialRepository private constructor() {
     val sharedPings: StateFlow<List<SharedPingRow>> = _sharedPings.asStateFlow()
 
     /** Add a shared ping received via a rockscout://ping deep link.
-     *  Deduplicates by lat+lng+senderName — tapping the same link twice
+     *  Deduplicates by lat+lng+senderId — tapping the same link twice
      *  doesn't create duplicate markers. Expires after 24 hours. */
-    suspend fun addSharedPing(lat: Double, lng: Double, label: String, senderName: String): Result<Unit> {
+    suspend fun addSharedPing(
+        lat: Double,
+        lng: Double,
+        label: String,
+        senderId: String?,
+        senderName: String,
+    ): Result<Unit> {
         return runCatching {
             val now = java.time.OffsetDateTime.now()
             val expires = now.plusHours(24)
             val rows = LocalDataStore.getTable<MockDataSeeder.LocalSharedPing>(LocalDataStore.KEY_SHARED_PINGS).toMutableList()
             // Deduplicate — skip if same coords + sender already exist and not expired.
             val exists = rows.any {
-                it.lat == lat && it.lng == lng && it.sender_name == senderName &&
+                it.lat == lat && it.lng == lng && it.sender_id == senderId &&
                 runCatching { java.time.OffsetDateTime.parse(it.expires_at).isAfter(now) }.getOrDefault(false)
             }
             if (!exists) {
@@ -694,6 +704,7 @@ class SocialRepository private constructor() {
                     lat = lat,
                     lng = lng,
                     label = label,
+                    sender_id = senderId,
                     sender_name = senderName,
                     received_at = now.toString(),
                     expires_at = expires.toString(),
@@ -716,11 +727,11 @@ class SocialRepository private constructor() {
             }
             if (active.size != all.size) {
                 LocalDataStore.setTable(LocalDataStore.KEY_SHARED_PINGS, active.map {
-                    MockDataSeeder.LocalSharedPing(it.id, it.lat, it.lng, it.label, it.sender_name, it.received_at, it.expires_at)
+                    MockDataSeeder.LocalSharedPing(it.id, it.lat, it.lng, it.label, it.sender_id, it.sender_name, it.received_at, it.expires_at)
                 })
             }
             _sharedPings.value = active.map {
-                SharedPingRow(it.id, it.lat, it.lng, it.label, it.sender_name, it.received_at, it.expires_at)
+                SharedPingRow(it.id, it.lat, it.lng, it.label, it.sender_id, it.sender_name, it.received_at, it.expires_at)
             }
             _sharedPings.value
         }.onFailure { Log.w("SocialRepository", "loadSharedPings failed", it) }
@@ -734,6 +745,18 @@ class SocialRepository private constructor() {
             LocalDataStore.setTable(LocalDataStore.KEY_SHARED_PINGS, rows)
             loadSharedPings()
         }.onFailure { Log.w("SocialRepository", "removeSharedPing failed", it) }
+    }
+
+    /** Remove all shared pings received from a specific user. Used when a
+     *  RockScout Friends connection is removed so the ex-connection's pings
+     *  disappear from the current user's map. */
+    suspend fun removeSharedPingsFromSender(senderId: String) {
+        runCatching {
+            val rows = LocalDataStore.getTable<MockDataSeeder.LocalSharedPing>(LocalDataStore.KEY_SHARED_PINGS)
+                .filterNot { it.sender_id == senderId }
+            LocalDataStore.setTable(LocalDataStore.KEY_SHARED_PINGS, rows)
+            loadSharedPings()
+        }.onFailure { Log.w("SocialRepository", "removeSharedPingsFromSender failed", it) }
     }
 
     /** Drop a new ping at [lat]/[lng]. Replaces any existing live ping of mine. */

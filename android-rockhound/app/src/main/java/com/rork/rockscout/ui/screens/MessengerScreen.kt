@@ -1,6 +1,8 @@
 package com.rork.rockscout.ui.screens
 
+import android.content.Intent
 import android.net.Uri
+import com.rork.rockscout.data.SafeLinkOpener
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -342,6 +344,7 @@ fun MessengerScreen(
                     activeRequestId = null
                 }
             },
+            navController = navController,
         )
         return
     }
@@ -1616,6 +1619,7 @@ fun RequestChatView(
     onBlock: () -> Unit,
     senderId: String = "",
     onOpenUserProfile: ((String) -> Unit)? = null,
+    navController: NavController? = null,
 ) {
     var showBlockConfirm by remember { mutableStateOf(false) }
     var showReportConfirm by remember { mutableStateOf(false) }
@@ -1854,6 +1858,7 @@ fun ChatBubble(
     taggedUserNames: List<String> = emptyList(),
     senderName: String? = null,
     senderEmoji: String? = null,
+    navController: NavController? = null,
 ) {
     val bubbleBg = if (isMe) MyBubbleBg else OtherBubbleBg
     val bubbleShape = RoundedCornerShape(
@@ -1924,8 +1929,16 @@ fun ChatBubble(
                     }
                 }
                 if (text.isNotBlank()) {
-                    // Render text with tagged user pills inline
-                    TaggedText(text = text, taggedUserNames = taggedUserNames)
+                    // Render text with tagged user pills and clickable deep links inline
+                    val ctx = LocalContext.current
+                    val nav = navController
+                    ClickableMessageText(
+                        text = text,
+                        taggedUserNames = taggedUserNames,
+                        onDeepLinkClick = { deepLinkUri ->
+                            nav?.let { handlePingDeepLink(deepLinkUri, ctx, it) }
+                        },
+                    )
                 }
             }
         }
@@ -2173,55 +2186,115 @@ private fun MessageRequestComposeDialog(
  * the username in dark text on a Citrine background.
  */
 @Composable
-private fun TaggedText(text: String, taggedUserNames: List<String>) {
-    if (taggedUserNames.isEmpty()) {
-        Text(text, style = MaterialTheme.typography.bodyMedium, color = DarkTextHigh)
-        return
-    }
-    // Find all tagged names in the text and split into segments
-    val segments = mutableListOf<Pair<String, Boolean>>()
+private fun ClickableMessageText(
+    text: String,
+    taggedUserNames: List<String>,
+    onDeepLinkClick: (android.net.Uri) -> Unit,
+) {
+    // Find all tagged names and deep links in the text and split into segments.
+    // Each segment is (content, type) where type is "plain", "tag", or "link".
+    val segments = mutableListOf<Pair<String, String>>()
     var remaining = text
     while (remaining.isNotEmpty()) {
-        var earliestMatch: Pair<String, Int>? = null
+        var earliestMatch: Triple<String, Int, String>? = null
+
+        // Check for tagged names
         for (name in taggedUserNames) {
             val idx = remaining.indexOf(name, ignoreCase = true)
-            if (idx >= 0 && (earliestMatch == null || idx < earliestMatch!!.second)) {
-                earliestMatch = name to idx
+            if (idx >= 0 && (earliestMatch == null || idx < earliestMatch.second)) {
+                earliestMatch = Triple(name, idx, "tag")
             }
         }
+        // Check for deep links (rockscout:// or https://)
+        val deepLinkRegex = Regex("(rockscout://[^\\s]+|https?://[^\\s]+)")
+        deepLinkRegex.find(remaining)?.let { match ->
+            val idx = match.range.first
+            if (earliestMatch == null || idx < earliestMatch.second) {
+                earliestMatch = Triple(match.value, idx, "link")
+            }
+        }
+
         if (earliestMatch == null) {
-            segments.add(remaining to false)
+            segments.add(remaining to "plain")
             break
         }
-        val (name, idx) = earliestMatch
-        if (idx > 0) segments.add(remaining.substring(0, idx) to false)
-        segments.add(remaining.substring(idx, idx + name.length) to true)
-        remaining = remaining.substring(idx + name.length)
+        val (content, idx, type) = earliestMatch
+        if (idx > 0) segments.add(remaining.substring(0, idx) to "plain")
+        segments.add(remaining.substring(idx, idx + content.length) to type)
+        remaining = remaining.substring(idx + content.length)
     }
     androidx.compose.foundation.layout.FlowRow(
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        for ((segment, isTagged) in segments) {
-            if (isTagged) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Citrine)
-                        .padding(horizontal = 6.dp, vertical = 1.dp),
-                ) {
-                    Text(
-                        segment,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Ink,
-                        fontWeight = FontWeight.Bold,
-                    )
+        for ((segment, type) in segments) {
+            when (type) {
+                "tag" -> {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Citrine)
+                            .padding(horizontal = 6.dp, vertical = 1.dp),
+                    ) {
+                        Text(
+                            segment,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Ink,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                 }
-            } else {
-                Text(segment, style = MaterialTheme.typography.bodyMedium, color = DarkTextHigh)
+                "link" -> {
+                    val uri = runCatching { android.net.Uri.parse(segment) }.getOrNull()
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Aqua.copy(alpha = 0.18f))
+                            .glowingBorder(1.dp, Aqua.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                            .then(
+                                if (uri != null) Modifier.clickable { onDeepLinkClick(uri) } else Modifier
+                            )
+                            .padding(horizontal = 6.dp, vertical = 1.dp),
+                    ) {
+                        Text(
+                            segment,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Aqua,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+                else -> Text(segment, style = MaterialTheme.typography.bodyMedium, color = DarkTextHigh)
             }
         }
     }
+}
+
+/** Handle a rockscout://ping deep link tapped inside a chat bubble. */
+private fun handlePingDeepLink(
+    uri: android.net.Uri,
+    context: android.content.Context,
+    navController: NavController,
+) {
+    if (uri.host != "ping") return
+    val coordSegment = uri.pathSegments.firstOrNull()
+    val parts = coordSegment?.split(',')
+    if (parts?.size == 2) {
+        val lat = parts[0].toDoubleOrNull()
+        val lng = parts[1].toDoubleOrNull()
+        if (lat != null && lng != null) {
+            val label = uri.getQueryParameter("label") ?: "Shared ping"
+            val from = uri.getQueryParameter("from") ?: "A fellow hunter"
+            val fromId = uri.getQueryParameter("fromId")
+            kotlinx.coroutines.MainScope().launch {
+                SocialRepository.instance.addSharedPing(lat, lng, label, fromId, from)
+            }
+            navController.navigate(Routes.ROCKSCOUTS_MAP)
+            return
+        }
+    }
+    // Fallback for generic web links
+    SafeLinkOpener.launch(context, android.content.Intent(Intent.ACTION_VIEW, uri), "No app can open this link.")
 }
 
 /* ── Helpers ──────────────────────────────────────────────────────────────── */

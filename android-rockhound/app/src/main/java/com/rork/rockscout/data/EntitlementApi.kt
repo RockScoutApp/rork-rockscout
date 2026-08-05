@@ -37,12 +37,14 @@ object EntitlementApi {
     private data class EntitlementRequest(
         val userId: String,
         val forcePremium: Boolean = false,
+        val premiumSource: String? = null,
     )
 
     @Serializable
     private data class EntitlementResponse(
         val ok: Boolean = false,
         val isPremium: Boolean = false,
+        val premiumSource: String? = null,
         val supabaseUpdated: Boolean = false,
     )
 
@@ -50,24 +52,35 @@ object EntitlementApi {
      * Sync the user's RevenueCat entitlement to Supabase.
      * Silently fails on network errors — this is a best-effort sync.
      * Returns true if the sync succeeded, false otherwise.
+     *
+     * @param premiumSource Pass "apk" for premium-unlocked builds, "revenuecat"
+     * for normal RevenueCat-managed subscriptions, or null when unknown.
      */
-    suspend fun syncEntitlement(userId: String, forcePremium: Boolean = false): Boolean {
+    suspend fun syncEntitlement(
+        userId: String,
+        forcePremium: Boolean = false,
+        premiumSource: String? = null,
+    ): Boolean {
         if (userId.isBlank()) return false
         return try {
             val baseUrl = BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", BuildSecrets.RORK_FUNCTIONS_URL)
                 .ifBlank { null } ?: return false
             val appKey = BuildSecrets.resolve("EXPO_PUBLIC_RORK_APP_KEY", BuildSecrets.RORK_APP_KEY)
 
+            val source = premiumSource ?: if (forcePremium) "apk" else null
             val response = client.post("$baseUrl/entitlement") {
                 contentType(ContentType.Application.Json)
                 if (appKey.isNotBlank()) header("X-App-Key", appKey)
-                setBody(json.encodeToString(EntitlementRequest.serializer(), EntitlementRequest(userId, forcePremium)))
+                setBody(json.encodeToString(
+                    EntitlementRequest.serializer(),
+                    EntitlementRequest(userId, forcePremium, source),
+                ))
             }
 
             val body = response.body<String>()
             val parsed = json.decodeFromString(EntitlementResponse.serializer(), body)
             if (parsed.ok) {
-                Log.i(TAG, "Entitlement synced for user=$userId: isPremium=${parsed.isPremium}, supabaseUpdated=${parsed.supabaseUpdated}")
+                Log.i(TAG, "Entitlement synced for user=$userId: isPremium=${parsed.isPremium}, premiumSource=${parsed.premiumSource}, supabaseUpdated=${parsed.supabaseUpdated}")
                 true
             } else {
                 Log.w(TAG, "Entitlement sync returned ok=false for user=$userId")

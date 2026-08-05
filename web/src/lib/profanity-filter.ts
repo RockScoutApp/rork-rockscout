@@ -35,14 +35,28 @@ const EXPLICIT_WORDS: string[] = [
   "dick",
   "pussy",
   "bitch",
+  "bitches",
+  "bitching",
   "bastard",
+  "bastards",
   "slut",
+  "sluts",
   "whore",
+  "whores",
   "nigger",
+  "niggers",
   "nigga",
+  "niggas",
   "faggot",
+  "faggots",
   "retard",
+  "retards",
+  "retarded",
   "rape",
+  "rapes",
+  "raping",
+  "rapist",
+  "rapists",
 ];
 
 // Words that must never be censored even if they contain a censored substring.
@@ -85,6 +99,18 @@ const ALLOWED_WORDS: Set<string> = new Set([
   "classroom",
   "classic",
   "classify",
+  "crass",
+  "brass",
+  "morass",
+  "amass",
+  "stash",
+  "flash",
+  "splash",
+  "smash",
+  "password",
+  "bypass",
+  "underpass",
+  "overpass",
 ]);
 
 function asteriskWord(word: string): string {
@@ -123,7 +149,7 @@ export function filterProfanity(text: string, strict = false): FilterResult {
 
   // Tier 2: explicit language — asterisk + warning
   const explicitList = strict
-    ? [...EXPLICIT_WORDS, "crap", "piss", "jackass", " prick"]
+    ? [...EXPLICIT_WORDS, "crap", "piss", "jackass", "prick"]
     : EXPLICIT_WORDS;
   for (const word of explicitList) {
     const trimmed = word.trim();

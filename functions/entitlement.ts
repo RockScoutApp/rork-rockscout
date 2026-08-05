@@ -100,15 +100,22 @@ async function checkRevenueCatEntitlements(
   }
 }
 
-/** Fetch the current is_pro value from Supabase. */
-async function fetchSupabaseIsPro(
+type PremiumSource = "apk" | "revenuecat" | null;
+
+interface SupabaseProfile {
+  is_pro: boolean;
+  premium_source: PremiumSource;
+}
+
+/** Fetch the current is_pro + premium_source values from Supabase. */
+async function fetchSupabaseProfile(
   supabaseUrl: string,
   serviceKey: string,
   userId: string,
-): Promise<boolean> {
+): Promise<SupabaseProfile | null> {
   try {
     const resp = await fetch(
-      `${supabaseUrl}/rest/v1/rockscout_profiles?select=is_pro&id=eq.${encodeURIComponent(userId)}`,
+      `${supabaseUrl}/rest/v1/rockscout_profiles?select=is_pro,premium_source&id=eq.${encodeURIComponent(userId)}`,
       {
         method: "GET",
         headers: {
@@ -117,22 +124,31 @@ async function fetchSupabaseIsPro(
         },
       },
     );
-    if (!resp.ok) return false;
-    const rows = (await resp.json()) as { is_pro: boolean }[];
-    return rows[0]?.is_pro ?? false;
+    if (!resp.ok) return null;
+    const rows = (await resp.json()) as SupabaseProfile[];
+    return rows[0] ?? null;
   } catch {
-    return false;
+    return null;
   }
 }
 
-/** Update the Supabase profile's is_pro column via the service-role key. */
-async function updateSupabaseIsPro(
+/** Update the Supabase profile's is_pro + premium_source columns via the service-role key. */
+async function updateSupabaseProfile(
   supabaseUrl: string,
   serviceKey: string,
   userId: string,
   isPro: boolean,
+  premiumSource: PremiumSource,
 ): Promise<boolean> {
   try {
+    const payload: Record<string, unknown> = { is_pro: isPro };
+    if (premiumSource !== null) {
+      payload.premium_source = premiumSource;
+    } else {
+      // Explicitly clear the column when source is null.
+      payload.premium_source = null;
+    }
+
     const resp = await fetch(
       `${supabaseUrl}/rest/v1/rockscout_profiles?id=eq.${encodeURIComponent(userId)}`,
       {
@@ -143,20 +159,20 @@ async function updateSupabaseIsPro(
           "Content-Type": "application/json",
           Prefer: "return=minimal",
         },
-        body: JSON.stringify({ is_pro: isPro }),
+        body: JSON.stringify(payload),
       },
     );
 
     if (!resp.ok) {
       console.error(
-        `Supabase is_pro update failed: ${resp.status}`,
+        `Supabase profile update failed: ${resp.status}`,
         await resp.text(),
       );
       return false;
     }
     return true;
   } catch (err) {
-    console.error("Supabase is_pro update error:", err);
+    console.error("Supabase profile update error:", err);
     return false;
   }
 }
@@ -180,7 +196,7 @@ export async function handleEntitlement(
     );
   }
 
-  let body: { userId?: string; forcePremium?: boolean } = {};
+  let body: { userId?: string; forcePremium?: boolean; premiumSource?: string } = {};
   try {
     const text = await request.text();
     if (text) body = JSON.parse(text) as typeof body;
@@ -203,8 +219,7 @@ export async function handleEntitlement(
   // so it has no RevenueCat entitlement. When the app sends forcePremium=true
   // (authenticated via X-App-Key), skip RevenueCat and set is_pro=true directly.
   const forcePremium = body.forcePremium === true;
-
-  let isPremium: boolean;
+  let requestedSource: PremiumSource = null;
   if (forcePremium) {
     // Verify the request is app-key authenticated before honoring forcePremium.
     const expectedKey = env.EXPO_PUBLIC_RORK_APP_KEY;
@@ -215,10 +230,13 @@ export async function handleEntitlement(
         { status: 401, headers },
       );
     }
-    isPremium = true;
-  } else {
-    // 1. Check RevenueCat for active entitlements.
-    isPremium = await checkRevenueCatEntitlements(
+    requestedSource = "apk";
+  }
+
+  // 1. Check RevenueCat for active entitlements (unless the APK forces it).
+  let revenueCatPremium = false;
+  if (!forcePremium) {
+    revenueCatPremium = await checkRevenueCatEntitlements(
       env.REVENUECAT_SECRET_API_KEY,
       userId,
     );
@@ -226,39 +244,63 @@ export async function handleEntitlement(
 
   // 2. Write the result back to Supabase so the web PWA sees it.
   //
-  // CRITICAL: If the user is already is_pro=true in Supabase (e.g. the premium
-  // APK set it via forcePremium), do NOT overwrite to false just because
-  // RevenueCat has no entitlement — premium APK users bypass RevenueCat
-  // entirely. Only write is_pro=false if it was already false (a normal-app
-  // user whose subscription expired).
+  // premium_source tells us how the profile became premium:
+  // - "apk": premium APK (no RevenueCat record). Keep is_pro=true regardless of RC.
+  // - "revenuecat": subscription managed by RevenueCat. Follow RC active state.
+  // - null: never premium or unknown.
+  //
+  // This prevents lapsed RevenueCat subscribers from staying premium while still
+  // preserving premium APK users who bypass RevenueCat entirely.
   const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+  let isPremium = forcePremium || revenueCatPremium;
   let supabaseUpdated = false;
+  let premiumSource: PremiumSource = requestedSource;
+
   if (env.SUPABASE_SERVICE_ROLE_KEY && supabaseUrl) {
-    if (!isPremium) {
-      const currentIsPro = await fetchSupabaseIsPro(
+    const currentProfile = await fetchSupabaseProfile(
+      supabaseUrl,
+      env.SUPABASE_SERVICE_ROLE_KEY,
+      userId,
+    );
+    const currentSource = currentProfile?.premium_source ?? null;
+
+    if (forcePremium) {
+      // Premium APK always sets is_pro=true and source=apk.
+      premiumSource = "apk";
+      isPremium = true;
+      supabaseUpdated = await updateSupabaseProfile(
         supabaseUrl,
         env.SUPABASE_SERVICE_ROLE_KEY,
         userId,
+        true,
+        "apk",
       );
-      if (currentIsPro) {
-        // Already premium — preserve it. Return isPremium=true so the caller
-        // knows the user has premium.
-        isPremium = true;
-        supabaseUpdated = true;
-      } else {
-        supabaseUpdated = await updateSupabaseIsPro(
-          supabaseUrl,
-          env.SUPABASE_SERVICE_ROLE_KEY,
-          userId,
-          false,
-        );
-      }
-    } else {
-      supabaseUpdated = await updateSupabaseIsPro(
+    } else if (revenueCatPremium) {
+      // Active RevenueCat subscription: mark premium and source=revenuecat.
+      premiumSource = "revenuecat";
+      isPremium = true;
+      supabaseUpdated = await updateSupabaseProfile(
         supabaseUrl,
         env.SUPABASE_SERVICE_ROLE_KEY,
         userId,
-        isPremium,
+        true,
+        "revenuecat",
+      );
+    } else if (currentSource === "apk") {
+      // Premium APK user with no RevenueCat record: preserve premium.
+      isPremium = true;
+      supabaseUpdated = true;
+    } else {
+      // Lapsed RevenueCat subscriber or never-premium user: write false.
+      // Keep premium_source as revenuecat so we know it was once a subscription.
+      premiumSource = currentSource === "revenuecat" ? "revenuecat" : null;
+      isPremium = false;
+      supabaseUpdated = await updateSupabaseProfile(
+        supabaseUrl,
+        env.SUPABASE_SERVICE_ROLE_KEY,
+        userId,
+        false,
+        premiumSource,
       );
     }
   }
@@ -267,6 +309,7 @@ export async function handleEntitlement(
     {
       ok: true,
       isPremium,
+      premiumSource,
       supabaseUpdated,
     },
     { status: 200, headers },

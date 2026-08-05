@@ -63,6 +63,8 @@ import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.AuthRepository
 import com.rork.rockscout.data.PersistenceManager
 import com.rork.rockscout.data.SafeLinkOpener
+import com.rork.rockscout.ui.components.PingConversationPicker
+import com.rork.rockscout.ui.components.PingToShare
 import com.rork.rockscout.data.SocialRepository
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.theme.Aqua
@@ -143,7 +145,7 @@ fun RockScoutsMapScreen(navController: NavController) {
     var showSafetyNote by remember { mutableStateOf(true) }
     var showPingConfirmDialog by remember { mutableStateOf(false) }
     var showDownloadSheet by remember { mutableStateOf(false) }
-    var showShareConfirmDialog by remember { mutableStateOf(false) }
+    var showConversationPicker by remember { mutableStateOf(false) }
     var selectedSharedPing by remember { mutableStateOf<SocialRepository.SharedPingRow?>(null) }
     var showRemovePingConfirm by remember { mutableStateOf(false) }
     var showColorPicker by remember { mutableStateOf(false) }
@@ -398,7 +400,7 @@ fun RockScoutsMapScreen(navController: NavController) {
         }
 
         // Zoom controls — compact shared component, raised well above the bottom
-        // action bar so it never overlaps the Drop ping / Remove ping controls.
+        // action bar so it never overlaps the compact button rows.
         MapZoomControls(
             onZoomIn = { mapView?.let { it.controller.zoomIn() } },
             onZoomOut = { mapView?.let { it.controller.zoomOut() } },
@@ -409,7 +411,7 @@ fun RockScoutsMapScreen(navController: NavController) {
             mapView = mapView,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(end = 16.dp, bottom = 192.dp)
+                .padding(end = 16.dp, bottom = 156.dp)
                 .navigationBarsPadding(),
         )
 
@@ -472,108 +474,118 @@ fun RockScoutsMapScreen(navController: NavController) {
             }
         }
 
-        // Bottom action bar — Set Ping sits in the same bottom row as the profile
-        // button (full-width when no live ping; Set Ping + Remove side-by-side
-        // when a ping is already live). Lifted above the system navigation bar.
+        // Bottom action bar — compact, two-column rows so all buttons fit above
+        // the system navigation bar. Half-width buttons keep text visible while
+        // preserving tappable size.
         Box(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .background(Color(0xFF1C1A14).copy(alpha = 0.95f))
-                .padding(16.dp)
+                .padding(horizontal = 12.dp, vertical = 10.dp)
                 .navigationBarsPadding(),
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                // Download Map button — uses the centered pin's coordinates (map center)
-                SculptedOutlinedButton(
-                    text = "Download offline maps",
-                    onClick = { showDownloadSheet = true },
-                    accent = Aqua,
-                    textColor = Aqua,
-                    icon = Icons.Filled.Download,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(10.dp))
                 if (myPing != null) {
-                    // Live ping — show info + Share / Set Ping (update) / Remove
+                    // Compact live ping info
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(32.dp)
                                 .clip(CircleShape)
                                 .background(Success.copy(alpha = 0.30f))
                                 .glowingBorder(1.dp, Success.copy(alpha = 0.35f), CircleShape),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Icon(Icons.Filled.LocationOn, contentDescription = null, tint = Success, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Filled.LocationOn, contentDescription = null, tint = Success, modifier = Modifier.size(18.dp))
                         }
-                        Spacer(Modifier.width(12.dp))
+                        Spacer(Modifier.width(8.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Your ping is live", style = MaterialTheme.typography.titleMedium, color = DarkTextHigh, fontWeight = FontWeight.Bold)
-                            Text("Private — share via Messenger to show someone · expires in ${if (isPremium) "24h" else "12h"}", style = MaterialTheme.typography.bodySmall, color = DarkTextMid)
+                            Text(
+                                "Your ping is live",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = DarkTextHigh,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                "Private — expires in ${if (isPremium) "24h" else "12h"}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = DarkTextMid,
+                            )
                         }
                     }
-                    Spacer(Modifier.height(10.dp))
-                    // Share button — opens confirmation dialog, then Messenger
-                    SculptedButton(
-                        text = "Share ping location",
-                        onClick = { showShareConfirmDialog = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        accent = Citrine,
-                        containerColor = Citrine,
-                        textColor = Ink,
-                        icon = Icons.Filled.Share,
-                        shape = RoundedCornerShape(24.dp),
-                    )
-                    Spacer(Modifier.height(10.dp))
+                    // Share + Remove row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         SculptedButton(
-                            text = "Drop ping",
-                            onClick = { showPingConfirmDialog = true },
-                            modifier = Modifier.weight(2f),
-                            accent = Success,
-                            containerColor = Success,
+                            text = "Share ping",
+                            onClick = { showConversationPicker = true },
+                            modifier = Modifier.weight(1f),
+                            accent = Citrine,
+                            containerColor = Citrine,
                             textColor = Ink,
-                            icon = Icons.Filled.LocationOn,
-                            shape = RoundedCornerShape(24.dp),
+                            icon = Icons.Filled.Share,
+                            shape = RoundedCornerShape(18.dp),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 8.dp),
+                            textStyle = MaterialTheme.typography.labelMedium,
                         )
                         SculptedButton(
-                            text = "Remove ping",
+                            text = "Remove ...",
                             onClick = { showRemovePingConfirm = true },
                             modifier = Modifier.weight(1f),
                             accent = Aqua,
                             containerColor = Color(0xFF3A3830),
                             textColor = DarkTextHigh,
-                            shape = RoundedCornerShape(24.dp),
+                            shape = RoundedCornerShape(18.dp),
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 8.dp),
+                            textStyle = MaterialTheme.typography.labelMedium,
                         )
                     }
                 } else {
                     Text(
-                        "Drag the map to position your pin, then tap Set ping. Your ping is private — share it with whoever you choose via Messenger.",
-                        style = MaterialTheme.typography.bodyMedium,
+                        "Drag the map to position your pin, then tap Set ping.",
+                        style = MaterialTheme.typography.bodySmall,
                         color = DarkTextHigh,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center,
                     )
-                    Spacer(Modifier.height(10.dp))
+                }
+                // Download maps + Set/Drop ping row — always visible
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    SculptedOutlinedButton(
+                        text = "Download offline maps",
+                        onClick = { showDownloadSheet = true },
+                        accent = Aqua,
+                        textColor = Aqua,
+                        icon = Icons.Filled.Download,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(18.dp),
+                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 8.dp),
+                        textStyle = MaterialTheme.typography.labelMedium,
+                    )
                     SculptedButton(
-                        text = "Set ping",
+                        text = if (myPing != null) "Drop ping" else "Set ping",
                         onClick = { showPingConfirmDialog = true },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.weight(1f),
                         accent = Success,
                         containerColor = Success,
                         textColor = Ink,
                         icon = Icons.Filled.LocationOn,
-                        shape = RoundedCornerShape(24.dp),
+                        shape = RoundedCornerShape(18.dp),
+                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 8.dp),
+                        textStyle = MaterialTheme.typography.labelMedium,
                     )
                 }
             }
@@ -591,55 +603,19 @@ fun RockScoutsMapScreen(navController: NavController) {
             )
         }
 
-        // Share confirmation dialog — confirms before opening Messenger
-        if (showShareConfirmDialog && myPing != null) {
+        // In-app conversation picker — share the user's ping to a selected chat.
+        if (showConversationPicker && myPing != null) {
             val ping = myPing!!
-            AlertDialog(
-                onDismissRequest = { showShareConfirmDialog = false },
-                containerColor = Color(0xFF1C1A14),
-                titleContentColor = DarkTextHigh,
-                textContentColor = DarkTextHigh,
-                title = { Text("Share via Messenger?") },
-                text = {
-                    Column {
-                        Text(
-                            "This will open Messenger so you can pick a conversation to send your ping to. Make sure you select the right conversation — your exact location will be shared with that person.",
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            "Lat: %.5f  ·  Lng: %.5f".format(ping.lat, ping.lng),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = DarkTextMid,
-                        )
-                    }
-                },
-                confirmButton = {
-                    SculptedButton(
-                        text = "Open Messenger",
-                        onClick = {
-                            showShareConfirmDialog = false
-                            SafeLinkOpener.sharePingLocation(
-                                context,
-                                ping.lat,
-                                ping.lng,
-                                ping.label,
-                                profile.name,
-                            )
-                        },
-                        accent = Citrine,
-                        containerColor = Citrine,
-                        textColor = Ink,
-                        icon = Icons.Filled.Share,
-                    )
-                },
-                dismissButton = {
-                    SculptedOutlinedButton(
-                        text = "Cancel",
-                        onClick = { showShareConfirmDialog = false },
-                        accent = Aqua,
-                        textColor = DarkTextHigh,
-                    )
-                },
+            PingConversationPicker(
+                navController = navController,
+                ping = PingToShare(
+                    lat = ping.lat,
+                    lng = ping.lng,
+                    label = ping.label,
+                    senderId = auth.currentUserId ?: "",
+                    senderName = profile.name,
+                ),
+                onDismiss = { showConversationPicker = false },
             )
         }
 

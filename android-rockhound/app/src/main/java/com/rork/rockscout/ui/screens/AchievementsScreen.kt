@@ -33,6 +33,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -73,6 +74,7 @@ import com.rork.rockscout.ui.components.GamerStatPill
 import com.rork.rockscout.ui.components.GamerStreakCard
 import com.rork.rockscout.ui.components.UnlimitedXpBarWithProgress
 import com.rork.rockscout.ui.components.SculptedIconButton
+import com.rork.rockscout.ui.components.ShareToProfileComposer
 import com.rork.rockscout.ui.components.badgePalette
 import com.rork.rockscout.ui.components.glowingBorder
 import com.rork.rockscout.ui.navigation.Routes
@@ -100,6 +102,7 @@ fun AchievementsScreen(
     val tier by AchievementsRepository.tier.collectAsStateWithLifecycle()
     val profile by AppRepository.instance.profile.collectAsStateWithLifecycle()
     var selectedBadge by remember { mutableStateOf<Badge?>(null) }
+    var showShareToProfile by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
 
     // The badge catalog header item index — used for scrollToBadges navigation.
@@ -134,6 +137,17 @@ fun AchievementsScreen(
             maxAlpha = 0.4f,
         )
 
+        if (showShareToProfile) {
+            ShareToProfileComposer(
+                sourceType = "achievement",
+                title = "${profile.name}'s Player Card",
+                tagline = "Level $level • ${tier.name.lowercase().replaceFirstChar { it.uppercase() }} tier",
+                imageUri = null,
+                locationText = "",
+                onDismiss = { showShareToProfile = false },
+            )
+        }
+
         LazyColumn(
             state = listState,
             // Keep the scrollable area above the gesture navigation bar so
@@ -166,6 +180,13 @@ fun AchievementsScreen(
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.weight(1f),
+                    )
+                    SculptedIconButton(
+                        icon = Icons.Filled.PersonAdd,
+                        contentDescription = "Share to Profile",
+                        onClick = { showShareToProfile = true },
+                        accent = Citrine,
+                        iconTint = Color.White,
                     )
                 }
             }
