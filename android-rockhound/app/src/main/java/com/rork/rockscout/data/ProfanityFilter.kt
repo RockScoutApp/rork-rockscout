@@ -48,14 +48,22 @@ object ProfanityFilter {
         "ass", "asses",
     )
 
-    /** Words that must never be censored even if they contain a censored substring. */
+    /** Words that must never be censored even if they contain a censored substring.
+     *  Includes geological / paleontological / proper-noun terms relevant to RockScout. */
     private val allowedWords = setOf(
         "hell", "damn", "ass", "asses", "badass", "hardass", "smartass",
         "jackass", "dumbass", "kickass", "lass", "class", "grass", "mass",
         "pass", "bass", "glass",
         // False-positive names and words
         "cocktail", "cocktails",
-        "dickerson", "dickinson",
+        "dickerson", "dickinson", "dickinsonia", "dickinsoniids",
+        // Geological / mineral / field terms
+        "snigger", "scunthorpe", "penistone", "lightfoot",
+        "assassin", "assay", "casserole", "grasshopper",
+        "passerby", "massive", "classroom", "classic", "classify",
+        "crass", "brass", "morass", "amass",
+        "stash", "flash", "splash", "smash",
+        "password", "bypass", "underpass", "overpass",
     )
 
     /** Common leetspeak substitutions to normalize before matching. */

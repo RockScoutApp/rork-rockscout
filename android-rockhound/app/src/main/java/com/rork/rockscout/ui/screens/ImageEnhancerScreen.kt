@@ -64,7 +64,10 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.ImageEnhancerService
+import com.rork.rockscout.data.ImageModerator
 import com.rork.rockscout.data.ImageUtils
+import com.rork.rockscout.data.ModerationResult
+import com.rork.rockscout.data.ModerationTriState
 import com.rork.rockscout.ui.components.ShareCardImage
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.SculptedButton
@@ -106,6 +109,8 @@ fun ImageEnhancerScreen(
     var tileProgressText by remember { mutableStateOf("") }
     var isSaved by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isModerating by remember { mutableStateOf(false) }
+    var moderationRejected by remember { mutableStateOf<String?>(null) }
 
     // Camera launcher
     var cameraUri by remember { mutableStateOf<Uri?>(null) }
@@ -113,9 +118,27 @@ fun ImageEnhancerScreen(
         contract = ActivityResultContracts.TakePicture(),
     ) { success ->
         if (success && cameraUri != null) {
-            sourceUri = cameraUri
-            enhancedResult = null
-            isSaved = false
+            val capturedUri = cameraUri!!
+            isModerating = true
+            moderationRejected = null
+            scope.launch {
+                val base64 = ImageUtils.uriToModerationBase64(context, capturedUri)
+                val verdict = if (base64 != null) {
+                    ImageModerator.scan(base64)
+                } else {
+                    ModerationResult(allowed = true)
+                }
+                isModerating = false
+                if (verdict.triState == ModerationTriState.EXPLICIT) {
+                    moderationRejected = verdict.reason.ifBlank {
+                        "This image can't be used because it contains content that violates our family-friendly policy."
+                    }
+                } else {
+                    sourceUri = capturedUri
+                    enhancedResult = null
+                    isSaved = false
+                }
+            }
         }
     }
 
@@ -124,9 +147,26 @@ fun ImageEnhancerScreen(
         contract = ActivityResultContracts.GetContent(),
     ) { uri ->
         if (uri != null) {
-            sourceUri = uri
-            enhancedResult = null
-            isSaved = false
+            isModerating = true
+            moderationRejected = null
+            scope.launch {
+                val base64 = ImageUtils.uriToModerationBase64(context, uri)
+                val verdict = if (base64 != null) {
+                    ImageModerator.scan(base64)
+                } else {
+                    ModerationResult(allowed = true)
+                }
+                isModerating = false
+                if (verdict.triState == ModerationTriState.EXPLICIT) {
+                    moderationRejected = verdict.reason.ifBlank {
+                        "This image can't be used because it contains content that violates our family-friendly policy."
+                    }
+                } else {
+                    sourceUri = uri
+                    enhancedResult = null
+                    isSaved = false
+                }
+            }
         }
     }
 
@@ -257,44 +297,55 @@ fun ImageEnhancerScreen(
                 if (sourceBitmap == null && sourceUri == null) {
                     // No image selected — show picker options
                     Spacer(Modifier.weight(1f))
-                    Text(
-                        text = "Select an image to enhance",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = TextHigh,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        text = "The AI model runs entirely on your device — no internet needed, no cloud credits.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = DarkTextMid,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Spacer(Modifier.height(32.dp))
-                    // Picker buttons
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        SculptedOutlinedButton(
-                            text = "Gallery",
-                            icon = Icons.Filled.PhotoLibrary,
-                            onClick = { startGallery() },
-                            accent = Aqua,
-                            textColor = Aqua,
-                            modifier = Modifier.weight(1f),
+                    if (isModerating) {
+                        Text(
+                            text = "Scanning image for inappropriate content...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Citrine,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
                         )
-                        SculptedOutlinedButton(
-                            text = "Camera",
-                            icon = Icons.Filled.CameraAlt,
-                            onClick = { startCamera() },
-                            accent = Aqua,
-                            textColor = Aqua,
-                            modifier = Modifier.weight(1f),
+                        Spacer(Modifier.height(16.dp))
+                    } else {
+                        Text(
+                            text = "Select an image to enhance",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = TextHigh,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
                         )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = "The AI model runs entirely on your device — no internet needed, no cloud credits.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = DarkTextMid,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Spacer(Modifier.height(32.dp))
+                        // Picker buttons
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            SculptedOutlinedButton(
+                                text = "Gallery",
+                                icon = Icons.Filled.PhotoLibrary,
+                                onClick = { startGallery() },
+                                accent = Aqua,
+                                textColor = Aqua,
+                                modifier = Modifier.weight(1f),
+                            )
+                            SculptedOutlinedButton(
+                                text = "Camera",
+                                icon = Icons.Filled.CameraAlt,
+                                onClick = { startCamera() },
+                                accent = Aqua,
+                                textColor = Aqua,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
                     }
                     Spacer(Modifier.weight(1f))
                 } else {
@@ -463,6 +514,16 @@ fun ImageEnhancerScreen(
                     Text(
                         text = errorMessage ?: "",
                         style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFFE2574C),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                    )
+                }
+                // Moderation rejection message
+                if (moderationRejected != null) {
+                    Text(
+                        text = moderationRejected ?: "",
+                        style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFFE2574C),
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),

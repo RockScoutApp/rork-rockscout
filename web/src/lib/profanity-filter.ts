@@ -3,6 +3,9 @@
  * Two-tier system:
  * - Tier 1 (common profanity): silently asterisked, no warning
  * - Tier 2 (explicit language): asterisked + triggers a warning popup
+ *
+ * Includes an allowlist of false-positive words that must never be censored
+ * even if they contain a censored substring (e.g. "cocktail", "Dickerson").
  */
 
 interface FilterResult {
@@ -42,6 +45,48 @@ const EXPLICIT_WORDS: string[] = [
   "rape",
 ];
 
+// Words that must never be censored even if they contain a censored substring.
+// Mirrors Android's ProfanityFilter.allowedWords plus additional geological /
+// paleontological / proper-noun terms relevant to RockScout.
+const ALLOWED_WORDS: Set<string> = new Set([
+  "cocktail",
+  "cocktails",
+  "dickerson",
+  "dickinson",
+  "dickinsonia",
+  "dickinsoniids",
+  // Geological / mineral terms
+  "ass",
+  "asses",
+  "badass",
+  "hardass",
+  "smartass",
+  "jackass",
+  "dumbass",
+  "kickass",
+  "lass",
+  "class",
+  "grass",
+  "mass",
+  "pass",
+  "bass",
+  "glass",
+  // Additional false positives
+  "snigger",
+  "scunthorpe",
+  "penistone",
+  "lightfoot",
+  "assassin",
+  "assay",
+  "casserole",
+  "grasshopper",
+  "passerby",
+  "massive",
+  "classroom",
+  "classic",
+  "classify",
+]);
+
 function asteriskWord(word: string): string {
   if (word.length <= 2) return "*".repeat(word.length);
   return word[0] + "*".repeat(word.length - 2) + word[word.length - 1];
@@ -56,6 +101,19 @@ export function filterProfanity(text: string, strict = false): FilterResult {
   let hasExplicitContent = false;
 
   const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  // Protect allowed words by temporarily replacing them with placeholders.
+  // This prevents both tier-1 and tier-2 filters from touching them, then we
+  // restore the originals after all filtering is done.
+  const placeholders: string[] = [];
+  for (const allowed of ALLOWED_WORDS) {
+    const regex = new RegExp(`\\b${escapeRegex(allowed)}\\b`, "gi");
+    filteredText = filteredText.replace(regex, (match) => {
+      const idx = placeholders.length;
+      placeholders.push(match); // preserve original casing
+      return `\u0000ALLOWED_${idx}\u0000`;
+    });
+  }
 
   // Tier 1: common profanity — silent asterisk
   for (const word of COMMON_PROFANITY) {
@@ -76,6 +134,14 @@ export function filterProfanity(text: string, strict = false): FilterResult {
         asteriskWord(match),
       );
     }
+  }
+
+  // Restore protected allowed words
+  for (let i = placeholders.length - 1; i >= 0; i--) {
+    filteredText = filteredText.replace(
+      `\u0000ALLOWED_${i}\u0000`,
+      placeholders[i],
+    );
   }
 
   return { filteredText, hasExplicitContent };
