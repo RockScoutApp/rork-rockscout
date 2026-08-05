@@ -340,6 +340,12 @@ fun HomeScreen(navController: NavController) {
     val trialExpired by accessManager.trialExpired.collectAsStateWithLifecycle()
     val shouldShowTrialInfo by accessManager.shouldShowTrialInfo.collectAsStateWithLifecycle()
     var trialBannerDismissed by remember { mutableStateOf(false) }
+
+    // Update state — collected here so the update-available banner at the top
+    // of the home screen can react instantly when a new version is detected.
+    val updateInfo by UpdateManager.updateInfo.collectAsStateWithLifecycle()
+    val apkStatus by ApkInstaller.status.collectAsStateWithLifecycle()
+
     // TokenBank shows total identifies available: trial uses (when active) + purchased tokens.
     val effectiveTokenBalance = (if (trialActive) trialUsesRemaining else 0) + tokenBalance
     val hasLocationUnlock by accessManager.hasLocationUnlock.collectAsStateWithLifecycle()
@@ -577,6 +583,18 @@ fun HomeScreen(navController: NavController) {
                 ),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
+            // Update available banner — shown at the very top when a newer
+            // version is available. Tapping it goes to Settings → Update Now.
+            if (updateInfo != null && apkStatus == ApkInstaller.Status.IDLE) {
+                item {
+                    UpdateAvailableBanner(
+                        versionName = updateInfo?.latestVersionName ?: "",
+                        changelog = updateInfo?.changelog ?: "",
+                        onClick = { navController.navigate(Routes.SOCIAL_SETTINGS) },
+                    )
+                }
+            }
+
             // Email verification success banner — shown once when the user
             // arrives from a click-to-verify email link. Auto-dismisses after 6s.
             if (justVerifiedFromLink) {
@@ -5507,6 +5525,73 @@ private fun TrialExpiredBanner(
                     shape = RoundedCornerShape(12.dp),
                 )
             }
+        }
+    }
+}
+
+/**
+ * Compact banner shown at the very top of the home screen when a newer app
+ * version is available. Tapping it navigates to Settings where the "Update
+ * Now" button lives. Auto-dismisses when the download starts (handled by the
+ * caller's visibility condition — banner only shows when apkStatus is IDLE).
+ */
+@Composable
+private fun UpdateAvailableBanner(
+    versionName: String,
+    changelog: String,
+    onClick: () -> Unit,
+) {
+    DarkCard(modifier = Modifier.fillMaxWidth(), accent = Success) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            // Pulsing download icon to draw the eye.
+            val transition = rememberInfiniteTransition(label = "update-pulse")
+            val pulse by transition.animateFloat(
+                initialValue = 0.7f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(900, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse,
+                ),
+                label = "pulse-alpha",
+            )
+            Icon(
+                Icons.Filled.Download,
+                contentDescription = null,
+                tint = Success.copy(alpha = pulse),
+                modifier = Modifier.size(22.dp),
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = if (versionName.isNotBlank()) "Update available — v${versionName}" else "Update available",
+                    style = MaterialTheme.typography.titleSmall,
+                    color = DarkTextHigh,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (changelog.isNotBlank()) {
+                    Text(
+                        text = changelog,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextMid,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            Icon(
+                Icons.Filled.ChevronRight,
+                contentDescription = "Go to update",
+                tint = Success,
+                modifier = Modifier.size(20.dp),
+            )
         }
     }
 }
