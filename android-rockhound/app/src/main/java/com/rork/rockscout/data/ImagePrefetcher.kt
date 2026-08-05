@@ -151,11 +151,17 @@ object ImagePrefetcher {
             val loader = SingletonImageLoader.get(appContext)
             val disk = loader.diskCache
 
-            // Collect + dedupe every specimen image URL, plus every educational /
-            // guide / hero / background image URL so the offline claim covers all
-            // read-only screens — not just the specimen database.
+            // Collect + dedupe every image URL in the app: specimen photos,
+            // educational/guide illustrations, AND dino fossil/skeleton + life
+            // reconstruction images. This ensures the bulk download truly covers
+            // every single image in the app for offline use.
+            val dinoUrls = DinoImageMap.images.values.map { path ->
+                "https://jvns5dfy7fpytx79a2tb3-web.rork.live/$path"
+            } + DinoLifeImageMap.images.values.map { path ->
+                "https://jvns5dfy7fpytx79a2tb3-web.rork.live/$path"
+            }
             val allUrls = runCatching {
-                (SpecimenImages.urls.values.flatten() + EducationalImages.all)
+                (SpecimenImages.urls.values.flatten() + EducationalImages.all + dinoUrls)
                     .distinct()
                     .filter { it.isNotBlank() && it.startsWith("http") }
             }.getOrDefault(emptyList())

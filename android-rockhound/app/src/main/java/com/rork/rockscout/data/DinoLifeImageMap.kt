@@ -1,7 +1,7 @@
 package com.rork.rockscout.data
 
 /**
- * Maps a dino ID to its bundled life-reconstruction ("alive") artwork.
+ * Maps a dino ID to its life-reconstruction ("alive") artwork served via CDN.
  *
  * These are palaeoart illustrations of the living animal, kept separate from
  * [DinoImageMap], which holds fossil/skeleton photographs. Entries missing from
@@ -9,6 +9,9 @@ package com.rork.rockscout.data
  * drawn silhouette instead of showing bones labelled as a living animal.
  */
 object DinoLifeImageMap {
+
+    /** Base URL for dino life-reconstruction images on the PWA CDN. */
+    private const val CDN_BASE = "https://jvns5dfy7fpytx79a2tb3-web.rork.live"
 
     /** Dino ID to bundled asset path for the life reconstruction. */
     val images: Map<String, String> = mapOf(
@@ -219,11 +222,11 @@ object DinoLifeImageMap {
     /** True when a life reconstruction exists for this entry. */
     fun hasLifeArt(entry: DinoEntry): Boolean = images.containsKey(entry.id)
 
-    /** Coil-loadable asset URI for the life reconstruction, or null. */
+    /** CDN URL for the life reconstruction, or null. */
     fun imageUri(entry: DinoEntry): String? =
-        images[entry.id]?.let { "file:///android_asset/$it" }
+        images[entry.id]?.let { "$CDN_BASE/$it" }
 
-    /** Coil-loadable asset URI for the life reconstruction by ID, or null. */
+    /** CDN URL for the life reconstruction by ID, or null. */
     fun imageUri(id: String): String? =
-        images[id]?.let { "file:///android_asset/$it" }
+        images[id]?.let { "$CDN_BASE/$it" }
 }

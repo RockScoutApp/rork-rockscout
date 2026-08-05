@@ -23,6 +23,41 @@ import { SculptedCard, ScreenScaffold, TagChip } from "@/components/sculpted";
 const AQUA_HEX = "20 62% 65%";
 const CITRINE_HEX = "36 80% 58%";
 
+// Dino IDs that use .png instead of .jpg for fossil/skeleton images.
+// Must match Android's DinoImageMap.kt extensions exactly.
+const DINO_PNG_FOSSIL = new Set<string>([
+  "american-cheetah", "argentinosaurus", "beipiaosaurus", "dimorphodon",
+  "doedicurus", "edmontosaurus", "elasmosaurus", "gojirasaurus",
+  "merychippus", "microraptor", "noasaurus", "ouranosaurus",
+  "phorusrhacos", "plotosaurus", "puertasaurus", "pulmonoscorpius",
+  "saltasaurus", "saurophaganax", "scutellosaurus", "struthiomimus",
+  "troodon", "tsintaosaurus",
+]);
+
+// Dino IDs that use .png instead of .jpg for life-reconstruction images.
+// Must match Android's DinoLifeImageMap.kt extensions exactly.
+const DINO_PNG_LIFE = new Set<string>([
+  "acanthostega", "achillobator", "amargasaurus", "american-cheetah",
+  "american-lion", "ankylosaurus", "austroraptor", "beipiaosaurus",
+  "carnotaurus", "concavenator", "deinocheirus", "deinonychus",
+  "dilophosaurus", "dimetrodon", "dire-wolf", "dunkleosteus",
+  "gallimimus", "heterodontosaurus", "homotherium", "hypsilophodon",
+  "iguanodon", "incisivosaurus", "lambeosaurus", "macrauchenia",
+  "megalania", "megalodon", "megaraptor", "mei",
+  "microraptor", "mussaurus", "ophthalmosaurus", "ornithomimus",
+  "orodromeus", "ouranosaurus", "oviraptor", "parasaurolophus",
+  "patagotitan", "pinacosaurus", "polacanthus", "protoceratops",
+  "pulmonoscorpius", "quetzalcoatlus", "scelidosaurus", "scutellosaurus",
+  "shantungosaurus", "sinoceratops", "smilodon-populator", "spinosaurus",
+  "stegosaurus", "tarbosaurus", "tarchia", "therizinosaurus",
+  "tiktaalik", "torvosaurus", "triceratops", "troodon",
+  "tsintaosaurus", "tylosaurus", "tyrannosaurus", "utahraptor",
+  "velociraptor", "zuniceratops",
+]);
+
+const dinoFossilExt = (id: string) => (DINO_PNG_FOSSIL.has(id) ? ".png" : ".jpg");
+const dinoLifeExt = (id: string) => (DINO_PNG_LIFE.has(id) ? ".png" : ".jpg");
+
 const ERA_ORDER: DinoEra[] = [
   "TRIASSIC",
   "JURASSIC",
@@ -188,8 +223,8 @@ function DinoCard({
 }) {
   const eraInfo = ERA_LABELS[entry.era];
   const dietColor = DIET_COLORS[entry.diet];
-  const imageUrl = `/dino_images/${entry.id}.jpg`;
-  const lifeImageUrl = `/dino_life/${entry.id}.jpg`;
+  const imageUrl = `/dino_images/${entry.id}${dinoFossilExt(entry.id)}`;
+  const lifeImageUrl = `/dino_life/${entry.id}${dinoLifeExt(entry.id)}`;
 
   return (
     <SculptedCard

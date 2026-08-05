@@ -50,6 +50,8 @@ import {
 } from "lucide-react";
 import { useTier } from "@/hooks/useTier";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 import { DashboardTile, SculptedCard, ProfileStatBar } from "@/components/sculpted";
 
 type Accent = "citrine" | "aqua" | "cyan" | "amethyst" | "danger" | "success";
@@ -363,6 +365,24 @@ export default function Home() {
   const versionTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [justVerified, setJustVerified] = useState(false);
 
+  // Fetch the user's display_name so the greeting shows their username, not email.
+  const { data: profile } = useQuery<{ display_name: string } | null>({
+    queryKey: ["home-profile", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from("rockscout_profiles")
+        .select("display_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      return (data as { display_name: string } | null) ?? null;
+    },
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+
+  const displayName = profile?.display_name || user?.email?.split("@")[0] || "Rockhound";
+
   // Show a verification-success banner if the user arrived from a click-to-verify
   // email link. The InstallPWA page sets a sessionStorage flag before redirecting.
   useEffect(() => {
@@ -438,7 +458,7 @@ export default function Home() {
         </button>
         <div className="flex-1">
           <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-            {user ? `Hello, ${user.email?.split("@")[0] ?? "Rockhound"}` : "Welcome to RockScout"}
+            {user ? `Hello, ${displayName}` : "Welcome to RockScout"}
           </h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
             What are you hunting for today?

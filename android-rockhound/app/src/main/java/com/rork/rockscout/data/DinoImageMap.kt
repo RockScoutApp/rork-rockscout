@@ -1,11 +1,14 @@
 package com.rork.rockscout.data
 
 /**
- * Maps each dino ID to a locally bundled Wikipedia image in the app assets.
+ * Maps each dino ID to a Wikipedia fossil/skeleton image served via CDN.
  * All 202 dinosaurs and prehistoric animals have their own unique image.
- * Images are bundled in assets/dino_images/ — no external links.
+ * Images are served from the PWA CDN — no longer bundled in APK assets.
  */
 object DinoImageMap {
+
+    /** Base URL for dino fossil/skeleton images on the PWA CDN. */
+    private const val CDN_BASE = "https://jvns5dfy7fpytx79a2tb3-web.rork.live"
 
     /** Maps each dino ID to its locally bundled image asset path. */
     val images: Map<String, String> = mapOf(
@@ -219,9 +222,9 @@ object DinoImageMap {
     /** Get the local asset path for a dino ID, or null if not found. */
     fun imagePath(id: String): String? = images[id]
 
-    /** Get the Coil-loadable URI (file:///android_asset/...) for a [DinoEntry]. */
-    fun imageUri(entry: DinoEntry): String? = images[entry.id]?.let { "file:///android_asset/$it" }
+    /** Get the CDN URL for a [DinoEntry]'s fossil/skeleton image, or null if not found. */
+    fun imageUri(entry: DinoEntry): String? = images[entry.id]?.let { "$CDN_BASE/$it" }
 
-    /** Get the Coil-loadable URI (file:///android_asset/...) for a dino ID. */
-    fun imageUri(id: String): String? = images[id]?.let { "file:///android_asset/$it" }
+    /** Get the CDN URL for a dino ID's fossil/skeleton image, or null if not found. */
+    fun imageUri(id: String): String? = images[id]?.let { "$CDN_BASE/$it" }
 }

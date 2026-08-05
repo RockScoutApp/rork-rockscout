@@ -100,6 +100,31 @@ async function checkRevenueCatEntitlements(
   }
 }
 
+/** Fetch the current is_pro value from Supabase. */
+async function fetchSupabaseIsPro(
+  supabaseUrl: string,
+  serviceKey: string,
+  userId: string,
+): Promise<boolean> {
+  try {
+    const resp = await fetch(
+      `${supabaseUrl}/rest/v1/rockscout_profiles?select=is_pro&id=eq.${encodeURIComponent(userId)}`,
+      {
+        method: "GET",
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+        },
+      },
+    );
+    if (!resp.ok) return false;
+    const rows = (await resp.json()) as { is_pro: boolean }[];
+    return rows[0]?.is_pro ?? false;
+  } catch {
+    return false;
+  }
+}
+
 /** Update the Supabase profile's is_pro column via the service-role key. */
 async function updateSupabaseIsPro(
   supabaseUrl: string,
@@ -200,15 +225,42 @@ export async function handleEntitlement(
   }
 
   // 2. Write the result back to Supabase so the web PWA sees it.
+  //
+  // CRITICAL: If the user is already is_pro=true in Supabase (e.g. the premium
+  // APK set it via forcePremium), do NOT overwrite to false just because
+  // RevenueCat has no entitlement — premium APK users bypass RevenueCat
+  // entirely. Only write is_pro=false if it was already false (a normal-app
+  // user whose subscription expired).
   const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
   let supabaseUpdated = false;
   if (env.SUPABASE_SERVICE_ROLE_KEY && supabaseUrl) {
-    supabaseUpdated = await updateSupabaseIsPro(
-      supabaseUrl,
-      env.SUPABASE_SERVICE_ROLE_KEY,
-      userId,
-      isPremium,
-    );
+    if (!isPremium) {
+      const currentIsPro = await fetchSupabaseIsPro(
+        supabaseUrl,
+        env.SUPABASE_SERVICE_ROLE_KEY,
+        userId,
+      );
+      if (currentIsPro) {
+        // Already premium — preserve it. Return isPremium=true so the caller
+        // knows the user has premium.
+        isPremium = true;
+        supabaseUpdated = true;
+      } else {
+        supabaseUpdated = await updateSupabaseIsPro(
+          supabaseUrl,
+          env.SUPABASE_SERVICE_ROLE_KEY,
+          userId,
+          false,
+        );
+      }
+    } else {
+      supabaseUpdated = await updateSupabaseIsPro(
+        supabaseUrl,
+        env.SUPABASE_SERVICE_ROLE_KEY,
+        userId,
+        isPremium,
+      );
+    }
   }
 
   return Response.json(
