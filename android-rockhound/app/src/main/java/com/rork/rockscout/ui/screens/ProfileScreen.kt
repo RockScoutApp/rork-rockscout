@@ -457,12 +457,29 @@ fun ProfileScreen(
                                             .glowingBorder(3.dp, profileBorderColor(profile.hunterStatus), RoundedCornerShape(16.dp)),
                                         contentAlignment = Alignment.Center,
                                     ) {
-                                        AnimatedAvatarIcon(
-                                            emoji = profile.avatarEmoji,
-                                            size = 72.dp,
-                                            style = MaterialTheme.typography.displaySmall,
-                                            contentAlignment = Alignment.Center,
-                                        )
+                                        if (!profile.avatarImagePath.isNullOrBlank()) {
+                                            AsyncImage(
+                                                model = profile.avatarImagePath,
+                                                contentDescription = "Profile picture",
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentScale = ContentScale.Crop,
+                                            )
+                                        } else {
+                                            // Framed question mark fallback
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .background(Brush.linearGradient(listOf(Citrine.copy(alpha = 0.15f), Aqua.copy(alpha = 0.08f)))),
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                Text(
+                                                    "?",
+                                                    style = MaterialTheme.typography.displayMedium,
+                                                    color = Citrine.copy(alpha = 0.7f),
+                                                    fontWeight = FontWeight.Bold,
+                                                )
+                                            }
+                                        }
                                     }
                                     BadgeIconButton(
                                         icon = Icons.Filled.Notifications,
@@ -1498,6 +1515,7 @@ private fun EditProfileSheet(
     var editBio by remember { mutableStateOf(bio) }
     var editAvatar by remember { mutableStateOf(avatarEmoji) }
     var editAvatarImagePath by remember { mutableStateOf(avatarImagePath) }
+    var editBgImagePath by remember { mutableStateOf(backgroundImagePath) }
     var editRegion by remember { mutableStateOf(homeRegion) }
     var editGender by remember { mutableStateOf(gender) }
     var editBirthday by remember { mutableStateOf(birthdayMillis) }
@@ -1518,17 +1536,76 @@ private fun EditProfileSheet(
     var avatarOffsetX by remember { mutableStateOf(0f) }
     var avatarOffsetY by remember { mutableStateOf(0f) }
     var avatarPreviewSizePx by remember { mutableStateOf(0) }
+    var bgScale by remember { mutableStateOf(1f) }
+    var bgOffsetX by remember { mutableStateOf(0f) }
+    var bgOffsetY by remember { mutableStateOf(0f) }
+    var bgPreviewSizeWPx by remember { mutableStateOf(0) }
+    var bgPreviewSizeHPx by remember { mutableStateOf(0) }
+    var bgCropping by remember { mutableStateOf(false) }
     var cropping by remember { mutableStateOf(false) }
     var showFullScreenAvatarEditor by remember { mutableStateOf(false) }
+    var showFullScreenBgEditor by remember { mutableStateOf(false) }
     var isInteracting by remember { mutableStateOf(false) }
+    var isBgInteracting by remember { mutableStateOf(false) }
     LaunchedEffect(isInteracting) {
         if (isInteracting) {
             kotlinx.coroutines.delay(800)
             isInteracting = false
         }
     }
+    LaunchedEffect(isBgInteracting) {
+        if (isBgInteracting) {
+            kotlinx.coroutines.delay(800)
+            isBgInteracting = false
+        }
+    }
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+
+    // Gallery launcher for background photo — stores raw URI, crop happens on save
+    val bgGalleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+    ) { uri: Uri? ->
+        if (uri != null) {
+            coroutineScope.launch {
+                bgModerating = true
+                val base64 = ImageUtils.uriToModerationBase64(context, uri)
+                if (base64 == null) {
+                    bgModerating = false
+                    return@launch
+                }
+                val verdict = ImageModerator.scan(base64, "image/jpeg")
+                when (verdict.triState) {
+                    ModerationTriState.CLEAN -> {
+                        val persistentPath = ImageUtils.copyUriToInternalStorage(context, uri, "backgrounds")
+                        if (persistentPath != null) {
+                            editBgImagePath = persistentPath
+                            bgScale = 1f
+                            bgOffsetX = 0f
+                            bgOffsetY = 0f
+                        }
+                    }
+                    ModerationTriState.EXPLICIT -> {
+                        android.widget.Toast.makeText(
+                            context,
+                            "Image rejected: inappropriate content detected.",
+                            android.widget.Toast.LENGTH_LONG,
+                        ).show()
+                    }
+                    ModerationTriState.QUESTIONABLE -> {
+                        val persistentPath = ImageUtils.copyUriToInternalStorage(context, uri, "backgrounds")
+                        if (persistentPath != null) {
+                            editBgImagePath = persistentPath
+                            bgScale = 1f
+                            bgOffsetX = 0f
+                            bgOffsetY = 0f
+                        }
+                    }
+                }
+                bgModerating = false
+            }
+        }
+    }
 
     // Gallery launcher for avatar photo
     val avatarGalleryLauncher = rememberLauncherForActivityResult(
@@ -1560,6 +1637,9 @@ private fun EditProfileSheet(
                         editAvatarImagePath = persistentPath ?: uri.toString()
                     }
                 }
+                avatarScale = 1f
+                avatarOffsetX = 0f
+                avatarOffsetY = 0f
                 avatarModerating = false
             }
         }

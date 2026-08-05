@@ -199,7 +199,98 @@ fun SocialSettingsScreen(
                 .padding(horizontal = 20.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // ── Section 1: Discovery & Location ──
+            // ── Section 1: Content Filter ──
+            SectionHeader("Content Filter")
+            Text(
+                "Choose how much profanity is filtered from text in posts, messages, and other user-generated content. Sexually explicit words, racial slurs, and severe terms are always filtered. Image moderation is always on.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextMid,
+            )
+
+            val profanityLevel = remember(profile.profanityFilterLevel) {
+                com.rork.rockscout.data.ProfanityFilter.ProfanityLevel.fromValue(profile.profanityFilterLevel)
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0xFF1A1812).copy(alpha = 0.6f))
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    com.rork.rockscout.data.ProfanityFilter.ProfanityLevel.entries.forEach { level ->
+                        val isSelected = profanityLevel == level
+                        val label = when (level) {
+                            com.rork.rockscout.data.ProfanityFilter.ProfanityLevel.OFF -> "Off"
+                            com.rork.rockscout.data.ProfanityFilter.ProfanityLevel.LOW -> "Low (default)"
+                            com.rork.rockscout.data.ProfanityFilter.ProfanityLevel.STRICT -> "Strict"
+                        }
+                        val desc = when (level) {
+                            com.rork.rockscout.data.ProfanityFilter.ProfanityLevel.OFF ->
+                                "Only sexually explicit words, racial slurs, and severe terms (retard, rape) are asterisked. All other profanity is shown."
+                            com.rork.rockscout.data.ProfanityFilter.ProfanityLevel.LOW ->
+                                "Same as Off, plus \u201cfuck\u201d variants are silently asterisked. Mild profanity (shit, bitch, ass, etc.) is shown."
+                            com.rork.rockscout.data.ProfanityFilter.ProfanityLevel.STRICT ->
+                                "Everything except \u201chell\u201d and \u201cdamn\u201d is asterisked."
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(
+                                    if (isSelected) Citrine.copy(alpha = 0.12f)
+                                    else Color.Transparent
+                                )
+                                .clickable { repo.setProfanityFilterLevel(level) }
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(
+                                        if (isSelected) Citrine else Color(0xFF2A2820)
+                                    )
+                                    .border(
+                                        1.5.dp,
+                                        if (isSelected) Citrine else TextLow,
+                                        RoundedCornerShape(10.dp),
+                                    ),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                if (isSelected) {
+                                    Icon(
+                                        Icons.Filled.CheckCircle,
+                                        contentDescription = null,
+                                        tint = Color(0xFF1A1812),
+                                        modifier = Modifier.size(14.dp),
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) Citrine else DarkTextMid,
+                                )
+                                Text(
+                                    text = desc,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextMid,
+                                )
+                            }
+                        }
+                        if (level != com.rork.rockscout.data.ProfanityFilter.ProfanityLevel.STRICT) {
+                            Spacer(Modifier.height(4.dp))
+                        }
+                    }
+                }
+            }
+
+            // ── Section 2: Discovery & Location ──
             SectionHeader("Discovery & Location")
 
             ToggleRow(
@@ -337,98 +428,6 @@ fun SocialSettingsScreen(
                     }
                 },
             )
-
-            // ── Section 2: Content Filter ──
-            Spacer(Modifier.height(8.dp))
-            SectionHeader("Content Filter")
-            Text(
-                "Choose how much profanity is filtered from text in posts, messages, and other user-generated content. Sexually explicit words, racial slurs, and severe terms are always filtered. Image moderation is always on.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = TextMid,
-            )
-
-            val profanityLevel = remember(profile.profanityFilterLevel) {
-                com.rork.rockscout.data.ProfanityFilter.ProfanityLevel.fromValue(profile.profanityFilterLevel)
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFF1A1812).copy(alpha = 0.6f))
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
-            ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    com.rork.rockscout.data.ProfanityFilter.ProfanityLevel.entries.forEach { level ->
-                        val isSelected = profanityLevel == level
-                        val label = when (level) {
-                            com.rork.rockscout.data.ProfanityFilter.ProfanityLevel.OFF -> "Off"
-                            com.rork.rockscout.data.ProfanityFilter.ProfanityLevel.LOW -> "Low (default)"
-                            com.rork.rockscout.data.ProfanityFilter.ProfanityLevel.STRICT -> "Strict"
-                        }
-                        val desc = when (level) {
-                            com.rork.rockscout.data.ProfanityFilter.ProfanityLevel.OFF ->
-                                "Only sexually explicit words, racial slurs, and severe terms (retard, rape) are asterisked. All other profanity is shown."
-                            com.rork.rockscout.data.ProfanityFilter.ProfanityLevel.LOW ->
-                                "Same as Off, plus \u201cfuck\u201d variants are silently asterisked. Mild profanity (shit, bitch, ass, etc.) is shown."
-                            com.rork.rockscout.data.ProfanityFilter.ProfanityLevel.STRICT ->
-                                "Everything except \u201chell\u201d and \u201cdamn\u201d is asterisked."
-                        }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(
-                                    if (isSelected) Citrine.copy(alpha = 0.12f)
-                                    else Color.Transparent
-                                )
-                                .clickable { repo.setProfanityFilterLevel(level) }
-                                .padding(horizontal = 10.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(
-                                        if (isSelected) Citrine else Color(0xFF2A2820)
-                                    )
-                                    .border(
-                                        1.5.dp,
-                                        if (isSelected) Citrine else TextLow,
-                                        RoundedCornerShape(10.dp),
-                                    ),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                if (isSelected) {
-                                    Icon(
-                                        Icons.Filled.CheckCircle,
-                                        contentDescription = null,
-                                        tint = Color(0xFF1A1812),
-                                        modifier = Modifier.size(14.dp),
-                                    )
-                                }
-                            }
-                            Spacer(Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = label,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) Citrine else DarkTextMid,
-                                )
-                                Text(
-                                    text = desc,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = TextMid,
-                                )
-                            }
-                        }
-                        if (level != com.rork.rockscout.data.ProfanityFilter.ProfanityLevel.STRICT) {
-                            Spacer(Modifier.height(4.dp))
-                        }
-                    }
-                }
-            }
 
             // ── Section 3: Notifications ──
             Spacer(Modifier.height(8.dp))

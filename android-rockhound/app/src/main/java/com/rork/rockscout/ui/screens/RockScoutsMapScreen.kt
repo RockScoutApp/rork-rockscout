@@ -100,8 +100,7 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.compass.CompassOverlay
 import org.osmdroid.views.overlay.gestures.RotationGestureOverlay
-import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
-import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import com.rork.rockscout.data.LocationFetcher
 
 /**
  * RockScouts Map — shows YOUR ping only. Pings are private — nobody else's
@@ -194,32 +193,16 @@ fun RockScoutsMapScreen(navController: NavController) {
         myPingId = pings.firstOrNull { it.user_id == auth.currentUserId }?.id
     }
 
-    // Render my ping marker + shared pings on the map. Only my own ping
-    // is shown by default — shared pings (received via Messenger) appear
-    // in a different color with a directions button.
-    LaunchedEffect(pings, sharedPings, mapView, pingColorArgb) {
+    // Render shared pings only on the map. The user's own ping is NOT shown
+    // as a marker — instead the map centers on the user's GPS location (or
+    // their existing ping location) so they can position a new ping at the
+    // map center using the crosshair.
+    LaunchedEffect(sharedPings, mapView) {
         val mv = mapView ?: return@LaunchedEffect
         try {
             withContext(Dispatchers.IO) {
                 if (!isActive) return@withContext
                 mv.overlays.removeAll { it is Marker && it.id?.startsWith("ping_") == true }
-                // My ping — uses the user's chosen color
-                pings.forEach { ping ->
-                    if (!isActive) return@withContext
-                    val marker = PingMarker(
-                        mv,
-                        ping.lat,
-                        ping.lng,
-                        ping.label,
-                        isMine = true,
-                        displayName = "You",
-                        avatarEmoji = "\u26CF\uFE0F",
-                        onOpenThread = { {} },
-                        markerColor = pingColorArgb,
-                    )
-                    marker.id = "ping_${ping.id}"
-                    mv.overlays.add(marker)
-                }
                 // Shared pings — Aqua color, tappable to show directions
                 sharedPings.forEach { sp ->
                     if (!isActive) return@withContext
@@ -247,6 +230,28 @@ fun RockScoutsMapScreen(navController: NavController) {
             // Expected when navigating away.
         } catch (_: Throwable) {
             // MapView may have been detached concurrently.
+        }
+    }
+
+    // Center the map on the user's existing ping location, or their GPS
+    // location if no ping is set yet. This runs once after the map is ready.
+    LaunchedEffect(mapView, myPing) {
+        val mv = mapView ?: return@LaunchedEffect
+        val targetPoint = if (myPing != null) {
+            GeoPoint(myPing.lat, myPing.lng)
+        } else {
+            // Fetch GPS location and center there
+            val loc = withContext(Dispatchers.IO) {
+                runCatching { LocationFetcher.fetch(context) }.getOrNull()
+            }
+            if (loc != null) GeoPoint(loc.latitude, loc.longitude)
+            else GeoPoint(current.first, current.second)
+        }
+        withContext(Dispatchers.Main) {
+            runCatching {
+                mv.controller.animateTo(targetPoint)
+                mv.controller.setZoom(10.0)
+            }
         }
     }
 
@@ -291,14 +296,10 @@ fun RockScoutsMapScreen(navController: NavController) {
                 modifier = Modifier.fillMaxSize(),
                 factory = { ctx ->
                     createRockScoutMapView(ctx).apply {
-                        controller.setZoom(8.0)
+                        controller.setZoom(10.0)
                         controller.setCenter(GeoPoint(current.first, current.second))
                         overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
                         overlays.add(CompassOverlay(ctx, this).apply { enableCompass() })
-                        // User location dot
-                        val locOverlay = MyLocationNewOverlay(GpsMyLocationProvider(ctx), this)
-                        locOverlay.enableMyLocation()
-                        overlays.add(locOverlay)
 
                         mapView = this
                     }
@@ -313,8 +314,9 @@ fun RockScoutsMapScreen(navController: NavController) {
 
         }
 
-        // Centered ping pin — stays fixed at screen center while the map pans
-        // underneath. The tip of the pin marks the exact geo-point at the map center.
+        // Centered crosshair — stays fixed at screen center while the map pans
+        // underneath. Marks the exact geo-point at the map center where the ping
+        // will be set.
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
@@ -322,19 +324,17 @@ fun RockScoutsMapScreen(navController: NavController) {
             // Glow circle at the exact target point
             Box(
                 modifier = Modifier
-                    .size(14.dp)
+                    .size(16.dp)
                     .clip(CircleShape)
-                    .background(Warning.copy(alpha = 0.35f))
-                    .glowingBorder(2.dp, Warning, CircleShape),
+                    .background(Success.copy(alpha = 0.25f))
+                    .glowingBorder(2.dp, Success, CircleShape),
             )
-            // Pin above center — tip touches the center point
-            Icon(
-                Icons.Filled.LocationOn,
-                contentDescription = "Drag the map to set your ping",
-                tint = Warning,
+            // Crosshair ring
+            Box(
                 modifier = Modifier
-                    .size(44.dp)
-                    .offset(y = (-22).dp),
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .glowingBorder(1.5.dp, Success.copy(alpha = 0.6f), CircleShape),
             )
         }
 
@@ -605,7 +605,7 @@ fun RockScoutsMapScreen(navController: NavController) {
 
         // In-app conversation picker — share the user's ping to a selected chat.
         if (showConversationPicker && myPing != null) {
-            val ping = myPing!!
+            val ping = myPing
             PingConversationPicker(
                 navController = navController,
                 ping = PingToShare(
@@ -765,13 +765,17 @@ fun RockScoutsMapScreen(navController: NavController) {
                     SculptedButton(
                         text = "Confirm",
                         onClick = {
-                            val mv = mapView ?: return@SculptedButton
-                            val c = mv.mapCenter
-                            showPingConfirmDialog = false
-                            scope.launch {
-                                val ttl = if (isPremium) 24 else 12
-                                social.setPing(c.latitude, c.longitude, "I'm here!", ttlHours = ttl)
-                                social.loadVisiblePings()
+                            val mv = mapView
+                            val center = mv?.mapCenter
+                            if (center != null) {
+                                showPingConfirmDialog = false
+                                scope.launch {
+                                    runCatching {
+                                        val ttl = if (isPremium) 24 else 12
+                                        social.setPing(center.latitude, center.longitude, "I'm here!", ttlHours = ttl)
+                                        social.loadVisiblePings()
+                                    }
+                                }
                             }
                         },
                         accent = Success,

@@ -350,6 +350,86 @@ object ImageUtils {
         }
     }
 
+    /**
+     * Crop a wide background region from a bitmap based on the user's pan/zoom
+     * state in the profile editor background preview box.
+     *
+     * The preview renders the image with ContentScale.Crop at a wide aspect ratio,
+     * then applies the user's pinch-zoom scale and pan offset via GraphicsLayer.
+     *
+     * @param bitmap     The source bitmap
+     * @param userScale  User's pinch-zoom scale (clamped to >= 1f)
+     * @param offsetX    User's pan offset X in preview-box pixels
+     * @param offsetY    User's pan offset Y in preview-box pixels
+     * @param boxWPx     The preview box width in pixels
+     * @param boxHPx     The preview box height in pixels
+     * @return A cropped bitmap suitable for background use
+     */
+    fun cropBackground(
+        bitmap: Bitmap,
+        userScale: Float,
+        offsetX: Float,
+        offsetY: Float,
+        boxWPx: Int,
+        boxHPx: Int,
+    ): Bitmap {
+        val bmpW = bitmap.width
+        val bmpH = bitmap.height
+        val cropScale = maxOf(boxWPx.toFloat() / bmpW, boxHPx.toFloat() / bmpH)
+        val imgLeft = (boxWPx - bmpW * cropScale) / 2f
+        val imgTop = (boxHPx - bmpH * cropScale) / 2f
+        val us = userScale.coerceAtLeast(1f)
+        val visW = boxWPx / (cropScale * us)
+        val visH = boxHPx / (cropScale * us)
+        val cx = (boxWPx / 2f - imgLeft - offsetX / us) / cropScale
+        val cy = (boxHPx / 2f - imgTop - offsetY / us) / cropScale
+        val halfW = visW / 2f
+        val halfH = visH / 2f
+        val left = (cx - halfW).coerceIn(0f, (bmpW - visW).coerceAtLeast(0f))
+        val top = (cy - halfH).coerceIn(0f, (bmpH - visH).coerceAtLeast(0f))
+        val w = visW.toInt().coerceIn(1, bmpW)
+        val h = visH.toInt().coerceIn(1, bmpH)
+        return Bitmap.createBitmap(
+            bitmap,
+            left.toInt().coerceIn(0, (bmpW - w).coerceAtLeast(0)),
+            top.toInt().coerceIn(0, (bmpH - h).coerceAtLeast(0)),
+            w,
+            h,
+        )
+    }
+
+    /**
+     * Decode a URI to a bitmap, crop a wide background region based on the
+     * user's pan/zoom state, resize to 800x300, and save the result to internal
+     * storage as a JPEG.
+     *
+     * @return A stable file:// URI string, or null on failure
+     */
+    fun cropAndSaveBackground(
+        context: Context,
+        uri: Uri,
+        userScale: Float,
+        offsetX: Float,
+        offsetY: Float,
+        boxWPx: Int,
+        boxHPx: Int,
+    ): String? {
+        return try {
+            val bitmap = decodeSampledBitmap(context, uri, 2048) ?: return null
+            val cropped = cropBackground(bitmap, userScale, offsetX, offsetY, boxWPx, boxHPx)
+            val resized = Bitmap.createScaledBitmap(cropped, 800, 300, true)
+            val dir = File(context.filesDir, "backgrounds").apply { mkdirs() }
+            val fileName = "bg_${System.currentTimeMillis()}.jpg"
+            val destFile = File(dir, fileName)
+            FileOutputStream(destFile).use { out ->
+                resized.compress(Bitmap.CompressFormat.JPEG, 85, out)
+            }
+            "file://${destFile.absolutePath}"
+        } catch (_: Throwable) {
+            null
+        }
+    }
+
     fun copyUriToInternalStorage(context: Context, uri: Uri, subdir: String = "images"): String? {
         return try {
             val scheme = uri.scheme
