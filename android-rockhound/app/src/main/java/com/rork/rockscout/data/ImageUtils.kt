@@ -354,8 +354,9 @@ object ImageUtils {
      * Crop a wide background region from a bitmap based on the user's pan/zoom
      * state in the profile editor background preview box.
      *
-     * The preview renders the image with ContentScale.Crop at a wide aspect ratio,
+     * The preview renders the image with ContentScale.Fit at a wide aspect ratio,
      * then applies the user's pinch-zoom scale and pan offset via GraphicsLayer.
+     * Zoom is clamped to >= 1f — the whole image is always visible.
      *
      * @param bitmap     The source bitmap
      * @param userScale  User's pinch-zoom scale (clamped to >= 1f)
@@ -378,7 +379,7 @@ object ImageUtils {
         val cropScale = minOf(boxWPx.toFloat() / bmpW, boxHPx.toFloat() / bmpH)
         val imgLeft = (boxWPx - bmpW * cropScale) / 2f
         val imgTop = (boxHPx - bmpH * cropScale) / 2f
-        val us = userScale
+        val us = userScale.coerceAtLeast(1f)
         val visW = boxWPx / (cropScale * us)
         val visH = boxHPx / (cropScale * us)
         val cx = (boxWPx / 2f - imgLeft - offsetX / us) / cropScale

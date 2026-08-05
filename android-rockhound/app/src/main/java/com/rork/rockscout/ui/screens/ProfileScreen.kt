@@ -1825,6 +1825,98 @@ private fun EditProfileSheet(
                 }
             }
         }
+        // ── Background image pan/zoom preview (always shows whole image, zoom-only) ──
+        if (editBgImagePath != null && bgModerating.not()) {
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            val bgPreviewW = 300.dp
+            val bgPreviewH = 112.dp
+            val bgPreviewWPx = with(density) { bgPreviewW.toPx().toInt() }
+            val bgPreviewHPx = with(density) { bgPreviewH.toPx().toInt() }
+            LaunchedEffect(bgPreviewWPx, bgPreviewHPx) {
+                bgPreviewSizeWPx = bgPreviewWPx
+                bgPreviewSizeHPx = bgPreviewHPx
+            }
+            Spacer(Modifier.height(6.dp))
+            Text("Pinch to zoom and drag to pan.",
+                style = MaterialTheme.typography.bodySmall, color = DarkTextMid)
+            Spacer(Modifier.height(8.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(bgPreviewH)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFF1A1812))
+                    .glowingBorder(2.dp, Citrine.copy(alpha = 0.35f), RoundedCornerShape(16.dp))
+                    .pointerInput(editBgImagePath) {
+                        detectTransformGestures { _, pan, zoom, _ ->
+                            isBgInteracting = true
+                            bgScale = (bgScale * zoom).coerceIn(1f, 5f)
+                            val maxOffX = bgPreviewWPx * (bgScale - 1f) / 2f
+                            val maxOffY = bgPreviewHPx * (bgScale - 1f) / 2f
+                            bgOffsetX = (bgOffsetX + pan.x).coerceIn(-maxOffX, maxOffX)
+                            bgOffsetY = (bgOffsetY + pan.y).coerceIn(-maxOffY, maxOffY)
+                        }
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                AsyncImage(
+                    model = editBgImagePath,
+                    contentDescription = "Background photo preview",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer(
+                            scaleX = bgScale,
+                            scaleY = bgScale,
+                            translationX = bgOffsetX,
+                            translationY = bgOffsetY,
+                        ),
+                    contentScale = ContentScale.Fit,
+                )
+            }
+            Spacer(Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    "Zoom: ${"%.1f".format(bgScale)}x",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Aqua,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Citrine.copy(alpha = 0.12f))
+                        .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+                        .clickable {
+                            bgScale = 1f
+                            bgOffsetX = 0f
+                            bgOffsetY = 0f
+                        }
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                ) {
+                    Text("Reset", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Bold)
+                }
+            }
+        } else if (bgModerating) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(112.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFF1A1812))
+                    .glowingBorder(2.dp, Citrine.copy(alpha = 0.35f), RoundedCornerShape(16.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                androidx.compose.material3.CircularProgressIndicator(
+                    modifier = Modifier.size(28.dp),
+                    strokeWidth = 3.dp,
+                    color = Citrine,
+                )
+            }
+        }
         // Pending review hint
         if (!pendingBackgroundPath.isNullOrBlank()) {
             Text(
