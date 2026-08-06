@@ -2,7 +2,10 @@ import { handleIdentify, handleClarify, handleArtifactDetect } from "./identify"
 import { handleGeocode } from "./geocode";
 import { handleCommonsPhoto } from "./commons-photo";
 // RockScout backend — Cloudflare Worker entry (auth + rate-limit enabled).
-// Env sync: Supabase URL + keys point to the kzgzmudgascivwivxvvn project.
+// Env sync: Supabase URL points to the kzgzmudgascivwivxvvn project.
+// NOTE: SUPABASE_SERVICE_ROLE_KEY must also be for kzgzmudgascivwivxvvn — a key for
+// any other project causes resolveSupabaseUrl() to silently redirect all admin
+// calls to the wrong database. Verify the key's JWT ref matches the URL.
 // Routes: /ping, /identify, /identify/clarify, /identify/artifact-detect, /app-version, /welcome-email, /image-rejection-email, /referral/*, /dev-sms-verify, /push/*.
 import { handleAppVersion } from "./app-version";
 import { handleWelcomeEmail } from "./welcome-email";
