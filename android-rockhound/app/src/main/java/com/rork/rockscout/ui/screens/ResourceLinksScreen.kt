@@ -85,6 +85,7 @@ import com.rork.rockscout.data.UserMuseum
 import com.rork.rockscout.data.UserMuseumStore
 import com.rork.rockscout.ui.components.CompactSearchPill
 import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.LocationImage
 import com.rork.rockscout.ui.components.addOverlaySafe
 import com.rork.rockscout.ui.components.removeOverlaysSafe
 import com.rork.rockscout.ui.components.runMapSafe
@@ -891,7 +892,14 @@ private fun MuseumCard(
                 .glowingBorder(1.dp, Citrine.copy(alpha = 0.3f), RoundedCornerShape(12.dp)),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Filled.Museum, contentDescription = null, tint = Citrine, modifier = Modifier.size(22.dp))
+            LocationImage(
+                name = museum.name,
+                region = "${museum.city} ${museum.state}",
+                modifier = Modifier.fillMaxSize(),
+                fallback = {
+                    Icon(Icons.Filled.Museum, contentDescription = null, tint = Citrine, modifier = Modifier.size(22.dp))
+                },
+            )
         }
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {

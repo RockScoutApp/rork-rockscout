@@ -246,6 +246,41 @@ object ImagePrefetcher {
         }.getOrDefault(false)
     }
 
+    /**
+     * Prefetch Commons photo URLs (not bitmaps) for a list of locations so the
+     * [LocationImage] composable renders instantly when cards scroll into view.
+     *
+     * This only warms the URL-resolution cache in [LocationImageRepository] —
+     * the actual image bytes are loaded lazily by Coil when the composable
+     * enters composition. URL resolution is cheap (one backend call per unique
+     * location name, cached in-memory + persisted), so we can afford to
+     * pre-warm more entries than the bitmap prefetch.
+     *
+     * @param context Android context
+     * @param names list of (name, region?) pairs to resolve
+     */
+    fun prefetchLocationImages(
+        context: Context,
+        names: List<Pair<String, String?>>,
+    ) {
+        if (names.isEmpty()) return
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+        val isOnline = cm?.isOnline() ?: true
+        if (!isOnline) return
+
+        scope.launch {
+            // Resolve in batches of 5 to avoid overwhelming the backend.
+            // Each batch runs concurrently up to the cellular permit limit.
+            names.distinctBy { it.first.lowercase() }.chunked(5).forEach { batch ->
+                cellularPermit.withPermit {
+                    runCatching {
+                        com.rork.rockscout.data.LocationImageRepository.prefetch(batch)
+                    }
+                }
+            }
+        }
+    }
+
     private fun ConnectivityManager.isWifiConnected(): Boolean {
         val network = activeNetwork ?: return false
         val caps = getNetworkCapabilities(network) ?: return false

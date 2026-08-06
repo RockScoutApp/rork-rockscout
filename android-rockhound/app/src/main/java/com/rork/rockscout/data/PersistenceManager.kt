@@ -746,6 +746,39 @@ object PersistenceManager {
         Log.d(TAG, "Loaded persisted app state into AppRepository")
     }
 
+    // ------------------------------------------------- location image cache
+    /**
+     * Read a cached Commons photo URL for [key]. Returns null if not cached.
+     * Format: "<timestampMs>|<url-or-NO_PHOTO>".
+     */
+    fun readLocationImageCache(key: String): String? {
+        ensureInitialized()
+        return runCatching {
+            prefs.getString("loc_img_$key", null)
+        }.getOrNull()
+    }
+
+    /** Write a resolved Commons photo URL (or NO_PHOTO sentinel) for [key]. */
+    fun writeLocationImageCache(key: String, value: String) {
+        ensureInitialized()
+        runCatching {
+            prefs.edit().putString("loc_img_$key", value).apply()
+        }.onFailure { Log.w(TAG, "Failed to write location image cache: ${it.message}") }
+    }
+
+    /** Clear all cached location image entries (used by "Clear offline data"). */
+    fun clearLocationImageCache() {
+        ensureInitialized()
+        runCatching {
+            val edits = prefs.all.keys.filter { it.startsWith("loc_img_") }
+            if (edits.isNotEmpty()) {
+                val editor = prefs.edit()
+                edits.forEach { editor.remove(it) }
+                editor.apply()
+            }
+        }.onFailure { Log.w(TAG, "Failed to clear location image cache: ${it.message}") }
+    }
+
     // ---------------------------------------------------------------- helpers
     private inline fun <reified T> putJson(key: String, value: T) {
         ensureInitialized()

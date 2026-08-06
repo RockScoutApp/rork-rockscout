@@ -97,6 +97,8 @@ import com.rork.rockscout.ui.components.MapOfflineNotice
 import com.rork.rockscout.ui.components.createRockScoutMapView
 import com.rork.rockscout.ui.components.MapExpandButton
 import com.rork.rockscout.ui.components.FullscreenMapOverlay
+import androidx.compose.ui.layout.ContentScale
+import com.rork.rockscout.ui.components.LocationImage
 import com.rork.rockscout.ui.components.SculptedButton
 import com.rork.rockscout.ui.components.SculptedIconButton
 import com.rork.rockscout.ui.components.SculptedOutlinedButton
@@ -280,7 +282,38 @@ fun LocationDetailScreen(navController: NavController, locationId: String) {
                     size = 50.dp,
                 )
             }
-            // Map moved here — between the directions buttons and the field conditions card.
+            // Hero photo from Wikimedia Commons (cached via LocationImageRepository + Coil).
+            // Falls back to a terrain icon placeholder if no photo exists.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .height(180.dp)
+                    .clip(RoundedCornerShape(14.dp)),
+            ) {
+                LocationImage(
+                    name = loc.name,
+                    region = loc.region,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    fallback = {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color(0xFF15130E)),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                Icons.Filled.Terrain,
+                                contentDescription = null,
+                                tint = Aqua.copy(alpha = 0.3f),
+                                modifier = Modifier.size(48.dp),
+                            )
+                        }
+                    },
+                )
+            }
+            // Map moved here — between the hero photo and the field conditions card.
             RouteMap(loc, miles, showBackButton = false) { navController.popBackStack() }
             WeatherCard(
                 snapshot = weather,
