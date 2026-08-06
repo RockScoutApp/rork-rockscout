@@ -39,6 +39,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -61,6 +62,7 @@ import androidx.compose.ui.window.DialogProperties
 import coil3.compose.AsyncImage
 import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.CustomSpecimenStore
+import com.rork.rockscout.data.GeocodeRepository
 import com.rork.rockscout.data.ImageModerator
 import com.rork.rockscout.data.ImageUtils
 import com.rork.rockscout.data.ModerationResult
@@ -106,10 +108,11 @@ fun SubmitSpecimenDialog(
     var name by remember { mutableStateOf("") }
     var dateFound by remember { mutableStateOf(formatToday()) }
     var description by remember { mutableStateOf("") }
-    var selectedLocation by remember { mutableStateOf("") }
-    var locationDropdownExpanded by remember { mutableStateOf(false) }
-    var customLocation by remember { mutableStateOf("") }
-    var useCustomLocation by remember { mutableStateOf(false) }
+    var locationQuery by remember { mutableStateOf("") }
+    var selectedGeocodedLocation by remember { mutableStateOf<GeocodeRepository.GeocodedLocation?>(null) }
+    var geocodedResults by remember { mutableStateOf<List<GeocodeRepository.GeocodedLocation>>(emptyList()) }
+    var isGeocoding by remember { mutableStateOf(false) }
+    var showGeocodeResults by remember { mutableStateOf(false) }
     var isModerating by remember { mutableStateOf(false) }
     var showSavedImagePicker by remember { mutableStateOf(false) }
     var showImageSourcePicker by remember { mutableStateOf(false) }
@@ -172,9 +175,21 @@ fun SubmitSpecimenDialog(
         }
     }
 
-    // Unique US state/region names from SeedData locations
-    val locations = remember {
-        SeedData.allLocations.map { it.region }.distinct().sorted()
+    // Debounced geocoding: when the user types a location query, run a web
+    // search after a short pause and show matching places with addresses.
+    LaunchedEffect(locationQuery) {
+        val query = locationQuery.trim()
+        if (query.length < 3) {
+            geocodedResults = emptyList()
+            showGeocodeResults = false
+            return@LaunchedEffect
+        }
+        kotlinx.coroutines.delay(400L)
+        isGeocoding = true
+        val result = GeocodeRepository.search(query)
+        isGeocoding = false
+        geocodedResults = result.getOrDefault(emptyList())
+        showGeocodeResults = geocodedResults.isNotEmpty()
     }
 
     Dialog(
@@ -224,7 +239,7 @@ fun SubmitSpecimenDialog(
 
                 // Helper text
                 Text(
-                    text = "Make sure the image is as clear and precise as possible, and include any information you have about it.",
+                    text = "Make sure the images are as clear and precise as possible, and include any information you have about them.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = DarkTextMid,
                 )
@@ -299,7 +314,7 @@ fun SubmitSpecimenDialog(
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Icon(Icons.Filled.Add, "Add photo", tint = Aqua, modifier = Modifier.size(24.dp))
                                     Text(
-                                        "${imageUris.size}/4",
+                                        "${imageUris.size}/10",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = Aqua,
                                     )
@@ -319,90 +334,86 @@ fun SubmitSpecimenDialog(
                     minLines = 3,
                 )
 
-                // Location dropdown
+                // Location — free-text search with geocoded results
                 Text(
                     text = "Location",
                     style = MaterialTheme.typography.titleSmall,
                     color = DarkTextHigh,
                     fontWeight = FontWeight.Bold,
                 )
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    Box(
+                OutlinedTextField(
+                    value = locationQuery,
+                    onValueChange = {
+                        locationQuery = ProfanityFilter.filter(it)
+                        selectedGeocodedLocation = null
+                        showGeocodeResults = true
+                    },
+                    label = { Text("Search location") },
+                    placeholder = { Text("e.g. Crater of Diamonds, Arkansas") },
+                    leadingIcon = { Icon(Icons.Filled.LocationOn, null, tint = Aqua) },
+                    trailingIcon = {
+                        if (isGeocoding) {
+                            Icon(Icons.Filled.Download, null, tint = Aqua, modifier = Modifier.size(18.dp))
+                        }
+                    },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().noAutoFocus(),
+                )
+                if (showGeocodeResults && geocodedResults.isNotEmpty()) {
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFF2A2820))
+                            .background(Color(0xFF1E1C16))
                             .glowingBorder(1.dp, Aqua.copy(alpha = 0.3f), RoundedCornerShape(10.dp))
-                            .clickable { locationDropdownExpanded = true }
-                            .padding(horizontal = 14.dp, vertical = 14.dp),
+                            .padding(vertical = 4.dp),
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Filled.LocationOn, null, tint = Aqua, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                text = if (useCustomLocation) {
-                                    customLocation.ifBlank { "Enter location…" }
-                                } else {
-                                    selectedLocation.ifBlank { "Select a location…" }
-                                },
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = if (selectedLocation.isNotBlank() || customLocation.isNotBlank()) DarkTextHigh else DarkTextMid,
-                                modifier = Modifier.weight(1f),
-                            )
+                        geocodedResults.forEach { place ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        selectedGeocodedLocation = place
+                                        locationQuery = place.address
+                                        showGeocodeResults = false
+                                    }
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                            ) {
+                                Column {
+                                    Text(
+                                        text = place.displayName,
+                                        color = DarkTextHigh,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                    )
+                                    Text(
+                                        text = place.address,
+                                        color = DarkTextMid,
+                                        style = MaterialTheme.typography.bodySmall,
+                                    )
+                                }
+                            }
                         }
-                    }
-                    DropdownMenu(
-                        expanded = locationDropdownExpanded,
-                        onDismissRequest = { locationDropdownExpanded = false },
-                        modifier = Modifier
-                            .fillMaxWidth(0.9f)
-                            .background(Color(0xFF1E1C16), RoundedCornerShape(10.dp)),
-                    ) {
-                        locations.forEach { region ->
-                            DropdownMenuItem(
-                                text = { Text(region, color = DarkTextHigh) },
-                                onClick = {
-                                    selectedLocation = region
-                                    useCustomLocation = false
-                                    locationDropdownExpanded = false
-                                },
-                            )
-                        }
-                        DropdownMenuItem(
-                            text = { Text("Location not shown", color = Aqua, fontWeight = FontWeight.SemiBold) },
-                            onClick = {
-                                useCustomLocation = true
-                                selectedLocation = ""
-                                locationDropdownExpanded = false
-                            },
-                        )
                     }
                 }
-                if (useCustomLocation) {
-                    OutlinedTextField(
-                        value = customLocation,
-                        onValueChange = { customLocation = ProfanityFilter.filter(it) },
-                        label = { Text("Enter location") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth().noAutoFocus(),
+                if (selectedGeocodedLocation != null) {
+                    Text(
+                        text = "Coordinates: ${"%.4f".format(selectedGeocodedLocation!!.latitude)}, ${"%.4f".format(selectedGeocodedLocation!!.longitude)}",
+                        color = DarkTextMid,
+                        style = MaterialTheme.typography.bodySmall,
                     )
                 }
 
                 Spacer(Modifier.weight(1f))
 
                 // Submit button — auth-gated (must be signed in to submit) and
-                // requires a non-empty location whether picked or custom.
+                // requires a non-empty geocoded or manually-entered location.
                 val isSignedIn = com.rork.rockscout.data.AuthRepository.instance.currentUserId != null
-                val locationValid = if (useCustomLocation) {
-                    customLocation.trim().isNotBlank()
-                } else {
-                    selectedLocation.isNotBlank()
-                }
+                val locationValid = locationQuery.trim().isNotBlank()
                 val canSubmit = imageUris.isNotEmpty() &&
                     name.trim().isNotBlank() &&
                     locationValid &&
                     isSignedIn
-                val finalLocation = if (useCustomLocation) customLocation.trim() else selectedLocation
+                val finalLocation = selectedGeocodedLocation?.address ?: locationQuery.trim()
                 SculptedButton(
                     text = "Submit Specimen",
                     onClick = {
@@ -423,6 +434,8 @@ fun SubmitSpecimenDialog(
                             infoText = ProfanityFilter.filter(description.trim()),
                             dateFound = dateFound.trim(),
                             location = finalLocation,
+                            latitude = selectedGeocodedLocation?.latitude,
+                            longitude = selectedGeocodedLocation?.longitude,
                             submittedAt = System.currentTimeMillis(),
                         )
                         val result = SpecimenSubmissionStore.add(submission)
@@ -454,7 +467,7 @@ fun SubmitSpecimenDialog(
             onDismiss = { showImageSourcePicker = false },
             onImageSelected = { uri ->
                 showImageSourcePicker = false
-                if (imageUris.size < 4) {
+                if (imageUris.size < 10) {
                     scope.launch {
                         isModerating = true
                         val path = processImageUri(context, uri, "specimen_submissions", "specimen_submission")

@@ -1,4 +1,5 @@
 import { handleIdentify, handleClarify, handleArtifactDetect } from "./identify";
+import { handleGeocode } from "./geocode";
 // RockScout backend — Cloudflare Worker entry (auth + rate-limit enabled).
 // Env sync: Supabase URL + keys point to the kzgzmudgascivwivxvvn project.
 // Routes: /ping, /identify, /identify/clarify, /identify/artifact-detect, /app-version, /welcome-email, /image-rejection-email, /referral/*, /dev-sms-verify, /push/*.
@@ -358,6 +359,13 @@ export default {
         },
         cors,
       );
+    }
+
+    // Geocoding — free-text location search via Nominatim. Auth + rate limit.
+    if (url.pathname === "/geocode" && request.method === "POST") {
+      const guard = guardEndpoint(request, env, "/geocode", cors, env.RATE_LIMIT_KV);
+      if (guard) return guard;
+      return handleGeocode(request, cors);
     }
 
     // Image caching proxy — public GET, no auth required.

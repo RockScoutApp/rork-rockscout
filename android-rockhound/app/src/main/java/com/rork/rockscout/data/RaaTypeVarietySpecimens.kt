@@ -32,7 +32,6 @@ object RaaTypeVarietySpecimens {
                     "amazing-zeolite-natrolite" -> "Natrolite Spray"
                     "amazing-pyrite-sun" -> "Pyrite, Sun (Dollar)"
                     "amazing-tenebrescent-sodalite" -> "Hackmanite"
-                    "amazing-thunderegg" -> "Agate, Thunderegg (Lithophysae)"
                     "amazing-trapiche-emerald" -> "Trapiche"
                     "amazing-vivianite-crystals" -> "Vivianite, Unstable Green"
                     else -> specimen.name

@@ -346,6 +346,9 @@ object SpecimenImages {
     private const val IMG_NOVACULITE = "$Q/d21cd251-40a1-45cb-8e96-0a46cc1ac1b9.png"
     private const val IMG_NUMMULITES = "$Q/3609a8a4-2464-4cba-a395-63d6e355bab4.png"
     private const val IMG_OBSIDIAN = "$Q/a2b1f9e9-180d-42eb-b34c-a40a2a0df26c.png"
+    // Real Wikimedia Commons photos for the merged Obsidian/Apache Tears card.
+    private const val IMG_COMMONS_APACHE_TEARS = "https://upload.wikimedia.org/wikipedia/commons/f/fb/Obsydian_(%C5%81zy_Apacza)_w_perlicie_-_Arizna._USA..jpg"
+    private const val IMG_COMMONS_APACHE_TEARS_PERLITE = "https://upload.wikimedia.org/wikipedia/commons/b/bf/Obsidian_in_perlite_(Arnett_Rhyolite,_Miocene,_~15-18.6_Ma;_near_Superior,_Arizona,_USA)_7.jpg"
     private const val IMG_OBSIDIAN_MAHOGANY = "$Q/4dcc8766-b9db-4670-87c2-bee093186d48.png"
     private const val IMG_OBSIDIAN_RAINBOW = "$Q/2a06ea43-a06f-4f92-8e5e-578eeddb12f1.png"
     private const val IMG_OCEANVIEW_MINE = "$Q/b8a1fdf6-758b-4739-8983-0c91f93eb352.png"
@@ -1147,6 +1150,10 @@ object SpecimenImages {
     private const val IMG_AMYGDALOIDAL_BASALT_VAR = "$Q/019fd42e-9336-4e86-a4c0-3ea49c5f2d1a.png"
     private const val IMG_AGATE_ENHYDRO_VAR = "$Q/4b2e2a44-b751-4979-857a-8c806345f1fb.png"
     private const val IMG_AGATE_THUNDER_EGG_VAR = "$Q/11abc57c-8982-429a-b867-368d131e347f.png"
+    // Real Wikimedia Commons photos for the merged Agate-Thunderegg card.
+    private const val IMG_COMMONS_THUNDER_EGG_PRIDAY = "https://upload.wikimedia.org/wikipedia/commons/e/e9/Thunder_Egg_Agate_(Priday_Blue_Bed,_John_Day_Formation,_Miocene;_near_Madras,_Oregon,_USA)_2_(34416129410).jpg"
+    private const val IMG_COMMONS_THUNDER_EGG_QUARTZ = "https://upload.wikimedia.org/wikipedia/commons/8/8d/Quartz-agate_nodule_(Killer_Green_Claim,_Ochoco_Mountains,_Prineville,_Oregon,_USA)_(33993292453).jpg"
+    private const val IMG_COMMONS_THUNDER_EGG_FRIEND = "https://upload.wikimedia.org/wikipedia/commons/e/e2/Friend_ranch-thunderegg.JPG"
     private const val IMG_ARCHAEOPTERYX_VAR = "$Q/d9fe7464-0c62-4377-ac7b-ac773b99e302.png"
     private const val IMG_ANOMALOCARIS_VAR = "$Q/c3d7bee1-9bb1-4e62-a0b9-5623a3bd0ccd.png"
     // Batch 50: andrewsarchus, banded-iron, amethyst-calcite, basalt-copper-calcite, calcite-cobalt-cab, calcite-nailhead-polish, banded-chert-slab, borax-cluster
@@ -2821,6 +2828,10 @@ object SpecimenImages {
     private const val IMG_CHIASTOLITE = "$Q/b30a9cca-98f7-418d-a550-a7aef377896c.png"
     private const val IMG_CHIASTOLITE_WILD = "$Q/daf0e907-b377-4dc3-876a-6ca811a10286.png"
     private const val IMG_CHIASTOLITE_MUSEUM = "$Q/350dd46d-0402-42fb-9534-87d6076d433f.png"
+    // Real Wikimedia Commons photos for the merged Andalusite/Chiastolite card.
+    private const val IMG_COMMONS_CHIASTOLITE = "https://upload.wikimedia.org/wikipedia/commons/f/fa/Chiastolite.JPG"
+    private const val IMG_COMMONS_CHIASTOLITE_GEODIL = "https://upload.wikimedia.org/wikipedia/commons/f/f0/Andalusite_(chiastolite)_(GeoDIL_number_-_388).jpg"
+    private const val IMG_COMMONS_CHIASTOLITE_GEOMUSEUM = "https://upload.wikimedia.org/wikipedia/commons/8/8c/Andalusite_and_chiastolite_(GeoMuseum_Cologne).JPG"
     private const val IMG_CLINOHUMITE = "$Q/d546e9e8-2f89-4984-b977-ff5c5db51e05.png"
     private const val IMG_EOSPHORITE = "$Q/7776b9f0-e049-4f18-bcb3-9aa59fc44efb.png"
     private const val IMG_VERMICULITE = "$Q/42f8a1bc-368a-4cdf-8107-3843eb5db565.png"
@@ -3301,7 +3312,7 @@ object SpecimenImages {
         "ametrine" to listOf(IMG_AMETRINE, IMG_AMETRINE_WILD, IMG_AMETRINE_MUSEUM, IMG_AMETRINE_CABOCHON),
         "ammonite" to listOf(IMG_AMMONITE, IMG_AMMONITE_WILD, IMG_AMMONITE_MUSEUM, IMG_AMMONITE_CABOCHON),
         "amphibolite" to listOf(IMG_AMPHIBOLITE, IMG_AMPHIBOLITE_WILD, IMG_AMPHIBOLITE_MUSEUM),
-        "andalusite" to listOf(IMG_ANDALUSITE, IMG_ANDALUSITE_WILD, IMG_ANDALUSITE_MUSEUM),
+        "andalusite" to listOf(IMG_COMMONS_CHIASTOLITE, IMG_COMMONS_CHIASTOLITE_GEODIL, IMG_COMMONS_CHIASTOLITE_GEOMUSEUM, IMG_ANDALUSITE, IMG_ANDALUSITE_WILD, IMG_ANDALUSITE_MUSEUM, IMG_ANDALUSITE_CABOCHON),
         "anderson-mine" to listOf(IMG_ANDERSON_MINE),
         "anglesite" to listOf(IMG_ANGLESITE, IMG_ANGLESITE_WILD, IMG_ANGLESITE_MUSEUM),
         "anhydrite" to listOf(IMG_ANHYDRITE, IMG_ANHYDRITE_WILD, IMG_ANHYDRITE_MUSEUM),
@@ -3764,7 +3775,7 @@ object SpecimenImages {
         "iris-agate" to listOf(IMG_IRIS_AGATE, IMG_IRIS_AGATE_VAR),
         "sagenitic-agate" to listOf(IMG_SAGENITIC_AGATE, IMG_SAGENITIC_AGATE_WILD),
         "coldwater-agate" to listOf(IMG_COLDWATER_AGATE, IMG_COLDWATER_AGATE_VAR),
-        "obsidian" to listOf(IMG_OBSIDIAN, IMG_OBSIDIAN_MAHOGANY, IMG_OBSIDIAN_RAINBOW, IMG_SNOWFLAKE_OBSIDIAN, IMG_ELECTRIC_BLUE_OBSIDIAN, IMG_SILVER_SHEEN_OBSIDIAN, IMG_GOLDEN_SHEEN_OBSIDIAN, IMG_MIDNIGHT_LACE_OBSIDIAN, IMG_OBSIDIAN_WILD, IMG_OBSIDIAN_MUSEUM, IMG_OBSIDIAN_CABOCHON),
+        "obsidian" to listOf(IMG_COMMONS_APACHE_TEARS, IMG_COMMONS_APACHE_TEARS_PERLITE, IMG_OBSIDIAN, IMG_OBSIDIAN_MAHOGANY, IMG_OBSIDIAN_RAINBOW, IMG_SNOWFLAKE_OBSIDIAN, IMG_ELECTRIC_BLUE_OBSIDIAN, IMG_SILVER_SHEEN_OBSIDIAN, IMG_GOLDEN_SHEEN_OBSIDIAN, IMG_MIDNIGHT_LACE_OBSIDIAN, IMG_OBSIDIAN_WILD, IMG_OBSIDIAN_MUSEUM, IMG_OBSIDIAN_CABOCHON),
         "actinolite" to listOf(IMG_ACTINOLITE, IMG_ACTINOLITE_WILD, IMG_ACTINOLITE_MUSEUM),
         "aegirine" to listOf(IMG_AEGIRINE, IMG_AEGIRINE_MUSEUM),
         "albite" to listOf(IMG_ALBITE, IMG_ALBITE_MUSEUM),
@@ -3914,7 +3925,7 @@ object SpecimenImages {
         "coccolithophore" to listOf(IMG_COCCOLITHOPHORE_WILD, IMG_ALIVE_COCCOLITHOPHORE),
         "agate-turritella" to listOf(IMG_AGATE_TURRITELLA, IMG_AGATE_TURRITELLA_VAR),
         "agate-brazilian" to listOf(IMG_AGATE_BRAZILIAN, IMG_AGATE_BRAZILIAN_VAR),
-        "agate-thunderegg" to listOf(IMG_AGATE_THUNDER_EGG, IMG_AGATE_THUNDER_EGG_VAR),
+        "agate-thunderegg" to listOf(IMG_COMMONS_THUNDER_EGG_PRIDAY, IMG_COMMONS_THUNDER_EGG_QUARTZ, IMG_COMMONS_THUNDER_EGG_FRIEND, IMG_AGATE_THUNDER_EGG, IMG_AGATE_THUNDER_EGG_VAR),
         "agate-snake-skin" to listOf(IMG_AGATE_SNAKE_SKIN, IMG_AGATE_SNAKE_SKIN_VAR),
         "agate-tube" to listOf(IMG_AGATE_TUBE, IMG_AGATE_TUBE_VAR, IMG_AGATE_TUBE_POLISHED),
         "agate-eye" to listOf(IMG_AGATE_EYE, IMG_AGATE_EYE_VAR),
@@ -4076,7 +4087,7 @@ object SpecimenImages {
         "amazing-vivianite-crystals" to listOf(IMG_VIVIANITE_AMAZE, IMG_VIVIANITE_AMAZE_VAR, IMG_VIVIANITE_MUSEUM),
         "amazing-pyrite-sun" to listOf(IMG_PYRITE_SUN, IMG_PYRITE_SUN_VAR),
         "amazing-desert-rose-new" to listOf(IMG_DESERT_ROSE_AMAZE, IMG_DESERT_ROSE_AMAZE_VAR),
-        "amazing-thunderegg" to listOf(IMG_THUNDEREGG_AMAZE, IMG_THUNDEREGG_AMAZE_VAR),
+
         "amazing-zeolite-natrolite" to listOf(IMG_NATROLITE_AMAZE, IMG_NATROLITE_AMAZE_VAR),
         "amazing-cave-pearl" to listOf(IMG_CAVE_PEARL, IMG_CAVE_PEARL_VAR),
         "amazing-leland-blue" to listOf(IMG_LELAND_BLUE, IMG_LELAND_BLUE_WILD, IMG_LELAND_BLUE_CAB, IMG_LELAND_BLUE_BEACH),
@@ -4119,7 +4130,7 @@ object SpecimenImages {
         "barite-rose" to listOf(IMG_BARITE_DESERT_ROSE_NEW),
         "bismuth-native" to listOf("$Q/beb4bf8f-32db-4248-ace2-c226c2f8f998.png", "$Q/1d50bd32-0dbf-48e2-a50c-dc20121efb5a.png", "$Q/b16c5435-7c99-4e91-bf18-a09bc291be93.png"),
         "celestine-blue" to listOf(IMG_CELESTINE_BLUE_ROUGH, IMG_CELESTINE_BLUE_WILD, IMG_CELESTINE_BLUE_MUSEUM),
-        "chiastolite" to listOf(IMG_CHIASTOLITE, IMG_CHIASTOLITE_WILD, IMG_CHIASTOLITE_MUSEUM),
+
         "clinohumite" to listOf(IMG_CLINOHUMITE_MUSEUM, IMG_CLINOHUMITE),
         "eosphorite" to listOf(IMG_EOSPHORITE_MUSEUM, IMG_EOSPHORITE),
         "evaporite-halite" to listOf(IMG_EVAPORITE_HALITE_DEDICATED),
@@ -4840,7 +4851,7 @@ object SpecimenImages {
         "imperial-topaz" to listOf(IMG_EB16_IMPERIAL_TOPAZ_ROUGH, IMG_EB16_IMPERIAL_TOPAZ_CAB),
         "melanite" to listOf(IMG_EB16_MELANITE_ROUGH, IMG_EB16_MELANITE_WILD, IMG_EB16_MELANITE_MUSEUM),
         "blue-topaz" to listOf(IMG_EB16_BLUE_TOPAZ_ROUGH, IMG_EB16_BLUE_TOPAZ_CAB),
-        "apache-tears" to listOf(IMG_EB16_APACHE_TEARS_ROUGH, IMG_EB16_APACHE_TEARS_WILD, IMG_EB16_APACHE_TEARS_MUSEUM),
+
         "angelite" to listOf(IMG_EB16_ANGELITE_ROUGH, IMG_EB16_ANGELITE_WILD),
         "shungite" to listOf(IMG_EB16_SHUNGITE_ROUGH, IMG_EB16_SHUNGITE_CAB),
         "bumblebee-jasper" to listOf(IMG_EB16_BUMBLEBEE_ROUGH, IMG_EB16_BUMBLEBEE_CAB),

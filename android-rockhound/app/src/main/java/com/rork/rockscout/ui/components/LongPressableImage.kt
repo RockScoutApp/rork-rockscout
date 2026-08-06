@@ -118,6 +118,8 @@ fun LongPressableImage(
             .data(model)
             .crossfade(true)
             .apply { if (fullResolution) size(Size.ORIGINAL) }
+            .diskCacheKey(model?.toString())
+            .memoryCacheKey(model?.toString())
             .build()
     }
     val painter = rememberAsyncImagePainter(request)

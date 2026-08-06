@@ -1478,32 +1478,6 @@ object ExpansionBatch16 {
             rarity = "Common (treated), Rare (natural)"
         ),
 
-        Specimen(
-            id = "apache-tears",
-            name = "Apache Tears",
-            rockClass = RockClass.IGNEOUS,
-            category = "Volcanic Glass — Obsidian Nodule Variety",
-            tagline = "Rounded obsidian nodules with a tragic legend and smooth, glassy texture.",
-            emoji = "🌑",
-            colorHex = 0xFF1A1A1A,
-            description = "Apache Tears are rounded, pebble-like nodules of obsidian (volcanic glass) found in volcanic areas, particularly in the American Southwest. They are typically black to dark smoky in color and become transparent to translucent when held up to light. The name comes from a Native American legend about Apache warriors who leapt to their deaths rather than surrender, their tears turning to stone.",
-            formation = "Formed from rapidly cooled lava (obsidian) that has been weathered out of volcanic tuff. The nodules are naturally rounded by erosion.",
-            hardness = "5–5.5",
-            luster = "Vitreous (glassy)",
-            streak = "White (powdered)",
-            crystalSystem = "Amorphous (natural glass)",
-            chemicalFormula = "SiO₂ (with various impurities)",
-            commonColors = listOf("Black", "Dark smoky", "Dark brown (when transparent)"),
-            whereFound = listOf("Arizona, USA", "New Mexico, USA", "Nevada, USA", "Mexico", "Turkey"),
-            funFacts = listOf(
-                "The name comes from a legend of Apache warriors who jumped off a cliff rather than surrender to cavalry.",
-                "According to legend, the dark obsidian pebbles are the tears of their grieving families.",
-                "They are actually small nodules of obsidian embedded in perlite or volcanic tuff.",
-                "When held to light, thin pieces show a smoky transparency."
-            ),
-            uses = "Collector specimens, jewelry (tumbled), metaphysical, lapidary.",
-            rarity = "Common"
-        ),
 
         Specimen(
             id = "angelite",

@@ -1319,31 +1319,7 @@ object RocksAreAmazingSpecimens {
         // amazing-tenebrescent-sodalite (Hackmanite) removed from the RAA section in the
         // master build (2026-07-19). The standalone Hackmanite specimen in the main database
         // and the amazing-fluorescent-hackmanite UV entry stay untouched.
-        Specimen(
-            id = "amazing-thunderegg",
-            name = "Thunderegg (Lithophysae)",
-            rockClass = RockClass.IGNEOUS,
-            category = "Other Amazing Formations",
-            tagline = "Plain volcanic rocks hiding spectacular crystal-filled star patterns inside — nature's geodesic surprise.",
-            emoji = "\uD83E\uDD5A",
-            colorHex = 0xFF886644,
-            description = "Thundereggs are nodule-like volcanic rocks — typically rhyolite — that contain spectacular internal star-shaped or geometric cavities filled with agate, chalcedony, or quartz crystals. The contrast between the dull brown exterior and the colorful crystalline interior is one of nature's greatest surprises. Rarity: Common (in specific volcanic regions).",
-            formation = "Formed in silica-rich volcanic ash layers, where gas bubbles created spherical cavities. Silica-rich groundwater later filled the cavities with layered agate and quartz, creating the characteristic star-like internal structure that's only revealed when the thunderegg is cut open.",
-            hardness = "7 (interior), 6 (rhyolite exterior)",
-            luster = "Dull exterior, vitreous agate interior",
-            streak = "White",
-            crystalSystem = "N/A (volcanic rock with chalcedony filling)",
-            chemicalFormula = "Rhyolite shell with SiO₂ (chalcedony/quartz) interior",
-            commonColors = listOf("Brown/gray exterior", "Blue, red, white, clear interior"),
-            whereFound = listOf("Oregon (state rock), USA", "Germany", "Australia", "Mexico"),
-            funFacts = listOf(
-                "Thunderegg is the official state rock of Oregon — designated in 1965.",
-                "Native American legend says thunder spirits hurled these 'thunder eggs' at each other.",
-                "The internal star pattern is unique to each thunderegg — no two are identical."
-            ),
-            uses = "Lapidary (cut and polished halves), collector specimens, jewelry.",
-            rarity = "Common (in specific volcanic regions)"
-        ),
+        // Thunderegg now merged into the main database "agate-thunderegg" specimen.
         Specimen(
             id = "amazing-trapiche-emerald",
             name = "Trapiche",

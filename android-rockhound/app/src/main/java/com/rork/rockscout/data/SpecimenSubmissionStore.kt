@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
  * Persistently stores user-submitted specimens awaiting developer review.
  *
  * Users can submit specimens from the Specimen Database or Rocks Are Amazing
- * screens. Each submission includes up to 4 images, info text, and a location.
+ * screens. Each submission includes up to 10 images, info text, and a location.
  * The developer reviews submissions in the Developer Console and can approve
  * them to the specimen database or RAA, or deny them.
  */
@@ -30,6 +30,10 @@ object SpecimenSubmissionStore {
         /** User-provided date the specimen was found, e.g. "Jul 25, 2026". */
         val dateFound: String = "",
         val location: String,
+        /** Geocoded latitude for the submitted location, if available. */
+        val latitude: Double? = null,
+        /** Geocoded longitude for the submitted location, if available. */
+        val longitude: Double? = null,
         val submittedAt: Long,
         val status: String = "pending",
         /** Set by dev on approval: "database" or "raa". */

@@ -315,25 +315,28 @@ object SeedData {
             id = "obsidian",
             name = "Obsidian",
             rockClass = RockClass.IGNEOUS,
-            category = "Volcanic glass",
-            tagline = "Volcanic glass so sharp it beats surgical steel.",
+            category = "Volcanic glass — includes Apache Tears nodules",
+            tagline = "Volcanic glass so sharp it beats surgical steel — plus rounded Apache Tears nodules.",
             emoji = "\u26AB",
             colorHex = 0xFF1A1A1F,
-            description = "Obsidian is a glossy volcanic glass that forms when lava cools so fast that crystals never get a chance to grow. It fractures into razor-sharp edges, which early humans used for tools and weapons.",
-            formation = "Forms when felsic lava cools almost instantly, freezing into glass instead of crystals.",
+            description = "Obsidian is a glossy volcanic glass that forms when lava cools so fast that crystals never get a chance to grow. It fractures into razor-sharp edges, which early humans used for tools and weapons. Apache Tears are a special rounded, pebble-like nodule variety of obsidian found in volcanic tuff, particularly in the American Southwest. They are typically black to dark smoky, and thin pieces become translucent when held to light.",
+            formation = "Forms when felsic lava cools almost instantly, freezing into glass instead of crystals. Apache Tears are rounded nodules of obsidian weathered out of volcanic tuff.",
             hardness = "5–6",
             luster = "Vitreous (glassy)",
             streak = "—",
             crystalSystem = "Amorphous (no crystal structure)",
             chemicalFormula = "SiO₂ (glass)",
-            commonColors = listOf("Black", "Mahogany", "Rainbow sheen"),
-            whereFound = listOf("Oregon, USA", "Mexico", "Iceland", "Armenia"),
+            commonColors = listOf("Black", "Mahogany", "Rainbow sheen", "Dark smoky", "Dark brown (when transparent)"),
+            whereFound = listOf("Oregon, USA", "Mexico", "Iceland", "Armenia", "Arizona, USA", "New Mexico, USA", "Nevada, USA", "Turkey"),
             funFacts = listOf(
                 "Surgical scalpels of obsidian can be sharper than steel.",
                 "Snowflake obsidian has white crystal patches.",
-                "It has no crystal structure — it's truly a glass."
+                "It has no crystal structure — it's truly a glass.",
+                "Apache Tears are rounded nodules of obsidian embedded in perlite or volcanic tuff.",
+                "The name Apache Tears comes from a legend of Apache warriors who leapt from a cliff rather than surrender.",
+                "When held to light, thin Apache Tears pieces show a smoky transparency."
             ),
-            uses = "Blades, jewelry, and ornamental carvings.",
+            uses = "Blades, jewelry, ornamental carvings, and collector specimens (Apache Tears).",
             rarity = "Common",
         ),
         Specimen(id = "peridot", name = "Olivine, Peridot", rockClass = RockClass.CRYSTAL, category = "Silicate — Olivine group", tagline = "The only gemstone that also falls from space in meteorites.", emoji = "\uD83D\uDFE2", colorHex = 0xFF8DB600, description = "Peridot is gem-quality olivine with a distinctive olive-green color that stays the same in any light. It forms deep in the mantle and has been found in pallasite meteorites — one of the few gems with an extraterrestrial origin.", formation = "Forms deep in the Earth's mantle and brought to the surface by volcanic eruptions in basalt.", hardness = "6.5–7", luster = "Vitreous (oily)", streak = "White", crystalSystem = "Orthorhombic", chemicalFormula = "(Mg,Fe)₂SiO₄", commonColors = listOf("Olive green", "Yellow-green", "Lime"), whereFound = listOf("Arizona, USA", "Egypt", "Myanmar", "Pakistan"), funFacts = listOf("August's birthstone.", "Extraterrestrial peridot exists in meteorites.", "Egyptians called it 'the gem of the sun'."), uses = "Jewelry, collector specimens.", rarity = "Common"),
@@ -5175,8 +5178,7 @@ object SeedData {
             "amazing-copper-replacement-agate",
             "amazing-copper-banded-agate",
             "amazing-copper-infused-agate",
-            // Thunderegg RAA original excluded; TV copy stays
-            "amazing-thunderegg",
+            // Thunderegg RAA entry merged into the main database "agate-thunderegg" specimen.
             // Star Optics moved to RAA; no longer in the main specimen database
             "gem-sapphire-star",
             // Hackmanite RAA non-fluorescent copy excluded; TV copy stays

@@ -134,6 +134,7 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.rork.rockscout.ui.components.PersistentImage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.rork.rockscout.data.AchievementsRepository
@@ -3908,9 +3909,10 @@ private fun DashboardTile(tile: HomeTile, modifier: Modifier = Modifier, onClick
                     )
                 ),
         )
-        // Specimen photo as full-tile background
+        // Specimen photo as full-tile background — uses PersistentImage so it
+        // survives navigation back and retries transient network failures.
         if (tile.imageUrl != null) {
-            AsyncImage(
+            PersistentImage(
                 model = tile.imageUrl,
                 contentDescription = null,
                 modifier = Modifier

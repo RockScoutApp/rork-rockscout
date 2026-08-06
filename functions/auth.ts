@@ -68,6 +68,7 @@ const RATE_LIMITS: Record<string, RateLimitConfig> = {
   "/push/subscribe": { rpm: 10, burst: 3 },
   "/push/send": { rpm: 30, burst: 10 },
   "/museums": { rpm: 10, burst: 3 },
+  "/geocode": { rpm: 30, burst: 10 },
   "/settings/backup": { rpm: 5, burst: 2 },
   "/settings/restore": { rpm: 10, burst: 3 },
   // Entitlement bridge — called on sign-in + Paywall open (web) and after purchase (Android).

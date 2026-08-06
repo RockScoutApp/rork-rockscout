@@ -85,17 +85,23 @@ object ExpandedVarieties {
         ),
         Specimen(
             id = "agate-thunderegg", name = "Agate, Thunder Egg",
-            rockClass = RockClass.CRYSTAL, category = "Silicate — Chalcedony geode",
+            rockClass = RockClass.CRYSTAL, category = "Silicate — Chalcedony geode (Lithophysae)",
             tagline = "Oregon's state rock — a volcanic nodule hiding a star-filled agate center.",
             emoji = "\uD83E\uDDA5", colorHex = 0xFFAA7744,
-            description = "Thunder eggs are spherical volcanic nodules with a star-shaped agate or chalcedony center surrounded by a brown rhyolite shell. Oregon's state rock, they formed in rhyolite lava flows where gas pockets filled with silica. The cut face reveals a starburst pattern — nature's geode masterpiece. Rarity: Common (Oregon regionally).",
-            formation = "Gas bubbles in rhyolitic lava filled with silica gel that crystallized into agate and quartz, often in a star-shaped pattern radiating from the center. The outer shell is the original rhyolite.",
-            hardness = "6.5–7", luster = "Waxy to vitreous (center), dull (rind)", streak = "White",
-            crystalSystem = "Microcrystalline", chemicalFormula = "SiO₂ (agate) in rhyolite",
-            commonColors = listOf("Gray-blue agate center", "White quartz star", "Brown rhyolite shell", "Pink and gray"),
-            whereFound = listOf("Priday Ranch, Oregon, USA", "Richardson Ranch, Oregon", "Owyhee Reservoir, Oregon"),
-            funFacts = listOf("Oregon's official state rock since 1965.", "Native Americans believed they were eggs of the thunderbird.", "Priday Ranch produces world-class thundereggs with blue agate centers."),
-            uses = "Display specimens, lapidary, Oregon souvenir pieces.",
+            description = "Thunder eggs are spherical volcanic nodules with a star-shaped agate or chalcedony center surrounded by a brown rhyolite shell. Known to geologists as lithophysae, these nodules form in silica-rich volcanic ash layers where gas bubbles created spherical cavities. Oregon's state rock, they formed in rhyolite lava flows where gas pockets filled with silica. The cut face reveals a starburst pattern — nature's geode masterpiece.",
+            formation = "Gas bubbles in rhyolitic lava filled with silica gel that crystallized into agate and quartz, often in a star-shaped pattern radiating from the center. The outer shell is the original rhyolite. In ash layers, silica-rich groundwater later filled the cavities with layered agate and quartz, creating the characteristic star-like internal structure.",
+            hardness = "6.5–7 (interior), 6 (rhyolite exterior)", luster = "Waxy to vitreous (center), dull (rind)", streak = "White",
+            crystalSystem = "Microcrystalline (chalcedony/quartz filling)", chemicalFormula = "SiO₂ (agate/chalcedony/quartz) in rhyolite",
+            commonColors = listOf("Gray-blue agate center", "White quartz star", "Brown rhyolite shell", "Pink and gray", "Blue, red, white, clear interior"),
+            whereFound = listOf("Priday Ranch, Oregon, USA", "Richardson Ranch, Oregon", "Owyhee Reservoir, Oregon", "Oregon (state rock), USA", "Germany", "Australia", "Mexico"),
+            funFacts = listOf(
+                "Oregon's official state rock since 1965.",
+                "Native Americans believed they were eggs of the thunderbird.",
+                "Priday Ranch produces world-class thundereggs with blue agate centers.",
+                "Thunderegg is also known as lithophysae — a nodule-like volcanic rock with crystal-filled cavities.",
+                "The internal star pattern is unique to each thunderegg — no two are identical."
+            ),
+            uses = "Display specimens, lapidary, jewelry, Oregon souvenir pieces.",
             rarity = "Common (Oregon regionally)"
         ),
         Specimen(
