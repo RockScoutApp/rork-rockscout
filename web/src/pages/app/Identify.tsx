@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { FUNCTIONS_URL as BACKEND_URL, APP_KEY } from "@/lib/config";
 
 interface Match {
   id: string;
@@ -40,9 +41,6 @@ interface SpecimenRef {
   image_url: string;
   image_urls?: string[];
 }
-
-const BACKEND_URL = import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL as string;
-const APP_KEY = import.meta.env.EXPO_PUBLIC_RORK_APP_KEY as string;
 
 export default function Identify() {
   const navigate = useNavigate();

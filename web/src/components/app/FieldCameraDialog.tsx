@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { FUNCTIONS_URL as BACKEND_URL, APP_KEY } from "@/lib/config";
 
 /**
  * Save destination for a field camera photo.
@@ -43,9 +44,6 @@ const DESTINATIONS: { value: SaveDestination; label: string }[] = [
   { value: "PROFILE_BACKGROUND", label: "Change Profile Background" },
   { value: "SUBMIT_SPECIMEN", label: "Submit a Specimen" },
 ];
-
-const BACKEND_URL = import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL as string;
-const APP_KEY = import.meta.env.EXPO_PUBLIC_RORK_APP_KEY as string;
 
 interface FieldCameraDialogProps {
   open: boolean;

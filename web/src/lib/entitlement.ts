@@ -1,3 +1,5 @@
+import { FUNCTIONS_URL, APP_KEY } from "@/lib/config";
+
 /**
  * Syncs a user's RevenueCat Premium entitlement to the Supabase profile.
  *
@@ -24,12 +26,8 @@ interface EntitlementResponse {
  */
 export async function syncEntitlement(userId: string): Promise<boolean> {
   try {
-    const functionsUrl = import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL as
-      | string
-      | undefined;
-    const appKey = import.meta.env.EXPO_PUBLIC_RORK_APP_KEY as
-      | string
-      | undefined;
+    const functionsUrl = FUNCTIONS_URL;
+    const appKey = APP_KEY;
     if (!functionsUrl || !appKey) {
       console.warn("Entitlement sync not configured — env vars missing");
       return false;

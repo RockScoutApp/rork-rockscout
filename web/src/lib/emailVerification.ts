@@ -9,10 +9,7 @@
  * rejected with 401, which is why every call here goes through `postAction`.
  */
 
-const FUNCTIONS_URL = import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL as
-  | string
-  | undefined;
-const APP_KEY = import.meta.env.EXPO_PUBLIC_RORK_APP_KEY as string | undefined;
+import { FUNCTIONS_URL, APP_KEY } from "@/lib/config";
 
 export interface VerificationOutcome {
   ok: boolean;

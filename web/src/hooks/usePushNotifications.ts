@@ -1,10 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-
-const BACKEND_URL = import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL as string;
-const APP_KEY = import.meta.env.EXPO_PUBLIC_RORK_APP_KEY as string;
-const VAPID_PUBLIC_KEY = import.meta.env.EXPO_PUBLIC_VAPID_PUBLIC_KEY as string;
+import { FUNCTIONS_URL as BACKEND_URL, APP_KEY, VAPID_PUBLIC_KEY } from "@/lib/config";
 
 const PUSH_CATEGORIES = [
   { id: "social", label: "Social — friends, messages, posts" },

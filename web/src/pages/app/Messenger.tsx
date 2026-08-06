@@ -25,6 +25,7 @@ import {
   drainMessageQueue,
   type PendingWebMessage,
 } from "@/lib/offline-message-queue";
+import { FUNCTIONS_URL } from "@/lib/config";
 
 const CITRINE_HEX = "36 80% 58%";
 const AQUA_HEX = "20 62% 65%";
@@ -737,7 +738,7 @@ export default function Messenger() {
       if (newCount >= 2) {
         // Auto-file a report for 2nd self-harm offense
         if (user) {
-          fetch(`${import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL}/report-notification-email`, {
+          fetch(`${FUNCTIONS_URL}/report-notification-email`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -761,7 +762,7 @@ export default function Messenger() {
       setShowProfanityWarning(true);
       // Record warning server-side
       if (user) {
-        fetch(`${import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL}/profanity-warning`, {
+        fetch(`${FUNCTIONS_URL}/profanity-warning`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

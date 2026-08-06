@@ -7,6 +7,7 @@ import {
   estimatedAffiliateRevenue,
   type AffiliateState,
 } from "@/lib/affiliate-tracker";
+import { FUNCTIONS_URL } from "@/lib/config";
 
 export default function DeveloperConsole() {
   const { user } = useAuth();
@@ -85,7 +86,7 @@ Email: ${user?.email}`}
         <h3 className="text-sm font-semibold text-foreground">Backend Status</h3>
         <p className="mt-2 text-sm text-muted-foreground">
           Backend URL:{" "}
-          {import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL ?? "not configured"}
+          {FUNCTIONS_URL}
         </p>
       </div>
 

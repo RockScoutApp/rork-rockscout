@@ -35,6 +35,7 @@ import { toast } from "sonner";
 import { filterProfanity } from "@/lib/profanity-filter";
 import { useProfanityLevel } from "@/hooks/useProfanityLevel";
 import { isUsernameTaken } from "@/lib/username-resolver";
+import { FUNCTIONS_URL } from "@/lib/config";
 
 interface Profile {
   id: string;
@@ -241,7 +242,7 @@ export default function UserProfile() {
       if (!user || !profileId) throw new Error("Not signed in");
       const reason = `Manual report from user profile by ${user.email?.split("@")[0] ?? "unknown"}`;
       const resp = await fetch(
-        `${import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL}/report-notification-email`,
+        `${FUNCTIONS_URL}/report-notification-email`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
