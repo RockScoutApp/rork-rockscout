@@ -538,8 +538,8 @@ const FEATURES_LIST = [
   {
     icon: Trophy,
     title: "Achievements, XP & badges",
-    desc: "101 achievements and 31 badges with confetti level-ups. Earn XP for every action, track your progress on each locked achievement with a visual progress bar, and share brag-worthy level-up cards.",
-    items: ["101 achievements", "31 badges", "Progress bars on locked achievements", "XP & leveling"],
+    desc: "101 achievements and 30 badges with confetti level-ups. Earn XP for every action, track your progress on each locked achievement with a visual progress bar, and share brag-worthy level-up cards.",
+    items: ["101 achievements", "30 badges", "Progress bars on locked achievements", "XP & leveling"],
   },
 
   // ── Educational Content & Catalogs ──
@@ -564,8 +564,8 @@ const FEATURES_LIST = [
   {
     icon: Landmark,
     title: "Artifacts & stone tools",
-    desc: "A growing catalog of 100+ authentic prehistoric artifacts — arrowheads (20+ types), spear points & dart tips, hand axes & axe heads, flaked stone tools, drill bits, native beads, stone effigies, pipes, ornaments, shell and bone tools, pottery, and more. Each entry has a generated reference image, cultural period, material, and how it was made and used. A NEW badge flags artifacts added in the last 7 days.",
-    items: ["100+ artifacts", "Arrowheads", "Spear points", "Hand axes", "Stone effigies", "Drill bits & beads", "NEW badge on recent adds"],
+    desc: "A growing catalog of 90+ authentic prehistoric artifacts — arrowheads (19 types), spear points & dart tips, hand axes & axe heads, flaked stone tools, drill bits, native beads, stone effigies, pipes, ornaments, shell and bone tools, pottery, and more. Each entry has a generated reference image, cultural period, material, and how it was made and used. A NEW badge flags artifacts added in the last 7 days.",
+    items: ["90+ artifacts", "Arrowheads", "Spear points", "Hand axes", "Stone effigies", "Drill bits & beads", "NEW badge on recent adds"],
   },
   {
     icon: Mountain,
@@ -590,8 +590,8 @@ const FEATURES_LIST = [
   {
     icon: Star,
     title: "Stars & Constellations",
-    desc: "A complete night sky guide — all 88 IAU constellations with programmatic star charts, 30+ important stars with spectral data, all 8 planets plus dwarf planets, and 40+ deep sky objects (galaxies, nebulae, star clusters). Every page features animated twinkling white stars in the background and generated hero images for the most famous objects.",
-    items: ["88 constellations", "Star charts", "30+ stars", "10 planets", "40+ deep sky objects", "Twinkling stars bg"],
+    desc: "A complete night sky guide — all 88 IAU constellations with programmatic star charts, 30+ important stars with spectral data, all 8 planets plus dwarf planets, and 37 deep sky objects (galaxies, nebulae, star clusters). Every page features animated twinkling white stars in the background and generated hero images for the most famous objects.",
+    items: ["88 constellations", "Star charts", "30+ stars", "10 planets", "37 deep sky objects", "Twinkling stars bg"],
   },
 
   // ── Search, Alerts & Notifications ──
@@ -606,7 +606,7 @@ const FEATURES_LIST = [
   {
     icon: Backpack,
     title: "Gear, tokens & design",
-    desc: "Beginner-to-advanced Gear Guide with 48+ tools and Amazon links. 7-day free trial, $5.99/mo Premium, or one-time donations for tokens. Immersive 3D design with an optional 2GB offline cache mode plus a one-tap bulk download that caches every specimen photo, guide illustration, and hero image (~3.5 GB) so the whole app works fully offline.",
+    desc: "Beginner-to-advanced Gear Guide with 77 tools and Amazon links. 7-day free trial, $5.99/mo Premium, or one-time donations for tokens. Immersive 3D design with an optional 2GB offline cache mode plus a one-tap bulk download that caches every specimen photo, guide illustration, and hero image (~3.5 GB) so the whole app works fully offline.",
     items: ["Gear Guide", "Tokens & Premium", "3D design", "2GB cache mode", "Bulk offline download (~3.5 GB)"],
   },
   {
@@ -676,8 +676,8 @@ const FEATURES_LIST = [
   {
     icon: Users,
     title: "Add users to private chats",
-    desc: "Add up to 5 users to a private chat thread. The invited user gets an accept/cancel popup — once accepted, they're part of the conversation with full messaging, image sharing, and reply threading support.",
-    items: ["5-user max", "Accept/cancel popup", "Full messaging support"],
+    desc: "Add up to 10 users to a private chat thread. The invited user gets an accept/cancel popup — once accepted, they're part of the conversation with full messaging, image sharing, and reply threading support.",
+    items: ["10-user max", "Accept/cancel popup", "Full messaging support"],
   },
 ];
 

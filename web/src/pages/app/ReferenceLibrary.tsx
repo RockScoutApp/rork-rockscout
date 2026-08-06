@@ -28,7 +28,7 @@ interface RefTile {
 }
 
 const TILES: RefTile[] = [
-  { to: "/app/gear", icon: Compass, label: "Gear Guide", description: "47 recommended tools — loupes, hammers, UV lights, and more.", accent: "20 62% 55%" },
+  { to: "/app/gear", icon: Compass, label: "Gear Guide", description: "77 recommended tools — loupes, hammers, UV lights, and more.", accent: "20 62% 55%" },
   { to: "/app/gem-shows", icon: Calendar, label: "Gem & Mineral Shows", description: "281 upcoming shows across the US with dates and venues.", accent: "4 70% 55%" },
   { to: "/app/map", icon: MapPin, label: "Dig Sites & Maps", description: "583 dig sites, mines, parks, and shops on an interactive map.", accent: "174 60% 45%" },
   { to: "/app/glossary", icon: BookOpen, label: "Glossary", description: "146 terms — mineralogy, geology, paleontology, lapidary & more.", accent: "190 60% 50%" },
@@ -43,7 +43,7 @@ const TILES: RefTile[] = [
   { to: "/app/aurora", icon: Sparkles, label: "Aurora Tracker", description: "KP index guide, viewing tips, and forecast links.", accent: "174 100% 45%" },
   { to: "/app/stars", icon: Telescope, label: "Stars & Constellations", description: "10 constellations & 10 bright stars with mythology.", accent: "220 30% 50%" },
   { to: "/app/severe-weather", icon: Zap, label: "Severe Weather Guide", description: "6 weather hazards, safety tips, and NOAA links.", accent: "4 70% 55%" },
-  { to: "/app/achievements", icon: Award, label: "Achievements", description: "101 badges to earn as you identify, collect, and explore.", accent: "36 80% 58%" },
+  { to: "/app/achievements", icon: Award, label: "Achievements", description: "101 achievements to earn as you identify, collect, and explore.", accent: "36 80% 58%" },
   { to: "/app/paywall", icon: Zap, label: "Go Premium", description: "Unlimited AI IDs, ad-free, and pro features for $5.99/mo.", accent: "265 47% 67%" },
   { to: "/app/notifications", icon: Bell, label: "Notifications", description: "Your in-app notification feed and push settings.", accent: "210 70% 55%" },
   { to: "/app/referral", icon: Gift, label: "Refer a Friend", description: "Earn XP and rewards for every rockhound you bring in.", accent: "147 49% 55%" },

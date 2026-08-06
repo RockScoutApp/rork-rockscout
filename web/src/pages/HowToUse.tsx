@@ -134,7 +134,7 @@ export const HOW_TO_SECTIONS: HowToSection[] = [
       `After snapping with the Field Camera, pick a destination from the "Save to…" dropdown: Field Captures, Saved Images, My Rocks, My Wishlist, Field Journal Entry, Share to Profile, Change Profile Background, or Submit a Specimen.`,
       `The save form lets you add a name, location, and description, plus drop a pin on a map to mark the exact find spot — the pin's coordinates are stored with the capture card.`,
       `Field Captures has a second swipeable page: a full-page Specimen Map showing every capture that has a pin. Tap any pin to open the full specimen detail page for viewing or editing. Swipe the top pills or the screen to switch between the captures list and the specimen map.`,
-      `An Upload pill sits in the same row as the Captures and Specimen Map pills — tap it to submit a new specimen with up to 4 photos, name, date found, location, and description.`,
+      `An Upload pill sits in the same row as the Captures and Specimen Map pills — tap it to submit a new specimen with up to 10 photos, name, date found, location, and description.`,
     ],
   },
   {
@@ -274,7 +274,7 @@ export const HOW_TO_SECTIONS: HowToSection[] = [
     steps: [
       `Tap the "Explore the Stars" tile on the home screen to open the Stars & Constellations landing page.`,
       `Four clickable tiles lead to detailed astronomical info: Constellations, Important Stars, Planets, and Deep Sky Objects.`,
-      `Constellations: browse all 88 IAU constellations organized by hemisphere. Tap any constellation for a programmatic star chart drawn with Canvas, mythology/lore, best viewing season, and its major stars with magnitudes. The 12 most famous constellations include hero images.`,
+      `Constellations: browse all 88 IAU constellations organized by hemisphere. Tap any constellation for a programmatic star chart drawn with Canvas, mythology/lore, best viewing season, and its major stars with magnitudes. The 10 most famous constellations include hero images.`,
       `Important Stars: explore ~30 notable stars — Sirius, Betelgeuse, Vega, Polaris, Rigel, and more. Tap any star for its spectral class, temperature, luminosity, distance, and visibility info. The 6 most iconic stars include hero images.`,
       `Planets: all 8 planets plus dwarf planets (Pluto, Ceres) with diameter, distance from Sun, orbital period, moons, and detail cards showing physical properties, visibility, and notable features. Each planet has a generated image.`,
       `Deep Sky Objects: ~40 galaxies, nebulae, and star clusters (Andromeda Galaxy, Orion Nebula, Pleiades, Crab Nebula, and more) with catalog numbers, distances, magnitudes, and observing info. The 8 most famous DSOs include hero images.`,
@@ -357,7 +357,7 @@ export const HOW_TO_SECTIONS: HowToSection[] = [
       `Tap your avatar on the home screen to open your Profile.`,
       `Your Player Card shows your level, XP progress, hunter status, and earned badges.`,
       `Set your hunter status: Off Grid, Hunting, Digging, or Trading — each shows a color-coded profile border.`,
-`Browse over 100 achievements and over 30 badges on the Achievements page.`,
+`Browse over 100 achievements and 30 badges on the Achievements page.`,
       `Each locked achievement on the All Achievements page now shows a visual progress bar indicating how close you are to earning it — so you always know what to do next to level up.`,
       `Earn XP for every action — identifying rocks, adding to your collection, capturing field photos, trading, and more.`,
       `Level up to unlock new tiers with unique emojis and brag-worthy celebration pop-ups.`,
@@ -472,8 +472,8 @@ export const HOW_TO_SECTIONS: HowToSection[] = [
     shortLabel: "Artifacts",
     category: "explore-learn",
     steps: [
-      `Tap the "Artifacts" tile on the home screen to browse a growing catalog of over 100 authentic prehistoric artifacts, each with its own generated reference image on a unique background.`,
-      `Families include Arrowheads (20+ types from Clovis and Folsom to Mississippian triangle points), Spear Points & Dart Tips (12+ Paleoindian and Archaic forms), Hand Axes & Axe Heads (20+ Acheulean and Neolithic bifaces), Flaked Stone Tools (12+ scrapers, knives, and gravers), Drill Bits (6+ awl and drill forms), Native Beads (13+ shell, stone, and copper beads), Stone Effigies (7+ animal and human effigies from the Woodland and Mississippian periods), Pipes & Medicine Tubes, Ornaments & Weights, Shell Tools, Bone Tools, Pottery, Game Discs, and Wooden Artifacts.`,
+      `Tap the "Artifacts" tile on the home screen to browse a growing catalog of over 90 authentic prehistoric artifacts, each with its own generated reference image on a unique background.`,
+      `Families include Arrowheads (19 types from Clovis and Folsom to Mississippian triangle points), Spear Points & Dart Tips (12 Paleoindian and Archaic forms), Hand Axes & Axe Heads (19 Acheulean and Neolithic bifaces), Flaked Stone Tools (11 scrapers, knives, and gravers), Drill Bits (5 awl and drill forms), Native Beads (12 shell, stone, and copper beads), Stone Effigies, Pipes & Medicine Tubes, Ornaments & Weights, Shell Tools, Bone Tools, Pottery, Game Discs, and Wooden Artifacts.`,
       `Each artifact card shows a reference image, cultural period, material, and a detailed description of how it was made and used.`,
       `The Artifacts tile is linked to the Specimen Database via the ARTIFACTS category chip at the top of the specimen list — tap the chip to filter the full database down to artifacts only. Artifacts never appear inside the main specimen database list; they are only accessible through the Artifacts tile or the category chip.`,
       `A NEW badge appears on any artifact added to the catalog within the last 7 days, so you can spot the latest additions at a glance.`,
@@ -513,7 +513,7 @@ export const HOW_TO_SECTIONS: HowToSection[] = [
     shortLabel: "Gear Guide",
     category: "tools-misc",
     steps: [
-      `Tap the "Gear Guide" banner (right below the Calendar tile) on the home screen to browse over 45 curated tools with Amazon links.`,
+      `Tap the "Gear Guide" banner (right below the Calendar tile) on the home screen to browse over 75 curated tools with Amazon links.`,
       `Kits are organized from beginner to advanced — from a first loupe and rock hammer to lapidary equipment and UV lights.`,
       `Each item shows a price range and a quick link so you can stock up before your next dig.`,
       `As an Amazon Associate, RockScout earns from qualifying purchases — at no extra cost to you.`,
@@ -542,7 +542,7 @@ export const HOW_TO_SECTIONS: HowToSection[] = [
     category: "identify-collect",
     steps: [
       `Found a specimen that isn't in the database? Use the Upload Specimen pill (found on the Specimen Database screen, the Field Captures screen, and specimen detail pages).`,
-      `Submit up to 4 photos plus a name, date found, location, and description. Images are automatically checked against a 5 MB size limit — if a photo is too large, you'll get a friendly notification to pick a smaller file, preventing upload failures before they happen.`,
+      `Submit up to 10 photos plus a name, date found, location, and description. Images are automatically checked against a 5 MB size limit — if a photo is too large, you'll get a friendly notification to pick a smaller file, preventing upload failures before they happen.`,
       `If the specimen already exists in the database and your location is a common find spot for it, you'll get a small pop-up letting you know it's already included. If the location is unusual for that specimen, it goes to developer review instead.`,
       `Found a dig site, rock shop, or gem show that isn't on the map? Use the Add Location form on the Dig Sites map or any map screen.`,
       `After review, submitted locations appear on the Dig Sites map for every RockScout user to discover.`,

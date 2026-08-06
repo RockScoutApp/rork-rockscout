@@ -42,7 +42,7 @@ const FAQ = [
   },
   {
     q: "What is the Artifacts & Stone Tools tile?",
-    a: "The Artifacts tile is a growing catalog of 100+ authentic prehistoric artifacts, each with its own generated reference image. Families include Arrowheads (20+ types), Spear Points & Dart Tips (12+), Hand Axes & Axe Heads (20+), Flaked Stone Tools (12+), Drill Bits (6+), Native Beads (13+), Stone Effigies (7+), Pipes & Medicine Tubes, Ornaments & Weights, Shell Tools, Bone Tools, Pottery, Game Discs, and Wooden Artifacts. The tile is linked to the Specimen Database via the ARTIFACTS category chip at the top of the specimen list — artifacts never appear inside the main specimen database, only through the Artifacts tile or the category chip. A NEW badge appears on any artifact added within the last 7 days.",
+    a: "The Artifacts tile is a growing catalog of 90+ authentic prehistoric artifacts, each with its own generated reference image. Families include Arrowheads (19 types), Spear Points & Dart Tips (12), Hand Axes & Axe Heads (19), Flaked Stone Tools (11), Drill Bits (5), Native Beads (12), Stone Effigies, Pipes & Medicine Tubes, Ornaments & Weights, Shell Tools, Bone Tools, Pottery, Game Discs, and Wooden Artifacts. The tile is linked to the Specimen Database via the ARTIFACTS category chip at the top of the specimen list — artifacts never appear inside the main specimen database, only through the Artifacts tile or the category chip. A NEW badge appears on any artifact added within the last 7 days.",
   },
   {
     q: "What are the Natural Wonders?",

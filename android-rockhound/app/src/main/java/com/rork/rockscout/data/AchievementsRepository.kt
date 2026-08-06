@@ -156,7 +156,7 @@ object AchievementsRepository {
         return (totalXp - cur).toFloat() / (next - cur).toFloat()
     }
 
-    /** Full badge catalog (31 badges). Stable ordering — UI renders in this order. */
+    /** Full badge catalog (30 badges). Stable ordering — UI renders in this order. */
     val badgeCatalog: List<Badge> = listOf(
         // ── Identification milestones ──
         Badge("first_10", "First 10", "Identify 10 rocks.", "\uD83C\uDFC6", Badge.Requirement("identify_count", 10)),

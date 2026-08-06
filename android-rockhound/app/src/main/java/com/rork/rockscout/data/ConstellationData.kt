@@ -293,7 +293,6 @@ object ConstellationData {
     val allConstellations: List<ConstellationEntry> = listOf(
         orion, ursaMajor, cassiopeia, leo, scorpius, cygnus, lyra, taurus, gemini, canisMajor, andromeda, sagittarius,
         // Northern hemisphere
-        ConstellationEntry("Andromeda", "And", "Northern", "Alpheratz", "The Princess, chained maiden rescued by Perseus.", "Rescued by Perseus from a sea monster.", "Autumn", "1h", "+40°", heroImageUrl = ANDROMEDA_URL),
         ConstellationEntry("Aquila", "Aql", "Equatorial", "Altair", "The Eagle — carries Zeus's thunderbolts.", "Zeus's eagle.", "Summer", "19h", "+0°", heroImageUrl = AQUILA_URL),
         ConstellationEntry("Auriga", "Aur", "Northern", "Capella", "The Charioteer — hexagonal constellation with bright Capella.", "Athena's charioteer.", "Winter", "6h", "+40°", heroImageUrl = AURIGA_URL),
         ConstellationEntry("Boötes", "Boo", "Northern", "Arcturus", "The Herdsman — kite-shaped constellation with bright Arcturus.", "The ox driver.", "Spring", "15h", "+30°", heroImageUrl = BOOTES_URL),
@@ -316,7 +315,6 @@ object ConstellationData {
         ConstellationEntry("Libra", "Lib", "Equatorial", "Zubeneschamali", "The Scales — zodiac constellation of balance.", "The scales of justice.", "Spring", "15h", "-15°", heroImageUrl = LIBRA_URL),
         ConstellationEntry("Lupus", "Lup", "Southern", "Alpha Lup", "The Wolf — near Centaurus.", "A wild animal slain by Centaurus.", "Summer", "15h", "-45°", heroImageUrl = LUPUS_URL),
         ConstellationEntry("Lynx", "Lyn", "Northern", "Alpha Lyn", "The Lynx — faint constellation between Ursa Major and Auriga.", "Named for the sharp-eyed animal.", "Winter", "8h", "+45°", heroImageUrl = LYNX_URL),
-        ConstellationEntry("Lyra", "Lyr", "Northern", "Vega", "The Lyre — small constellation with brilliant Vega.", "Orpheus's lyre.", "Summer", "19h", "+35°", heroImageUrl = LYRA_URL),
         ConstellationEntry("Ophiuchus", "Oph", "Equatorial", "Rasalhague", "The Serpent Bearer — holds Serpens.", "Asclepius, the healer.", "Summer", "17h", "+0°", heroImageUrl = OPHIUCHUS_URL),
         ConstellationEntry("Pegasus", "Peg", "Northern", "Enif", "The Winged Horse — features the Great Square asterism.", "Pegasus, sprung from Medusa's blood.", "Autumn", "22h", "+20°", heroImageUrl = PEGASUS_URL),
         ConstellationEntry("Perseus", "Per", "Northern", "Mirfak", "The Hero — rescuer of Andromeda.", "Slayer of Medusa.", "Winter", "3h", "+45°", heroImageUrl = PERSEUS_URL),
@@ -334,16 +332,13 @@ object ConstellationData {
         ConstellationEntry("Fornax", "For", "Southern", "Alpha For", "The Furnace — faint constellation.", "The chemical furnace.", "Winter", "3h", "-30°", heroImageUrl = FORNAX_URL),
         ConstellationEntry("Hydra", "Hya", "Equatorial", "Alphard", "The Water Snake — the largest constellation.", "The multi-headed monster.", "Spring", "11h", "-15°", heroImageUrl = HYDRA_URL),
         ConstellationEntry("Monoceros", "Mon", "Equatorial", "Beta Mon", "The Unicorn — faint constellation near Orion.", "The mythical unicorn.", "Winter", "7h", "+0°", heroImageUrl = MONOCEROS_URL),
-        ConstellationEntry("Orion", "Ori", "Equatorial", "Rigel", "The Hunter — most recognizable winter constellation.", "The great hunter.", "Winter", "5h", "+5°", heroImageUrl = ORION_URL),
         ConstellationEntry("Pisces", "Psc", "Equatorial", "Alpherg", "The Fishes — zodiac constellation of two fish.", "Aphrodite and Eros as fish.", "Autumn", "1h", "+15°", heroImageUrl = PISCES_URL),
         ConstellationEntry("Piscis Austrinus", "PsA", "Southern", "Fomalhaut", "The Southern Fish — drinks water from Aquarius.", "The fish.", "Autumn", "22h", "-30°", heroImageUrl = PISCIS_AUSTRINUS_URL),
         ConstellationEntry("Sextans", "Sex", "Equatorial", "Alpha Sex", "The Sextant — faint constellation near Leo.", "Named after the navigational instrument.", "Spring", "10h", "-5°", heroImageUrl = SEXTANS_URL),
-        ConstellationEntry("Taurus", "Tau", "Equatorial", "Aldebaran", "The Bull — zodiac constellation with the Pleiades and Hyades.", "Zeus as a bull.", "Winter", "4h", "+15°", heroImageUrl = TAURUS_URL),
         ConstellationEntry("Virgo", "Vir", "Equatorial", "Spica", "The Maiden — second largest constellation, zodiac sign.", "Astraea, goddess of justice.", "Spring", "13h", "+0°", heroImageUrl = VIRGO_URL),
         // Southern hemisphere
         ConstellationEntry("Ara", "Ara", "Southern", "Alpha Ara", "The Altar — small southern constellation.", "The altar of the gods.", "Summer", "17h", "-55°", heroImageUrl = ARA_URL),
         ConstellationEntry("Caelum", "Cae", "Southern", "Alpha Cae", "The Chisel — faint southern constellation.", "The sculptor's chisel.", "Winter", "5h", "-40°", heroImageUrl = CAELUM_URL),
-        ConstellationEntry("Canis Major", "CMa", "Southern", "Sirius", "The Greater Dog — contains the brightest star.", "Orion's hunting dog.", "Winter", "7h", "-25°", heroImageUrl = CANIS_MAJOR_URL),
         ConstellationEntry("Chamaeleon", "Cha", "Southern", "Alpha Cha", "The Chameleon — small circumpolar constellation.", "The chameleon.", "Year-round", "11h", "-80°", heroImageUrl = CHAMAELEON_URL),
         ConstellationEntry("Circinus", "Cir", "Southern", "Alpha Cir", "The Compass — small constellation near Centaurus.", "The drafting compass.", "Spring", "15h", "-60°", heroImageUrl = CIRCINUS_URL),
         ConstellationEntry("Columba", "Col", "Southern", "Phact", "The Dove — small constellation near Puppis.", "Noah's dove.", "Winter", "6h", "-35°", heroImageUrl = COLUMBA_URL),
@@ -364,13 +359,18 @@ object ConstellationData {
         ConstellationEntry("Puppis", "Pup", "Southern", "Naos", "The Stern — part of the former Argo Navis.", "The stern of the Argo.", "Winter", "8h", "-30°", heroImageUrl = PUPPIS_URL),
         ConstellationEntry("Pyxis", "Pyx", "Southern", "Alpha Pyx", "The Compass — small constellation near Puppis.", "The ship's compass.", "Spring", "9h", "-25°", heroImageUrl = PYXIS_URL),
         ConstellationEntry("Reticulum", "Ret", "Southern", "Alpha Ret", "The Net — small southern constellation.", "The reticle net.", "Winter", "4h", "-60°", heroImageUrl = RETICULUM_URL),
-        ConstellationEntry("Sagittarius", "Sgr", "Southern", "Kaus Aust.", "The Archer — points toward galactic center.", "The centaur archer.", "Summer", "19h", "-25°", heroImageUrl = SAGITTARIUS_URL),
-        ConstellationEntry("Scorpius", "Sco", "Southern", "Antares", "The Scorpion — S-shaped constellation with red Antares.", "The killer of Orion.", "Summer", "17h", "-30°", heroImageUrl = SCORPIUS_URL),
         ConstellationEntry("Sculptor", "Scl", "Southern", "Alpha Scl", "The Sculptor — faint constellation near Cetus.", "The sculptor's studio.", "Autumn", "0h", "-30°", heroImageUrl = SCULPTOR_URL),
         ConstellationEntry("Scutum", "Sct", "Equatorial", "Alpha Sct", "The Shield — small constellation in the Milky Way.", "Sobieski's shield.", "Summer", "19h", "-10°", heroImageUrl = SCUTUM_URL),
         ConstellationEntry("Tucana", "Tuc", "Southern", "Alpha Tuc", "The Toucan — contains the Small Magellanic Cloud.", "The toucan.", "Autumn", "0h", "-65°", heroImageUrl = TUCANA_URL),
         ConstellationEntry("Vela", "Vel", "Southern", "Gamma Vel", "The Sails — part of the former Argo Navis.", "The sails of the Argo.", "Spring", "9h", "-45°", heroImageUrl = VELA_URL),
         ConstellationEntry("Volans", "Vol", "Southern", "Beta Vol", "The Flying Fish — small southern constellation.", "The flying fish.", "Winter", "8h", "-70°", heroImageUrl = VOLANS_URL),
+        ConstellationEntry("Antlia", "Ant", "Southern", "Alpha Ant", "The Air Pump — faint southern constellation.", "The air pump.", "Spring", "10h", "-35°"),
+        ConstellationEntry("Apus", "Aps", "Southern", "Alpha Aps", "The Bird of Paradise — small southern constellation.", "The bird of paradise.", "Year-round", "16h", "-75°"),
+        ConstellationEntry("Corona Australis", "CrA", "Southern", "Alpha CrA", "The Southern Crown — semicircle of stars near Sagittarius.", "The southern crown.", "Summer", "19h", "-40°"),
+        ConstellationEntry("Leo Minor", "LMi", "Northern", "Praecipua", "The Lesser Lion — faint constellation between Leo and Ursa Major.", "The smaller lion.", "Spring", "10h", "+25°"),
+        ConstellationEntry("Lepus", "Lep", "Equatorial", "Arneb", "The Hare — constellation below Orion.", "The hare hunted by Orion.", "Winter", "6h", "-20°"),
+        ConstellationEntry("Telescopium", "Tel", "Southern", "Alpha Tel", "The Telescope — faint southern constellation.", "The telescope.", "Summer", "19h", "-50°"),
+        ConstellationEntry("Triangulum Australe", "TrA", "Southern", "Atria", "The Southern Triangle — small constellation near Norma.", "The southern triangle.", "Summer", "16h", "-65°"),
     )
 
     /** The 12 famous constellations that get hero images. */

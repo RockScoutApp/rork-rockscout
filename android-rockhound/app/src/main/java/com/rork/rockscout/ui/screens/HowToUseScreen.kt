@@ -410,7 +410,7 @@ private val howToSections: List<HowToSection> = listOf(
             "Tap your avatar on the home screen to open your Profile.",
             "Your Player Card shows your level, XP progress, hunter status, and earned badges.",
             "Set your hunter status: Off Grid, Hunting, Digging, or Trading — each shows a color-coded profile border.",
-            "Browse over 100 achievements and over 30 badges on the Achievements page.",
+            "Browse over 100 achievements and 30 badges on the Achievements page.",
             "Each locked achievement on the All Achievements page now shows a visual progress bar indicating how close you are to earning it — so you always know what to do next to level up.",
             "Earn XP for every action — identifying rocks, adding to your collection, capturing field photos, trading, and more.",
             "Level up to unlock new tiers with unique emojis and brag-worthy celebration pop-ups.",
@@ -539,7 +539,7 @@ private val howToSections: List<HowToSection> = listOf(
         shortLabel = "Natural Wonders",
         category = HowToCategory.EXPLORE_LEARN,
         steps = listOf(
-            "Tap the \"Natural Wonders\" tile on the home screen to explore over 35 world-famous geological sites and the rocks and minerals you can find at each one.",
+            "Tap the \"Natural Wonders\" tile on the home screen to explore over 70 world-famous geological sites and the rocks and minerals you can find at each one.",
             "Each wonder includes a stunning photo, location, geological formation story, rocks to find, and fun facts — from the Grand Canyon and Giant's Causeway to Mount Vesuvius, Salar de Uyuni, and the Zhangjiajie Pillars.",
             "Recent additions include the Naica Crystal Caves (Chihuahua, Mexico) — the Cave of the Crystals, where giant selenite crystals grow from floor to ceiling, some over 36 feet long — plus Sossusvlei Red Dunes, Þingvellir Rift Valley, Tongariro Volcanic Complex, and more.",
             "Each card opens a full detail page with the formation's geological history, what rocks and minerals are found there, and visitor tips for rockhounds.",
@@ -566,7 +566,7 @@ private val howToSections: List<HowToSection> = listOf(
         shortLabel = "Gear Guide",
         category = HowToCategory.TOOLS_MISC,
         steps = listOf(
-            "Tap the \"Gear Guide\" banner (right below the Calendar tile) on the home screen to browse over 45 curated tools with Amazon links.",
+            "Tap the \"Gear Guide\" banner (right below the Calendar tile) on the home screen to browse over 75 curated tools with Amazon links.",
             "Kits are organized from beginner to advanced — from a first loupe and rock hammer to lapidary equipment and UV lights.",
             "Each item shows a price range and a quick link so you can stock up before your next dig.",
             "As an Amazon Associate, RockScout earns from qualifying purchases — at no extra cost to you.",
@@ -1031,7 +1031,7 @@ private val howToSections: List<HowToSection> = listOf(
         category = HowToCategory.MAPS_LOCATIONS,
         steps = listOf(
             "Tap \"National & State Parks\" from the Field Kit section on the home screen.",
-            "Browse over 250 national and state parks — including all 62 US National Parks — that are dig-friendly or geologically significant.",
+            "Browse over 490 national and state parks — including all 60 US National Parks — that are dig-friendly or geologically significant.",
             "Each park shows what rocks and minerals you can find there, plus visitor info and common wildlife.",
             "Tap the bookmark icon on any park, dig site, or museum to save it to Favorite Spots for quick access.",
         ),
@@ -1274,7 +1274,7 @@ fun HowToUseScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = {
                         Text(
-                            text = "Search 72 sections…",
+                            text = "Search 73 sections…",
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 color = TextLow,
                             ),
