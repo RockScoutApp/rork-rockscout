@@ -37,7 +37,12 @@ import com.rork.rockscout.data.UserTimezoneProvider
 import com.rork.rockscout.data.EmailComposerDraftStore
 import com.rork.rockscout.data.CustomSpecimenStore
 import com.rork.rockscout.data.LocationSubmissionStore
+import com.rork.rockscout.data.LocationCacheRepository
 import com.rork.rockscout.data.LocalDataStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import com.rork.rockscout.data.NightModeManager
 import com.rork.rockscout.data.SpecimenSubmissionStore
 import com.rork.rockscout.data.MockDataSeeder
@@ -281,6 +286,17 @@ class RockScoutApplication : Application() {
 
         safeInit("custom-dig-location-store") {
             CustomDigLocationStore.initialize()
+        }
+
+        safeInit("room-database") {
+            LocationCacheRepository.initialize(this)
+            // Seed from hardcoded data on first launch or app update.
+            // Fire-and-forget on a background scope — screens fall back to
+            // SeedData singletons until seeding completes, then Room flows
+            // take over with the same data persisted in SQLite.
+            CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+                LocationCacheRepository.seedIfNeeded(BuildConfig.VERSION_CODE)
+            }
         }
 
         safeInit("specimen-submission-store") {

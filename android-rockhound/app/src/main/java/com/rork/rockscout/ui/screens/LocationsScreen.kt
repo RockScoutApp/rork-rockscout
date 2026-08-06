@@ -58,12 +58,15 @@ import androidx.navigation.NavController
 import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.DigLocation
 import com.rork.rockscout.data.InternationalLocations
+import com.rork.rockscout.data.LocationCacheRepository
 import com.rork.rockscout.data.LocationFetcher
 import com.rork.rockscout.data.LocationRefresher
 import com.rork.rockscout.data.LocationType
 import com.rork.rockscout.data.UserPinSubmissionStore
 import com.rork.rockscout.data.PurchaseManager
 import com.rork.rockscout.data.SeedData
+import com.rork.rockscout.data.db.DigLocationEntity
+import com.rork.rockscout.data.db.toDigLocation
 
 import com.rork.rockscout.ui.components.AlphabetIndex
 import com.rork.rockscout.ui.components.DarkCard
@@ -152,23 +155,44 @@ fun LocationsScreen(navController: NavController) {
         InternationalLocations.isInUnitedStates(current.first, current.second)
     }
 
+    // Collect dig locations from Room (offline SQLite cache). Falls back to
+    // SeedData singletons on first launch before seeding completes.
+    val roomUsLocations by LocationCacheRepository.usDigLocations
+        .collectAsStateWithLifecycle(emptyList())
+    val roomIntlLocations by LocationCacheRepository.internationalDigLocations
+        .collectAsStateWithLifecycle(emptyList())
+
+    // Use Room data when seeded, otherwise fall back to SeedData so the screen
+    // is never blank during the first few seconds of a fresh install.
+    val usDigLocations: List<DigLocation> = remember(roomUsLocations) {
+        if (roomUsLocations.isNotEmpty()) roomUsLocations.map { it.toDigLocation() }
+        else SeedData.allLocations
+    }
+    val intlDigLocations: List<DigLocation> = remember(roomIntlLocations) {
+        if (roomIntlLocations.isNotEmpty()) roomIntlLocations.map { it.toDigLocation() }
+        else InternationalLocations.internationalLocations
+    }
+
     // International nearby locations (within 150 miles)
-    val intlNearby = remember(current, nearbyOn, filter, searchQuery) {
+    val intlNearby = remember(intlDigLocations, current, nearbyOn, filter, searchQuery) {
         if (nearbyOn && !isUsUser) {
-            InternationalLocations.nearbyInternational(current.first, current.second)
+            intlDigLocations
+                .map { it to AppRepository.distanceMiles(current.first, current.second, it.latitude, it.longitude) }
+                .filter { it.second <= InternationalLocations.MAX_RADIUS_MILES }
                 .filter { filter == null || it.first.type == filter }
                 .filter { searchQuery.isBlank() ||
                     it.first.name.contains(searchQuery, ignoreCase = true) ||
                     it.first.region.contains(searchQuery, ignoreCase = true) ||
                     (it.first.address?.contains(searchQuery, ignoreCase = true) ?: false) }
+                .sortedBy { it.second }
         } else {
             emptyList()
         }
     }
 
     // US locations (full list for US users, or when nearby is off)
-    val usLocations = remember(current, filter, isUsUser, nearbyOn, searchQuery) {
-        SeedData.allLocations
+    val usLocations = remember(usDigLocations, current, filter, isUsUser, nearbyOn, searchQuery) {
+        usDigLocations
             .filter { filter == null || it.type == filter }
             .filter { searchQuery.isBlank() ||
                 it.name.contains(searchQuery, ignoreCase = true) ||
@@ -240,7 +264,7 @@ fun LocationsScreen(navController: NavController) {
             )
             if (viewMode == ViewMode.MAP) {
                 DigSitesMapView(
-                    locations = SeedData.allLocations + InternationalLocations.internationalLocations,
+                    locations = usDigLocations + intlDigLocations,
                     userLat = current.first,
                     userLng = current.second,
                     showUser = nearbyOn,

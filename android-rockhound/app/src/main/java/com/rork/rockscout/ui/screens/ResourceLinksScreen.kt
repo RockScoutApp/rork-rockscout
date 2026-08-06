@@ -78,11 +78,14 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.rork.rockscout.data.LocationCacheRepository
 import com.rork.rockscout.data.MuseumEntry
 import com.rork.rockscout.data.SafeLinkOpener
 import com.rork.rockscout.data.UsMuseums
 import com.rork.rockscout.data.UserMuseum
 import com.rork.rockscout.data.UserMuseumStore
+import com.rork.rockscout.data.db.MuseumEntity
+import com.rork.rockscout.data.db.toMuseumEntry
 import com.rork.rockscout.ui.components.CompactSearchPill
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.LocationImage
@@ -363,11 +366,31 @@ private fun MuseumsPage() {
     var showAddMuseumDialog by remember { mutableStateOf(false) }
     val userMuseums by UserMuseumStore.museums.collectAsStateWithLifecycle()
 
-    val filteredStates = remember(searchQuery) {
-        if (searchQuery.isBlank()) {
-            UsMuseums.states
+    // Collect curated museums from Room (offline SQLite cache). Falls back to
+    // UsMuseums singleton on first launch before seeding completes.
+    val roomMuseums by LocationCacheRepository.curatedMuseums
+        .collectAsStateWithLifecycle(emptyList())
+
+    // Build state-grouped list from Room data (or fallback to hardcoded).
+    val allStates: List<UsMuseums.StateGroup> = remember(roomMuseums) {
+        if (roomMuseums.isNotEmpty()) {
+            roomMuseums
+                .map { it.toMuseumEntry() }
+                .groupBy { it.state }
+                .toSortedMap(compareBy { it })
+                .map { (state, museums) ->
+                    UsMuseums.StateGroup(state, museums.sortedBy { it.name })
+                }
         } else {
-            UsMuseums.states.map { sg ->
+            UsMuseums.states
+        }
+    }
+
+    val filteredStates = remember(allStates, searchQuery) {
+        if (searchQuery.isBlank()) {
+            allStates
+        } else {
+            allStates.map { sg ->
                 sg.copy(museums = sg.museums.filter { m ->
                     m.name.contains(searchQuery, ignoreCase = true) ||
                         m.city.contains(searchQuery, ignoreCase = true) ||
