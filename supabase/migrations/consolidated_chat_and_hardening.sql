@@ -207,7 +207,7 @@ CREATE TABLE IF NOT EXISTS report_notifications (
 CREATE TABLE IF NOT EXISTS chat_typing_status (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   chat_id TEXT NOT NULL,
-  user_id TEXT NOT NULL REFERENCES public.rockscout_profiles(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES public.rockscout_profiles(id) ON DELETE CASCADE,
   is_typing BOOLEAN DEFAULT false,
   updated_at TIMESTAMPTZ DEFAULT now(),
   UNIQUE(chat_id, user_id)
