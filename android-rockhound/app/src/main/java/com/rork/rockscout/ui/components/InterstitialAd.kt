@@ -1,12 +1,12 @@
 package com.rork.rockscout.ui.components
 
+import android.app.Activity
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,24 +34,36 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.google.android.gms.ads.AdError
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.rork.rockscout.data.AdAnalyticsTracker
 import com.rork.rockscout.data.AdManager
+import com.rork.rockscout.data.AdMobIds
 import com.rork.rockscout.data.IdentifyAccessManager
 import com.rork.rockscout.data.PurchaseManager
 import com.rork.rockscout.ui.theme.Amethyst
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
+import com.rork.rockscout.util.findActivity
 
 /** Simulated interstitial ad content cycled for variety. */
 private data class AdContent(
@@ -83,10 +95,12 @@ private val AD_ROTATIONS = listOf(
 )
 
 /**
- * A closeable interstitial popup ad shown to non-premium users when they
- * navigate into key screens. Respects a per-session cooldown and global
- * minimum interval so it's not too aggressive, and never appears for
- * premium users.
+ * Interstitial ad shown to non-premium users when they navigate into key screens.
+ *
+ * First tries to load a real Google AdMob interstitial. If the real ad fails to
+ * load (cloud emulator, no network, ad blocker) the simulated premium promo
+ * dialog is shown as a fallback. Respects a per-session cooldown and global
+ * minimum interval so it's not too aggressive, and never appears for premium users.
  *
  * Place at the top level of a screen composable — it self-manages visibility.
  */
@@ -102,23 +116,40 @@ fun InterstitialAdTrigger(
     val analyticsState by AdAnalyticsTracker.state.collectAsState()
     val showAds = !isPremium && !hasAdFreeUnlock && analyticsState.adsEnabled
 
-    var visible by remember { mutableStateOf(false) }
-    var ad by remember { mutableStateOf(AD_ROTATIONS[0]) }
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
+    val activity = context.findActivity()
 
-    // Evaluate on entry — only show if ads aren't suppressed, not dismissed, and cooldown elapsed
+    var fallbackVisible by remember { mutableStateOf(false) }
+    var ad by remember { mutableStateOf(AD_ROTATIONS[0]) }
+    val scope = rememberCoroutineScope()
+
     LaunchedEffect(screenKey, showAds) {
-        if (showAds && AdManager.instance.shouldShowAd(screenKey)) {
-            ad = AD_ROTATIONS[AdManager.instance.rotationIndex % AD_ROTATIONS.size]
-            AdManager.instance.markShown(screenKey)
-            // Small delay so the screen renders before the popup appears
-            kotlinx.coroutines.delay(400L)
-            visible = true
-            AdAnalyticsTracker.recordInterstitialImpression(context)
-        }
+        if (!showAds || !AdManager.instance.shouldShowAd(screenKey)) return@LaunchedEffect
+
+        AdManager.instance.markShown(screenKey)
+        ad = AD_ROTATIONS[AdManager.instance.rotationIndex % AD_ROTATIONS.size]
+
+        loadAndShowRealInterstitial(
+            context = context,
+            activity = activity,
+            onAdShowed = { AdAnalyticsTracker.recordInterstitialImpression(context) },
+            onAdFailed = {
+                // Real ad could not load; fall back to the simulated premium dialog.
+                scope.launch {
+                    delay(400L)
+                    fallbackVisible = true
+                    AdAnalyticsTracker.recordInterstitialImpression(context)
+                }
+            },
+        )
     }
 
-    if (!visible) return
+    if (!fallbackVisible) return
+
+    val dismiss = {
+        AdManager.instance.dismissAd(screenKey)
+        fallbackVisible = false
+    }
 
     val transition = rememberInfiniteTransition(label = "interstitialGlow")
     val glow by transition.animateFloat(
@@ -127,11 +158,6 @@ fun InterstitialAdTrigger(
         animationSpec = infiniteRepeatable(tween(2800), RepeatMode.Reverse),
         label = "interstitialGlowAlpha",
     )
-
-    val dismiss = {
-        AdManager.instance.dismissAd(screenKey)
-        visible = false
-    }
 
     Dialog(
         onDismissRequest = dismiss,
@@ -161,7 +187,6 @@ fun InterstitialAdTrigger(
                     .glowingBorder(4.dp, ad.accent.copy(alpha = 0.55f), RoundedCornerShape(24.dp)),
                 contentAlignment = Alignment.Center,
             ) {
-                // Accent glow overlay at top
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -184,7 +209,6 @@ fun InterstitialAdTrigger(
                         .padding(horizontal = 24.dp, vertical = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    // Close button row
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End,
@@ -214,7 +238,6 @@ fun InterstitialAdTrigger(
 
                     Spacer(Modifier.height(4.dp))
 
-                    // Sponsored label
                     Text(
                         text = "Sponsored",
                         style = MaterialTheme.typography.labelSmall,
@@ -224,7 +247,6 @@ fun InterstitialAdTrigger(
 
                     Spacer(Modifier.height(16.dp))
 
-                    // Icon box
                     Box(
                         modifier = Modifier
                             .size(72.dp)
@@ -267,7 +289,6 @@ fun InterstitialAdTrigger(
 
                     Spacer(Modifier.height(22.dp))
 
-                    // CTA button
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -304,7 +325,6 @@ fun InterstitialAdTrigger(
 
                     Spacer(Modifier.height(14.dp))
 
-                    // Secondary dismiss
                     Text(
                         text = "No thanks, continue with ads",
                         style = MaterialTheme.typography.labelMedium,
@@ -317,4 +337,40 @@ fun InterstitialAdTrigger(
             }
         }
     }
+}
+
+private fun loadAndShowRealInterstitial(
+    context: android.content.Context,
+    activity: Activity?,
+    onAdShowed: () -> Unit,
+    onAdFailed: () -> Unit,
+) {
+    if (activity == null) {
+        onAdFailed()
+        return
+    }
+
+    InterstitialAd.load(
+        context,
+        AdMobIds.INTERSTITIAL_AD_UNIT_ID,
+        AdRequest.Builder().build(),
+        object : InterstitialAdLoadCallback() {
+            override fun onAdFailedToLoad(error: LoadAdError) {
+                onAdFailed()
+            }
+
+            override fun onAdLoaded(interstitialAd: InterstitialAd) {
+                interstitialAd.fullScreenContentCallback = object : FullScreenContentCallback() {
+                    override fun onAdShowedFullScreenContent() {
+                        onAdShowed()
+                    }
+
+                    override fun onAdFailedToShowFullScreenContent(error: AdError) {
+                        onAdFailed()
+                    }
+                }
+                interstitialAd.show(activity)
+            }
+        },
+    )
 }

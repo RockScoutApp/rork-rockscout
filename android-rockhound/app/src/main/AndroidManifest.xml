@@ -51,11 +51,10 @@
             </intent-filter>
         </receiver>
 
-        <!-- Google AdMob — uses test ad unit ID for development.
-             Replace with real AdMob app ID in production. -->
+        <!-- Google AdMob — production app ID for RockScout. -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="ca-app-pub-4371366555693080~9235421799" />
 
         <activity
             android:name=".MainActivity"

@@ -1261,7 +1261,7 @@ object NaturalWondersData {
             type = WonderType.VOLCANIC,
             description = "A 'Wonderland of Rocks' — thousands of towering balanced rock pinnacles, spires, and columns carved from welded volcanic ash erupted 27 million years ago by the Turkey Creek Caldera.",
             formation = "The Chiricahua pinnacles are carved from rhyolite tuff — volcanic ash that was erupted in a massive explosion from the Turkey Creek Caldera about 27 million years ago. The ash was so hot and thick that it welded together into a solid rock (welded tuff). As the tuff cooled, it developed vertical joints. Millions of years of weathering — especially freeze-thaw cracking along the joints — have carved the rock into thousands of slender spires, balanced rocks, and hoodoo-like formations. The harder, more densely welded layers resist erosion and form the 'caps' atop the softer pinnacles.",
-            rocksToFind = listOf("Welded Rhyolite Tuff", "Pumice", "Obsidian fragments", "Apache Tears (obsidian nodules)"),
+            rocksToFind = listOf("Welded Rhyolite Tuff", "Pumice", "Obsidian fragments", "Apache Tears"),
             funFacts = listOf(
                 "The pinnacles are carved from volcanic ash erupted 27 million years ago by a supervolcano caldera.",
             ),

@@ -1,6 +1,7 @@
 // RockScout — offline-aware rock & mineral identifier
 package com.rork.rockscout.ui.screens
 
+import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
@@ -115,6 +116,12 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.google.android.gms.ads.AdError
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.rewarded.RewardedAd
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.rork.rockscout.data.AngleImage
 import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.CapturedPhoto
@@ -143,6 +150,7 @@ import com.rork.rockscout.data.SpecimenImages
 import com.rork.rockscout.data.AssemblageResult
 import com.rork.rockscout.data.WebReference
 import com.rork.rockscout.data.SpecimenReportPdfExporter
+import com.rork.rockscout.data.AdMobIds
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.GearLinksCard
 import com.rork.rockscout.ui.components.FullScreenImageViewer
@@ -163,6 +171,7 @@ import com.rork.rockscout.ui.components.SculptedOutlinedButton
 import com.rork.rockscout.ui.components.SculptedTextButton
 import com.rork.rockscout.ui.components.sculpted
 import com.rork.rockscout.ui.components.glowingBorder
+import com.rork.rockscout.util.findActivity
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.theme.Amethyst
 import com.rork.rockscout.ui.theme.Aqua
@@ -1224,7 +1233,23 @@ fun IdentifyScreen(navController: NavController) {
                         isPremium = isPremium,
                         hasLocationUnlock = hasLocationUnlock,
                         onGoPremium = { navController.navigate(Routes.PAYWALL) },
-                        onWatchAdsForToken = { showRewardedVideo = true; rewardedVideoIndex = 0; rewardedVideoProgress = 0f; rewardedVideoComplete = false },
+                        onWatchAdsForToken = {
+                            loadAndShowRewardedAd(
+                                context = context,
+                                activity = context.findActivity(),
+                                onRewarded = {
+                                    accessManager.addTokens(1)
+                                    rewardedVideoComplete = true
+                                    state = ScanState.IDLE
+                                },
+                                onAdFailed = {
+                                    showRewardedVideo = true
+                                    rewardedVideoIndex = 0
+                                    rewardedVideoProgress = 0f
+                                    rewardedVideoComplete = false
+                                },
+                            )
+                        },
                         onPurchaseTokens = { packageId ->
                             val activity = context as? android.app.Activity
                             if (activity != null) {
@@ -3528,6 +3553,40 @@ private fun RewardedVideoOverlay(
             }
         }
     }
+}
+
+private fun loadAndShowRewardedAd(
+    context: android.content.Context,
+    activity: Activity?,
+    onRewarded: () -> Unit,
+    onAdFailed: () -> Unit,
+) {
+    if (activity == null) {
+        onAdFailed()
+        return
+    }
+
+    RewardedAd.load(
+        context,
+        AdMobIds.REWARDED_AD_UNIT_ID,
+        AdRequest.Builder().build(),
+        object : RewardedAdLoadCallback() {
+            override fun onAdFailedToLoad(error: LoadAdError) {
+                onAdFailed()
+            }
+
+            override fun onAdLoaded(rewardedAd: RewardedAd) {
+                rewardedAd.fullScreenContentCallback = object : FullScreenContentCallback() {
+                    override fun onAdFailedToShowFullScreenContent(error: AdError) {
+                        onAdFailed()
+                    }
+                }
+                rewardedAd.show(activity) { _ ->
+                    onRewarded()
+                }
+            }
+        },
+    )
 }
 
 /** Assemblage analysis card — shows host rock + mineral component breakdown
