@@ -46,7 +46,7 @@ const FAQ = [
   },
   {
     q: "What are the Natural Wonders?",
-    a: "The Natural Wonders tile features 36 world-famous geological sites with stunning photos, formation stories, rocks to find, and visitor tips. From the Grand Canyon and Giant's Causeway to Mount Vesuvius, Salar de Uyuni, and the Zhangjiajie Pillars — including the Naica Crystal Caves in Chihuahua, Mexico, where giant selenite crystals grow from floor to ceiling, some over 36 feet long. Each card opens a full detail page and is a great bucket-list trip-planning resource.",
+    a: "The Natural Wonders tile features 72 world-famous geological sites with stunning photos, formation stories, rocks to find, and visitor tips. From the Grand Canyon and Giant's Causeway to Mount Vesuvius, Salar de Uyuni, and the Zhangjiajie Pillars — including the Naica Crystal Caves in Chihuahua, Mexico, where giant selenite crystals grow from floor to ceiling, some over 36 feet long. Each card opens a full detail page and is a great bucket-list trip-planning resource.",
   },
   {
     q: "What does the NEW badge mean?",

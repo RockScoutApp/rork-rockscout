@@ -85,6 +85,11 @@ import com.rork.rockscout.data.UserMuseum
 import com.rork.rockscout.data.UserMuseumStore
 import com.rork.rockscout.ui.components.CompactSearchPill
 import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.addOverlaySafe
+import com.rork.rockscout.ui.components.removeOverlaysSafe
+import com.rork.rockscout.ui.components.runMapSafe
+import com.rork.rockscout.ui.components.safeGeoPoint
+import com.rork.rockscout.ui.components.isValidCoordinate
 import com.rork.rockscout.ui.components.FullscreenMapOverlay
 import com.rork.rockscout.ui.components.GEM_MINERAL_HERO_URL
 import com.rork.rockscout.ui.components.GEM_IMG_CUT_GEMS
@@ -630,24 +635,27 @@ private fun MuseumMapView(
     // Render / refresh pins whenever the filtered list changes.
     LaunchedEffect(mapView, museums) {
         val mv = mapView ?: return@LaunchedEffect
-        mv.overlays.removeAll { it is Marker && it.id?.startsWith("museum_pin_") == true }
-        museums.forEach { museum ->
-            val marker = MuseumMarker(mv, museum)
-            marker.id = "museum_pin_${museum.name}"
-            mv.overlays.add(marker)
-        }
-        // Auto-fit to all pins
-        val points = museums.map { GeoPoint(it.lat, it.lng) }
-        if (points.isNotEmpty()) {
-            if (points.size == 1) {
-                mv.controller.animateTo(points.first())
-                mv.controller.setZoom(8.0)
-            } else {
-                val box = BoundingBox.fromGeoPoints(points)
-                mv.zoomToBoundingBox(box, false, 64)
+        runMapSafe("MuseumMapView pins") {
+            mv.removeOverlaysSafe { it is Marker && it.id?.startsWith("museum_pin_") == true }
+            val validMuseums = museums.filter { isValidCoordinate(it.lat, it.lng) }
+            validMuseums.forEach { museum ->
+                val marker = MuseumMarker(mv, museum)
+                marker.id = "museum_pin_${museum.name}"
+                mv.addOverlaySafe(marker)
             }
+            // Auto-fit to all pins
+            val points = validMuseums.map { GeoPoint(it.lat, it.lng) }
+            if (points.isNotEmpty()) {
+                if (points.size == 1) {
+                    mv.controller.animateTo(points.first())
+                    mv.controller.setZoom(8.0)
+                } else {
+                    val box = BoundingBox.fromGeoPoints(points)
+                    mv.zoomToBoundingBox(box, false, 64)
+                }
+            }
+            mv.invalidate()
         }
-        mv.invalidate()
     }
 
     Box(modifier = modifier) {
@@ -660,10 +668,11 @@ private fun MuseumMapView(
                 createRockScoutMapView(ctx).apply {
                     controller.setZoom(3.5)
                     controller.setCenter(GeoPoint(39.5, -98.35))
-                    overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
+                    addOverlaySafe(RotationGestureOverlay(this).apply { isEnabled = true })
                     val compass = CompassOverlay(ctx, this).apply { enableCompass() }
-                    overlays.add(compass)
+                    addOverlaySafe(compass)
                     post {
+                        if (!isAttachedToWindow) return@post
                         val d = ctx.resources.displayMetrics.density
                         compass.setCompassCenter(width - 56f * d, 40f * d)
                     }

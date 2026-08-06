@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { isValidCoordinate, runMapSafe, safeMarker, safeRemoveLayer, safeRemoveMap, safeSetView } from "@/lib/mapSafe";
 import {
   allMapMarkers,
   getTypeMeta,
@@ -121,8 +122,15 @@ export default function MapPage() {
     // Invalidate size after mount to handle flex layout
     setTimeout(() => map.invalidateSize(), 100);
 
+    // Handle container resizes so the map stays correctly sized after tab changes or soft refresh.
+    const resizeObserver = new ResizeObserver(() => {
+      runMapSafe("resize", () => map.invalidateSize());
+    });
+    if (mapRef.current) resizeObserver.observe(mapRef.current);
+
     return () => {
-      map.remove();
+      resizeObserver.disconnect();
+      safeRemoveMap(map);
       mapInstance.current = null;
     };
   }, []);
@@ -163,13 +171,14 @@ export default function MapPage() {
     if (!markersLayer.current || !mapInstance.current) return;
     markersLayer.current.clearLayers();
 
-    // Limit to 500 markers for performance
-    const toRender = visibleMarkers.slice(0, 500);
+    // Limit to 500 markers for performance, and only render markers with valid coordinates.
+    const toRender = visibleMarkers.slice(0, 500).filter((m) => isValidCoordinate(m.latitude, m.longitude));
 
     for (const marker of toRender) {
       const meta = getTypeMeta(marker.type);
       const icon = createEmojiIcon(meta.emoji, meta.color);
-      const lm = L.marker([marker.latitude, marker.longitude], { icon });
+      const lm = safeMarker(mapInstance.current, marker.latitude, marker.longitude, { icon });
+      if (!lm) continue;
       lm.bindPopup(
         `<div style="min-width:180px;">
           <div style="font-weight:600;font-size:14px;margin-bottom:2px;">${marker.name}</div>
@@ -178,7 +187,7 @@ export default function MapPage() {
         </div>`,
       );
       lm.on("click", () => setSelectedMarker(marker));
-      markersLayer.current.addLayer(lm);
+      runMapSafe("addLayer", () => markersLayer.current?.addLayer(lm));
     }
   }, [visibleMarkers]);
 
@@ -193,13 +202,11 @@ export default function MapPage() {
         if (userMarker.current) {
           userMarker.current.setLatLng([pos.lat, pos.lng]);
         } else {
-          userMarker.current = L.marker([pos.lat, pos.lng], {
+          userMarker.current = safeMarker(mapInstance.current, pos.lat, pos.lng, {
             icon: createUserIcon(),
-          }).addTo(mapInstance.current);
+          });
         }
-        mapInstance.current.setView([pos.lat, pos.lng], 10, {
-          animate: true,
-        });
+        safeSetView(mapInstance.current, pos.lat, pos.lng, 10, { animate: true });
       }
       toast.success("Found your location");
     } catch (err) {
@@ -230,6 +237,7 @@ export default function MapPage() {
   };
 
   const openInMaps = (marker: MapMarker) => {
+    if (!isValidCoordinate(marker.latitude, marker.longitude)) return;
     const url = `https://www.google.com/maps/search/?api=1&query=${marker.latitude},${marker.longitude}`;
     window.open(url, "_blank", "noopener,noreferrer");
   };

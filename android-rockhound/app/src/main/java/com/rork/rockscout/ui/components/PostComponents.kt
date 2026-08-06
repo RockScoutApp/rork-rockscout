@@ -578,11 +578,12 @@ fun PostCard(
                     onLike = { onCommentLike(comment.id) },
                     onReply = { onReplyStart(comment.id) },
                     isReplying = replyingToCommentId == comment.id,
+                    canReply = canComment,
                     canDelete = isMe || comment.user_id == myUserId,
                     onDelete = onDeleteComment?.let { cb -> { cb(comment.id) } },
                     onEdit = onEditComment?.let { cb -> { newBody -> cb(comment.id, newBody) } },
                 )
-                if (replyingToCommentId == comment.id) {
+                if (replyingToCommentId == comment.id && canComment) {
                     ReplyComposer(
                         body = replyBody,
                         onBodyChange = onReplyBodyChange,
@@ -606,13 +607,14 @@ fun PostCard(
                             onLike = { onCommentLike(reply.id) },
                             onReply = { onReplyStart(reply.id) },
                             isReplying = replyingToCommentId == reply.id,
+                            canReply = canComment,
                             isReply = true,
                             parentCommentBody = comment.body,
                             canDelete = isMe || reply.user_id == myUserId,
                             onDelete = onDeleteComment?.let { cb -> { cb(reply.id) } },
                             onEdit = onEditComment?.let { cb -> { newBody -> cb(reply.id, newBody) } },
                         )
-                        if (replyingToCommentId == reply.id) {
+                        if (replyingToCommentId == reply.id && canComment) {
                             ReplyComposer(
                                 body = replyBody,
                                 onBodyChange = onReplyBodyChange,
@@ -717,6 +719,7 @@ private fun CommentRow(
     onLike: () -> Unit,
     onReply: () -> Unit,
     isReplying: Boolean,
+    canReply: Boolean = true,
     isReply: Boolean = false,
     parentCommentBody: String? = null,
     canDelete: Boolean = false,
@@ -818,13 +821,15 @@ private fun CommentRow(
             }
             Spacer(Modifier.height(4.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    "Reply",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (isReplying) Citrine else TextMid,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable { onReply() },
-                )
+                if (canReply) {
+                    Text(
+                        "Reply",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isReplying) Citrine else TextMid,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { onReply() },
+                    )
+                }
                 if (canDelete && onDelete != null) {
                     Text(
                         "Delete",

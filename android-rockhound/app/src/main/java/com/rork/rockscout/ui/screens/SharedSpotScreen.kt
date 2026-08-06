@@ -45,6 +45,12 @@ import androidx.navigation.NavController
 import com.rork.rockscout.data.SafeLinkOpener
 import com.rork.rockscout.ui.components.MapExpandButton
 import com.rork.rockscout.ui.components.MapOfflineNotice
+import com.rork.rockscout.ui.components.addOverlaySafe
+import com.rork.rockscout.ui.components.removeOverlaysSafe
+import com.rork.rockscout.ui.components.runMapSafe
+import com.rork.rockscout.ui.components.safeGeoPoint
+import com.rork.rockscout.ui.components.safeTapOverlay
+import com.rork.rockscout.ui.components.isValidCoordinate
 import com.rork.rockscout.ui.components.MapViewLifecycleEffect
 import com.rork.rockscout.ui.components.MapZoomControls
 import com.rork.rockscout.ui.components.RockBackground
@@ -99,19 +105,21 @@ fun SharedSpotScreen(
     // Drop a single pin on the map once the view is ready, then center on it.
     LaunchedEffect(mapView) {
         val mv = mapView ?: return@LaunchedEffect
-        mv.overlays.removeAll { it is Marker && it.id?.startsWith("shared_spot_") == true }
-        val point = GeoPoint(latitude, longitude)
-        val marker = Marker(mv).apply {
-            id = "shared_spot_pin"
-            position = point
-            title = safeName
-            snippet = String.format(Locale.US, "%.5f, %.5f", latitude, longitude)
-            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+        val point = safeGeoPoint(latitude, longitude) ?: return@LaunchedEffect
+        runMapSafe("SharedSpotScreen pin") {
+            mv.removeOverlaysSafe { it is Marker && it.id?.startsWith("shared_spot_") == true }
+            val marker = Marker(mv).apply {
+                id = "shared_spot_pin"
+                position = point
+                title = safeName
+                snippet = String.format(Locale.US, "%.5f, %.5f", latitude, longitude)
+                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            }
+            mv.addOverlaySafe(marker)
+            mv.controller.animateTo(point)
+            mv.controller.setZoom(13.0)
+            mv.invalidate()
         }
-        mv.overlays.add(marker)
-        mv.controller.animateTo(point)
-        mv.controller.setZoom(13.0)
-        mv.invalidate()
     }
 
     RockBackground {
@@ -223,10 +231,10 @@ fun SharedSpotScreen(
                         modifier = Modifier.fillMaxSize(),
                         factory = { ctx ->
                             createRockScoutMapView(ctx, readOnly = true).apply {
-                                controller.setCenter(GeoPoint(latitude, longitude))
+                                controller.setCenter(safeGeoPoint(latitude, longitude) ?: GeoPoint(39.5, -98.0))
                                 controller.setZoom(13.0)
-                                overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
-                                overlays.add(CompassOverlay(ctx, this).apply { enableCompass() })
+                                addOverlaySafe(RotationGestureOverlay(this).apply { isEnabled = true })
+                                addOverlaySafe(CompassOverlay(ctx, this).apply { enableCompass() })
                                 mapView = this
                             }
                         },
@@ -237,7 +245,7 @@ fun SharedSpotScreen(
                         onZoomIn = { mapView?.controller?.zoomIn() },
                         onZoomOut = { mapView?.controller?.zoomOut() },
                         onRecenter = {
-                            mapView?.controller?.animateTo(GeoPoint(latitude, longitude))
+                            safeGeoPoint(latitude, longitude)?.let { mapView?.controller?.animateTo(it) }
                         },
                         showUser = false,
                         onSatellite = { toggleSatelliteView(mapView) },

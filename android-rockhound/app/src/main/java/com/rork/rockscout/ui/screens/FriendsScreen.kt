@@ -83,6 +83,7 @@ import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.GlobalSearchBar
 import com.rork.rockscout.ui.components.GlobalSearchSection
 import com.rork.rockscout.ui.components.HunterStatusIcon
+import com.rork.rockscout.ui.components.ProBadge
 import com.rork.rockscout.ui.components.ProfileStatBar
 import com.rork.rockscout.ui.components.ReportSubmittedDialog
 import com.rork.rockscout.ui.components.ScreenScaffold
@@ -1271,14 +1272,7 @@ private fun FriendCard(
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                     )
                     if (friend.premium_badge) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(Citrine.copy(alpha = 0.30f))
-                                .padding(horizontal = 4.dp, vertical = 1.dp),
-                        ) {
-                            Text("PREMIUM", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Bold)
-                        }
+                        ProBadge()
                     }
                 }
                 Row(

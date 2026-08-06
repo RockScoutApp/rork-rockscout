@@ -1587,18 +1587,42 @@ async function callVisualReferenceComparison(
   preliminaryMatches: MatchResult[],
   webContext: string,
   maxCandidates: number = 15,
+  preferPolished: boolean = false,
 ): Promise<IdentificationResult | null> {
   if (preliminaryMatches.length === 0) return null;
 
-  const topCandidates = preliminaryMatches.slice(0, maxCandidates);
-  const refs: Array<{ id: string; name: string; imageUrl: string }> = [];
-  for (const m of topCandidates) {
+  const HAIKU_REF_IMAGE_BUDGET = 20;
+  const IMAGES_PER_SPECIMEN = 3;
+
+  // Collect candidates with up to 3 reference images each.
+  const candidateRefs: Array<{
+    id: string;
+    name: string;
+    imageUrls: string[];
+    colors: string;
+  }> = [];
+  for (const m of preliminaryMatches) {
     const spec = SPECIMEN_DB.find(s => s.id === m.id);
-    if (spec?.imageUrl) {
-      refs.push({ id: spec.id, name: spec.name, imageUrl: spec.imageUrl });
-    }
+    if (!spec?.imageUrl) continue;
+    const allUrls = spec.imageUrls?.length ? spec.imageUrls : [spec.imageUrl];
+    // Prefer the first images (face-polished / cabochon) unless the user's
+    // specimen is described as rough; then we keep the natural order which
+    // already places polished first.
+    const selectedUrls = allUrls.slice(0, IMAGES_PER_SPECIMEN);
+    candidateRefs.push({
+      id: spec.id,
+      name: spec.name,
+      imageUrls: selectedUrls,
+      colors: spec.colors ?? "",
+    });
   }
-  if (refs.length === 0) return null;
+  if (candidateRefs.length === 0) return null;
+
+  // If a candidate has multiple images, we can afford fewer candidates while
+  // still giving the model richer visual evidence. Cap reference-image budget
+  // at ~20 so Haiku never chokes on a huge payload.
+  const maxMultiImageCandidates = Math.floor(HAIKU_REF_IMAGE_BUDGET / IMAGES_PER_SPECIMEN);
+  const refs = candidateRefs.slice(0, Math.max(6, maxMultiImageCandidates));
 
   // Build user content: all angle photos first (labeled), then reference images
   const userContent: Array<Record<string, unknown>> = [];
@@ -1617,27 +1641,34 @@ async function callVisualReferenceComparison(
 
   userContent.push({
     type: "text",
-    text: `The above ${images.length} photo(s) show the user's unknown specimen from different angles. Below are database reference images for the top candidates. Compare the user's photos against each reference image visually.`,
+    text: `The above ${images.length} photo(s) show the user's unknown specimen from different angles. Below are database reference images for the top candidates. Each candidate may show up to ${IMAGES_PER_SPECIMEN} views (face polished, cabochon, rough/natural). Compare the user's photos against each reference image visually.`,
   });
 
-  // Add reference images
-  for (let i = 0; i < refs.length; i++) {
-    userContent.push({
-      type: "image_url",
-      image_url: { url: refs[i].imageUrl },
-    });
-    userContent.push({
-      type: "text",
-      text: `Reference image ${i + 1}: ${refs[i].name} (id: ${refs[i].id})`,
-    });
+  // Add reference images, grouped by candidate.
+  const refListLines: string[] = [];
+  for (let c = 0; c < refs.length; c++) {
+    const candidate = refs[c];
+    refListLines.push(`${c + 1}. ${candidate.name} (id: ${candidate.id})`);
+    for (let u = 0; u < candidate.imageUrls.length; u++) {
+      const label = u === 0 ? "face polished" : u === 1 ? "cabochon" : "rough/natural";
+      userContent.push({
+        type: "image_url",
+        image_url: { url: candidate.imageUrls[u] },
+      });
+      userContent.push({
+        type: "text",
+        text: `Reference image ${c + 1}.${u + 1}: ${candidate.name} — ${label}${candidate.colors ? ` | typical colors: ${candidate.colors}` : ""}`,
+      });
+    }
   }
-
-  const refList = refs.map((r, i) => `${i + 1}. ${r.name} (id: ${r.id})`).join("\n");
+  const refList = refListLines.join("\n");
 
   // Build the prompt with web context
   const webContextBlock = webContext
     ? `\n\nPublished mineralogy data for top candidates:\n${webContext}\n\nUse BOTH the visual similarity across all angles AND the published properties (hardness, crystal system, luster, streak, associated minerals) to rank candidates. If the published data contradicts the visual appearance, note the discrepancy in your reasoning.`
     : "";
+
+  const agateGuidance = `If a candidate is an agate or chalcedony variety, pay special attention to the banding color sequence shown in the user's photo(s) versus the "typical colors" listed for each reference. Compare banding thickness, contrast between bands, fortification vs flat-band patterns, and translucency. A polished cross-section should match the face-polished/cabochon reference views; a rough nodule should match the rough/natural reference view.`;
 
   const prompt = `You are comparing a user's specimen photos (from ${images.length} angle${images.length > 1 ? "s" : ""}) against database reference images.
 
@@ -1651,6 +1682,7 @@ Visually compare the user's photos against each reference image. Focus on:
 - Luster and surface texture match — may vary by angle
 - Overall visual similarity across all viewpoints
 - If the specimen appears to be a multi-mineral assemblage (e.g. granite with quartz + feldspar + mica), identify the rock type AND note the visible component minerals
+${agateGuidance}
 
 Rank all candidates by how well the user's photos visually match the reference images. You may reorder from the initial ranking if visual comparison suggests a different top match.
 

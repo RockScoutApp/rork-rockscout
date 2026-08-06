@@ -66,11 +66,12 @@ fun SculptedButton(
     icon: ImageVector? = null,
     shape: Shape = RoundedCornerShape(16.dp),
     shadowElevation: Dp = 8.dp,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 20.dp, vertical = 14.dp),
+    contentPadding: PaddingValues = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
     textStyle: TextStyle = MaterialTheme.typography.labelLarge,
 ) {
     Box(
         modifier = modifier
+            .defaultMinSize(minHeight = 44.dp)
             .sculpted(
                 shape = shape,
                 accent = accent,
@@ -132,11 +133,12 @@ fun SculptedOutlinedButton(
     icon: ImageVector? = null,
     shape: Shape = RoundedCornerShape(16.dp),
     shadowElevation: Dp = 6.dp,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
+    contentPadding: PaddingValues = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
     textStyle: TextStyle = MaterialTheme.typography.labelLarge,
 ) {
     Box(
         modifier = modifier
+            .defaultMinSize(minHeight = 44.dp)
             .sculpted(
                 shape = shape,
                 accent = accent,
@@ -247,10 +249,11 @@ fun SculptedTextButton(
     fontWeight: FontWeight = FontWeight.SemiBold,
     shape: Shape = RoundedCornerShape(12.dp),
     shadowElevation: Dp = 4.dp,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+    contentPadding: PaddingValues = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
 ) {
     Box(
         modifier = modifier
+            .defaultMinSize(minHeight = 44.dp)
             .sculpted(
                 shape = shape,
                 accent = accent,
@@ -292,10 +295,11 @@ fun SculptedDialogButton(
     enabled: Boolean = true,
     shape: Shape = RoundedCornerShape(14.dp),
     shadowElevation: Dp = 5.dp,
-    contentPadding: PaddingValues = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
+    contentPadding: PaddingValues = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
 ) {
     Box(
         modifier = modifier
+            .defaultMinSize(minHeight = 44.dp)
             .sculpted(
                 shape = shape,
                 accent = accent,

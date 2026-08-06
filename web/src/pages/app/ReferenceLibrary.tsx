@@ -47,7 +47,7 @@ const TILES: RefTile[] = [
   { to: "/app/paywall", icon: Zap, label: "Go Premium", description: "Unlimited AI IDs, ad-free, and pro features for $5.99/mo.", accent: "265 47% 67%" },
   { to: "/app/notifications", icon: Bell, label: "Notifications", description: "Your in-app notification feed and push settings.", accent: "210 70% 55%" },
   { to: "/app/referral", icon: Gift, label: "Refer a Friend", description: "Earn XP and rewards for every rockhound you bring in.", accent: "147 49% 55%" },
-  { to: "/app/natural-wonders", icon: Globe, label: "Natural Wonders", description: "10 world-famous geological landmarks and their stories.", accent: "200 41% 61%" },
+  { to: "/app/natural-wonders", icon: Globe, label: "Natural Wonders", description: "72 world-famous geological landmarks and their stories.", accent: "200 41% 61%" },
   { to: "/app/blm-guide", icon: MapPin, label: "BLM Guide", description: "Collecting rules, 10 sites, 61 trailheads, 55 campgrounds.", accent: "20 62% 55%" },
 ];
 

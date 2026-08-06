@@ -13,6 +13,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { SculptedCard, ScreenScaffold, SculptedButton } from "@/components/sculpted";
+import { isValidCoordinate, runMapSafe, safeMarker, safeRemoveMap, safeSetView } from "@/lib/mapSafe";
 
 const CITRINE_HEX = "36 80% 58%";
 const AQUA_HEX = "20 62% 65%";
@@ -107,8 +108,15 @@ export default function RockScoutsMap() {
 
     mapRef.current = map;
 
+    // Resize observer keeps the map correctly sized after navigation or tab changes.
+    const resizeObserver = new ResizeObserver(() => {
+      runMapSafe("resize", () => map.invalidateSize());
+    });
+    resizeObserver.observe(containerRef.current);
+
     return () => {
-      map.remove();
+      resizeObserver.disconnect();
+      safeRemoveMap(map);
       mapRef.current = null;
     };
   }, []);
@@ -117,21 +125,23 @@ export default function RockScoutsMap() {
   useEffect(() => {
     if (!mapRef.current) return;
 
-    markersRef.current.forEach((m) => m.remove());
+    markersRef.current.forEach((m) => runMapSafe("remove marker", () => m.remove()));
     markersRef.current = [];
 
     (myPings ?? []).forEach((ping) => {
+      if (!isValidCoordinate(ping.lat, ping.lng)) return;
       const emoji = ping.profile?.avatar_emoji ?? "⛏️";
-      const marker = L.marker([ping.lat, ping.lng], { icon: createEmojiIcon(emoji) })
-        .bindPopup(
-          `<div style="font-family: sans-serif; min-width: 120px;">
-            <div style="font-size: 20px; margin-bottom: 4px;">${emoji}</div>
-            <strong>Your ping</strong><br/>
-            ${ping.label ? `<span style="font-size: 12px;">${ping.label}</span><br/>` : ""}
-            <span style="color: #aaa; font-size: 10px;">Expires ${new Date(ping.expires_at).toLocaleString()}</span>
-          </div>`,
-        )
-        .addTo(mapRef.current!);
+      const marker = safeMarker(mapRef.current, ping.lat, ping.lng, { icon: createEmojiIcon(emoji) });
+      if (!marker) return;
+      marker.bindPopup(
+        `<div style="font-family: sans-serif; min-width: 120px;">
+          <div style="font-size: 20px; margin-bottom: 4px;">${emoji}</div>
+          <strong>Your ping</strong><br/>
+          ${ping.label ? `<span style="font-size: 12px;">${ping.label}</span><br/>` : ""}
+          <span style="color: #aaa; font-size: 10px;">Expires ${new Date(ping.expires_at).toLocaleString()}</span>
+        </div>`,
+      );
+      runMapSafe("add marker", () => marker.addTo(mapRef.current!));
       markersRef.current.push(marker);
     });
   }, [myPings]);
@@ -162,7 +172,7 @@ export default function RockScoutsMap() {
       if (error) throw error;
 
       if (mapRef.current) {
-        mapRef.current.setView([pos.coords.latitude, pos.coords.longitude], 10);
+        safeSetView(mapRef.current, pos.coords.latitude, pos.coords.longitude, 10);
       }
 
       queryClient.invalidateQueries({ queryKey: ["my-pings"] });
@@ -220,9 +230,7 @@ export default function RockScoutsMap() {
   const centerOnMe = async () => {
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        if (mapRef.current) {
-          mapRef.current.setView([pos.coords.latitude, pos.coords.longitude], 11);
-        }
+        safeSetView(mapRef.current, pos.coords.latitude, pos.coords.longitude, 11);
       },
       () => toast_error("Could not get your location"),
       { timeout: 10_000 },

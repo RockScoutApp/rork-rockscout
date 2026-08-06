@@ -3304,12 +3304,7 @@ private fun ClubMemberRow(
                 )
                 if (isPremium) {
                     Spacer(Modifier.width(4.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(Citrine.copy(alpha = 0.30f))
-                            .padding(horizontal = 4.dp, vertical = 1.dp),
-                    ) { Text("PREMIUM", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Bold) }
+                    ProBadge()
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {

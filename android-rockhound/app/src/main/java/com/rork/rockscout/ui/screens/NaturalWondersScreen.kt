@@ -79,6 +79,11 @@ import com.rork.rockscout.data.stateName
 import com.rork.rockscout.data.usRegion
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.FullScreenImageViewer
+import com.rork.rockscout.ui.components.addOverlaySafe
+import com.rork.rockscout.ui.components.removeOverlaysSafe
+import com.rork.rockscout.ui.components.runMapSafe
+import com.rork.rockscout.ui.components.safeGeoPoint
+import com.rork.rockscout.ui.components.isValidCoordinate
 import com.rork.rockscout.ui.components.FullscreenMapOverlay
 import com.rork.rockscout.ui.components.MapExpandButton
 import com.rork.rockscout.ui.components.MapOfflineNotice
@@ -693,24 +698,27 @@ private fun WonderMapView(
     // Render / refresh pins whenever the filtered list changes.
     LaunchedEffect(mapView, wonders) {
         val mv = mapView ?: return@LaunchedEffect
-        mv.overlays.removeAll { it is Marker && it.id?.startsWith("wonder_pin_") == true }
-        wonders.forEach { wonder ->
-            val marker = WonderMarker(mv, wonder)
-            marker.id = "wonder_pin_${wonder.id}"
-            mv.overlays.add(marker)
-        }
-        // Auto-fit to all pins
-        val points = wonders.map { GeoPoint(it.latitude, it.longitude) }
-        if (points.isNotEmpty()) {
-            if (points.size == 1) {
-                mv.controller.animateTo(points.first())
-                mv.controller.setZoom(8.0)
-            } else {
-                val box = BoundingBox.fromGeoPoints(points)
-                mv.zoomToBoundingBox(box, false, 64)
+        runMapSafe("WonderMapView pins") {
+            mv.removeOverlaysSafe { it is Marker && it.id?.startsWith("wonder_pin_") == true }
+            val validWonders = wonders.filter { isValidCoordinate(it.latitude, it.longitude) }
+            validWonders.forEach { wonder ->
+                val marker = WonderMarker(mv, wonder)
+                marker.id = "wonder_pin_${wonder.id}"
+                mv.addOverlaySafe(marker)
             }
+            // Auto-fit to all pins
+            val points = validWonders.map { GeoPoint(it.latitude, it.longitude) }
+            if (points.isNotEmpty()) {
+                if (points.size == 1) {
+                    mv.controller.animateTo(points.first())
+                    mv.controller.setZoom(8.0)
+                } else {
+                    val box = BoundingBox.fromGeoPoints(points)
+                    mv.zoomToBoundingBox(box, false, 64)
+                }
+            }
+            mv.invalidate()
         }
-        mv.invalidate()
     }
 
     Box(modifier = modifier) {
@@ -723,10 +731,11 @@ private fun WonderMapView(
                 createRockScoutMapView(ctx).apply {
                     controller.setZoom(2.0)
                     controller.setCenter(GeoPoint(20.0, 0.0))
-                    overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
+                    addOverlaySafe(RotationGestureOverlay(this).apply { isEnabled = true })
                     val compass = CompassOverlay(ctx, this).apply { enableCompass() }
-                    overlays.add(compass)
+                    addOverlaySafe(compass)
                     post {
+                        if (!isAttachedToWindow) return@post
                         val d = ctx.resources.displayMetrics.density
                         compass.setCompassCenter(width - 56f * d, 40f * d)
                     }

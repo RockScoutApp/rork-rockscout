@@ -57,6 +57,7 @@ import com.rork.rockscout.ui.components.GlobalSearchSection
 import com.rork.rockscout.ui.components.HunterStatusIcon
 import com.rork.rockscout.ui.components.profileBorderColor
 import com.rork.rockscout.ui.components.ProfileStatBar
+import com.rork.rockscout.ui.components.ProBadge
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.theme.Aqua
@@ -348,19 +349,7 @@ private fun DiscoverableHunterRow(
                     )
                     if (hunter.premium_badge) {
                         Spacer(Modifier.width(6.dp))
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(Citrine.copy(alpha = 0.30f))
-                                .padding(horizontal = 5.dp, vertical = 1.dp),
-                        ) {
-                            Text(
-                                "PREMIUM",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Citrine,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
+                        ProBadge()
                     }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {

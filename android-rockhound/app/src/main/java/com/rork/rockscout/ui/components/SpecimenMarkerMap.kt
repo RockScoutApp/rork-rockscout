@@ -224,8 +224,8 @@ fun SpecimenMarkerMap(
             MapExpandButton(
                 onClick = {
                     mapView?.let {
-                        fullscreenCenter = GeoPoint(it.mapCenter.latitude, it.mapCenter.longitude)
-                        fullscreenZoom = it.zoomLevelDouble
+                        fullscreenCenter = safeGeoPoint(it.mapCenter.latitude, it.mapCenter.longitude) ?: GeoPoint(39.5, -98.0)
+                        fullscreenZoom = it.zoomLevelDouble.coerceIn(it.minZoomLevel, it.maxZoomLevel)
                     }
                     isFullscreen = true
                 },

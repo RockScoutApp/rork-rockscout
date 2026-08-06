@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import {
   Camera,
   Upload,
@@ -9,10 +10,13 @@ import {
   CheckCircle2,
   ArrowRight,
   X,
+  ScanLine,
+  Maximize2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 interface Match {
   id: string;
@@ -28,6 +32,13 @@ interface IdentifyResponse {
   modelsUsed?: string[];
   visualReferenceUsed?: boolean;
   error?: string;
+}
+
+interface SpecimenRef {
+  id: string;
+  name: string;
+  image_url: string;
+  image_urls?: string[];
 }
 
 const BACKEND_URL = import.meta.env.EXPO_PUBLIC_RORK_FUNCTIONS_URL as string;
@@ -48,6 +59,8 @@ export default function Identify() {
   const [error, setError] = useState<string | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -120,6 +133,24 @@ export default function Identify() {
     [],
   );
 
+  const topMatchIds = result?.matches.slice(0, 5).map((m) => m.id) ?? [];
+
+  const { data: specimenRefs, isLoading: refsLoading } = useQuery<SpecimenRef[]>({
+    queryKey: ["identify-specimen-refs", topMatchIds.join(",")],
+    queryFn: async () => {
+      if (topMatchIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from("specimen_catalog")
+        .select("id, name, image_url, image_urls")
+        .in("id", topMatchIds);
+      if (error) throw error;
+      const rows = (data ?? []) as SpecimenRef[];
+      const byId = new Map(rows.map((r) => [r.id, r]));
+      return topMatchIds.map((id) => byId.get(id)!).filter(Boolean);
+    },
+    enabled: topMatchIds.length > 0,
+  });
+
   const handleIdentify = useCallback(async () => {
     if (!imageBase64) return;
     setIsIdentifying(true);
@@ -171,7 +202,7 @@ export default function Identify() {
           Identify a Rock
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Snap a photo or upload an image — AI will identify your specimen from
+          Snap photos or upload images — AI will identify your specimen from
           900+ known rocks, minerals, gems, and fossils.
         </p>
       </div>
@@ -228,7 +259,7 @@ export default function Identify() {
               </div>
               <div>
                 <p className="font-medium text-foreground">
-                  Take or upload a photo
+                  Take or upload photos
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Get the best results in natural light, filling the frame with
@@ -345,22 +376,50 @@ export default function Identify() {
                 <p className="mt-2 text-sm text-muted-foreground">
                   {result.matches[0].reasoning}
                 </p>
-                <Button
-                  onClick={() =>
-                    navigate(`/app/specimens/${result.matches[0].id}`)
-                  }
-                  variant="outline"
-                  size="sm"
-                  className="mt-3 gap-2"
-                >
-                  View specimen details
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => navigate(`/app/specimens/${result.matches[0].id}`)}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    View specimen details
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    onClick={() => setCompareOpen(true)}
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <ScanLine className="h-4 w-4" />
+                    Compare
+                  </Button>
+                </div>
               </div>
 
               <p className="text-sm text-muted-foreground">
                 {result.summary}
               </p>
+
+              {/* Agate uncertainty disclaimer */}
+              {result.matches[0].name.toLowerCase().includes("agate") &&
+                result.matches[0].confidence < 85 && (
+                  <div className="dark-card sculpted-raised border-l-4 border-l-warning rounded-lg p-4">
+                    <div className="mb-1 flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 text-warning" />
+                      <span className="text-sm font-semibold text-foreground">
+                        Agate identification
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Agates are among the hardest minerals to identify down to their specific
+                      variety — many share similar banding patterns and colors. The database
+                      images and your local gem & mineral resources can help you confirm the exact
+                      type. Tap any match below to compare your specimen side-by-side with reference
+                      photos.
+                    </p>
+                  </div>
+                )}
 
               {result.matches.length > 1 && (
                 <div>
@@ -369,30 +428,154 @@ export default function Identify() {
                   </h4>
                   <div className="space-y-2">
                     {result.matches.slice(1).map((match) => (
-                      <button
+                      <div
                         key={match.id}
-                        onClick={() => navigate(`/app/specimens/${match.id}`)}
-                        className="flex w-full items-center justify-between dark-card sculpted-raised rounded-lg p-3 text-left transition-colors hover:border-primary/40"
+                        className="flex w-full items-center justify-between dark-card sculpted-raised rounded-lg p-3"
                       >
-                        <div className="min-w-0 flex-1">
+                        <button
+                          onClick={() => navigate(`/app/specimens/${match.id}`)}
+                          className="min-w-0 flex-1 text-left transition-colors hover:text-primary"
+                        >
                           <p className="truncate text-sm font-medium text-foreground">
                             {match.name}
                           </p>
                           <p className="truncate text-xs text-muted-foreground">
                             {match.reasoning}
                           </p>
+                        </button>
+                        <div className="ml-3 flex shrink-0 items-center gap-2">
+                          <span
+                            className={cn(
+                              "text-sm font-semibold",
+                              confidenceColor(match.confidence),
+                            )}
+                          >
+                            {match.confidence}%
+                          </span>
+                          <Button
+                            onClick={() => setCompareOpen(true)}
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            aria-label={`Compare with ${match.name}`}
+                          >
+                            <ScanLine className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <span
-                          className={cn(
-                            "ml-3 shrink-0 text-sm font-semibold",
-                            confidenceColor(match.confidence),
-                          )}
-                        >
-                          {match.confidence}%
-                        </span>
-                      </button>
+                      </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {compareOpen && imagePreview && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
+                  <div className="relative flex max-h-[90vh] w-full max-w-2xl flex-col rounded-xl bg-card p-4 shadow-2xl">
+                    <button
+                      onClick={() => setCompareOpen(false)}
+                      className="absolute right-3 top-3 rounded-full bg-black/60 p-2 text-white backdrop-blur transition-colors hover:bg-black/80"
+                      aria-label="Close comparison"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                    <h3 className="mb-4 pr-10 text-lg font-semibold text-foreground">
+                      Side-by-side comparison
+                    </h3>
+                    <div className="scrollbar-thin overflow-y-auto pr-1">
+                      <div className="space-y-4">
+                        {result.matches.slice(0, 5).map((match) => {
+                          const refSpec = specimenRefs?.find((r) => r.id === match.id);
+                          const refUrl = refSpec?.image_urls?.[0] ?? refSpec?.image_url;
+                          return (
+                            <div key={match.id} className="dark-card rounded-lg p-3">
+                              <div className="grid grid-cols-2 gap-2">
+                                <button
+                                  onClick={() => setLightboxUrl(imagePreview)}
+                                  className="relative aspect-square overflow-hidden rounded-lg bg-black/30"
+                                >
+                                  <img
+                                    src={imagePreview}
+                                    alt="Your photo"
+                                    className="h-full w-full object-contain"
+                                  />
+                                  <div className="absolute right-2 top-2 rounded-full bg-black/50 p-1 text-white">
+                                    <Maximize2 className="h-3 w-3" />
+                                  </div>
+                                  <span className="absolute bottom-2 left-2 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+                                    Your photo
+                                  </span>
+                                </button>
+                                <button
+                                  onClick={() => refUrl && setLightboxUrl(refUrl)}
+                                  className="relative aspect-square overflow-hidden rounded-lg bg-black/30"
+                                >
+                                  {refsLoading || !refUrl ? (
+                                    <div className="flex h-full w-full items-center justify-center">
+                                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <img
+                                        src={refUrl}
+                                        alt={match.name}
+                                        className="h-full w-full object-contain"
+                                      />
+                                      <div className="absolute right-2 top-2 rounded-full bg-black/50 p-1 text-white">
+                                        <Maximize2 className="h-3 w-3" />
+                                      </div>
+                                      <span className="absolute bottom-2 left-2 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white">
+                                        Reference
+                                      </span>
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                              <div className="mt-2 flex items-center justify-between">
+                                <div>
+                                  <p className="text-sm font-medium text-foreground">{match.name}</p>
+                                  <span className={cn("text-xs font-semibold", confidenceColor(match.confidence))}>
+                                    {match.confidence}%
+                                  </span>
+                                </div>
+                                <Button
+                                  onClick={() => {
+                                    setCompareOpen(false);
+                                    navigate(`/app/specimens/${match.id}`);
+                                  }}
+                                  variant="outline"
+                                  size="sm"
+                                  className="gap-1"
+                                >
+                                  View details
+                                  <ArrowRight className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {lightboxUrl && (
+                <div
+                  className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 p-4"
+                  onClick={() => setLightboxUrl(null)}
+                >
+                  <button
+                    onClick={() => setLightboxUrl(null)}
+                    className="absolute right-4 top-4 rounded-full bg-black/60 p-2 text-white backdrop-blur transition-colors hover:bg-black/80"
+                    aria-label="Close lightbox"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                  <img
+                    src={lightboxUrl}
+                    alt="Expanded view"
+                    className="max-h-[90vh] max-w-full rounded-lg object-contain"
+                  />
                 </div>
               )}
             </>

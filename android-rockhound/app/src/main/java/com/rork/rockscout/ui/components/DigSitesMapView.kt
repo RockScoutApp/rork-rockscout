@@ -310,7 +310,7 @@ fun DigSitesMapView(
                 onClick = {
                     val coords = pinLocation ?: mapView?.let {
                         Pair(it.mapCenter.latitude, it.mapCenter.longitude)
-                    } ?: Pair(39.5, -98.0)
+                    }?.takeIf { isValidCoordinate(it.first, it.second) } ?: Pair(39.5, -98.0)
                     pinLocation = coords
                     showDownloadSheet = true
                 },

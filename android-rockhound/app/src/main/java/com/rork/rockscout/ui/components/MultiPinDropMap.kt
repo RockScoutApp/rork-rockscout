@@ -111,65 +111,82 @@ fun MultiPinDropMap(
     var isFullscreen by remember { mutableStateOf(false) }
     var fullscreenCenter by remember { mutableStateOf(GeoPoint(39.5, -98.0)) }
     var fullscreenZoom by remember { mutableStateOf(initialZoom) }
+    // Guard against crashes in the embedded factory if the view is detached or bad initial coords are passed.
+    val initialGeoPoint = remember(initialCenter) {
+        initialCenter?.let { safeGeoPoint(it.first, it.second) } ?: GeoPoint(39.5, -98.0)
+    }
+    val initialPinCenter = remember(pins) {
+        if (pins.isEmpty()) null else {
+            val validPins = pins.mapNotNull { safeGeoPoint(it.latitude, it.longitude) }
+            if (validPins.isEmpty()) null else {
+                val box = BoundingBox.fromGeoPoints(validPins)
+                GeoPoint(box.centerLatitude, box.centerLongitude)
+            }
+        }
+    }
 
     // Render pins, highlight selection, and fit the map whenever the data changes.
     LaunchedEffect(mapView, pins, tentativePin, selectedPinId) {
         val mv = mapView ?: return@LaunchedEffect
+        runMapSafe("MultiPinDropMap render") {
+            // Drop all MultiPinDropMap markers so we can redraw them cleanly.
+            mv.removeOverlaysSafe { it is Marker && it.id?.startsWith("multipin_") == true }
 
-        // Drop all MultiPinDropMap markers so we can redraw them cleanly.
-        mv.overlays.removeAll { it is Marker && it.id?.startsWith("multipin_") == true }
-
-        // Existing pins.
-        pins.forEach { pin ->
-            val isSelected = pin.id == selectedPinId
-            val marker = object : Marker(mv) {
-                init {
-                    position = GeoPoint(pin.latitude, pin.longitude)
-                    title = pin.name
-                    snippet = pin.description
-                    id = "multipin_${pin.id}"
-                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                    icon = createPinDrawable(
-                        mv.context,
-                        if (isSelected) Color(0xFFFF4444) else accent,
-                        sizePx = if (isSelected) 40 else 32,
-                    )
-                    setOnMarkerClickListener { _, _ ->
-                        selectedPinId = if (selectedPinId == pin.id) null else pin.id
-                        onExistingPinTapped(pin)
-                        true
+            // Existing pins — skip any with invalid coordinates so a bad DB row can't crash the map.
+            pins.forEach { pin ->
+                val geo = safeGeoPoint(pin.latitude, pin.longitude) ?: return@forEach
+                val isSelected = pin.id == selectedPinId
+                val marker = object : Marker(mv) {
+                    init {
+                        position = geo
+                        title = pin.name
+                        snippet = pin.description
+                        id = "multipin_${pin.id}"
+                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                        icon = createPinDrawable(
+                            mv.context,
+                            if (isSelected) Color(0xFFFF4444) else accent,
+                            sizePx = if (isSelected) 40 else 32,
+                        )
+                        setOnMarkerClickListener { _, _ ->
+                            selectedPinId = if (selectedPinId == pin.id) null else pin.id
+                            onExistingPinTapped(pin)
+                            true
+                        }
                     }
                 }
+                mv.addOverlaySafe(marker)
             }
-            mv.overlays.add(marker)
-        }
 
-        // Tentative pin (orange, smaller) — shown while the user is deciding whether to add it.
-        tentativePin?.let { (lat, lng) ->
-            val marker = Marker(mv).apply {
-                id = "multipin_tentative"
-                position = GeoPoint(lat, lng)
-                title = "Tentative $pinLabel"
-                setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                icon = createPinDrawable(mv.context, Color(0xFFE8A33D), sizePx = 28)
+            // Tentative pin (orange, smaller) — shown while the user is deciding whether to add it.
+            tentativePin?.let { (lat, lng) ->
+                safeGeoPoint(lat, lng)?.let { geo ->
+                    val marker = Marker(mv).apply {
+                        id = "multipin_tentative"
+                        position = geo
+                        title = "Tentative $pinLabel"
+                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                        icon = createPinDrawable(mv.context, Color(0xFFE8A33D), sizePx = 28)
+                    }
+                    mv.addOverlaySafe(marker)
+                }
             }
-            mv.overlays.add(marker)
-        }
 
-        // Fit all pins (existing + tentative). Only auto-fit when pins change, not every selection tick.
-        val allPoints = pins.map { GeoPoint(it.latitude, it.longitude) } +
-            tentativePin?.let { GeoPoint(it.first, it.second) }
-        if (allPoints.isNotEmpty()) {
-            if (allPoints.size == 1) {
-                mv.controller.animateTo(allPoints.first())
-                mv.controller.setZoom(10.0)
-            } else {
-                val box = BoundingBox.fromGeoPoints(allPoints)
-                mv.zoomToBoundingBox(box, false, 48)
+            // Fit all pins (existing + tentative). Only auto-fit when pins change, not every selection tick.
+            val allPoints = pins.mapNotNull { safeGeoPoint(it.latitude, it.longitude) } +
+                listOfNotNull(tentativePin?.let { safeGeoPoint(it.first, it.second) })
+            if (allPoints.isNotEmpty()) {
+                if (allPoints.size == 1) {
+                    mv.controller.animateTo(allPoints.first())
+                    mv.controller.setZoom(10.0.coerceIn(mv.minZoomLevel, mv.maxZoomLevel))
+                } else {
+                    val box = BoundingBox.fromGeoPoints(allPoints)
+                    mv.zoomToBoundingBox(box, false, 48)
+                }
             }
-        }
 
-        mv.invalidate()
+            mv.invalidate()
+        }
     }
 
     Box(modifier = modifier.clip(RoundedCornerShape(16.dp))) {
@@ -177,37 +194,33 @@ fun MultiPinDropMap(
             modifier = Modifier.fillMaxSize(),
             factory = { ctx ->
                 createRockScoutMapView(ctx).apply {
-                    val center = initialCenter?.let { GeoPoint(it.first, it.second) }
-                        ?: if (pins.isNotEmpty()) {
-                            val box = BoundingBox.fromGeoPoints(pins.map { GeoPoint(it.latitude, it.longitude) })
-                            GeoPoint(box.centerLatitude, box.centerLongitude)
-                        } else {
-                            GeoPoint(39.5, -98.0)
-                        }
-                    controller.setCenter(center)
-                    controller.setZoom(if (pins.size > 1) 10.0 else initialZoom)
-                    overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
+                    controller.setCenter(initialPinCenter ?: initialGeoPoint)
+                    controller.setZoom(
+                        if (pins.count { isValidCoordinate(it.latitude, it.longitude) } > 1) 10.0 else initialZoom
+                    )
+                    addOverlaySafe(RotationGestureOverlay(this).apply { isEnabled = true })
                     // Compass repositioned to top-right so it doesn't overlap
                     // the pin controls at top-left.
                     val embedCompass = CompassOverlay(ctx, this).apply { enableCompass() }
-                    overlays.add(embedCompass)
+                    addOverlaySafe(embedCompass)
                     post {
+                        if (!isAttachedToWindow) return@post
                         val d = ctx.resources.displayMetrics.density
                         embedCompass.setCompassCenter(width - 56f * d, 40f * d)
                     }
 
                     // Tap-to-drop-pin overlay. Tapping the map always creates a new tentative pin;
                     // existing-pin taps are handled by each marker's own click listener above.
-                    overlays.add(object : Overlay() {
-                        override fun onSingleTapConfirmed(e: MotionEvent?, view: MapView?): Boolean {
-                            if (e == null || view == null) return false
-                            val proj = view.projection
-                            val point = proj.fromPixels(e.x.toInt(), e.y.toInt())
-                            tentativePin = Pair(point.latitude, point.longitude)
-                            selectedPinId = null
-                            view.invalidate()
-                            return true
-                        }
+                    overlays.add(safeTapOverlay { e, view ->
+                        val proj = view.projection ?: return@safeTapOverlay false
+                        val point = proj.fromPixels(e.x.toInt(), e.y.toInt())
+                        val lat = point.latitude
+                        val lng = point.longitude
+                        if (!isValidCoordinate(lat, lng)) return@safeTapOverlay false
+                        tentativePin = Pair(lat, lng)
+                        selectedPinId = null
+                        view.invalidate()
+                        true
                     })
                     mapView = this
                 }

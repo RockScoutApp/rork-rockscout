@@ -486,7 +486,7 @@ export const HOW_TO_SECTIONS: HowToSection[] = [
     shortLabel: "Natural Wonders",
     category: "explore-learn",
     steps: [
-      `Tap the "Natural Wonders" tile on the home screen to explore over 35 world-famous geological sites and the rocks and minerals you can find at each one.`,
+      `Tap the "Natural Wonders" tile on the home screen to explore 72 world-famous geological sites and the rocks and minerals you can find at each one.`,
       `Each wonder includes a stunning photo, location, geological formation story, rocks to find, and fun facts — from the Grand Canyon and Giant's Causeway to Mount Vesuvius, Salar de Uyuni, and the Zhangjiajie Pillars.`,
       `Recent additions include the Naica Crystal Caves (Chihuahua, Mexico) — the Cave of the Crystals, where giant selenite crystals grow from floor to ceiling, some over 36 feet long — plus Sossusvlei Red Dunes, Þingvellir Rift Valley, Tongariro Volcanic Complex, and more.`,
       `Each card opens a full detail page with the formation's geological history, what rocks and minerals are found there, and visitor tips for rockhounds.`,

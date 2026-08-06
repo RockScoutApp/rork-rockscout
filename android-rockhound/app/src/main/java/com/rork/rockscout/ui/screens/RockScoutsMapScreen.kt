@@ -84,6 +84,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.rork.rockscout.ui.components.MapDownloadSheet
 import com.rork.rockscout.ui.components.applyHybridTiles
+import com.rork.rockscout.ui.components.addOverlaySafe
+import com.rork.rockscout.ui.components.removeOverlaysSafe
+import com.rork.rockscout.ui.components.runMapSafe
+import com.rork.rockscout.ui.components.safeGeoPoint
+import com.rork.rockscout.ui.components.isValidCoordinate
 import com.rork.rockscout.ui.components.MapOfflineNotice
 import com.rork.rockscout.ui.components.MapTileCacheManager
 import com.rork.rockscout.ui.components.MapViewLifecycleEffect
@@ -174,10 +179,12 @@ fun RockScoutsMapScreen(navController: NavController) {
     LaunchedEffect(mapView) {
         while (true) {
             val mv = mapView
-            if (mv != null) {
-                val c = mv.mapCenter
-                mapCenterLat = c.latitude
-                mapCenterLng = c.longitude
+            if (mv != null && mv.isAttachedToWindow) {
+                runMapSafe("RockScoutsMap center poll") {
+                    val c = mv.mapCenter
+                    mapCenterLat = c.latitude
+                    mapCenterLng = c.longitude
+                }
             }
             kotlinx.coroutines.delay(300)
         }
@@ -218,29 +225,30 @@ fun RockScoutsMapScreen(navController: NavController) {
         try {
             withContext(Dispatchers.IO) {
                 if (!isActive) return@withContext
-                mv.overlays.removeAll { it is Marker && it.id?.startsWith("ping_") == true }
-                // Shared pings — Aqua color, tappable to show directions
-                sharedPings.forEach { sp ->
-                    if (!isActive) return@withContext
-                    val marker = PingMarker(
-                        mv,
-                        sp.lat,
-                        sp.lng,
-                        sp.label,
-                        isMine = false,
-                        displayName = sp.senderName,
-                        avatarEmoji = "\uD83D\uDC65",
-                        onOpenThread = {
-                            selectedSharedPing = sp
-                        },
-                    )
-                    marker.id = "ping_shared_${sp.id}"
-                    mv.overlays.add(marker)
+                runMapSafe("RockScoutsMap pings") {
+                    mv.removeOverlaysSafe { it is Marker && it.id?.startsWith("ping_") == true }
+                    // Shared pings — Aqua color, tappable to show directions
+                    sharedPings.forEach { sp ->
+                        if (!isActive) return@forEach
+                        if (!isValidCoordinate(sp.lat, sp.lng)) return@forEach
+                        val marker = PingMarker(
+                            mv,
+                            sp.lat,
+                            sp.lng,
+                            sp.label,
+                            isMine = false,
+                            displayName = sp.senderName,
+                            avatarEmoji = "\uD83D\uDC65",
+                            onOpenThread = {
+                                selectedSharedPing = sp
+                            },
+                        )
+                        marker.id = "ping_shared_${sp.id}"
+                        mv.addOverlaySafe(marker)
+                    }
                 }
                 if (!isActive) return@withContext
-                withContext(Dispatchers.Main) {
-                    runCatching { mv.invalidate() }
-                }
+                withContext(Dispatchers.Main) { runMapSafe("invalidate") { mv.invalidate() } }
             }
         } catch (_: kotlinx.coroutines.CancellationException) {
             // Expected when navigating away.
@@ -256,18 +264,21 @@ fun RockScoutsMapScreen(navController: NavController) {
     // location if no ping is set yet. This runs once after the map is ready.
     LaunchedEffect(mapView, myPing) {
         val mv = mapView ?: return@LaunchedEffect
-        val targetPoint = if (myPing != null) {
+        val targetPoint = if (myPing != null && isValidCoordinate(myPing.lat, myPing.lng)) {
             GeoPoint(myPing.lat, myPing.lng)
         } else {
             // Fetch GPS location and center there
             val loc = withContext(Dispatchers.IO) {
                 runCatching { LocationFetcher.fetch(context) }.getOrNull()
             }
-            if (loc != null) GeoPoint(loc.latitude, loc.longitude)
-            else GeoPoint(current.first, current.second)
+            if (loc != null && isValidCoordinate(loc.latitude, loc.longitude)) {
+                GeoPoint(loc.latitude, loc.longitude)
+            } else {
+                safeGeoPoint(current.first, current.second) ?: GeoPoint(39.5, -98.0)
+            }
         }
         withContext(Dispatchers.Main) {
-            runCatching {
+            runMapSafe("RockScoutsMap center") {
                 mv.controller.animateTo(targetPoint)
                 mv.controller.setZoom(10.0)
             }
@@ -314,9 +325,9 @@ fun RockScoutsMapScreen(navController: NavController) {
                 factory = { ctx ->
                     createRockScoutMapView(ctx).apply {
                         controller.setZoom(10.0)
-                        controller.setCenter(GeoPoint(current.first, current.second))
-                        overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
-                        overlays.add(CompassOverlay(ctx, this).apply { enableCompass() })
+                        controller.setCenter(safeGeoPoint(current.first, current.second) ?: GeoPoint(39.5, -98.0))
+                        addOverlaySafe(RotationGestureOverlay(this).apply { isEnabled = true })
+                        addOverlaySafe(CompassOverlay(ctx, this).apply { enableCompass() })
 
                         mapView = this
                     }

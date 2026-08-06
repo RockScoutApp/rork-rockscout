@@ -570,8 +570,8 @@ const FEATURES_LIST = [
   {
     icon: Mountain,
     title: "Natural wonders of the world",
-    desc: "36 world-famous geological sites with stunning photos, formation stories, rocks to find, and visitor tips. From the Grand Canyon and Giant's Causeway to Mount Vesuvius, Salar de Uyuni, and the Zhangjiajie Pillars — including the Naica Crystal Caves in Chihuahua, Mexico, where giant selenite crystals grow from floor to ceiling. A perfect bucket-list planner for dig-friendly destinations.",
-    items: ["36 geological wonders", "Naica Crystal Caves", "Formation stories", "Rocks to find", "Visitor tips"],
+    desc: "72 world-famous geological sites with stunning photos, formation stories, rocks to find, and visitor tips. From the Grand Canyon and Giant's Causeway to Mount Vesuvius, Salar de Uyuni, and the Zhangjiajie Pillars — including the Naica Crystal Caves in Chihuahua, Mexico, where giant selenite crystals grow from floor to ceiling. A perfect bucket-list planner for dig-friendly destinations.",
+    items: ["72 geological wonders", "Naica Crystal Caves", "Formation stories", "Rocks to find", "Visitor tips"],
   },
   {
     icon: Library,

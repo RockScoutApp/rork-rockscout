@@ -2,6 +2,7 @@ package com.rork.rockscout.ui.screens
 
 import android.content.Intent
 import android.net.Uri
+import org.osmdroid.util.GeoPoint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -71,6 +72,10 @@ import com.rork.rockscout.data.DigLocation
 import com.rork.rockscout.data.SeedData
 import com.rork.rockscout.data.WildlifeData
 import com.rork.rockscout.ui.components.WildlifeCard
+import com.rork.rockscout.ui.components.addOverlaySafe
+import com.rork.rockscout.ui.components.removeOverlaysSafe
+import com.rork.rockscout.ui.components.runMapSafe
+import com.rork.rockscout.ui.components.safeGeoPoint
 import com.rork.rockscout.data.SpecimenImages
 import com.rork.rockscout.data.WeatherRepository
 import com.rork.rockscout.data.WeatherSnapshot
@@ -492,37 +497,39 @@ private fun RouteMap(loc: DigLocation, miles: Double, showBackButton: Boolean = 
     // GPS update, which would reset the user's pan/zoom and cause jank.
     LaunchedEffect(mapView) {
         val mv = mapView ?: return@LaunchedEffect
-        val destPoint = org.osmdroid.util.GeoPoint(loc.latitude, loc.longitude)
-        val currentPoint = org.osmdroid.util.GeoPoint(current.first, current.second)
+        val destPoint = safeGeoPoint(loc.latitude, loc.longitude) ?: return@LaunchedEffect
+        val currentPoint = safeGeoPoint(current.first, current.second) ?: return@LaunchedEffect
         val routePoints = listOf(currentPoint, destPoint)
 
-        // Route line
-        val polyline = org.osmdroid.views.overlay.Polyline().apply {
-            id = "route_to_site"
-            setPoints(routePoints)
-            outlinePaint.strokeWidth = 6f * context.resources.displayMetrics.density
-            outlinePaint.color = Citrine.toArgb()
-            outlinePaint.isAntiAlias = true
-        }
-        mv.overlays.removeAll { it is org.osmdroid.views.overlay.Polyline && it.id == "route_to_site" }
-        mv.overlays.add(0, polyline)
+        runMapSafe("LocationDetail route") {
+            // Route line
+            val polyline = org.osmdroid.views.overlay.Polyline().apply {
+                id = "route_to_site"
+                setPoints(routePoints)
+                outlinePaint.strokeWidth = 6f * context.resources.displayMetrics.density
+                outlinePaint.color = Citrine.toArgb()
+                outlinePaint.isAntiAlias = true
+            }
+            mv.removeOverlaysSafe { it is org.osmdroid.views.overlay.Polyline && it.id == "route_to_site" }
+            mv.overlays.add(0, polyline)
 
-        // Destination pin
-        val marker = org.osmdroid.views.overlay.Marker(mv).apply {
-            position = destPoint
-            title = loc.name
-            snippet = loc.region
-            setAnchor(org.osmdroid.views.overlay.Marker.ANCHOR_CENTER, org.osmdroid.views.overlay.Marker.ANCHOR_BOTTOM)
-            icon = createLocationPinIcon(context, Citrine)
-        }
-        mv.overlays.removeAll { it is org.osmdroid.views.overlay.Marker && it.id == "site_dest" }
-        marker.id = "site_dest"
-        mv.overlays.add(marker)
+            // Destination pin
+            val marker = org.osmdroid.views.overlay.Marker(mv).apply {
+                position = destPoint
+                title = loc.name
+                snippet = loc.region
+                setAnchor(org.osmdroid.views.overlay.Marker.ANCHOR_CENTER, org.osmdroid.views.overlay.Marker.ANCHOR_BOTTOM)
+                icon = createLocationPinIcon(context, Citrine)
+            }
+            mv.removeOverlaysSafe { it is org.osmdroid.views.overlay.Marker && it.id == "site_dest" }
+            marker.id = "site_dest"
+            mv.addOverlaySafe(marker)
 
-        // Fit the route in view.
-        val box = org.osmdroid.util.BoundingBox.fromGeoPoints(routePoints)
-        mv.zoomToBoundingBox(box, false, 48)
-        mv.invalidate()
+            // Fit the route in view.
+            val box = org.osmdroid.util.BoundingBox.fromGeoPoints(routePoints)
+            mv.zoomToBoundingBox(box, false, 48)
+            mv.invalidate()
+        }
 
         // NOTE: Automatic tile prefetching removed — it was causing the app to
         // freeze on entry. The prefetch created multiple SqlTileWriter instances
@@ -544,9 +551,9 @@ private fun RouteMap(loc: DigLocation, miles: Double, showBackButton: Boolean = 
             factory = { ctx ->
                 createRockScoutMapView(ctx, isEmbedded = true).apply {
                     controller.setZoom(12.0)
-                    controller.setCenter(org.osmdroid.util.GeoPoint(loc.latitude, loc.longitude))
-                    overlays.add(org.osmdroid.views.overlay.gestures.RotationGestureOverlay(this).apply { isEnabled = true })
-                    overlays.add(org.osmdroid.views.overlay.compass.CompassOverlay(ctx, this).apply { enableCompass() })
+                    controller.setCenter(safeGeoPoint(loc.latitude, loc.longitude) ?: GeoPoint(39.5, -98.0))
+                    addOverlaySafe(org.osmdroid.views.overlay.gestures.RotationGestureOverlay(this).apply { isEnabled = true })
+                    addOverlaySafe(org.osmdroid.views.overlay.compass.CompassOverlay(ctx, this).apply { enableCompass() })
                     mapView = this
                 }
             },

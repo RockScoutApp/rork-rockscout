@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { SculptedCard, SculptedButton, ScreenScaffold } from "@/components/sculpted";
+import { isValidCoordinate, runMapSafe, safeRemoveMap } from "@/lib/mapSafe";
 
 const AQUA_HEX = "20 62% 65%";
 const CITRINE_HEX = "36 80% 58%";
@@ -29,12 +30,16 @@ export default function SharedSpot() {
   const latitude = lat ? parseFloat(lat) : null;
   const longitude = lng ? parseFloat(lng) : null;
   const spotName = name ? decodeURIComponent(name) : "Shared Spot";
+  const coordsValid = isValidCoordinate(latitude, longitude);
 
   useEffect(() => {
-    if (!containerRef.current || mapRef.current || latitude === null || longitude === null) return;
+    if (!containerRef.current || mapRef.current || !coordsValid) return;
+
+    const lat = latitude as number;
+    const lng = longitude as number;
 
     const map = L.map(containerRef.current, {
-      center: [latitude, longitude],
+      center: [lat, lng],
       zoom: 13,
       zoomControl: true,
     });
@@ -52,18 +57,27 @@ export default function SharedSpot() {
       iconAnchor: [16, 28],
     });
 
-    L.marker([latitude, longitude], { icon })
-      .addTo(map)
-      .bindPopup(`<strong>${spotName}</strong><br/>${latitude.toFixed(4)}, ${longitude.toFixed(4)}`)
-      .openPopup();
+    runMapSafe("shared spot marker", () => {
+      L.marker([lat, lng], { icon })
+        .addTo(map)
+        .bindPopup(`<strong>${spotName}</strong><br/>${lat.toFixed(4)}, ${lng.toFixed(4)}`)
+        .openPopup();
+    });
 
     mapRef.current = map;
 
+    // Resize observer keeps the map correctly sized after navigation or tab changes.
+    const resizeObserver = new ResizeObserver(() => {
+      runMapSafe("resize", () => map.invalidateSize());
+    });
+    resizeObserver.observe(containerRef.current);
+
     return () => {
-      map.remove();
+      resizeObserver.disconnect();
+      safeRemoveMap(map);
       mapRef.current = null;
     };
-  }, [latitude, longitude, spotName]);
+  }, [latitude, longitude, spotName, coordsValid]);
 
   const saveToFavorites = async () => {
     if (!user || latitude === null || longitude === null) return;
@@ -89,7 +103,7 @@ export default function SharedSpot() {
     navigate("/app/favorites");
   };
 
-  if (latitude === null || longitude === null) {
+  if (!coordsValid) {
     return (
       <ScreenScaffold title="Shared Spot" onBack={() => navigate("/app")}>
         <div className="flex flex-col items-center justify-center gap-3 px-4 py-16 text-center">

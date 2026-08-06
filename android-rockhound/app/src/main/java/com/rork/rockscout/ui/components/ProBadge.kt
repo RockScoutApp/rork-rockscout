@@ -84,7 +84,7 @@ fun ProBadge(
                     drawRect(sweep)
                 }
             }
-            .padding(horizontal = 8.dp, vertical = 3.dp),
+            .padding(horizontal = 8.dp, vertical = 1.dp),
         contentAlignment = Alignment.Center,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

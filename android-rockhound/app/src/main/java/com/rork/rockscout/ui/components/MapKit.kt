@@ -470,6 +470,98 @@ private fun applyAutoHybridTiles(mapView: MapView, labelOverlay: HybridLabelOver
     mapView.invalidate()
 }
 
+/** Maximum valid latitude and longitude bounds for the WGS-84 coordinate system. */
+private const val MAX_LATITUDE = 90.0
+private const val MAX_LONGITUDE = 180.0
+
+/**
+ * Returns true if the coordinate is a finite, non-null number within the
+ * WGS-84 bounds. Used to guard every point that is projected into a marker,
+ * bounding box, or map camera so bad data can never crash a map screen.
+ */
+fun isValidCoordinate(latitude: Double, longitude: Double): Boolean {
+    return latitude.isFinite() && longitude.isFinite() &&
+        latitude in -MAX_LATITUDE..MAX_LATITUDE &&
+        longitude in -MAX_LONGITUDE..MAX_LONGITUDE
+}
+
+fun isValidCoordinate(latitude: Double?, longitude: Double?): Boolean {
+    return latitude != null && longitude != null && isValidCoordinate(latitude, longitude)
+}
+
+/**
+ * Builds a [GeoPoint] from the supplied coordinates only if they are valid.
+ * Returns null otherwise, so callers can skip rendering the marker instead of
+ * crashing the map with a bad projection.
+ */
+fun safeGeoPoint(latitude: Double?, longitude: Double?): GeoPoint? {
+    if (latitude == null || longitude == null) return null
+    return if (isValidCoordinate(latitude, longitude)) GeoPoint(latitude, longitude) else null
+}
+
+/**
+ * Runs a block of map operations defensively, catching and logging any exception
+ * so one bad overlay or marker cannot bring down the whole screen. This should be
+ * used around all marker add/remove/fit operations inside map effects.
+ */
+fun runMapSafe(tag: String, block: () -> Unit) {
+    try {
+        block()
+    } catch (e: Throwable) {
+        android.util.Log.e("MapSafe", "$tag: ${e.message}", e)
+    }
+}
+
+/**
+ * Safely removes the given overlays from the MapView, ignoring any concurrent
+ * modification or already-detached state. Returns true if any overlays were removed.
+ */
+fun MapView.removeOverlaysSafe(predicate: (Overlay) -> Boolean): Boolean {
+    return try {
+        val toRemove = overlays.filter(predicate)
+        if (toRemove.isEmpty()) return false
+        overlays.removeAll(toRemove)
+        true
+    } catch (e: Throwable) {
+        android.util.Log.e("MapSafe", "removeOverlaysSafe failed: ${e.message}", e)
+        false
+    }
+}
+
+/**
+ * Safely adds an overlay to the MapView, guarding against a detached map or
+ * concurrent modification errors.
+ */
+fun MapView.addOverlaySafe(overlay: Overlay): Boolean {
+    return try {
+        if (!isAttachedToWindow) return false
+        overlays.add(overlay)
+        true
+    } catch (e: Throwable) {
+        android.util.Log.e("MapSafe", "addOverlaySafe failed: ${e.message}", e)
+        false
+    }
+}
+
+/**
+ * Safe wrapper for creating an Overlay with a tap listener. The listener itself
+ * is wrapped in runMapSafe so exceptions inside the tap handler do not propagate
+ * to the Android view system and crash the host screen.
+ */
+fun safeTapOverlay(onTap: (MotionEvent, MapView) -> Boolean): Overlay {
+    return object : Overlay() {
+        override fun onSingleTapConfirmed(e: MotionEvent?, view: MapView?): Boolean {
+            return try {
+                if (e == null || view == null || !view.isAttachedToWindow) return false
+                onTap(e, view)
+            } catch (err: Throwable) {
+                android.util.Log.e("MapSafe", "onSingleTapConfirmed error: ${err.message}", err)
+                false
+            }
+        }
+    }
+}
+
 /** Zoom level for the first satellite toggle tap — satellite imagery appears here. */
 private const val SATELLITE_JUMP_ZOOM = 16.0
 

@@ -189,6 +189,7 @@ fun SpecimenDetailScreen(
                     "amazing-fluorescent-benitoite" -> benitoiteFluorescentLabels
                     "amazing-fluorescent-tugtupite" -> tugtupiteFluorescentLabels
                     "amethyst" -> amethystPhotoLabels
+                    in agateSpecimenIds -> agatePhotoLabels
                     in fluorescentSpecimenIds -> fluorescentPhotoLabels
                     else -> photoLabels
                 }
@@ -528,6 +529,16 @@ private val amethystPhotoLabels = listOf(
     "Polished Cabochon",
 )
 
+/** Agate-specific labels for the multi-image gallery order (face polished → cabochon → rough → wild → variants). */
+private val agatePhotoLabels = listOf(
+    "Face Polished",
+    "Cabochon",
+    "Rough",
+    "In the Wild",
+    "Polished Variant",
+    "Rough Variant",
+)
+
 /** Specimens whose photos are UV-wavelength sets rather than rough/wild/museum/cabochon. */
 private val fluorescentSpecimenIds = setOf(
     "amazing-fluorescent-adamite",
@@ -546,6 +557,23 @@ private val fluorescentSpecimenIds = setOf(
     "amazing-fluorescent-hyalite",
     "amazing-fluorescent-benitoite",
     "amazing-fluorescent-tugtupite",
+)
+
+/** Agate/chalcedony varieties that should show agate-specific photo labels. */
+private val agateSpecimenIds = setOf(
+    "blue-lace-agate", "dendrite-agate", "enchantment-agates", "fire-agate",
+    "lake-superior-agate", "moss-agate", "plume-agate", "trinity-agates",
+    "botswana-agate", "laguna-agate", "crazy-lace-agate", "condor-agate",
+    "fortification-agate", "lake-superior-agate-spec", "fairburn-agate",
+    "coyamito-agate", "polka-dot-agate", "iris-agate", "sagenitic-agate",
+    "coldwater-agate", "grape-agate", "agate-turritella", "agate-brazilian",
+    "agate-thunderegg", "agate-snake-skin", "agate-tube", "agate-eye",
+    "agate-enhydro", "agate-dryhead", "amazing-enhydro-agate",
+    "amazing-copper-banded-agate", "amazing-copper-replacement-agate",
+    "amazing-copper-infused-agate", "amazing-silver-copper-agate",
+    "agate-ankara", "agate-dead-sea", "amazing-copper-replacement-agate-tv",
+    "amazing-copper-banded-agate-tv", "amazing-copper-infused-agate-tv",
+    "amazing-silver-copper-agate-tv", "enhydro-agate-multi-chamber",
 )
 
 /** UV-wavelength labels for fluorescent mineral photo sets. */

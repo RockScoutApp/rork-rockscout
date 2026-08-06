@@ -20,6 +20,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -98,13 +100,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
@@ -141,6 +148,8 @@ import com.rork.rockscout.ui.components.GearLinksCard
 import com.rork.rockscout.ui.components.FullScreenImageViewer
 import com.rork.rockscout.ui.components.InterstitialAdTrigger
 import com.rork.rockscout.ui.components.ScreenScaffold
+import com.rork.rockscout.ui.components.SculptedIconButton
+import com.rork.rockscout.ui.components.StandaloneZoomableImageViewer
 import com.rork.rockscout.ui.components.rememberNetworkOnline
 import com.rork.rockscout.ui.theme.Warning
 import com.rork.rockscout.ui.components.CelebrationLevel
@@ -247,6 +256,7 @@ fun IdentifyScreen(navController: NavController) {
     var clarificationQuestions by remember { mutableStateOf<List<ClarificationQuestion>>(emptyList()) }
     var webReferences by remember { mutableStateOf<List<WebReference>>(emptyList()) }
     var assemblageResult by remember { mutableStateOf<AssemblageResult?>(null) }
+    var modelsUsed by remember { mutableStateOf<List<String>>(emptyList()) }
     var uncertainArtifact by remember { mutableStateOf(false) }
     var artifactDetectConfidence by remember { mutableIntStateOf(0) }
     var preliminaryMatches by remember { mutableStateOf<List<IdentifyMatch>>(emptyList()) }
@@ -257,6 +267,10 @@ fun IdentifyScreen(navController: NavController) {
     // Full-screen viewer state
     var viewerUrls by remember { mutableStateOf<List<String>>(emptyList()) }
     var viewerInitialPage by remember { mutableIntStateOf(0) }
+
+    // Comparison sheet state
+    var showComparisonSheet by remember { mutableStateOf(false) }
+    var comparisonMatch by remember { mutableStateOf<Pair<Specimen, IdentifyMatch>?>(null) }
 
     // PDF report generation — tracks which match index is currently generating
     var generatingReportIndex by remember { mutableIntStateOf(-1) }
@@ -318,12 +332,15 @@ fun IdentifyScreen(navController: NavController) {
         clarificationQuestions = emptyList()
         webReferences = emptyList()
         assemblageResult = null
+        modelsUsed = emptyList()
         uncertainArtifact = false
         artifactDetectConfidence = 0
         preliminaryMatches = emptyList()
         preliminarySummary = ""
         answers.clear()
         customAnswers.clear()
+        showComparisonSheet = false
+        comparisonMatch = null
     }
 
     fun startIdentification(searchMode: String = "rocks", skipArtifactDetect: Boolean = false) {
@@ -450,6 +467,7 @@ fun IdentifyScreen(navController: NavController) {
                     aiSummary = response.summary
                     webReferences = response.webReferences
                     assemblageResult = response.assemblage
+                    modelsUsed = response.modelsUsed
                     uncertainArtifact = response.uncertainArtifact
                     state = ScanState.RESULTS
                     return@launch
@@ -496,6 +514,7 @@ fun IdentifyScreen(navController: NavController) {
                     clarificationQuestions = response.clarificationQuestions
                     webReferences = response.webReferences
                     assemblageResult = response.assemblage
+                    modelsUsed = response.modelsUsed
                     preliminaryMatches = response.matches
                     preliminarySummary = response.summary
                     answers.clear()
@@ -507,6 +526,7 @@ fun IdentifyScreen(navController: NavController) {
                     aiSummary = response.summary
                     webReferences = response.webReferences
                     assemblageResult = response.assemblage
+                    modelsUsed = response.modelsUsed
                     identifyProgress = 1f
                     state = ScanState.RESULTS
                 }
@@ -624,6 +644,7 @@ fun IdentifyScreen(navController: NavController) {
                 matches = matchedList
                 aiSummary = response.summary
                 webReferences = response.webReferences
+                modelsUsed = response.modelsUsed
 
                 // Update the saved capture with the refined top match
                 val topMatch = matchedList.first()
@@ -1278,12 +1299,43 @@ fun IdentifyScreen(navController: NavController) {
                                 viewerUrls = urls
                                 viewerInitialPage = page
                             },
+                            onCompare = {
+                                val userBitmap = angleCaptures.firstNotNullOfOrNull { it.bitmap }
+                                if (userBitmap != null) {
+                                    comparisonMatch = null
+                                    showComparisonSheet = true
+                                } else {
+                                    Toast.makeText(context, "No captured photo to compare", Toast.LENGTH_SHORT).show()
+                                }
+                            },
                         )
                     }
                 }
             }
 
-            // AI summary
+            // Agate uncertainty disclaimer — shown when the top match is an agate and confidence < 85%.
+            if (state == ScanState.RESULTS) {
+                val topAgate = matches.firstOrNull()?.let { (spec, match) ->
+                    if (spec.name.contains("agate", ignoreCase = true) && match.confidence < 85) spec to match else null
+                }
+                if (topAgate != null) {
+                    item {
+                        AgateUncertaintyCard(
+                            onCompare = {
+                                val userBitmap = angleCaptures.firstNotNullOfOrNull { it.bitmap }
+                                if (userBitmap != null) {
+                                    comparisonMatch = null
+                                    showComparisonSheet = true
+                                } else {
+                                    Toast.makeText(context, "No captured photo to compare", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                        )
+                    }
+                }
+            }
+
+            // AI summary + model attribution chips
             if (state == ScanState.RESULTS && aiSummary.isNotEmpty()) {
                 item {
                     DarkCard(modifier = Modifier.fillMaxWidth(), accent = Citrine) {
@@ -1309,6 +1361,10 @@ fun IdentifyScreen(navController: NavController) {
                             color = DarkTextMid,
                             lineHeight = 22.sp,
                         )
+                        if (modelsUsed.isNotEmpty()) {
+                            Spacer(Modifier.height(10.dp))
+                            ModelsAttributionRow(modelsUsed)
+                        }
                     }
                 }
             }
@@ -1556,6 +1612,15 @@ fun IdentifyScreen(navController: NavController) {
                                 }
                             },
                             isGeneratingReport = generatingReportIndex == index,
+                            onCompare = {
+                                val userBitmap = angleCaptures.firstNotNullOfOrNull { it.bitmap }
+                                if (userBitmap != null) {
+                                    comparisonMatch = null
+                                    showComparisonSheet = true
+                                } else {
+                                    Toast.makeText(context, "No captured photo to compare", Toast.LENGTH_SHORT).show()
+                                }
+                            },
                         )
                     }
                 }
@@ -1576,6 +1641,24 @@ fun IdentifyScreen(navController: NavController) {
                 initialPage = viewerInitialPage,
                 onDismiss = { viewerUrls = emptyList() },
             )
+        }
+
+        // Side-by-side comparison sheet
+        if (showComparisonSheet) {
+            val userBitmap = remember(angleCaptures) {
+                angleCaptures.firstNotNullOfOrNull { it.bitmap }
+            }
+            if (userBitmap != null) {
+                SpecimenComparisonSheet(
+                    matches = matches,
+                    userBitmap = userBitmap,
+                    onDismiss = { showComparisonSheet = false },
+                    onViewDetails = { spec ->
+                        showComparisonSheet = false
+                        navController.navigate(Routes.specimen(spec.id))
+                    },
+                )
+            }
         }
 
         // Thank-you celebration overlay (after a successful donation)
@@ -2292,6 +2375,341 @@ private fun WebReferencesCard(references: List<WebReference>) {
     }
 }
 
+/**
+ * Simple pinch-to-zoom viewer for a captured [Bitmap]. Mirrors the behavior of
+ * [ZoomablePhoto] in Components.kt but accepts an in-memory bitmap instead of a URL.
+ */
+@Composable
+private fun ZoomableBitmap(bitmap: Bitmap, contentDescription: String, onDismiss: () -> Unit, modifier: Modifier = Modifier) {
+    var scale by remember { mutableFloatStateOf(1f) }
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    var offsetY by remember { mutableFloatStateOf(0f) }
+
+    Box(
+        modifier = modifier
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onTap = {
+                        if (scale > 1f) {
+                            scale = 1f
+                            offsetX = 0f
+                            offsetY = 0f
+                        } else {
+                            onDismiss()
+                        }
+                    },
+                )
+            }
+            .pointerInput(Unit) {
+                detectTransformGestures { _, pan, zoom, _ ->
+                    val newScale = (scale * zoom).coerceIn(1f, 6f)
+                    scale = newScale
+                    if (newScale > 1f) {
+                        offsetX += pan.x
+                        offsetY += pan.y
+                    } else {
+                        offsetX = 0f
+                        offsetY = 0f
+                    }
+                }
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = contentDescription,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer(
+                    scaleX = scale,
+                    scaleY = scale,
+                    translationX = offsetX,
+                    translationY = offsetY,
+                ),
+            contentScale = ContentScale.Fit,
+        )
+    }
+}
+
+/**
+ * Informational amber card shown when the top match is an agate and confidence is below 85%.
+ * It explains that agate varieties are hard to distinguish and suggests comparing with reference photos.
+ */
+@Composable
+private fun AgateUncertaintyCard(onCompare: () -> Unit, modifier: Modifier = Modifier) {
+    DarkCard(modifier = modifier.fillMaxWidth(), accent = Warning) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                Icons.Filled.HelpOutline,
+                contentDescription = null,
+                tint = Warning,
+                modifier = Modifier.size(22.dp),
+            )
+            Spacer(Modifier.width(10.dp))
+            Text(
+                "Agate identification",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(
+            "Agates are among the hardest minerals to identify down to their specific variety — many share similar banding patterns and colors. The database images and your local gem & mineral resources can help you confirm the exact type. Tap any match above to compare your specimen side-by-side with reference photos.",
+            style = MaterialTheme.typography.bodySmall,
+            color = DarkTextLow,
+            lineHeight = 18.sp,
+        )
+        Spacer(Modifier.height(10.dp))
+        SculptedButton(
+            text = "Compare reference photos",
+            onClick = onCompare,
+            accent = Warning,
+            containerColor = Warning,
+            textColor = Color.Black,
+            icon = Icons.Filled.PhotoLibrary,
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+        )
+    }
+}
+
+/**
+ * Full-screen comparison dialog. Shows up to 5 rows, each pairing the user's best
+ * captured photo (left) with a match's primary reference image (right). The user's
+ * photo is the same in every row; the match reference image changes per row.
+ * Each image is independently tap-to-zoom. Tapping "View details" navigates to the
+ * specimen detail page and dismisses the dialog.
+ */
+@Composable
+private fun SpecimenComparisonSheet(
+    matches: List<Pair<Specimen, IdentifyMatch>>,
+    userBitmap: Bitmap,
+    onDismiss: () -> Unit,
+    onViewDetails: (Specimen) -> Unit,
+) {
+    val context = LocalContext.current
+    var zoomedMatchUrl by remember { mutableStateOf<String?>(null) }
+    var zoomedUserBitmap by remember { mutableStateOf(false) }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = true,
+            dismissOnClickOutside = false,
+        ),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xF2000000)),
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "Compare your specimen",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f),
+                    )
+                    SculptedIconButton(
+                        icon = Icons.Filled.Close,
+                        contentDescription = "Close comparison",
+                        onClick = onDismiss,
+                        accent = Color.White,
+                        iconTint = Color.White,
+                        backgroundColor = Slate800,
+                        size = 40.dp,
+                        shadowElevation = 4.dp,
+                    )
+                }
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
+                ) {
+                    itemsIndexed(matches.take(5)) { index, (spec, match) ->
+                        val imageUrls = SpecimenImages.urls[spec.id] ?: spec.imageUrls
+                        val refUrl = imageUrls.firstOrNull() ?: ""
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                "Match ${index + 1}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = TextLow,
+                                modifier = Modifier.padding(bottom = 6.dp),
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth().height(180.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                // User photo
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(Color(0xFF1C1A14))
+                                        .clickable { zoomedUserBitmap = true },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Image(
+                                        bitmap = userBitmap.asImageBitmap(),
+                                        contentDescription = "Your photo",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop,
+                                    )
+                                }
+                                // Match reference image
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .fillMaxHeight()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(Color(0xFF1C1A14))
+                                        .clickable(enabled = refUrl.isNotBlank()) { zoomedMatchUrl = refUrl },
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (refUrl.isNotBlank()) {
+                                        AsyncImage(
+                                            model = refUrl,
+                                            contentDescription = spec.name,
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = ContentScale.Crop,
+                                        )
+                                    } else {
+                                        Text(
+                                            "No reference image",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = TextLow,
+                                        )
+                                    }
+                                }
+                            }
+                            Spacer(Modifier.height(6.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        spec.name,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color.White,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                    Text(
+                                        "${match.confidence}% match",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = rockClassColor(spec.rockClass),
+                                    )
+                                }
+                                TextButton(
+                                    onClick = { onViewDetails(spec) },
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                                ) {
+                                    Text(
+                                        "View details",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Citrine,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(16.dp))
+                            if (index < matches.size.coerceAtMost(5) - 1) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(1.dp)
+                                        .background(Color.White.copy(alpha = 0.12f)),
+                                )
+                                Spacer(Modifier.height(16.dp))
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Zoomed overlays
+            if (zoomedUserBitmap) {
+                ZoomableBitmap(
+                    bitmap = userBitmap,
+                    contentDescription = "Your photo",
+                    onDismiss = { zoomedUserBitmap = false },
+                    modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.95f)),
+                )
+            }
+            zoomedMatchUrl?.let { url ->
+                StandaloneZoomableImageViewer(
+                    imageUrl = url,
+                    onDismiss = { zoomedMatchUrl = null },
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Small chip row showing which AI pipeline steps ran for this identification.
+ * Models are mapped to user-friendly labels and only unique, non-empty values are shown.
+ */
+@Composable
+private fun ModelsAttributionRow(models: List<String>, modifier: Modifier = Modifier) {
+    val labels = remember(models) {
+        models.distinct().map { raw ->
+            when (raw.lowercase()) {
+                "visual_db_match", "visual reference comparison", "visual_reference_comparison" -> "Visual DB match"
+                "web_cross_check", "web cross-check", "web_search" -> "Web cross-check"
+                "sonnet_rerank", "sonnet re-rank", "claude_sonnet" -> "Sonnet re-rank"
+                "gemini_2nd_opinion", "gemini 2nd opinion", "gemini" -> "Gemini 2nd opinion"
+                "haiku_describe", "haiku description", "haiku" -> "Haiku describe"
+                "artifact_detect" -> "Artifact check"
+                "assemblage_analysis" -> "Assemblage analysis"
+                else -> raw.replace("_", " ").replaceFirstChar { it.uppercaseChar() }
+            }
+        }.filter { it.isNotBlank() }
+    }
+    if (labels.isEmpty()) return
+    FlowRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        labels.forEach { label ->
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color(0xFF2A2720))
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = Success,
+                    modifier = Modifier.size(12.dp),
+                )
+                Spacer(Modifier.width(4.dp))
+                Text(
+                    label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = DarkTextHigh,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun MatchRow(
     spec: Specimen,
@@ -2301,6 +2719,7 @@ private fun MatchRow(
     onPhotoClick: (List<String>, Int) -> Unit = { _, _ -> },
     onGenerateReport: () -> Unit = {},
     isGeneratingReport: Boolean = false,
+    onCompare: () -> Unit = {},
 ) {
     val accent = rockClassColor(spec.rockClass)
     val imageUrls = SpecimenImages.urls[spec.id] ?: spec.imageUrls
@@ -2445,6 +2864,17 @@ private fun MatchRow(
                             .padding(2.dp),
                     )
                 }
+                Icon(
+                    Icons.Filled.PhotoLibrary,
+                    contentDescription = "Compare with reference",
+                    tint = Citrine,
+                    modifier = Modifier
+                        .size(20.dp)
+                        .padding(top = 4.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .clickable(onClick = onCompare)
+                        .padding(2.dp),
+                )
                 Icon(Icons.Filled.ChevronRight, contentDescription = null, tint = DarkTextMid)
             }
         }

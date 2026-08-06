@@ -2125,7 +2125,7 @@ private fun IdentifyHero(onClick: () -> Unit) {
         animationSpec = infiniteRepeatable(tween(2200), RepeatMode.Reverse),
         label = "glowAlpha",
     )
-    val note = "Try to take a picture in daylight and catch as much clear detail as possible for the most accurate IDs. Although this search engine is extremely thorough, blurriness or certain lighting can cause inaccuracy or false IDs."
+    val note = "Try to take pictures in daylight and catch as much clear detail as possible for the most accurate IDs. Although this search engine is extremely thorough, blurriness or certain lighting can cause inaccuracy or false IDs."
     Box(
         modifier = Modifier
             .fillMaxWidth()

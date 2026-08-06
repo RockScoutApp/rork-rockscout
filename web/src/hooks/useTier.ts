@@ -87,19 +87,26 @@ function useTierState(): TierState {
     retry: 2,
   });
 
-  // If the profile says the user is not Premium, try syncing the RevenueCat
-  // entitlement once. This catches users who bought Premium on Android/iOS and
-  // then opened the web PWA without a fresh sign-in.
+  // Sync the RevenueCat entitlement on every fresh sign-in. This catches users
+  // who bought Premium on Android/iOS (or use a Premium APK) and then open the
+  // web PWA without a fresh sign-in. The sync also refreshes an existing
+  // premiumSource="apk" row so the PWA immediately sees Premium.
   useEffect(() => {
     if (SCREENSHOT_MODE || !user || !session || syncedOnce.current) return;
-    if (profile?.is_pro === false) {
-      syncedOnce.current = true;
-      syncEntitlement(user.id).then((isPremium) => {
-        if (isPremium) {
-          queryClient.invalidateQueries({ queryKey: ["tier-profile", user.id] });
-        }
-      });
-    }
+    syncedOnce.current = true;
+    syncEntitlement(user.id).then((isPremium) => {
+      if (isPremium || profile?.is_pro === false) {
+        // Refresh the profile whether the sync turned premium on or the profile
+        // was stale/off. This ensures the UI re-evaluates with the latest data.
+        queryClient.invalidateQueries({ queryKey: ["tier-profile", user.id] });
+      }
+      // eslint-disable-next-line no-console
+      console.log("[useTier] entitlement sync completed", { isPremium, userId: user.id });
+    }).catch((err) => {
+      // Best-effort sync; failures are logged so they can be diagnosed in the field.
+      // eslint-disable-next-line no-console
+      console.warn("[useTier] entitlement sync failed", err);
+    });
   }, [user, session, profile?.is_pro, queryClient]);
 
   // Effective premium — false when device is over the 3-device limit.

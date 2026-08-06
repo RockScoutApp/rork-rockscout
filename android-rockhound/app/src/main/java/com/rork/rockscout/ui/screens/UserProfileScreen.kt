@@ -70,6 +70,7 @@ import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.EmptyPostBox
 import com.rork.rockscout.ui.components.HunterStatusIcon
 import com.rork.rockscout.ui.components.PostCard
+import com.rork.rockscout.ui.components.ProBadge
 import com.rork.rockscout.ui.components.ArchivedPostsPopup
 import com.rork.rockscout.ui.components.ReportSubmittedDialog
 import com.rork.rockscout.ui.components.postImageNavigation
@@ -283,15 +284,7 @@ fun UserProfileScreen(
                                 )
                                 if (h.premium_badge) {
                                     Spacer(Modifier.width(6.dp))
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(6.dp))
-                                            .background(Citrine.copy(alpha = 0.30f))
-                                            .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), RoundedCornerShape(6.dp))
-                                            .padding(horizontal = 6.dp, vertical = 2.dp),
-                                    ) {
-                                        Text("PREMIUM", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Bold)
-                                    }
+                                    ProBadge()
                                 }
                             }
                             // Tappable level pill — opens UserAchievementsScreen

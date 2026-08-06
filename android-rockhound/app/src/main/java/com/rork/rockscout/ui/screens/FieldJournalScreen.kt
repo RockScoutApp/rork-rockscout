@@ -731,44 +731,37 @@ private fun JournalEditorScreen(
                             ) { Icon(Icons.Filled.Close, "Remove", tint = Color.White, modifier = Modifier.size(14.dp)) }
                         }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
                         SculptedOutlinedButton(
                             text = "Add photo",
                             icon = Icons.Filled.Add,
-                            onClick = { galleryLauncher.launch("image/*") },
-                            accent = Citrine,
-                            textColor = Citrine,
-                        )
-                        SculptedOutlinedButton(
-                            text = "Saved images",
-                            icon = Icons.Filled.Download,
                             onClick = { showImageSourcePicker = true },
                             accent = Citrine,
                             textColor = Citrine,
+                            modifier = Modifier.weight(1f),
+                        )
+                        SculptedOutlinedButton(
+                            text = "Attach",
+                            onClick = { showCapturePicker = true },
+                            accent = Citrine,
+                            textColor = Citrine,
+                            modifier = Modifier.weight(1f),
                         )
                     }
                 }
 
                 Spacer(Modifier.height(8.dp))
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+                Text(
+                    "Attached field captures (${attachedCaptureIds.size})",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(
-                        "Attached field captures (${attachedCaptureIds.size})",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.weight(1f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    SculptedOutlinedButton(
-                        text = "Attach",
-                        onClick = { showCapturePicker = true },
-                        accent = Citrine,
-                        textColor = Citrine,
-                    )
-                }
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 if (attachedCaptureIds.isNotEmpty()) {
                     Spacer(Modifier.height(6.dp))
                     attachedCaptureIds.forEachIndexed { idx, capId ->

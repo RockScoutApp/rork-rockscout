@@ -71,6 +71,7 @@ import com.rork.rockscout.data.LocationRefresher
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.HunterStatusIcon
 import com.rork.rockscout.ui.components.profileBorderColor
+import com.rork.rockscout.ui.components.ProBadge
 import com.rork.rockscout.ui.components.ReportSubmittedDialog
 import com.rork.rockscout.ui.components.ScreenScaffold
 import com.rork.rockscout.ui.navigation.Routes
@@ -809,16 +810,9 @@ private fun HunterCard(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
-                        if (h.premium_badge) {
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(Citrine.copy(alpha = 0.30f))
-                                    .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), RoundedCornerShape(6.dp))
-                                    .padding(horizontal = 6.dp, vertical = 2.dp),
-                            ) {
-                                Text("PREMIUM", style = MaterialTheme.typography.labelSmall, color = Citrine, fontWeight = FontWeight.Bold)
-                            }
+                        when (h.premium_badge) {
+                            true -> ProBadge()
+                            else -> {}
                         }
                     }
                     Spacer(Modifier.height(4.dp))

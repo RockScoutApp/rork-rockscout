@@ -142,6 +142,12 @@ import com.rork.rockscout.ui.components.ShareToProfileComposer
 import com.rork.rockscout.ui.components.TagChip
 import com.rork.rockscout.ui.components.TripRouteMap
 import com.rork.rockscout.ui.components.MultiPinDropMap
+import com.rork.rockscout.ui.components.addOverlaySafe
+import com.rork.rockscout.ui.components.removeOverlaysSafe
+import com.rork.rockscout.ui.components.runMapSafe
+import com.rork.rockscout.ui.components.safeGeoPoint
+import com.rork.rockscout.ui.components.safeTapOverlay
+import com.rork.rockscout.ui.components.isValidCoordinate
 import com.rork.rockscout.ui.components.sculpted
 import com.rork.rockscout.ui.screens.AddLocationDialog
 import com.rork.rockscout.ui.navigation.Routes
@@ -3054,27 +3060,28 @@ private fun CustomPinPickerSheet(
                         factory = { ctx ->
                             createRockScoutMapView(ctx).apply {
                                 controller.setZoom(10.0)
-                                controller.setCenter(GeoPoint(current.first, current.second))
-                                overlays.add(RotationGestureOverlay(this).apply { isEnabled = true })
-                                overlays.add(CompassOverlay(ctx, this).apply { enableCompass() })
+                                val center = safeGeoPoint(current.first, current.second) ?: GeoPoint(39.5, -98.0)
+                                controller.setCenter(center)
+                                addOverlaySafe(RotationGestureOverlay(this).apply { isEnabled = true })
+                                addOverlaySafe(CompassOverlay(ctx, this).apply { enableCompass() })
 
-                                overlays.add(object : org.osmdroid.views.overlay.Overlay() {
-                                    override fun onSingleTapConfirmed(e: android.view.MotionEvent?, view: MapView?): Boolean {
-                                        if (e == null || view == null) return false
-                                        val proj = view.projection
-                                        val point = proj.fromPixels(e.x.toInt(), e.y.toInt())
-                                        pinLocation = Pair(point.latitude, point.longitude)
-                                        view.overlays.removeAll { it is Marker && it.id == "custom_pin_preview" }
-                                        val marker = Marker(view).apply {
-                                            id = "custom_pin_preview"
-                                            position = GeoPoint(point.latitude, point.longitude)
-                                            title = "Pin location"
-                                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                                        }
-                                        view.overlays.add(marker)
-                                        view.invalidate()
-                                        return true
+                                overlays.add(safeTapOverlay { e, view ->
+                                    val proj = view.projection ?: return@safeTapOverlay false
+                                    val point = proj.fromPixels(e.x.toInt(), e.y.toInt())
+                                    val lat = point.latitude
+                                    val lng = point.longitude
+                                    if (!isValidCoordinate(lat, lng)) return@safeTapOverlay false
+                                    pinLocation = Pair(lat, lng)
+                                    view.removeOverlaysSafe { it is Marker && it.id == "custom_pin_preview" }
+                                    val marker = Marker(view).apply {
+                                        id = "custom_pin_preview"
+                                        position = GeoPoint(lat, lng)
+                                        title = "Pin location"
+                                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                                     }
+                                    view.addOverlaySafe(marker)
+                                    view.invalidate()
+                                    true
                                 })
 
                                 mapView = this
@@ -3092,7 +3099,7 @@ private fun CustomPinPickerSheet(
                         showRemovePin = pinLocation != null,
                         onRemovePin = {
                             pinLocation = null
-                            mapView?.overlays?.removeAll { it is Marker && it.id == "custom_pin_preview" }
+                            mapView?.removeOverlaysSafe { it is Marker && it.id == "custom_pin_preview" }
                             mapView?.invalidate()
                         },
                         modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
