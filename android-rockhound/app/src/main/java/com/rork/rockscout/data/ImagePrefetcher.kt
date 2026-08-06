@@ -160,11 +160,55 @@ object ImagePrefetcher {
             } + DinoLifeImageMap.images.values.map { path ->
                 "https://jvns5dfy7fpytx79a2tb3-web.rork.live/$path"
             }
-            val allUrls = runCatching {
+            val staticUrls = runCatching {
                 (SpecimenImages.urls.values.flatten() + EducationalImages.all + dinoUrls)
                     .distinct()
                     .filter { it.isNotBlank() && it.startsWith("http") }
             }.getOrDefault(emptyList())
+
+            // ── Resolve dynamic location + museum image URLs from Wikimedia
+            //    Commons via the /commons-photo backend. These are not known
+            //    at compile time — they're resolved on first access and cached
+            //    by LocationImageRepository. During bulk download we pre-resolve
+            //    every dig site and museum name so their hero photos are cached
+            //    on-device for offline use.
+            val locationImageUrls = mutableListOf<String>()
+            runCatching {
+                val locationNames = mutableListOf<Pair<String, String?>>()
+
+                // US dig sites
+                SeedData.allLocations.forEach { loc ->
+                    if (shouldCancel()) return@runCatching
+                    locationNames.add(loc.name to loc.region)
+                }
+
+                // International dig sites
+                InternationalLocations.internationalLocations.forEach { loc ->
+                    if (shouldCancel()) return@runCatching
+                    locationNames.add(loc.name to loc.region)
+                }
+
+                // Museums
+                UsMuseums.allMuseums.forEach { museum ->
+                    if (shouldCancel()) return@runCatching
+                    locationNames.add(museum.name to "${museum.city} ${museum.state}")
+                }
+
+                // Resolve in batches of 10 to avoid overwhelming the backend.
+                // Each resolve call hits the in-memory/persisted cache first,
+                // so only first-time resolutions actually call the network.
+                locationNames.distinctBy { it.first.lowercase() }.chunked(10).forEach { batch ->
+                    if (shouldCancel()) return@runCatching
+                    batch.forEach { (name, region) ->
+                        val url = LocationImageRepository.resolveImageUrl(name, region)
+                        if (url != null) locationImageUrls.add(url)
+                    }
+                }
+            }
+
+            val allUrls = (staticUrls + locationImageUrls)
+                .distinct()
+                .filter { it.isNotBlank() && it.startsWith("http") }
 
             if (allUrls.isEmpty()) {
                 onProgress(0, 0, disk?.size ?: 0L)

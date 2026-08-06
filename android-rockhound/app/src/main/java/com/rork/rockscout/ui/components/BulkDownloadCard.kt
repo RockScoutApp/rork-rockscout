@@ -306,8 +306,8 @@ fun BulkDownloadCard(
                         isRunning -> "${state.finished} / ${state.total} images · $progressPercent% · ~${formatBytes(state.bytes)} so far"
                         cancelled && state.finished > 0 -> "${state.finished} / ${state.total} images · ${progressPercent}% complete · tap to resume"
                         !isMaxCache -> "Requires Maximum (2 GB) cache — enable it to download ~$ESTIMATED_SIZE_GB GB of images for offline use."
-                        state.total > 0 -> "Caches every specimen photo plus all educational/guide illustrations on-device. Estimated size: ~$ESTIMATED_SIZE_GB GB."
-                        else -> "Caches every specimen photo, guide illustration, and hero image on-device so the whole app works fully offline. Estimated size: ~$ESTIMATED_SIZE_GB GB."
+                        state.total > 0 -> "Caches every specimen photo, guide illustration, dig site & museum photo on-device. Estimated size: ~$ESTIMATED_SIZE_GB GB."
+                        else -> "Caches every specimen photo, guide illustration, hero image, and dig site & museum photo on-device so the whole app works fully offline. Estimated size: ~$ESTIMATED_SIZE_GB GB."
                     },
                     style = MaterialTheme.typography.bodySmall.copy(
                         shadow = Shadow(
@@ -385,7 +385,7 @@ fun BulkDownloadCard(
                     modifier = Modifier.size(20.dp),
                 )
                 Text(
-                    "Every image is now on your device — specimens, guides, geology articles, and hero art. The whole app loads instantly with no signal.",
+                    "Every image is now on your device — specimens, guides, geology articles, hero art, and dig site & museum photos. The whole app loads instantly with no signal.",
                     style = MaterialTheme.typography.bodySmall,
                     color = TextMid,
                     modifier = Modifier.weight(1f),

@@ -428,7 +428,7 @@ private val howToSections: List<HowToSection> = listOf(
         steps = listOf(
             "Tap the heart icon on any specimen card to add it to your Wishlist.",
             "View your Wishlist from the home screen — it's your dream-specimen shopping list.",
-            "Tap the bookmark icon on any dig site, national or state park, BLM location, campground, trailhead, or dig site detail screen to save it to Favorite Spots for quick access.",
+            "Tap the bookmark icon on any dig site, museum, national or state park, BLM location, campground, trailhead, or detail screen to save it to Favorite Spots for quick access.",
             "Favorite Spots appear on the home screen with a count of saved locations and are fully searchable from the global search.",
             "In the Aurora Forecaster, use the Saved Spots section to bookmark specific coordinates and track aurora visibility at those locations — drop a pin on the map, enter lat/lng manually, or tap \"Mark My Location\" to use your GPS.",
             "Each aurora saved spot shows the name, coordinates, and current visibility status (Aurora visible / unlikely) based on the spot's latitude and current Kp index.",
@@ -1033,7 +1033,7 @@ private val howToSections: List<HowToSection> = listOf(
             "Tap \"National & State Parks\" from the Field Kit section on the home screen.",
             "Browse over 250 national and state parks — including all 62 US National Parks — that are dig-friendly or geologically significant.",
             "Each park shows what rocks and minerals you can find there, plus visitor info and common wildlife.",
-            "Tap the bookmark icon on any park to save it to Favorite Spots for quick access.",
+            "Tap the bookmark icon on any park, dig site, or museum to save it to Favorite Spots for quick access.",
         ),
     ),
     HowToSection(

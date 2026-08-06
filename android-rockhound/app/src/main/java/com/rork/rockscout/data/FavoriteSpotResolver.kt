@@ -36,6 +36,7 @@ data class FavoriteSpotEntry(
  *  - Specimen markers / custom pins:  "pin:{lat}:{lng}:{name}"
  *  - Searched / inputted locations:   "search:{lat}:{lng}:{name}"
  *  - Natural wonders:                  "wonder:{wonderId}"
+ *  - Museums:                          "museum:{name}:{city}:{state}"
  */
 object FavoriteSpotResolver {
 
@@ -47,6 +48,7 @@ object FavoriteSpotResolver {
     private const val PIN_PREFIX = "pin:"
     private const val SEARCH_PREFIX = "search:"
     private const val WONDER_PREFIX = "wonder:"
+    private const val MUSEUM_PREFIX = "museum:"
 
     // ── ID generators (used by detail screens when toggling favorites) ──
 
@@ -56,6 +58,10 @@ object FavoriteSpotResolver {
     fun blmSiteId(stateCode: String, siteName: String): String = "$BLM_SITE_PREFIX$stateCode:$siteName"
     fun blmStateId(stateCode: String): String = "$BLM_STATE_PREFIX$stateCode"
     fun wonderId(wonderId: String): String = "$WONDER_PREFIX$wonderId"
+
+    /** Favorite ID for a curated museum entry. */
+    fun museumId(name: String, city: String, state: String): String =
+        "$MUSEUM_PREFIX$name:$city:$state"
 
     // ── Specimen marker / custom pin / search location IDs ──
 
@@ -83,6 +89,7 @@ object FavoriteSpotResolver {
             id.startsWith(PIN_PREFIX) -> resolveCoordinatePin(id.removePrefix(PIN_PREFIX), "Specimen Pin")
             id.startsWith(SEARCH_PREFIX) -> resolveCoordinatePin(id.removePrefix(SEARCH_PREFIX), "Searched Location")
             id.startsWith(WONDER_PREFIX) -> resolveWonder(id.removePrefix(WONDER_PREFIX))
+            id.startsWith(MUSEUM_PREFIX) -> resolveMuseum(id.removePrefix(MUSEUM_PREFIX))
             else -> resolveDigLocation(id)
         }
     }
@@ -220,6 +227,35 @@ object FavoriteSpotResolver {
             emoji = loc.type.emoji,
             accent = Aqua,
             route = "location/${loc.id}",
+        )
+    }
+
+    /**
+     * Resolves a museum favorite of the form "{name}:{city}:{state}".
+     * The name may contain colons, so only the last two colons are treated as
+     * delimiters for city and state.
+     */
+    private fun resolveMuseum(body: String): FavoriteSpotEntry? {
+        val lastColon = body.lastIndexOf(':')
+        if (lastColon < 0) return null
+        val secondLastColon = body.lastIndexOf(':', startIndex = lastColon - 1)
+        if (secondLastColon < 0) return null
+        val name = body.substring(0, secondLastColon)
+        val city = body.substring(secondLastColon + 1, lastColon)
+        val state = body.substring(lastColon + 1)
+        val museum = UsMuseums.allMuseums.firstOrNull {
+            it.name == name && it.city == city && it.state == state
+        } ?: return null
+        return FavoriteSpotEntry(
+            id = museumId(museum.name, museum.city, museum.state),
+            name = museum.name,
+            region = "${museum.city}, ${museum.state}",
+            latitude = museum.lat,
+            longitude = museum.lng,
+            typeLabel = "Museum",
+            emoji = "🏛️",
+            accent = Aqua,
+            route = "resources",
         )
     }
 }

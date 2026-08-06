@@ -83,7 +83,7 @@ fun FavoriteSpotsScreen(navController: NavController) {
             EmptyState(
                 emoji = "\uD83D\uDCCD",
                 title = "No saved spots yet",
-                message = "Bookmark dig sites, state parks, BLM areas, trailheads, campgrounds, specimen marker pins, and searched locations from their detail pages to keep them one tap away.",
+                message = "Bookmark dig sites, museums, state parks, BLM areas, trailheads, campgrounds, specimen marker pins, and searched locations from their list or detail pages to keep them one tap away.",
             )
         } else {
             // Resolve all favorite IDs into unified entries; drop any that can't be resolved.
@@ -114,7 +114,7 @@ fun FavoriteSpotsScreen(navController: NavController) {
                 ) {
                 item {
                     Text(
-                        "Dig sites, state parks, BLM areas, trailheads, campgrounds, specimen pins, and searched locations you've saved. Tap any to open its detail page.",
+                        "Dig sites, museums, state parks, BLM areas, trailheads, campgrounds, specimen pins, and searched locations you've saved. Tap any to open its detail page.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextMid,
                         modifier = Modifier.padding(bottom = 4.dp),

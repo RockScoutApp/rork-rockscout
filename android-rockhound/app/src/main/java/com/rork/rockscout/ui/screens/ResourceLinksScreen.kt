@@ -36,6 +36,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Launch
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Diamond
 import androidx.compose.material.icons.filled.EmojiNature
@@ -78,6 +80,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.rork.rockscout.data.AppRepository
+import com.rork.rockscout.data.FavoriteSpotResolver
 import com.rork.rockscout.data.LocationCacheRepository
 import com.rork.rockscout.data.MuseumEntry
 import com.rork.rockscout.data.SafeLinkOpener
@@ -359,6 +363,8 @@ private fun WebsitesPage() {
 @Composable
 private fun MuseumsPage() {
     val context = LocalContext.current
+    val repo = AppRepository.instance
+    val favorites by repo.favoriteSpots.collectAsStateWithLifecycle()
     var searchQuery by remember { mutableStateOf("") }
     var expandedState by remember { mutableStateOf("") }
     var isMapView by remember { mutableStateOf(false) }
@@ -523,6 +529,8 @@ private fun MuseumsPage() {
                             }
                         }
                         items(filteredUserMuseums, key = { it.id }) { um ->
+                            val umFavId = FavoriteSpotResolver.museumId(um.name, um.city, um.state)
+                            val isUmFav = favorites.contains(umFavId)
                             DarkCard(
                                 modifier = Modifier.fillMaxWidth(),
                                 accent = Aqua,
@@ -555,6 +563,23 @@ private fun MuseumsPage() {
                                             )
                                         }
                                     }
+                                    Box(
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF2A2820))
+                                            .glowingBorder(1.dp, Citrine.copy(alpha = 0.3f), CircleShape)
+                                            .clickable { repo.toggleFavoriteSpot(umFavId) },
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Icon(
+                                            if (isUmFav) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
+                                            contentDescription = if (isUmFav) "Remove from favorites" else "Add to favorites",
+                                            tint = if (isUmFav) Citrine else Color.White,
+                                            modifier = Modifier.size(18.dp),
+                                        )
+                                    }
+                                    Spacer(Modifier.width(6.dp))
                                     if (um.website.isNotBlank()) {
                                         SculptedIconButton(
                                             icon = Icons.AutoMirrored.Filled.Launch,
@@ -589,6 +614,8 @@ private fun MuseumsPage() {
                                 expandedState = if (expandedState == stateGroup.state) "" else stateGroup.state
                             },
                             onOpenWebsite = { url -> SafeLinkOpener.openUrl(context, url) },
+                            favorites = favorites,
+                            onToggleFavorite = { favId -> repo.toggleFavoriteSpot(favId) },
                         )
                     }
                 }
@@ -828,6 +855,8 @@ private fun MuseumStateSection(
     isExpanded: Boolean,
     onToggle: () -> Unit,
     onOpenWebsite: (String) -> Unit,
+    favorites: List<String>,
+    onToggleFavorite: (String) -> Unit,
 ) {
     DarkCard(modifier = Modifier.fillMaxWidth(), accent = Aqua) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -884,8 +913,11 @@ private fun MuseumStateSection(
                 ) {
                     Spacer(Modifier.height(4.dp))
                     stateGroup.museums.forEach { museum ->
+                        val favId = FavoriteSpotResolver.museumId(museum.name, museum.city, museum.state)
                         MuseumCard(
                             museum = museum,
+                            isFavorited = favorites.contains(favId),
+                            onToggleFavorite = { onToggleFavorite(favId) },
                             onOpenWebsite = { onOpenWebsite(museum.website) },
                         )
                     }
@@ -898,6 +930,8 @@ private fun MuseumStateSection(
 @Composable
 private fun MuseumCard(
     museum: MuseumEntry,
+    isFavorited: Boolean,
+    onToggleFavorite: () -> Unit,
     onOpenWebsite: () -> Unit,
 ) {
     Row(
@@ -944,6 +978,23 @@ private fun MuseumCard(
                 color = DarkTextMid,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Spacer(Modifier.width(8.dp))
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(Color(0xFF2A2820))
+                .glowingBorder(1.dp, Citrine.copy(alpha = 0.3f), CircleShape)
+                .clickable(onClick = onToggleFavorite),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                if (isFavorited) Icons.Filled.Bookmark else Icons.Filled.BookmarkBorder,
+                contentDescription = if (isFavorited) "Remove from favorites" else "Add to favorites",
+                tint = if (isFavorited) Citrine else Color.White,
+                modifier = Modifier.size(18.dp),
             )
         }
         Spacer(Modifier.width(8.dp))
