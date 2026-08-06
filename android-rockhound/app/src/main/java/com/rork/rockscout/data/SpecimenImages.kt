@@ -346,9 +346,13 @@ object SpecimenImages {
     private const val IMG_NOVACULITE = "$Q/d21cd251-40a1-45cb-8e96-0a46cc1ac1b9.png"
     private const val IMG_NUMMULITES = "$Q/3609a8a4-2464-4cba-a395-63d6e355bab4.png"
     private const val IMG_OBSIDIAN = "$Q/a2b1f9e9-180d-42eb-b34c-a40a2a0df26c.png"
-    // Real Wikimedia Commons photos for the merged Obsidian/Apache Tears card.
+    // Real Wikimedia Commons photos for the Obsidian/Apache Tears card.
     private const val IMG_COMMONS_APACHE_TEARS = "https://upload.wikimedia.org/wikipedia/commons/f/fb/Obsydian_(%C5%81zy_Apacza)_w_perlicie_-_Arizna._USA..jpg"
     private const val IMG_COMMONS_APACHE_TEARS_PERLITE = "https://upload.wikimedia.org/wikipedia/commons/b/bf/Obsidian_in_perlite_(Arnett_Rhyolite,_Miocene,_~15-18.6_Ma;_near_Superior,_Arizona,_USA)_7.jpg"
+    // AI-generated apache tears replicas (1:1 from mindat references, different backgrounds)
+    private const val IMG_APACHE_TEARS_ROUGH_NODULES = "$Q/018426df-7b01-4475-ac9f-3fb0d1f47fe0.png"
+    private const val IMG_APACHE_TEARS_IN_PERLITE = "$Q/38ae7778-3467-4fef-884e-c1736f8cfeb4.png"
+    private const val IMG_APACHE_TEARS_BACKLIT = "$Q/71583f7b-9538-409c-9a23-5d61a3a9536f.png"
     private const val IMG_OBSIDIAN_MAHOGANY = "$Q/4dcc8766-b9db-4670-87c2-bee093186d48.png"
     private const val IMG_OBSIDIAN_RAINBOW = "$Q/2a06ea43-a06f-4f92-8e5e-578eeddb12f1.png"
     private const val IMG_OCEANVIEW_MINE = "$Q/b8a1fdf6-758b-4739-8983-0c91f93eb352.png"
@@ -3786,7 +3790,7 @@ object SpecimenImages {
         "iris-agate" to listOf(IMG_IRIS_AGATE, IMG_IRIS_AGATE_VAR),
         "sagenitic-agate" to listOf(IMG_SAGENITIC_AGATE, IMG_SAGENITIC_AGATE_WILD),
         "coldwater-agate" to listOf(IMG_COLDWATER_AGATE, IMG_COLDWATER_AGATE_VAR),
-        "obsidian" to listOf(IMG_COMMONS_APACHE_TEARS, IMG_COMMONS_APACHE_TEARS_PERLITE, IMG_OBSIDIAN, IMG_OBSIDIAN_MAHOGANY, IMG_OBSIDIAN_RAINBOW, IMG_SNOWFLAKE_OBSIDIAN, IMG_ELECTRIC_BLUE_OBSIDIAN, IMG_SILVER_SHEEN_OBSIDIAN, IMG_GOLDEN_SHEEN_OBSIDIAN, IMG_MIDNIGHT_LACE_OBSIDIAN, IMG_OBSIDIAN_WILD, IMG_OBSIDIAN_MUSEUM, IMG_OBSIDIAN_CABOCHON),
+        "obsidian" to listOf(IMG_COMMONS_APACHE_TEARS, IMG_COMMONS_APACHE_TEARS_PERLITE, IMG_APACHE_TEARS_ROUGH_NODULES, IMG_APACHE_TEARS_IN_PERLITE, IMG_APACHE_TEARS_BACKLIT, IMG_OBSIDIAN, IMG_OBSIDIAN_MAHOGANY, IMG_OBSIDIAN_RAINBOW, IMG_SNOWFLAKE_OBSIDIAN, IMG_ELECTRIC_BLUE_OBSIDIAN, IMG_SILVER_SHEEN_OBSIDIAN, IMG_GOLDEN_SHEEN_OBSIDIAN, IMG_MIDNIGHT_LACE_OBSIDIAN, IMG_OBSIDIAN_WILD, IMG_OBSIDIAN_MUSEUM, IMG_OBSIDIAN_CABOCHON),
         "actinolite" to listOf(IMG_ACTINOLITE, IMG_ACTINOLITE_WILD, IMG_ACTINOLITE_MUSEUM),
         "aegirine" to listOf(IMG_AEGIRINE, IMG_AEGIRINE_MUSEUM),
         "albite" to listOf(IMG_ALBITE, IMG_ALBITE_MUSEUM),

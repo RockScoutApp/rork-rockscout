@@ -1131,46 +1131,123 @@ private fun SimpleLocationPicker(
     onDismiss: () -> Unit,
     onPick: (com.rork.rockscout.data.DigLocation) -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
+    var searchMode by remember { mutableStateOf(false) }
+    var query by remember { mutableStateOf("") }
+    var isGeocoding by remember { mutableStateOf(false) }
+    var geocodedResults by remember { mutableStateOf<List<com.rork.rockscout.data.GeocodeRepository.GeocodedLocation>>(emptyList()) }
+
+    LaunchedEffect(query, searchMode) {
+        if (!searchMode || query.isBlank()) return@LaunchedEffect
+        kotlinx.coroutines.delay(600)
+        isGeocoding = true
+        val result = com.rork.rockscout.data.GeocodeRepository.search(query)
+        isGeocoding = false
+        geocodedResults = result.getOrElse { emptyList() }
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         containerColor = MaterialTheme.colorScheme.surface,
         title = { Text("Link a dig site", style = MaterialTheme.typography.headlineSmall) },
         text = {
-            val query = remember { mutableStateOf("") }
-            val locations = remember(query.value) {
-                val all = SeedData.allLocations
-                if (query.value.isBlank()) all else all.filter {
-                    it.name.contains(query.value, ignoreCase = true) ||
-                        it.region.contains(query.value, ignoreCase = true)
-                }
-            }
             Column(modifier = Modifier.fillMaxWidth().height(420.dp).imePadding()) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    SculptedTextButton(
+                        text = if (searchMode) "Dig Sites" else "Search",
+                        onClick = { searchMode = !searchMode; geocodedResults = emptyList() },
+                        accent = if (searchMode) Aqua else Citrine,
+                        textColor = if (searchMode) Aqua else Citrine,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                Spacer(Modifier.height(10.dp))
                 OutlinedTextField(
-                    value = query.value,
-                    onValueChange = { query.value = it },
-                    label = { Text("Search dig sites") },
+                    value = query,
+                    onValueChange = { query = it },
+                    label = { Text(if (searchMode) "Search any location" else "Search dig sites") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().noAutoFocus(),
                 )
                 Spacer(Modifier.height(10.dp))
-                LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(locations.take(60), key = { it.id }) { loc ->
-                        Box(
-                            modifier = Modifier.fillMaxWidth().sculpted(shape = RoundedCornerShape(10.dp), accent = Citrine, shadowElevation = 3.dp, onClick = { onPick(loc) })
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(MaterialTheme.colorScheme.surfaceContainer)
-                                .glowingBorder(2.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
-                                .padding(12.dp),
-                        ) {
-                            Column {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(loc.type.emoji, style = MaterialTheme.typography.titleMedium)
-                                    Spacer(Modifier.width(8.dp))
-                                    Text(loc.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                if (searchMode) {
+                    if (isGeocoding) {
+                        Text("Searching…", style = MaterialTheme.typography.bodySmall, color = TextLow)
+                        Spacer(Modifier.height(6.dp))
+                    }
+                    LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(geocodedResults.take(20), key = { it.displayName }) { geo ->
+                            Box(
+                                modifier = Modifier.fillMaxWidth().sculpted(shape = RoundedCornerShape(10.dp), accent = Aqua, shadowElevation = 3.dp, onClick = {
+                                    val loc = com.rork.rockscout.data.DigLocation(
+                                        id = "geo-${System.currentTimeMillis()}",
+                                        name = geo.displayName.substringBefore(",").trim(),
+                                        type = com.rork.rockscout.data.LocationType.PUBLIC_DIG,
+                                        region = geo.address,
+                                        latitude = geo.latitude,
+                                        longitude = geo.longitude,
+                                        summary = "",
+                                        knownFor = emptyList(),
+                                        mineralTags = emptyList(),
+                                        feeInfo = "",
+                                        hours = "",
+                                        website = null,
+                                        phone = null,
+                                        difficulty = "",
+                                        publicAccess = true,
+                                        tips = "",
+                                    )
+                                    onPick(loc)
+                                })
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                                    .glowingBorder(2.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
+                                    .padding(12.dp),
+                            ) {
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Filled.LocationOn, contentDescription = null, tint = Aqua, modifier = Modifier.size(18.dp))
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(geo.displayName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                                    }
+                                    Spacer(Modifier.height(2.dp))
+                                    Text("%.4f, %.4f".format(geo.latitude, geo.longitude), style = MaterialTheme.typography.labelSmall, color = TextLow)
                                 }
-                                Spacer(Modifier.height(2.dp))
-                                Text(loc.region, style = MaterialTheme.typography.labelSmall, color = TextLow)
+                            }
+                        }
+                        if (!isGeocoding && geocodedResults.isEmpty() && query.isNotBlank()) {
+                            item {
+                                Text("No results found. Try a city, park, or landmark name.", style = MaterialTheme.typography.bodySmall, color = TextLow)
+                            }
+                        }
+                    }
+                } else {
+                    val locations = remember(query) {
+                        val all = SeedData.allLocations
+                        if (query.isBlank()) all else all.filter {
+                            it.name.contains(query, ignoreCase = true) ||
+                                it.region.contains(query, ignoreCase = true)
+                        }
+                    }
+                    LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(locations.take(60), key = { it.id }) { loc ->
+                            Box(
+                                modifier = Modifier.fillMaxWidth().sculpted(shape = RoundedCornerShape(10.dp), accent = Citrine, shadowElevation = 3.dp, onClick = { onPick(loc) })
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                                    .glowingBorder(2.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
+                                    .padding(12.dp),
+                            ) {
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(loc.type.emoji, style = MaterialTheme.typography.titleMedium)
+                                        Spacer(Modifier.width(8.dp))
+                                        Text(loc.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                                    }
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(loc.region, style = MaterialTheme.typography.labelSmall, color = TextLow)
+                                }
                             }
                         }
                     }
