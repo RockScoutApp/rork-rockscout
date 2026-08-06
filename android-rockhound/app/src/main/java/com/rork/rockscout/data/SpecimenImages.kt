@@ -2825,13 +2825,23 @@ object SpecimenImages {
     private const val IMG_SILTSTONE_SED_WILD = "$Q/63484bdd-62ca-4c16-837f-9a037ab731cb.png"
     private const val IMG_SILTSTONE_SED_MUSEUM = "$Q/0471fed2-92ae-4c30-b0d9-7975a6f2f0eb.png"
     // ── Missing specimen images — generated 2026-07-03 ──
+    // Chiastolite AI-generated replicas (cross-stone variety)
     private const val IMG_CHIASTOLITE = "$Q/b30a9cca-98f7-418d-a550-a7aef377896c.png"
     private const val IMG_CHIASTOLITE_WILD = "$Q/daf0e907-b377-4dc3-876a-6ca811a10286.png"
     private const val IMG_CHIASTOLITE_MUSEUM = "$Q/350dd46d-0402-42fb-9534-87d6076d433f.png"
-    // Real Wikimedia Commons photos for the merged Andalusite/Chiastolite card.
+    // Andalusite AI-generated replicas (gem-quality pleochroic crystal)
+    private const val IMG_ANDALUSITE_GEM_REPLICA = "$Q/65f07502-7861-4131-9177-d854511cc269.png"
+    // Chiastolite AI-generated replica (cross-stone polished slice)
+    private const val IMG_CHIASTOLITE_CROSS_REPLICA = "$Q/9cb43531-7192-4893-9ed2-4d55e9dabe02.png"
+    // Real Wikimedia Commons photos — andalusite (gem-quality pleochroic crystals)
+    private const val IMG_COMMONS_ANDALUSITE_MRZ335A = "https://upload.wikimedia.org/wikipedia/commons/9/9e/Andalusite-mrz335a.jpg"
+    private const val IMG_COMMONS_ANDALUSITE_RH1_24B = "https://upload.wikimedia.org/wikipedia/commons/1/15/Andalusite-rh1-24b.jpg"
+    private const val IMG_COMMONS_ANDALUSITE_LUCOMAGNO = "https://upload.wikimedia.org/wikipedia/commons/6/62/Andalusite_-_Lucomagno%2C_Svizzera_01.jpg"
+    // Real Wikimedia Commons photos — chiastolite (cross-stone variety)
     private const val IMG_COMMONS_CHIASTOLITE = "https://upload.wikimedia.org/wikipedia/commons/f/fa/Chiastolite.JPG"
+    private const val IMG_COMMONS_CHIASTOLITE_2581 = "https://upload.wikimedia.org/wikipedia/commons/1/18/Chiastolite_2581.jpg"
+    private const val IMG_COMMONS_CHIASTOLITE_CHINE = "https://upload.wikimedia.org/wikipedia/commons/e/ed/Chiastolite_%28Chine%29.jpg"
     private const val IMG_COMMONS_CHIASTOLITE_GEODIL = "https://upload.wikimedia.org/wikipedia/commons/f/f0/Andalusite_(chiastolite)_(GeoDIL_number_-_388).jpg"
-    private const val IMG_COMMONS_CHIASTOLITE_GEOMUSEUM = "https://upload.wikimedia.org/wikipedia/commons/8/8c/Andalusite_and_chiastolite_(GeoMuseum_Cologne).JPG"
     private const val IMG_CLINOHUMITE = "$Q/d546e9e8-2f89-4984-b977-ff5c5db51e05.png"
     private const val IMG_EOSPHORITE = "$Q/7776b9f0-e049-4f18-bcb3-9aa59fc44efb.png"
     private const val IMG_VERMICULITE = "$Q/42f8a1bc-368a-4cdf-8107-3843eb5db565.png"
@@ -3312,7 +3322,8 @@ object SpecimenImages {
         "ametrine" to listOf(IMG_AMETRINE, IMG_AMETRINE_WILD, IMG_AMETRINE_MUSEUM, IMG_AMETRINE_CABOCHON),
         "ammonite" to listOf(IMG_AMMONITE, IMG_AMMONITE_WILD, IMG_AMMONITE_MUSEUM, IMG_AMMONITE_CABOCHON),
         "amphibolite" to listOf(IMG_AMPHIBOLITE, IMG_AMPHIBOLITE_WILD, IMG_AMPHIBOLITE_MUSEUM),
-        "andalusite" to listOf(IMG_COMMONS_CHIASTOLITE, IMG_COMMONS_CHIASTOLITE_GEODIL, IMG_COMMONS_CHIASTOLITE_GEOMUSEUM, IMG_ANDALUSITE, IMG_ANDALUSITE_WILD, IMG_ANDALUSITE_MUSEUM, IMG_ANDALUSITE_CABOCHON),
+        "andalusite" to listOf(IMG_COMMONS_ANDALUSITE_MRZ335A, IMG_COMMONS_ANDALUSITE_RH1_24B, IMG_COMMONS_ANDALUSITE_LUCOMAGNO, IMG_ANDALUSITE, IMG_ANDALUSITE_WILD, IMG_ANDALUSITE_MUSEUM, IMG_ANDALUSITE_CABOCHON, IMG_ANDALUSITE_GEM_REPLICA),
+        "chiastolite" to listOf(IMG_COMMONS_CHIASTOLITE, IMG_COMMONS_CHIASTOLITE_2581, IMG_COMMONS_CHIASTOLITE_CHINE, IMG_COMMONS_CHIASTOLITE_GEODIL, IMG_CHIASTOLITE, IMG_CHIASTOLITE_WILD, IMG_CHIASTOLITE_MUSEUM, IMG_CHIASTOLITE_CROSS_REPLICA),
         "anderson-mine" to listOf(IMG_ANDERSON_MINE),
         "anglesite" to listOf(IMG_ANGLESITE, IMG_ANGLESITE_WILD, IMG_ANGLESITE_MUSEUM),
         "anhydrite" to listOf(IMG_ANHYDRITE, IMG_ANHYDRITE_WILD, IMG_ANHYDRITE_MUSEUM),
