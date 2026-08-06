@@ -70,8 +70,12 @@ const MILD_PROFANITY: string[] = [
  * Words that must never be censored even if they contain a censored substring.
  * "hell" and "damn" are exempt from all filtering (including strict).
  * Compound "-ass" words are protected so they don't get caught by "ass".
+ *
+ * This list combines the built-in allowlist with a dynamic exception list
+ * that grows at runtime when the false-positive web check confirms a
+ * word is innocent (e.g. mineral names, place names, surnames).
  */
-const ALLOWED_WORDS: Set<string> = new Set([
+const BASE_ALLOWED_WORDS: Set<string> = new Set([
   "hell", "damn",
   "badass", "hardass", "smartass", "jackass", "kickass",
   "lass", "class", "grass", "mass", "pass", "bass", "glass",
@@ -83,7 +87,34 @@ const ALLOWED_WORDS: Set<string> = new Set([
   "crass", "brass", "morass", "amass",
   "stash", "flash", "splash", "smash",
   "password", "bypass", "underpass", "overpass",
+  // Mineral / geology terms that could trigger false positives
+  "coprolite", "shist", "phallic", "penistone",
+  "cumulate", "cumulonimbus", "cumulus",
+  "balls", "ballsbridge", "balzac",
+  "crappy", "crapo",
+  "dike", "dikes", // geological term (volcanic dike)
+  "screw", "screws", // mechanical term
+  "hole", "holes", // geological term (blowhole, mouse hole)
+  "pussytoes", // plant name
+  "pecker", "peckers", // woodpecker truncation
+  "knob", "knobs", // geological knob
 ]);
+
+/** Dynamic exception list — words confirmed as false positives at runtime. */
+let dynamicExceptions: Set<string> = new Set();
+
+/** Add a word to the dynamic exception list so it is never censored again. */
+export function addProfanityException(word: string): void {
+  const lower = word.toLowerCase().trim();
+  if (lower) {
+    dynamicExceptions = dynamicExceptions.add(lower);
+  }
+}
+
+/** The complete allowlist (base + dynamic). */
+function getAllowedWords(): Set<string> {
+  return new Set([...BASE_ALLOWED_WORDS, ...dynamicExceptions]);
+}
 
 function asteriskWord(word: string): string {
   if (word.length <= 2) return "*".repeat(word.length);
@@ -122,7 +153,7 @@ export function filterProfanity(
 
   // Protect allowed words by temporarily replacing them with placeholders.
   const placeholders: string[] = [];
-  for (const allowed of ALLOWED_WORDS) {
+  for (const allowed of getAllowedWords()) {
     const regex = new RegExp(`\\b${escapeRegex(allowed)}\\b`, "gi");
     filteredText = filteredText.replace(regex, (match) => {
       const idx = placeholders.length;

@@ -90,8 +90,12 @@ object ProfanityFilter {
      * Words that must never be censored even if they contain a censored substring.
      * "hell" and "damn" are exempt from all filtering (including strict).
      * Compound "-ass" words are protected so they don't get caught by "ass".
+     *
+     * This list combines the built-in allowlist with a dynamic exception list
+     * that grows at runtime when the false-positive web check confirms a
+     * word is innocent (e.g. mineral names, place names, surnames).
      */
-    private val allowedWords = setOf(
+    private val baseAllowedWords = setOf(
         "hell", "damn",
         "badass", "hardass", "smartass", "jackass", "kickass",
         "lass", "class", "grass", "mass", "pass", "bass", "glass",
@@ -103,7 +107,35 @@ object ProfanityFilter {
         "crass", "brass", "morass", "amass",
         "stash", "flash", "splash", "smash",
         "password", "bypass", "underpass", "overpass",
+        // Mineral / geology terms that could trigger false positives
+        "coprolite", "shist", "phallic", "penistone",
+        "cumulate", "cumulonimbus", "cumulus",
+        "balls", "ballsbridge", "balzac",
+        "crappy", "crapo",
+        "dike", "dikes", // geological term (volcanic dike)
+        "screw", "screws", // mechanical term
+        "hole", "holes", // geological term (blowhole, mouse hole)
+        "pussytoes", // plant name
+        "pecker", "peckers", // woodpecker truncation
+        "knob", "knobs", // geological knob
+        "ballsbridge", // place name
     )
+
+    /** Dynamic exception list — words confirmed as false positives at runtime. */
+    @Volatile
+    private var dynamicExceptions: Set<String> = emptySet()
+
+    /** Add a word to the dynamic exception list so it is never censored again. */
+    fun addException(word: String) {
+        val lower = word.lowercase().trim()
+        if (lower.isNotEmpty()) {
+            dynamicExceptions = dynamicExceptions + lower
+        }
+    }
+
+    /** The complete allowlist (base + dynamic). */
+    private val allowedWords: Set<String>
+        get() = baseAllowedWords + dynamicExceptions
 
     /** Common leetspeak substitutions to normalize before matching. */
     private val leetMap = mapOf(

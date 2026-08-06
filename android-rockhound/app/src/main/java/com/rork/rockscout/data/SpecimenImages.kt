@@ -1198,6 +1198,36 @@ object SpecimenImages {
     private const val IMG_COPROLITE_FISH_ANIMAL_VAR = "$Q/afda36b4-8778-4f14-af02-7f9ac4af2bc1.png"
     private const val IMG_COPROLITE_CROC_ANIMAL_VAR = "$Q/fdd48d22-d205-4987-8760-24815d42df0f.png"
     private const val IMG_COPROLITE_TURTLE = "$Q/1344014f-82c8-4923-82b9-63a9d3c857c9.png"
+    // ── Real Wikimedia Commons photos for agate varieties (PD/CC-BY/CC-BY-SA) ──
+    private const val COMMONS_BLUE_LACE_AGATE_POLISHED = "https://upload.wikimedia.org/wikipedia/commons/0/03/Blue_Lace_Agate_from_Namibia_%28polished%29.jpg"
+    private const val COMMONS_BLUE_LACE_AGATE_ROUGH = "https://upload.wikimedia.org/wikipedia/commons/0/08/Blue_lace_agate_%28rough%29.png"
+    private const val COMMONS_BLUE_LACE_AGATE_TUMBLED = "https://upload.wikimedia.org/wikipedia/commons/7/7d/Blue_lace_agate_%28tumbled%29.png"
+    private const val COMMONS_BLUE_LACE_AGATE_SLAB = "https://upload.wikimedia.org/wikipedia/commons/4/48/Blue_lace_agate_lapidary_slab.png"
+    private const val COMMONS_BLUE_LACE_AGATE_DRUZY = "https://upload.wikimedia.org/wikipedia/commons/8/89/Blue_lace_agate_with_druzy_quartz.png"
+    private const val COMMONS_FIRE_AGATE_MEXICO = "https://upload.wikimedia.org/wikipedia/commons/9/91/Agat_ognisty_-_Calvillo%2C_Aguascalientes%2C_Meksyk.jpg"
+    private const val COMMONS_FIRE_AGATE_TUMBLED = "https://upload.wikimedia.org/wikipedia/commons/5/51/Feuerachat_Fireagate_from_Brazil_-_tumble_polished_stone.jpg"
+    private const val COMMONS_FIRE_AGATE_GEM = "https://upload.wikimedia.org/wikipedia/commons/e/e7/Fire_Agate.jpg"
+    private const val COMMONS_FIRE_AGATE_ROUGH = "https://upload.wikimedia.org/wikipedia/commons/e/ee/Fire_agate.jpg"
+    private const val COMMONS_MOSS_AGATE_MONTANA = "https://upload.wikimedia.org/wikipedia/commons/b/b5/Montana_Moss_Agate.jpg"
+    private const val COMMONS_MOSS_AGATE_CABOCHONS = "https://upload.wikimedia.org/wikipedia/commons/5/57/Four_moss_agate_cabochons.jpg"
+    private const val COMMONS_MOSS_AGATE_HG = "https://upload.wikimedia.org/wikipedia/commons/a/a1/Moosachat_hg.jpg"
+    private const val COMMONS_DENDRITIC_AGATE_1 = "https://upload.wikimedia.org/wikipedia/commons/0/02/Dendritic_agate_1.jpg"
+    private const val COMMONS_DENDRITIC_AGATE_2 = "https://upload.wikimedia.org/wikipedia/commons/6/69/Dendritic_agate_2.jpg"
+    private const val COMMONS_DENDRITIC_AGATE_3 = "https://upload.wikimedia.org/wikipedia/commons/3/3d/Dendritic_agate_3.jpg"
+    private const val COMMONS_CRAZY_LACE_01 = "https://upload.wikimedia.org/wikipedia/commons/2/20/Crazy_Lace_Agate_01.jpg"
+    private const val COMMONS_CRAZY_LACE_02 = "https://upload.wikimedia.org/wikipedia/commons/a/ac/Crazy_Lace_Agate_02.jpg"
+    private const val COMMONS_CRAZY_LACE_03 = "https://upload.wikimedia.org/wikipedia/commons/b/b3/Crazy_Lace_Agate_03.jpg"
+    private const val COMMONS_CRAZY_LACE_MEXICO = "https://upload.wikimedia.org/wikipedia/commons/8/8d/Crazy_Lace_Agate_%28Mexico%29_%2832745236336%29.jpg"
+    private const val COMMONS_LAKE_SUPERIOR_1 = "https://upload.wikimedia.org/wikipedia/commons/2/2e/Agat_Lake_Superior_%28Lake_superior_agate%29_-_Minnesota%2C_USA.jpg"
+    private const val COMMONS_LAKE_SUPERIOR_002 = "https://upload.wikimedia.org/wikipedia/commons/8/8b/Lake_superior_agate_002.jpg"
+    private const val COMMONS_LAKE_SUPERIOR_NODULE_1 = "https://upload.wikimedia.org/wikipedia/commons/7/7f/Agate_nodule_%28%22Lake_Superior_Agate%22%29_1_%2823248724760%29.jpg"
+    private const val COMMONS_LAKE_SUPERIOR_NODULE_2 = "https://upload.wikimedia.org/wikipedia/commons/c/c9/Agate_nodule_%28%22Lake_Superior_Agate%22%29_2_%2823518382156%29.jpg"
+    private const val COMMONS_BOTSWANA_AGATE = "https://upload.wikimedia.org/wikipedia/commons/9/97/Agat_-_Bobonong%2C_Botswana.jpg"
+    private const val COMMONS_BOTSWANA_AGATE_CROPPED = "https://upload.wikimedia.org/wikipedia/commons/c/c5/Agat_-_Bobonong%2C_Botswana_%28cropped%29.jpg"
+    private const val COMMONS_DRYHEAD_AGATE = "https://upload.wikimedia.org/wikipedia/commons/3/36/Chalcedony-216544.jpg"
+    private const val COMMONS_ACHATSCHEIBE = "https://upload.wikimedia.org/wikipedia/commons/2/2d/Achatscheibe.JPG"
+    private const val COMMONS_THREE_AGATE_FRAGMENTS = "https://upload.wikimedia.org/wikipedia/commons/5/5f/3_agate_fragments.jpg"
+
     // Batch 53: agate & sapphire variety images
     private const val IMG_CONDOR_AGATE_VAR = "$Q/7f7858c7-b466-4871-820b-639d6ec3f4c3.png"
     private const val IMG_FAIRBURN_AGATE_VAR = "$Q/7a418701-436e-4e62-a0d4-1f350ec05a58.png"
@@ -3134,6 +3164,29 @@ object SpecimenImages {
     private const val IMG_TOURMALINE_QUARTZ_INCLUSION = "$Q/1d30f919-9600-485e-96f7-204786b395ad.png"
     private const val IMG_MOONSTONE_ADULESCENCE = "$Q/9b75ab72-cac9-4d66-924b-7efe28edc6c1.png"
     private const val IMG_OPAL_PLAY_OF_COLOR = "$Q/69f1168d-88bc-4bf2-a491-2ca2e3f5e68a.png"
+    // RAA expansion images (rough + polished variants)
+    private const val IMG_RAA_CALCITE_ARAGONITE_ROUGH = "$Q/d2f2d489-d5e9-4881-a9de-b1e0880ee422.png"
+    private const val IMG_RAA_CALCITE_ARAGONITE_POLISHED = "$Q/37d4bf9d-8fe7-49ea-ae78-967d4346161f.png"
+    private const val IMG_RAA_CHALCEDONY_CORAL_ROUGH = "$Q/f73eb572-8f3c-427e-8962-55d8edb81628.png"
+    private const val IMG_RAA_CHALCEDONY_CORAL_POLISHED = "$Q/aca1ce83-3084-4198-89cf-7cf778576c08.png"
+    private const val IMG_RAA_PYRITE_QUARTZ_ROUGH = "$Q/f36516b5-087a-45b7-8f83-9c8a1ecd5550.png"
+    private const val IMG_RAA_PYRITE_QUARTZ_POLISHED = "$Q/8ef7249a-c9c0-4f3b-9556-7a3ed41feb26.png"
+    private const val IMG_RAA_TOURMALINE_QUARTZ_ROUGH = "$Q/25a406a0-cd0c-41fb-9a1e-00b83c40160f.png"
+    private const val IMG_RAA_TOURMALINE_QUARTZ_POLISHED = "$Q/c7214940-1f6d-4ebe-b124-7a3cb7012824.png"
+    private const val IMG_RAA_MOONSTONE_ROUGH = "$Q/cb05d38d-1165-4dce-b3d6-576f68232c2a.png"
+    private const val IMG_RAA_MOONSTONE_POLISHED = "$Q/d2c17639-bf8a-44ca-b5c5-55895651e70d.png"
+    private const val IMG_RAA_OPAL_ROUGH = "$Q/40de6381-dd9e-48c8-aafa-7361706dff95.png"
+    private const val IMG_RAA_OPAL_POLISHED = "$Q/afa043d0-7e3c-4f06-a780-dacf9619b58c.png"
+    // Agate AI replicas for varieties without Commons photos
+    private const val IMG_COLDWATER_AGATE_REPLICA_1 = "$Q/ce78a5d2-4348-4113-a906-603e73317a7b.png"
+    private const val IMG_COLDWATER_AGATE_REPLICA_2 = "$Q/21fc4e4e-7c49-4389-b565-00e874662b95.png"
+    private const val IMG_EYE_AGATE_REPLICA_1 = "$Q/2ef33bb7-be9c-48bf-9db2-532a8ec38391.png"
+    private const val IMG_EYE_AGATE_REPLICA_2 = "$Q/35e5fdc4-7828-4aeb-82eb-469d4af447c8.png"
+    private const val IMG_SNAKE_SKIN_AGATE_REPLICA = "$Q/6def59a2-2c03-4fe3-8114-01ef39d5e63d.png"
+    private const val IMG_ENCHANTMENT_AGATE_REPLICA_1 = "$Q/72eeb3c8-98b7-45cb-a845-31f0219c8bb9.png"
+    private const val IMG_ENCHANTMENT_AGATE_REPLICA_2 = "$Q/a96e02fe-a9c0-484b-a367-75084d85e41a.png"
+    private const val IMG_TRINITY_AGATE_REPLICA_1 = "$Q/acfc2fea-35fc-4cfe-a8d0-24e3fa3a0cb0.png"
+    private const val IMG_TRINITY_AGATE_REPLICA_2 = "$Q/d8e801f3-e769-479c-8819-bb2c83e405c2.png"
     private const val IMG_PINK_AMETHYST = "$Q/bab556c2-6d84-42c5-a030-11a0f0ab6152.png"
     private const val IMG_FLUORITE_RAINBOW_NEW = "$Q/9c704758-8981-475b-8695-e9bcddcbf148.png"
     private const val IMG_SELENITE_COLUMN = "$Q/7f3913ff-2bd8-480e-8005-e4dbaea95ee8.png"
@@ -3359,7 +3412,7 @@ object SpecimenImages {
         "blastoid" to listOf(IMG_BLASTOID, IMG_BLASTOID_WILD, IMG_BLASTOID_MUSEUM),
         "bloodstone" to listOf(IMG_BLOODSTONE, IMG_BLOODSTONE_WILD, IMG_BLOODSTONE_MUSEUM, IMG_BLOODSTONE_CABOCHON),
         "blue-aragonite" to listOf(IMG_BLUE_ARAGONITE),
-        "blue-lace-agate" to listOf(IMG_BLUE_LACE_AGATE, IMG_BLUE_LACE_AGATE_WILD, IMG_BLUE_LACE_AGATE_MUSEUM, IMG_BLUE_LACE_AGATE_CABOCHON),
+        "blue-lace-agate" to listOf(COMMONS_BLUE_LACE_AGATE_POLISHED, COMMONS_BLUE_LACE_AGATE_ROUGH, COMMONS_BLUE_LACE_AGATE_TUMBLED, COMMONS_BLUE_LACE_AGATE_SLAB, COMMONS_BLUE_LACE_AGATE_DRUZY),
         "bornite" to listOf(IMG_BORNITE, IMG_BORNITE_WILD, IMG_BORNITE_MUSEUM),
         "boston-mineral-club" to listOf(IMG_BOSTON_MINERAL_CLUB),
         "brachiopod" to listOf(IMG_BRACHIOPOD, IMG_BRACHIOPOD_WILD, IMG_BRACHIOPOD_MUSEUM),
@@ -3420,7 +3473,7 @@ object SpecimenImages {
             IMG_DATOLITE_CREAM_WHITE_HALF,
             IMG_DATOLITE_PINK_WHITE_MARBLED_HALF
         ),
-        "dendrite-agate" to listOf(IMG_DENDRITE_AGATE, IMG_DENDRITE_AGATE_WILD, IMG_DENDRITE_AGATE_MUSEUM, IMG_DENDRITE_AGATE_CABOCHON),
+        "dendrite-agate" to listOf(COMMONS_DENDRITIC_AGATE_1, COMMONS_DENDRITIC_AGATE_2, COMMONS_DENDRITIC_AGATE_3, IMG_DENDRITE_AGATE_WILD, IMG_DENDRITE_AGATE_MUSEUM, IMG_DENDRITE_AGATE_CABOCHON),
         "denio-thundereggs" to listOf(IMG_DENIO_THUNDEREGGS, IMG_DENIO_THUNDEREGG_WILD, IMG_DENIO_THUNDEREGG_MUSEUM, IMG_DENIO_THUNDEREGG_CAB),
         "denver-gem-show" to listOf(IMG_DENVER_GEM_SHOW),
         "descloizite" to listOf(IMG_DESCLOIZITE, IMG_DESCLOIZITE_WILD, IMG_DESCLOIZITE_MUSEUM),
@@ -3445,7 +3498,7 @@ object SpecimenImages {
         "ellenville" to listOf(IMG_ELLENVILLE, IMG_ELLENVILLE_WILD, IMG_ELLENVILLE_MUSEUM),
         "emerald" to listOf(IMG_EMERALD, IMG_EMERALD_WILD, IMG_EMERALD_MUSEUM),
         "emerald-hollow" to listOf(IMG_EMERALD_HOLLOW, IMG_EMERALD_HOLLOW_WILD, IMG_EMERALD_HOLLOW_MUSEUM, IMG_EMERALD_HOLLOW_CAB),
-        "enchantment-agates" to listOf(IMG_ENCHANTMENT_AGATES, IMG_ENCHANTMENT_AGATE_WILD, IMG_ENCHANTMENT_AGATE_MUSEUM, IMG_ENCHANTMENT_AGATE_CAB),
+        "enchantment-agates" to listOf(IMG_ENCHANTMENT_AGATES, IMG_ENCHANTMENT_AGATE_WILD, IMG_ENCHANTMENT_AGATE_MUSEUM, IMG_ENCHANTMENT_AGATE_CAB, IMG_ENCHANTMENT_AGATE_REPLICA_1, IMG_ENCHANTMENT_AGATE_REPLICA_2),
         "enchodus" to listOf(IMG_ENCHODUS, IMG_ENCHODUS_WILD, IMG_ENCHODUS_MUSEUM),
         "endoceras" to listOf(IMG_ENDOCERAS, IMG_ENDOCERAS_WILD, IMG_ENDOCERAS_MUSEUM),
         "enstatite" to listOf(IMG_ENSTATITE, IMG_ENSTATITE_WILD, IMG_ENSTATITE_MUSEUM),
@@ -3457,7 +3510,7 @@ object SpecimenImages {
         "favosites" to listOf("$Q/443a83d2-405c-4310-9eb3-6829b2e877e7.png", "$Q/b7cb11d4-04fd-4167-ac5d-ae994852c0d7.png", IMG_FAVOSITES_MUSEUM),
         "fenestella" to listOf(IMG_FENESTELLA, IMG_FENESTELLA_WILD, IMG_FENESTELLA_MUSEUM),
         "ferberite" to listOf(IMG_FERBERITE, IMG_FERBERITE_WILD, IMG_FERBERITE_MUSEUM),
-        "fire-agate" to listOf(IMG_FIRE_AGATE, IMG_FIRE_AGATE_WILD, IMG_FIRE_AGATE_MUSEUM, IMG_FIRE_AGATE_CABOCHON),
+        "fire-agate" to listOf(COMMONS_FIRE_AGATE_GEM, COMMONS_FIRE_AGATE_TUMBLED, COMMONS_FIRE_AGATE_MEXICO, COMMONS_FIRE_AGATE_ROUGH, IMG_FIRE_AGATE_CABOCHON),
         "fire-opal" to listOf(IMG_FIRE_OPAL, IMG_FIRE_OPAL_WILD, IMG_FIRE_OPAL_MUSEUM, IMG_FIRE_OPAL_CABOCHON),
         "flint" to listOf(IMG_FLINT, IMG_FLINT_BROWN, IMG_FLINT_BANDED, IMG_FLINT_GRAY, IMG_FLINT_RED, IMG_FLINT_WILD, IMG_FLINT_MUSEUM),
         "florida-rock-shack" to listOf(IMG_FLORIDA_ROCK_SHACK),
@@ -3568,7 +3621,7 @@ object SpecimenImages {
         "la-brea-tar-pits-shop" to listOf(IMG_LA_BREA_TAR_PITS_SHOP),
         "labradorite" to listOf(IMG_LABRADORITE, IMG_LABRADORITE_ROUGH_2, IMG_LABRADORITE_WILD_NEW, IMG_LABRADORITE_MUSEUM, IMG_LABRADORITE_CABOCHON, IMG_LABRADORITE_PEACOCK, IMG_LABRADORITE_GOLDEN),
         "lake-george" to listOf(IMG_LAKE_GEORGE, IMG_LAKE_GEORGE_WILD, IMG_LAKE_GEORGE_MUSEUM, IMG_LAKE_GEORGE_CAB),
-        "lake-superior-agate" to listOf(IMG_LAKE_SUPERIOR_AGATE, IMG_LAKE_SUPERIOR_AGATE_WILD, IMG_LAKE_SUPERIOR_AGATE_MUSEUM, IMG_LAKE_SUPERIOR_AGATE_CABOCHON),
+        "lake-superior-agate" to listOf(COMMONS_LAKE_SUPERIOR_1, COMMONS_LAKE_SUPERIOR_002, COMMONS_LAKE_SUPERIOR_NODULE_1, COMMONS_LAKE_SUPERIOR_NODULE_2, IMG_LAKE_SUPERIOR_AGATE_CABOCHON),
         "lapis-lazuli" to listOf(IMG_LAPIS_LAZULI, IMG_LAPIS_ROUGH, IMG_LAPIS_ROUGH_2, IMG_LAPIS_WILD, IMG_LAPIS_MUSEUM, IMG_LAPIS_CABOCHON, IMG_LAPIS_CABOCHON_2),
         "lazulite" to listOf(IMG_LAZULITE, IMG_LAZULITE_WILD, IMG_LAZULITE_MUSEUM),
         "lepidocrocite" to listOf(IMG_LEPIDOCROCITE, IMG_LEPIDOCROCITE_WILD, IMG_LEPIDOCROCITE_MUSEUM),
@@ -3598,7 +3651,7 @@ object SpecimenImages {
         "morefield-mine" to listOf(IMG_MOREFIELD_MINE),
         "morganite" to listOf(IMG_MORGANITE, IMG_MORGANITE_WILD, IMG_MORGANITE_MUSEUM),
         "mosasaur-tooth" to listOf(IMG_MOSASAUR_TOOTH, IMG_MOSASAUR_TOOTH_WILD, IMG_MOSASAUR_TOOTH_MUSEUM),
-        "moss-agate" to listOf(IMG_MOSS_AGATE, IMG_MOSS_AGATE_WILD, IMG_MOSS_AGATE_MUSEUM, IMG_MOSS_AGATE_CABOCHON),
+        "moss-agate" to listOf(COMMONS_MOSS_AGATE_HG, COMMONS_MOSS_AGATE_CABOCHONS, COMMONS_MOSS_AGATE_MONTANA, IMG_MOSS_AGATE_WILD, IMG_MOSS_AGATE_MUSEUM, IMG_MOSS_AGATE_CABOCHON),
         "mottramite" to listOf(IMG_MOTTRAMITE, IMG_MOTTRAMITE_WILD, IMG_MOTTRAMITE_MUSEUM),
         "mount-apatite" to listOf(IMG_MOUNT_APATITE, IMG_MOUNT_APATITE_WILD, IMG_MOUNT_APATITE_MUSEUM, IMG_MOUNT_APATITE_CAB),
         "munising-yooper" to listOf(IMG_YOOPERLITE_MUNISING),
@@ -3739,7 +3792,7 @@ object SpecimenImages {
         "travertine" to listOf(IMG_TRAVERTINE, IMG_TRAVERTINE_WILD, IMG_TRAVERTINE_MUSEUM),
         "tremolite" to listOf(IMG_TREMOLITE, IMG_TREMOLITE_WILD, IMG_TREMOLITE_MUSEUM),
         "trilobite" to listOf(IMG_TRILOBITE, IMG_TRILOBITE_WILD, IMG_TRILOBITE_MUSEUM),
-        "trinity-agates" to listOf(IMG_TRINITY_AGATES, IMG_TRINITY_AGATE_WILD, IMG_TRINITY_AGATE_MUSEUM, IMG_TRINITY_AGATE_CAB),
+        "trinity-agates" to listOf(IMG_TRINITY_AGATES, IMG_TRINITY_AGATE_WILD, IMG_TRINITY_AGATE_MUSEUM, IMG_TRINITY_AGATE_CAB, IMG_TRINITY_AGATE_REPLICA_1, IMG_TRINITY_AGATE_REPLICA_2),
         "tucson-mineral-dealers" to listOf(IMG_TUCSON_MINERAL_DEALERS),
         "tuff" to listOf(IMG_TUFF, IMG_TUFF_WILD, IMG_TUFF_MUSEUM),
         "turquoise" to listOf(IMG_TURQUOISE, IMG_TURQUOISE_GREEN_BLUE, IMG_TURQUOISE_APPLE_GREEN, IMG_TURQUOISE_ROUGH_2, IMG_TURQUOISE_WILD, IMG_TURQUOISE_MUSEUM, IMG_TURQUOISE_CABOCHON),
@@ -3769,11 +3822,11 @@ object SpecimenImages {
         "white-opal" to listOf(IMG_COOPER_PEDY_OPAL_NEW, IMG_WHITE_OPAL, IMG_WHITE_OPAL_VAR),
         "crystal-opal" to listOf(IMG_CRYSTAL_OPAL, IMG_CRYSTAL_OPAL_VAR),
         "ethiopian-opal" to listOf(IMG_ETHIOPIAN_OPAL, IMG_ETHIOPIAN_OPAL_VAR),
-        "botswana-agate" to listOf(IMG_BOTSWANA_AGATE_SPECIMEN, IMG_BOTSWANA_AGATE_WILD_2),
+        "botswana-agate" to listOf(COMMONS_BOTSWANA_AGATE, COMMONS_BOTSWANA_AGATE_CROPPED, IMG_BOTSWANA_AGATE_SPECIMEN, IMG_BOTSWANA_AGATE_WILD_2),
         "laguna-agate" to listOf(IMG_LAGUNA_AGATE, IMG_LAGUNA_AGATE_VAR),
-        "crazy-lace-agate" to listOf(IMG_CRAZY_LACE_AGATE, IMG_CRAZY_LACE_AGATE_VAR),
+        "crazy-lace-agate" to listOf(COMMONS_CRAZY_LACE_01, COMMONS_CRAZY_LACE_02, COMMONS_CRAZY_LACE_03, COMMONS_CRAZY_LACE_MEXICO, IMG_CRAZY_LACE_AGATE_VAR),
         "condor-agate" to listOf(IMG_CONDOR_AGATE, IMG_CONDOR_AGATE_VAR),
-        "fortification-agate" to listOf(IMG_FORTIFICATION_AGATE, IMG_FORTIFICATION_AGATE_VAR),
+        "fortification-agate" to listOf(COMMONS_ACHATSCHEIBE, COMMONS_THREE_AGATE_FRAGMENTS, IMG_FORTIFICATION_AGATE, IMG_FORTIFICATION_AGATE_VAR),
         "snowflake-obsidian" to listOf(IMG_SNOWFLAKE_OBSIDIAN, IMG_SNOWFLAKE_OBSIDIAN_WILD, IMG_SNOWFLAKE_OBSIDIAN_MUSEUM),
         "electric-blue-obsidian" to listOf(IMG_ELECTRIC_BLUE_OBSIDIAN, IMG_ELECTRIC_BLUE_OBSIDIAN_VAR),
         "silver-sheen-obsidian" to listOf(IMG_SILVER_SHEEN_OBSIDIAN, IMG_SILVER_SHEEN_WILD, IMG_SILVER_SHEEN_MUSEUM, IMG_SILVER_SHEEN_CAB),
@@ -3788,7 +3841,7 @@ object SpecimenImages {
         "polka-dot-agate" to listOf(IMG_POLKA_DOT_AGATE, IMG_POLKA_DOT_AGATE_VAR),
         "iris-agate" to listOf(IMG_IRIS_AGATE, IMG_IRIS_AGATE_VAR),
         "sagenitic-agate" to listOf(IMG_SAGENITIC_AGATE, IMG_SAGENITIC_AGATE_WILD),
-        "coldwater-agate" to listOf(IMG_COLDWATER_AGATE, IMG_COLDWATER_AGATE_VAR),
+        "coldwater-agate" to listOf(IMG_COLDWATER_AGATE, IMG_COLDWATER_AGATE_VAR, IMG_COLDWATER_AGATE_REPLICA_1, IMG_COLDWATER_AGATE_REPLICA_2),
         "apache-tears" to listOf(IMG_COMMONS_APACHE_TEARS, IMG_COMMONS_APACHE_TEARS_PERLITE, IMG_APACHE_TEARS_ROUGH_NODULES, IMG_APACHE_TEARS_IN_PERLITE, IMG_APACHE_TEARS_BACKLIT),
         "obsidian" to listOf(IMG_OBSIDIAN, IMG_OBSIDIAN_MAHOGANY, IMG_OBSIDIAN_RAINBOW, IMG_SNOWFLAKE_OBSIDIAN, IMG_ELECTRIC_BLUE_OBSIDIAN, IMG_SILVER_SHEEN_OBSIDIAN, IMG_GOLDEN_SHEEN_OBSIDIAN, IMG_MIDNIGHT_LACE_OBSIDIAN, IMG_OBSIDIAN_WILD, IMG_OBSIDIAN_MUSEUM, IMG_OBSIDIAN_CABOCHON),
         "actinolite" to listOf(IMG_ACTINOLITE, IMG_ACTINOLITE_WILD, IMG_ACTINOLITE_MUSEUM),
@@ -3941,11 +3994,11 @@ object SpecimenImages {
         "agate-turritella" to listOf(IMG_AGATE_TURRITELLA, IMG_AGATE_TURRITELLA_VAR),
         "agate-brazilian" to listOf(IMG_AGATE_BRAZILIAN, IMG_AGATE_BRAZILIAN_VAR),
         "agate-thunderegg" to listOf(IMG_COMMONS_THUNDER_EGG_PRIDAY, IMG_COMMONS_THUNDER_EGG_QUARTZ, IMG_COMMONS_THUNDER_EGG_FRIEND, IMG_AGATE_THUNDER_EGG, IMG_AGATE_THUNDER_EGG_VAR),
-        "agate-snake-skin" to listOf(IMG_AGATE_SNAKE_SKIN, IMG_AGATE_SNAKE_SKIN_VAR),
+        "agate-snake-skin" to listOf(IMG_AGATE_SNAKE_SKIN, IMG_AGATE_SNAKE_SKIN_VAR, IMG_SNAKE_SKIN_AGATE_REPLICA),
         "agate-tube" to listOf(IMG_AGATE_TUBE, IMG_AGATE_TUBE_VAR, IMG_AGATE_TUBE_POLISHED),
-        "agate-eye" to listOf(IMG_AGATE_EYE, IMG_AGATE_EYE_VAR),
+        "agate-eye" to listOf(IMG_AGATE_EYE, IMG_AGATE_EYE_VAR, IMG_EYE_AGATE_REPLICA_1, IMG_EYE_AGATE_REPLICA_2),
         "agate-enhydro" to listOf(IMG_AGATE_ENHYDRO, IMG_AGATE_ENHYDRO_VAR),
-        "agate-dryhead" to listOf(IMG_AGATE_DRYHEAD, IMG_AGATE_DRYHEAD_VAR),
+        "agate-dryhead" to listOf(COMMONS_DRYHEAD_AGATE, IMG_AGATE_DRYHEAD, IMG_AGATE_DRYHEAD_VAR),
         "jasper-deschutes" to listOf(IMG_JASPER_DESCHUTES, IMG_JASPER_DESCHUTES_WILD, IMG_JASPER_DESCHUTES_MUSEUM, IMG_JASPER_DESCHUTES_CAB),
         "jasper-wild-horse" to listOf(IMG_JASPER_WILD_HORSE, IMG_JASPER_WILD_HORSE_WILD, IMG_JASPER_WILD_HORSE_MUSEUM, IMG_JASPER_WILD_HORSE_CAB),
         "jasper-owyhee" to listOf(IMG_JASPER_OWYHEE, IMG_JASPER_OWYHEE_WILD, IMG_JASPER_OWYHEE_MUSEUM, IMG_JASPER_OWYHEE_CAB),
@@ -4322,9 +4375,9 @@ object SpecimenImages {
         "vishnevite" to listOf(IMG_VISHNEVITE_NEW),
         "pyroxene-group" to listOf(IMG_PYROXENE_GROUP_ROUGH),
         "amphibole-group" to listOf(IMG_AMPHIBOLE_GROUP),
-        "amazing-pseudo-calcite-aragonite" to listOf(IMG_PSEUDO_CALCITE_ARAGONITE),
-        "amazing-pseudo-chalcedony-coral" to listOf(IMG_PSEUDO_CHALCEDONY_CORAL),
-        "amazing-pyrite-quartz" to listOf(IMG_PYRITE_QUARTZ_INCLUSION),
+        "amazing-pseudo-calcite-aragonite" to listOf(IMG_PSEUDO_CALCITE_ARAGONITE, IMG_RAA_CALCITE_ARAGONITE_ROUGH, IMG_RAA_CALCITE_ARAGONITE_POLISHED),
+        "amazing-pseudo-chalcedony-coral" to listOf(IMG_PSEUDO_CHALCEDONY_CORAL, IMG_RAA_CHALCEDONY_CORAL_ROUGH, IMG_RAA_CHALCEDONY_CORAL_POLISHED),
+        "amazing-pyrite-quartz" to listOf(IMG_PYRITE_QUARTZ_INCLUSION, IMG_RAA_PYRITE_QUARTZ_ROUGH, IMG_RAA_PYRITE_QUARTZ_POLISHED),
         "septarian-nodule" to listOf(IMG_SEPTARIAN_NODULE_CUT_1, IMG_SEPTARIAN_ROUGH_NEW, IMG_SEPTARIAN_NODULE, IMG_SEPTARIAN_NODULE_CUT_2, IMG_SEPTARIAN_NODULE_CUT_3, IMG_SEPTARIAN_NODULE_CUT_4),
         "michigan-lightning-stone" to listOf(IMG_MICHIGAN_LIGHTNING_ROUGH_PILE, IMG_MICHIGAN_LIGHTNING_HAND_BEACH, IMG_MICHIGAN_LIGHTNING_CUT_PAIR, IMG_MICHIGAN_LIGHTNING_HEART_CUT, IMG_MICHIGAN_LIGHTNING_STONE, IMG_MICHIGAN_LIGHTNING_STONE_CUT_1, IMG_MICHIGAN_LIGHTNING_STONE_CUT_2, IMG_MICHIGAN_LIGHTNING_STONE_CUT_3, IMG_MICHIGAN_LIGHTNING_STONE_CUT_4),
         "hagstone" to listOf(IMG_HAGSTONE_PALE_GRAY, IMG_HAGSTONE_BEIGE_CREAM, IMG_HAGSTONE_PINK_PITTED, IMG_HAGSTONE_DARK_GRAY, IMG_HAGSTONE_TAN_ROUGH),
@@ -4335,10 +4388,10 @@ object SpecimenImages {
     ) }
 
     private val urlChunk7: Map<String, List<String>> by lazy { mapOf(
-        "amazing-tourmaline-quartz" to listOf(IMG_TOURMALINE_QUARTZ_INCLUSION),
-        "amazing-adularescent-moonstone" to listOf(IMG_MOONSTONE_ADULESCENCE),
+        "amazing-tourmaline-quartz" to listOf(IMG_TOURMALINE_QUARTZ_INCLUSION, IMG_RAA_TOURMALINE_QUARTZ_ROUGH, IMG_RAA_TOURMALINE_QUARTZ_POLISHED),
+        "amazing-adularescent-moonstone" to listOf(IMG_MOONSTONE_ADULESCENCE, IMG_RAA_MOONSTONE_ROUGH, IMG_RAA_MOONSTONE_POLISHED),
         "amazing-schiller-lattice-sunstone" to listOf(IMG_RAINBOW_LATTICE_CLOSEUP, IMG_RAINBOW_LATTICE_ROUGH, IMG_RAINBOW_LATTICE_CABOCHON, IMG_RAINBOW_LATTICE_WILD),
-        "amazing-play-of-color-opal" to listOf(IMG_OPAL_PLAY_OF_COLOR),
+        "amazing-play-of-color-opal" to listOf(IMG_OPAL_PLAY_OF_COLOR, IMG_RAA_OPAL_ROUGH, IMG_RAA_OPAL_POLISHED),
         "amazing-fluorescent-benitoite" to listOf(IMG_FLUOR_BENITOITE_SW, IMG_FLUOR_BENITOITE_NAT, IMG_BENITOITE),
         "amazing-fluorescent-tugtupite" to listOf(IMG_FLUOR_TUGTUPITE_SW, IMG_FLUOR_TUGTUPITE_NAT),
         "rainbow-lattice" to listOf(IMG_RAINBOW_LATTICE_CABOCHON, IMG_RAINBOW_LATTICE_ROUGH, IMG_RAINBOW_LATTICE_CLOSEUP, IMG_RAINBOW_LATTICE_WILD),
