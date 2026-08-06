@@ -30,7 +30,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -81,30 +80,6 @@ fun AdBanner(
     val context = LocalContext.current
     var loadFailed by remember { mutableStateOf(false) }
 
-    val adView = remember(context) {
-        AdView(context).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-            )
-        }
-    }
-
-    DisposableEffect(adView, showAds) {
-        if (!showAds) {
-            return@DisposableEffect onDispose { adView.destroy() }
-        }
-        adView.setAdSize(AdSize.BANNER)
-        adView.adUnitId = AdMobIds.BANNER_AD_UNIT_ID
-        adView.adListener = object : AdListener() {
-            override fun onAdFailedToLoad(error: LoadAdError) {
-                loadFailed = true
-            }
-        }
-        adView.loadAd(AdRequest.Builder().build())
-        onDispose { adView.destroy() }
-    }
-
     LaunchedEffect(showAds, loadFailed) {
         if (showAds && loadFailed) {
             AdAnalyticsTracker.recordBannerImpression(context)
@@ -120,7 +95,27 @@ fun AdBanner(
             SimulatedPromoBanner(onRemoveAds, modifier)
         } else {
             AndroidView(
-                factory = { adView },
+                factory = { ctx ->
+                    AdView(ctx).apply {
+                        setAdSize(AdSize.BANNER)
+                        adUnitId = AdMobIds.BANNER_AD_UNIT_ID
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                        )
+                        adListener = object : AdListener() {
+                            override fun onAdLoaded() {
+                                AdAnalyticsTracker.recordBannerImpression(context)
+                            }
+
+                            override fun onAdFailedToLoad(error: LoadAdError) {
+                                loadFailed = true
+                            }
+                        }
+                        loadAd(AdRequest.Builder().build())
+                    }
+                },
+                onRelease = { it.destroy() },
                 modifier = modifier.fillMaxWidth(),
             )
         }
