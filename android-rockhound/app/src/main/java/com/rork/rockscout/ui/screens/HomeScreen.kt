@@ -654,6 +654,7 @@ fun HomeScreen(navController: NavController) {
             item {
                 HomeHeader(
                     avatar = profile.avatarEmoji,
+                    avatarImagePath = profile.avatarImagePath,
                     onSearchClick = { navController.navigate(Routes.SEARCH) },
                     onProfileClick = { navController.navigate(Routes.PROFILE) },
                     tokenBalance = effectiveTokenBalance,
@@ -1462,6 +1463,7 @@ private fun HomeTagline(
 @Composable
 private fun HomeHeader(
     avatar: String,
+    avatarImagePath: String? = null,
     onSearchClick: () -> Unit,
     onProfileClick: () -> Unit,
     tokenBalance: Int = 0,
@@ -1558,11 +1560,20 @@ private fun HomeHeader(
                             .glowingBorder(4.dp, Cyan.copy(alpha = 0.3f), CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
-                        AnimatedAvatarIcon(
-                            emoji = avatar,
-                            size = 50.dp,
-                            style = MaterialTheme.typography.headlineSmall,
-                        )
+                        if (!avatarImagePath.isNullOrBlank()) {
+                            AsyncImage(
+                                model = avatarImagePath,
+                                contentDescription = "Profile picture",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop,
+                            )
+                        } else {
+                            AnimatedAvatarIcon(
+                                emoji = avatar,
+                                size = 50.dp,
+                                style = MaterialTheme.typography.headlineSmall,
+                            )
+                        }
                     }
                 }
 
