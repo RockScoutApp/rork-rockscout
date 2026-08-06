@@ -685,6 +685,43 @@ object SupabaseMessagingRepository {
         }
     }
 
+    /** Mark group messages as read by the current user (per-recipient read receipts).
+     *  Inserts a row into group_message_reads for each unread message not sent by the
+     *  current user. Uses ON CONFLICT to skip already-read messages. */
+    suspend fun markGroupMessagesRead(groupChatId: String): Result<Unit> {
+        val token = accessToken() ?: return Result.failure(Exception("Not authenticated"))
+        val uid = userId() ?: return Result.failure(Exception("No user ID"))
+        return try {
+            // Get unread messages in this group not sent by me
+            val resp = client.get("${baseUrl()}/rest/v1/group_messages?group_chat_id=eq.$groupChatId&sender_id=neq.$uid&select=id") {
+                header("apikey", anonKey())
+                header("Authorization", "Bearer $token")
+            }
+            if (!resp.status.isSuccess()) return Result.success(Unit)
+            val raw = resp.body<String>()
+            val msgIds = json.parseToJsonElement(raw).jsonArray.mapNotNull {
+                it.jsonObject["id"]?.jsonPrimitive?.contentOrNull
+            }
+            for (msgId in msgIds) {
+                val payload = buildJsonObject {
+                    put("message_id", msgId)
+                    put("user_id", uid)
+                }.toString()
+                client.post("${baseUrl()}/rest/v1/group_message_reads") {
+                    header("apikey", anonKey())
+                    header("Authorization", "Bearer $token")
+                    header("Content-Type", "application/json")
+                    header("Prefer", "return=minimal")
+                    setBody(payload)
+                }
+            }
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e(TAG, "markGroupMessagesRead failed", e)
+            Result.failure(e)
+        }
+    }
+
     /** Invite a user to a group chat. */
     suspend fun inviteToGroupChat(groupChatId: String, inviteeId: String): Result<Unit> {
         val token = accessToken() ?: return Result.failure(Exception("Not authenticated"))

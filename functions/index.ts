@@ -26,6 +26,7 @@ import { handleErrorReport } from "./error-report";
 import { handleSendErrorEmail } from "./send-error-email";
 import { handleProfanityWarning } from "./profanity-warning";
 import { handleReportNotificationEmail } from "./report-notification-email";
+import { handleTripReminder } from "./trip-reminder";
 import {
   buildCorsHeaders,
   guardEndpoint,
@@ -359,6 +360,27 @@ export default {
           EXPO_PUBLIC_SUPABASE_URL?: string;
           SUPABASE_SERVICE_ROLE_KEY?: string;
           EXPO_PUBLIC_RORK_APP_KEY?: string;
+        },
+        cors,
+      );
+    }
+
+    // Trip reminder — called by Supabase pg_cron `check_tomorrow_trips()` daily.
+    // App-key authenticated (the pg_cron function sends the app key in the header).
+    // Dispatches a web push notification to the trip owner reminding them about
+    // their trip scheduled for tomorrow.
+    if (url.pathname === "/trips/reminder" && request.method === "POST") {
+      const guard = guardEndpoint(request, env, "/trips/reminder", cors, env.RATE_LIMIT_KV);
+      if (guard) return guard;
+      return handleTripReminder(
+        request,
+        env as unknown as {
+          EXPO_PUBLIC_RORK_APP_KEY?: string;
+          EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
+          EXPO_PUBLIC_SUPABASE_URL?: string;
+          SUPABASE_SERVICE_ROLE_KEY?: string;
+          VAPID_PUBLIC_KEY?: string;
+          VAPID_PRIVATE_KEY?: string;
         },
         cors,
       );

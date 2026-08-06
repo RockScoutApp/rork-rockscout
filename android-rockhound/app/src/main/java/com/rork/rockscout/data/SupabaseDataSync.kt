@@ -27,6 +27,7 @@ import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
@@ -262,6 +263,11 @@ object SupabaseDataSync {
                     weatherSummary = obj["weather_summary"]?.jsonPrimitive?.content ?: "",
                     notes = obj["notes"]?.jsonPrimitive?.content ?: "",
                     photoUris = obj["photo_urls"]?.jsonArray?.map { it.jsonPrimitive.content } ?: emptyList(),
+                    tripId = obj["trip_id"]?.jsonPrimitive?.contentOrNull,
+                    specimenMarkers = obj["specimen_markers"]?.jsonArray?.mapNotNull { markerEl ->
+                        try { json.decodeFromString<SpecimenMarker>(markerEl.toString()) } catch (e: Exception) { null }
+                    } ?: emptyList(),
+                    attachedCaptureIds = obj["attached_capture_ids"]?.jsonArray?.map { it.jsonPrimitive.content } ?: emptyList(),
                     createdAt = obj["created_at"]?.jsonPrimitive?.content?.let { parseIsoToMillis(it) } ?: 0L,
                 )
             } catch (e: Exception) { null }
@@ -302,6 +308,9 @@ object SupabaseDataSync {
                     notes = obj["notes"]?.jsonPrimitive?.content ?: "",
                     isArchived = obj["is_archived"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: false,
                     completedAt = obj["completed_at"]?.jsonPrimitive?.content?.let { parseIsoToMillis(it) },
+                    specimenMarkers = obj["specimen_markers"]?.jsonArray?.mapNotNull { markerEl ->
+                        try { json.decodeFromString<SpecimenMarker>(markerEl.toString()) } catch (e: Exception) { null }
+                    } ?: emptyList(),
                     createdAt = obj["created_at"]?.jsonPrimitive?.content?.let { parseIsoToMillis(it) } ?: 0L,
                 )
             } catch (e: Exception) { null }
@@ -692,6 +701,8 @@ object SupabaseDataSync {
         val key = anonKey()
         return try {
             val photoUrlsArray = entry.photoUris.joinToString(",", prefix = "[", postfix = "]") { "\"$it\"" }
+            val markersArray = json.encodeToString(entry.specimenMarkers)
+            val captureIdsArray = entry.attachedCaptureIds.joinToString(",", prefix = "[", postfix = "]") { "\"$it\"" }
             val body = buildJsonObject {
                 put("id", entry.id)
                 put("user_id", uid)
@@ -701,6 +712,9 @@ object SupabaseDataSync {
                 put("weather_summary", entry.weatherSummary)
                 put("notes", entry.notes)
                 put("photo_urls", photoUrlsArray)
+                put("specimen_markers", markersArray)
+                put("attached_capture_ids", captureIdsArray)
+                entry.tripId?.let { put("trip_id", it) }
             }
             client.post("$url/rest/v1/rockscout_field_journal") {
                 header("apikey", key)
@@ -740,6 +754,7 @@ object SupabaseDataSync {
             val stopsArray = json.encodeToString(trip.stops)
             val targetsArray = json.encodeToString(trip.targetSpecimens)
             val gearArray = json.encodeToString(trip.gearChecklist)
+            val markersArray = json.encodeToString(trip.specimenMarkers)
             val body = buildJsonObject {
                 put("id", trip.id)
                 put("user_id", uid)
@@ -750,6 +765,7 @@ object SupabaseDataSync {
                 put("gear_checklist", gearArray)
                 put("notes", trip.notes)
                 put("is_archived", trip.isArchived.toString())
+                put("specimen_markers", markersArray)
                 trip.completedAt?.let { put("completed_at", formatIsoForDb(it)) }
             }
             client.post("$url/rest/v1/rockscout_trips") {

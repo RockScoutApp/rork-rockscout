@@ -34,6 +34,7 @@ object NotificationHelper {
     const val CHANNEL_DEVELOPER = "rockscout_developer"
     const val CHANNEL_AURORA = "rockscout_aurora"
     const val CHANNEL_OFFLINE_SYNC = "rockscout_offline_sync"
+    const val CHANNEL_TRIPS = "rockscout_trips"
 
     const val NOTIF_UPDATE_ID = 1001
     const val NOTIF_DEVELOPER_PIN_ID = 1010
@@ -50,6 +51,7 @@ object NotificationHelper {
     const val NOTIF_WEATHER_BASE = 4000
     const val NOTIF_AURORA_ID = 4500
     const val NOTIF_OFFLINE_SYNC_ID = 5001
+    const val NOTIF_TRIP_REMINDER_BASE = 6000
 
     /** Load the full-color RockScout logo used as the notification large icon. */
     private fun largeIcon(context: Context): Bitmap? = try {
@@ -181,6 +183,16 @@ object NotificationHelper {
             ).apply {
                 description = "Quiet nightly updates that keep your offline specimen database current while the device is charging."
                 setShowBadge(false)
+            }
+        )
+
+        manager.createNotificationChannel(
+            NotificationChannel(
+                CHANNEL_TRIPS,
+                "Trip Reminders",
+                NotificationManager.IMPORTANCE_DEFAULT,
+            ).apply {
+                description = "Reminders for upcoming rockhounding trips scheduled for tomorrow."
             }
         )
     }
@@ -917,5 +929,51 @@ object NotificationHelper {
 
         NotificationManagerCompat.from(context)
             .notify(NOTIF_LOCATION_APPROVED_ID, notification)
+    }
+
+    /**
+     * Post a trip reminder notification for a trip scheduled for tomorrow.
+     * Uses the [CHANNEL_TRIPS] channel with default importance.
+     * Tapping it opens the trip detail screen.
+     */
+    fun showTripReminderNotification(
+        context: Context,
+        tripId: String,
+        tripName: String,
+        stopsText: String,
+        gearCount: Int,
+    ) {
+        if (!hasNotificationPermission(context)) return
+
+        val deepLink = "rockscout://trip_detail/$tripId"
+        val appIntent = Intent(context, MainActivity::class.java).apply {
+            action = Intent.ACTION_VIEW
+            data = Uri.parse(deepLink)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
+        val notifId = NOTIF_TRIP_REMINDER_BASE + (tripId.hashCode() and 0x3FF)
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            notifId,
+            appIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val gearText = if (gearCount > 0) "$gearCount gear item${if (gearCount > 1) "s" else ""} on your checklist" else "No gear items yet"
+        val bigText = "Stops: $stopsText\n$gearText\nDon't forget to pack and check the weather!"
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_TRIPS)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setLargeIcon(largeIcon(context))
+            .setContentTitle("Trip Tomorrow: $tripName")
+            .setContentText(gearText)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(bigText))
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+
+        NotificationManagerCompat.from(context)
+            .notify(notifId, notification)
     }
 }

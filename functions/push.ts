@@ -291,8 +291,9 @@ async function handleNotify(
   });
 }
 
-/** Shared fan-out: look up the target's subscriptions and encrypt+POST to each. */
-async function deliver(
+/** Shared fan-out: look up the target's subscriptions and encrypt+POST to each.
+ *  Exported so other handlers (e.g. trip reminders) can reuse the same delivery path. */
+export async function deliver(
   env: PushEnv,
   headers: Record<string, string>,
   msg: { userId: string; category: string | null; title: string; body: string; url: string },

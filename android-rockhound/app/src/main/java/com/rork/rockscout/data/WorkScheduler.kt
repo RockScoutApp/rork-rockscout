@@ -170,7 +170,27 @@ object WorkScheduler {
             nightlyCaptureSyncRequest,
         )
 
-        Log.d(TAG, "Scheduled update check (6h), proximity check (10min), notification summary (1h), gem show refresh (monthly, in ${daysUntilMonthEnd}d), weather alerts (${WeatherAlertWorker.CHECK_INTERVAL_MINUTES}min chain), aurora alerts (${AuroraAlertWorker.CHECK_INTERVAL_MINUTES}min chain), offline sync (6h + nightly @4AM in ${nightlyCaptureSyncDelay}min)")
+        // Trip reminder — daily at ~8 AM local time, checks for trips
+        // scheduled for tomorrow and sends a local notification.
+        val tripReminderDelay = computeMinutesUntilNext8Am()
+        val tripReminderRequest = PeriodicWorkRequestBuilder<TripReminderWorker>(
+            1, TimeUnit.DAYS,
+        )
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.NOT_REQUIRED)
+                    .build(),
+            )
+            .setInitialDelay(tripReminderDelay, TimeUnit.MINUTES)
+            .build()
+
+        workManager.enqueueUniquePeriodicWork(
+            TripReminderWorker.WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            tripReminderRequest,
+        )
+
+        Log.d(TAG, "Scheduled update check (6h), proximity check (10min), notification summary (1h), gem show refresh (monthly, in ${daysUntilMonthEnd}d), weather alerts (${WeatherAlertWorker.CHECK_INTERVAL_MINUTES}min chain), aurora alerts (${AuroraAlertWorker.CHECK_INTERVAL_MINUTES}min chain), offline sync (6h + nightly @4AM in ${nightlyCaptureSyncDelay}min), trip reminder (daily @8AM in ${tripReminderDelay}min)")
     }
 
     /**
@@ -417,6 +437,21 @@ object WorkScheduler {
             request,
         )
         Log.d(TAG, "Scheduled immediate offline capture sync")
+    }
+
+    /** Minutes from now until the next 8:00 AM in the user's effective timezone. */
+    private fun computeMinutesUntilNext8Am(): Long {
+        val tz = UserTimezoneProvider.effectiveTimeZone.value
+        val now = Calendar.getInstance(tz)
+        val next = Calendar.getInstance(tz).apply {
+            set(Calendar.HOUR_OF_DAY, 8)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            if (before(now)) add(Calendar.DAY_OF_MONTH, 1)
+        }
+        val diffMs = next.timeInMillis - now.timeInMillis
+        return (diffMs / (60_000L)).coerceAtLeast(1L)
     }
 
     /** Days from now until the last day of the current month (minimum 1). */
