@@ -71,6 +71,8 @@ data class DigLocation(
     val submitterName: String? = null,
     val submittedPhotoUris: List<String> = emptyList(),
     val addedAtMs: Long = 0L,            // epoch ms when added; 0 = legacy (no badge)
+    val imageUrl: String? = null,        // hero photo from Wikimedia Commons
+    val address: String? = null,         // street address for directions
 ) {
     /** True when this location was added within the last 7 days. */
     fun isNew(): Boolean {

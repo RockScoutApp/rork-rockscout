@@ -15,6 +15,8 @@ data class MuseumEntry(
     val website: String,
     val lat: Double,
     val lng: Double,
+    val imageUrl: String? = null,  // hero photo from Wikimedia Commons
+    val address: String? = null,   // street address for directions
 )
 
 object UsMuseums {

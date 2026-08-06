@@ -27,7 +27,7 @@ object SpecimenImages {
     private const val IMG_AMMONITE = "$Q/43091c8c-862a-4f1d-b342-84ee86e12783.png"
     private const val IMG_AMPHIBOLITE = "$Q/738db003-c095-4d57-b93c-400911227343.png"
     private const val IMG_ANDALUSITE = "$Q/64e31bf3-85af-43dd-bac5-ba76be8415e2.png"
-    private const val IMG_ANDERSON_MINE = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
+    private const val IMG_ANDERSON_MINE = "$Q/b756414d-fb30-4bdd-9138-21004dfae941.png"
     private const val IMG_ANGLESITE = "$Q/cdcb4702-1fac-4c35-95e1-94a8782294cb.png"
     private const val IMG_ANHYDRITE = "$Q/4c78394a-a995-4486-bc85-34be63a2b0b3.png"
     private const val IMG_ANNABERGITE = "$Q/2ed8d3b2-2f58-4ee7-8b70-75e1dba22373.png"
@@ -39,7 +39,7 @@ object SpecimenImages {
     private const val IMG_ARAGONITE = "$Q/dc4db129-50ec-4d28-9d36-4c5f5298b986.png"
     private const val IMG_ARAGONITE_FLOWERS = "$Q/a302c237-8b11-4ba0-a15d-5d3a013a72c8.png"
     private const val IMG_ARCHIMEDES = "$Q/7d89a6d8-e905-4aa9-9dbd-86fc855e9f5b.png"
-    private const val IMG_ARKANSAS_QUARTZ_GALLERY = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
+    private const val IMG_ARKANSAS_QUARTZ_GALLERY = "$Q/b756414d-fb30-4bdd-9138-21004dfae941.png"
     private const val IMG_ARKOSE = "$Q/1761d90a-e03a-43df-bc5b-643bc83d2d4c.png"
     private const val IMG_ARSENOPYRITE = "$Q/ef14eabb-4ca4-4bd3-8480-9721c6ea95ad.png"
     private const val IMG_AUGITE = "$Q/53724707-5561-41e5-9298-2aec3f37bd8b.png"
@@ -49,7 +49,7 @@ object SpecimenImages {
     private const val IMG_AXINITE = "$Q/9eda2254-fc94-4211-a731-76402098ebe6.png"
     private const val IMG_AZURITE = "$Q/08135330-34fa-49d2-9350-c57b42c7faa2.png"
     private const val IMG_BACULITES = "$Q/91d3dd96-1ef8-41a9-9025-9eb17b831ef8.png"
-    private const val IMG_BAKER_RANCH = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
+    private const val IMG_BAKER_RANCH = "$Q/b756414d-fb30-4bdd-9138-21004dfae941.png"
     private const val IMG_BARITE = "$Q/8bb98c41-e700-41ed-8b36-1c2c73ec3673.png"
     private const val IMG_BASALT = "$Q/dcc7a373-69cf-4b81-8f77-95510c077ad8.png"
     private const val IMG_BELEMNITE = "$Q/ac51d207-45fe-4a25-a676-4512227c0517.png"
@@ -65,20 +65,20 @@ object SpecimenImages {
     private const val IMG_BERYL = "$Q/85ebf0e0-32d1-4916-9422-08d064c008c7.png"
     private const val IMG_BISMUTH_CRYSTAL = "$Q/f876baa4-cb5e-4734-9a7e-ffdc9c356aa9.png"
     private const val IMG_BIVALVE_FOSSIL = "$Q/b6b9b5ff-7271-452e-a48b-4936627e5345.png"
-    private const val IMG_BLACK_HILLS_INSTITUTE = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
+    private const val IMG_BLACK_HILLS_INSTITUTE = "$Q/4ccaff53-7599-45d0-a8b0-f353ca8e2712.png"
     private const val IMG_BLASTOID = "$Q/b916a77f-5499-4347-8d76-a1d944d08a8d.png"
     private const val IMG_BLOODSTONE = "$Q/c3d0ec3b-d91e-47c9-88c0-a599221220b6.png"
     private const val IMG_BLUE_ARAGONITE = "$Q/4b5061bf-7d9b-4dda-9b60-5d8887880bde.png"
     private const val IMG_BLUE_LACE_AGATE = "$Q/dcab33ba-ae88-4cd1-9566-ff582d5d47b3.png"
     private const val IMG_BORNITE = "$Q/da0c5d8a-b6ae-41e4-9e9b-c2e167dcf21e.png"
-    private const val IMG_BOSTON_MINERAL_CLUB = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
+    private const val IMG_BOSTON_MINERAL_CLUB = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
     private const val IMG_BRACHIOPOD = "$Q/3b5c85f6-9b96-42c3-bb84-1f88774a6d26.png"
     private const val IMG_BRECCIA = "$Q/1f436f98-c7f3-44ef-b1fb-2d4657a1bc19.png"
     private const val IMG_BRIMLEY_YOOPER = "$Q/499875b4-0004-4548-970e-c6291491a942.png"
     private const val IMG_BROCHANTITE = "$Q/9af81aac-e854-4731-85b1-c8f58e656d0d.png"
     private const val IMG_BRONZITE = "$Q/672ba710-d2ca-4976-9751-42b58a26a151.png"
-    private const val IMG_BURRO_CREEK = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
-    private const val IMG_CAHABA_RIVER = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
+    private const val IMG_BURRO_CREEK = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
+    private const val IMG_CAHABA_RIVER = "$Q/0ddbafe9-84ee-42ec-9f1b-f78c85baad07.png"
     private const val IMG_CALAMITES = "$Q/3e6da3af-6f7a-45da-8dc5-56b93535c942.png"
     private const val IMG_CALCITE_AMBER = "$Q/242d26fc-58d2-4534-b667-3858c5a01f2e.png"
     private const val IMG_CALCITE_BLUE = "$Q/827ba0eb-2192-4bee-a7b5-2c66137840b7.png"
@@ -91,7 +91,7 @@ object SpecimenImages {
     private const val IMG_HEXAGONAL_CALCITE_WILD = "$Q/1d521a03-34fc-4372-a9be-98bf22df81b4.png"
     private const val IMG_HEXAGONAL_CALCITE_MUSEUM = "$Q/8ef38bd3-714b-4bd4-bc18-3e2bc9c2caf2.png"
     private const val IMG_HEXAGONAL_CALCITE_CABOCHON = "$Q/359e91bd-a225-4a16-8873-e39906cff4d7.png"
-    private const val IMG_CALIFORNIA_ROCK_SHOP = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
+    private const val IMG_CALIFORNIA_ROCK_SHOP = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
     private const val IMG_CARNELIAN = "$Q/5d3bd82d-7c98-465f-9a1a-a45353b97ac9.png"
     private const val IMG_CARNOTITE = "$Q/f042f436-c367-4ea7-843a-bb25d2d4a09d.png"
     private const val IMG_CASSITERITE = "$Q/fd006839-65f1-4a1e-a26a-db55b14f4f3f.png"
@@ -134,22 +134,22 @@ object SpecimenImages {
     private const val IMG_CRATER_OF_DIAMONDS = "$Q/d3a5cdaf-cd76-4dfe-ab86-7e106532b9da.png"
     private const val IMG_CRINOID = "$Q/c8970948-e3eb-4119-8b49-a2a12780dbc0.png"
     private const val IMG_CROCOITE = "$Q/1855cb33-bc0d-4454-ad31-337f46e39cdc.png"
-    private const val IMG_CRYSTAL_GROVE = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
-    private const val IMG_CRYSTAL_MOUNTAIN = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
-    private const val IMG_CRYSTAL_PARK = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
-    private const val IMG_CRYSTAL_WORKS = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
+    private const val IMG_CRYSTAL_GROVE = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
+    private const val IMG_CRYSTAL_MOUNTAIN = "$Q/b756414d-fb30-4bdd-9138-21004dfae941.png"
+    private const val IMG_CRYSTAL_PARK = "$Q/b756414d-fb30-4bdd-9138-21004dfae941.png"
+    private const val IMG_CRYSTAL_WORKS = "$Q/b756414d-fb30-4bdd-9138-21004dfae941.png"
     private const val IMG_CUPRITE = "$Q/5473555f-aa84-4348-9b59-799315b16c9b.png"
     private const val IMG_DANBURITE = "$Q/e37c77a7-8411-4df2-a23c-6976993b667d.png"
     private const val IMG_DENDRITE_AGATE = "$Q/d53d0506-4175-4d6b-9443-1dda1b4a9d15.png"
-    private const val IMG_DENIO_THUNDEREGGS = "$Q/aeee0cb3-a8fd-438a-8266-a0fd28833b06.png"
-    private const val IMG_DENVER_GEM_SHOW = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
+    private const val IMG_DENIO_THUNDEREGGS = "$Q/764a09c1-50bf-4849-afd5-77d942265126.png"
+    private const val IMG_DENVER_GEM_SHOW = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
     private const val IMG_DESCLOIZITE = "$Q/d6483ebc-5f0b-41b7-ba50-b210f9126756.png"
     private const val IMG_DESERT_ROSE = "$Q/84d12592-9de8-460f-9aa8-a1bd17c50548.png"
     private const val IMG_DIAMOND = "$Q/d3a5cdaf-cd76-4dfe-ab86-7e106532b9da.png"
     private const val IMG_DIAMOND_YELLOW = "$Q/849f0dea-e051-49a2-8b66-9732832b8402.png"
     private const val IMG_DIAMOND_PINK = "$Q/b796696e-8a4d-4ef9-9121-2166cf8b94d7.png"
     private const val IMG_DIAMOND_BLUE = "$Q/77b95353-dd4b-4fae-88f5-f468b353dd02.png"
-    private const val IMG_DIAMOND_HILL = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
+    private const val IMG_DIAMOND_HILL = "$Q/b756414d-fb30-4bdd-9138-21004dfae941.png"
     private const val IMG_DIAMOND_PEAK = "$Q/d3a5cdaf-cd76-4dfe-ab86-7e106532b9da.png"
     private const val IMG_DIATOMITE = "$Q/e09b269c-b085-40eb-ba7a-7083c1f389ef.png"
     private const val IMG_DINOSAUR_BONE = "$Q/6bc8e37c-11c8-42ed-9250-dff8fbe2bfec.png"
@@ -159,17 +159,17 @@ object SpecimenImages {
     private const val IMG_DIOPTASE = "$Q/e365d410-13de-4872-bc2b-1e8cd85988a1.png"
     private const val IMG_DIORITE = "$Q/444eab0c-1550-45ba-aa6a-8769ef3543d5.png"
     private const val IMG_DIRE_WOLF_TOOTH = "$Q/d006cb33-88f8-49a1-a21f-55a012930505.png"
-    private const val IMG_DIXIE_CRYSTAL_CO = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
+    private const val IMG_DIXIE_CRYSTAL_CO = "$Q/b756414d-fb30-4bdd-9138-21004dfae941.png"
     private const val IMG_DOLOMITE = "$Q/1af220d2-979c-4f3e-81be-251fe2e0c490.png"
-    private const val IMG_DUGWAY_GEODES = "$Q/aeee0cb3-a8fd-438a-8266-a0fd28833b06.png"
+    private const val IMG_DUGWAY_GEODES = "$Q/764a09c1-50bf-4849-afd5-77d942265126.png"
     private const val IMG_DUMORTIERITE = "$Q/3bee65a7-fb24-4419-9d4e-57ca6241784d.png"
     private const val IMG_DUMORTIERITE_QUARTZ = "$Q/5c902613-10d7-482d-8963-3611df356089.png"
     private const val IMG_ECLOGITE = "$Q/8f9dff9a-8da3-4d08-a500-10168b7c38b4.png"
     private const val IMG_ECPHORA = "$Q/c0ca9cf4-abad-43cf-92bd-9e11ac38afae.png"
-    private const val IMG_ELLENVILLE = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
+    private const val IMG_ELLENVILLE = "$Q/b756414d-fb30-4bdd-9138-21004dfae941.png"
     private const val IMG_EMERALD = "$Q/33eacef5-cb8a-4793-9cd6-9252c42e7403.png"
     private const val IMG_EMERALD_HOLLOW = "$Q/33eacef5-cb8a-4793-9cd6-9252c42e7403.png"
-    private const val IMG_ENCHANTMENT_AGATES = "$Q/aeee0cb3-a8fd-438a-8266-a0fd28833b06.png"
+    private const val IMG_ENCHANTMENT_AGATES = "$Q/6f93b205-b4aa-4d92-9e7c-1b7d9188b09f.png"
     private const val IMG_ENCHODUS = "$Q/0f0e2a7f-3f64-43b1-af7a-c576f667c1fe.png"
     private const val IMG_ENDOCERAS = "$Q/6ae3f3db-d24e-41c3-9b68-75e78e8cae0a.png"
     private const val IMG_ENSTATITE = "$Q/bb8864b6-750b-4efc-b405-a7ef166ba983.png"
@@ -184,7 +184,7 @@ object SpecimenImages {
     private const val IMG_FIRE_AGATE = "$Q/dd8c1cc6-92c1-4f5f-a20a-872b2b4ac0f0.png"
     private const val IMG_FIRE_OPAL = "$Q/25501457-114a-4026-9158-0d49b505f672.png"
     private const val IMG_FLINT = "$Q/26b27c8a-7fcf-4393-a3b2-e510e6d3deeb.png"
-    private const val IMG_FLORIDA_ROCK_SHACK = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
+    private const val IMG_FLORIDA_ROCK_SHACK = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
     private const val IMG_FLUORITE = "$Q/95a9e35b-30d9-4522-82e2-1415c612dbc7.png"
     private const val IMG_FLUORITE_GREEN = "$Q/75343202-8a5e-4e21-8497-2b45bc42fedc.png"
     private const val IMG_FLUORITE_BLUE = "$Q/c58815d6-a6e2-4748-911c-bf6ef0ab400f.png"
@@ -194,7 +194,7 @@ object SpecimenImages {
     private const val IMG_FOSSIL_CORAL = "$Q/fcf5f8b0-f3d0-4094-a28c-abe40ce33cdb.png"
     private const val IMG_FOSSIL_FERN = "$Q/35cd5715-e26e-4f89-9300-9dc8aa20424b.png"
     private const val IMG_FOSSIL_FISH = "$Q/e66e6d4d-356f-40fd-8630-a1e0e5fcdec1.png"
-    private const val IMG_FRANKLIN_GEM = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
+    private const val IMG_FRANKLIN_GEM = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
     private const val IMG_FRANKLIN_MINERAL = "$Q/95a9e35b-30d9-4522-82e2-1415c612dbc7.png"
     private const val IMG_FUSULINID = "$Q/c01f0043-dd65-4113-9182-6b94c64408b5.png"
     private const val IMG_GABBRO = "$Q/8388f81e-036a-4463-be88-ea75d8662756.png"
@@ -221,7 +221,7 @@ object SpecimenImages {
     private const val IMG_GOETHITE = "$Q/17a030a0-4d65-47a3-b60c-8a7a3241d415.png"
     private const val IMG_GONIATITE = "$Q/c8fa7b84-db0f-432a-b1d7-993e549e1d5a.png"
     private const val IMG_GOSHENITE = "$Q/603f9945-ce0b-4047-8c57-c37904fa1519.png"
-    private const val IMG_GRAND_MARAIS_YOOPER = "$Q/aeee0cb3-a8fd-438a-8266-a0fd28833b06.png"
+    private const val IMG_GRAND_MARAIS_YOOPER = "$Q/0ddbafe9-84ee-42ec-9f1b-f78c85baad07.png"
     private const val IMG_GRANDIDIERITE = "$Q/8a510d07-f77a-4da1-827f-d1aca208d5b8.png"
     private const val IMG_GRANITE_GRAY = "$Q/92aadce6-472c-4ab1-8cdb-e8d191062601.png"
     private const val IMG_GRANITE_WHITE = "$Q/f6978e12-d67a-43b7-9b6a-eb39d75d57b9.png"
@@ -238,7 +238,7 @@ object SpecimenImages {
     private const val IMG_GYPSUM_MINERAL_ROUGH = "$Q/60c0c945-b692-48f4-8e4d-9b1d33a276b5.png"
     private const val IMG_GYPSUM_MINERAL_WILD = "$Q/7d8f28bf-a579-430c-8bd7-89f6f402bb69.png"
     private const val IMG_GYROLITE = "$Q/b89a5a03-5eda-4efe-8301-5976eb7311f7.png"
-    private const val IMG_HALLELUJAH_JCT = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
+    private const val IMG_HALLELUJAH_JCT = "$Q/b756414d-fb30-4bdd-9138-21004dfae941.png"
     private const val IMG_HALYSITES = "$Q/82fe4bcf-e7f6-4798-a24f-d9332daec945.png"
     private const val IMG_HAMBERGITE = "$Q/45768fed-0eb3-4b6d-b296-b341b1e469a9.png"
     private const val IMG_HELENA_SAPPHIRE = "$Q/0968cca6-0b47-4cb3-9158-6ca11ee8811b.png"
@@ -251,10 +251,10 @@ object SpecimenImages {
     private const val IMG_HIBONITE = "$Q/f503d323-91e6-43cf-9ad9-56823b99add4.png"
     private const val IMG_HIDDENITE = "$Q/247d9797-8cd4-4400-92e3-beaf906fb2fd.png"
     private const val IMG_HIMALAYA_MINE = "$Q/b8a1fdf6-758b-4739-8983-0c91f93eb352.png"
-    private const val IMG_HOG_CREEK = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
-    private const val IMG_HOGG_MINE = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
+    private const val IMG_HOG_CREEK = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
+    private const val IMG_HOGG_MINE = "$Q/b756414d-fb30-4bdd-9138-21004dfae941.png"
     private const val IMG_HORNFELS = "$Q/3cc3f121-cd3d-4a28-ae33-13f0f219043f.png"
-    private const val IMG_HORSE_CANYON = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
+    private const val IMG_HORSE_CANYON = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
     private const val IMG_HORSESHOE_CRAB = "$Q/013c1087-f5a9-4dda-b3c8-76f61a53aea8.png"
     private const val IMG_HUEBNERITE = "$Q/54ccc01f-d92e-4fb7-8d4d-4bf408e4344d.png"
     private const val IMG_HYBODUS = "$Q/efabddda-884e-4961-824a-4bd8852e18a9.png"
@@ -264,8 +264,8 @@ object SpecimenImages {
     private const val IMG_INOCERAMUS = "$Q/4c46d44d-489f-42f5-bc13-7f6091ba43d7.png"
     private const val IMG_IOLITE = "$Q/81492d6b-ddda-4a2a-9df8-bc768b66f3cc.png"
     private const val IMG_IROQUOIS_COPPERMINE = "$Q/40fb406a-401c-43c6-9899-6d507589deed.png"
-    private const val IMG_ISABELLA_MINE = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
-    private const val IMG_JACKSON_CROSSROADS = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
+    private const val IMG_ISABELLA_MINE = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
+    private const val IMG_JACKSON_CROSSROADS = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
     private const val IMG_JADE_WHITE = "$Q/4c0b09f6-cae7-4280-9a5d-b38a60529789.png"
     private const val IMG_JADE_LAVENDER = "$Q/e882fd8c-13e7-4d99-b167-eefe8b724ee1.png"
     private const val IMG_JADE_BLACK = "$Q/e617514c-4010-446d-980a-b6ded3f402cc.png"
@@ -278,8 +278,8 @@ object SpecimenImages {
     private const val IMG_JASPER = "$Q/328b7dd3-f045-49c5-a2da-824400d25194.png"
     private const val IMG_JEREMEJEVITE = "$Q/da0b4054-4390-43b5-be3c-c3ddc4ff2af6.png"
     private const val IMG_JOAQUINITE = "$Q/29a629c7-91d2-4dfc-9b45-bd990172359d.png"
-    private const val IMG_KEENAN_QUARRY = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
-    private const val IMG_KEOKUK_GEODES = "$Q/aeee0cb3-a8fd-438a-8266-a0fd28833b06.png"
+    private const val IMG_KEENAN_QUARRY = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
+    private const val IMG_KEOKUK_GEODES = "$Q/764a09c1-50bf-4849-afd5-77d942265126.png"
     private const val IMG_KEYSTONE_GALLERY = "$Q/218853fe-e40a-45c3-a372-74ae1cda3aab.png"
     private const val IMG_KOMATIITE = "$Q/c02a88ba-86aa-4617-87fc-8e425dd8f8ff.png"
     private const val IMG_KUNZITE = "$Q/0502dda7-9a9a-4459-9789-3c57c5608964.png"
@@ -288,8 +288,8 @@ object SpecimenImages {
     private const val IMG_LABRADORITE = "$Q/a417f5fb-1e7a-46b0-bbf5-6d72df5ccfba.png"
     private const val IMG_LABRADORITE_PEACOCK = "$Q/3d98771f-3719-4006-9b16-0a9c5904d285.png"
     private const val IMG_LABRADORITE_GOLDEN = "$Q/35ed68f4-deff-4357-8f08-e45f81f1984a.png"
-    private const val IMG_LAKE_GEORGE = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
-    private const val IMG_LAKE_SUPERIOR_AGATE = "$Q/aeee0cb3-a8fd-438a-8266-a0fd28833b06.png"
+    private const val IMG_LAKE_GEORGE = "$Q/b756414d-fb30-4bdd-9138-21004dfae941.png"
+    private const val IMG_LAKE_SUPERIOR_AGATE = "$Q/0ddbafe9-84ee-42ec-9f1b-f78c85baad07.png"
     private const val IMG_LAPIS_LAZULI = "$Q/ce15c050-ec63-4ef0-bfea-d66c63efd132.png"
     private const val IMG_LARIMAR = "$Q/068761f2-3d0b-4dea-a4cb-7cfa1b531fff.png"
     private const val IMG_LAZULITE = "$Q/8bb4b12d-05a6-44d3-a771-030a3556acf7.png"
@@ -300,11 +300,11 @@ object SpecimenImages {
     private const val IMG_LIMESTONE = "$Q/ef99523e-6d0b-470d-8dd6-e61c725e43f7.png"
     private const val IMG_LINARITE = "$Q/e7ab6c22-822d-44a2-86ca-f6eda2ba08af.png"
     private const val IMG_LINGULA = "$Q/8cff8fb5-dccc-471e-8dbc-5db33c7379a1.png"
-    private const val IMG_LLANO_UPLIFT = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
+    private const val IMG_LLANO_UPLIFT = "$Q/b756414d-fb30-4bdd-9138-21004dfae941.png"
     private const val IMG_MAGNESITE = "$Q/e3d25043-926c-4cb4-9c2c-b6d12c5369c3.png"
     private const val IMG_MAGNETITE = "$Q/56918ade-d762-4bbe-b28d-4628236046c7.png"
-    private const val IMG_MAIN_STREET_ROCKS = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
-    private const val IMG_MAIN_STREET_ROCKS_CLAWSON = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
+    private const val IMG_MAIN_STREET_ROCKS = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
+    private const val IMG_MAIN_STREET_ROCKS_CLAWSON = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
     private const val IMG_MALACHITE = "$Q/25b82e18-646a-4751-95d7-cf4f37805733.png"
     private const val IMG_MALACHOLLA = "$Q/7d6661e9-c2f0-40a5-b7e5-6575c2c55c29.png"
     private const val IMG_MAMMOTH_TOOTH = "$Q/9f69bc77-75f6-4c8c-b076-b5884d986ebf.png"
@@ -312,7 +312,7 @@ object SpecimenImages {
     private const val IMG_MARBLE_PINK = "$Q/1794c5f0-ed27-4492-afbd-7432223b7d32.png"
     private const val IMG_MARBLE_GREEN = "$Q/a5f1711d-fcf1-46ea-997f-bcf736497d50.png"
     private const val IMG_MARQUETTE_YOOPER = "$Q/499875b4-0004-4548-970e-c6291491a942.png"
-    private const val IMG_MCLAIN_YOOPER = "$Q/aeee0cb3-a8fd-438a-8266-a0fd28833b06.png"
+    private const val IMG_MCLAIN_YOOPER = "$Q/0ddbafe9-84ee-42ec-9f1b-f78c85baad07.png"
     private const val IMG_MEGALODON_TOOTH = "$Q/25b546bb-ad47-424b-8d5d-85f5d75204f7.png"
     private const val IMG_MESOLITE = "$Q/2d3cea09-1a34-4676-8a04-b66217feb232.png"
     private const val IMG_MIGMATITE = "$Q/1e4d8d22-bdfb-4db1-9b20-bc1c9751a818.png"
@@ -328,10 +328,10 @@ object SpecimenImages {
     private const val IMG_MOSS_AGATE = "$Q/9b38f6a5-4d99-4700-82d3-6f2456b1c914.png"
     private const val IMG_MOTTRAMITE = "$Q/f8218a8d-839d-42d3-b262-a56210fd59ff.png"
     private const val IMG_MOUNT_APATITE = "$Q/bc721a54-1fad-441a-9687-7a469b6e798d.png"
-    private const val IMG_MUNISING_YOOPER = "$Q/aeee0cb3-a8fd-438a-8266-a0fd28833b06.png"
+    private const val IMG_MUNISING_YOOPER = "$Q/0ddbafe9-84ee-42ec-9f1b-f78c85baad07.png"
     private const val IMG_MUSCOVITE = "$Q/c72c3fd3-9287-4381-957f-f57d0f6f61a4.png"
     private const val IMG_MUSGRAVITE = "$Q/978586ac-f9d7-42ac-b111-31a45cffd894.png"
-    private const val IMG_MUSKALLONGE_YOOPER = "$Q/aeee0cb3-a8fd-438a-8266-a0fd28833b06.png"
+    private const val IMG_MUSKALLONGE_YOOPER = "$Q/0ddbafe9-84ee-42ec-9f1b-f78c85baad07.png"
     private const val IMG_MYLONITE = "$Q/cac3d0fe-0114-469c-af9d-379826b58b97.png"
     private const val IMG_NATIVE_COPPER = "$Q/40fb406a-401c-43c6-9899-6d507589deed.png"
     private const val IMG_NATIVE_GOLD = "$Q/bbb51387-2359-4f34-b89c-310b39ddfba0.png"
@@ -340,7 +340,7 @@ object SpecimenImages {
     private const val IMG_NATROLITE = "$Q/db6bd39d-b8d2-4142-addc-d8bae9a5126c.png"
     private const val IMG_NAUTILOID = "$Q/ab973752-fef9-47ee-91eb-a7aa95b4d4ca.png"
     private const val IMG_NEPTUNITE = "$Q/222060d3-0c11-46bc-9141-4f5064636e9f.png"
-    private const val IMG_NETHERS_FARM = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
+    private const val IMG_NETHERS_FARM = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
     private const val IMG_NEW_MEXICO_ROCK_SHOP = "$Q/1e8be48f-0171-4f2f-8a9d-d71be01049a9.png"
     private const val IMG_NORITE = "$Q/a3a0ce3b-1c9e-4c1b-aa27-c7ab5819fc71.png"
     private const val IMG_NOVACULITE = "$Q/d21cd251-40a1-45cb-8e96-0a46cc1ac1b9.png"
@@ -362,7 +362,7 @@ object SpecimenImages {
     private const val IMG_OPAL_BLACK = "$Q/f0a087c6-b37c-48f8-b03b-fdd2b34ba0b5.png"
     private const val IMG_OPAL_FIRE = "$Q/e63db84b-5472-47c8-8168-cb48e2b45bcb.png"
     private const val IMG_OREGON_PETRIFIED = "$Q/8e16ab74-6bc0-44a2-b6d9-f47e4279e4ac.png"
-    private const val IMG_OREGON_ROCK_N_GEM = "$Q/aeee0cb3-a8fd-438a-8266-a0fd28833b06.png"
+    private const val IMG_OREGON_ROCK_N_GEM = "$Q/764a09c1-50bf-4849-afd5-77d942265126.png"
     private const val IMG_ORTHOCERAS = "$Q/4806c94c-a31d-42a9-b406-ca8c98faa14a.png"
     private const val IMG_ORTHOCLASE = "$Q/cbb8926b-5985-48ee-972b-993d68dfeff7.png"
     private const val IMG_PAINITE = "$Q/5415e1fa-4567-496a-908e-de1f93aa322a.png"
@@ -395,7 +395,7 @@ object SpecimenImages {
     private const val IMG_PYRITE = "$Q/ce54d4e8-b66c-4431-a33a-9bcae71ff5a5.png"
     private const val IMG_PYROLUSITE = "$Q/066fd757-6fba-4e9e-a69e-cb9940ce5af1.png"
     private const val IMG_PYROMORPHITE = "$Q/c71c41da-f606-4c62-acc0-ea8e5a4b71f2.png"
-    private const val IMG_QUARTZ = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
+    private const val IMG_QUARTZ = "$Q/b756414d-fb30-4bdd-9138-21004dfae941.png"
     private const val IMG_QUARTZITE = "$Q/69708fc1-4a45-4565-8fb0-482d72eced1e.png"
     private const val IMG_RAINBOW_LATTICE = "$Q/d02a9792-da2f-4edb-b912-89655aab478f.png"
     private const val IMG_RAINBOW_RIDGE = "$Q/9afc10aa-00e3-4b76-9962-2a044af38854.png"
@@ -405,10 +405,10 @@ object SpecimenImages {
     private const val IMG_RHODONITE = "$Q/8b8f9185-d0b4-4efb-b9ac-99523aba121d.png"
     private const val IMG_RHYOLITE = "$Q/2bf7a5c3-b2c4-4c29-b1c1-66c09f54a56d.png"
     private const val IMG_RIEBECKITE = "$Q/00f5817c-c82a-443b-9b2d-c1cae12085fd.png"
-    private const val IMG_ROCK_ELK = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
-    private const val IMG_ROCK_SHOP_MAGGIE = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
-    private const val IMG_ROCKHOUND_PARK = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
-    private const val IMG_RONTONDA = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
+    private const val IMG_ROCK_ELK = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
+    private const val IMG_ROCK_SHOP_MAGGIE = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
+    private const val IMG_ROCKHOUND_PARK = "$Q/b756414d-fb30-4bdd-9138-21004dfae941.png"
+    private const val IMG_RONTONDA = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
     private const val IMG_ROSE_QUARTZ = "$Q/81179175-b664-4280-b096-58ade243bfa3.png"
     private const val IMG_ROYAL_PEACOCK = "$Q/e998f079-8703-4f63-aa95-014760ba0bbe.png"
     private const val IMG_RUBELLITE = "$Q/d157eafb-1799-448a-8dce-df84720656de.png"
@@ -428,7 +428,7 @@ object SpecimenImages {
     private const val IMG_SERPENTINE = "$Q/a6766f56-1280-4ba8-813d-2b3cb820529d.png"
     private const val IMG_SHALE = "$Q/9bfb5ef0-a732-4291-bc15-a7802c31e43f.png"
     private const val IMG_SHATTUCKITE = "$Q/a789ec2a-fca1-4f1d-9f56-dd38a273acb1.png"
-    private const val IMG_SHEEP_CREEK = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
+    private const val IMG_SHEEP_CREEK = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
     private const val IMG_SHORTITE = "$Q/540ad293-4608-4834-96c8-e698cb78898e.png"
     private const val IMG_SIDERITE = "$Q/3a8c8f5b-c6c5-4de6-bcd3-71fd4d12ce4c.png"
     private const val IMG_SILLIMANITE = "$Q/1e1b3ee6-f313-42ed-85c9-13d205cea67f.png"
@@ -490,7 +490,7 @@ object SpecimenImages {
     private const val IMG_TRAVERTINE = "$Q/fde63316-61dd-4c91-901e-efd94cbbd1a6.png"
     private const val IMG_TREMOLITE = "$Q/ea9681c3-91c3-4a97-ab8a-cd76a2b31b64.png"
     private const val IMG_TRILOBITE = "$Q/ae6e4244-7c56-401f-be8d-6a5ff643ce4a.png"
-    private const val IMG_TRINITY_AGATES = "$Q/aeee0cb3-a8fd-438a-8266-a0fd28833b06.png"
+    private const val IMG_TRINITY_AGATES = "$Q/6f93b205-b4aa-4d92-9e7c-1b7d9188b09f.png"
     private const val IMG_TUCSON_MINERAL_DEALERS = "$Q/08135330-34fa-49d2-9350-c57b42c7faa2.png"
     private const val IMG_TUFF = "$Q/41fb2961-26e1-48fe-899e-0784e8461545.png"
     private const val IMG_TURQUOISE = "$Q/000cf579-8174-4073-b4b8-fbe78fd7aa1d.png"
@@ -501,7 +501,7 @@ object SpecimenImages {
     private const val IMG_TURRITELLA = "$Q/caba45f8-57d6-4d88-8b0c-12c2c8e3c84e.png"
     private const val IMG_ULEXITE = "$Q/cc1da64e-f3c4-42ba-b7ed-019945f428a1.png"
     private const val IMG_UVAROVITE = "$Q/52af9f95-b12c-4a63-8127-73477674b72d.png"
-    private const val IMG_V_ROCK_SHOP = "$Q/35d2da4f-6205-4eb2-a4ad-0217c15fc3c6.png"
+    private const val IMG_V_ROCK_SHOP = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
     private const val IMG_VANADINITE_NEW = "$Q/8eaac436-7be6-4fce-bbc0-08a379d31a89.png"
     private const val IMG_VARISCITE = "$Q/14709319-dbc8-4f78-b942-465dc8af6842.png"
     private const val IMG_VERDELITE = "$Q/eff7bd14-2a95-4afa-a251-9b041642bc3c.png"
@@ -509,10 +509,10 @@ object SpecimenImages {
     private const val IMG_VIVIANITE = "$Q/f62652e4-594c-467a-be94-06e936b0975a.png"
     private const val IMG_WACKE = "$Q/af4916ae-42c6-4f0b-a5a0-4cc11c0e33b4.png"
     private const val IMG_WAVELLITE = "https://r2-pub.rork.com/web-fetch-images/c3ae5de17f1376315cb34212c836634af3b244e4c3e8ee29cb90f6c9760b399c.jpeg"
-    private const val IMG_WEGNER_QUARTZ = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
-    private const val IMG_WHITEFISH_YOOPER = "$Q/aeee0cb3-a8fd-438a-8266-a0fd28833b06.png"
+    private const val IMG_WEGNER_QUARTZ = "$Q/b756414d-fb30-4bdd-9138-21004dfae941.png"
+    private const val IMG_WHITEFISH_YOOPER = "$Q/0ddbafe9-84ee-42ec-9f1b-f78c85baad07.png"
     private const val IMG_WILLEMITE = "$Q/4418575a-e42d-47a4-94a7-4fca662fb4e3.png"
-    private const val IMG_WILLIAMS_QUARRY = "$Q/f365ba1f-83ac-4e0c-b1ea-6933d51cf997.png"
+    private const val IMG_WILLIAMS_QUARRY = "$Q/b756414d-fb30-4bdd-9138-21004dfae941.png"
     private const val IMG_WITHERITE = "$Q/eb297c50-4ec4-45fe-8f62-419b23222b4b.png"
     private const val IMG_WOLFRAMITE = "$Q/c3bd75db-17d5-469a-8698-6a56154f97c9.png"
     private const val IMG_WULFENITE_NEW = "$Q/1c43f7ad-e2ef-4478-ad0a-460dd6203d4b.png"
@@ -3187,6 +3187,21 @@ object SpecimenImages {
     private const val IMG_ENCHANTMENT_AGATE_REPLICA_2 = "$Q/a96e02fe-a9c0-484b-a367-75084d85e41a.png"
     private const val IMG_TRINITY_AGATE_REPLICA_1 = "$Q/acfc2fea-35fc-4cfe-a8d0-24e3fa3a0cb0.png"
     private const val IMG_TRINITY_AGATE_REPLICA_2 = "$Q/d8e801f3-e769-479c-8819-bb2c83e405c2.png"
+    // Specimen replacement images for previously shared UUIDs
+    private const val IMG_PETRIFIED_WOOD_REPLICA = "$Q/6e106136-1f27-45cb-be3d-f757e86c75e8.png"
+    private const val IMG_PERIDOT_BEACH_REPLICA = "$Q/0c6a4cdc-c7a6-4a2d-a845-d2feda9a307c.png"
+    private const val IMG_MOREFIELD_MINE_REPLICA = "$Q/3f1d9fde-6083-4a73-ae10-b92c75c242b0.png"
+    private const val IMG_METACONGLOMERATE_REPLICA = "$Q/9a8a35df-2730-4747-b7b9-e3190b593a48.png"
+    private const val IMG_TEKTITE_TAGAMITE_REPLICA = "$Q/899dc68d-a0eb-4226-83ab-98c7bd1ac094.png"
+    // Location category placeholder images
+    private const val IMG_LOC_ROCK_SHOP = "$Q/81d79698-b3b5-4680-83f5-62e7a0a8fd33.png"
+    private const val IMG_LOC_QUARTZ_MINE = "$Q/b756414d-fb30-4bdd-9138-21004dfae941.png"
+    private const val IMG_LOC_AGATE_CREEK = "$Q/0ddbafe9-84ee-42ec-9f1b-f78c85baad07.png"
+    private const val IMG_LOC_GEODE_DESERT = "$Q/764a09c1-50bf-4849-afd5-77d942265126.png"
+    private const val IMG_LOC_MUSEUM = "$Q/4ccaff53-7599-45d0-a8b0-f353ca8e2712.png"
+    private const val IMG_LOC_GEM_SHOW = "$Q/9c220ea3-4e64-40e1-83a8-6e216e0b2580.png"
+    private const val IMG_LOC_QUARRY = "$Q/d2196094-4465-40a3-9549-c1f7615c1559.png"
+    private const val IMG_LOC_OPAL_MINE = "$Q/6f93b205-b4aa-4d92-9e7c-1b7d9188b09f.png"
     private const val IMG_PINK_AMETHYST = "$Q/bab556c2-6d84-42c5-a030-11a0f0ab6152.png"
     private const val IMG_FLUORITE_RAINBOW_NEW = "$Q/9c704758-8981-475b-8695-e9bcddcbf148.png"
     private const val IMG_SELENITE_COLUMN = "$Q/7f3913ff-2bd8-480e-8005-e4dbaea95ee8.png"
@@ -3437,7 +3452,7 @@ object SpecimenImages {
         "cherokee-ruby" to listOf(IMG_CHEROKEE_RUBY, IMG_CHEROKEE_RUBY_WILD, IMG_CHEROKEE_RUBY_MUSEUM),
         "charlevoix-stone" to listOf(IMG_CHARLEVOIX_SPECIMEN, IMG_CHARLEVOIX_WILD),
         "chert" to listOf(IMG_CHERT, IMG_CHERT_WILD, IMG_CHERT_MUSEUM, IMG_CHERT_CABOCHON_NEW),
-        "chlorastrolite" to listOf(IMG_CHLORASTROLITE, IMG_CHLORASTROLITE_WILD, IMG_CHLORASTROLITE_MUSEUM, IMG_CHLORASTROLITE_CABOCHON),
+        "chlorastrolite" to listOf(IMG_CHLORASTROLITE_WILD, IMG_CHLORASTROLITE_MUSEUM, IMG_CHLORASTROLITE_CABOCHON),
         "chromite" to listOf(IMG_CHROMITE, IMG_CHROMITE_WILD, IMG_CHROMITE_MUSEUM),
         "chrysoberyl" to listOf(IMG_CHRYSOBERYL, IMG_CHRYSOBERYL_WILD, IMG_CHRYSOBERYL_MUSEUM, IMG_CHRYSOBERYL_CABOCHON),
         "chrysocolla" to listOf(IMG_CHRYSOCOLLA, IMG_CHRYSOCOLLA_WILD, IMG_CHRYSOCOLLA_MUSEUM, IMG_CHRYSOCOLLA_CABOCHON),
@@ -3477,7 +3492,7 @@ object SpecimenImages {
         "denio-thundereggs" to listOf(IMG_DENIO_THUNDEREGGS, IMG_DENIO_THUNDEREGG_WILD, IMG_DENIO_THUNDEREGG_MUSEUM, IMG_DENIO_THUNDEREGG_CAB),
         "denver-gem-show" to listOf(IMG_DENVER_GEM_SHOW),
         "descloizite" to listOf(IMG_DESCLOIZITE, IMG_DESCLOIZITE_WILD, IMG_DESCLOIZITE_MUSEUM),
-        "diamond" to listOf(IMG_DIAMOND, IMG_DIAMOND_YELLOW, IMG_DIAMOND_PINK, IMG_DIAMOND_BLUE, IMG_DIAMOND_WILD, IMG_DIAMOND_MUSEUM),
+        "diamond" to listOf(IMG_DIAMOND_YELLOW, IMG_DIAMOND_PINK, IMG_DIAMOND_BLUE, IMG_DIAMOND_WILD, IMG_DIAMOND_MUSEUM),
         "diamond-hill" to listOf(IMG_DIAMOND_HILL),
         "diamond-peak" to listOf(IMG_DIAMOND_PEAK),
         "diatomite" to listOf(IMG_DIATOMITE, IMG_DIATOMITE_WILD, IMG_DIATOMITE_MUSEUM),
@@ -3496,8 +3511,8 @@ object SpecimenImages {
         "eclogite" to listOf(IMG_ECLOGITE, IMG_ECLOGITE_WILD, IMG_ECLOGITE_MUSEUM),
         "ecphora" to listOf(IMG_ECPHORA, IMG_ECPHORA_VAR),
         "ellenville" to listOf(IMG_ELLENVILLE, IMG_ELLENVILLE_WILD, IMG_ELLENVILLE_MUSEUM),
-        "emerald" to listOf(IMG_EMERALD, IMG_EMERALD_WILD, IMG_EMERALD_MUSEUM),
-        "emerald-hollow" to listOf(IMG_EMERALD_HOLLOW, IMG_EMERALD_HOLLOW_WILD, IMG_EMERALD_HOLLOW_MUSEUM, IMG_EMERALD_HOLLOW_CAB),
+        "emerald" to listOf(IMG_EMERALD_WILD, IMG_EMERALD_MUSEUM),
+        "emerald-hollow" to listOf(IMG_EMERALD_HOLLOW_WILD, IMG_EMERALD_HOLLOW_MUSEUM, IMG_EMERALD_HOLLOW_CAB),
         "enchantment-agates" to listOf(IMG_ENCHANTMENT_AGATES, IMG_ENCHANTMENT_AGATE_WILD, IMG_ENCHANTMENT_AGATE_MUSEUM, IMG_ENCHANTMENT_AGATE_CAB, IMG_ENCHANTMENT_AGATE_REPLICA_1, IMG_ENCHANTMENT_AGATE_REPLICA_2),
         "enchodus" to listOf(IMG_ENCHODUS, IMG_ENCHODUS_WILD, IMG_ENCHODUS_MUSEUM),
         "endoceras" to listOf(IMG_ENDOCERAS, IMG_ENDOCERAS_WILD, IMG_ENDOCERAS_MUSEUM),
@@ -3648,19 +3663,19 @@ object SpecimenImages {
         "mimetite" to listOf(IMG_MIMETITE, IMG_MIMETITE_MUSEUM),
         "molybdenite" to listOf(IMG_MOLYBDENITE, IMG_MOLYBDENITE_WILD, IMG_MOLYBDENITE_MUSEUM),
         "moonstone" to listOf(IMG_MOONSTONE, IMG_MOONSTONE_ROUGH_2, IMG_MOONSTONE_WILD, IMG_MOONSTONE_MUSEUM, IMG_MOONSTONE_CABOCHON),
-        "morefield-mine" to listOf(IMG_MOREFIELD_MINE),
+        "morefield-mine" to listOf(IMG_MOREFIELD_MINE, IMG_MOREFIELD_MINE_REPLICA),
         "morganite" to listOf(IMG_MORGANITE, IMG_MORGANITE_WILD, IMG_MORGANITE_MUSEUM),
         "mosasaur-tooth" to listOf(IMG_MOSASAUR_TOOTH, IMG_MOSASAUR_TOOTH_WILD, IMG_MOSASAUR_TOOTH_MUSEUM),
         "moss-agate" to listOf(COMMONS_MOSS_AGATE_HG, COMMONS_MOSS_AGATE_CABOCHONS, COMMONS_MOSS_AGATE_MONTANA, IMG_MOSS_AGATE_WILD, IMG_MOSS_AGATE_MUSEUM, IMG_MOSS_AGATE_CABOCHON),
         "mottramite" to listOf(IMG_MOTTRAMITE, IMG_MOTTRAMITE_WILD, IMG_MOTTRAMITE_MUSEUM),
-        "mount-apatite" to listOf(IMG_MOUNT_APATITE, IMG_MOUNT_APATITE_WILD, IMG_MOUNT_APATITE_MUSEUM, IMG_MOUNT_APATITE_CAB),
+        "mount-apatite" to listOf(IMG_MOUNT_APATITE_WILD, IMG_MOUNT_APATITE_MUSEUM, IMG_MOUNT_APATITE_CAB),
         "munising-yooper" to listOf(IMG_YOOPERLITE_MUNISING),
         "muscovite" to listOf(IMG_MUSCOVITE, IMG_MUSCOVITE_WILD, IMG_MUSCOVITE_MUSEUM),
         "musgravite" to listOf(IMG_MUSGRAVITE, IMG_MUSGRAVITE_WILD, IMG_MUSGRAVITE_MUSEUM),
         "muskallonge-yooper" to listOf(IMG_YOOPERLITE_MUSKALLONGE),
         "mylonite" to listOf(IMG_MYLONITE, IMG_MYLONITE_WILD, IMG_MYLONITE_MUSEUM),
         "mohawkite" to listOf(IMG_MOHAWKITE, IMG_MOHAWKITE_WILD, IMG_MOHAWKITE_MUSEUM),
-        "native-copper" to listOf(IMG_NATIVE_COPPER, IMG_NATIVE_COPPER_WILD, IMG_NATIVE_COPPER_MUSEUM),
+        "native-copper" to listOf(IMG_NATIVE_COPPER_WILD, IMG_NATIVE_COPPER_MUSEUM),
         "native-gold" to listOf(IMG_NATIVE_GOLD, IMG_NATIVE_GOLD_WILD, IMG_NATIVE_GOLD_MUSEUM),
         "native-silver" to listOf(IMG_NATIVE_SILVER, IMG_NATIVE_SILVER_WILD, IMG_NATIVE_SILVER_MUSEUM),
         "native-sulfur" to listOf(IMG_NATIVE_SULFUR, IMG_NATIVE_SULFUR_WILD, IMG_NATIVE_SULFUR_MUSEUM),
@@ -3684,7 +3699,7 @@ object SpecimenImages {
         "pargasite" to listOf(IMG_PARGASITE, IMG_PARGASITE_WILD, IMG_PARGASITE_MUSEUM),
         "pegmatite" to listOf(IMG_PEGMATITE, IMG_PEGMATITE_WILD, IMG_PEGMATITE_MUSEUM),
         "peridot" to listOf(IMG_PERIDOT, IMG_PERIDOT_ROUGH_2, IMG_PERIDOT_WILD, IMG_PERIDOT_MUSEUM, IMG_PERIDOT_CABOCHON),
-        "peridot-beach" to listOf(IMG_PERIDOT_BEACH),
+        "peridot-beach" to listOf(IMG_PERIDOT_BEACH, IMG_PERIDOT_BEACH_REPLICA),
         "pectolite" to listOf(IMG_PECTOLITE, IMG_PECTOLITE_WILD, IMG_PECTOLITE_MUSEUM, IMG_PECTOLITE_CABOCHON),
         "pectolite-fibrous" to listOf(IMG_PECTOLITE_FIBROUGH),
         "pectolite-schizolite" to listOf(IMG_PECTOLITE_SCHIZOLITE_MUSEUM, IMG_PECTOLITE_SCHIZOLITE),
@@ -3729,9 +3744,9 @@ object SpecimenImages {
         "royal-peacock" to listOf(IMG_ROYAL_PEACOCK, IMG_ROYAL_PEACOCK_WILD, IMG_ROYAL_PEACOCK_MUSEUM, IMG_ROYAL_PEACOCK_CAB),
         "rugose-coral" to listOf(IMG_RUGOSE_CORAL, IMG_RUGOSE_CORAL_WILD, IMG_RUGOSE_CORAL_MUSEUM),
         "rutilated-quartz" to listOf(IMG_RUTILATED_QUARTZ, IMG_RUTILATED_QUARTZ_WILD, IMG_RUTILATED_QUARTZ_MUSEUM),
-        "rutile" to listOf(IMG_RUTILE, IMG_RUTILE_WILD, IMG_RUTILE_MUSEUM),
-        "rutile-harrison" to listOf(IMG_RUTILE_HARRISON, IMG_RUTILE_HARRISON_WILD, IMG_RUTILE_HARRISON_MUSEUM),
-        "san-carlos" to listOf(IMG_SAN_CARLOS, IMG_SAN_CARLOS_WILD, IMG_SAN_CARLOS_MUSEUM, IMG_SAN_CARLOS_CAB),
+        "rutile" to listOf(IMG_RUTILE_WILD, IMG_RUTILE_MUSEUM),
+        "rutile-harrison" to listOf(IMG_RUTILE_HARRISON_WILD, IMG_RUTILE_HARRISON_MUSEUM),
+        "san-carlos" to listOf(IMG_SAN_CARLOS_WILD, IMG_SAN_CARLOS_MUSEUM, IMG_SAN_CARLOS_CAB),
         "sandstone" to listOf(IMG_SANDSTONE, IMG_SANDSTONE_WILD, IMG_SANDSTONE_MUSEUM),
         "sardonyx" to listOf(IMG_SARDONYX_SPECIMEN_NEW, IMG_SARDONYX_CABOCHON_NEW)
     ) }
@@ -3759,7 +3774,7 @@ object SpecimenImages {
         "soapstone" to listOf(IMG_SOAPSTONE, IMG_SOAPSTONE_WILD, IMG_SOAPSTONE_MUSEUM),
         "sodalite" to listOf(IMG_SODALITE, IMG_SODALITE_WILD, IMG_SODALITE_MUSEUM, IMG_SODALITE_CABOCHON),
         "spectrolite" to listOf(IMG_SPECTROLITE, IMG_SPECTROLITE_WILD, IMG_SPECTROLITE_CABOCHON),
-        "spencer-opal" to listOf(IMG_SPENCER_OPAL, IMG_SPENCER_OPAL_WILD, IMG_SPENCER_OPAL_MUSEUM, IMG_SPENCER_OPAL_CAB),
+        "spencer-opal" to listOf(IMG_SPENCER_OPAL_WILD, IMG_SPENCER_OPAL_MUSEUM, IMG_SPENCER_OPAL_CAB),
         "sphalerite" to listOf(IMG_SPHALERITE, IMG_SPHALERITE_BROWN, IMG_SPHALERITE_HONEY, IMG_SPHALERITE_RUBY, IMG_SPHALERITE_GREEN, IMG_SPHALERITE_WILD, IMG_SPHALERITE_MUSEUM),
         "spinel" to listOf(IMG_SPINEL, IMG_SPINEL_WILD, IMG_SPINEL_MUSEUM),
         "spirifer" to listOf(IMG_SPIRIFER, IMG_SPIRIFER_WILD),
@@ -3775,8 +3790,8 @@ object SpecimenImages {
         "strontianite" to listOf(IMG_STRONTIANITE, IMG_STRONTIANITE_WILD, IMG_STRONTIANITE_MUSEUM),
         "sugilite" to listOf(IMG_SUGILITE, IMG_SUGILITE_ROUGH_2, IMG_SUGILITE_WILD, IMG_SUGILITE_MUSEUM, IMG_SUGILITE_CABOCHON),
         "sunstone" to listOf(IMG_SUNSTONE, IMG_SUNSTONE_ROUGH_2, IMG_SUNSTONE_WILD, IMG_SUNSTONE_MUSEUM, IMG_SUNSTONE_CABOCHON),
-        "sunstone-plush" to listOf(IMG_SUNSTONE_PLUSH, IMG_SUNSTONE_PLUSH_WILD, IMG_SUNSTONE_PLUSH_MUSEUM, IMG_SUNSTONE_PLUSH_CAB),
-        "sweet-home" to listOf(IMG_SWEET_HOME, IMG_SWEET_HOME_WILD, IMG_SWEET_HOME_MUSEUM, IMG_SWEET_HOME_CAB),
+        "sunstone-plush" to listOf(IMG_SUNSTONE_PLUSH_WILD, IMG_SUNSTONE_PLUSH_MUSEUM, IMG_SUNSTONE_PLUSH_CAB),
+        "sweet-home" to listOf(IMG_SWEET_HOME_WILD, IMG_SWEET_HOME_MUSEUM, IMG_SWEET_HOME_CAB),
         "sylvite" to listOf(IMG_SYLVITE, IMG_SYLVITE_WILD, IMG_SYLVITE_MUSEUM),
         "taaffeite" to listOf(IMG_TAAFFEITE, IMG_TAAFFEITE_WILD),
         "talc" to listOf(IMG_TALC, IMG_TALC_WILD),
@@ -3787,8 +3802,8 @@ object SpecimenImages {
         "topaz-mountain" to listOf(IMG_TOPAZ_MOUNTAIN),
         "torbernite" to listOf(IMG_TORBERNITE, IMG_TORBERNITE_WILD, IMG_TORBERNITE_MUSEUM),
         "tourmalinated-quartz" to listOf(IMG_TOURMALINATED_QUARTZ, IMG_TOURMALINATED_QUARTZ_WILD, IMG_TOURMALINATED_QUARTZ_MUSEUM),
-        "tourmaline" to listOf(IMG_TOURMALINE, IMG_TOURMALINE_GREEN, IMG_TOURMALINE_BLUE, IMG_TOURMALINE_BLACK, IMG_TOURMALINE_WATERMELON, IMG_TOURMALINE_WILD, IMG_TOURMALINE_MUSEUM, IMG_TOURMALINE_CABOCHON),
-        "tourmaline-queen" to listOf(IMG_TOURMALINE_QUEEN, IMG_TOURMALINE_QUEEN_WILD, IMG_TOURMALINE_QUEEN_MUSEUM, IMG_TOURMALINE_QUEEN_CAB),
+        "tourmaline" to listOf(IMG_TOURMALINE_GREEN, IMG_TOURMALINE_BLUE, IMG_TOURMALINE_BLACK, IMG_TOURMALINE_WATERMELON, IMG_TOURMALINE_WILD, IMG_TOURMALINE_MUSEUM, IMG_TOURMALINE_CABOCHON),
+        "tourmaline-queen" to listOf(IMG_TOURMALINE_QUEEN_WILD, IMG_TOURMALINE_QUEEN_MUSEUM, IMG_TOURMALINE_QUEEN_CAB),
         "travertine" to listOf(IMG_TRAVERTINE, IMG_TRAVERTINE_WILD, IMG_TRAVERTINE_MUSEUM),
         "tremolite" to listOf(IMG_TREMOLITE, IMG_TREMOLITE_WILD, IMG_TREMOLITE_MUSEUM),
         "trilobite" to listOf(IMG_TRILOBITE, IMG_TRILOBITE_WILD, IMG_TRILOBITE_MUSEUM),
@@ -3843,7 +3858,7 @@ object SpecimenImages {
         "sagenitic-agate" to listOf(IMG_SAGENITIC_AGATE, IMG_SAGENITIC_AGATE_WILD),
         "coldwater-agate" to listOf(IMG_COLDWATER_AGATE, IMG_COLDWATER_AGATE_VAR, IMG_COLDWATER_AGATE_REPLICA_1, IMG_COLDWATER_AGATE_REPLICA_2),
         "apache-tears" to listOf(IMG_COMMONS_APACHE_TEARS, IMG_COMMONS_APACHE_TEARS_PERLITE, IMG_APACHE_TEARS_ROUGH_NODULES, IMG_APACHE_TEARS_IN_PERLITE, IMG_APACHE_TEARS_BACKLIT),
-        "obsidian" to listOf(IMG_OBSIDIAN, IMG_OBSIDIAN_MAHOGANY, IMG_OBSIDIAN_RAINBOW, IMG_SNOWFLAKE_OBSIDIAN, IMG_ELECTRIC_BLUE_OBSIDIAN, IMG_SILVER_SHEEN_OBSIDIAN, IMG_GOLDEN_SHEEN_OBSIDIAN, IMG_MIDNIGHT_LACE_OBSIDIAN, IMG_OBSIDIAN_WILD, IMG_OBSIDIAN_MUSEUM, IMG_OBSIDIAN_CABOCHON),
+        "obsidian" to listOf(IMG_OBSIDIAN_MAHOGANY, IMG_OBSIDIAN_RAINBOW, IMG_SNOWFLAKE_OBSIDIAN, IMG_ELECTRIC_BLUE_OBSIDIAN, IMG_SILVER_SHEEN_OBSIDIAN, IMG_GOLDEN_SHEEN_OBSIDIAN, IMG_MIDNIGHT_LACE_OBSIDIAN, IMG_OBSIDIAN_WILD, IMG_OBSIDIAN_MUSEUM, IMG_OBSIDIAN_CABOCHON),
         "actinolite" to listOf(IMG_ACTINOLITE, IMG_ACTINOLITE_WILD, IMG_ACTINOLITE_MUSEUM),
         "aegirine" to listOf(IMG_AEGIRINE, IMG_AEGIRINE_MUSEUM),
         "albite" to listOf(IMG_ALBITE, IMG_ALBITE_MUSEUM),
@@ -3919,14 +3934,14 @@ object SpecimenImages {
         "carbonaceous-chondrite" to listOf(IMG_CHONDRITE_FIELD, IMG_CARBONACEOUS_CROSS),
         "mesosiderite" to listOf(IMG_MESOSIDERITE, IMG_MESOSIDERITE_VAR),
         "tektite" to listOf(IMG_TEKTITE_ROUGH, IMG_TEKTITE_WILD_NEW, IMG_TEKTITE_MUSEUM_NEW),
-        "tektite-tagamite" to listOf(IMG_TEKTITE_TAGAMITE_ROUGH, IMG_TEKTITE_TAGAMITE_WILD, IMG_TEKTITE_TAGAMITE_MUSEUM),
+        "tektite-tagamite" to listOf(IMG_TEKTITE_TAGAMITE_ROUGH, IMG_TEKTITE_TAGAMITE_WILD, IMG_TEKTITE_TAGAMITE_MUSEUM, IMG_TEKTITE_TAGAMITE_REPLICA),
         "azurite-malachite" to listOf(IMG_AZURITE_MALACHITE, IMG_AZURITE_MALACHITE_VAR),
         "amygdaloidal-basalt" to listOf("$Q/6a43aaef-2289-4e6e-823d-502206774e4e.png", "$Q/3697278d-c379-4786-891b-6a2dd5ca8714.png"),
         "copper-ore-assemblage" to listOf(IMG_CHRYSOCOLLA_AZURITE_MALACHITE, IMG_COPPER_ORE_ASSEMBLAGE_VAR),
         "ruby-zoisite" to listOf(IMG_RUBY_ZOISITE, IMG_RUBY_ZOISITE_WILD, IMG_RUBY_ZOISITE_MUSEUM, IMG_RUBY_ZOISITE_CAB),
         "tourmaline-pegmatite" to listOf(IMG_TOURMALINE_QUARTZ_FELDSPAR, IMG_TOURMALINE_PEGMATITE_WILD, IMG_TOURMALINE_PEGMATITE_MUSEUM, IMG_TOURMALINE_PEGMATITE_CAB),
         "galena-sphalerite-pyrite" to listOf(IMG_GALENA_SPHALERITE_PYRITE, IMG_GALENA_SPHALERITE_PYRITE_VAR),
-        "quartz" to listOf(IMG_QUARTZ, IMG_QUARTZ_WILD, IMG_QUARTZ_WILD_2, IMG_QUARTZ_MUSEUM, IMG_QUARTZ_CABOCHON, "$Q/9a6317dd-e330-4f91-9e51-0a8443ca95eb.png", "$Q/6beafea5-90b5-4dd8-832e-e5b9e14ff923.png"),
+        "quartz" to listOf(IMG_QUARTZ_WILD, IMG_QUARTZ_WILD_2, IMG_QUARTZ_MUSEUM, IMG_QUARTZ_CABOCHON, "$Q/9a6317dd-e330-4f91-9e51-0a8443ca95eb.png", "$Q/6beafea5-90b5-4dd8-832e-e5b9e14ff923.png"),
         "fossil-soup" to listOf(IMG_FOSSIL_SOUP, IMG_FOSSIL_SOUP_VAR, IMG_FOSSIL_SOUP_BEACH),
         "natural-pearls" to listOf(IMG_NATURAL_PEARLS, IMG_NATURAL_PEARLS_WILD, IMG_NATURAL_PEARLS_MUSEUM),
         "grape-agate" to listOf(IMG_GRAPE_AGATE, IMG_GRAPE_AGATE_MUSEUM),
@@ -4116,7 +4131,7 @@ object SpecimenImages {
         "sedimentary-geode" to listOf(IMG_GEODE_WILD, IMG_GEODE_MUSEUM),
         "metamorphic-blueschist" to listOf(IMG_BLUESCHIST, IMG_METAMORPHIC_BLUESCHIST_VAR),
         "fossil-shark-tooth" to listOf(IMG_GREAT_WHITE_TOOTH, IMG_FOSSIL_SHARK_TOOTH_VAR),
-        "fossil-petrified-wood-whole" to listOf(IMG_PETRIFIED_WOOD, IMG_FOSSIL_PETRIFIED_WOOD_WHOLE_VAR),
+        "fossil-petrified-wood-whole" to listOf(IMG_PETRIFIED_WOOD, IMG_FOSSIL_PETRIFIED_WOOD_WHOLE_VAR, IMG_PETRIFIED_WOOD_REPLICA),
         "moldavite" to listOf(IMG_MOLDAVITE, IMG_MOLDAVITE_WILD, IMG_MOLDAVITE_MUSEUM, IMG_MOLDAVITE_CABOCHON),
         "libyan-desert-glass" to listOf(IMG_LIBYAN_DESERT_GLASS, IMG_LIBYAN_DESERT_GLASS_VAR),
         "amazing-enhydro-agate" to listOf(IMG_ENHYDRO_AGATE, IMG_ENHYDRO_AGATE_VAR),
@@ -4146,7 +4161,7 @@ object SpecimenImages {
         "amazing-fluorescent-scapolite" to listOf(IMG_FLUOR_SCAPOLITE_LW, IMG_FLUOR_SCAPOLITE_SW, IMG_FLUOR_SCAPOLITE_MW, IMG_FLUOR_SCAPOLITE_NAT),
         "amazing-fluorescent-hackmanite" to listOf(IMG_FLUOR_HACKMANITE_SW, IMG_FLUOR_HACKMANITE_LW, IMG_FLUOR_HACKMANITE_AFTER_UV, IMG_FLUOR_HACKMANITE_NAT, IMG_FLUOR_HACKMANITE_CAB_BEFORE_SUN, IMG_FLUOR_HACKMANITE_CAB_AFTER_SUN),
         "amazing-fluorescent-adamite" to listOf(IMG_FLUOR_ADAMITE_LW, IMG_FLUOR_ADAMITE_SW, IMG_FLUOR_ADAMITE_MW, IMG_FLUOR_ADAMITE_NAT),
-        "amazing-fluorescent-syenite-yooperlite" to listOf(IMG_FLUOR_YOOPERLITE_LW, IMG_FLUOR_YOOPERLITE_SW, IMG_FLUOR_YOOPERLITE_MW, IMG_FLUOR_SYENITE_LW, IMG_FLUOR_SYENITE_SW, IMG_FLUOR_SYENITE_MW, IMG_FLUOR_YOOPERLITE_NAT, IMG_FLUOR_SYENITE_NAT),
+        "amazing-fluorescent-syenite-yooperlite" to listOf(IMG_FLUOR_YOOPERLITE_LW, IMG_FLUOR_YOOPERLITE_SW, IMG_FLUOR_YOOPERLITE_MW, IMG_FLUOR_SYENITE_LW, IMG_FLUOR_SYENITE_SW, IMG_FLUOR_SYENITE_MW, IMG_FLUOR_SYENITE_NAT),
         "amazing-chatoyant-chrysoberyl" to listOf(IMG_CATSEYE_CHRYSO, IMG_CATSEYE_CHRYSO_CAB),
         // amazing-asteriated-sapphire removed; Star Optics now uses gem-sapphire-star mapping above
         "amazing-iridescent-ammolite" to listOf(IMG_AMMOLITE, IMG_AMMOLITE_VAR, IMG_IRID_AMMOLITE, IMG_IRID_AMMOLITE_VAR),
@@ -5007,9 +5022,9 @@ object SpecimenImages {
         "serpentinite" to listOf(IMG_EB18_SERPENTINITE_ROUGH, IMG_EB18_SERPENTINITE_WILD, IMG_EB18_SERPENTINITE_MUSEUM),
         "suevite" to listOf(IMG_EB18_SUEVITE_ROUGH, IMG_EB18_SUEVITE_WILD, IMG_EB18_SUEVITE_MUSEUM),
         "pseudotachylite" to listOf(IMG_EB18_PSEUDOTACHYLITE_ROUGH, IMG_EB18_PSEUDOTACHYLITE_WILD, IMG_EB18_PSEUDOTACHYLITE_MUSEUM),
-        "calcflinta" to listOf(IMG_EB18_CALCFLINTA_ROUGH, IMG_EB18_CALCFLINTA_WILD, IMG_EB18_CALCFLINTA_MUSEUM),
-        "metaconglomerate" to listOf(IMG_EB18_METACONGLOMERATE_ROUGH, IMG_EB18_METACONGLOMERATE_WILD, IMG_EB18_METACONGLOMERATE_MUSEUM),
-        "amphibolite-golden" to listOf(IMG_EB18_AMPHIBOLITE_GOLDEN_ROUGH, IMG_EB18_AMPHIBOLITE_GOLDEN_WILD, IMG_EB18_AMPHIBOLITE_GOLDEN_MUSEUM),
+        "calcflinta" to listOf(IMG_EB18_CALCFLINTA_WILD, IMG_EB18_CALCFLINTA_MUSEUM),
+        "metaconglomerate" to listOf(IMG_EB18_METACONGLOMERATE_ROUGH, IMG_EB18_METACONGLOMERATE_WILD, IMG_EB18_METACONGLOMERATE_MUSEUM, IMG_METACONGLOMERATE_REPLICA),
+        "amphibolite-golden" to listOf(IMG_EB18_AMPHIBOLITE_GOLDEN_WILD, IMG_EB18_AMPHIBOLITE_GOLDEN_MUSEUM),
         // Phase 4 — Expansion Batch 19
         "abelsonite" to listOf(IMG_EB19_ABELSONITE_ROUGH, IMG_EB19_ABELSONITE_WILD, IMG_EB19_ABELSONITE_MUSEUM),
         "kasolite" to listOf(IMG_EB19_KASOLITE_ROUGH, IMG_EB19_KASOLITE_WILD, IMG_EB19_KASOLITE_MUSEUM),
