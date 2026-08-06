@@ -371,7 +371,8 @@ private fun MuseumsPage() {
                 sg.copy(museums = sg.museums.filter { m ->
                     m.name.contains(searchQuery, ignoreCase = true) ||
                         m.city.contains(searchQuery, ignoreCase = true) ||
-                        sg.state.contains(searchQuery, ignoreCase = true)
+                        sg.state.contains(searchQuery, ignoreCase = true) ||
+                        (m.address?.contains(searchQuery, ignoreCase = true) ?: false)
                 })
             }.filter { it.museums.isNotEmpty() }
         }
@@ -393,7 +394,17 @@ private fun MuseumsPage() {
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // ── Add a Museum pill + Search bar + map toggle ──
+        // ── Search bar — single row at top ──
+        CompactSearchPill(
+            query = searchQuery,
+            onQueryChange = { searchQuery = it },
+            placeholder = "Search by museum name or location…",
+            accent = Aqua,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 4.dp),
+        )
+        // ── Add a Museum pill + map toggle ──
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -414,15 +425,7 @@ private fun MuseumsPage() {
                 Spacer(Modifier.width(4.dp))
                 Text("Add", style = MaterialTheme.typography.labelMedium, color = Aqua, fontWeight = FontWeight.Bold)
             }
-            Spacer(Modifier.width(8.dp))
-            CompactSearchPill(
-                query = searchQuery,
-                onQueryChange = { searchQuery = it },
-                placeholder = "Search museums…",
-                accent = Aqua,
-                modifier = Modifier.weight(1f),
-            )
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.weight(1f))
             SculptedIconButton(
                 icon = if (isMapView) Icons.Filled.ViewList else Icons.Filled.Map,
                 contentDescription = if (isMapView) "Switch to list view" else "Switch to map view",

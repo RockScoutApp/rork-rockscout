@@ -70,7 +70,7 @@ import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.LocationImage
 import com.rork.rockscout.ui.components.NewBadge
 import com.rork.rockscout.ui.components.DigSitesMapView
-import com.rork.rockscout.ui.components.GlobalSearchSection
+import com.rork.rockscout.ui.components.CompactSearchPill
 import com.rork.rockscout.ui.components.InterstitialAdTrigger
 import com.rork.rockscout.ui.components.AddLocationSheet
 import com.rork.rockscout.ui.components.ScreenScaffold
@@ -153,19 +153,27 @@ fun LocationsScreen(navController: NavController) {
     }
 
     // International nearby locations (within 150 miles)
-    val intlNearby = remember(current, nearbyOn, filter) {
+    val intlNearby = remember(current, nearbyOn, filter, searchQuery) {
         if (nearbyOn && !isUsUser) {
             InternationalLocations.nearbyInternational(current.first, current.second)
                 .filter { filter == null || it.first.type == filter }
+                .filter { searchQuery.isBlank() ||
+                    it.first.name.contains(searchQuery, ignoreCase = true) ||
+                    it.first.region.contains(searchQuery, ignoreCase = true) ||
+                    (it.first.address?.contains(searchQuery, ignoreCase = true) ?: false) }
         } else {
             emptyList()
         }
     }
 
     // US locations (full list for US users, or when nearby is off)
-    val usLocations = remember(current, filter, isUsUser, nearbyOn) {
+    val usLocations = remember(current, filter, isUsUser, nearbyOn, searchQuery) {
         SeedData.allLocations
             .filter { filter == null || it.type == filter }
+            .filter { searchQuery.isBlank() ||
+                it.name.contains(searchQuery, ignoreCase = true) ||
+                it.region.contains(searchQuery, ignoreCase = true) ||
+                (it.address?.contains(searchQuery, ignoreCase = true) ?: false) }
             .map { it to AppRepository.distanceMiles(current.first, current.second, it.latitude, it.longitude) }
             .sortedBy { it.first.name.lowercase() }
     }
@@ -210,11 +218,14 @@ fun LocationsScreen(navController: NavController) {
         },
     ) {
         Column(Modifier.fillMaxSize()) {
-            GlobalSearchSection(
-                navController = navController,
+            CompactSearchPill(
                 query = searchQuery,
                 onQueryChange = { searchQuery = it },
-                placeholder = "Search dig sites, rock shops, BLM areas, specimens…",
+                placeholder = "Search by name or address…",
+                accent = Aqua,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
             )
             Text(
                 "Mines, quarries, public digs, beaches, river gravels, rock shops, and metaphysical stores — tap any pin or card for details, weather, and recommended gear.",
