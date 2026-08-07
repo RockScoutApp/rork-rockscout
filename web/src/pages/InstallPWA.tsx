@@ -17,6 +17,7 @@ import { Layout } from "@/components/Layout";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { AuthPill } from "@/components/AuthPill";
 import { PremiumInstallDialog } from "@/components/PremiumInstallDialog";
+import { FreeInstallDialog } from "@/components/FreeInstallDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useTier } from "@/hooks/useTier";
 import { usePwaInstall, type Platform } from "@/hooks/usePwaInstall";
@@ -46,6 +47,7 @@ export default function InstallPWA({ mode }: InstallPWAProps) {
   const { isPremium, isLoading: tierLoading } = useTier();
   const { platform } = usePwaInstall();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [freeDialogOpen, setFreeDialogOpen] = useState(false);
 
   const isPremiumMode = mode === "premium";
   const isLoading = authLoading || tierLoading;
@@ -91,9 +93,14 @@ export default function InstallPWA({ mode }: InstallPWAProps) {
                 onSignIn={() => setDialogOpen(true)}
               />
             ) : (
-              <div className="scale-125">
-                <InstallAppButton mode="free" />
-              </div>
+              <Button
+                onClick={() => setFreeDialogOpen(true)}
+                size="lg"
+                className="inline-flex items-center gap-2 rounded-full border border-primary/50 bg-primary/10 px-6 text-base font-semibold text-primary transition-all hover:border-primary hover:bg-primary/15 hover:shadow-sm"
+              >
+                <Download className="h-5 w-5" />
+                Install Free PWA
+              </Button>
             )}
 
             {/* Switch-flow links */}
@@ -136,6 +143,11 @@ export default function InstallPWA({ mode }: InstallPWAProps) {
           sign-in button or automatically when the user is already signed in. */}
       {isPremiumMode && (
         <PremiumInstallDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      )}
+
+      {/* Shared free install dialog — opened by the free install button. */}
+      {!isPremiumMode && (
+        <FreeInstallDialog open={freeDialogOpen} onOpenChange={setFreeDialogOpen} />
       )}
     </Layout>
   );

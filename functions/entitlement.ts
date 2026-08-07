@@ -263,6 +263,7 @@ export async function handleEntitlement(
       userId,
     );
     const currentSource = currentProfile?.premium_source ?? null;
+    const currentIsPro = currentProfile?.is_pro ?? false;
 
     if (forcePremium) {
       // Premium APK always sets is_pro=true and source=apk.
@@ -288,6 +289,14 @@ export async function handleEntitlement(
       );
     } else if (currentSource === "apk") {
       // Premium APK user with no RevenueCat record: preserve premium.
+      isPremium = true;
+      supabaseUpdated = true;
+    } else if (currentIsPro && currentSource === null) {
+      // Profile is already premium but the source is unknown (e.g., an APK user
+      // whose Android sync hasn't completed yet, or a legacy premium user).
+      // Don't downgrade — wait for the APK or RevenueCat sync to tell us the
+      // source. This prevents the web PWA's sync from accidentally revoking
+      // premium while the true source is still being established.
       isPremium = true;
       supabaseUpdated = true;
     } else {

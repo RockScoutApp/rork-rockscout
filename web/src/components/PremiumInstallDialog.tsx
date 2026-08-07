@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePwaInstall, type Platform } from "@/hooks/usePwaInstall";
 import { supabase } from "@/lib/supabase";
 import { getDeviceFingerprint, getDeviceLabel } from "@/lib/deviceFingerprint";
+import { syncEntitlement } from "@/lib/entitlement";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
@@ -186,6 +187,12 @@ export function PremiumInstallDialog({ open, onOpenChange }: PremiumInstallDialo
         setState("form");
         return;
       }
+      // Sync the latest entitlement state from the backend before reading
+      // the profile. This is required for premium APK users who have no
+      // RevenueCat purchase: the backend will set/keep is_pro=true when it
+      // sees premium_source="apk" or when the profile is already premium with
+      // an unknown source. It also refreshes RevenueCat status for subscribers.
+      await syncEntitlement(userId);
       const { data } = await supabase
         .from("rockscout_profiles")
         .select("is_pro")

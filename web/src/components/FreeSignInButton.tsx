@@ -1,23 +1,20 @@
-import { useNavigate } from "react-router-dom";
 import { BookOpen, Download } from "lucide-react";
+import { FreeInstallDialog } from "@/components/FreeInstallDialog";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { useState } from "react";
-
-const PWA_START_URL = "/app";
 
 /**
  * Free PWA install button for the navbar.
  *
- * Taps the browser's native install prompt when available. If the browser has
- * not fired `beforeinstallprompt` (iOS Safari, Firefox, or Chrome before the
- * engagement heuristic), it navigates to the dedicated Free PWA install page
- * so the user gets a clear install button or platform-specific instructions
- * instead of a dead control.
+ * Opens the shared FreeInstallDialog so the user always sees a clear popup.
+ * When the browser has fired `beforeinstallprompt`, the dialog immediately
+ * surfaces the native install/cancel prompt. Otherwise it shows platform-specific
+ * "Add to Home Screen" instructions inside the same dialog.
  */
 export const FreeSignInButton = () => {
-  const navigate = useNavigate();
-  const { canInstall, install, installed, hasNativePrompt } = usePwaInstall();
+  const { installed, canInstall } = usePwaInstall();
   const [installing, setInstalling] = useState<boolean>(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   if (installed) {
     return (
@@ -32,40 +29,27 @@ export const FreeSignInButton = () => {
     return null;
   }
 
-  const handleClick = async () => {
-    if (!hasNativePrompt) {
-      navigate("/install/free");
-      return;
-    }
-    setInstalling(true);
-    try {
-      const accepted = await install();
-      if (accepted) {
-        // Once the free PWA is installed, open the app instead of leaving the
-        // browser tab on the marketing website.
-        navigate(PWA_START_URL);
-      }
-    } catch {
-      navigate("/install/free");
-    } finally {
-      setInstalling(false);
-    }
+  const handleClick = () => {
+    setDialogOpen(true);
   };
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={installing}
-      title="Install the free RockScout PWA — no account required"
-      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/40 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:border-primary/30 hover:text-foreground sm:inline-flex"
-    >
-      {installing ? (
-        <Download className="h-3 w-3 animate-bounce" />
-      ) : (
-        <BookOpen className="h-3 w-3" />
-      )}
-      {installing ? "Installing…" : "Free PWA"}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={installing}
+        title="Install the free RockScout PWA — no account required"
+        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/40 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-all hover:border-primary/30 hover:text-foreground sm:inline-flex"
+      >
+        {installing ? (
+          <Download className="h-3 w-3 animate-bounce" />
+        ) : (
+          <BookOpen className="h-3 w-3" />
+        )}
+        {installing ? "Installing…" : "Free PWA"}
+      </button>
+      <FreeInstallDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+    </>
   );
 };
