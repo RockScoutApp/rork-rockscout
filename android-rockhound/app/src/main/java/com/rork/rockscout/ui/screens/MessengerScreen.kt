@@ -1961,11 +1961,12 @@ fun ChatBubble(
                     // Render text with tagged user pills and clickable deep links inline
                     val ctx = LocalContext.current
                     val nav = navController
+                    val linkScope = rememberCoroutineScope()
                     ClickableMessageText(
                         text = text,
                         taggedUserNames = taggedUserNames,
                         onDeepLinkClick = { deepLinkUri ->
-                            nav?.let { handlePingDeepLink(deepLinkUri, ctx, it) }
+                            nav?.let { handlePingDeepLink(deepLinkUri, ctx, it, linkScope) }
                         },
                     )
                 }
@@ -2304,6 +2305,7 @@ private fun handlePingDeepLink(
     uri: android.net.Uri,
     context: android.content.Context,
     navController: NavController,
+    scope: kotlinx.coroutines.CoroutineScope,
 ) {
     if (uri.host != "ping") return
     val coordSegment = uri.pathSegments.firstOrNull()
@@ -2315,7 +2317,7 @@ private fun handlePingDeepLink(
             val label = uri.getQueryParameter("label") ?: "Shared ping"
             val from = uri.getQueryParameter("from") ?: "A fellow hunter"
             val fromId = uri.getQueryParameter("fromId")
-            kotlinx.coroutines.MainScope().launch {
+            scope.launch {
                 SocialRepository.instance.addSharedPing(lat, lng, label, fromId, from)
             }
             navController.navigate(Routes.ROCKSCOUTS_MAP)

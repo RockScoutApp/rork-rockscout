@@ -294,7 +294,7 @@ object Routes {
  * Note: Auth is now mandatory — the SignInScreen gate blocks all navigation
  * until the user is authenticated, so deep links are always handled post-auth.
  */
-private fun handleDeepLink(uri: Uri, navController: NavController) {
+private fun handleDeepLink(uri: Uri, navController: NavController, scope: kotlinx.coroutines.CoroutineScope) {
     val segments = uri.pathSegments
     val isSignedIn = AuthRepository.instance.currentUserId != null
     when (uri.host) {
@@ -381,7 +381,7 @@ private fun handleDeepLink(uri: Uri, navController: NavController) {
                         val from = uri.getQueryParameter("from") ?: "A fellow hunter"
                         val fromId = uri.getQueryParameter("fromId")
                         // Store the shared ping asynchronously, then navigate to the map.
-                        kotlinx.coroutines.MainScope().launch {
+                        scope.launch {
                             SocialRepository.instance.addSharedPing(lat, lng, label, fromId, from)
                         }
                         navController.navigate(Routes.ROCKSCOUTS_MAP)
@@ -569,7 +569,7 @@ fun AppNavigation(
     // so skip them here to avoid double-processing.
     LaunchedEffect(deepLinkUri) {
         if (deepLinkUri != null && deepLinkUri.host != "verify_email") {
-            handleDeepLink(deepLinkUri, navController)
+            handleDeepLink(deepLinkUri, navController, this)
             onDeepLinkConsumed()
         }
     }
