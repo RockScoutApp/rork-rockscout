@@ -10,13 +10,13 @@ object IapConfig {
 
     /** Pro entitlement identifier — legacy Pro tier. Kept for backward compatibility
      *  so existing Pro subscribers keep working. New subscribers buy Premium which
-     *  now includes all 3 AI models. */
+     *  now includes the full 5-source AI system. */
     const val PRO_ENTITLEMENT_ID = "pro"
 
     /** Offering identifier configured in RevenueCat dashboard. */
     const val OFFERING_ID = "default"
 
-    /** Monthly Premium subscription — $5.99/mo, full unlimited access, ad-free, all 3 AI models. */
+    /** Monthly Premium subscription — $5.99/mo, full unlimited access, ad-free, full 5-source AI system. */
     const val PACKAGE_MONTHLY = "monthly"
 
     /** Annual Premium subscription — legacy, kept for existing subscribers only. Not shown in UI. */

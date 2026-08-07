@@ -184,6 +184,7 @@ fun SpecimenDetailScreen(
             if (imageUrls.isNotEmpty()) {
                 val labels = when (spec.id) {
                     "amazing-fluorescent-hackmanite" -> hackmanitePhotoLabels
+                    "amazing-tenebrescent-sodalite-tv" -> listOf("Natural Light", "After UV Exposure")
                     "amazing-squid-game-calcite", "calcite-squid-game" -> squidGameCalciteLabels
                     "amazing-fluorescent-hyalite" -> hyaliteFluorescentLabels
                     "amazing-fluorescent-benitoite" -> benitoiteFluorescentLabels

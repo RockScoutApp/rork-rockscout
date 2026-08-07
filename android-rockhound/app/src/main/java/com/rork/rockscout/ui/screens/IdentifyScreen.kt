@@ -1338,12 +1338,14 @@ fun IdentifyScreen(navController: NavController) {
                 }
             }
 
-            // Agate uncertainty disclaimer — shown when the top match is an agate and confidence < 85%.
+            // Agate uncertainty disclaimer — shown when any match is an agate
+            // and the top match confidence is below 85%.
             if (state == ScanState.RESULTS) {
-                val topAgate = matches.firstOrNull()?.let { (spec, match) ->
-                    if (spec.name.contains("agate", ignoreCase = true) && match.confidence < 85) spec to match else null
+                val hasAgate = matches.any { (spec, _) ->
+                    spec.name.contains("agate", ignoreCase = true)
                 }
-                if (topAgate != null) {
+                val topConfidence = matches.firstOrNull()?.second?.confidence ?: 100
+                if (hasAgate && topConfidence < 85) {
                     item {
                         AgateUncertaintyCard(
                             onCompare = {

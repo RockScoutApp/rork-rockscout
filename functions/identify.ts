@@ -147,6 +147,7 @@ export async function handleIdentify(
     }
 
     const photoDescription = describeResult?.description ?? "";
+    const isPolished = describeResult?.isPolished ?? false;
     if (photoDescription) {
       modelsUsed.push("haiku-describe");
     }
@@ -226,7 +227,7 @@ export async function handleIdentify(
     // Haiku compares the user's photos against the narrowed candidate set's
     // reference images, with the web mineralogy context as additional input.
     const haikuVisual = await callVisualReferenceComparison(
-      toolkitUrl, toolkitSecret, images, parsed.matches, webContext.text, 15, false,
+      toolkitUrl, toolkitSecret, images, parsed.matches, webContext.text, 15, false, isPolished,
     );
 
     let finalMatches = parsed.matches;
@@ -1380,7 +1381,7 @@ async function callDescribeAndDetect(
   toolkitUrl: string,
   secret: string,
   images: AngleImage[],
-): Promise<{ description: string; isArtifact: boolean; artifactConfidence: number } | null> {
+): Promise<{ description: string; isArtifact: boolean; artifactConfidence: number; isPolished: boolean } | null> {
   // Build content with all images + per-angle descriptions
   const userContent: Array<Record<string, unknown>> = [];
 
@@ -1415,16 +1416,20 @@ Describe in 3-6 sentences using field-geologist vocabulary:
 
 ALSO determine: does this photo show a prehistoric artifact (knapped stone tool, arrowhead, spear point, hand axe, scraper, drill, bead, effigy, pipe, game disc, pottery sherd, or other human-made object)?
 
+ALSO determine: does the specimen appear to be polished, cut, cabochon, tumbled, or otherwise lapidary-worked (as opposed to rough/natural)?
+
 Return ONLY a JSON object — no markdown, no extra text:
 {
   "description": "your combined description prose here",
   "isArtifact": false,
-  "artifactConfidence": 0
+  "artifactConfidence": 0,
+  "isPolished": false
 }
 
 - description: the combined description of the specimen
 - isArtifact: true if the object appears to be a human-made artifact
 - artifactConfidence: 0-100, your confidence in the artifact verdict
+- isPolished: true if the specimen shows signs of lapidary work (polished cross-section, cut slab, cabochon, tumbled stone, faceted gem). false if it's rough/natural/raw.
 
 If it's clearly a natural rock, mineral, crystal, or fossil, return isArtifact: false with high confidence.
 If it's clearly an artifact, return isArtifact: true with high confidence.`,
@@ -1466,11 +1471,13 @@ If it's clearly an artifact, return isArtifact: true with high confidence.`,
       description?: string;
       isArtifact?: boolean;
       artifactConfidence?: number;
+      isPolished?: boolean;
     };
     return {
       description: (parsed.description ?? "").trim(),
       isArtifact: !!parsed.isArtifact,
       artifactConfidence: Math.max(0, Math.min(100, Math.round(parsed.artifactConfidence ?? 0))),
+      isPolished: !!parsed.isPolished,
     };
   } catch (err) {
     console.error("callDescribeAndDetect error:", String(err));
@@ -1598,6 +1605,7 @@ async function callVisualReferenceComparison(
   webContext: string,
   maxCandidates: number = 15,
   useSonnet: boolean = false,
+  isPolished: boolean = false,
 ): Promise<IdentificationResult | null> {
   if (preliminaryMatches.length === 0) return null;
 
@@ -1608,6 +1616,8 @@ async function callVisualReferenceComparison(
   const IMAGES_PER_SPECIMEN = 3;
 
   // Collect candidates with up to 3 reference images each.
+  // When isPolished is true (Haiku detected lapidary work), prioritize
+  // face-polished and cabochon reference views by selecting those first.
   const candidateRefs: Array<{
     id: string;
     name: string;
@@ -1618,7 +1628,14 @@ async function callVisualReferenceComparison(
     const spec = SPECIMEN_DB.find(s => s.id === m.id);
     if (!spec?.imageUrl) continue;
     const allUrls = spec.imageUrls?.length ? spec.imageUrls : [spec.imageUrl];
-    const selectedUrls = allUrls.slice(0, IMAGES_PER_SPECIMEN);
+    let selectedUrls: string[];
+    if (isPolished && allUrls.length > 1) {
+      // Prioritize polished views (first 2 = face polished, cabochon)
+      // then add rough/natural as a fallback context view.
+      selectedUrls = allUrls.slice(0, IMAGES_PER_SPECIMEN);
+    } else {
+      selectedUrls = allUrls.slice(0, IMAGES_PER_SPECIMEN);
+    }
     candidateRefs.push({
       id: spec.id,
       name: spec.name,
@@ -1677,7 +1694,8 @@ async function callVisualReferenceComparison(
     ? `\n\nPublished mineralogy data for top candidates:\n${webContext}\n\nUse BOTH the visual similarity across all angles AND the published properties (hardness, crystal system, luster, streak, associated minerals) to rank candidates. If the published data contradicts the visual appearance, note the discrepancy in your reasoning.`
     : "";
 
-  const agateGuidance = `If a candidate is an agate or chalcedony variety, pay special attention to the banding color sequence shown in the user's photo(s) versus the "typical colors" listed for each reference. Compare banding thickness, contrast between bands, fortification vs flat-band patterns, and translucency. A polished cross-section should match the face-polished/cabochon reference views; a rough nodule should match the rough/natural reference view.`;
+  const polishedNote = isPolished ? "\n\nIMPORTANT: The specimen appears to be polished, cut, or cabochon. Prioritize face-polished and cabochon reference views for comparison — the rough/natural view is provided for context only." : "";
+  const agateGuidance = `If a candidate is an agate or chalcedony variety, pay special attention to the banding color sequence shown in the user's photo(s) versus the "typical colors" listed for each reference. Compare banding thickness, contrast between bands, fortification vs flat-band patterns, and translucency. A polished cross-section should match the face-polished/cabochon reference views; a rough nodule should match the rough/natural reference view.${polishedNote}`;
 
   const prompt = `You are comparing a user's specimen photos (from ${images.length} angle${images.length > 1 ? "s" : ""}) against database reference images.
 

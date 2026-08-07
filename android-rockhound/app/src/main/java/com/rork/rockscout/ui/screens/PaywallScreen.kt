@@ -341,7 +341,7 @@ fun PaywallScreen(navController: NavController) {
                 }
             }
 
-            // Premium tier card — all 3 AI models + all features unlocked
+            // Premium tier card — full 5-source AI system + all features unlocked
             item {
                 PremiumTierCard(
                     isPurchasing = isPurchasing,
