@@ -92,6 +92,8 @@ export async function handleIdentify(
 
     const useSonnet = tier === "premium" || tier === "pro";
     const useGemini = tier === "premium" || tier === "pro";
+    const CONFIDENCE_WEB_THRESHOLD = 85;
+    const CONFIDENCE_CLARIFY_THRESHOLD = 60;
 
     const toolkitUrl = env.EXPO_PUBLIC_TOOLKIT_URL ?? "https://toolkit.rork.com";
     const toolkitSecret = env.EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY;
@@ -107,6 +109,9 @@ export async function handleIdentify(
     const modelsUsed: string[] = [];
 
     // ── Step 1: Combined describe + artifact detection (one Haiku call) ──
+    // This single lightweight Haiku call produces (a) a specimen-vocabulary
+    // description for the embedding index, and (b) an artifact-detection
+    // verdict. It does NOT load the full specimen database into context.
     // Haiku examines ALL photos + descriptions and returns BOTH a combined
     // description AND an artifact-detection verdict in a single JSON response.
     // If skipArtifactDetect is true (user said "No" on the confirmation popup),
@@ -145,7 +150,10 @@ export async function handleIdentify(
       modelsUsed.push("haiku-describe");
     }
 
-    // ── Step 2: Database embedding search ───────────────────────────────
+    // ── Step 2: Database embedding search (visual-embedding-first) ─────
+    // Use the lightweight description to query the pgvector index. This
+    // narrows all 900+ specimens to a short candidate list before any vision
+    // model is called, which is the core cost + accuracy win.
     const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, undefined);
     const supabaseAnonKey = env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
     const embeddingEnabled = !!(supabaseUrl && supabaseAnonKey);
@@ -156,7 +164,7 @@ export async function handleIdentify(
     if (embeddingEnabled && photoDescription) {
       try {
         const queryEmbedding = await embedText(toolkitUrl, toolkitSecret, photoDescription);
-        const matchCount = 15;
+        const matchCount = useSonnet ? 20 : 25;
         const embeddingMatches = await matchSpecimenEmbeddings(
           supabaseUrl!, supabaseAnonKey!, queryEmbedding, matchCount,
         );
@@ -200,80 +208,64 @@ export async function handleIdentify(
       modelsUsed.push("haiku");
     }
 
-    // ── Step 3: Web text search on authoritative mineralogy sites ──────
-    // Runs BEFORE the visual comparison so the web data can be fed in as
-    // additional context. Constrained to mindat.org, webmineral.com,
-    // minerals.net, geology.com, handbookofmineralogy.org, rruff.info,
-    // minsocam.org, wikipedia.org.
-    const webContext = await fetchMineralogyContext(
-      toolkitUrl, toolkitSecret, parsed.matches, photoDescription,
-    );
-    if (webContext.text) {
-      modelsUsed.push("web-search");
-    }
-
-    // ── Step 4: Haiku visual comparison (all images + web context) ─────
-    // ALL tiers use Haiku for the first visual pass. 15 reference images.
-    const visualMaxCandidates = 15;
+    // ── Step 3: Tiered visual comparison over the narrowed candidate set ──
+    // Free / trial: Haiku visual over 25 candidates.
+    // Premium: Sonnet visual over 20 candidates (no Haiku first pass).
+    const visualMaxCandidates = useSonnet ? 20 : 25;
     const visualResult = await callVisualReferenceComparison(
-      toolkitUrl, toolkitSecret, images, parsed.matches, webContext.text, visualMaxCandidates,
+      toolkitUrl, toolkitSecret, images, parsed.matches, "", visualMaxCandidates, useSonnet,
     );
 
     let finalMatches = parsed.matches;
     let finalSummary = parsed.summary;
     let visualReferenceUsed = false;
-    let visualShortCircuit = false;
 
     if (visualResult) {
-      modelsUsed.push("haiku-visual");
+      modelsUsed.push(useSonnet ? "sonnet-visual" : "haiku-visual");
       visualReferenceUsed = true;
       finalMatches = visualResult.matches;
       finalSummary = visualResult.summary;
-
-      // Free tier short-circuits at 90%+ — no Sonnet/Gemini needed.
-      const visualTopConf = visualResult.matches.length > 0 ? visualResult.matches[0].confidence : 0;
-      if (!useSonnet && visualTopConf >= 90) {
-        visualShortCircuit = true;
-      }
     }
 
-    // ── Step 5: Sonnet re-rank (ALWAYS runs for premium) ───────────────
-    // Premium NEVER short-circuits — Sonnet always runs to catch assemblages
-    // (granite = quartz + feldspar + mica) that Haiku might miss.
-    let sonnetDisagreed = false;
-
-    if (useSonnet && !visualShortCircuit) {
-      const sonnetResult = await callSonnetRerank(
-        toolkitUrl, toolkitSecret, images, finalMatches, finalSummary, webContext.text,
-      );
-      if (sonnetResult) {
-        modelsUsed.push("sonnet");
-        const haikuTopId = visualResult?.matches?.[0]?.id ?? finalMatches[0]?.id;
-        const merged = mergeRankings(finalMatches, sonnetResult.matches);
-        finalMatches = merged.matches;
-        finalSummary = merged.summary;
-        sonnetDisagreed = sonnetResult.matches.length > 0 &&
-          sonnetResult.matches[0].id !== haikuTopId;
-
-        // ── Step 6: Gemini third opinion (only on disagreement or low conf) ──
-        const sonnetTopConf = sonnetResult.matches.length > 0 ? sonnetResult.matches[0].confidence : 0;
-        if (useGemini && (sonnetTopConf < 85 || sonnetDisagreed)) {
-          const geminiResult = await callGeminiThirdOpinion(
-            toolkitUrl, toolkitSecret, images, finalMatches, sonnetResult.matches, finalSummary, webContext.text,
-          );
-          if (geminiResult) {
-            modelsUsed.push("gemini");
-            const resolved = mergeRankingsThreeWay(finalMatches, sonnetResult.matches, geminiResult.matches);
-            finalMatches = resolved.matches;
-            finalSummary = resolved.summary;
-          }
+    // ── Step 4: Premium Gemini tie-breaker (only when still ambiguous) ────
+    // If Sonnet's top confidence is below 85% or the top two candidates are
+    // within 10 points, bring in Gemini for a third opinion.
+    let geminiResult: IdentificationResult | null = null;
+    if (useSonnet && useGemini) {
+      const topConf = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
+      const secondConf = finalMatches.length > 1 ? finalMatches[1].confidence : 0;
+      const isAmbiguous = topConf < CONFIDENCE_WEB_THRESHOLD || (topConf - secondConf) < 10;
+      if (isAmbiguous) {
+        geminiResult = await callGeminiTieBreaker(
+          toolkitUrl, toolkitSecret, images, finalMatches, finalSummary,
+        );
+        if (geminiResult) {
+          modelsUsed.push("gemini");
+          const merged = mergeRankings(finalMatches, geminiResult.matches);
+          finalMatches = merged.matches;
+          finalSummary = merged.summary;
         }
       }
     }
 
-    // ── Step 7: Clarification (last resort, only if < 60%) ─────────────
+    // ── Step 5: Conditional web search (only when still ambiguous) ─────
+    // This is the main cost win: ~70-80% of confident IDs skip Exa entirely.
+    const postVisualTopConf = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
+    const needsWebContext = postVisualTopConf < CONFIDENCE_WEB_THRESHOLD;
+    let webReferences: WebReference[] = [];
+    if (needsWebContext) {
+      const webContext = await fetchMineralogyContext(
+        toolkitUrl, toolkitSecret, finalMatches, photoDescription,
+      );
+      if (webContext.text) {
+        modelsUsed.push("web-search");
+        webReferences = webContext.references ?? [];
+      }
+    }
+
+    // ── Step 6: Clarification (last resort, only if < 60%) ─────────────
     const finalTopConfidence = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
-    const needsClarification = finalTopConfidence < 60 && finalMatches.length > 0;
+    const needsClarification = finalTopConfidence < CONFIDENCE_CLARIFY_THRESHOLD && finalMatches.length > 0;
 
     let clarificationQuestions: ClarificationQuestion[] = [];
     if (needsClarification) {
@@ -281,9 +273,6 @@ export async function handleIdentify(
         toolkitUrl, toolkitSecret, finalMatches, finalSummary,
       );
     }
-
-    // Always return web references for transparency
-    const webReferences = webContext.references ?? [];
 
     const response: IdentifyResponse = {
       matches: finalMatches,
@@ -1587,11 +1576,14 @@ async function callVisualReferenceComparison(
   preliminaryMatches: MatchResult[],
   webContext: string,
   maxCandidates: number = 15,
-  preferPolished: boolean = false,
+  useSonnet: boolean = false,
 ): Promise<IdentificationResult | null> {
   if (preliminaryMatches.length === 0) return null;
 
-  const HAIKU_REF_IMAGE_BUDGET = 20;
+  // Sonnet can handle a larger reference-image budget than Haiku, but we
+  // still cap it so the request stays reasonable. Each candidate shows up to
+  // 3 reference images (face polished, cabochon, rough/natural).
+  const REF_IMAGE_BUDGET = useSonnet ? 36 : 20;
   const IMAGES_PER_SPECIMEN = 3;
 
   // Collect candidates with up to 3 reference images each.
@@ -1605,9 +1597,6 @@ async function callVisualReferenceComparison(
     const spec = SPECIMEN_DB.find(s => s.id === m.id);
     if (!spec?.imageUrl) continue;
     const allUrls = spec.imageUrls?.length ? spec.imageUrls : [spec.imageUrl];
-    // Prefer the first images (face-polished / cabochon) unless the user's
-    // specimen is described as rough; then we keep the natural order which
-    // already places polished first.
     const selectedUrls = allUrls.slice(0, IMAGES_PER_SPECIMEN);
     candidateRefs.push({
       id: spec.id,
@@ -1618,11 +1607,10 @@ async function callVisualReferenceComparison(
   }
   if (candidateRefs.length === 0) return null;
 
-  // If a candidate has multiple images, we can afford fewer candidates while
-  // still giving the model richer visual evidence. Cap reference-image budget
-  // at ~20 so Haiku never chokes on a huge payload.
-  const maxMultiImageCandidates = Math.floor(HAIKU_REF_IMAGE_BUDGET / IMAGES_PER_SPECIMEN);
-  const refs = candidateRefs.slice(0, Math.max(6, maxMultiImageCandidates));
+  // Slice down to the requested maxCandidates, but also respect the per-model
+  // reference-image budget. Always keep at least 6 candidates when possible.
+  const budgetLimited = Math.floor(REF_IMAGE_BUDGET / IMAGES_PER_SPECIMEN);
+  const refs = candidateRefs.slice(0, Math.min(maxCandidates, Math.max(6, budgetLimited)));
 
   // Build user content: all angle photos first (labeled), then reference images
   const userContent: Array<Record<string, unknown>> = [];
@@ -1706,7 +1694,7 @@ Return ONLY valid JSON — no markdown, no extra text:
       method: "POST",
       headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "anthropic/claude-haiku-4.5",
+        model: useSonnet ? "anthropic/claude-sonnet-4.5" : "anthropic/claude-haiku-4.5",
         messages: [{ role: "user", content: userContent }],
         max_tokens: 4096,
         temperature: 0.1,
@@ -1877,6 +1865,70 @@ You are the tie-breaker. Look at the photo(s) yourself and return your own ranke
     return parseIdentificationResponse(content);
   } catch (err) {
     console.error("Gemini third-opinion error:", String(err));
+    return null;
+  }
+}
+
+// ── Gemini tie-breaker (new cheaper pipeline) ────────────────────────────
+
+/** Gemini casts a tie-breaking vote when the primary visual model (Sonnet for
+ *  premium, Haiku for free) returns ambiguous results. Receives all angle
+ *  photos and the current top candidates. */
+async function callGeminiTieBreaker(
+  toolkitUrl: string,
+  secret: string,
+  images: AngleImage[],
+  matches: MatchResult[],
+  summary: string,
+): Promise<IdentificationResult | null> {
+  const systemPrompt = buildCandidateSystemPrompt(matches);
+  const matchList = matches.slice(0, 5)
+    .map(m => `- ${m.name} (${m.confidence}%): ${m.reasoning}`)
+    .join("\n");
+
+  const userPrompt = `Re-evaluate this specimen photo as a tie-breaker. The primary visual model returned these candidates:
+
+${matchList}
+
+Summary: ${summary}
+
+Look at the photo(s) with fresh eyes and return your own ranked matches. Every id must exist in the reference database. Return the same JSON shape.`;
+
+  const userContent: Array<Record<string, unknown>> = [];
+  for (const img of images) {
+    userContent.push({
+      type: "image_url",
+      image_url: { url: `data:${img.mimeType};base64,${img.imageBase64}` },
+    });
+  }
+  userContent.push({ type: "text", text: userPrompt });
+
+  const messages = [
+    {
+      role: "system",
+      content: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
+    },
+    { role: "user", content: userContent },
+  ];
+
+  try {
+    const response = await fetch(`${toolkitUrl}/v2/vercel/v1/chat/completions`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-pro",
+        messages,
+        max_tokens: 4096,
+        temperature: 0.1,
+      }),
+    });
+    if (!response.ok) return null;
+    const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) return null;
+    return parseIdentificationResponse(content);
+  } catch (err) {
+    console.error("Gemini tie-breaker error:", String(err));
     return null;
   }
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Download,
@@ -71,20 +71,35 @@ function GuideIcon({ platform }: { platform: Exclude<Platform, "unsupported"> })
 /**
  * Shared free PWA install dialog.
  *
- * Opens when the user clicks the Free PWA button (navbar pill or the free
- * install page). It immediately tries to trigger the browser's native
- * install/cancel popup. If the browser doesn't expose a programmatic prompt
- * (iOS Safari, Firefox, already dismissed), it shows platform-specific
- * "Add to Home Screen" instructions inside the same dialog.
+ * Opens when the user clicks the Free PWA button. It shows one clear primary
+ * action: Install Free PWA. If the browser has fired `beforeinstallprompt`,
+ * the button triggers the native install/cancel popup. If not (iOS Safari,
+ * Firefox, etc.), the same dialog immediately shows platform-specific manual
+ * instructions.
  */
 export function FreeInstallDialog({ open, onOpenChange }: FreeInstallDialogProps) {
   const { install, installed, hasNativePrompt, platform } = usePwaInstall();
   const navigate = useNavigate();
   const [installing, setInstalling] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
-  const [attemptedAutoPrompt, setAttemptedAutoPrompt] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Reset internal state when the dialog closes.
+  useEffect(() => {
+    if (!open) {
+      setInstalling(false);
+      setShowGuide(false);
+      setError(null);
+      return;
+    }
+    // If there is no programmatic prompt, show manual instructions right away.
+    if (!hasNativePrompt && !installed) {
+      setShowGuide(true);
+    }
+  }, [open, hasNativePrompt, installed]);
 
   const handleInstall = useCallback(async () => {
+    setError(null);
     if (!hasNativePrompt) {
       setShowGuide(true);
       return;
@@ -95,33 +110,18 @@ export function FreeInstallDialog({ open, onOpenChange }: FreeInstallDialogProps
       if (accepted) {
         navigate(PWA_START_URL);
       } else {
-        // User dismissed the native prompt — show instructions so they can
+        // User dismissed the native prompt. Surface instructions so they can
         // still install manually if they change their mind.
         setShowGuide(true);
       }
-    } catch {
+    } catch (err) {
+      console.error("Free PWA install failed:", err);
+      setError("Install couldn't start. Try using your browser's menu to add this site to your home screen.");
       setShowGuide(true);
     } finally {
       setInstalling(false);
     }
   }, [hasNativePrompt, install, navigate]);
-
-  // When the dialog opens and the native prompt is available, immediately
-  // surface it so the user sees the install/cancel popup right away.
-  useEffect(() => {
-    if (!open) {
-      setShowGuide(false);
-      setAttemptedAutoPrompt(false);
-      setInstalling(false);
-      return;
-    }
-    if (hasNativePrompt && !attemptedAutoPrompt && !installed) {
-      setAttemptedAutoPrompt(true);
-      void handleInstall();
-    } else if (!hasNativePrompt) {
-      setShowGuide(true);
-    }
-  }, [open, hasNativePrompt, attemptedAutoPrompt, installed, handleInstall]);
 
   const dialogTitle = installed ? "Free PWA installed!" : "Install Free PWA";
   const dialogDescription = installed
@@ -136,9 +136,9 @@ export function FreeInstallDialog({ open, onOpenChange }: FreeInstallDialogProps
       onOpenChange={(next) => {
         onOpenChange(next);
         if (!next) {
-          setShowGuide(false);
-          setAttemptedAutoPrompt(false);
           setInstalling(false);
+          setShowGuide(false);
+          setError(null);
         }
       }}
     >
@@ -187,8 +187,14 @@ export function FreeInstallDialog({ open, onOpenChange }: FreeInstallDialogProps
               ) : (
                 <Download className="h-4 w-4" />
               )}
-              {installing ? "Installing…" : "Install Free PWA"}
+              {installing ? "Installing…" : hasNativePrompt ? "Install Free PWA" : "How to install"}
             </Button>
+
+            {error && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+                {error}
+              </div>
+            )}
 
             {showGuide && guide && (
               <div className="rounded-xl border border-border bg-card/90 p-3 text-left shadow-sm">

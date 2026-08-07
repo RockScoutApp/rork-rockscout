@@ -18,8 +18,8 @@
  * / APP_PREMIUM_APK_URL / APP_CHANGELOG in the Worker settings.
  */
 
-const LATEST_VERSION_CODE = 11;
-const LATEST_VERSION_NAME = "1.1.9";
+const LATEST_VERSION_CODE = 12;
+const LATEST_VERSION_NAME = "1.1.10";
 const STORE_URL = "https://play.google.com/store/apps/details?id=com.rork.rockscout";
 const IOS_STORE_URL = "https://apps.apple.com/app/rockscout/id0000000000";
 /**
@@ -28,10 +28,10 @@ const IOS_STORE_URL = "https://apps.apple.com/app/rockscout/id0000000000";
  * that serves it with a stable URL and correct byte length. Leave empty to
  * fall back to the Play Store listing.
  */
-const APK_URL = "https://github.com/RockScoutApp/rork-rockscout/releases/download/v1.1.9/rockscout-1.1.9-trial.apk";
-const PREMIUM_APK_URL = "https://github.com/RockScoutApp/rork-rockscout/releases/download/v1.1.9/rockscout-1.1.9-premium.apk";
+const APK_URL = "https://github.com/RockScoutApp/rork-rockscout/releases/download/v1.1.10/rockscout-1.1.10-trial.apk";
+const PREMIUM_APK_URL = "https://github.com/RockScoutApp/rork-rockscout/releases/download/v1.1.10/rockscout-1.1.10-premium.apk";
 const CHANGELOG =
-  "1.1.9: Fixed every specimen-card detail so user-submitted RAA/community specimens never show 'Specimen not found.' Also replaced the push-notification icon with a faceted diamond.";
+  "1.1.10: Fixed premium PWA install flow, free PWA install crash, and aligned the AI ID pipeline with the cheaper embedding-first design.";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",

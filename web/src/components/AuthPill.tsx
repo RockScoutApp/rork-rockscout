@@ -126,8 +126,6 @@ export function AuthPill() {
                 onClick={() => {
                   if (installed) {
                     navigate("/app");
-                  } else if (hasNativePrompt) {
-                    openDialog();
                   } else {
                     openDialog();
                   }
@@ -147,7 +145,7 @@ export function AuthPill() {
             </>
           ) : (
             <DropdownMenuItem
-              onClick={() => navigate("/app/paywall")}
+              onClick={openDialog}
               className="gap-2"
             >
               <Crown className="h-4 w-4 text-amber-500" />
@@ -172,11 +170,9 @@ export function AuthPill() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Shared dialog — opened when the signed-in premium user clicks
-          "Install Premium PWA" from the dropdown. */}
-      {isPro && (
-        <PremiumInstallDialog open={dialogOpen} onOpenChange={setDialogOpen} />
-      )}
+      {/* Shared premium dialog — opened from the navbar pill (signed out) or
+          the dropdown (signed in, premium or free). */}
+      <PremiumInstallDialog open={dialogOpen} onOpenChange={setDialogOpen} />
     </>
   );
 }

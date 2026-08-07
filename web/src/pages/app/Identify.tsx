@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useTier } from "@/hooks/useTier";
 import {
   Camera,
   Upload,
@@ -44,6 +45,7 @@ interface SpecimenRef {
 
 export default function Identify() {
   const navigate = useNavigate();
+  const { isPremium } = useTier();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -164,7 +166,7 @@ export default function Identify() {
         body: JSON.stringify({
           imageBase64,
           mimeType,
-          entitlement: "free",
+          entitlement: isPremium ? "premium" : "free",
         }),
       });
       if (!response.ok) {
