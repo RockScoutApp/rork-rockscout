@@ -50,6 +50,7 @@ import { recordAffiliateClick } from "@/lib/affiliate-tracker";
 import { getTopPickNames } from "@/lib/top-picks";
 import { SITE } from "@/content/legal";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { PremiumInstallDialog } from "@/components/PremiumInstallDialog";
 import { useState, useMemo } from "react";
 
 const SHOTS = [
@@ -910,7 +911,9 @@ const FieldStories = () => {
   );
 };
 
-const CTA = () => (
+const CTA = () => {
+  const [premiumDialogOpen, setPremiumDialogOpen] = useState(false);
+  return (
   <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
     <div className="relative overflow-hidden rounded-[1.5rem] border border-primary/30 bg-gradient-to-br from-card via-card to-primary/10 p-6 text-center sm:rounded-[2rem] sm:p-10 md:p-20">
       <div className="pointer-events-none absolute inset-0 geode-gradient opacity-70" aria-hidden />
@@ -946,15 +949,16 @@ const CTA = () => (
               Install Free PWA
             </span>
           </Link>
-          <Link
-            to="/install/premium"
+          <button
+            type="button"
+            onClick={() => setPremiumDialogOpen(true)}
             className="inline-flex h-14 w-56 items-center justify-center gap-2.5 rounded-full border border-amber-500/50 bg-gradient-to-br from-amber-500/15 to-primary/15 px-5 font-semibold text-amber-600 transition-transform hover:scale-[1.02] active:scale-[0.98] dark:text-amber-400"
           >
             <Crown className="h-5 w-5 shrink-0" />
             <span className="text-center leading-tight">
               Install Premium PWA
             </span>
-          </Link>
+          </button>
           <span
             aria-disabled
             className="inline-flex h-14 w-56 cursor-default items-center justify-center gap-2.5 rounded-full border border-border bg-card/40 px-5 font-semibold text-muted-foreground/60"
@@ -979,8 +983,10 @@ const CTA = () => (
         </ul>
       </div>
     </div>
+    <PremiumInstallDialog open={premiumDialogOpen} onOpenChange={setPremiumDialogOpen} />
   </section>
-);
+  );
+};
 
 const Landing = () => {
   // JSON-LD structured data for the landing page
