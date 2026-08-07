@@ -5206,8 +5206,6 @@ object SeedData {
             "gem-sapphire-star",
             // Hackmanite RAA non-fluorescent copy excluded; TV copy stays
             "amazing-tenebrescent-sodalite",
-            // Achroite (colorless tourmaline) removed per massive database expansion plan
-            "tourmaline-achroite",
             // Pyrite Sun RAA original excluded; TV copy stays
             "amazing-pyrite-sun",
             // Phosphorescent Calcite excluded from main db; stays in RAA
