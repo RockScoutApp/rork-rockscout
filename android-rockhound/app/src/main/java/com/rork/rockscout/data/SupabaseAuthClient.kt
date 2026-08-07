@@ -13,6 +13,8 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 /**
  * Supabase auth REST API client.
@@ -228,6 +230,55 @@ object SupabaseAuthClient {
         } catch (e: Exception) {
             Log.w(TAG, "Profile upsert error: ${e.message}")
             Result.failure(e)
+        }
+    }
+
+    /**
+     * Build a Supabase OAuth URL for Google sign-in with a deep-link redirect.
+     * The URL opens in the system browser; after authentication, Supabase
+     * redirects back to the app via the `rockscout://oauth_callback` scheme.
+     *
+     * Returns the full URL string to open in a browser.
+     */
+    fun buildGoogleOAuthUrl(): String {
+        val base = baseUrl()
+        val key = anonKey()
+        val redirectUrl = "rockscout://oauth_callback"
+        return "${base}/auth/v1/authorize?provider=google&redirect_to=${android.net.Uri.encode(redirectUrl)}" +
+            "&" + android.net.Uri.encode("client_id") + "=${android.net.Uri.encode(key)}"
+    }
+
+    /**
+     * Exchange an authorization code (from the OAuth redirect URL) for a
+     * Supabase session. Supabase's PKCE flow returns the code in the redirect
+     * URL query params; we exchange it for access + refresh tokens.
+     */
+    suspend fun exchangeOAuthCode(code: String, codeVerifier: String? = null): Result<AuthResponse> {
+        return try {
+            val payload = buildJsonObject {
+                put("grant_type", "authorization_code")
+                put("code", code)
+                put("redirect_to", "rockscout://oauth_callback")
+                if (codeVerifier != null) put("code_verifier", codeVerifier)
+            }.toString()
+            val response = client.post("${baseUrl()}/auth/v1/token?grant_type=authorization_code") {
+                header("apikey", anonKey())
+                contentType(ContentType.Application.Json)
+                setBody(payload)
+            }
+            if (response.status.isSuccess()) {
+                val body = response.body<String>()
+                val parsed = json.decodeFromString(AuthResponse.serializer(), body)
+                Log.i(TAG, "OAuth code exchange successful, user=${parsed.user?.id}")
+                Result.success(parsed)
+            } else {
+                val err = parseError(response)
+                Log.w(TAG, "OAuth code exchange failed: $err")
+                Result.failure(Exception(err))
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "OAuth code exchange network error: ${e.message}")
+            Result.failure(Exception("Network error during Google sign-in. Check your connection and try again."))
         }
     }
 

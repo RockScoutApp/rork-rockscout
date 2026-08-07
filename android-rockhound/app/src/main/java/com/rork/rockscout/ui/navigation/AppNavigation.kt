@@ -463,12 +463,20 @@ fun AppNavigation(
     // Authenticated), so the normal handleDeepLink below (which runs after
     // the gate) would never fire. The backend has already confirmed the
     // Supabase email — we just sign in with the stored credentials.
+    // Also handle Google OAuth callback — arrives before auth gate since
+    // the user isn't authenticated yet.
     LaunchedEffect(deepLinkUri) {
         if (deepLinkUri != null && deepLinkUri.host == "verify_email") {
             val linkEmail = deepLinkUri.getQueryParameter("email") ?: ""
             val verified = deepLinkUri.getQueryParameter("verified")?.toBoolean() ?: false
             if (verified && linkEmail.isNotBlank()) {
                 auth.completeVerificationFromLink(linkEmail)
+            }
+            onDeepLinkConsumed()
+        } else if (deepLinkUri != null && deepLinkUri.host == "oauth_callback") {
+            val code = deepLinkUri.getQueryParameter("code")
+            if (code != null && code.isNotBlank()) {
+                auth.completeGoogleOAuth(code)
             }
             onDeepLinkConsumed()
         }

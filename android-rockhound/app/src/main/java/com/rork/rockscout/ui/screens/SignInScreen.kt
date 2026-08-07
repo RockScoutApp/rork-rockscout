@@ -444,9 +444,9 @@ fun SignInScreen(
             }
             } // end if (!isPendingVerification) — form fields + referral
 
-            // Google (secondary) — native Supabase Auth doesn't ship OAuth in-app
-            // without a browser deep-link yet, so this is shown as a disabled
-            // "coming soon" path. Email/password is the primary supported flow.
+            // Google sign-in — opens Supabase OAuth in the system browser.
+            // The browser redirects back to rockscout://oauth_callback?code=...
+            // which is handled by the AppNavigation deep-link handler.
             if (!isPendingVerification) {
                 Spacer(Modifier.height(28.dp))
 
@@ -459,8 +459,10 @@ fun SignInScreen(
                 Spacer(Modifier.height(16.dp))
 
                 OutlinedButton(
-                    onClick = { /* TODO: wire Google OAuth via deep-link */ },
-                    enabled = false,
+                    onClick = {
+                        val oauthUrl = com.rork.rockscout.data.SupabaseAuthClient.buildGoogleOAuthUrl()
+                        com.rork.rockscout.data.SafeLinkOpener.openUrl(context, oauthUrl)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(52.dp),
@@ -469,7 +471,7 @@ fun SignInScreen(
                         contentColor = TextMid,
                     ),
                 ) {
-                    Text("Sign in with Google (coming soon)")
+                    Text("Sign in with Google")
                 }
 
                 Spacer(Modifier.height(24.dp))

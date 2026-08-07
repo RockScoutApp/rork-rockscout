@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Heart, Plus, Loader2, AlertCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
-import { OptimizedImage } from "@/components/OptimizedImage";
+import { OptimizedImage, SpecimenGallery } from "@/components/OptimizedImage";
 import { toast } from "sonner";
 import { SculptedCard, SculptedButton, ScreenScaffold, TagChip } from "@/components/sculpted";
 
@@ -22,6 +22,7 @@ interface SpecimenDetail {
   streak: string;
   rarity: string;
   image_url: string;
+  image_urls: string[] | null;
   description: string | null;
   formation: string | null;
   where_found: string | null;
@@ -115,18 +116,15 @@ export default function SpecimenDetail() {
   return (
     <ScreenScaffold title={specimen.name} onBack={() => navigate("/app/specimens")}>
       <div className="space-y-5 px-4 pb-8">
-        {specimen.image_url && (
-          <SculptedCard accent="citrine" glowing className="overflow-hidden">
-            <div className="relative overflow-hidden">
-              <OptimizedImage
-                src={specimen.image_url}
-                alt={specimen.name}
-                loading="eager"
-                className="max-h-[400px] w-full object-cover"
-              />
-            </div>
-          </SculptedCard>
-        )}
+        {(() => {
+          const images = specimen.image_urls && specimen.image_urls.length > 0
+            ? specimen.image_urls
+            : specimen.image_url
+              ? [specimen.image_url]
+              : [];
+          if (images.length === 0) return null;
+          return <SpecimenGallery images={images} alt={specimen.name} accent="citrine" />;
+        })()}
 
         <div>
           <p className="text-sm text-muted-foreground">{specimen.tagline}</p>

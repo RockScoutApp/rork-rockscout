@@ -349,9 +349,33 @@ export default function Identify() {
                     Top Match
                   </span>
                   {result.modelsUsed && result.modelsUsed.length > 0 && (
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      via {result.modelsUsed.join(" + ")}
-                    </span>
+                    <div className="ml-auto flex flex-wrap gap-1">
+                      {result.modelsUsed.map((model: string) => {
+                        const label = model.charAt(0).toUpperCase() + model.slice(1);
+                        const color = model.toLowerCase().includes("haiku")
+                          ? "border-orange-400/40 bg-orange-400/10 text-orange-300"
+                          : model.toLowerCase().includes("sonnet")
+                            ? "border-violet-400/40 bg-violet-400/10 text-violet-300"
+                            : model.toLowerCase().includes("gemini")
+                              ? "border-sky-400/40 bg-sky-400/10 text-sky-300"
+                              : model.toLowerCase().includes("web")
+                                ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-300"
+                                : model.toLowerCase().includes("database") || model.toLowerCase().includes("embedding")
+                                  ? "border-amber-400/40 bg-amber-400/10 text-amber-300"
+                                  : "border-muted-foreground/30 bg-muted/30 text-muted-foreground";
+                        return (
+                          <span
+                            key={model}
+                            className={cn(
+                              "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium",
+                              color,
+                            )}
+                          >
+                            {label}
+                          </span>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
                 <h3 className="font-display text-xl font-bold text-foreground">

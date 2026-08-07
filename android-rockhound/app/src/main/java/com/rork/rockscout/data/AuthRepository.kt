@@ -667,6 +667,47 @@ class AuthRepository private constructor() {
         }
     }
 
+    /** Complete Google OAuth sign-in from a deep-link callback.
+     *  Called when the app receives a `rockscout://oauth_callback?code=...` deep
+     *  link after the user authenticates with Google in the system browser.
+     *  Exchanges the authorization code for a Supabase session. */
+    suspend fun completeGoogleOAuth(code: String): Boolean {
+        _isLoading.value = true
+        _error.value = null
+        return runCatching {
+            val result = SupabaseAuthClient.exchangeOAuthCode(code)
+            if (result.isFailure) {
+                error(result.exceptionOrNull()?.message ?: "Google sign-in failed")
+            }
+            val auth = result.getOrThrow()
+            saveSupabaseTokens(auth.access_token, auth.refresh_token)
+            val userId = auth.user?.id ?: ""
+            val userEmail = auth.user?.email ?: ""
+            LocalDataStore.setString(LocalDataStore.KEY_AUTH_EMAIL, userEmail)
+            LocalDataStore.setString(LocalDataStore.KEY_AUTH_USER_ID, userId)
+            LocalDataStore.setBoolean(LocalDataStore.KEY_LOCAL_AUTH_MIGRATED, true)
+
+            scope.launch {
+                val uniqueName = UsernameResolver.ensureUnique("Rock Scout", userId)
+                SupabaseAuthClient.upsertProfile(auth.access_token, userId, uniqueName, "\uD83E\uDD20")
+            }
+
+            _sessionStatus.value = SessionStatus.Authenticated(
+                Session(user = UserInfo(id = userId, email = userEmail))
+            )
+            scope.launch { PurchaseManager.instance.linkRevenueCatUser(userId) }
+            registerAndCheckDevice(userId)
+            SupabaseDataSync.syncInBackground()
+            restoreSettingsFromCloudIfNeeded(userId)
+            true
+        }.onFailure {
+            _error.value = it.message ?: "Google sign-in failed"
+            Log.e("AuthRepository", "Google OAuth failed", it)
+        }.getOrDefault(false).also {
+            _isLoading.value = false
+        }
+    }
+
     /** Sign out and clear the Supabase session. */
     suspend fun signOut(): Result<Unit> {
         _isLoading.value = true

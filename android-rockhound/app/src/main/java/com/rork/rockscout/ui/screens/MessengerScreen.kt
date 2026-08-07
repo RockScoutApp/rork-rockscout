@@ -156,6 +156,8 @@ fun MessengerScreen(
     val threads by social.threads.collectAsStateWithLifecycle()
     val messages by social.messages.collectAsStateWithLifecycle()
     val connections by social.connections.collectAsStateWithLifecycle()
+    val friendRepo = com.rork.rockscout.data.FriendRepository.instance
+    val friendsList by friendRepo.friends.collectAsStateWithLifecycle()
 
     val scope = rememberCoroutineScope()
     var activeThreadId by remember { mutableStateOf<String?>(null) }
@@ -583,6 +585,20 @@ fun MessengerScreen(
             onReplyChange = { replyBody = it },
             chatId = threadId ?: "",
             onOpenUserProfile = { uid -> navController.navigate(Routes.userProfile(uid)) },
+            friendsList = friendsList,
+            onAddFriendToChat = { friend ->
+                scope.launch {
+                    val tid = social.ensureThread(friend.id)
+                    if (tid != null) {
+                        social.loadThreads()
+                        // Navigate to the new thread
+                        activeThreadId = tid
+                        activeOtherId = friend.id
+                        activeOtherName = friend.display_name
+                        activeOtherEmoji = friend.avatar_emoji
+                    }
+                }
+            },
             onSend = {
                 // Step 1: Check for self-harm phrases FIRST
                 val selfHarmResult = ProfanityFilter.filterSelfHarm(replyBody)
@@ -803,6 +819,8 @@ private fun ThreadView(
     hunterCache: Map<String, SocialRepository.HunterProfile> = emptyMap(),
     chatId: String = "",
     onOpenUserProfile: (String) -> Unit = {},
+    friendsList: List<SocialRepository.HunterProfile> = emptyList(),
+    onAddFriendToChat: (SocialRepository.HunterProfile) -> Unit = {},
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -995,16 +1013,27 @@ private fun ThreadView(
                 )
                 // Add User button (private chats only, max 10 users)
                 if (!isGroupChat && otherUserId != null) {
+                    var showFriendPicker by remember { mutableStateOf(false) }
                     SculptedIconButton(
                         icon = Icons.Filled.PersonAdd,
                         contentDescription = "Add user to chat",
-                        onClick = { /* TODO: opens friend picker */ },
+                        onClick = { showFriendPicker = true },
                         accent = Aqua,
                         iconTint = Aqua,
                         size = 40.dp,
                         shadowElevation = 3.dp,
                     )
                     Spacer(Modifier.width(6.dp))
+                    if (showFriendPicker) {
+                        FriendPickerDialog(
+                            friends = friendsList.filter { it.id != otherUserId && it.id != myUserId },
+                            onDismiss = { showFriendPicker = false },
+                            onSelect = { friend ->
+                                showFriendPicker = false
+                                onAddFriendToChat(friend)
+                            },
+                        )
+                    }
                 }
                 if (otherUserId != null) {
                     var showReportConfirm by remember { mutableStateOf(false) }
@@ -2344,4 +2373,105 @@ private fun parseTaggedUserIds(
         }
     }
     return tagged.distinct()
+}
+
+/**
+ * Friend picker dialog — shows a searchable list of friends to invite into
+ * a private chat. Tapping a friend opens a new thread with them.
+ */
+@Composable
+private fun FriendPickerDialog(
+    friends: List<SocialRepository.HunterProfile>,
+    onDismiss: () -> Unit,
+    onSelect: (SocialRepository.HunterProfile) -> Unit,
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    val filtered = remember(friends, searchQuery) {
+        if (searchQuery.isBlank()) friends
+        else friends.filter { it.display_name.contains(searchQuery, ignoreCase = true) }
+    }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add a friend to chat", color = DarkTextHigh, fontWeight = FontWeight.Bold) },
+        text = {
+            Column {
+                if (friends.isEmpty()) {
+                    Text(
+                        "You don't have any friends yet. Send a friend request from a hunter's profile to start connecting!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = DarkTextMid,
+                    )
+                } else {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = { Text("Search friends...", color = TextMid) },
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedTextColor = DarkTextHigh,
+                            unfocusedTextColor = DarkTextHigh,
+                            cursorColor = Aqua,
+                            focusedIndicatorColor = Aqua,
+                            unfocusedIndicatorColor = Color(0x33FFFFFF),
+                        ),
+                    )
+                    LazyColumn(
+                        modifier = Modifier.heightIn(max = 300.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        items(filtered, key = { it.id }) { friend ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .clickable { onSelect(friend) }
+                                    .padding(horizontal = 8.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(Brush.linearGradient(listOf(Citrine.copy(alpha = 0.3f), Aqua.copy(alpha = 0.2f)))),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(friend.avatar_emoji, style = MaterialTheme.typography.titleSmall)
+                                }
+                                Spacer(Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        friend.display_name,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = DarkTextHigh,
+                                        fontWeight = FontWeight.Medium,
+                                    )
+                                    if (friend.status.isNotBlank() && friend.status != "off") {
+                                        Text(
+                                            friend.status.replace("-", " ").replaceFirstChar { it.uppercase() },
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = TextMid,
+                                        )
+                                    }
+                                }
+                                Icon(
+                                    Icons.Filled.PersonAdd,
+                                    contentDescription = null,
+                                    tint = Aqua,
+                                    modifier = Modifier.size(20.dp),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            SculptedTextButton(text = "Cancel", onClick = onDismiss, accent = DarkTextMid, textColor = DarkTextMid)
+        },
+        containerColor = Color(0xFF1E1C16),
+        titleContentColor = DarkTextHigh,
+        textContentColor = DarkTextMid,
+    )
 }

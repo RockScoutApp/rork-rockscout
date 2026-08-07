@@ -44,6 +44,7 @@ interface CatalogRow {
   streak: string;
   rarity: string;
   image_url: string;
+  image_urls: string[];
 }
 
 export async function handleSpecimenCatalogBackfill(
@@ -106,6 +107,7 @@ export async function handleSpecimenCatalogBackfill(
       streak: s.streak,
       rarity: s.rarity,
       image_url: s.imageUrl,
+      image_urls: s.imageUrls && s.imageUrls.length > 0 ? s.imageUrls : [s.imageUrl],
     }));
 
     try {

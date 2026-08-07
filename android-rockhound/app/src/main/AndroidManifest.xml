@@ -99,6 +99,7 @@
                 <data android:scheme="rockscout" android:host="spot" />
                 <data android:scheme="rockscout" android:host="ping" />
                 <data android:scheme="rockscout" android:host="verify_email" />
+                <data android:scheme="rockscout" android:host="oauth_callback" />
             </intent-filter>
         </activity>
 
