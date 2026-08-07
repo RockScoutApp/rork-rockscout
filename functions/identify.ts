@@ -225,7 +225,7 @@ export async function handleIdentify(
     // Haiku compares the user's photos against the narrowed candidate set's
     // reference images, with the web mineralogy context as additional input.
     const haikuVisual = await callVisualReferenceComparison(
-      toolkitUrl, toolkitSecret, images, parsed.matches, webContext.text, 25, false,
+      toolkitUrl, toolkitSecret, images, parsed.matches, webContext.text, 15, false,
     );
 
     let finalMatches = parsed.matches;
@@ -276,28 +276,7 @@ export async function handleIdentify(
       }
     }
 
-    // ── Step 7: Further web search (if still ambiguous after all models) ──
-    // If the top confidence is still below 85% after all vision models have
-    // weighed in, do a second Exa search for additional references.
-    const postAllTopConf = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
-    if (postAllTopConf < CONFIDENCE_WEB_THRESHOLD) {
-      const moreRefs = await searchWebReferences(
-        toolkitUrl, toolkitSecret, finalMatches,
-      );
-      if (moreRefs.length > 0) {
-        modelsUsed.push("web-search-2");
-        const seenUrls = new Set(webReferences.map(r => r.url));
-        for (const ref of moreRefs) {
-          if (!seenUrls.has(ref.url)) {
-            webReferences.push(ref);
-            seenUrls.add(ref.url);
-          }
-        }
-        webReferences = webReferences.slice(0, 8);
-      }
-    }
-
-    // ── Step 8: Clarification (last resort, only if < 60%) ─────────────
+    // ── Step 7: Clarification (last resort, only if < 60%) ─────────────
     const finalTopConfidence = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
     const needsClarification = finalTopConfidence < CONFIDENCE_CLARIFY_THRESHOLD && finalMatches.length > 0;
 
@@ -431,7 +410,7 @@ async function identifyArtifact(
       modelsUsed.push("web-search-artifact");
     }
 
-    const visualMaxCandidates = usedEmbeddingFlow ? 25 : 15;
+    const visualMaxCandidates = 15;
     // Haiku visual for ALL tiers (Sonnet runs separately for premium)
     const visualResult = await callArtifactVisualComparison(
       toolkitUrl, toolkitSecret, imageData, mimeType, parsed.matches, false, visualMaxCandidates,
@@ -495,22 +474,6 @@ async function identifyArtifact(
 
     let clarificationQuestions: ClarificationQuestion[] = [];
     let webReferences: WebReference[] = artifactWebContext.references ?? [];
-
-    // ── Further web search if still ambiguous ──
-    if (finalTopConfidence < 85 && finalMatches.length > 0) {
-      const moreRefs = await searchWebReferences(toolkitUrl, toolkitSecret, finalMatches, true);
-      if (moreRefs.length > 0) {
-        modelsUsed.push("web-search-artifact-2");
-        const seenUrls = new Set(webReferences.map(r => r.url));
-        for (const ref of moreRefs) {
-          if (!seenUrls.has(ref.url)) {
-            webReferences.push(ref);
-            seenUrls.add(ref.url);
-          }
-        }
-        webReferences = webReferences.slice(0, 8);
-      }
-    }
 
     if (needsClarification && finalMatches.length > 0) {
       clarificationQuestions = await generateArtifactClarificationQuestions(
