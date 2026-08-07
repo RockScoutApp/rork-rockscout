@@ -69,6 +69,7 @@ export default function Identify() {
   const [emailTargetMuseum, setEmailTargetMuseum] = useState<Museum | null>(null);
   const [emailTargetMuseums, setEmailTargetMuseums] = useState<Museum[]>([]);
   const [showReplyEmail, setShowReplyEmail] = useState(false);
+  const [showAgateComparison, setShowAgateComparison] = useState(false);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -80,6 +81,21 @@ export default function Identify() {
 
   // Clean up camera stream on unmount so the camera LED doesn't stay on.
   useEffect(() => () => stopCamera(), [stopCamera]);
+
+  // Auto-trigger the agate visual comparison popup when any match is an agate.
+  // Fires regardless of confidence (even 100%). Resets when result clears.
+  useEffect(() => {
+    if (!result || result.matches.length === 0) {
+      setShowAgateComparison(false);
+      return;
+    }
+    const hasAgate = result.matches.some((m) =>
+      m.name.toLowerCase().includes("agate"),
+    );
+    if (hasAgate) {
+      setShowAgateComparison(true);
+    }
+  }, [result]);
 
   const startCamera = useCallback(async () => {
     setCameraError(null);
@@ -436,65 +452,50 @@ export default function Identify() {
                 {result.summary}
               </p>
 
-              {/* Agate uncertainty disclaimer */}
-              {result.matches[0].name.toLowerCase().includes("agate") &&
-                result.matches[0].confidence < 85 && (
-                  <div className="dark-card sculpted-raised border-l-4 border-l-warning rounded-lg p-4">
-                    <div className="mb-1 flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4 text-warning" />
-                      <span className="text-sm font-semibold text-foreground">
-                        Agate identification
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Agates are among the hardest minerals to identify down to their specific
-                      variety — many share similar banding patterns and colors. The database
-                      images and your local gem & mineral resources can help you confirm the exact
-                      type. Tap any match below to compare your specimen side-by-side with reference
-                      photos.
+              {/* Agate uncertainty disclaimer — no confidence threshold, fires even at 100% */}
+              {result.matches.some((m) =>
+                m.name.toLowerCase().includes("agate")) && (
+                <div className="dark-card sculpted-raised border-l-4 border-l-warning rounded-lg p-4">
+                  <div className="mb-1 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-warning" />
+                    <span className="text-sm font-semibold text-foreground">
+                      Agate identification
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Agates are among the hardest minerals to identify down to their specific
+                    variety — many share similar banding patterns and colors. A visual comparison
+                    is showing — compare your photos side-by-side with the top reference images to
+                    confirm the exact type.
+                  </p>
+                </div>
+              )}
+
+              {/* Ask an Expert — always available for ALL results, no confidence gate */}
+              <div className="dark-card sculpted-raised rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <MuseumIcon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      Want to confirm with a museum?
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      If you think you may have something rare or historically
+                      significant, reach out to a nearby museum or cultural
+                      center. They can help verify your find with expert eyes.
                     </p>
                     <Button
                       onClick={() => setShowMuseumFinder(true)}
-                      variant="default"
+                      variant="outline"
                       size="sm"
-                      className="mt-3 w-full gap-2"
+                      className="mt-3 gap-2"
                     >
-                      <AlertCircle className="h-4 w-4" />
+                      <MuseumIcon className="h-4 w-4" />
                       Ask an Expert
                     </Button>
                   </div>
-                )}
-
-              {/* Ask an Expert — confident results card */}
-              {result.matches[0].confidence >= 60 && !(
-                result.matches[0].name.toLowerCase().includes("agate") &&
-                result.matches[0].confidence < 85
-              ) && (
-                <div className="dark-card sculpted-raised rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <MuseumIcon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">
-                        Want to confirm with a museum?
-                      </p>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        If you think you may have something rare or historically
-                        significant, reach out to a nearby museum or cultural
-                        center. They can help verify your find with expert eyes.
-                      </p>
-                      <Button
-                        onClick={() => setShowMuseumFinder(true)}
-                        variant="outline"
-                        size="sm"
-                        className="mt-3 gap-2"
-                      >
-                        <MuseumIcon className="h-4 w-4" />
-                        Ask an Expert
-                      </Button>
-                    </div>
-                  </div>
                 </div>
-              )}
+              </div>
 
               {result.matches.length > 1 && (
                 <div>
@@ -693,6 +694,93 @@ export default function Identify() {
         aiSummary={result?.summary ?? ""}
         capturedImage={imagePreview}
       />
+
+      {/* Agate visual comparison popup — auto-triggers when any match is an agate */}
+      {showAgateComparison && result && result.matches.length > 0 && imagePreview && (
+        <div
+          className="fixed inset-0 z-[70] flex flex-col bg-black/95"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowAgateComparison(false);
+          }}
+        >
+          {/* Header: text + close button — 2px padding on sides */}
+          <div className="flex items-center justify-between px-0.5 py-0.5">
+            <p className="flex-1 truncate text-sm text-white/70">
+              You might want to give them a visual comparison for a clearer identification
+            </p>
+            <button
+              onClick={() => setShowAgateComparison(false)}
+              className="ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+              aria-label="Close comparison"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* 5px gap between text and first row */}
+          <div className="h-[5px] shrink-0" />
+
+          {/* 5-row grid: user photo (left) | ref image (right) — 2px gap, fills remaining height */}
+          <div
+            className="grid flex-1 grid-cols-2 grid-rows-5 gap-[2px] px-0.5 pb-0.5"
+          >
+            {result.matches.slice(0, 5).map((match, i) => {
+              const refSpec = specimenRefs?.find((r) => r.id === match.id);
+              const refUrl = refSpec?.image_urls?.[0] ?? refSpec?.image_url;
+              return (
+                <div key={i} className="grid grid-cols-2 gap-[2px]">
+                  {/* Left: user photo (same in every row) */}
+                  <button
+                    onClick={() => setLightboxUrl(imagePreview)}
+                    className="overflow-hidden rounded-sm bg-black/30"
+                  >
+                    <img
+                      src={imagePreview}
+                      alt="Your photo"
+                      className="h-full w-full object-cover"
+                    />
+                  </button>
+                  {/* Right: reference image */}
+                  <button
+                    onClick={() => refUrl && setLightboxUrl(refUrl)}
+                    className="overflow-hidden rounded-sm bg-black/30"
+                  >
+                    {refsLoading || !refUrl ? (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <Loader2 className="h-4 w-4 animate-spin text-white/40" />
+                      </div>
+                    ) : (
+                      <img
+                        src={refUrl}
+                        alt={match.name}
+                        className="h-full w-full object-cover"
+                      />
+                    )}
+                  </button>
+                </div>
+              );
+            })}
+            {/* Fill remaining rows if fewer than 5 matches */}
+            {Array.from({ length: Math.max(0, 5 - result.matches.length) }).map((_, i) => (
+              <div key={`empty-${i}`} className="grid grid-cols-2 gap-[2px]">
+                <button
+                  onClick={() => setLightboxUrl(imagePreview)}
+                  className="overflow-hidden rounded-sm bg-black/30"
+                >
+                  <img
+                    src={imagePreview}
+                    alt="Your photo"
+                    className="h-full w-full object-cover"
+                  />
+                </button>
+                <div className="flex items-center justify-center overflow-hidden rounded-sm bg-black/30">
+                  <span className="text-xs text-white/30">No match</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

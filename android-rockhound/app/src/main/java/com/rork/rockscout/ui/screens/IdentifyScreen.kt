@@ -282,6 +282,7 @@ fun IdentifyScreen(navController: NavController) {
     // Comparison sheet state
     var showComparisonSheet by remember { mutableStateOf(false) }
     var comparisonMatch by remember { mutableStateOf<Pair<Specimen, IdentifyMatch>?>(null) }
+    var showAgateComparison by remember { mutableStateOf(false) }
 
     // PDF report generation — tracks which match index is currently generating
     var generatingReportIndex by remember { mutableIntStateOf(-1) }
@@ -328,6 +329,17 @@ fun IdentifyScreen(navController: NavController) {
     // specimen database (which is fully cached after a bulk download).
     val isOnline by rememberNetworkOnline()
 
+    // Auto-trigger the agate visual comparison popup when any match is an agate.
+    // Fires regardless of confidence (even 100%). Resets when matches clear.
+    LaunchedEffect(matches) {
+        val hasAgate = matches.any { (spec, _) ->
+            spec.name.contains("agate", ignoreCase = true)
+        }
+        if (hasAgate && matches.isNotEmpty()) {
+            showAgateComparison = true
+        }
+    }
+
     fun resetAll() {
         state = ScanState.IDLE
         angleCaptures = List(3) { i -> AngleCapture(angle = angleLabels[i]) }
@@ -352,6 +364,7 @@ fun IdentifyScreen(navController: NavController) {
         customAnswers.clear()
         showComparisonSheet = false
         comparisonMatch = null
+        showAgateComparison = false
     }
 
     fun startIdentification(searchMode: String = "rocks", skipArtifactDetect: Boolean = false) {
@@ -1340,26 +1353,16 @@ fun IdentifyScreen(navController: NavController) {
                 }
             }
 
-            // Agate uncertainty disclaimer — shown when any match is an agate
-            // and the top match confidence is below 85%.
+            // Agate uncertainty disclaimer — shown when any match is an agate.
+            // No confidence threshold: fires even at 100%.
+            // The full-screen visual comparison popup auto-triggers separately.
             if (state == ScanState.RESULTS) {
                 val hasAgate = matches.any { (spec, _) ->
                     spec.name.contains("agate", ignoreCase = true)
                 }
-                val topConfidence = matches.firstOrNull()?.second?.confidence ?: 100
-                if (hasAgate && topConfidence < 85) {
+                if (hasAgate) {
                     item {
-                        AgateUncertaintyCard(
-                            onCompare = {
-                                val userBitmap = angleCaptures.firstNotNullOfOrNull { it.bitmap }
-                                if (userBitmap != null) {
-                                    comparisonMatch = null
-                                    showComparisonSheet = true
-                                } else {
-                                    Toast.makeText(context, "No captured photo to compare", Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                        )
+                        AgateUncertaintyCard()
                     }
                 }
             }
@@ -1660,6 +1663,61 @@ fun IdentifyScreen(navController: NavController) {
                         accent = Citrine,
                     )
                 }
+                // Always-available Ask an Expert card for rock IDs — lets
+                // the user contact a museum even when the AI is confident.
+                // No confidence threshold: always shows for all rock results.
+                item {
+                    DarkCard(modifier = Modifier.fillMaxWidth(), accent = Citrine) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Filled.Museum,
+                                contentDescription = null,
+                                tint = Citrine,
+                                modifier = Modifier.size(22.dp),
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    "Want to confirm with a museum?",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    "If you think you may have something rare or historically significant, reach out to a nearby museum or cultural center. They can help verify your find with expert eyes.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = DarkTextLow,
+                                    lineHeight = 18.sp,
+                                )
+                                Spacer(Modifier.height(10.dp))
+                                SculptedButton(
+                                    text = "Ask an Expert",
+                                    onClick = { showMuseumFinder = true },
+                                    accent = Citrine,
+                                    containerColor = Citrine,
+                                    textColor = Color.Black,
+                                    icon = Icons.Filled.Museum,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Agate visual comparison popup — auto-triggers when any match is an agate
+        if (showAgateComparison && matches.isNotEmpty()) {
+            val agateUserBitmap = remember(angleCaptures) {
+                angleCaptures.firstNotNullOfOrNull { it.bitmap }
+            }
+            if (agateUserBitmap != null) {
+                AgateComparisonPopup(
+                    matches = matches.take(5),
+                    userBitmap = agateUserBitmap,
+                    onDismiss = { showAgateComparison = false },
+                )
             }
         }
 
@@ -2464,8 +2522,13 @@ private fun ZoomableBitmap(bitmap: Bitmap, contentDescription: String, onDismiss
  * Informational amber card shown when the top match is an agate and confidence is below 85%.
  * It explains that agate varieties are hard to distinguish and suggests comparing with reference photos.
  */
+/**
+ * Informational amber card shown when any match is an agate.
+ * No button — the full-screen visual comparison popup auto-triggers
+ * separately when an agate is detected.
+ */
 @Composable
-private fun AgateUncertaintyCard(onCompare: () -> Unit, modifier: Modifier = Modifier) {
+private fun AgateUncertaintyCard(modifier: Modifier = Modifier) {
     DarkCard(modifier = modifier.fillMaxWidth(), accent = Warning) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
@@ -2484,21 +2547,10 @@ private fun AgateUncertaintyCard(onCompare: () -> Unit, modifier: Modifier = Mod
         }
         Spacer(Modifier.height(8.dp))
         Text(
-            "Agates are among the hardest minerals to identify down to their specific variety — many share similar banding patterns and colors. The database images and your local gem & mineral resources can help you confirm the exact type. Tap any match above to compare your specimen side-by-side with reference photos.",
+            "Agates are among the hardest minerals to identify down to their specific variety — many share similar banding patterns and colors. A visual comparison is showing — compare your photos side-by-side with the top reference images to confirm the exact type.",
             style = MaterialTheme.typography.bodySmall,
             color = DarkTextLow,
             lineHeight = 18.sp,
-        )
-        Spacer(Modifier.height(10.dp))
-        SculptedButton(
-            text = "Compare reference photos",
-            onClick = onCompare,
-            accent = Warning,
-            containerColor = Warning,
-            textColor = Color.Black,
-            icon = Icons.Filled.PhotoLibrary,
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
         )
     }
 }
@@ -2663,6 +2715,149 @@ private fun SpecimenComparisonSheet(
                                 )
                                 Spacer(Modifier.height(16.dp))
                             }
+                        }
+                    }
+                }
+            }
+
+            // Zoomed overlays
+            if (zoomedUserBitmap) {
+                ZoomableBitmap(
+                    bitmap = userBitmap,
+                    contentDescription = "Your photo",
+                    onDismiss = { zoomedUserBitmap = false },
+                    modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.95f)),
+                )
+            }
+            zoomedMatchUrl?.let { url ->
+                StandaloneZoomableImageViewer(
+                    imageUrl = url,
+                    onDismiss = { zoomedMatchUrl = null },
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Full-screen agate visual comparison popup. Auto-triggers when any match
+ * contains "agate". Shows 5 copies of the user's best photo in the left
+ * column and the top 5 match reference images in the right column.
+ *
+ * Tight 2dp padding on all sides and between images. 5dp between the header
+ * text and the first row. All 5 rows fit on screen without scrolling via
+ * equal weight distribution. Each image is tap-to-zoom.
+ */
+@Composable
+private fun AgateComparisonPopup(
+    matches: List<Pair<Specimen, IdentifyMatch>>,
+    userBitmap: Bitmap,
+    onDismiss: () -> Unit,
+) {
+    var zoomedMatchUrl by remember { mutableStateOf<String?>(null) }
+    var zoomedUserBitmap by remember { mutableStateOf(false) }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = true,
+            dismissOnClickOutside = false,
+        ),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xF2000000)),
+        ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                // Header: text + close button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 2.dp, vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        "You might want to give them a visual comparison for a clearer identification",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.White.copy(alpha = 0.7f),
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    SculptedIconButton(
+                        icon = Icons.Filled.Close,
+                        contentDescription = "Close comparison",
+                        onClick = onDismiss,
+                        accent = Color.White,
+                        iconTint = Color.White,
+                        backgroundColor = Slate800,
+                        size = 36.dp,
+                        shadowElevation = 4.dp,
+                    )
+                }
+                Spacer(Modifier.height(5.dp))
+
+                // 5 equally-weighted rows: user photo (left) | ref image (right)
+                Column(modifier = Modifier.weight(1f)) {
+                    for (index in 0 until 5) {
+                        val spec = matches.getOrNull(index)?.first
+                        val imageUrls = spec?.let {
+                            SpecimenImages.urls[it.id] ?: it.imageUrls
+                        }
+                        val refUrl = imageUrls?.firstOrNull() ?: ""
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        ) {
+                            // Left: user photo (same in every row)
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(Color(0xFF1C1A14))
+                                    .clickable { zoomedUserBitmap = true },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Image(
+                                    bitmap = userBitmap.asImageBitmap(),
+                                    contentDescription = "Your photo",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop,
+                                )
+                            }
+                            // Right: reference image (one per match)
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(Color(0xFF1C1A14))
+                                    .clickable(enabled = refUrl.isNotBlank()) { zoomedMatchUrl = refUrl },
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                if (refUrl.isNotBlank()) {
+                                    AsyncImage(
+                                        model = refUrl,
+                                        contentDescription = spec?.name ?: "Reference",
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop,
+                                    )
+                                } else {
+                                    Text(
+                                        "No image",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = TextLow,
+                                    )
+                                }
+                            }
+                        }
+                        if (index < 4) {
+                            Spacer(Modifier.height(2.dp))
                         }
                     }
                 }
