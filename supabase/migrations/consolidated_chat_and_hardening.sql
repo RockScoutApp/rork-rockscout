@@ -41,7 +41,7 @@ ALTER TABLE public.rockscout_profiles
 
 ALTER TABLE public.rockscout_profiles
   ADD COLUMN IF NOT EXISTS premium_source text
-  CHECK (premium_source IN ('apk', 'revenuecat', null));
+  CHECK (premium_source IS NULL OR premium_source IN ('apk', 'revenuecat'));
 
 ALTER TABLE public.rockscout_profiles
   ADD COLUMN IF NOT EXISTS profanity_filter_level text NOT NULL DEFAULT 'low'
@@ -262,20 +262,45 @@ CREATE INDEX IF NOT EXISTS idx_typing_status_updated_at ON chat_typing_status(up
 -- 5. RLS POLICIES
 -- ============================================================================
 
+-- ─── SECURITY DEFINER helper functions to avoid RLS recursion ───────────────
+-- These functions bypass RLS so policies can check membership without
+-- triggering recursive policy evaluation on the same table.
+CREATE OR REPLACE FUNCTION is_group_member(p_group_chat_id text, p_user_id uuid)
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM group_chat_members
+    WHERE group_chat_id = p_group_chat_id AND user_id = p_user_id
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION is_thread_participant(p_thread_id text, p_user_id uuid)
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM chat_thread_participants
+    WHERE thread_id = p_thread_id AND user_id = p_user_id
+  );
+$$;
+
+GRANT EXECUTE ON FUNCTION is_group_member(text, uuid) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION is_thread_participant(text, uuid) TO anon, authenticated;
+
 -- ─── group_chats ──────────────────────────────────────────────────────────
 ALTER TABLE group_chats ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "group_chats_select" ON group_chats;
 CREATE POLICY "group_chats_select" ON group_chats FOR SELECT
   USING (
-    deleted_at IS NULL AND (
-      creator_id = auth.uid() OR
-      EXISTS (
-        SELECT 1 FROM group_chat_members m
-        WHERE m.group_chat_id = group_chats.id AND m.user_id = auth.uid()
-      ) OR
-      true
-    )
+    deleted_at IS NULL
   );
 
 DROP POLICY IF EXISTS "group_chats_insert" ON group_chats;
@@ -296,10 +321,7 @@ ALTER TABLE group_chat_members ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "gcm_select" ON group_chat_members;
 CREATE POLICY "gcm_select" ON group_chat_members FOR SELECT
   USING (
-    user_id = auth.uid() OR EXISTS (
-      SELECT 1 FROM group_chat_members m2
-      WHERE m2.group_chat_id = group_chat_members.group_chat_id AND m2.user_id = auth.uid()
-    )
+    user_id = auth.uid() OR is_group_member(group_chat_members.group_chat_id, auth.uid())
   );
 
 DROP POLICY IF EXISTS "gcm_insert" ON group_chat_members;
@@ -330,18 +352,12 @@ ALTER TABLE group_messages ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "gm_select" ON group_messages;
 CREATE POLICY "gm_select" ON group_messages FOR SELECT
-  USING (EXISTS (
-    SELECT 1 FROM group_chat_members m
-    WHERE m.group_chat_id = group_messages.group_chat_id AND m.user_id = auth.uid()
-  ));
+  USING (is_group_member(group_messages.group_chat_id, auth.uid()));
 
 DROP POLICY IF EXISTS "gm_insert" ON group_messages;
 CREATE POLICY "gm_insert" ON group_messages FOR INSERT
   WITH CHECK (
-    sender_id = auth.uid() AND EXISTS (
-      SELECT 1 FROM group_chat_members m
-      WHERE m.group_chat_id = group_messages.group_chat_id AND m.user_id = auth.uid()
-    )
+    sender_id = auth.uid() AND is_group_member(group_messages.group_chat_id, auth.uid())
   );
 
 DROP POLICY IF EXISTS "gm_update" ON group_messages;
@@ -360,8 +376,8 @@ CREATE POLICY "gmr_select" ON group_message_reads FOR SELECT
   USING (
     user_id = auth.uid() OR EXISTS (
       SELECT 1 FROM group_messages gm
-      JOIN group_chat_members m ON m.group_chat_id = gm.group_chat_id
-      WHERE gm.id = group_message_reads.message_id AND m.user_id = auth.uid()
+      WHERE gm.id = group_message_reads.message_id
+        AND is_group_member(gm.group_chat_id, auth.uid())
     )
   );
 
@@ -370,8 +386,8 @@ CREATE POLICY "gmr_insert" ON group_message_reads FOR INSERT
   WITH CHECK (
     user_id = auth.uid() AND EXISTS (
       SELECT 1 FROM group_messages gm
-      JOIN group_chat_members m ON m.group_chat_id = gm.group_chat_id
-      WHERE gm.id = group_message_reads.message_id AND m.user_id = auth.uid()
+      WHERE gm.id = group_message_reads.message_id
+        AND is_group_member(gm.group_chat_id, auth.uid())
     )
   );
 
@@ -417,10 +433,7 @@ ALTER TABLE chat_threads ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "ct_select" ON chat_threads;
 CREATE POLICY "ct_select" ON chat_threads FOR SELECT
-  USING (EXISTS (
-    SELECT 1 FROM chat_thread_participants p
-    WHERE p.thread_id = chat_threads.id AND p.user_id = auth.uid()
-  ));
+  USING (is_thread_participant(chat_threads.id, auth.uid()));
 
 DROP POLICY IF EXISTS "ct_insert" ON chat_threads;
 CREATE POLICY "ct_insert" ON chat_threads FOR INSERT
@@ -428,10 +441,7 @@ CREATE POLICY "ct_insert" ON chat_threads FOR INSERT
 
 DROP POLICY IF EXISTS "ct_update" ON chat_threads;
 CREATE POLICY "ct_update" ON chat_threads FOR UPDATE
-  USING (EXISTS (
-    SELECT 1 FROM chat_thread_participants p
-    WHERE p.thread_id = chat_threads.id AND p.user_id = auth.uid()
-  ));
+  USING (is_thread_participant(chat_threads.id, auth.uid()));
 
 -- ─── chat_thread_participants ─────────────────────────────────────────────
 ALTER TABLE chat_thread_participants ENABLE ROW LEVEL SECURITY;
@@ -439,18 +449,14 @@ ALTER TABLE chat_thread_participants ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "ctp_select" ON chat_thread_participants;
 CREATE POLICY "ctp_select" ON chat_thread_participants FOR SELECT
   USING (
-    user_id = auth.uid() OR EXISTS (
-      SELECT 1 FROM chat_thread_participants p2
-      WHERE p2.thread_id = chat_thread_participants.thread_id AND p2.user_id = auth.uid()
-    )
+    user_id = auth.uid() OR is_thread_participant(chat_thread_participants.thread_id, auth.uid())
   );
 
 DROP POLICY IF EXISTS "ctp_insert" ON chat_thread_participants;
 CREATE POLICY "ctp_insert" ON chat_thread_participants FOR INSERT
-  WITH CHECK (user_id = auth.uid() OR EXISTS (
-    SELECT 1 FROM chat_thread_participants p2
-    WHERE p2.thread_id = chat_thread_participants.thread_id AND p2.user_id = auth.uid()
-  ));
+  WITH CHECK (
+    user_id = auth.uid() OR is_thread_participant(chat_thread_participants.thread_id, auth.uid())
+  );
 
 DROP POLICY IF EXISTS "ctp_delete" ON chat_thread_participants;
 CREATE POLICY "ctp_delete" ON chat_thread_participants FOR DELETE
@@ -461,18 +467,12 @@ ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "cm_select" ON chat_messages;
 CREATE POLICY "cm_select" ON chat_messages FOR SELECT
-  USING (EXISTS (
-    SELECT 1 FROM chat_thread_participants p
-    WHERE p.thread_id = chat_messages.thread_id AND p.user_id = auth.uid()
-  ));
+  USING (is_thread_participant(chat_messages.thread_id, auth.uid()));
 
 DROP POLICY IF EXISTS "cm_insert" ON chat_messages;
 CREATE POLICY "cm_insert" ON chat_messages FOR INSERT
   WITH CHECK (
-    sender_id = auth.uid() AND EXISTS (
-      SELECT 1 FROM chat_thread_participants p
-      WHERE p.thread_id = chat_messages.thread_id AND p.user_id = auth.uid()
-    )
+    sender_id = auth.uid() AND is_thread_participant(chat_messages.thread_id, auth.uid())
   );
 
 DROP POLICY IF EXISTS "cm_update" ON chat_messages;
@@ -491,8 +491,8 @@ CREATE POLICY "cmr_select" ON chat_message_reads FOR SELECT
   USING (
     user_id = auth.uid() OR EXISTS (
       SELECT 1 FROM chat_messages cm
-      JOIN chat_thread_participants p ON p.thread_id = cm.thread_id
-      WHERE cm.id = chat_message_reads.message_id AND p.user_id = auth.uid()
+      WHERE cm.id = chat_message_reads.message_id
+        AND is_thread_participant(cm.thread_id, auth.uid())
     )
   );
 
@@ -510,17 +510,9 @@ ALTER TABLE chat_typing_status ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "users_can_read_typing_status" ON chat_typing_status;
 CREATE POLICY "users_can_read_typing_status" ON chat_typing_status
   FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM chat_thread_participants p
-      WHERE p.thread_id = chat_typing_status.chat_id
-        AND p.user_id = auth.uid()
-    )
+    is_thread_participant(chat_typing_status.chat_id, auth.uid())
     OR
-    EXISTS (
-      SELECT 1 FROM group_chat_members m
-      WHERE m.group_chat_id = chat_typing_status.chat_id
-        AND m.user_id = auth.uid()
-    )
+    is_group_member(chat_typing_status.chat_id, auth.uid())
   );
 
 DROP POLICY IF EXISTS "users_can_upsert_own_typing" ON chat_typing_status;
@@ -560,6 +552,7 @@ CREATE OR REPLACE FUNCTION check_warning_thresholds()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   warn_count int;
@@ -602,6 +595,7 @@ CREATE OR REPLACE FUNCTION enforce_group_member_cap()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   max_members int;
@@ -702,6 +696,7 @@ CREATE OR REPLACE FUNCTION notify_fatal_error()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   worker_url text;
@@ -780,6 +775,7 @@ CREATE OR REPLACE FUNCTION check_tomorrow_trips()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   worker_url text;
@@ -866,6 +862,7 @@ CREATE OR REPLACE FUNCTION cleanup_old_temp_data()
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   start_time timestamptz;
@@ -933,6 +930,36 @@ SELECT cron.schedule(
 );
 
 -- ============================================================================
+-- 14. STORAGE BUCKET + POLICIES
+--     storage.objects is owned by supabase_admin, so CREATE/DROP POLICY on it
+--     fails with 42501 from the SQL Editor (runs as postgres). Create the
+--     bucket and policies via the Supabase Dashboard instead:
+--
+--     1. Storage → New bucket → id: "user-photos", public: true,
+--        10 MB file size limit, MIME types: jpeg/png/webp/heic/heif
+--     2. Storage → user-photos → Policies → add these 4 policies:
+--
+--        Name: user-photos-read-all
+--        Allowed operation: SELECT
+--        Target row: bucket_id = 'user-photos'
+--
+--        Name: user-photos-write-self
+--        Allowed operation: INSERT
+--        Target row: bucket_id = 'user-photos'
+--        WITH CHECK: (storage.foldername(name))[1] = auth.uid()::text
+--
+--        Name: user-photos-update-self
+--        Allowed operation: UPDATE
+--        USING: bucket_id = 'user-photos' AND (storage.foldername(name))[1] = auth.uid()::text
+--        WITH CHECK: bucket_id = 'user-photos' AND (storage.foldername(name))[1] = auth.uid()::text
+--
+--        Name: user-photos-delete-self
+--        Allowed operation: DELETE
+--        USING: bucket_id = 'user-photos' AND (storage.foldername(name))[1] = auth.uid()::text
+-- ============================================================================"
+
+-- ============================================================================"
 -- DONE — all chat tables, RLS, indexes, read receipts, cron jobs, schema
--- additions, and config table are now created and ready.
+-- additions, and config table are now created and ready. Storage bucket and
+-- policies must be created via the Supabase Dashboard (see section 14 above).
 -- ============================================================================
