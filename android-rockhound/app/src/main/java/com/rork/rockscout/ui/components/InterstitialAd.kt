@@ -77,7 +77,7 @@ private val AD_ROTATIONS = listOf(
     AdContent(
         headline = "RockScout Premium",
         body = "Go Premium to remove all ads, unlock unlimited identifications, and support development.",
-        cta = "Go Premium · $9.99/mo",
+        cta = "Go Premium · $5.99/mo",
         accent = Amethyst,
     ),
     AdContent(

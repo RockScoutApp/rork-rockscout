@@ -1,3 +1,4 @@
+// RockScout identify pipeline — matches the approved 8-step plan (v2)
 import { SPECIMEN_DB, type SpecimenEntry } from "./specimens";
 import { ARTIFACT_DB, ARTIFACT_MAP, type ArtifactEntry } from "./artifacts";
 import {
@@ -334,10 +335,6 @@ async function identifyArtifact(
     );
   }
 
-  const firstImage = images[0];
-  const imageData = firstImage.imageBase64;
-  const mimeType = firstImage.mimeType;
-
   const isPremium = tier === "premium" || tier === "pro";
   const useGemini = isPremium;
   const modelsUsed: string[] = ["artifact-mode"];
@@ -353,7 +350,7 @@ async function identifyArtifact(
     if (embeddingEnabled) {
       try {
         const photoDescription = await callDescribeArtifactPhoto(
-          toolkitUrl, toolkitSecret, imageData, mimeType,
+          toolkitUrl, toolkitSecret, images,
         );
         if (photoDescription) {
           const queryEmbedding = await embedText(toolkitUrl, toolkitSecret, photoDescription);
@@ -375,7 +372,7 @@ async function identifyArtifact(
 
     if (!usedEmbeddingFlow) {
       const result = await callArtifactVisionModel(
-        toolkitUrl, toolkitSecret, imageData, mimeType,
+        toolkitUrl, toolkitSecret, images,
       );
       if (!result.ok) {
         const errorBody = await result.text().catch(() => "unknown error");
@@ -413,7 +410,7 @@ async function identifyArtifact(
     const visualMaxCandidates = 15;
     // Haiku visual for ALL tiers (Sonnet runs separately for premium)
     const visualResult = await callArtifactVisualComparison(
-      toolkitUrl, toolkitSecret, imageData, mimeType, parsed.matches, false, visualMaxCandidates,
+      toolkitUrl, toolkitSecret, images, parsed.matches, false, visualMaxCandidates,
       artifactWebContext.text,
     );
 
@@ -436,7 +433,7 @@ async function identifyArtifact(
     let sonnetDisagreed = false;
     if (isPremium && finalMatches.length > 0) {
       const sonnetResult = await callSonnetArtifactRerank(
-        toolkitUrl, toolkitSecret, imageData, mimeType, finalMatches, finalSummary,
+        toolkitUrl, toolkitSecret, images, finalMatches, finalSummary,
         artifactWebContext.text,
       );
       if (sonnetResult) {
@@ -452,7 +449,7 @@ async function identifyArtifact(
         const topConf = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
         if (useGemini && (topConf < 85 || sonnetDisagreed)) {
           const geminiResult = await callGeminiArtifactThirdOpinion(
-            toolkitUrl, toolkitSecret, imageData, mimeType,
+            toolkitUrl, toolkitSecret, images,
             finalMatches, sonnetResult.matches, finalSummary,
             artifactWebContext.text,
           );
@@ -525,12 +522,11 @@ function artifactEmbeddingMatchesToMatchResults(
 async function callDescribeArtifactPhoto(
   toolkitUrl: string,
   secret: string,
-  imageBase64: string,
-  mimeType: string,
+  images: AngleImage[],
 ): Promise<string | null> {
   const describePrompt = `Observe this prehistoric artifact photograph carefully and describe what you see using the vocabulary an archaeologist would use.
 
-Describe in 3-5 sentences:
+${images.length > 1 ? `You are given ${images.length} photos of the same artifact from different angles. Examine all photos and produce a single combined description that integrates what you observe from each angle.\n\n` : ""}Describe in 3-5 sentences:
 - Overall shape (lanceolate, stemmed, corner-notched, bifacial, disc, tubular, oval, triangular, pick, etc.)
 - Flaking pattern (collateral, parallel, oblique, random, pressure-flaked, bifacial, unifacial)
 - Base style (concave, convex, straight, notched, bifurcated, ground, grooved, shouldered)
@@ -542,14 +538,17 @@ Describe in 3-5 sentences:
 
 Return ONLY the description prose — no JSON, no markdown, no preamble.`;
 
+  const userContent: Array<Record<string, unknown>> = [];
+  for (let i = 0; i < images.length; i++) {
+    userContent.push({
+      type: "image_url",
+      image_url: { url: `data:${images[i].mimeType};base64,${images[i].imageBase64}` },
+    });
+  }
+  userContent.push({ type: "text", text: describePrompt });
+
   const messages = [
-    {
-      role: "user",
-      content: [
-        { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
-        { type: "text", text: describePrompt },
-      ],
-    },
+    { role: "user", content: userContent },
   ];
 
   try {
@@ -609,8 +608,7 @@ For each match, explain which visual features (shape, flaking pattern, notching,
 async function callArtifactVisionModel(
   toolkitUrl: string,
   secret: string,
-  imageBase64: string,
-  mimeType: string,
+  images: AngleImage[],
 ): Promise<Response> {
   const systemPrompt = buildArtifactSystemPrompt();
   const userPrompt = `Analyze this artifact photograph carefully. Identify which artifact type from the database it matches.
@@ -649,6 +647,15 @@ Return ONLY valid JSON — no markdown, no extra text:
   "summary": "3-4 sentence description of the artifact and your identification reasoning."
 }`;
 
+  const userContent: Array<Record<string, unknown>> = [];
+  for (let i = 0; i < images.length; i++) {
+    userContent.push({
+      type: "image_url",
+      image_url: { url: `data:${images[i].mimeType};base64,${images[i].imageBase64}` },
+    });
+  }
+  userContent.push({ type: "text", text: userPrompt });
+
   const messages = [
     {
       role: "system",
@@ -656,13 +663,7 @@ Return ONLY valid JSON — no markdown, no extra text:
         { type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } },
       ],
     },
-    {
-      role: "user",
-      content: [
-        { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
-        { type: "text", text: userPrompt },
-      ],
-    },
+    { role: "user", content: userContent },
   ];
 
   return fetch(`${toolkitUrl}/v2/vercel/v1/chat/completions`, {
@@ -683,8 +684,7 @@ Return ONLY valid JSON — no markdown, no extra text:
 async function callArtifactVisualComparison(
   toolkitUrl: string,
   secret: string,
-  imageBase64: string,
-  mimeType: string,
+  images: AngleImage[],
   preliminaryMatches: MatchResult[],
   useSonnet: boolean,
   maxCandidates: number = 12,
@@ -702,10 +702,19 @@ async function callArtifactVisualComparison(
   }
   if (refs.length === 0) return null;
 
-  const userContent: Array<Record<string, unknown>> = [
-    { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
-    { type: "text", text: "This is the user's photo. Below are reference images for the top artifact candidates. Compare the user's photo against each reference image visually." },
-  ];
+  const userContent: Array<Record<string, unknown>> = [];
+  for (let i = 0; i < images.length; i++) {
+    userContent.push({
+      type: "image_url",
+      image_url: { url: `data:${images[i].mimeType};base64,${images[i].imageBase64}` },
+    });
+  }
+  userContent.push({
+    type: "text",
+    text: images.length > 1
+      ? `These are the user's photos of the same artifact from ${images.length} angles. Below are reference images for the top artifact candidates. Compare the user's photos against each reference image visually.`
+      : "This is the user's photo. Below are reference images for the top artifact candidates. Compare the user's photo against each reference image visually.",
+  });
 
   for (let i = 0; i < refs.length; i++) {
     userContent.push({ type: "image_url", image_url: { url: refs[i].imageUrl } });
@@ -752,7 +761,7 @@ Return ONLY valid JSON — no markdown:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: useSonnet ? "anthropic/claude-sonnet-4" : "anthropic/claude-haiku-4.5",
+        model: useSonnet ? "anthropic/claude-sonnet-4.5" : "anthropic/claude-haiku-4.5",
         messages,
         max_tokens: 4096,
         temperature: 0.15,
@@ -774,8 +783,7 @@ Return ONLY valid JSON — no markdown:
 async function callSonnetArtifactRerank(
   toolkitUrl: string,
   secret: string,
-  imageBase64: string,
-  mimeType: string,
+  images: AngleImage[],
   preliminaryMatches: MatchResult[],
   summary: string,
   webContext: string = "",
@@ -789,7 +797,7 @@ async function callSonnetArtifactRerank(
 
 Initial summary: ${summary}${webContextBlock}
 
-Look at the photo again with fresh eyes and return your own ranked matches. You may agree, reorder, or introduce new candidates from the artifact database — but every id must exist in the reference database.
+Look at the ${images.length > 1 ? `${images.length} photos` : "photo"} again with fresh eyes and return your own ranked matches. You may agree, reorder, or introduce new candidates from the artifact database — but every id must exist in the reference database.
 
 Return ONLY valid JSON — no markdown:
 {
@@ -799,15 +807,18 @@ Return ONLY valid JSON — no markdown:
   "summary": "Updated analysis."
 }`;
 
+  const userContent: Array<Record<string, unknown>> = [];
+  for (let i = 0; i < images.length; i++) {
+    userContent.push({
+      type: "image_url",
+      image_url: { url: `data:${images[i].mimeType};base64,${images[i].imageBase64}` },
+    });
+  }
+  userContent.push({ type: "text", text: userPrompt });
+
   const messages = [
     { role: "system", content: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }] },
-    {
-      role: "user",
-      content: [
-        { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
-        { type: "text", text: userPrompt },
-      ],
-    },
+    { role: "user", content: userContent },
   ];
 
   try {
@@ -818,7 +829,7 @@ Return ONLY valid JSON — no markdown:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "anthropic/claude-sonnet-4",
+        model: "anthropic/claude-sonnet-4.5",
         messages,
         max_tokens: 4096,
         temperature: 0.15,
@@ -840,8 +851,7 @@ Return ONLY valid JSON — no markdown:
 async function callGeminiArtifactThirdOpinion(
   toolkitUrl: string,
   secret: string,
-  imageBase64: string,
-  mimeType: string,
+  images: AngleImage[],
   haikuMatches: MatchResult[],
   sonnetMatches: MatchResult[],
   summary: string,
@@ -864,7 +874,16 @@ ${sonnetList}
 
 Summary: ${summary}${webContextBlock}
 
-You are the tie-breaker. Look at the photo yourself and return your own ranked matches. Every id must exist in the reference database. Return the same JSON shape.`;
+You are the tie-breaker. Look at the ${images.length > 1 ? `${images.length} photos` : "photo"} yourself and return your own ranked matches. Every id must exist in the reference database. Return the same JSON shape.`;
+
+  const userContent: Array<Record<string, unknown>> = [];
+  for (let i = 0; i < images.length; i++) {
+    userContent.push({
+      type: "image_url",
+      image_url: { url: `data:${images[i].mimeType};base64,${images[i].imageBase64}` },
+    });
+  }
+  userContent.push({ type: "text", text: userPrompt });
 
   const messages = [
     {
@@ -873,13 +892,7 @@ You are the tie-breaker. Look at the photo yourself and return your own ranked m
         { type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } },
       ],
     },
-    {
-      role: "user",
-      content: [
-        { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
-        { type: "text", text: userPrompt },
-      ],
-    },
+    { role: "user", content: userContent },
   ];
 
   try {
@@ -1591,7 +1604,7 @@ async function callVisualReferenceComparison(
   // Sonnet can handle a larger reference-image budget than Haiku, but we
   // still cap it so the request stays reasonable. Each candidate shows up to
   // 3 reference images (face polished, cabochon, rough/natural).
-  const REF_IMAGE_BUDGET = useSonnet ? 36 : 20;
+  const REF_IMAGE_BUDGET = 15;
   const IMAGES_PER_SPECIMEN = 3;
 
   // Collect candidates with up to 3 reference images each.
@@ -1618,7 +1631,7 @@ async function callVisualReferenceComparison(
   // Slice down to the requested maxCandidates, but also respect the per-model
   // reference-image budget. Always keep at least 6 candidates when possible.
   const budgetLimited = Math.floor(REF_IMAGE_BUDGET / IMAGES_PER_SPECIMEN);
-  const refs = candidateRefs.slice(0, Math.min(maxCandidates, Math.max(6, budgetLimited)));
+  const refs = candidateRefs.slice(0, Math.min(maxCandidates, budgetLimited));
 
   // Build user content: all angle photos first (labeled), then reference images
   const userContent: Array<Record<string, unknown>> = [];

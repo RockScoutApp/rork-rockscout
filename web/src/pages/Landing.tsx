@@ -618,9 +618,9 @@ const FEATURES_LIST = [
   },
   {
     icon: Monitor,
-    title: "Desktop web app & keyboard shortcuts",
-    desc: "The RockScout web app is a full PWA with desktop-optimized layouts — wider multi-column grids, a split map + location list view, and vim-style keyboard shortcuts. Press \"?\" for the shortcuts overlay, \"/\" to focus search, and \"g\" followed by a letter to jump to any section. Install the PWA to your desktop for a standalone app window.",
-    items: ["Desktop multi-column grids", "Map + list split view", "Keyboard shortcuts", "Installable PWA"],
+    title: "Desktop web app",
+    desc: "The RockScout web app is a full PWA with desktop-optimized layouts — wider multi-column grids, a split map + location list view, and grids that use your screen space efficiently. Install the PWA to your desktop for a standalone app window.",
+    items: ["Desktop multi-column grids", "Map + list split view", "Installable PWA"],
   },
 
   // ── Safety & Account ──

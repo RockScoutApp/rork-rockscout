@@ -67,11 +67,13 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -974,6 +976,83 @@ fun rockClassColor(rockClass: RockClass): Color = when (rockClass) {
     RockClass.FOSSIL -> Fossil
 }
 
+/**
+ * Subtle animated sparkles overlaid on SpecimenListItem cards, tinted by
+ * rock class color. 14 sparkles with randomized positions seeded by specimen
+ * id hash (stable across recompositions). Each twinkles independently with
+ * low peak alpha (0.30–0.55) and small radii so readability is never impeded.
+ * Draw-only Canvas — no pointerInput, so taps pass through to the card.
+ */
+@Composable
+fun SpecimenSparkleOverlay(
+    rockClass: RockClass,
+    seedId: String,
+    modifier: Modifier = Modifier,
+) {
+    val tint = rockClassColor(rockClass)
+    val transition = rememberInfiniteTransition(label = "sparkle")
+    val progress = transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 3000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart,
+        ),
+        label = "sparkleProgress",
+    )
+    val sparkles = remember(seedId) {
+        val hash = seedId.hashCode()
+        val random = java.util.Random(hash.toLong())
+        List(14) {
+            SparkleData(
+                x = random.nextFloat(),
+                y = random.nextFloat(),
+                phaseOffset = random.nextFloat(),
+                driftAmp = 2f + random.nextFloat() * 3f,
+                driftPhase = random.nextFloat() * 6.28f,
+                peakAlpha = 0.30f + random.nextFloat() * 0.25f,
+                coreRadius = 0.6f + random.nextFloat() * 1.0f,
+            )
+        }
+    }
+    Canvas(modifier = modifier.fillMaxSize()) {
+        val w = size.width
+        val h = size.height
+        val t = progress.value
+        for (s in sparkles) {
+            val phase = (t + s.phaseOffset) % 1f
+            val alpha = (kotlin.math.sin(phase * kotlin.math.PI * 2.0).toFloat() * 0.5f + 0.5f) * s.peakAlpha
+            if (alpha < 0.02f) continue
+            val drift = kotlin.math.sin((t * 6.28f + s.driftPhase).toDouble()).toFloat() * s.driftAmp
+            val cx = s.x * w + drift
+            val cy = s.y * h + drift * 0.5f
+            val scale = 0.7f + alpha / s.peakAlpha * 0.3f
+            val coreR = s.coreRadius * scale * density
+            val haloR = coreR * 3f
+            drawCircle(
+                color = tint.copy(alpha = alpha * 0.15f),
+                radius = haloR,
+                center = Offset(cx, cy),
+            )
+            drawCircle(
+                color = tint.copy(alpha = alpha),
+                radius = coreR,
+                center = Offset(cx, cy),
+            )
+        }
+    }
+}
+
+private data class SparkleData(
+    val x: Float,
+    val y: Float,
+    val phaseOffset: Float,
+    val driftAmp: Float,
+    val driftPhase: Float,
+    val peakAlpha: Float,
+    val coreRadius: Float,
+)
+
 /** Light, class-tinted card background gradient. Each rock class gets its own
  *  subtle color identity (warm, sandy, blue-gray, amber, purple, sepia) while
  *  staying dark enough at the bottom for the white title and dark text rows to
@@ -1657,6 +1736,13 @@ fun SpecimenListItem(
                             listOf(accent.copy(alpha = 0.15f), Color.Transparent)
                         )
                     ),
+            )
+
+            // Animated class-colored sparkles
+            SpecimenSparkleOverlay(
+                rockClass = specimen.rockClass,
+                seedId = specimen.id,
+                modifier = Modifier.fillMaxSize(),
             )
 
             Column(

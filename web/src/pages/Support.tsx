@@ -70,7 +70,7 @@ const FAQ = [
   },
   {
     q: "Does the web app work on desktop?",
-    a: "Yes — the RockScout web app is a full PWA with desktop-optimized layouts: wider multi-column grids, a split map + location list view on the Dig Sites page, and vim-style keyboard shortcuts. Press \"?\" for the shortcuts overlay, \"/\" to focus search, and \"g\" followed by a letter to jump to any section (g h for Home, g m for Map, etc.). Install the PWA to your desktop from your browser's install prompt for a standalone app window.",
+    a: "Yes — the RockScout web app is a full PWA with desktop-optimized layouts: wider multi-column grids, a split map + location list view on the Dig Sites page, and grids that use your screen space efficiently. Install the PWA to your desktop from your browser's install prompt for a standalone app window.",
   },
   {
     q: "What is the Aurora Forecaster?",

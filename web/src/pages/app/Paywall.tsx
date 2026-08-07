@@ -14,7 +14,7 @@ interface Profile {
 
 const PREMIUM_FEATURES = [
   "Unlimited AI rock identifications",
-  "All 3 AI models (Haiku + Sonnet + Gemini Pro)",
+  "5-source AI system (database + Haiku + Sonnet + Gemini + web cross-check)",
   "Ad-free experience",
   "250-mile scan radius",
   "24-hour pings on the map",

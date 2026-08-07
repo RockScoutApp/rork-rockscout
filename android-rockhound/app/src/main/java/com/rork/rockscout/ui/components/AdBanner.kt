@@ -200,7 +200,7 @@ private fun SimulatedPromoBanner(
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
-                        text = "Go Premium — $9.99/mo",
+                        text = "Go Premium — $5.99/mo",
                         style = MaterialTheme.typography.labelSmall,
                         color = Color(0xFFC8C2B0),
                     )
