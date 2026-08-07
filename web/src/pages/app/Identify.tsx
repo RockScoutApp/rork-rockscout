@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useTier } from "@/hooks/useTier";
@@ -69,6 +69,9 @@ export default function Identify() {
     }
     setCameraActive(false);
   }, []);
+
+  // Clean up camera stream on unmount so the camera LED doesn't stay on.
+  useEffect(() => () => stopCamera(), [stopCamera]);
 
   const startCamera = useCallback(async () => {
     setCameraError(null);
@@ -146,7 +149,7 @@ export default function Identify() {
       if (error) throw error;
       const rows = (data ?? []) as SpecimenRef[];
       const byId = new Map(rows.map((r) => [r.id, r]));
-      return topMatchIds.map((id) => byId.get(id)!).filter(Boolean);
+      return topMatchIds.map((id) => byId.get(id)).filter((r): r is SpecimenRef => r != null);
     },
     enabled: topMatchIds.length > 0,
   });
@@ -180,7 +183,7 @@ export default function Identify() {
     } finally {
       setIsIdentifying(false);
     }
-  }, [imageBase64, mimeType]);
+  }, [imageBase64, mimeType, isPremium]);
 
   const resetImage = useCallback(() => {
     setImagePreview(null);

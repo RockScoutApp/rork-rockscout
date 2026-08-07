@@ -44,8 +44,6 @@ export function AuthPill() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const openDialog = useCallback(() => setDialogOpen(true), []);
-  const closeDialog = useCallback(() => setDialogOpen(false), []);
-
   const handleSignOut = useCallback(async () => {
     await signOut();
   }, [signOut]);

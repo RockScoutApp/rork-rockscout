@@ -1251,7 +1251,7 @@ fun IdentifyScreen(navController: NavController) {
                             )
                         },
                         onPurchaseTokens = { packageId ->
-                            val activity = context as? android.app.Activity
+                            val activity = context.findActivity()
                             if (activity != null) {
                                 scope.launch {
                                     val result = purchaseManager.purchaseDonation(activity, packageId)

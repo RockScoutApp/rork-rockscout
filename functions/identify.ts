@@ -90,8 +90,8 @@ export async function handleIdentify(
       return await identifyArtifact(env, cors, images, tier);
     }
 
-    const useSonnet = tier === "premium" || tier === "pro";
-    const useGemini = tier === "premium" || tier === "pro";
+    const isPremium = tier === "premium" || tier === "pro";
+    const useGemini = isPremium;
     const CONFIDENCE_WEB_THRESHOLD = 85;
     const CONFIDENCE_CLARIFY_THRESHOLD = 60;
 
@@ -158,15 +158,14 @@ export async function handleIdentify(
     const supabaseAnonKey = env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
     const embeddingEnabled = !!(supabaseUrl && supabaseAnonKey);
 
-    let parsed: IdentificationResult;
+    let parsed!: IdentificationResult;
     let usedEmbeddingFlow = false;
 
     if (embeddingEnabled && photoDescription) {
       try {
         const queryEmbedding = await embedText(toolkitUrl, toolkitSecret, photoDescription);
-        const matchCount = useSonnet ? 20 : 25;
         const embeddingMatches = await matchSpecimenEmbeddings(
-          supabaseUrl!, supabaseAnonKey!, queryEmbedding, matchCount,
+          supabaseUrl!, supabaseAnonKey!, queryEmbedding, 25,
         );
         if (embeddingMatches.length > 0) {
           parsed = {
@@ -208,62 +207,97 @@ export async function handleIdentify(
       modelsUsed.push("haiku");
     }
 
-    // ── Step 3: Tiered visual comparison over the narrowed candidate set ──
-    // Free / trial: Haiku visual over 25 candidates.
-    // Premium: Sonnet visual over 20 candidates (no Haiku first pass).
-    const visualMaxCandidates = useSonnet ? 20 : 25;
-    const visualResult = await callVisualReferenceComparison(
-      toolkitUrl, toolkitSecret, images, parsed.matches, "", visualMaxCandidates, useSonnet,
+    // ── Step 3: Web search (BEFORE visual — feeds context into comparison) ──
+    // Search authoritative mineralogy sites (mindat, webmineral, wikipedia,
+    // etc) for reference data on the top embedding candidates. This context
+    // is fed into the visual comparison prompt so the vision model can
+    // cross-reference published properties (hardness, crystal system, luster)
+    // alongside the reference images.
+    const webContext = await fetchMineralogyContext(
+      toolkitUrl, toolkitSecret, parsed.matches, photoDescription,
+    );
+    let webReferences: WebReference[] = webContext.references ?? [];
+    if (webContext.text) {
+      modelsUsed.push("web-search");
+    }
+
+    // ── Step 4: Haiku visual comparison (ALL tiers) ──
+    // Haiku compares the user's photos against the narrowed candidate set's
+    // reference images, with the web mineralogy context as additional input.
+    const haikuVisual = await callVisualReferenceComparison(
+      toolkitUrl, toolkitSecret, images, parsed.matches, webContext.text, 25, false,
     );
 
     let finalMatches = parsed.matches;
     let finalSummary = parsed.summary;
     let visualReferenceUsed = false;
 
-    if (visualResult) {
-      modelsUsed.push(useSonnet ? "sonnet-visual" : "haiku-visual");
+    if (haikuVisual) {
+      modelsUsed.push("haiku-visual");
       visualReferenceUsed = true;
-      finalMatches = visualResult.matches;
-      finalSummary = visualResult.summary;
+      finalMatches = haikuVisual.matches;
+      finalSummary = haikuVisual.summary;
     }
 
-    // ── Step 4: Premium Gemini tie-breaker (only when still ambiguous) ────
-    // If Sonnet's top confidence is below 85% or the top two candidates are
-    // within 10 points, bring in Gemini for a third opinion.
-    let geminiResult: IdentificationResult | null = null;
-    if (useSonnet && useGemini) {
-      const topConf = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
-      const secondConf = finalMatches.length > 1 ? finalMatches[1].confidence : 0;
-      const isAmbiguous = topConf < CONFIDENCE_WEB_THRESHOLD || (topConf - secondConf) < 10;
-      if (isAmbiguous) {
-        geminiResult = await callGeminiTieBreaker(
-          toolkitUrl, toolkitSecret, images, finalMatches, finalSummary,
-        );
-        if (geminiResult) {
-          modelsUsed.push("gemini");
-          const merged = mergeRankings(finalMatches, geminiResult.matches);
-          finalMatches = merged.matches;
-          finalSummary = merged.summary;
+    // ── Step 5: Sonnet visual (ALWAYS for premium — scans for assemblages) ──
+    // Sonnet independently re-evaluates the specimen with fresh eyes. It
+    // ALWAYS runs for premium regardless of Haiku's confidence, because
+    // Sonnet catches multi-mineral assemblages (granite, schist, gneiss)
+    // that Haiku may call as a single mineral at high confidence.
+    if (isPremium) {
+      const sonnetResult = await callSonnetRerank(
+        toolkitUrl, toolkitSecret, images, finalMatches, finalSummary, webContext.text,
+      );
+      if (sonnetResult) {
+        modelsUsed.push("sonnet-visual");
+        const haikuTopId = finalMatches.length > 0 ? finalMatches[0].id : undefined;
+        const sonnetDisagreed = sonnetResult.matches.length > 0 &&
+          sonnetResult.matches[0].id !== haikuTopId;
+        const merged = mergeRankings(finalMatches, sonnetResult.matches);
+        finalMatches = merged.matches;
+        finalSummary = merged.summary;
+
+        // ── Step 6: Gemini if needed (disagreement or low confidence) ──
+        const topConf = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
+        if (useGemini && (topConf < CONFIDENCE_WEB_THRESHOLD || sonnetDisagreed)) {
+          const geminiResult = await callGeminiThirdOpinion(
+            toolkitUrl, toolkitSecret, images, finalMatches, sonnetResult.matches,
+            finalSummary, webContext.text,
+          );
+          if (geminiResult) {
+            modelsUsed.push("gemini");
+            const resolved = mergeRankingsThreeWay(
+              finalMatches, sonnetResult.matches, geminiResult.matches,
+            );
+            finalMatches = resolved.matches;
+            finalSummary = resolved.summary;
+          }
         }
       }
     }
 
-    // ── Step 5: Conditional web search (only when still ambiguous) ─────
-    // This is the main cost win: ~70-80% of confident IDs skip Exa entirely.
-    const postVisualTopConf = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
-    const needsWebContext = postVisualTopConf < CONFIDENCE_WEB_THRESHOLD;
-    let webReferences: WebReference[] = [];
-    if (needsWebContext) {
-      const webContext = await fetchMineralogyContext(
-        toolkitUrl, toolkitSecret, finalMatches, photoDescription,
+    // ── Step 7: Further web search (if still ambiguous after all models) ──
+    // If the top confidence is still below 85% after all vision models have
+    // weighed in, do a second Exa search for additional references.
+    const postAllTopConf = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
+    if (postAllTopConf < CONFIDENCE_WEB_THRESHOLD) {
+      const moreRefs = await searchWebReferences(
+        toolkitUrl, toolkitSecret, finalMatches,
       );
-      if (webContext.text) {
-        modelsUsed.push("web-search");
-        webReferences = webContext.references ?? [];
+      if (moreRefs.length > 0) {
+        modelsUsed.push("web-search-2");
+        const seenUrls = new Set(webReferences.map(r => r.url));
+        for (const ref of moreRefs) {
+          if (!seenUrls.has(ref.url)) {
+            webReferences.push(ref);
+            seenUrls.add(ref.url);
+          }
+        }
+        webReferences = webReferences.slice(0, 8);
       }
     }
 
-    // ── Step 6: Clarification (last resort, only if < 60%) ─────────────
+    // ── Step 8: Clarification (last resort, only if < 60%) ─────────────
     const finalTopConfidence = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
     const needsClarification = finalTopConfidence < CONFIDENCE_CLARIFY_THRESHOLD && finalMatches.length > 0;
 
@@ -325,8 +359,8 @@ async function identifyArtifact(
   const imageData = firstImage.imageBase64;
   const mimeType = firstImage.mimeType;
 
-  const useSonnet = tier === "premium" || tier === "pro";
-  const useGemini = tier === "premium" || tier === "pro";
+  const isPremium = tier === "premium" || tier === "pro";
+  const useGemini = isPremium;
   const modelsUsed: string[] = ["artifact-mode"];
 
   const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, undefined);
@@ -334,7 +368,7 @@ async function identifyArtifact(
   const embeddingEnabled = !!(supabaseUrl && supabaseAnonKey);
 
   try {
-    let parsed: IdentificationResult;
+    let parsed!: IdentificationResult;
     let usedEmbeddingFlow = false;
 
     if (embeddingEnabled) {
@@ -344,9 +378,8 @@ async function identifyArtifact(
         );
         if (photoDescription) {
           const queryEmbedding = await embedText(toolkitUrl, toolkitSecret, photoDescription);
-          const matchCount = useSonnet ? 20 : 25;
           const embeddingMatches = await matchArtifactEmbeddings(
-            supabaseUrl!, supabaseAnonKey!, queryEmbedding, matchCount,
+            supabaseUrl!, supabaseAnonKey!, queryEmbedding, 25,
           );
           if (embeddingMatches.length > 0) {
             parsed = {
@@ -398,41 +431,34 @@ async function identifyArtifact(
       modelsUsed.push("web-search-artifact");
     }
 
-    const visualMaxCandidates = usedEmbeddingFlow
-      ? (useSonnet ? 20 : 25)
-      : (useSonnet ? 12 : 15);
+    const visualMaxCandidates = usedEmbeddingFlow ? 25 : 15;
+    // Haiku visual for ALL tiers (Sonnet runs separately for premium)
     const visualResult = await callArtifactVisualComparison(
-      toolkitUrl, toolkitSecret, imageData, mimeType, parsed.matches, useSonnet, visualMaxCandidates,
+      toolkitUrl, toolkitSecret, imageData, mimeType, parsed.matches, false, visualMaxCandidates,
       artifactWebContext.text,
     );
 
     let finalMatches = parsed.matches;
     let finalSummary = parsed.summary;
     let visualReferenceUsed = false;
-    let visualShortCircuit = false;
 
     if (usedEmbeddingFlow) {
       modelsUsed.push("haiku-artifact-describe");
     }
 
     if (visualResult) {
-      modelsUsed.push(useSonnet ? "sonnet-artifact-visual" : "haiku-artifact-visual");
+      modelsUsed.push("haiku-artifact-visual");
       visualReferenceUsed = true;
       finalMatches = visualResult.matches;
       finalSummary = visualResult.summary;
-
-      const visualTopConf = visualResult.matches.length > 0
-        ? visualResult.matches[0].confidence : 0;
-      if (visualTopConf >= 92) {
-        visualShortCircuit = true;
-      }
     }
 
+    // ── Sonnet artifact rerank (ALWAYS for premium) ──
     let sonnetDisagreed = false;
-    const topConf = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
-    if (!visualShortCircuit && useSonnet && topConf < 85 && finalMatches.length > 0) {
+    if (isPremium && finalMatches.length > 0) {
       const sonnetResult = await callSonnetArtifactRerank(
         toolkitUrl, toolkitSecret, imageData, mimeType, finalMatches, finalSummary,
+        artifactWebContext.text,
       );
       if (sonnetResult) {
         modelsUsed.push("sonnet-artifact");
@@ -443,12 +469,13 @@ async function identifyArtifact(
         sonnetDisagreed = sonnetResult.matches.length > 0 &&
           sonnetResult.matches[0].id !== haikuTopId;
 
-        const sonnetTopConf = sonnetResult.matches.length > 0
-          ? sonnetResult.matches[0].confidence : 0;
-        if (useGemini && (sonnetTopConf < 85 || sonnetDisagreed)) {
+        // ── Gemini if needed (disagreement or low confidence) ──
+        const topConf = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
+        if (useGemini && (topConf < 85 || sonnetDisagreed)) {
           const geminiResult = await callGeminiArtifactThirdOpinion(
             toolkitUrl, toolkitSecret, imageData, mimeType,
             finalMatches, sonnetResult.matches, finalSummary,
+            artifactWebContext.text,
           );
           if (geminiResult) {
             modelsUsed.push("gemini-artifact");
@@ -464,24 +491,34 @@ async function identifyArtifact(
 
     const finalTopConfidence = finalMatches.length > 0
       ? finalMatches[0].confidence : 0;
-    const needsClarification = !visualShortCircuit && finalTopConfidence < 85 && finalMatches.length > 0;
+    const needsClarification = finalTopConfidence < 60 && finalMatches.length > 0;
 
     let clarificationQuestions: ClarificationQuestion[] = [];
-    let webReferences: WebReference[] = [];
+    let webReferences: WebReference[] = artifactWebContext.references ?? [];
+
+    // ── Further web search if still ambiguous ──
+    if (finalTopConfidence < 85 && finalMatches.length > 0) {
+      const moreRefs = await searchWebReferences(toolkitUrl, toolkitSecret, finalMatches, true);
+      if (moreRefs.length > 0) {
+        modelsUsed.push("web-search-artifact-2");
+        const seenUrls = new Set(webReferences.map(r => r.url));
+        for (const ref of moreRefs) {
+          if (!seenUrls.has(ref.url)) {
+            webReferences.push(ref);
+            seenUrls.add(ref.url);
+          }
+        }
+        webReferences = webReferences.slice(0, 8);
+      }
+    }
 
     if (needsClarification && finalMatches.length > 0) {
       clarificationQuestions = await generateArtifactClarificationQuestions(
         toolkitUrl, toolkitSecret, finalMatches, finalSummary,
       );
-      webReferences = await searchWebReferences(toolkitUrl, toolkitSecret, finalMatches, true);
     }
 
-    // Always fetch web references for artifacts — museums, archaeological sites
-    if (webReferences.length === 0 && finalMatches.length > 0) {
-      webReferences = await searchWebReferences(toolkitUrl, toolkitSecret, finalMatches, true);
-    }
-
-    const uncertainArtifact = !visualShortCircuit && finalTopConfidence < 55;
+    const uncertainArtifact = finalTopConfidence < 55;
 
     const artifactResponse: IdentifyResponse = {
       matches: finalMatches,
@@ -778,12 +815,16 @@ async function callSonnetArtifactRerank(
   mimeType: string,
   preliminaryMatches: MatchResult[],
   summary: string,
+  webContext: string = "",
 ): Promise<IdentificationResult | null> {
   const systemPrompt = buildArtifactSystemPrompt();
   const matchNames = preliminaryMatches.slice(0, 5).map((m) => `${m.name} (${m.confidence}%)`).join(", ");
+  const webContextBlock = webContext
+    ? `\n\nPublished archaeological data:\n${webContext}\n`
+    : "";
   const userPrompt = `Re-evaluate this artifact photo independently. A first-pass model returned these candidates: ${matchNames}
 
-Initial summary: ${summary}
+Initial summary: ${summary}${webContextBlock}
 
 Look at the photo again with fresh eyes and return your own ranked matches. You may agree, reorder, or introduce new candidates from the artifact database — but every id must exist in the reference database.
 
@@ -841,11 +882,15 @@ async function callGeminiArtifactThirdOpinion(
   haikuMatches: MatchResult[],
   sonnetMatches: MatchResult[],
   summary: string,
+  webContext: string = "",
 ): Promise<IdentificationResult | null> {
   const allCandidates = [...haikuMatches, ...sonnetMatches];
   const systemPrompt = buildArtifactCandidateSystemPrompt(allCandidates);
   const haikuList = haikuMatches.slice(0, 5).map(m => `- ${m.name} (${m.confidence}%)`).join("\n");
   const sonnetList = sonnetMatches.slice(0, 5).map(m => `- ${m.name} (${m.confidence}%)`).join("\n");
+  const webContextBlock = webContext
+    ? `\n\nPublished archaeological data:\n${webContext}\n`
+    : "";
   const userPrompt = `Two prior models disagreed on this artifact photo.
 
 Model A (first pass) candidates:
@@ -854,7 +899,7 @@ ${haikuList}
 Model B (re-rank) candidates:
 ${sonnetList}
 
-Summary: ${summary}
+Summary: ${summary}${webContextBlock}
 
 You are the tie-breaker. Look at the photo yourself and return your own ranked matches. Every id must exist in the reference database. Return the same JSON shape.`;
 

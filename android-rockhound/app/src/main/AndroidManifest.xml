@@ -17,6 +17,7 @@
     <!-- Allows the app to install a downloaded update APK over the existing
          install (no uninstall needed). Required for in-app self-update. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <!-- APK files downloaded for in-app self-update live in cache and are
          shared to the system installer via FileProvider. -->

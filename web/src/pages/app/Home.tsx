@@ -344,19 +344,6 @@ const EXPLORE_TILES: HomeTileData[] = [
   },
 ];
 
-/* Routes hidden for free users */
-const PREMIUM_ONLY_ROUTES = new Set([
-  "/app/identify",
-  "/app/journal",
-  "/app/trips",
-  "/app/trade",
-  "/app/community",
-  "/app/friends",
-  "/app/notifications",
-  "/app/achievements",
-  "/app/referral",
-]);
-
 export default function Home() {
   const navigate = useNavigate();
   const { isFree, isPremium, deviceOverLimit, rawIsPremium } = useTier();

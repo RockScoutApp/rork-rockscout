@@ -298,7 +298,7 @@ export async function handleEntitlement(
       // source. This prevents the web PWA's sync from accidentally revoking
       // premium while the true source is still being established.
       isPremium = true;
-      supabaseUpdated = true;
+      supabaseUpdated = false;
     } else {
       // Lapsed RevenueCat subscriber or never-premium user: write false.
       // Keep premium_source as revenuecat so we know it was once a subscription.
