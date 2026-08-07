@@ -13,12 +13,16 @@ import {
   X,
   ScanLine,
   Maximize2,
+  Mail,
+  Landmark as MuseumIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { FUNCTIONS_URL as BACKEND_URL, APP_KEY } from "@/lib/config";
+import { MuseumFinderSheet, type Museum } from "@/components/app/MuseumFinderSheet";
+import { ReplyEmailDialog } from "@/components/app/ReplyEmailDialog";
 
 interface Match {
   id: string;
@@ -61,6 +65,10 @@ export default function Identify() {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [compareOpen, setCompareOpen] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [showMuseumFinder, setShowMuseumFinder] = useState(false);
+  const [emailTargetMuseum, setEmailTargetMuseum] = useState<Museum | null>(null);
+  const [emailTargetMuseums, setEmailTargetMuseums] = useState<Museum[]>([]);
+  const [showReplyEmail, setShowReplyEmail] = useState(false);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -445,8 +453,48 @@ export default function Identify() {
                       type. Tap any match below to compare your specimen side-by-side with reference
                       photos.
                     </p>
+                    <Button
+                      onClick={() => setShowMuseumFinder(true)}
+                      variant="default"
+                      size="sm"
+                      className="mt-3 w-full gap-2"
+                    >
+                      <AlertCircle className="h-4 w-4" />
+                      Ask an Expert
+                    </Button>
                   </div>
                 )}
+
+              {/* Ask an Expert — confident results card */}
+              {result.matches[0].confidence >= 60 && !(
+                result.matches[0].name.toLowerCase().includes("agate") &&
+                result.matches[0].confidence < 85
+              ) && (
+                <div className="dark-card sculpted-raised rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <MuseumIcon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        Want to confirm with a museum?
+                      </p>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        If you think you may have something rare or historically
+                        significant, reach out to a nearby museum or cultural
+                        center. They can help verify your find with expert eyes.
+                      </p>
+                      <Button
+                        onClick={() => setShowMuseumFinder(true)}
+                        variant="outline"
+                        size="sm"
+                        className="mt-3 gap-2"
+                      >
+                        <MuseumIcon className="h-4 w-4" />
+                        Ask an Expert
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {result.matches.length > 1 && (
                 <div>
@@ -609,6 +657,42 @@ export default function Identify() {
           )}
         </div>
       )}
+
+      {/* Ask an Expert — Museum Finder */}
+      <MuseumFinderSheet
+        open={showMuseumFinder}
+        onDismiss={() => setShowMuseumFinder(false)}
+        onEmailExpert={(museum) => {
+          setEmailTargetMuseum(museum);
+          setEmailTargetMuseums([museum]);
+          setShowMuseumFinder(false);
+          setShowReplyEmail(true);
+        }}
+        onEmailExperts={(museums) => {
+          setEmailTargetMuseums(museums);
+          setEmailTargetMuseum(museums[0] ?? null);
+          setShowMuseumFinder(false);
+          setShowReplyEmail(true);
+        }}
+        matchNames={result?.matches.map((m) => m.name) ?? []}
+        matchConfidences={result?.matches.map((m) => m.confidence) ?? []}
+        aiSummary={result?.summary ?? ""}
+      />
+
+      {/* Reply Email Dialog */}
+      <ReplyEmailDialog
+        museum={emailTargetMuseum}
+        museums={emailTargetMuseums}
+        open={showReplyEmail}
+        onDismiss={() => {
+          setShowReplyEmail(false);
+          setEmailTargetMuseum(null);
+        }}
+        matchNames={result?.matches.map((m) => m.name) ?? []}
+        matchConfidences={result?.matches.map((m) => m.confidence) ?? []}
+        aiSummary={result?.summary ?? ""}
+        capturedImage={imagePreview}
+      />
     </div>
   );
 }
