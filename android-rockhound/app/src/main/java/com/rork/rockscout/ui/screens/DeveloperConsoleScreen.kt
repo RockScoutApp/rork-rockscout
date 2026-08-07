@@ -1,5 +1,7 @@
 package com.rork.rockscout.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import android.content.ClipData
 import androidx.activity.compose.BackHandler
 import android.content.ClipboardManager
@@ -301,7 +303,7 @@ private data class DevTab(val label: String, val icon: ImageVector)
 @Composable
 private fun AnalyticsTab() {
     val context = LocalContext.current
-    val state by AdAnalyticsTracker.state.collectAsState()
+    val state by AdAnalyticsTracker.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
     LazyColumn(
@@ -368,7 +370,7 @@ private fun AnalyticsTab() {
         item { PageTitle("Affiliate Clicks", "Amazon gear guide click-through tracking") }
 
         item {
-            val affState by AffiliateClickTracker.state.collectAsState()
+            val affState by AffiliateClickTracker.state.collectAsStateWithLifecycle()
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     StatCard(
@@ -391,7 +393,7 @@ private fun AnalyticsTab() {
 
         // Daily clicks bar graph (last 14 days)
         item {
-            val affState by AffiliateClickTracker.state.collectAsState()
+            val affState by AffiliateClickTracker.state.collectAsStateWithLifecycle()
             DevCard(accent = Aqua) {
                 Column {
                     Text(
@@ -459,7 +461,7 @@ private fun AnalyticsTab() {
 
         // Top items bar graph (top 10)
         item {
-            val affState by AffiliateClickTracker.state.collectAsState()
+            val affState by AffiliateClickTracker.state.collectAsStateWithLifecycle()
             DevCard(accent = Citrine) {
                 Column {
                     Text(
@@ -1728,9 +1730,9 @@ private fun ReportGroupCard(
 private fun BugLogTab() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val allEntries by BugLogger.entries.collectAsState()
-    val discoveredSites by DigSiteDiscoveryStore.sites.collectAsState()
-    val customCount by CustomDigLocationStore.locations.collectAsState()
+    val allEntries by BugLogger.entries.collectAsStateWithLifecycle()
+    val discoveredSites by DigSiteDiscoveryStore.sites.collectAsStateWithLifecycle()
+    val customCount by CustomDigLocationStore.locations.collectAsStateWithLifecycle()
     var expandedId by remember { mutableStateOf<String?>(null) }
     var confirmClear by remember { mutableStateOf(false) }
     var bugSearchQuery by remember { mutableStateOf("") }
@@ -2356,11 +2358,11 @@ private fun DevCard(
 private fun SubmissionsTab() {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val pinSubmissions by UserPinSubmissionStore.submissions.collectAsState()
-    val specimenSubmissions by SpecimenSubmissionStore.submissions.collectAsState()
-    val discoveredSites by DigSiteDiscoveryStore.sites.collectAsState()
-    val locationSubmissions by LocationSubmissionStore.submissions.collectAsState()
-    val showSubmissions by GemShowSubmissionStore.submissions.collectAsState()
+    val pinSubmissions by UserPinSubmissionStore.submissions.collectAsStateWithLifecycle()
+    val specimenSubmissions by SpecimenSubmissionStore.submissions.collectAsStateWithLifecycle()
+    val discoveredSites by DigSiteDiscoveryStore.sites.collectAsStateWithLifecycle()
+    val locationSubmissions by LocationSubmissionStore.submissions.collectAsStateWithLifecycle()
+    val showSubmissions by GemShowSubmissionStore.submissions.collectAsStateWithLifecycle()
     var selectedPinIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     var actionMessage by remember { mutableStateOf<String?>(null) }
     var specimenViewerUrls by remember { mutableStateOf<List<String>>(emptyList()) }

@@ -1,5 +1,7 @@
 package com.rork.rockscout.ui.navigation
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import android.net.Uri
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
@@ -445,18 +447,18 @@ fun AppNavigation(
     // Family-friendly moderation: load the current user's report status on
     // app open and show the escalating warning pop-up if they have reports.
     val reportRepo = ReportRepository.instance
-    val reportStatus by reportRepo.myStatus.collectAsState()
+    val reportStatus by reportRepo.myStatus.collectAsStateWithLifecycle()
     var warningAcknowledged by remember { mutableStateOf(false) }
     // Recomposition trigger for the mandatory disclaimer gate. Accept is
     // persisted to PersistenceManager; flipping this state afterwards makes
     // the gate overlay disappear and reveal the NavHost (HOME as start).
     var disclaimerAcceptedVersion by remember { mutableStateOf(0) }
     val auth = AuthRepository.instance
-    val sessionStatus by auth.sessionStatus.collectAsState()
+    val sessionStatus by auth.sessionStatus.collectAsStateWithLifecycle()
     val isSignedIn = sessionStatus is com.rork.rockscout.data.SessionStatus.Authenticated
     val isAccountDeleted = sessionStatus is com.rork.rockscout.data.SessionStatus.AccountDeleted
-    val pendingReferralCode by ReferralRepository.pendingReferralCode.collectAsState()
-    val referralCodeApplied by ReferralRepository.referralCodeApplied.collectAsState()
+    val pendingReferralCode by ReferralRepository.pendingReferralCode.collectAsStateWithLifecycle()
+    val referralCodeApplied by ReferralRepository.referralCodeApplied.collectAsStateWithLifecycle()
 
     // Handle the click-to-verify deep link BEFORE the auth gate. This link
     // arrives while the user is in PendingVerification state (not yet

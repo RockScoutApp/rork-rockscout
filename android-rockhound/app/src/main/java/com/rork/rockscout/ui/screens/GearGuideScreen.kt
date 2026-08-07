@@ -1,5 +1,7 @@
 package com.rork.rockscout.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -288,7 +290,7 @@ private fun GearKitCard(kit: GearKit) {
 
 @Composable
 private fun GearItemRow(item: GearItem, accent: Color, onClick: () -> Unit) {
-    val topPickIds by TopPickManager.topPickIds.collectAsState()
+    val topPickIds by TopPickManager.topPickIds.collectAsStateWithLifecycle()
     val isTopPick = topPickIds.contains(item.id)
     val rowShape = RoundedCornerShape(12.dp)
     Row(

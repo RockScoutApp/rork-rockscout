@@ -1,6 +1,6 @@
 // Complete specimen database for AI identification prompt
 // Auto-generated from all Kotlin specimen data files
-// Total: 794 specimens (2026-07-19 master build + follow-up: +T-Rex/Spinosaurus/Triceratops teeth, +Mahogany Obsidian, +Indigo Gabbro, +Fuchsite/Ruby, +Orpiment/Realgar, +Mozarkite, +K2, +Concretion Pyrite; removed duplicate fossil-soup/fossil-horn-coral/fossil-blastoid/fossil-petrified-wood-whole/desert-rose/tagamite and RAA-only amazing-chatoyant-chrysoberyl/amazing-desert-rose-new/amazing-cave-pearl; renamed amygdaloidal-basalt, tektite, zoisite-thulite to Thulite, amazing-iridescent-ammolite to Ammolite, gypsum-desert-rose to Selenite, Desert Rose; regenerated Black Onyx and Orpiment images)
+// Total: 810 specimens (2026-07-19 master build + follow-up: +T-Rex/Spinosaurus/Triceratops teeth, +Mahogany Obsidian, +Indigo Gabbro, +Fuchsite/Ruby, +Orpiment/Realgar, +Mozarkite, +K2, +Concretion Pyrite; removed duplicate fossil-soup/fossil-horn-coral/fossil-blastoid/fossil-petrified-wood-whole/desert-rose/tagamite and RAA-only amazing-chatoyant-chrysoberyl/amazing-desert-rose-new/amazing-cave-pearl; renamed amygdaloidal-basalt, tektite, zoisite-thulite to Thulite, amazing-iridescent-ammolite to Ammolite, gypsum-desert-rose to Selenite, Desert Rose; regenerated Black Onyx and Orpiment images)
 
 export interface SpecimenEntry {
   id: string;

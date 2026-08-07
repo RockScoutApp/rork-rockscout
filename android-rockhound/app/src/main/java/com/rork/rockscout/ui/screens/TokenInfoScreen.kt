@@ -1,5 +1,7 @@
 package com.rork.rockscout.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import android.app.Activity
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -93,14 +95,14 @@ fun TokenInfoScreen(navController: NavController) {
     val accessManager = IdentifyAccessManager.instance
     val purchaseManager = PurchaseManager.instance
 
-    val tokenBalance by accessManager.tokenBalance.collectAsState()
-    val trialActive by accessManager.trialActive.collectAsState()
-    val trialUsesRemaining by accessManager.trialUsesRemaining.collectAsState()
-    val trialExpired by accessManager.trialExpired.collectAsState()
-    val hasLocationUnlock by accessManager.hasLocationUnlock.collectAsState()
-    val hasAdFreeUnlock by accessManager.hasAdFreeUnlock.collectAsState()
-    val isPremium by purchaseManager.effectiveIsPremium.collectAsState()
-    val isPurchasing by purchaseManager.isPurchasing.collectAsState()
+    val tokenBalance by accessManager.tokenBalance.collectAsStateWithLifecycle()
+    val trialActive by accessManager.trialActive.collectAsStateWithLifecycle()
+    val trialUsesRemaining by accessManager.trialUsesRemaining.collectAsStateWithLifecycle()
+    val trialExpired by accessManager.trialExpired.collectAsStateWithLifecycle()
+    val hasLocationUnlock by accessManager.hasLocationUnlock.collectAsStateWithLifecycle()
+    val hasAdFreeUnlock by accessManager.hasAdFreeUnlock.collectAsStateWithLifecycle()
+    val isPremium by purchaseManager.effectiveIsPremium.collectAsStateWithLifecycle()
+    val isPurchasing by purchaseManager.isPurchasing.collectAsStateWithLifecycle()
 
     var celebrationLevel by remember { mutableStateOf<CelebrationLevel?>(null) }
 

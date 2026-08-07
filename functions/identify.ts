@@ -1,4 +1,4 @@
-// RockScout identify pipeline — matches the approved 8-step plan (v2)
+// RockScout identify pipeline — matches the approved 7-step plan (v2)
 import { SPECIMEN_DB, type SpecimenEntry } from "./specimens";
 import { ARTIFACT_DB, ARTIFACT_MAP, type ArtifactEntry } from "./artifacts";
 import {
@@ -154,7 +154,7 @@ export async function handleIdentify(
 
     // ── Step 2: Database embedding search (visual-embedding-first) ─────
     // Use the lightweight description to query the pgvector index. This
-    // narrows all 900+ specimens to a short candidate list before any vision
+    // narrows all 810 specimens to a short candidate list before any vision
     // model is called, which is the core cost + accuracy win.
     const supabaseUrl = resolveSupabaseUrl(env.EXPO_PUBLIC_SUPABASE_URL, undefined);
     const supabaseAnonKey = env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
@@ -183,7 +183,7 @@ export async function handleIdentify(
     }
 
     if (!usedEmbeddingFlow) {
-      // Fallback: old text-first flow (full 58K-token DB in system prompt).
+      // Fallback: old text-first flow (full DB in system prompt).
       const firstImage = images[0];
       const result = await callVisionModel(toolkitUrl, toolkitSecret, firstImage.imageBase64, firstImage.mimeType);
       if (!result.ok) {
@@ -448,7 +448,7 @@ async function identifyArtifact(
 
         // ── Gemini if needed (disagreement or low confidence) ──
         const topConf = finalMatches.length > 0 ? finalMatches[0].confidence : 0;
-        if (useGemini && (topConf < 85 || sonnetDisagreed)) {
+        if (useGemini && (topConf < CONFIDENCE_WEB_THRESHOLD || sonnetDisagreed)) {
           const geminiResult = await callGeminiArtifactThirdOpinion(
             toolkitUrl, toolkitSecret, images,
             finalMatches, sonnetResult.matches, finalSummary,
@@ -1629,10 +1629,13 @@ async function callVisualReferenceComparison(
     if (!spec?.imageUrl) continue;
     const allUrls = spec.imageUrls?.length ? spec.imageUrls : [spec.imageUrl];
     let selectedUrls: string[];
-    if (isPolished && allUrls.length > 1) {
-      // Prioritize polished views (first 2 = face polished, cabochon)
-      // then add rough/natural as a fallback context view.
-      selectedUrls = allUrls.slice(0, IMAGES_PER_SPECIMEN);
+    if (isPolished && allUrls.length > IMAGES_PER_SPECIMEN) {
+      // When the specimen is polished/cabochon, prioritize reference views
+      // that show lapidary work (typically the last entries in the imageUrls
+      // array — museum/cabochon shots) before rough/natural views.
+      const polishedViews = allUrls.slice(-IMAGES_PER_SPECIMEN);
+      const naturalViews = allUrls.slice(0, IMAGES_PER_SPECIMEN);
+      selectedUrls = [...polishedViews, ...naturalViews].slice(0, IMAGES_PER_SPECIMEN);
     } else {
       selectedUrls = allUrls.slice(0, IMAGES_PER_SPECIMEN);
     }

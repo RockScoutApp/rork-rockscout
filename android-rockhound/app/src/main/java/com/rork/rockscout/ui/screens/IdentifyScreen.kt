@@ -1,6 +1,8 @@
 // RockScout — offline-aware rock & mineral identifier
 package com.rork.rockscout.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -228,14 +230,14 @@ fun IdentifyScreen(navController: NavController) {
     val scope = rememberCoroutineScope()
 
     val purchaseManager = PurchaseManager.instance
-    val isPremium by purchaseManager.effectiveIsPremium.collectAsState()
-    val isPurchasing by purchaseManager.isPurchasing.collectAsState()
+    val isPremium by purchaseManager.effectiveIsPremium.collectAsStateWithLifecycle()
+    val isPurchasing by purchaseManager.isPurchasing.collectAsStateWithLifecycle()
     val accessManager = IdentifyAccessManager.instance
-    val trialUsesRemaining by accessManager.trialUsesRemaining.collectAsState()
-    val trialActive by accessManager.trialActive.collectAsState()
-    val trialExpired by accessManager.trialExpired.collectAsState()
-    val tokenBalance by accessManager.tokenBalance.collectAsState()
-    val hasLocationUnlock by accessManager.hasLocationUnlock.collectAsState()
+    val trialUsesRemaining by accessManager.trialUsesRemaining.collectAsStateWithLifecycle()
+    val trialActive by accessManager.trialActive.collectAsStateWithLifecycle()
+    val trialExpired by accessManager.trialExpired.collectAsStateWithLifecycle()
+    val tokenBalance by accessManager.tokenBalance.collectAsStateWithLifecycle()
+    val hasLocationUnlock by accessManager.hasLocationUnlock.collectAsStateWithLifecycle()
 
     var state by remember { mutableStateOf(ScanState.IDLE) }
     // 3-angle capture state — each slot has its own bitmap, uri, and

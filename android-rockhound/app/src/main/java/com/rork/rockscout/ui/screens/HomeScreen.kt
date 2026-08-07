@@ -325,10 +325,10 @@ fun HomeScreen(navController: NavController) {
     ) { _ -> /* Results handled implicitly */ }
 
     val purchaseManager = PurchaseManager.instance
-    val isPurchasing by purchaseManager.isPurchasing.collectAsState()
-    val isPremium by purchaseManager.effectiveIsPremium.collectAsState()
-    val rawIsPremium by purchaseManager.isPremium.collectAsState()
-    val deviceOverLimit by DeviceManager.deviceOverLimit.collectAsState()
+    val isPurchasing by purchaseManager.isPurchasing.collectAsStateWithLifecycle()
+    val isPremium by purchaseManager.effectiveIsPremium.collectAsStateWithLifecycle()
+    val rawIsPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val deviceOverLimit by DeviceManager.deviceOverLimit.collectAsStateWithLifecycle()
     val auth = AuthRepository.instance
     val sessionStatus by auth.sessionStatus.collectAsStateWithLifecycle()
     val isSignedIn = sessionStatus is com.rork.rockscout.data.SessionStatus.Authenticated

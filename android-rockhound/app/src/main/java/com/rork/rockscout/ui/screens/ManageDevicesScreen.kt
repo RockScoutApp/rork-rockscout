@@ -1,5 +1,7 @@
 package com.rork.rockscout.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -66,9 +68,9 @@ fun ManageDevicesScreen(navController: NavController) {
     val auth = AuthRepository.instance
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val devices by DeviceManager.devices.collectAsState()
-    val isLoading by DeviceManager.isLoading.collectAsState()
-    val deviceOverLimit by DeviceManager.deviceOverLimit.collectAsState()
+    val devices by DeviceManager.devices.collectAsStateWithLifecycle()
+    val isLoading by DeviceManager.isLoading.collectAsStateWithLifecycle()
+    val deviceOverLimit by DeviceManager.deviceOverLimit.collectAsStateWithLifecycle()
     val userId = auth.currentUserId
     val myFingerprint = remember { DeviceManager.getDeviceFingerprint(context) }
     var showRemoveConfirm by remember { mutableStateOf<DeviceManager.DeviceInfo?>(null) }

@@ -1,5 +1,7 @@
 package com.rork.rockscout.ui.screens
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import android.app.Activity
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.RepeatMode
@@ -119,14 +121,14 @@ import kotlinx.coroutines.launch
 @Composable
 fun PaywallScreen(navController: NavController) {
     val purchaseManager = PurchaseManager.instance
-    val isPremium by purchaseManager.isPremium.collectAsState()
-    val isLoading by purchaseManager.isLoading.collectAsState()
-    val isPurchasing by purchaseManager.isPurchasing.collectAsState()
-    val message by purchaseManager.purchaseMessage.collectAsState()
-    val currentOffering by purchaseManager.currentOffering.collectAsState()
+    val isPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val isLoading by purchaseManager.isLoading.collectAsStateWithLifecycle()
+    val isPurchasing by purchaseManager.isPurchasing.collectAsStateWithLifecycle()
+    val message by purchaseManager.purchaseMessage.collectAsStateWithLifecycle()
+    val currentOffering by purchaseManager.currentOffering.collectAsStateWithLifecycle()
 
     val auth = AuthRepository.instance
-    val sessionStatus by auth.sessionStatus.collectAsState()
+    val sessionStatus by auth.sessionStatus.collectAsStateWithLifecycle()
     val isSignedIn = sessionStatus is com.rork.rockscout.data.SessionStatus.Authenticated
     val signedInEmail = (sessionStatus as? com.rork.rockscout.data.SessionStatus.Authenticated)?.session?.user?.email
 

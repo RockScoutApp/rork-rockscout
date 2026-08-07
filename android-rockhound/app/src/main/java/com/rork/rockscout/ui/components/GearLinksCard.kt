@@ -1,5 +1,7 @@
 package com.rork.rockscout.ui.components
 
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -121,7 +123,7 @@ fun ScrollingGearBox(
 ) {
     if (items.isEmpty()) return
     val context = LocalContext.current
-    val topPickIds by TopPickManager.topPickIds.collectAsState()
+    val topPickIds by TopPickManager.topPickIds.collectAsStateWithLifecycle()
 
     Column(modifier = modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
         Text(
@@ -248,7 +250,7 @@ private fun CompactGearItemRow(
 
 @Composable
 private fun GearItemRow(item: GearItem, accent: Color, onClick: () -> Unit) {
-    val topPickIds by TopPickManager.topPickIds.collectAsState()
+    val topPickIds by TopPickManager.topPickIds.collectAsStateWithLifecycle()
     val isTopPick = topPickIds.contains(item.id)
     val rowShape = RoundedCornerShape(12.dp)
     Row(

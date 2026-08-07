@@ -646,9 +646,9 @@ export default function FieldCameraDialog({
                     // After trial expires, free users can only save to
                     // Saved Images. Other destinations are paid.
                     const isPaidDestination = dest.value !== "SAVED_IMAGES";
-                    // TODO: wire trial/premium status from useAuth or a
-                    // separate entitlement hook. For now, all destinations
-                    // are available — premium is managed via the mobile app.
+                    // Premium/entitlement is managed via the mobile app (RevenueCat).
+                    // The web PWA has full access to all camera destinations —
+                    // premium gating happens on the Android/iOS side.
                     return (
                       <button
                         key={dest.value}

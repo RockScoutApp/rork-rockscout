@@ -139,7 +139,7 @@ fun AuroraScreen(navController: NavController) {
     val repo = AppRepository.instance
     val profile by repo.profile.collectAsStateWithLifecycle()
     val currentLocation by repo.currentLocation.collectAsStateWithLifecycle()
-    val auroraData by AuroraRepository.auroraData.collectAsState()
+    val auroraData by AuroraRepository.auroraData.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
 
