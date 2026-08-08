@@ -25,6 +25,9 @@ package com.rork.rockscout.data
  * @param funFacts notable facts
  * @param tribe associated culture or tradition
  * @param timePeriod age range (e.g. "Paleoindian · 10,000–9,000 BCE")
+ * @param domain "prehistoric" for prehistoric artifacts, "war_relic" for
+ *   Civil War / Revolutionary War relics. Screens use this to filter which
+ *   specimens to show. The ID pipeline ignores it — all domains are searched.
  * @param addedAtMs epoch milliseconds when this entry was added to the catalog;
  *   0 means it is a legacy entry (not shown as new). Entries with a timestamp
  *   within the last 7 days display a "NEW" badge in list views.
@@ -45,6 +48,7 @@ data class Artifact(
     val tribe: String,
     val timePeriod: String,
     val addedAtMs: Long = 0L,
+    val domain: String = "prehistoric",
 ) {
     /** True when this entry was added to the catalog within the last 7 days. */
     fun isNew(): Boolean {
