@@ -43,6 +43,7 @@ enum class ListCategoryFilter(
     MINERAL("Mineral", RockClass.MINERAL),
     SEDIMENTARY("Sedimentary", RockClass.SEDIMENTARY),
     ARTIFACTS("Artifacts"),
+    WAR_RELICS("War Relics"),
 }
 
 /** Set of specimen IDs that are assemblage specimens. */

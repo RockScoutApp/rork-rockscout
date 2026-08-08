@@ -30,13 +30,14 @@ export default function Search() {
           a.name.toLowerCase().includes(q) ||
           a.tagline.toLowerCase().includes(q) ||
           a.family.toLowerCase().includes(q) ||
-          a.tribe.toLowerCase().includes(q),
+          a.tribe.toLowerCase().includes(q) ||
+          a.timePeriod.toLowerCase().includes(q),
       )
-      .slice(0, 20)
+      .slice(0, 30)
       .map((a) => ({
         id: a.id,
         name: a.name,
-        type: "artifact",
+        type: a.domain === "war_relic" ? "artifact" : "artifact",
         subtitle: `${a.family} · ${a.timePeriod}`,
         imageUrl: a.imageUrl,
         route: `/app/artifacts/${a.id}`,
@@ -75,7 +76,7 @@ export default function Search() {
           Search
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          Search artifacts and locations
+          Search artifacts, relics, and locations
         </p>
       </div>
 
@@ -84,7 +85,7 @@ export default function Search() {
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search artifacts, locations..."
+          placeholder="Search artifacts, relics, locations..."
           className="pl-10"
           autoFocus
         />
@@ -155,7 +156,7 @@ export default function Search() {
         <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
           <SearchIcon className="h-8 w-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            Start typing to search across artifacts and locations.
+            Start typing to search across artifacts, relics, and locations.
           </p>
         </div>
       )}

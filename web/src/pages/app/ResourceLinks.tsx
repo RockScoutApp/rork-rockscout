@@ -83,6 +83,24 @@ const CATEGORIES: {
       { name: "Geology.com", description: "Articles and guides on rocks, minerals, and geology.", url: "https://geology.com" },
     ],
   },
+  {
+    title: "War Relics",
+    emoji: "🎖️",
+    links: [
+      { name: "American Civil War Museum", description: "Online collections from the premier museum of Civil War artifacts, uniforms, and ordnance.", url: "https://www.acwm.org" },
+      { name: "Encyclopedia of Civil War Artillery", description: "Comprehensive reference for Civil War artillery projectiles, fuses, and ordnance.", url: "https://www.civilwarartillery.com" },
+      { name: "Ridgeway Reference Library", description: "Ridgeway's extensive photo reference for Civil War plates, buckles, and buttons.", url: "https://www.relicman.com" },
+      { name: "Museum of the American Revolution", description: "Online exhibits and artifact collections from the American Revolutionary War.", url: "https://www.amrevmuseum.org" },
+      { name: "NPS Archaeology", description: "National Park Service archaeology articles on Civil War and Revolutionary War sites.", url: "https://www.nps.gov/subjects/archeology/index.htm" },
+      { name: "Colonial Williamsburg Archaeology", description: "Archaeological research and collections from Colonial Williamsburg, Virginia.", url: "https://www.colonialwilliamsburg.org" },
+      { name: "Historic Jamestowne Collections", description: "Artifact collections and archaeological findings from Historic Jamestowne.", url: "https://www.historicjamestowne.org" },
+      { name: "Smithsonian National Museum of American History", description: "The Smithsonian's collections of Civil War and Revolutionary War military artifacts.", url: "https://americanhistory.si.edu" },
+      { name: "American Revolution Institute", description: "Reference library and collections on Revolutionary War artifacts and military material culture.", url: "https://www.americanrevolutioninstitute.org" },
+      { name: "Civil War Bullet Forum", description: "Community forum dedicated to the identification and study of Civil War bullets and projectiles.", url: "https://www.cwbullet.org" },
+      { name: "Columbia River Arsenal", description: "Detailed photo reference for Civil War small arms ammunition and cartridge types.", url: "https://www.columbiariverarsenal.com" },
+      { name: "Mount Vernon Archaeology", description: "Archaeological findings and artifact collections from George Washington's Mount Vernon estate.", url: "https://www.mountvernon.org" },
+    ],
+  },
 ];
 
 const US_STATES = [

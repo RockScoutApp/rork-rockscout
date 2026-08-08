@@ -1,17 +1,27 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bone, Search, X } from "lucide-react";
+import { Bone, Search, X, Shield } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { artifacts, artifactFamilies } from "@/data/artifacts";
+import {
+  prehistoricArtifacts,
+  artifactFamilies,
+  warRelics,
+  warRelicFamilies,
+} from "@/data/artifacts";
 import { OptimizedImage } from "@/components/OptimizedImage";
 
 export default function Artifacts() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [familyFilter, setFamilyFilter] = useState<string>("ALL");
+  const [tab, setTab] = useState<"artifacts" | "relics">("artifacts");
+
+  const isRelicTab = tab === "relics";
+  const sourceList = isRelicTab ? warRelics : prehistoricArtifacts;
+  const families = isRelicTab ? warRelicFamilies : artifactFamilies;
 
   const filtered = useMemo(() => {
-    let result = artifacts;
+    let result = sourceList;
     if (familyFilter !== "ALL") {
       result = result.filter((a) => a.family === familyFilter);
     }
@@ -22,21 +32,59 @@ export default function Artifacts() {
           a.name.toLowerCase().includes(q) ||
           a.tagline.toLowerCase().includes(q) ||
           a.tribe.toLowerCase().includes(q) ||
-          a.timePeriod.toLowerCase().includes(q),
+          a.timePeriod.toLowerCase().includes(q) ||
+          a.family.toLowerCase().includes(q),
       );
     }
     return result;
-  }, [search, familyFilter]);
+  }, [sourceList, search, familyFilter]);
+
+  const accentColor = isRelicTab
+    ? "hsl(204 22% 39%)"
+    : "hsl(22 55% 42%)";
 
   return (
     <div className="space-y-5">
+      {/* Pill switcher */}
+      <div className="flex items-center justify-center gap-3">
+        <button
+          onClick={() => {
+            setTab("artifacts");
+            setFamilyFilter("ALL");
+          }}
+          className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition-all ${
+            !isRelicTab
+              ? "bg-primary/15 text-primary ring-1 ring-primary/30"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Bone className="h-4 w-4" />
+          Artifacts
+        </button>
+        <button
+          onClick={() => {
+            setTab("relics");
+            setFamilyFilter("ALL");
+          }}
+          className={`inline-flex items-center gap-2 rounded-full px-5 py-2 text-sm font-semibold transition-all ${
+            isRelicTab
+              ? "bg-primary/15 text-primary ring-1 ring-primary/30"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Shield className="h-4 w-4" />
+          War Relics
+        </button>
+      </div>
+
       <div>
         <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-          Artifacts
+          {isRelicTab ? "War Relics" : "Artifacts"}
         </h1>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          {artifacts.length} prehistoric tools and ornaments — arrowheads, hand
-          axes, beads, and more
+          {isRelicTab
+            ? `${warRelics.length} Civil War & Revolutionary War relics — bullets, buttons, buckles, bayonets & more`
+            : `${prehistoricArtifacts.length} prehistoric tools and ornaments — arrowheads, hand axes, beads, and more`}
         </p>
       </div>
 
@@ -45,7 +93,11 @@ export default function Artifacts() {
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search artifacts by name, culture, or period..."
+          placeholder={
+            isRelicTab
+              ? "Search relics by name, side, or era..."
+              : "Search artifacts by name, culture, or period..."
+          }
           className="pl-10"
         />
         {search && (
@@ -69,7 +121,7 @@ export default function Artifacts() {
         >
           All
         </button>
-        {artifactFamilies.map((f) => (
+        {families.map((f) => (
           <button
             key={f}
             onClick={() => setFamilyFilter(f)}
@@ -113,9 +165,14 @@ export default function Artifacts() {
 
       {filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center gap-3 dark-card sculpted-raised rounded-lg py-12 text-center">
-          <Bone className="h-8 w-8 text-muted-foreground" />
+          {isRelicTab ? (
+            <Shield className="h-8 w-8 text-muted-foreground" />
+          ) : (
+            <Bone className="h-8 w-8 text-muted-foreground" />
+          )}
           <p className="text-sm text-muted-foreground">
-            No artifacts found. Try a different search or filter.
+            No {isRelicTab ? "relics" : "artifacts"} found. Try a different
+            search or filter.
           </p>
         </div>
       )}

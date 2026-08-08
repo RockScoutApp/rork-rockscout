@@ -320,8 +320,8 @@ const EXPLORE_TILES: HomeTileData[] = [
     imageUrl: `${R2_BASE}/4984334e-fd43-4402-907f-10d9b056b6d7.png`,
   },
   {
-    label: "Artifacts",
-    subtitle: "Arrowheads & stone tools",
+    label: "Artifacts / Relics",
+    subtitle: "Arrowheads, hand axes, bullets, buttons & buckles",
     icon: <Bone className="h-5 w-5" style={{ color: "hsl(22 55% 42%)" }} />,
     accent: "aqua",
     to: "/app/artifacts",

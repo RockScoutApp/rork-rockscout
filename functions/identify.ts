@@ -134,7 +134,7 @@ export async function handleIdentify(
       modelsUsed.push("haiku-describe-artifact-detect");
       const detectResponse: IdentifyResponse = {
         matches: [],
-        summary: "The AI detected that this may be a prehistoric artifact rather than a natural rock or mineral.",
+        summary: "The AI detected that this may be a prehistoric artifact or war relic rather than a natural rock or mineral.",
         needsClarification: false,
         clarificationQuestions: [],
         webReferences: [],
@@ -525,17 +525,25 @@ async function callDescribeArtifactPhoto(
   secret: string,
   images: AngleImage[],
 ): Promise<string | null> {
-  const describePrompt = `Observe this prehistoric artifact photograph carefully and describe what you see using the vocabulary an archaeologist would use.
+  const describePrompt = `Observe this artifact or war relic photograph carefully and describe what you see using the vocabulary an archaeologist or military historian would use.
 
-${images.length > 1 ? `You are given ${images.length} photos of the same artifact from different angles. Examine all photos and produce a single combined description that integrates what you observe from each angle.\n\n` : ""}Describe in 3-5 sentences:
+${images.length > 1 ? `You are given ${images.length} photos of the same artifact or relic from different angles. Examine all photos and produce a single combined description that integrates what you observe from each angle.\n\n` : ""}Describe in 3-5 sentences. If it is a prehistoric artifact, describe:
 - Overall shape (lanceolate, stemmed, corner-notched, bifacial, disc, tubular, oval, triangular, pick, etc.)
 - Flaking pattern (collateral, parallel, oblique, random, pressure-flaked, bifacial, unifacial)
 - Base style (concave, convex, straight, notched, bifurcated, ground, grooved, shouldered)
 - Material hints (chert, flint, obsidian, slate, shell, ceramic, stone, bone, wood)
 - Surface treatment (incised, cord-marked, polished, serrated, cortex, retouched)
-- Size and proportions if discernible
 - Any hafting features (notches, stem, tang, groove)
 - Cultural or temporal markers if visible
+
+If it is a war relic (bullet, button, buckle, artillery, bayonet, etc.), describe:
+- Caliber, size, and weight class if discernible
+- Projectile type (Minie ball, round ball, rifled shell, solid shot, case shot, canister)
+- Grease ring count (3-ring, 2-ring, no rings), base cavity type (cone, teat, flat, hollow)
+- Material (lead, cast iron, stamped brass, forged steel, copper, pewter, bone, clay)
+- Surface patina (white lead oxide, green verdigris, brown iron rust, dark brass patina)
+- Button/plate features (raised letters, eagle design, branch letter, backmark, attachment hooks)
+- Blade or edge features (triangular, socket, blade profile, guard shape)
 
 Return ONLY the description prose — no JSON, no markdown, no preamble.`;
 
@@ -937,17 +945,25 @@ function buildArtifactCandidateSystemPrompt(candidates: MatchResult[]): string {
   }
   const candidateList = rows.join("\n");
 
-  return `You are an expert archaeologist identifying prehistoric artifacts from photographs.
+  return `You are an expert archaeologist and military historian identifying prehistoric artifacts and war relics from photographs.
 
-A pre-filter step has narrowed the database to these ${rows.length} candidates. Only consider these artifacts — never invent IDs.
+A pre-filter step has narrowed the database to these ${rows.length} candidates. Only consider these artifacts and relics — never invent IDs.
 
-## DIAGNOSTIC FEATURES (in priority order)
+## DIAGNOSTIC FEATURES — Prehistoric Artifacts (in priority order)
 1. **Overall shape**: lanceolate, stemmed, corner-notched, bifacial, disc, tubular, oval, triangular, pick, cordiform, ovate, etc.
 2. **Flaking pattern**: collateral, parallel, oblique, random, pressure-flaked, bifacial, unifacial
 3. **Base style**: concave, convex, straight, notched, bifurcated, ground, grooved, shouldered
 4. **Material**: chert, flint, obsidian, slate, shell, ceramic, stone, bone, wood
 5. **Surface treatment**: incised, cord-marked, polished, serrated, cortex, retouched
 6. **Hafting features**: notches, stem, tang, groove
+
+## DIAGNOSTIC FEATURES — War Relics (in priority order)
+1. **Projectile type**: Minie ball (3-ring/2-ring), round ball, rifled shell, solid shot, case shot, canister
+2. **Caliber**: .58, .577, .54, .52, .69, .44, .36, .45, .60 cal, 12lb, 6lb, 10lb, 20lb
+3. **Base type**: cone cavity, teat-base, flat, hollow base, solid
+4. **Material & patina**: lead (white oxide), cast iron (brown rust), stamped brass (green verdigris), copper, pewter, bone, clay
+5. **Button/plate features**: raised letters (US, CS, I, A, C), eagle design, branch letter, backmark, attachment hooks, state seal
+6. **Blade/edge**: triangular socket, blade profile, guard shape, scabbard hardware
 
 ## CONFIDENCE CALIBRATION
 - **90-98%**: Multiple diagnostic features clearly visible and aligned
@@ -977,7 +993,7 @@ async function generateArtifactClarificationQuestions(
     return `- ${m.name}: ${m.reasoning}${art ? ` | Family: ${art.family}, Culture: ${art.tribe}, Period: ${art.timePeriod}` : ""}`;
   }).join("\n");
 
-  const prompt = `You are helping a user identify a prehistoric artifact from a photo. The AI vision model returned these ambiguous matches:
+  const prompt = `You are helping a user identify a prehistoric artifact or war relic from a photo. The AI vision model returned these ambiguous matches:
 
 ${matchDetails}
 
@@ -1176,7 +1192,7 @@ export async function handleArtifactDetect(
       );
     }
 
-    const detectPrompt = `You are an expert archaeologist. Look at this photo and determine: is this a prehistoric artifact (knapped stone tool, arrowhead, spear point, hand axe, scraper, drill, bead, effigy, pipe, game disc, pottery sherd, or other human-made object of stone, shell, wood, or ceramic)?
+    const detectPrompt = `You are an expert archaeologist and military historian. Look at this photo and determine: is this a prehistoric artifact or war relic (knapped stone tool, arrowhead, spear point, hand axe, scraper, drill, bead, effigy, pipe, game disc, pottery sherd, OR a Civil War / Revolutionary War relic such as a lead bullet, Minie ball, musket ball, cannonball, artillery shell, uniform button, belt buckle, bayonet, percussion cap, or other military object)?
 
 Respond with ONLY a JSON object:
 {"isArtifact": true/false, "confidence": 0-100}

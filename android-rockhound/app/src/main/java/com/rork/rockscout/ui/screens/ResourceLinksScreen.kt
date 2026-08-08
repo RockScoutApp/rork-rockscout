@@ -36,6 +36,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Launch
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Close
@@ -352,6 +353,12 @@ private fun WebsitesPage() {
         item {
             ResourceCategoryCard(
                 category = resourceCategories[5],
+                onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
+            )
+        }
+        item {
+            ResourceCategoryCard(
+                category = resourceCategories[6],
                 onLinkClick = { link -> SafeLinkOpener.openUrl(context, link.url) },
             )
         }
@@ -1295,6 +1302,73 @@ private val resourceCategories = listOf(
                 "American Federation of Mineralogical Societies",
                 "Umbrella organization for local gem and mineral clubs across the US.",
                 "https://www.amfed.org",
+            ),
+        ),
+    ),
+    ResourceCategory(
+        title = "War Relics",
+        icon = Icons.Filled.MilitaryTech,
+        accent = Color(0xFF4A6B7B),
+        links = listOf(
+            ResourceLink(
+                "American Civil War Museum",
+                "Online collections from the premier museum of Civil War artifacts, uniforms, and ordnance.",
+                "https://www.acwm.org",
+            ),
+            ResourceLink(
+                "Encyclopedia of Civil War Artillery",
+                "Comprehensive reference for Civil War artillery projectiles, fuses, and ordnance.",
+                "https://www.civilwarartillery.com",
+            ),
+            ResourceLink(
+                "Ridgeway Reference Library",
+                "Ridgeway's extensive photo reference for Civil War plates, buckles, and buttons.",
+                "https://www.relicman.com",
+            ),
+            ResourceLink(
+                "Museum of the American Revolution",
+                "Online exhibits and artifact collections from the American Revolutionary War.",
+                "https://www.amrevmuseum.org",
+            ),
+            ResourceLink(
+                "NPS Archaeology",
+                "National Park Service archaeology articles on Civil War and Revolutionary War sites.",
+                "https://www.nps.gov/subjects/archeology/index.htm",
+            ),
+            ResourceLink(
+                "Colonial Williamsburg Archaeology",
+                "Archaeological research and collections from Colonial Williamsburg, Virginia.",
+                "https://www.colonialwilliamsburg.org",
+            ),
+            ResourceLink(
+                "Historic Jamestowne Collections",
+                "Artifact collections and archaeological findings from Historic Jamestowne.",
+                "https://www.historicjamestowne.org",
+            ),
+            ResourceLink(
+                "Smithsonian National Museum of American History",
+                "The Smithsonian's collections of Civil War and Revolutionary War military artifacts.",
+                "https://americanhistory.si.edu",
+            ),
+            ResourceLink(
+                "American Revolution Institute",
+                "Reference library and collections on Revolutionary War artifacts and military material culture.",
+                "https://www.americanrevolutioninstitute.org",
+            ),
+            ResourceLink(
+                "Civil War Bullet Forum",
+                "Community forum dedicated to the identification and study of Civil War bullets and projectiles.",
+                "https://www.cwbullet.org",
+            ),
+            ResourceLink(
+                "Columbia River Arsenal",
+                "Detailed photo reference for Civil War small arms ammunition and cartridge types.",
+                "https://www.columbiariverarsenal.com",
+            ),
+            ResourceLink(
+                "Mount Vernon Archaeology",
+                "Archaeological findings and artifact collections from George Washington's Mount Vernon estate.",
+                "https://www.mountvernon.org",
             ),
         ),
     ),

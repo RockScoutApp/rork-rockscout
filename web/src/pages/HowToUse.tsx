@@ -468,15 +468,17 @@ export const HOW_TO_SECTIONS: HowToSection[] = [
   {
     icon: Landmark,
     accent: "hsl(30 52% 51%)",
-    title: "Artifacts & Stone Tools",
+    title: "Artifacts, Relics & Stone Tools",
     shortLabel: "Artifacts",
     category: "explore-learn",
     steps: [
-      `Tap the "Artifacts" tile on the home screen to browse a growing catalog of over 90 authentic prehistoric artifacts, each with its own generated reference image on a unique background.`,
-      `Families include Arrowheads (19 types from Clovis and Folsom to Mississippian triangle points), Spear Points & Dart Tips (12 Paleoindian and Archaic forms), Hand Axes & Axe Heads (19 Acheulean and Neolithic bifaces), Flaked Stone Tools (11 scrapers, knives, and gravers), Drill Bits (5 awl and drill forms), Native Beads (12 shell, stone, and copper beads), Stone Effigies, Pipes & Medicine Tubes, Ornaments & Weights, Shell Tools, Bone Tools, Pottery, Game Discs, and Wooden Artifacts.`,
-      `Each artifact card shows a reference image, cultural period, material, and a detailed description of how it was made and used.`,
-      `The Artifacts tile is linked to the Specimen Database via the ARTIFACTS category chip at the top of the specimen list — tap the chip to filter the full database down to artifacts only. Artifacts never appear inside the main specimen database list; they are only accessible through the Artifacts tile or the category chip.`,
-      `A NEW badge appears on any artifact added to the catalog within the last 7 days, so you can spot the latest additions at a glance.`,
+      `Tap the "Artifacts / Relics" tile on the home screen to browse a growing catalog of over 170 authentic prehistoric artifacts and Civil War / Revolutionary War relics, each with its own generated reference image on a unique background.`,
+      `Use the pill switcher at the top of the screen to toggle between "Artifacts" (prehistoric) and "War Relics" (Civil War & Revolutionary War). The Artifacts catalog includes Arrowheads (20+ types), Spear Points & Dart Tips, Hand Axes, Flaked Stone Tools, Drill Bits, Native Beads, Stone Effigies, Pipes, Ornaments, Shell & Bone Tools, Pottery, Game Discs, and Wooden Artifacts.`,
+      `The War Relics catalog includes 64 specimens across 8 families: Civil War Bullets (Minie balls, Sharps, Spencer, Colt revolver), Revolutionary War Bullets (Brown Bess, Charleville, Kentucky rifle), Artillery Projectiles (solid shot, case shot, Parrott shells, Whitworth bolts), Uniform Buttons (Union eagle, Confederate block, state seal, Continental, British regimental), Belt Buckles & Plates (US/CS oval, cartridge box, breastplate, officer's, NCO, Georgia state, British), Edged Weapons & Bayonets, Military Accoutrements (percussion caps, cap pouches, friction primers, canteen hardware), and Camp Life & Personal Items (bone toothbrushes, clay pipes, hardtack, dice, ID tags).`,
+      `Each artifact or relic card shows a reference image, cultural period or war era, origin/side (Union, Confederate, British, etc.), and a detailed description of how it was made and used.`,
+      `The Artifacts / Relics tile is linked to the Specimen Database via the ARTIFACTS and WAR RELICS category chips at the top of the specimen list. Tap either chip to filter the full database down to artifacts or war relics. Artifacts and relics never appear inside the main specimen database list; they are only accessible through the Artifacts / Relics tile or the category chips.`,
+      `When using the ID tool, the AI will detect whether your photo might be a prehistoric artifact or war relic (bullet, button, buckle, etc.) and ask you to confirm. If confirmed, it searches both catalogs together — 170 candidates total.`,
+      `A NEW badge appears on any artifact or relic added to the catalog within the last 7 days, so you can spot the latest additions at a glance.`,
     ],
   },
   {
@@ -609,7 +611,7 @@ export const HOW_TO_SECTIONS: HowToSection[] = [
     steps: [
       `A NEW badge automatically appears on any specimen or artifact card that was added to the catalog within the last 7 days.`,
       `Spot the latest database additions at a glance — no need to hunt through the full list to find what's new.`,
-      `The badge works across the Specimen Database, Artifacts tile, and any category-filtered view.`,
+      `The badge works across the Specimen Database, Artifacts / Relics tile, and any category-filtered view.`,
       `After 7 days, the badge disappears automatically — the specimen stays in the catalog but is no longer flagged as new.`,
     ],
   },
@@ -685,7 +687,7 @@ export const HOW_TO_SECTIONS: HowToSection[] = [
     shortLabel: "Recently Added",
     category: "tools-misc",
     steps: [
-      `On both the Specimen Database and Artifacts screens, a "Recently Added" filter chip appears in the filter row.`,
+      `On both the Specimen Database and Artifacts / Relics screens, a "Recently Added" filter chip appears in the filter row.`,
       `Tap the chip to narrow the list to only items added within the last 7 days — the same window the NEW badge covers.`,
       `The filter composes with existing category, family, and search filters — all filters apply together (AND logic). Tap again to turn it off.`,
       `If no items were added in the last 7 days, a friendly empty state appears: "No specimens added in the last 7 days. Check back soon!"`,

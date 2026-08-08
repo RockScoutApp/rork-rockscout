@@ -448,18 +448,23 @@ fun SpecimenListScreen(navController: NavController) {
                 )
             }
 
-            // ARTIFACTS chip — swap list source (the ONLY specimen-DB connection point).
-            // Specimen data, filter, and card are NOT touched — this is a screen-level
-            // early-return that renders ArtifactListItem instead of SpecimenListItem.
-            if (selectedFilter == ListCategoryFilter.ARTIFACTS) {
-                val artifacts = remember(query) {
-                    val all = com.rork.rockscout.data.ArtifactSpecimens.allArtifacts
+            // ARTIFACTS / WAR_RELICS chip — swap list source (the ONLY specimen-DB
+            // connection point). Specimen data, filter, and card are NOT touched —
+            // this is a screen-level early-return that renders ArtifactListItem.
+            if (selectedFilter == ListCategoryFilter.ARTIFACTS || selectedFilter == ListCategoryFilter.WAR_RELICS) {
+                val artifacts = remember(query, selectedFilter) {
+                    val all = if (selectedFilter == ListCategoryFilter.WAR_RELICS) {
+                        com.rork.rockscout.data.WarRelicSpecimens.allWarRelics
+                    } else {
+                        com.rork.rockscout.data.ArtifactSpecimens.allArtifacts
+                    }
                     if (query.isBlank()) all
                     else all.filter { it.name.contains(query, ignoreCase = true) ||
                         it.family.contains(query, ignoreCase = true) ||
                         it.tagline.contains(query, ignoreCase = true) ||
                         it.whereFound.any { it.contains(query, ignoreCase = true) } }
                 }
+                val emptyLabel = if (selectedFilter == ListCategoryFilter.WAR_RELICS) "relics" else "artifacts"
                 if (artifacts.isEmpty()) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -467,7 +472,7 @@ fun SpecimenListScreen(navController: NavController) {
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                "No artifacts match \"$query\"",
+                                "No $emptyLabel match \"$query\"",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = TextMid,
                             )

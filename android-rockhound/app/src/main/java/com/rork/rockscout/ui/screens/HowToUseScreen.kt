@@ -521,15 +521,17 @@ private val howToSections: List<HowToSection> = listOf(
     HowToSection(
         icon = Icons.Filled.AccountBox,
         accent = Color(0xFFC97B4A),
-        title = "Artifacts & Stone Tools",
+        title = "Artifacts, Relics & Stone Tools",
         shortLabel = "Artifacts",
         category = HowToCategory.EXPLORE_LEARN,
         steps = listOf(
-            "Tap the \"Artifacts\" tile on the home screen to browse a growing catalog of over 100 authentic prehistoric artifacts, each with its own generated reference image on a unique background.",
-            "Families include Arrowheads (20+ types from Clovis and Folsom to Mississippian triangle points), Spear Points & Dart Tips (12+ Paleoindian and Archaic forms), Hand Axes & Axe Heads (20+ Acheulean and Neolithic bifaces), Flaked Stone Tools (12+ scrapers, knives, and gravers), Drill Bits (6+ awl and drill forms), Native Beads (13+ shell, stone, and copper beads), Stone Effigies (7+ animal and human effigies from the Woodland and Mississippian periods), Pipes & Medicine Tubes, Ornaments & Weights, Shell Tools, Bone Tools, Pottery, Game Discs, and Wooden Artifacts.",
-            "Each artifact card shows a reference image, cultural period, material, and a detailed description of how it was made and used.",
-            "The Artifacts tile is linked to the Specimen Database via the ARTIFACTS category chip at the top of the specimen list — tap the chip to filter the full database down to artifacts only. Artifacts never appear inside the main specimen database list; they are only accessible through the Artifacts tile or the category chip.",
-            "A NEW badge appears on any artifact added to the catalog within the last 7 days, so you can spot the latest additions at a glance.",
+            "Tap the \"Artifacts / Relics\" tile on the home screen to browse a growing catalog of over 170 authentic prehistoric artifacts and Civil War / Revolutionary War relics, each with its own generated reference image on a unique background.",
+            "Use the pill switcher at the top of the screen to toggle between \"Artifacts\" (prehistoric) and \"War Relics\" (Civil War & Revolutionary War). The Artifacts catalog includes Arrowheads (20+ types), Spear Points & Dart Tips, Hand Axes, Flaked Stone Tools, Drill Bits, Native Beads, Stone Effigies, Pipes, Ornaments, Shell & Bone Tools, Pottery, Game Discs, and Wooden Artifacts.",
+            "The War Relics catalog includes 64 specimens across 8 families: Civil War Bullets (Minie balls, Sharps, Spencer, Colt revolver), Revolutionary War Bullets (Brown Bess, Charleville, Kentucky rifle), Artillery Projectiles (solid shot, case shot, Parrott shells, Whitworth bolts), Uniform Buttons (Union eagle, Confederate block, state seal, Continental, British regimental), Belt Buckles & Plates (US/CS oval, cartridge box, breastplate, officer's, NCO, Georgia state, British), Edged Weapons & Bayonets, Military Accoutrements (percussion caps, cap pouches, friction primers, canteen hardware), and Camp Life & Personal Items (bone toothbrushes, clay pipes, hardtack, dice, ID tags).",
+            "Each artifact or relic card shows a reference image, cultural period or war era, origin/side (Union, Confederate, British, etc.), and a detailed description of how it was made and used.",
+            "The Artifacts / Relics tile is linked to the Specimen Database via the ARTIFACTS and WAR RELICS category chips at the top of the specimen list. Tap either chip to filter the full database down to artifacts or war relics. Artifacts and relics never appear inside the main specimen database list; they are only accessible through the Artifacts / Relics tile or the category chips.",
+            "When using the ID tool, the AI will detect whether your photo might be a prehistoric artifact or war relic (bullet, button, buckle, etc.) and ask you to confirm. If confirmed, it searches both catalogs together — 170 candidates total.",
+            "A NEW badge appears on any artifact or relic added to the catalog within the last 7 days, so you can spot the latest additions at a glance.",
         ),
     ),
     HowToSection(
@@ -662,7 +664,7 @@ private val howToSections: List<HowToSection> = listOf(
         steps = listOf(
             "A NEW badge automatically appears on any specimen or artifact card that was added to the catalog within the last 7 days.",
             "Spot the latest database additions at a glance — no need to hunt through the full list to find what's new.",
-            "The badge works across the Specimen Database, Artifacts tile, and any category-filtered view.",
+            "The badge works across the Specimen Database, Artifacts / Relics tile, and any category-filtered view.",
             "After 7 days, the badge disappears automatically — the specimen stays in the catalog but is no longer flagged as new.",
         ),
     ),

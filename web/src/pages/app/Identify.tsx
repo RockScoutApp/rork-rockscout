@@ -24,7 +24,9 @@ import { FUNCTIONS_URL as BACKEND_URL, APP_KEY } from "@/lib/config";
 import { MuseumFinderSheet, type Museum } from "@/components/app/MuseumFinderSheet";
 import { ReplyEmailDialog } from "@/components/app/ReplyEmailDialog";
 import ReportIncorrectMatchDialog from "@/components/app/ReportIncorrectMatchDialog";
-import { Flag } from "lucide-react";
+import { Flag, HelpCircle } from "lucide-react";
+import { findArtifactOrRelicById, type Artifact } from "@/data/artifacts";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 interface Match {
   id: string;
@@ -40,6 +42,8 @@ interface IdentifyResponse {
   modelsUsed?: string[];
   visualReferenceUsed?: boolean;
   error?: string;
+  artifactDetected?: boolean;
+  artifactConfidence?: number;
 }
 
 interface SpecimenRef {
@@ -73,6 +77,10 @@ export default function Identify() {
   const [showReplyEmail, setShowReplyEmail] = useState(false);
   const [showAgateComparison, setShowAgateComparison] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [artifactConfirm, setArtifactConfirm] = useState<IdentifyResponse | null>(null);
+  const [searchMode, setSearchMode] = useState<string | null>(null);
+  const [skipArtifactDetect, setSkipArtifactDetect] = useState(false);
+  const [artifactMatches, setArtifactMatches] = useState<Array<{ artifact: Artifact; match: Match }>>([]);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -186,6 +194,8 @@ export default function Identify() {
     setIsIdentifying(true);
     setError(null);
     setResult(null);
+    setArtifactConfirm(null);
+    setArtifactMatches([]);
     try {
       const response = await fetch(`${BACKEND_URL}/identify`, {
         method: "POST",
@@ -197,6 +207,8 @@ export default function Identify() {
           imageBase64,
           mimeType,
           entitlement: isPremium ? "premium" : "free",
+          ...(searchMode ? { searchMode } : {}),
+          ...(skipArtifactDetect ? { skipArtifactDetect: true } : {}),
         }),
       });
       if (!response.ok) {
@@ -204,19 +216,42 @@ export default function Identify() {
         throw new Error(body.error || `Identification failed (${response.status})`);
       }
       const data = (await response.json()) as IdentifyResponse;
-      setResult(data);
+      // Artifact detection: show confirmation popup
+      if (data.artifactDetected && !skipArtifactDetect && !searchMode) {
+        setArtifactConfirm(data);
+      } else if (searchMode === "artifacts" && data.matches.length > 0) {
+        // Artifact search mode: resolve matches to artifact/relic data
+        const matched = data.matches
+          .map((m) => {
+            const artifact = findArtifactOrRelicById(m.id);
+            return artifact ? { artifact, match: m } : null;
+          })
+          .filter((x): x is { artifact: Artifact; match: Match } => x != null);
+        if (matched.length === 0) {
+          setError("No matching artifacts or relics found. Try a clearer photo showing the object's shape and diagnostic features.");
+        } else {
+          setArtifactMatches(matched);
+          setResult(data);
+        }
+      } else {
+        setResult(data);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Identification failed");
     } finally {
       setIsIdentifying(false);
     }
-  }, [imageBase64, mimeType, isPremium]);
+  }, [imageBase64, mimeType, isPremium, searchMode, skipArtifactDetect]);
 
   const resetImage = useCallback(() => {
     setImagePreview(null);
     setImageBase64(null);
     setResult(null);
     setError(null);
+    setArtifactConfirm(null);
+    setArtifactMatches([]);
+    setSearchMode(null);
+    setSkipArtifactDetect(false);
   }, []);
 
   const confidenceColor = (conf: number) => {
@@ -352,6 +387,66 @@ export default function Identify() {
         </Button>
       )}
 
+      {/* Artifact confirmation popup */}
+      {artifactConfirm && !result && (
+        <div className="dark-card sculpted-raised rounded-lg border-l-4 border-l-warning p-4">
+          <div className="flex items-start gap-3">
+            <HelpCircle className="mt-0.5 h-5 w-5 shrink-0 text-warning" />
+            <div className="flex-1">
+              <p className="text-sm font-bold text-foreground">
+                Is this a prehistoric artifact or war relic?
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Our AI thinks this might be a prehistoric artifact or war relic
+                ({artifactConfirm.artifactConfidence}% confidence) — like an
+                arrowhead, tool, bead, pottery, bullet, button, buckle, or
+                cannonball — rather than a natural rock or mineral.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  onClick={() => {
+                    setSearchMode("artifacts");
+                    setArtifactConfirm(null);
+                    setTimeout(() => handleIdentify(), 0);
+                  }}
+                  size="sm"
+                  className="gap-1.5 bg-emerald-500/90 text-white hover:bg-emerald-500"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Yes
+                </Button>
+                <Button
+                  onClick={() => {
+                    setSearchMode("artifacts");
+                    setArtifactConfirm(null);
+                    setTimeout(() => handleIdentify(), 0);
+                  }}
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 border-warning/40 text-warning hover:bg-warning/10"
+                >
+                  <HelpCircle className="h-4 w-4" />
+                  Maybe
+                </Button>
+                <Button
+                  onClick={() => {
+                    setSkipArtifactDetect(true);
+                    setArtifactConfirm(null);
+                    setTimeout(() => handleIdentify(), 0);
+                  }}
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5"
+                >
+                  <X className="h-4 w-4" />
+                  No
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Error */}
       {error && (
         <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
@@ -367,6 +462,116 @@ export default function Identify() {
             <div className="dark-card sculpted-raised rounded-lg p-6 text-center text-muted-foreground">
               No matches found. Try a clearer photo or different angle.
             </div>
+          ) : artifactMatches.length > 0 ? (
+            <>
+              {/* Artifact/relic matches */}
+              {artifactMatches.map(({ artifact, match }, index) => (
+                <div key={artifact.id} className="dark-card sculpted-raised rounded-lg p-4">
+                  {index === 0 && (
+                    <div className="mb-2 flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                      <span className="text-sm font-medium text-foreground">
+                        Top Match
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex gap-3">
+                    <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-muted/30">
+                      <OptimizedImage
+                        src={artifact.imageUrl}
+                        alt={artifact.name}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-display text-lg font-bold text-foreground">
+                        {artifact.name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        {artifact.family} · {artifact.subFamily}
+                      </p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className={cn(
+                              "h-full rounded-full bg-primary transition-all",
+                              confidenceColor(match.confidence),
+                            )}
+                            style={{ width: `${match.confidence}%` }}
+                          />
+                        </div>
+                        <span className={cn("text-sm font-semibold", confidenceColor(match.confidence))}>
+                          {match.confidence}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-sm text-muted-foreground">{match.reasoning}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      onClick={() => navigate(`/app/artifacts/${artifact.id}`)}
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                    >
+                      View details
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <p className="text-sm text-muted-foreground">{result.summary}</p>
+
+              {/* Ask an Expert for artifact results */}
+              <div className="dark-card sculpted-raised rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <MuseumIcon className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      Want to confirm with a museum?
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      If you think you may have something rare or historically
+                      significant, reach out to a nearby museum or cultural
+                      center.
+                    </p>
+                    <Button
+                      onClick={() => setShowMuseumFinder(true)}
+                      variant="outline"
+                      size="sm"
+                      className="mt-3 gap-2"
+                    >
+                      <MuseumIcon className="h-4 w-4" />
+                      Ask an Expert
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Report incorrect ID for artifact results */}
+              <div className="dark-card sculpted-raised rounded-lg p-4 border-amber-500/30">
+                <div className="flex items-start gap-3">
+                  <Flag className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      Think this ID is wrong?
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Help us improve the database. Send your photos and the AI's results to our team for manual review.
+                    </p>
+                    <Button
+                      onClick={() => setShowReportDialog(true)}
+                      variant="outline"
+                      size="sm"
+                      className="mt-3 gap-2 border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+                    >
+                      <Flag className="h-4 w-4" />
+                      Report incorrect ID
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </>
           ) : (
             <>
               <div className="dark-card sculpted-raised rounded-lg p-4">
@@ -819,7 +1024,7 @@ export default function Identify() {
             topMatchReasoning: result.matches[0].reasoning,
             allMatchNames: result.matches.map((m) => m.name),
             allMatchConfidences: result.matches.map((m) => m.confidence),
-            isArtifact: false,
+            isArtifact: artifactMatches.length > 0,
           }}
           imagePreview={imagePreview}
           onDismiss={() => setShowReportDialog(false)}

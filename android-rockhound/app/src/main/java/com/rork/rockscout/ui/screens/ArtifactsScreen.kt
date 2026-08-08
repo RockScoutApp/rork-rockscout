@@ -96,7 +96,7 @@ fun ArtifactsScreen(navController: NavController) {
                                 fields = listOf(
                                     "Family" to art.family,
                                     "Sub-Family" to art.subFamily,
-                                    if (selectedTab == 1) "Origin/Side" else "Tribe" to art.tribe,
+                                    (if (selectedTab == 1) "Origin/Side" else "Tribe") to art.tribe,
                                     "Time Period" to art.timePeriod,
                                     "Where Found" to art.whereFound.joinToString(", "),
                                     "How Made" to art.howMade,

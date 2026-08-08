@@ -146,6 +146,7 @@ import com.rork.rockscout.data.PurchaseManager
 import com.rork.rockscout.data.PurchaseResult
 import com.rork.rockscout.data.Artifact
 import com.rork.rockscout.data.ArtifactSpecimens
+import com.rork.rockscout.data.WarRelicSpecimens
 import com.rork.rockscout.data.SeedData
 import com.rork.rockscout.data.Specimen
 import com.rork.rockscout.data.GearGuide
@@ -461,14 +462,14 @@ fun IdentifyScreen(navController: NavController) {
                 // untouched.
                 val isArtifactSearch = pendingSearchMode == "artifacts"
                 if (isArtifactSearch) {
-                    val artifactMap = ArtifactSpecimens.allArtifacts.associateBy { it.id }
+                    val artifactMap = (ArtifactSpecimens.allArtifacts + WarRelicSpecimens.allWarRelics).associateBy { it.id }
                     val matchedArtifacts = response.matches.mapNotNull { match ->
                         artifactMap[match.id]?.let { it to match }
                     }
                     if (matchedArtifacts.isEmpty()) {
                         // Refund — no valid artifact matches returned.
                         accessManager.refundIdentify(consumedCredit)
-                        errorMessage = "No matching artifacts found. Try a clearer photo showing the artifact's shape and flaking pattern."
+                        errorMessage = "No matching artifacts or relics found. Try a clearer photo showing the object's shape and diagnostic features."
                         state = ScanState.ERROR
                         return@launch
                     }
@@ -1222,15 +1223,15 @@ fun IdentifyScreen(navController: NavController) {
                             Spacer(Modifier.width(10.dp))
                             Column {
                                 Text(
-                                    "Is this a prehistoric artifact?",
+                                    "Is this a prehistoric artifact or war relic?",
                                     style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     fontWeight = FontWeight.Bold,
                                 )
                                 Text(
-                                    "Our AI thinks this might be a prehistoric artifact (${artifactDetectConfidence}% confidence) — like an arrowhead, tool, bead, or pottery — rather than a natural rock or mineral.\n\n" +
-                                        "• \u2705 Yes — search the artifact database\n" +
-                                        "• \u2753 Maybe — try the artifact database\n" +
+                                    "Our AI thinks this might be a prehistoric artifact or war relic (${artifactDetectConfidence}% confidence) — like an arrowhead, tool, bead, pottery, bullet, button, buckle, or cannonball — rather than a natural rock or mineral.\n\n" +
+                                        "• \u2705 Yes — search the artifact & relic database\n" +
+                                        "• \u2753 Maybe — try the artifact & relic database\n" +
                                         "• \u274c No — continue with rock & mineral ID",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = DarkTextMid,

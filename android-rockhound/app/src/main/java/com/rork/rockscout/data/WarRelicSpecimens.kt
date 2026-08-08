@@ -1454,49 +1454,43 @@ object WarRelicSpecimens {
     )
 
     /** Section list for the War Relics screen (family title + its cards). */
-    data class WarRelicSection(
-        val title: String,
-        val subtitle: String,
-        val artifacts: List<Artifact>,
-    )
-
-    val sections: List<WarRelicSection> = listOf(
-        WarRelicSection(
+    val sections: List<ArtifactSpecimens.ArtifactSection> = listOf(
+        ArtifactSpecimens.ArtifactSection(
             title = "Civil War Bullets & Projectiles",
             subtitle = "12 types — Minie balls, carbine rounds, revolver bullets & more",
             artifacts = civilWarBullets,
         ),
-        WarRelicSection(
+        ArtifactSpecimens.ArtifactSection(
             title = "Revolutionary War Bullets & Projectiles",
             subtitle = "5 types — musket balls, rifle balls, pistol balls & buckshot",
             artifacts = revolutionaryWarBullets,
         ),
-        WarRelicSection(
+        ArtifactSpecimens.ArtifactSection(
             title = "Artillery Projectiles",
             subtitle = "8 types — solid shot, case shot, rifled shells & canister",
             artifacts = artilleryProjectiles,
         ),
-        WarRelicSection(
+        ArtifactSpecimens.ArtifactSection(
             title = "Uniform Buttons",
             subtitle = "12 types — Union eagle, Confederate block, state seal & Revolutionary War",
             artifacts = uniformButtons,
         ),
-        WarRelicSection(
+        ArtifactSpecimens.ArtifactSection(
             title = "Belt Buckles & Plates",
             subtitle = "9 types — US/CS plates, cartridge box plates, breastplates & more",
             artifacts = beltBucklesAndPlates,
         ),
-        WarRelicSection(
+        ArtifactSpecimens.ArtifactSection(
             title = "Edged Weapons & Bayonets",
             subtitle = "5 types — socket bayonets, sword hilts & scabbard hardware",
             artifacts = edgedWeaponsAndBayonets,
         ),
-        WarRelicSection(
+        ArtifactSpecimens.ArtifactSection(
             title = "Military Accoutrements",
             subtitle = "7 types — percussion caps, cartridge box tins, cap pouches & tools",
             artifacts = militaryAccoutrements,
         ),
-        WarRelicSection(
+        ArtifactSpecimens.ArtifactSection(
             title = "Camp Life & Personal Items",
             subtitle = "6 types — toothbrushes, pipes, hardtack, dice & ID tags",
             artifacts = campLifeAndPersonalItems,

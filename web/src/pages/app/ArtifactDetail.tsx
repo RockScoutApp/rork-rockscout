@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { MapPin, Clock, Hammer, Lightbulb, Users } from "lucide-react";
-import { findArtifactById } from "@/data/artifacts";
+import { findArtifactOrRelicById } from "@/data/artifacts";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { SculptedCard, ScreenScaffold, TagChip } from "@/components/sculpted";
 import NotFound from "@/pages/NotFound";
@@ -11,9 +11,13 @@ const CITRINE_HEX = "36 80% 58%";
 export default function ArtifactDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const artifact = id ? findArtifactById(id) : undefined;
+  const artifact = id ? findArtifactOrRelicById(id) : undefined;
 
   if (!artifact) return <NotFound />;
+
+  const isWarRelic = artifact.domain === "war_relic";
+  const cultureLabel = isWarRelic ? "Origin / Side" : "Culture / Tradition";
+  const eraLabel = isWarRelic ? "Origin & Era" : "Time Period";
 
   return (
     <ScreenScaffold title={artifact.name} onBack={() => navigate("/app/artifacts")}>
@@ -43,12 +47,12 @@ export default function ArtifactDetail() {
           </div>
         </SculptedCard>
 
-        {/* Time period & culture */}
+        {/* Time period & culture/origin */}
         <div className="grid gap-4 sm:grid-cols-2">
           <SculptedCard accent="citrine" className="p-4">
             <div className="flex items-center gap-2 text-sm font-bold text-foreground">
               <Clock className="h-4 w-4" style={{ color: `hsl(${CITRINE_HEX})` }} />
-              Time Period
+              {eraLabel}
             </div>
             <p className="mt-1.5 text-sm text-[hsl(var(--text-mid))]">
               {artifact.timePeriod}
@@ -57,7 +61,7 @@ export default function ArtifactDetail() {
           <SculptedCard accent="aqua" className="p-4">
             <div className="flex items-center gap-2 text-sm font-bold text-foreground">
               <Users className="h-4 w-4" style={{ color: `hsl(${AQUA_HEX})` }} />
-              Culture / Tradition
+              {cultureLabel}
             </div>
             <p className="mt-1.5 text-sm text-[hsl(var(--text-mid))]">
               {artifact.tribe}
@@ -101,7 +105,7 @@ export default function ArtifactDetail() {
         <SculptedCard accent="citrine" glowing className="p-4">
           <div className="flex items-center gap-2 text-sm font-bold text-foreground">
             <Lightbulb className="h-4 w-4" style={{ color: `hsl(${CITRINE_HEX})` }} />
-            Fun Facts
+            {isWarRelic ? "Good to Know" : "Fun Facts"}
           </div>
           <ul className="mt-2 space-y-2">
             {artifact.funFacts.map((fact, i) => (

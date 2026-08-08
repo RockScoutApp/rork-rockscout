@@ -465,8 +465,8 @@ const FEATURES_LIST = [
   {
     icon: Trophy,
     title: "NEW badges & recently added specimens",
-    desc: "A NEW badge automatically appears on any specimen or artifact card added to the catalog within the last 7 days. Spot the latest database additions at a glance across the Specimen Database, Artifacts tile, and any category-filtered view — the badge disappears automatically after 7 days.",
-    items: ["7-day NEW badge", "Specimen Database", "Artifacts tile", "Category-filtered views"],
+    desc: "A NEW badge automatically appears on any specimen or artifact card added to the catalog within the last 7 days. Spot the latest database additions at a glance across the Specimen Database, Artifacts / Relics tile, and any category-filtered view — the badge disappears automatically after 7 days.",
+    items: ["7-day NEW badge", "Specimen Database", "Artifacts / Relics tile", "Category-filtered views"],
   },
 
   // ── Collection & Field Tools ──
@@ -564,9 +564,9 @@ const FEATURES_LIST = [
   },
   {
     icon: Landmark,
-    title: "Artifacts & stone tools",
-    desc: "A growing catalog of 90+ authentic prehistoric artifacts — arrowheads (19 types), spear points & dart tips, hand axes & axe heads, flaked stone tools, drill bits, native beads, stone effigies, pipes, ornaments, shell and bone tools, pottery, and more. Each entry has a generated reference image, cultural period, material, and how it was made and used. A NEW badge flags artifacts added in the last 7 days.",
-    items: ["90+ artifacts", "Arrowheads", "Spear points", "Hand axes", "Stone effigies", "Drill bits & beads", "NEW badge on recent adds"],
+    title: "Artifacts, relics & stone tools",
+    desc: "A growing catalog of 170+ authentic prehistoric artifacts and Civil War / Revolutionary War relics — arrowheads (20+ types), spear points & dart tips, hand axes, flaked stone tools, drill bits, native beads, stone effigies, pipes, ornaments, shell and bone tools, pottery, PLUS 64 war relics: Minie balls, musket balls, artillery shells, uniform buttons (Union eagle & Confederate block), belt buckles (US/CS plates), bayonets, percussion caps, and camp-life items like bone toothbrushes, clay pipes, and hardtack. Each entry has a generated reference image, cultural period or war era, origin/side, and how it was made and used. A NEW badge flags items added in the last 7 days.",
+    items: ["170+ artifacts & relics", "Arrowheads", "Civil War bullets", "Uniform buttons", "Belt buckles & plates", "Artillery projectiles", "NEW badge on recent adds"],
   },
   {
     icon: Mountain,

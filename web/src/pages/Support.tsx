@@ -41,8 +41,8 @@ const FAQ = [
     a: "Block them from their profile or from the message thread, then report the conversation. Our team reviews reports and takes action under the Community Guidelines.",
   },
   {
-    q: "What is the Artifacts & Stone Tools tile?",
-    a: "The Artifacts tile is a growing catalog of 90+ authentic prehistoric artifacts, each with its own generated reference image. Families include Arrowheads (19 types), Spear Points & Dart Tips (12), Hand Axes & Axe Heads (19), Flaked Stone Tools (11), Drill Bits (5), Native Beads (12), Stone Effigies, Pipes & Medicine Tubes, Ornaments & Weights, Shell Tools, Bone Tools, Pottery, Game Discs, and Wooden Artifacts. The tile is linked to the Specimen Database via the ARTIFACTS category chip at the top of the specimen list — artifacts never appear inside the main specimen database, only through the Artifacts tile or the category chip. A NEW badge appears on any artifact added within the last 7 days.",
+    q: "What is the Artifacts / Relics tile?",
+    a: "The Artifacts / Relics tile is a growing catalog of 170+ authentic prehistoric artifacts and Civil War / Revolutionary War relics, each with its own generated reference image. Use the pill switcher to toggle between Artifacts (prehistoric — arrowheads, hand axes, beads, stone tools, effigies, pipes, pottery) and War Relics (64 specimens: Minie balls, musket balls, artillery shells, uniform buttons, belt buckles, bayonets, percussion caps, and camp-life items). The tile is linked to the Specimen Database via the ARTIFACTS and WAR RELICS category chips — artifacts and relics never appear inside the main specimen database, only through the Artifacts / Relics tile or the category chips. A NEW badge appears on any artifact or relic added within the last 7 days.",
   },
   {
     q: "What are the Natural Wonders?",
@@ -50,7 +50,7 @@ const FAQ = [
   },
   {
     q: "What does the NEW badge mean?",
-    a: "A NEW badge automatically appears on any specimen or artifact card that was added to the catalog within the last 7 days. It works across the Specimen Database, Artifacts tile, and any category-filtered view. After 7 days the badge disappears automatically — the specimen stays in the catalog but is no longer flagged as new.",
+    a: "A NEW badge automatically appears on any specimen or artifact card that was added to the catalog within the last 7 days. It works across the Specimen Database, Artifacts / Relics tile, and any category-filtered view. After 7 days the badge disappears automatically — the specimen stays in the catalog but is no longer flagged as new.",
   },
   {
     q: "How do achievement progress bars work?",
