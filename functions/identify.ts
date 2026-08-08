@@ -1368,6 +1368,13 @@ export async function handleClarify(
 
     const responseHeaders = { ...cors, "Content-Type": "application/json" };
 
+    // Detect artifact/relic clarification: if any preliminary match has
+    // an art- or wr- prefix, route through the artifact system prompt and
+    // parser instead of the rock/mineral one.
+    const isArtifactClarify = body.preliminaryMatches.some(
+      m => m.id.startsWith("art-") || m.id.startsWith("wr-"),
+    );
+
     const result = await callClarifyModel(
       toolkitUrl,
       toolkitSecret,
@@ -1375,6 +1382,7 @@ export async function handleClarify(
       body.answers,
       body.preliminaryMatches,
       body.summary,
+      isArtifactClarify,
     );
 
     if (!result.ok) {
@@ -1398,7 +1406,9 @@ export async function handleClarify(
       );
     }
 
-    const parsed = parseClarificationResponse(content);
+    const parsed = isArtifactClarify
+      ? parseArtifactIdentificationResponse(content)
+      : parseClarificationResponse(content);
 
     const isArtifactResult = parsed.matches.some(m => m.id.startsWith("art-") || m.id.startsWith("wr-"));
     const webReferences = await searchWebReferences(
@@ -1619,8 +1629,9 @@ async function callClarifyModel(
   answers: Record<string, string>,
   preliminaryMatches: MatchResult[],
   summary: string,
+  isArtifact: boolean = false,
 ): Promise<Response> {
-  const systemPrompt = buildSystemPrompt();
+  const systemPrompt = isArtifact ? buildArtifactSystemPrompt() : buildSystemPrompt();
   const userPrompt = buildClarifyUserPrompt(answers, preliminaryMatches, summary);
 
   // Build user content with all angle images
@@ -2647,6 +2658,8 @@ async function fetchArtifactContext(
           "amnh.org",
           "si.edu",
           "nps.gov",
+          "txsh-09.org",
+          "txsh-09.org",
           "projectilepoints.net",
           "lithiccastinglab.com",
           "indiana.edu",

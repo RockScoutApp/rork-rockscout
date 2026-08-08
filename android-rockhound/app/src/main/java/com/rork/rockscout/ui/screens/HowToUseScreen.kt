@@ -727,7 +727,7 @@ private val howToSections: List<HowToSection> = listOf(
         shortLabel = "Recently Added",
         category = HowToCategory.TOOLS_MISC,
         steps = listOf(
-            "On both the Specimen Database and Artifacts screens, a \"Recently Added\" filter chip appears in the filter row.",
+            "On both the Specimen Database and Artifacts / Relics screens, a \"Recently Added\" filter chip appears in the filter row.",
             "Tap the chip to narrow the list to only items added within the last 7 days — the same window the NEW badge covers.",
             "The filter composes with existing category, family, and search filters — all filters apply together (AND logic). Tap again to turn it off.",
             "If no items were added in the last 7 days, a friendly empty state appears: \"No specimens added in the last 7 days. Check back soon!\"",

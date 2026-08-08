@@ -1087,7 +1087,7 @@ object WarRelicSpecimens {
             tagline = "The sergeant's steel — a plainer blade for the non-commissioned man",
             emoji = "🗡️",
             accentHex = 0xFF7B7B7B,
-            imageUrl = BASE + "093631cd-98c6-4cf9-8e09-6b7e9348821a.png",
+            imageUrl = BASE + "986be428-5b34-4ddf-a834-ca42c0912255.png",
             whereFound = listOf("NCO camps", "Battlefields"),
             description = "The enlisted/NCO sword hilt was the simpler, government-issued sword carried by non-commissioned officers and musicians. The Model 1840 NCO sword had a plain brass guard and a straight steel blade — functional but not ornate.",
             howMade = "The guard was cast from brass, the blade forged from steel. Unlike officer's swords, NCO swords were government-contracted and standardized. The grip was typically leather-wrapped with brass wire.",

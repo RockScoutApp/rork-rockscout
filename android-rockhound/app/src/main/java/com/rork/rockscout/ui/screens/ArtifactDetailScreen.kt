@@ -241,9 +241,9 @@ fun ArtifactDetailScreen(
                 }
             }
 
-            // Good to know
+            // Good to know / Fun facts
             item {
-                SectionCard("Good to know", accent = accent) {
+                SectionCard(if (artifact.domain == "war_relic") "Good to Know" else "Fun Facts", accent = accent) {
                     artifact.funFacts.forEachIndexed { index, fact ->
                         FactRow(fact, accent, isLast = index == artifact.funFacts.lastIndex)
                     }
