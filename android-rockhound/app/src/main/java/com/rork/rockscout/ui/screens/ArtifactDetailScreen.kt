@@ -26,11 +26,14 @@ import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,18 +49,27 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.ArtifactSpecimens
+import com.rork.rockscout.data.RelicRegions
 import com.rork.rockscout.data.WarRelicSpecimens
 import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.MapViewLifecycleEffect
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.StandaloneZoomableImageViewer
 import com.rork.rockscout.ui.components.StatRow
 import com.rork.rockscout.ui.components.TagChip
+import com.rork.rockscout.ui.components.addOverlaySafe
+import com.rork.rockscout.ui.components.createRockScoutMapView
 import com.rork.rockscout.ui.components.glowingBorder
+import com.rork.rockscout.ui.components.isValidCoordinate
+import com.rork.rockscout.ui.components.removeOverlaysSafe
+import com.rork.rockscout.ui.components.runMapSafe
+import com.rork.rockscout.ui.components.safeGeoPoint
 import com.rork.rockscout.ui.components.sculpted
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
@@ -65,6 +77,10 @@ import com.rork.rockscout.ui.theme.Ink
 import com.rork.rockscout.ui.theme.Slate900
 import com.rork.rockscout.ui.theme.TextHigh
 import com.rork.rockscout.ui.theme.TextMid
+import org.osmdroid.util.BoundingBox
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 
 /**
  * Standalone detail screen for artifacts — modeled on [SpecimenDetailScreen]
@@ -96,6 +112,15 @@ fun ArtifactDetailScreen(
     val collected = collection.any { it.specimenId == artifact.id }
     val wishlisted = wishlist.contains(artifact.id)
     val isLiked = likedSpecimens.contains(artifact.id)
+
+    // Pre-compute relic region coordinates for the map (only for war relics)
+    val relicRegions = remember(artifact.id) {
+        if (artifact.domain == "war_relic") {
+            RelicRegions.getRegionCoords(artifact.whereFound)
+        } else {
+            emptyList()
+        }
+    }
 
     var viewerOpen by remember { mutableStateOf(false) }
 
@@ -193,6 +218,16 @@ fun ArtifactDetailScreen(
                     artifact.whereFound.forEachIndexed { index, place ->
                         LocationRow(place, accent, isLast = index == artifact.whereFound.lastIndex)
                     }
+                }
+            }
+
+            // Visual region map — only for war relics
+            if (artifact.domain == "war_relic") {
+                item {
+                    RelicRegionMap(
+                        regions = relicRegions,
+                        accent = accent,
+                    )
                 }
             }
 
@@ -344,6 +379,145 @@ private fun ArtifactHeader(
             )
         }
     }
+}
+
+/**
+ * Compact osmdroid map showing discovery region markers for war relics.
+ * Uses the same [createRockScoutMapView] infrastructure as the Dig Sites map,
+ * configured as a read-only embedded preview (scroll passes through to the
+ * parent LazyColumn, taps still work for marker popups).
+ */
+@Composable
+private fun RelicRegionMap(
+    regions: List<RelicRegions.RegionCoord>,
+    accent: Color,
+) {
+    var mapView by remember { mutableStateOf<MapView?>(null) }
+
+    LaunchedEffect(mapView, regions) {
+        val mv = mapView ?: return@LaunchedEffect
+        runMapSafe("RelicRegionMap markers") {
+            mv.removeOverlaysSafe { it is Marker && it.id?.startsWith("relic_region_") == true }
+            val points = mutableListOf<GeoPoint>()
+            for (region in regions) {
+                if (!isValidCoordinate(region.lat, region.lng)) continue
+                val geo = safeGeoPoint(region.lat, region.lng) ?: continue
+                points.add(geo)
+                val marker = Marker(mv).apply {
+                    position = geo
+                    title = region.label
+                    id = "relic_region_${region.name}"
+                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                }
+                mv.addOverlaySafe(marker)
+            }
+            // Fit bounds to show all markers
+            if (points.size > 1) {
+                val box = BoundingBox.fromGeoPoints(points)
+                mv.zoomToBoundingBox(box, false, 48)
+            } else if (points.size == 1) {
+                mv.controller.animateTo(points.first())
+                mv.controller.setZoom(6.0)
+            }
+            mv.invalidate()
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color(0xFF1A1812))
+            .glowingBorder(1.dp, accent.copy(alpha = 0.25f), RoundedCornerShape(18.dp)),
+    ) {
+        // Header row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Filled.MilitaryTech,
+                contentDescription = null,
+                tint = accent,
+                modifier = Modifier.size(18.dp),
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(
+                "Discovery Regions",
+                style = MaterialTheme.typography.labelMedium,
+                color = TextHigh,
+                fontWeight = FontWeight.Bold,
+            )
+            Spacer(Modifier.weight(1f))
+            Text(
+                "${regions.size} region${if (regions.size != 1) "s" else ""}",
+                style = MaterialTheme.typography.labelSmall,
+                color = TextMid,
+            )
+        }
+
+        // Map view
+        AndroidView(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp)
+                .padding(horizontal = 8.dp)
+                .clip(RoundedCornerShape(14.dp)),
+            factory = { ctx ->
+                createRockScoutMapView(ctx, readOnly = true, isEmbedded = true).apply {
+                    controller.setZoom(5.0)
+                    controller.setCenter(GeoPoint(38.9, -77.35))
+                    mapView = this
+                }
+            },
+            update = { /* handled by LaunchedEffect above */ },
+        )
+
+        // Region chips below the map
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            regions.take(3).forEach { region ->
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(accent.copy(alpha = 0.12f))
+                        .glowingBorder(1.dp, accent.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                ) {
+                    Text(
+                        region.label,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = accent,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            if (regions.size > 3) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(accent.copy(alpha = 0.12f))
+                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                ) {
+                    Text(
+                        "+${regions.size - 3} more",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = accent,
+                    )
+                }
+            }
+        }
+    }
+
+    MapViewLifecycleEffect(mapView)
 }
 
 @Composable

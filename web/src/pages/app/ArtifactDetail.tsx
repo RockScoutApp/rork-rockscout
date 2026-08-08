@@ -3,6 +3,7 @@ import { MapPin, Clock, Hammer, Lightbulb, Users } from "lucide-react";
 import { findArtifactOrRelicById } from "@/data/artifacts";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { SculptedCard, ScreenScaffold, TagChip } from "@/components/sculpted";
+import RelicRegionMap from "@/components/app/RelicRegionMap";
 import NotFound from "@/pages/NotFound";
 
 const AQUA_HEX = "20 62% 65%";
@@ -100,6 +101,14 @@ export default function ArtifactDetail() {
             ))}
           </div>
         </SculptedCard>
+
+        {/* Visual region map — only for war relics */}
+        {isWarRelic && (
+          <RelicRegionMap
+            whereFound={artifact.whereFound}
+            accentHex={AQUA_HEX}
+          />
+        )}
 
         {/* Fun facts */}
         <SculptedCard accent="citrine" glowing className="p-4">
