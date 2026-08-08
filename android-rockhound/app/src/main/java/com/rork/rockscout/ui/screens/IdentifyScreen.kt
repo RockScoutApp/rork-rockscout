@@ -1207,9 +1207,9 @@ fun IdentifyScreen(navController: NavController) {
                 }
             }
 
-            // Artifact detection confirmation — the AI detected a possible
-            // prehistoric artifact. Show a card explaining what was detected
-            // with yes/maybe/no buttons (the buttons are in the action area above).
+            // Artifact/relic detection confirmation — the AI detected a possible
+            // prehistoric artifact or war relic. Show a card explaining what was
+            // detected with yes/maybe/no buttons (the buttons are in the action area above).
             if (state == ScanState.ARTIFACT_CONFIRM) {
                 item {
                     DarkCard(modifier = Modifier.fillMaxWidth(), accent = Warning) {

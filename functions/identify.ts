@@ -626,18 +626,23 @@ async function callArtifactVisionModel(
   const userPrompt = `Analyze this artifact photograph carefully. Identify which artifact type from the database it matches.
 
 STEP 1 — OBSERVE: Describe what you see:
-- Overall shape (lanceolate, stemmed, corner-notched, bifacial, disc, tubular, etc.)
-- Flaking pattern (collateral, parallel, oblique, random, pressure-flaked)
-- Base style (concave, convex, straight, notched, bifurcated, ground)
-- Material hints (chert, flint, obsidian, slate, shell, ceramic, stone)
+- Overall shape (lanceolate, stemmed, corner-notched, bifacial, disc, tubular, conical, cylindrical, flat, etc.)
+- For knapped stone: flaking pattern (collateral, parallel, oblique, random, pressure-flaked)
+- For knapped stone: base style (concave, convex, straight, notched, bifurcated, ground)
+- For lead projectiles: caliber, ring count, base cavity type, grease grooves, casting seams
+- For metal items: material (cast lead, stamped brass, forged iron, copper alloy), patina color
+- For buttons: face design, backmark, attachment method (iron loop, brass shank)
+- For plates/buckles: shape, attachment hooks/rivets, stamped lettering or device
+- For edged weapons: blade profile, socket type, guard shape
+- Material hints (chert, flint, obsidian, slate, shell, ceramic, stone, lead, brass, iron, copper)
 - Size and proportions if discernible
-- Any surface treatment (incised, cord-marked, polished, serrated)
-- Cultural or temporal markers if visible
+- Any surface treatment (incised, cord-marked, polished, serrated, stamped, cast)
+- Cultural, temporal, or military markers if visible
 
 STEP 2 — COMPARE: Match against the artifact database. Consider:
-- Which types share the observed shape and flaking pattern?
-- Which match the base style and notching?
-- Which are from the right material and region?
+- Which types share the observed shape, flaking pattern, or projectile profile?
+- Which match the base style, notching, caliber, or diagnostic features?
+- Which are from the right material, region, or conflict era?
 
 STEP 3 — RANK: Return exactly 5 matches with honest confidence scores:
 - 90-98%: Near-certain match with multiple distinguishing features aligned
@@ -746,9 +751,12 @@ ${refList}${webContextBlock}
 
 Visually compare the user's photo against each reference image. Focus on:
 - Overall shape and silhouette match
-- Flaking pattern and surface treatment
-- Base style, notching, and hafting features
-- Material color and texture
+- For knapped stone: flaking pattern, surface treatment, base style, notching, hafting features
+- For lead projectiles: caliber, ring count, base cavity, grease grooves, casting seams
+- For buttons: face design, size, backmark, attachment method
+- For plates/buckles: shape, attachment hooks, stamped lettering or device
+- For edged weapons: blade profile, socket type, guard shape
+- Material color, patina, and texture
 - Proportions and size hints
 
 Rank all candidates by how well the user's photo visually matches the reference image. You may reorder from the initial ranking if visual comparison suggests a different top match.
@@ -1070,6 +1078,53 @@ function getDefaultArtifactQuestions(matches: MatchResult[]): ClarificationQuest
 
   const questions: ClarificationQuestion[] = [];
 
+  // Detect whether the matches are war relics or prehistoric artifacts
+  const isWarRelic = arts.some(a => a.id.startsWith("wr-"));
+  const isPrehistoric = arts.some(a => a.id.startsWith("art-"));
+
+  if (isWarRelic && !isPrehistoric) {
+    // War relic specific questions
+    const shapes = new Set<string>();
+    arts.forEach(a => {
+      const f = a.family.toLowerCase();
+      if (f.includes("bullet") || f.includes("projectile")) shapes.add("Bullet or projectile");
+      if (f.includes("artillery")) shapes.add("Artillery round");
+      if (f.includes("button")) shapes.add("Button (flat, round)");
+      if (f.includes("buckle") || f.includes("plate")) shapes.add("Plate or buckle (flat, rectangular/oval)");
+      if (f.includes("edged") || f.includes("bayonet")) shapes.add("Blade or bayonet (long, pointed)");
+      if (f.includes("accoutrement")) shapes.add("Small hardware item");
+      if (f.includes("camp")) shapes.add("Personal or camp item");
+    });
+    if (shapes.size > 1) {
+      questions.push({
+        id: "shape",
+        question: "What type of object is it?",
+        options: Array.from(shapes).slice(0, 5),
+      });
+    }
+
+    questions.push({
+      id: "material",
+      question: "What material is it made from?",
+      options: ["Cast lead", "Stamped brass", "Forged iron", "Copper alloy", "Other metal or mixed"],
+    });
+
+    questions.push({
+      id: "size",
+      question: "How large is the object?",
+      options: ["Under 1 inch (bullet/caliber)", "1-2 inches (button, cap)", "2-4 inches (plate, buckle)", "Over 4 inches (artillery, blade)", "Not sure"],
+    });
+
+    questions.push({
+      id: "context",
+      question: "Where did you find it?",
+      options: ["Civil War battlefield or campsite", "Revolutionary War site", "Farm field or plowed ground", "River or creek crossing", "Bought / unknown"],
+    });
+
+    return questions.slice(0, 4);
+  }
+
+  // Prehistoric artifact questions (existing behavior)
   const shapes = new Set<string>();
   arts.forEach(a => {
     const sf = a.subFamily.toLowerCase();
@@ -1345,10 +1400,12 @@ export async function handleClarify(
 
     const parsed = parseClarificationResponse(content);
 
+    const isArtifactResult = parsed.matches.some(m => m.id.startsWith("art-") || m.id.startsWith("wr-"));
     const webReferences = await searchWebReferences(
       toolkitUrl,
       toolkitSecret,
       parsed.matches,
+      isArtifactResult,
     );
 
     const response: IdentifyResponse = {
@@ -2391,6 +2448,17 @@ async function searchWebReferences(
         "projectilepoints.net",
         "indiana.edu",
         "umass.edu",
+        "acwm.org",
+        "civilwarartillery.com",
+        "relicman.com",
+        "amrevmuseum.org",
+        "colonialwilliamsburg.org",
+        "historicjamestowne.org",
+        "americanhistory.si.edu",
+        "americanrevolutioninstitute.org",
+        "cwbullet.org",
+        "columbiariverarsenal.com",
+        "mountvernon.org",
       ]
     : [
         "mindat.org",

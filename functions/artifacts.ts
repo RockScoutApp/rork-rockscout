@@ -3,8 +3,8 @@
 // artifacts. SEPARATE from specimens.ts — artifacts never enter the rock
 // or mineral candidate set. Used only when searchMode === "artifacts".
 //
-// Total: 106 artifacts across 15 families.
-// Auto-generated from Android ArtifactSpecimens.kt — keep in sync.
+// Total: 170 artifacts & war relics across 23 families (106 prehistoric + 64 war relic).
+// Auto-generated from Android ArtifactSpecimens.kt and WarRelicSpecimens.kt — keep in sync.
 
 export interface ArtifactEntry {
   id: string;

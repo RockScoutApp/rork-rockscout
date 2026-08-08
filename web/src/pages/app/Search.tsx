@@ -9,7 +9,7 @@ import { OptimizedImage } from "@/components/OptimizedImage";
 interface SearchResult {
   id: string;
   name: string;
-  type: "specimen" | "artifact" | "location";
+  type: "specimen" | "artifact" | "relic" | "location";
   subtitle: string;
   imageUrl?: string;
   emoji?: string;
@@ -37,7 +37,7 @@ export default function Search() {
       .map((a) => ({
         id: a.id,
         name: a.name,
-        type: a.domain === "war_relic" ? "artifact" : "artifact",
+        type: a.domain === "war_relic" ? "relic" : "artifact",
         subtitle: `${a.family} · ${a.timePeriod}`,
         imageUrl: a.imageUrl,
         route: `/app/artifacts/${a.id}`,
