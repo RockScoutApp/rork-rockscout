@@ -45,6 +45,7 @@ import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.NoAccounts
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.PersonSearch
 import androidx.compose.material.icons.filled.QueryStats
 import androidx.compose.material.icons.filled.Restore
@@ -85,6 +86,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.FullScreenImageViewer
 import com.rork.rockscout.ui.components.DevUserPopup
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -93,11 +95,15 @@ import androidx.compose.foundation.lazy.grid.items as gridItems
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import io.ktor.client.call.body
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.header
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -136,6 +142,7 @@ import com.rork.rockscout.ui.theme.Amethyst
 import com.rork.rockscout.ui.theme.Aqua
 import com.rork.rockscout.ui.theme.Citrine
 import com.rork.rockscout.ui.theme.Danger
+import com.rork.rockscout.ui.theme.DarkTextLow
 import com.rork.rockscout.ui.theme.DarkTextHigh
 import com.rork.rockscout.ui.theme.DarkTextMid
 import com.rork.rockscout.ui.theme.Ink
@@ -165,6 +172,7 @@ fun DeveloperConsoleScreen(navController: NavController) {
         DevTab("Moderation", Icons.Filled.Flag),
         DevTab("Bugs", Icons.Filled.BugReport),
         DevTab("Submit", Icons.Filled.AddLocation),
+        DevTab("Premium", Icons.Filled.Shield),
     )
 
     RockBackground {
@@ -291,6 +299,7 @@ fun DeveloperConsoleScreen(navController: NavController) {
                 2 -> ModerationTab()
                 3 -> BugLogTab()
                 4 -> SubmissionsTab()
+                5 -> PremiumAllowlistTab()
             }
         }
     }
@@ -3442,5 +3451,239 @@ private fun ReportLogRow(
                 }
             }
         }
+    }
+}
+
+// ── Premium Allowlist Tab ──────────────────────────────────────────────────
+
+@Serializable
+private data class PremiumAllowlistResponse(
+    val ok: Boolean = false,
+    val entries: List<AllowlistEntry> = emptyList(),
+)
+
+@Serializable
+private data class AllowlistEntry(
+    val email: String,
+    val added_at: String,
+    val added_by: String? = null,
+    val notes: String? = null,
+)
+
+@Composable
+private fun PremiumAllowlistTab() {
+    val scope = rememberCoroutineScope()
+    var entries by remember { mutableStateOf<List<AllowlistEntry>>(emptyList()) }
+    var isLoading by remember { mutableStateOf(true) }
+    var newEmail by remember { mutableStateOf("") }
+    var newNotes by remember { mutableStateOf("") }
+    var isAdding by remember { mutableStateOf(false) }
+    var removingEmail by remember { mutableStateOf<String?>(null) }
+
+    fun loadEntries() {
+        scope.launch {
+            isLoading = true
+            try {
+                val functionsUrl = com.rork.rockscout.data.BuildSecrets.resolve(
+                    "EXPO_PUBLIC_RORK_FUNCTIONS_URL",
+                    com.rork.rockscout.data.BuildSecrets.RORK_FUNCTIONS_URL,
+                ).ifBlank { null } ?: run { isLoading = false; return@launch }
+                val appKey = com.rork.rockscout.data.BuildSecrets.resolve(
+                    "EXPO_PUBLIC_RORK_APP_KEY",
+                    com.rork.rockscout.data.BuildSecrets.RORK_APP_KEY,
+                )
+                val client = HttpClient { install(HttpTimeout) { requestTimeoutMillis = 15_000 } }
+                val resp = client.get("$functionsUrl/premium-allowlist") {
+                    if (appKey.isNotBlank()) header("X-App-Key", appKey)
+                }
+                val body = resp.body<String>()
+                val parsed = kotlinx.serialization.json.Json {
+                    ignoreUnknownKeys = true
+                    isLenient = true
+                }.decodeFromString(PremiumAllowlistResponse.serializer(), body)
+                entries = parsed.entries
+                client.close()
+            } catch (e: Exception) {
+                android.util.Log.w("PremiumAllowlist", "Load failed: ${e.message}")
+            }
+            isLoading = false
+        }
+    }
+
+    LaunchedEffect(Unit) { loadEntries() }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().navigationBarsPadding().imePadding(),
+        contentPadding = PaddingValues(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        item { PageTitle("Premium APK Allowlist", "Manage which emails get Premium access") }
+
+        // Add form
+        item {
+            DarkCard(modifier = Modifier.fillMaxWidth(), accent = Citrine) {
+                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("Add email to allowlist", style = MaterialTheme.typography.titleSmall, color = DarkTextHigh, fontWeight = FontWeight.Bold)
+                    OutlinedTextField(
+                        value = newEmail,
+                        onValueChange = { newEmail = it },
+                        label = { Text("Email address") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Citrine,
+                            unfocusedBorderColor = Slate800,
+                            focusedLabelColor = Citrine,
+                            unfocusedLabelColor = DarkTextLow,
+                            cursorColor = Citrine,
+                        ),
+                    )
+                    OutlinedTextField(
+                        value = newNotes,
+                        onValueChange = { newNotes = it },
+                        label = { Text("Notes (optional)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Citrine,
+                            unfocusedBorderColor = Slate800,
+                            focusedLabelColor = Citrine,
+                            unfocusedLabelColor = DarkTextLow,
+                            cursorColor = Citrine,
+                        ),
+                    )
+                    SculptedButton(
+                        text = if (isAdding) "Adding..." else "Add to Allowlist",
+                        onClick = {
+                            if (newEmail.isBlank() || !newEmail.contains("@")) return@SculptedButton
+                            isAdding = true
+                            scope.launch {
+                                try {
+                                    val functionsUrl = com.rork.rockscout.data.BuildSecrets.resolve(
+                                        "EXPO_PUBLIC_RORK_FUNCTIONS_URL",
+                                        com.rork.rockscout.data.BuildSecrets.RORK_FUNCTIONS_URL,
+                                    ).ifBlank { null } ?: run { isAdding = false; return@launch }
+                                    val appKey = com.rork.rockscout.data.BuildSecrets.resolve(
+                                        "EXPO_PUBLIC_RORK_APP_KEY",
+                                        com.rork.rockscout.data.BuildSecrets.RORK_APP_KEY,
+                                    )
+                                    val client = HttpClient { install(HttpTimeout) { requestTimeoutMillis = 15_000 } }
+                                    val payload = buildJsonObject {
+                                        put("email", newEmail.trim().lowercase())
+                                        if (newNotes.isNotBlank()) put("notes", newNotes.trim())
+                                    }.toString()
+                                    client.post("$functionsUrl/premium-allowlist") {
+                                        contentType(ContentType.Application.Json)
+                                        if (appKey.isNotBlank()) header("X-App-Key", appKey)
+                                        setBody(payload)
+                                    }
+                                    client.close()
+                                    newEmail = ""
+                                    newNotes = ""
+                                    loadEntries()
+                                } catch (e: Exception) {
+                                    android.util.Log.w("PremiumAllowlist", "Add failed: ${e.message}")
+                                }
+                                isAdding = false
+                            }
+                        },
+                        accent = Citrine,
+                        containerColor = Citrine,
+                        textColor = Color.Black,
+                        enabled = !isAdding && newEmail.contains("@"),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+        }
+
+        // Entries list
+        if (isLoading) {
+            item {
+                Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                    androidx.compose.material3.CircularProgressIndicator(color = Citrine)
+                }
+            }
+        } else if (entries.isEmpty()) {
+            item {
+                DarkCard(modifier = Modifier.fillMaxWidth(), accent = Aqua) {
+                    Text(
+                        "No approved emails yet. Add someone to grant them Premium APK access.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = DarkTextMid,
+                        modifier = Modifier.padding(16.dp),
+                    )
+                }
+            }
+        } else {
+            items(entries.size) { index ->
+                val entry = entries[index]
+                DarkCard(modifier = Modifier.fillMaxWidth(), accent = Aqua) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(entry.email, style = MaterialTheme.typography.bodyMedium, color = DarkTextHigh, fontWeight = FontWeight.Bold)
+                            Text("Added: ${entry.added_at.take(10)}", style = MaterialTheme.typography.labelSmall, color = DarkTextLow)
+                            if (!entry.notes.isNullOrBlank()) {
+                                Text(entry.notes, style = MaterialTheme.typography.labelSmall, color = DarkTextLow, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
+                            }
+                        }
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .clickable { removingEmail = entry.email },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(Icons.Filled.Delete, contentDescription = "Remove", tint = Danger, modifier = Modifier.size(20.dp))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Remove confirmation dialog
+    removingEmail?.let { email ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { removingEmail = null },
+            title = { Text("Remove from allowlist?") },
+            text = { Text("Remove $email from the allowlist? They will lose Premium on next app launch.") },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        scope.launch {
+                            try {
+                                val functionsUrl = com.rork.rockscout.data.BuildSecrets.resolve(
+                                    "EXPO_PUBLIC_RORK_FUNCTIONS_URL",
+                                    com.rork.rockscout.data.BuildSecrets.RORK_FUNCTIONS_URL,
+                                ).ifBlank { null } ?: return@launch
+                                val appKey = com.rork.rockscout.data.BuildSecrets.resolve(
+                                    "EXPO_PUBLIC_RORK_APP_KEY",
+                                    com.rork.rockscout.data.BuildSecrets.RORK_APP_KEY,
+                                )
+                                val client = HttpClient { install(HttpTimeout) { requestTimeoutMillis = 15_000 } }
+                                val payload = buildJsonObject { put("email", email) }.toString()
+                                client.delete("$functionsUrl/premium-allowlist") {
+                                    contentType(ContentType.Application.Json)
+                                    if (appKey.isNotBlank()) header("X-App-Key", appKey)
+                                    setBody(payload)
+                                }
+                                client.close()
+                                loadEntries()
+                            } catch (e: Exception) {
+                                android.util.Log.w("PremiumAllowlist", "Delete failed: ${e.message}")
+                            }
+                        }
+                        removingEmail = null
+                    },
+                ) { Text("Remove", color = Danger) }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { removingEmail = null }) { Text("Cancel") }
+            },
+        )
     }
 }

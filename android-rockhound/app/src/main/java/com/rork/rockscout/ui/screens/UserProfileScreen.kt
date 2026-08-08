@@ -24,12 +24,13 @@ import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Report
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.PlaylistAdd
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.HorizontalDivider
@@ -66,7 +67,11 @@ import com.rork.rockscout.data.ProfanityFilter
 import com.rork.rockscout.data.ReportRepository
 import com.rork.rockscout.data.ReportScreenshotHelper
 import com.rork.rockscout.data.SocialRepository
+import com.rork.rockscout.ui.components.AvatarSize
+import com.rork.rockscout.ui.components.BadgeFlags
+import com.rork.rockscout.ui.components.BadgeRow
 import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.UserAvatar
 import com.rork.rockscout.ui.components.EmptyPostBox
 import com.rork.rockscout.ui.components.HunterStatusIcon
 import com.rork.rockscout.ui.components.PostCard
@@ -239,7 +244,7 @@ fun UserProfileScreen(
             )
             // Report button
             SculptedIconButton(
-                icon = Icons.Filled.Flag,
+                icon = Icons.Filled.Report,
                 contentDescription = "Report",
                 onClick = { showReportConfirm = true },
                 accent = Danger,
@@ -259,14 +264,20 @@ fun UserProfileScreen(
             item {
                 DarkCard(modifier = Modifier.fillMaxWidth(), accent = highlightColor) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(72.dp)
-                                .clip(CircleShape)
-                                .background(Brush.linearGradient(listOf(highlightColor.copy(alpha = 0.5f), Aqua.copy(alpha = 0.3f))))
-                                .glowingBorder(3.dp, highlightColor, CircleShape),
-                            contentAlignment = Alignment.Center,
-                        ) { Text(h.avatar_emoji, style = MaterialTheme.typography.displaySmall) }
+                        UserAvatar(
+                            imagePath = h.avatar_image_path,
+                            displayName = h.display_name,
+                            size = AvatarSize.LARGE,
+                            showName = false,
+                            badgeFlags = BadgeFlags(
+                                topContributor = h.badge_top_contributor,
+                                avidTrader = h.badge_avid_trader,
+                                specimenContributor = h.badge_specimen_contributor,
+                                expert = h.expert_verified,
+                                expertAutoVerified = h.expert_verification_status == "auto_verified",
+                            ),
+                            borderColor = highlightColor,
+                        )
                         Spacer(Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Row(
@@ -395,7 +406,7 @@ fun UserProfileScreen(
                                 accent = Aqua,
                                 containerColor = Aqua,
                                 textColor = Ink,
-                                icon = Icons.Filled.Send,
+                                icon = Icons.AutoMirrored.Filled.Send,
                             )
                         } else {
                             SculptedButton(
@@ -407,7 +418,7 @@ fun UserProfileScreen(
                                 accent = Aqua,
                                 containerColor = Aqua,
                                 textColor = Ink,
-                                icon = Icons.Filled.Send,
+                                icon = Icons.AutoMirrored.Filled.Send,
                             )
                         }
                         // RockScout request button (friend request)
@@ -478,6 +489,20 @@ fun UserProfileScreen(
                             accent = Color(0xFFE2574C),
                             modifier = Modifier.weight(1f),
                             onClick = if (isMe) {{ navController.navigate(Routes.FAVORITES) }} else null,
+                        )
+                    }
+
+                    // Badge row
+                    if (h.badge_top_contributor || h.badge_avid_trader || h.badge_specimen_contributor || h.expert_verified) {
+                        Spacer(Modifier.height(12.dp))
+                        BadgeRow(
+                            badgeFlags = BadgeFlags(
+                                topContributor = h.badge_top_contributor,
+                                avidTrader = h.badge_avid_trader,
+                                specimenContributor = h.badge_specimen_contributor,
+                                expert = h.expert_verified,
+                                expertAutoVerified = h.expert_verification_status == "auto_verified",
+                            ),
                         )
                     }
 

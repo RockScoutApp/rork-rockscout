@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, X, Droplets, Sparkles, Shield, Box, AlertTriangle } from "lucide-react";
+import { Search, X, Droplets, Shield, Box, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SculptedCard, ScreenScaffold, TagChip } from "@/components/sculpted";
 
@@ -123,7 +123,7 @@ const CARE_TIPS: CareTip[] = [
 const CATEGORY_ICONS: Record<string, typeof Droplets> = {
   Cleaning: Droplets,
   Storage: Box,
-  Display: Sparkles,
+  Display: Droplets,
   Handling: Shield,
 };
 

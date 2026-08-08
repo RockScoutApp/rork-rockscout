@@ -5,7 +5,7 @@ import {
   Copy,
   Check,
   Users,
-  Zap,
+  Coins,
   Loader2,
   Share2,
 } from "lucide-react";
@@ -194,7 +194,7 @@ export default function Referral() {
           {[
             { icon: Share2, title: "Share your link", desc: "Send your referral link to a fellow rockhound." },
             { icon: Users, title: "They sign up", desc: "Your friend creates a RockScout account using your link." },
-            { icon: Zap, title: "You both earn XP", desc: "You get 100 XP, your friend gets 50 XP — and a head start on Level 2." },
+            { icon: Coins, title: "You both earn XP", desc: "You get 100 XP, your friend gets 50 XP — and a head start on Level 2." },
           ].map((step, i) => (
             <div key={i} className="flex items-start gap-3">
               <div
@@ -248,7 +248,7 @@ export default function Referral() {
       {/* Your stats */}
       <div className="grid grid-cols-2 gap-3">
         <StatTile label="Referrals" value={0} accent="aqua" icon={<Users className="h-4 w-4" />} />
-        <StatTile label="Total XP" value={profile?.xp ?? 0} accent="citrine" icon={<Zap className="h-4 w-4" />} />
+        <StatTile label="Total XP" value={profile?.xp ?? 0} accent="citrine" icon={<Coins className="h-4 w-4" />} />
       </div>
      </div>
     </ScreenScaffold>

@@ -10,7 +10,7 @@ import {
   Monitor,
   ArrowRight,
   BookOpen,
-  Sparkles,
+
   Loader2,
 } from "lucide-react";
 import { Layout } from "@/components/Layout";

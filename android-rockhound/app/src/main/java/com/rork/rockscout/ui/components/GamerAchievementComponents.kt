@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
@@ -297,7 +298,7 @@ fun GamerStreakCard(
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    Icons.Filled.LocalFireDepartment,
+                    Icons.Filled.TrendingUp,
                     contentDescription = null,
                     tint = if (active) Aqua else Color.White.copy(alpha = 0.85f),
                     modifier = Modifier.size(30.dp),
@@ -754,7 +755,7 @@ object GamerStatIcons {
     val Identified: ImageVector = Icons.Filled.Search
     val Captured: ImageVector = Icons.Filled.CameraAlt
     val Badges: ImageVector = Icons.Filled.EmojiEvents
-    val Streak: ImageVector = Icons.Filled.LocalFireDepartment
+    val Streak: ImageVector = Icons.Filled.TrendingUp
     val Xp: ImageVector = Icons.Filled.Star
 }
 

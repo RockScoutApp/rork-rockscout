@@ -4,7 +4,7 @@ import {
   Map as MapIcon,
   Gem,
   Users,
-  Sparkles,
+
   ShieldCheck,
   ChevronRight,
   Download,
@@ -228,7 +228,7 @@ const Hero = () => {
       <div className="fade-rise">
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
-            <Sparkles className="h-3.5 w-3.5" /> Field companion for rockhounds
+            <Star className="h-3.5 w-3.5" /> Field companion for rockhounds
           </span>
           <a
             href="#features"
@@ -328,7 +328,7 @@ const Hero = () => {
             className="-right-2 top-28 sm:-right-6"
             rotate="5deg"
             delay="1.2s"
-            glyph={<Sparkles className="h-5 w-5" />}
+            glyph={<Star className="h-5 w-5" />}
             label="Pyrite"
             sub="FeS₂ · Mohs 6"
           />
@@ -463,7 +463,7 @@ const FEATURES_LIST = [
     items: ["Submit specimens", "5 MB image check", "Submit locations", "Reviewed by RockScout", "Community-built database"],
   },
   {
-    icon: Sparkles,
+    icon: Trophy,
     title: "NEW badges & recently added specimens",
     desc: "A NEW badge automatically appears on any specimen or artifact card added to the catalog within the last 7 days. Spot the latest database additions at a glance across the Specimen Database, Artifacts tile, and any category-filtered view — the badge disappears automatically after 7 days.",
     items: ["7-day NEW badge", "Specimen Database", "Artifacts tile", "Category-filtered views"],

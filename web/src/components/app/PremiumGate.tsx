@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { Lock, Crown, Sparkles } from "lucide-react";
+import { Lock, Crown } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTier } from "@/hooks/useTier";
 import { getRouteTier } from "@/lib/routeAccess";
@@ -104,7 +104,7 @@ function LockedScreen({ routePath }: { routePath: string }) {
       </div>
       <div className="mt-8 flex flex-wrap justify-center gap-4 text-xs text-muted-foreground/70">
         <span className="inline-flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5" />
+          <Crown className="h-3.5 w-3.5" />
           Unlimited AI IDs
         </span>
         <span className="inline-flex items-center gap-1.5">

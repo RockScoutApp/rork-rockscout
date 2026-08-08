@@ -52,9 +52,11 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.rork.rockscout.data.CommunityRepository
 import com.rork.rockscout.data.SocialRepository
+import com.rork.rockscout.ui.components.AvatarSize
 import com.rork.rockscout.ui.components.CommunityCommentInputRow
 import com.rork.rockscout.ui.components.CommunityReplyComposer
 import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.UserAvatar
 import com.rork.rockscout.ui.components.FullScreenImageViewer
 import com.rork.rockscout.ui.components.SculptedButton
 import com.rork.rockscout.ui.components.SculptedIconButton
@@ -228,16 +230,12 @@ fun CommunityPostDetailScreen(
         // Post header: avatar + author + category
         item {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Citrine.copy(alpha = 0.18f))
-                        .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(authorAvatar, style = MaterialTheme.typography.titleSmall)
-                }
+                UserAvatar(
+                    imagePath = null,
+                    displayName = authorName,
+                    size = AvatarSize.SMALL,
+                    showName = false,
+                )
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         authorName,
@@ -857,16 +855,12 @@ private fun DetailCommentRow(
         verticalAlignment = Alignment.Top,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(
-                modifier = Modifier
-                    .size(26.dp)
-                    .clip(CircleShape)
-                    .background(accent.copy(alpha = 0.25f))
-                    .glowingBorder(1.dp, accent.copy(alpha = 0.35f), CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(if (isMine) "🫵" else "⛏️", style = MaterialTheme.typography.labelSmall)
-            }
+            UserAvatar(
+                imagePath = null,
+                displayName = authorName,
+                size = AvatarSize.THUMBNAIL,
+                showName = false,
+            )
             Spacer(Modifier.height(6.dp))
             Row(
                 modifier = Modifier

@@ -11,7 +11,7 @@ import {
   MapPin,
   ArrowRightLeft,
   Users,
-  Sparkles,
+
   Award,
   Compass,
   Star,
@@ -53,6 +53,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { DashboardTile, SculptedCard, ProfileStatBar } from "@/components/sculpted";
+import { UserAvatar } from "@/components/app/UserAvatar";
 
 type Accent = "citrine" | "aqua" | "cyan" | "amethyst" | "danger" | "success";
 
@@ -353,16 +354,16 @@ export default function Home() {
   const [justVerified, setJustVerified] = useState(false);
 
   // Fetch the user's display_name so the greeting shows their username, not email.
-  const { data: profile } = useQuery<{ display_name: string } | null>({
+  const { data: profile } = useQuery<{ display_name: string; avatar_image_path?: string | null } | null>({
     queryKey: ["home-profile", user?.id],
     queryFn: async () => {
       if (!user) return null;
       const { data } = await supabase
         .from("rockscout_profiles")
-        .select("display_name")
+        .select("display_name, avatar_image_path")
         .eq("id", user.id)
         .maybeSingle();
-      return (data as { display_name: string } | null) ?? null;
+      return (data as { display_name: string; avatar_image_path?: string | null } | null) ?? null;
     },
     enabled: !!user,
     staleTime: 60_000,
@@ -443,22 +444,32 @@ export default function Home() {
         >
           <Search className="h-5 w-5" style={{ color: `hsl(${CITRINE_HEX})` }} />
         </button>
-        <div className="flex-1">
-          <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
-            {user ? `Hello, ${displayName}` : "Welcome to RockScout"}
-          </h1>
-          <p className="mt-0.5 text-sm text-muted-foreground">
-            What are you hunting for today?
-          </p>
+        <div className="flex flex-1 items-center gap-2.5">
+          {user && (
+            <UserAvatar
+              imagePath={profile?.avatar_image_path ?? null}
+              displayName={displayName}
+              size="sm"
+              showName={false}
+              onClick={() => navigate("/app/profile")}
+            />
+          )}
+          <div>
+            <h1 className="font-display text-2xl font-bold text-foreground md:text-3xl">
+              {user ? `Hello, ${displayName}` : "Welcome to RockScout"}
+            </h1>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              What are you hunting for today?
+            </p>
+          </div>
         </div>
-        <button
+        <UserAvatar
+          imagePath={profile?.avatar_image_path ?? null}
+          displayName={displayName}
+          size="sm"
+          showName={false}
           onClick={() => navigate(user ? "/app/profile" : "/app/signin")}
-          className="sculpted-button sculpted-raised dark-card flex h-11 w-11 items-center justify-center rounded-xl"
-          style={{ ["--sculpted-accent" as string]: AQUA_HEX }}
-          aria-label="Profile"
-        >
-          <User className="h-5 w-5" style={{ color: `hsl(${AQUA_HEX})` }} />
-        </button>
+        />
       </div>
 
       {/* ── Device limit banner ── */}

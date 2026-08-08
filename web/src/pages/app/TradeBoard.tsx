@@ -29,6 +29,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { filterProfanity } from "@/lib/profanity-filter";
 import { useProfanityLevel } from "@/hooks/useProfanityLevel";
+import { UserAvatar } from "@/components/app/UserAvatar";
 
 interface TradeListing {
   id: string;
@@ -49,6 +50,7 @@ interface Profile {
   id: string;
   display_name: string;
   avatar_emoji: string;
+  avatar_image_path?: string | null;
 }
 
 interface ListingWithOwner extends TradeListing {
@@ -102,7 +104,7 @@ export default function TradeBoard() {
       if (ownerIds.length === 0) return [];
       const { data: profiles } = await supabase
         .from("rockscout_profiles")
-        .select("id, display_name, avatar_emoji")
+        .select("id, display_name, avatar_emoji, avatar_image_path")
         .in("id", ownerIds);
       const profileMap = new Map<string, Profile>(
         (profiles ?? []).map((p) => [p.id, p as Profile]),
@@ -328,9 +330,12 @@ export default function TradeBoard() {
 
                 <div className="flex items-center justify-between border-t border-border pt-2">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <span className="text-base">
-                      {listing.owner?.avatar_emoji ?? "💎"}
-                    </span>
+                    <UserAvatar
+                      imagePath={listing.owner?.avatar_image_path ?? null}
+                      displayName={listing.owner?.display_name ?? "Unknown"}
+                      size="xs"
+                      showName={false}
+                    />
                     <button
                       className="font-medium text-foreground hover:text-primary hover:underline"
                       onClick={() => navigate(`/app/profile/${listing.owner_user_id}`)}

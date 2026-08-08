@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { filterProfanity } from "@/lib/profanity-filter";
 import { useProfanityLevel } from "@/hooks/useProfanityLevel";
 import NotFound from "@/pages/NotFound";
+import { UserAvatar } from "@/components/app/UserAvatar";
 
 interface Post {
   id: string;
@@ -34,6 +35,7 @@ interface Post {
 interface PostWithMeta extends Post {
   owner_emoji: string;
   owner_name: string;
+  owner_avatar_path: string | null;
   like_count: number;
   liked_by_me: boolean;
   comment_count: number;
@@ -47,6 +49,7 @@ interface Comment {
   created_at: string;
   author_emoji: string;
   author_name: string;
+  author_avatar_path: string | null;
 }
 
 const formatTime = (iso: string): string => {
@@ -86,7 +89,7 @@ export default function CommunityPostDetail() {
       // Fetch owner profile
       const { data: ownerProfile } = await supabase
         .from("rockscout_profiles")
-        .select("id, display_name, avatar_emoji")
+        .select("id, display_name, avatar_emoji, avatar_image_path")
         .eq("id", rawPost.user_id)
         .maybeSingle();
 
@@ -109,6 +112,7 @@ export default function CommunityPostDetail() {
         ...rawPost,
         owner_emoji: ownerProfile?.avatar_emoji ?? "💎",
         owner_name: ownerProfile?.display_name ?? "Rockhound",
+        owner_avatar_path: (ownerProfile as { avatar_image_path?: string | null })?.avatar_image_path ?? null,
         like_count: likeList.length,
         liked_by_me: likedByMe,
         comment_count: commentCount ?? 0,
@@ -133,7 +137,7 @@ export default function CommunityPostDetail() {
       const userIds = [...new Set(rows.map((r) => r.user_id))];
       const { data: profiles } = await supabase
         .from("rockscout_profiles")
-        .select("id, display_name, avatar_emoji")
+        .select("id, display_name, avatar_emoji, avatar_image_path")
         .in("id", userIds);
       const profileMap = new Map(
         (profiles ?? []).map((p) => [p.id as string, p]),
@@ -149,6 +153,7 @@ export default function CommunityPostDetail() {
           created_at: r.created_at,
           author_emoji: p?.avatar_emoji ?? "💎",
           author_name: p?.display_name ?? "Rockhound",
+          author_avatar_path: (p as { avatar_image_path?: string | null })?.avatar_image_path ?? null,
         } as Comment;
       });
     },
@@ -242,7 +247,12 @@ export default function CommunityPostDetail() {
       {/* Post */}
       <div className="dark-card sculpted-raised rounded-xl overflow-hidden">
         <div className="flex items-center gap-3 p-4">
-          <span className="text-2xl">{post.owner_emoji ?? "🧗"}</span>
+          <UserAvatar
+            imagePath={post.owner_avatar_path}
+            displayName={post.owner_name ?? "Anonymous"}
+            size="sm"
+            showName={false}
+          />
           <div className="min-w-0 flex-1">
             <button
               className="text-left text-sm font-semibold text-foreground hover:text-primary hover:underline"
@@ -331,7 +341,12 @@ export default function CommunityPostDetail() {
                 className="dark-card sculpted-raised rounded-lg p-3"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">{comment.author_emoji ?? "🧗"}</span>
+                  <UserAvatar
+                    imagePath={comment.author_avatar_path}
+                    displayName={comment.author_name ?? "Anonymous"}
+                    size="xs"
+                    showName={false}
+                  />
                   <button
                     className="text-left text-sm font-medium text-foreground hover:text-primary hover:underline"
                     onClick={() => navigate(`/app/profile/${comment.user_id}`)}

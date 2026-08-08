@@ -26,6 +26,7 @@ import {
   type PendingWebMessage,
 } from "@/lib/offline-message-queue";
 import { FUNCTIONS_URL } from "@/lib/config";
+import { UserAvatar } from "@/components/app/UserAvatar";
 
 const CITRINE_HEX = "36 80% 58%";
 const AQUA_HEX = "20 62% 65%";
@@ -61,6 +62,7 @@ interface Profile {
   id: string;
   display_name: string;
   avatar_emoji: string;
+  avatar_image_path?: string | null;
 }
 
 interface ThreadWithMeta extends Thread {
@@ -245,7 +247,7 @@ export default function Messenger() {
       if (otherIds.length > 0) {
         const { data: profiles } = await supabase
           .from("rockscout_profiles")
-          .select("id, display_name, avatar_emoji")
+          .select("id, display_name, avatar_emoji, avatar_image_path")
           .in("id", otherIds);
         profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
       }
@@ -388,7 +390,7 @@ export default function Messenger() {
       if (memberIds.length === 0) return [];
       const { data, error } = await supabase
         .from("rockscout_profiles")
-        .select("id, display_name, avatar_emoji")
+        .select("id, display_name, avatar_emoji, avatar_image_path")
         .in("id", memberIds);
       if (error) throw error;
       return (data ?? []) as Profile[];
@@ -804,7 +806,6 @@ export default function Messenger() {
     const headerName = isGroup
       ? chatView.group.name
       : chatView.thread.other_user?.display_name ?? "Unknown hunter";
-    const headerEmoji = isGroup ? "👥" : (chatView.thread.other_user?.avatar_emoji ?? "🧗");
     const memberCount = isGroup ? (groupMembers ?? []).length : 0;
     const currentMessages = isGroup ? (groupMessages ?? []) : (messages ?? []);
     const profileMap = new Map((memberProfiles ?? []).map((p) => [p.id, p]));
@@ -833,7 +834,12 @@ export default function Messenger() {
           >
             <X className="h-4 w-4" style={{ color: `hsl(${AQUA_HEX})` }} />
           </button>
-          <span className="text-2xl">{headerEmoji}</span>
+          <UserAvatar
+            imagePath={isGroup ? null : (chatView.thread.other_user?.avatar_image_path ?? null)}
+            displayName={headerName}
+            size="sm"
+            showName={false}
+          />
           <div className="min-w-0 flex-1">
             <button
               className="block truncate text-left text-sm font-bold text-foreground hover:text-primary hover:underline"
@@ -936,9 +942,8 @@ export default function Messenger() {
                   title="Right-click or double-click to reply. Long-press sender name to view profile."
                 >
                   {isGroup && !isMine && (
-                    <button
-                      className="mb-1 block text-xs font-bold hover:underline"
-                      style={{ color: `hsl(${CITRINE_HEX})` }}
+                    <div
+                      className="mb-1 cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
                         if (msg.sender_id !== user.id) {
@@ -947,8 +952,15 @@ export default function Messenger() {
                       }}
                       title="Click to view profile"
                     >
-                      {profileMap.get(msg.sender_id)?.avatar_emoji ?? "💎"} {senderName}
-                    </button>
+                      <UserAvatar
+                        imagePath={profileMap.get(msg.sender_id)?.avatar_image_path ?? null}
+                        displayName={senderName}
+                        size="xs"
+                        showName={true}
+                        nameClassName="text-xs font-bold hover:underline"
+                        className="cursor-pointer"
+                      />
+                    </div>
                   )}
                   {/* Private chat: click sender name to open profile */}
                   {!isGroup && !isMine && (
@@ -1217,9 +1229,12 @@ export default function Messenger() {
                 onClick={() => setChatView({ type: "group", group: gc })}
               >
                 <div className="flex items-center gap-3 p-3.5">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xl ring-1 ring-primary/25">
-                    👥
-                  </div>
+                  <UserAvatar
+                    imagePath={null}
+                    displayName={gc.name}
+                    size="md"
+                    showName={false}
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="truncate text-sm font-bold text-foreground">
@@ -1269,12 +1284,12 @@ export default function Messenger() {
                 onClick={() => setChatView({ type: "thread", thread })}
               >
                 <div className="flex items-center gap-3 p-3.5">
-                  <div
-                    className="glowing-border flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-xl"
-                    style={{ ["--glow-color" as string]: AQUA_HEX }}
-                  >
-                    {thread.other_user?.avatar_emoji ?? "🧗"}
-                  </div>
+                  <UserAvatar
+                    imagePath={thread.other_user?.avatar_image_path ?? null}
+                    displayName={thread.other_user?.display_name ?? "Unknown hunter"}
+                    size="md"
+                    showName={false}
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="truncate text-sm font-bold text-foreground">

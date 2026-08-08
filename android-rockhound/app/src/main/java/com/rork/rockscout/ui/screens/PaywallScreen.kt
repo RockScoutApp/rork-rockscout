@@ -49,7 +49,7 @@ import androidx.compose.material.icons.filled.Science
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Verified
@@ -627,7 +627,7 @@ private fun FreeTierCard() {
             Spacer(Modifier.height(8.dp))
             FeatureRow(Icons.Filled.Spa, "RockScout Friends, Messenger & Community", Aqua)
             Spacer(Modifier.height(8.dp))
-            FeatureRow(Icons.Filled.Send, "Trade Board, Trading Floor & Discover Hunters", Aqua)
+            FeatureRow(Icons.AutoMirrored.Filled.Send, "Trade Board, Trading Floor & Discover Hunters", Aqua)
             Spacer(Modifier.height(8.dp))
             FeatureRow(Icons.Filled.GpsFixed, "My Rocks, Wishlist, Field Captures & Favorite Spots", Aqua)
             Spacer(Modifier.height(8.dp))

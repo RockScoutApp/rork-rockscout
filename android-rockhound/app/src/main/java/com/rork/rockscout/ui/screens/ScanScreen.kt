@@ -68,7 +68,9 @@ import com.rork.rockscout.data.ReportRepository
 import com.rork.rockscout.data.ReportScreenshotHelper
 import com.rork.rockscout.data.SocialRepository
 import com.rork.rockscout.data.LocationRefresher
+import com.rork.rockscout.ui.components.AvatarSize
 import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.UserAvatar
 import com.rork.rockscout.ui.components.HunterStatusIcon
 import com.rork.rockscout.ui.components.profileBorderColor
 import com.rork.rockscout.ui.components.ProBadge
@@ -787,16 +789,13 @@ private fun HunterCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(statusAccent.copy(alpha = 0.45f), Aqua.copy(alpha = 0.25f))))
-                        .glowingBorder(2.dp, profileBorderColor(status), CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(h.avatar_emoji, style = MaterialTheme.typography.headlineSmall)
-                }
+                UserAvatar(
+                    imagePath = h.avatar_image_path,
+                    displayName = h.display_name,
+                    size = AvatarSize.MEDIUM,
+                    showName = false,
+                    borderColor = statusAccent,
+                )
                 Column(modifier = Modifier.weight(1f)) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,

@@ -266,7 +266,61 @@ export async function handleEntitlement(
     const currentIsPro = currentProfile?.is_pro ?? false;
 
     if (forcePremium) {
-      // Premium APK always sets is_pro=true and source=apk.
+      // Premium APK: check email allowlist before granting premium.
+      // Look up the user's email via Supabase admin API.
+      const userEmail = await fetchUserEmail(
+        supabaseUrl,
+        env.SUPABASE_SERVICE_ROLE_KEY,
+        userId,
+      );
+
+      if (!userEmail) {
+        // Email lookup failed — fail closed, never grant premium on error.
+        return Response.json(
+          {
+            ok: true,
+            isPremium: false,
+            premiumSource: null,
+            supabaseUpdated: false,
+            allowed: false,
+            message: "lookup_failed",
+          },
+          { status: 200, headers },
+        );
+      }
+
+      // Check the allowlist
+      const isAllowed = await checkPremiumAllowlist(
+        supabaseUrl,
+        env.SUPABASE_SERVICE_ROLE_KEY,
+        userEmail,
+      );
+
+      if (!isAllowed) {
+        // Not on the allowlist — stay on free tier.
+        premiumSource = null;
+        isPremium = false;
+        supabaseUpdated = await updateSupabaseProfile(
+          supabaseUrl,
+          env.SUPABASE_SERVICE_ROLE_KEY,
+          userId,
+          false,
+          null,
+        );
+        return Response.json(
+          {
+            ok: true,
+            isPremium: false,
+            premiumSource: null,
+            supabaseUpdated,
+            allowed: false,
+            message: "not_on_allowlist",
+          },
+          { status: 200, headers },
+        );
+      }
+
+      // On the allowlist — grant premium.
       premiumSource = "apk";
       isPremium = true;
       supabaseUpdated = await updateSupabaseProfile(
@@ -320,7 +374,65 @@ export async function handleEntitlement(
       isPremium,
       premiumSource,
       supabaseUpdated,
+      allowed: true,
+      message: null,
     },
     { status: 200, headers },
   );
+}
+
+/** Look up a user's email via the Supabase admin API. */
+async function fetchUserEmail(
+  supabaseUrl: string,
+  serviceKey: string,
+  userId: string,
+): Promise<string | null> {
+  try {
+    const resp = await fetch(
+      `${supabaseUrl}/auth/v1/admin/users/${encodeURIComponent(userId)}`,
+      {
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+        },
+      },
+    );
+    if (!resp.ok) {
+      console.error("fetchUserEmail failed:", resp.status);
+      return null;
+    }
+    const data = await resp.json() as { email?: string };
+    return data.email?.toLowerCase() ?? null;
+  } catch (err) {
+    console.error("fetchUserEmail error:", String(err));
+    return null;
+  }
+}
+
+/** Check if an email is on the premium APK allowlist. */
+async function checkPremiumAllowlist(
+  supabaseUrl: string,
+  serviceKey: string,
+  email: string,
+): Promise<boolean> {
+  try {
+    const resp = await fetch(
+      `${supabaseUrl}/rest/v1/rockscout_premium_apk_allowlist?email=eq.${encodeURIComponent(email.toLowerCase())}&select=email&limit=1`,
+      {
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+        },
+      },
+    );
+    if (!resp.ok) {
+      console.error("checkPremiumAllowlist failed:", resp.status);
+      return false;
+    }
+    const rows = await resp.json() as Array<{ email: string }>;
+    return rows.length > 0;
+  } catch (err) {
+    console.error("checkPremiumAllowlist error:", String(err));
+    return false;
+  }
 }

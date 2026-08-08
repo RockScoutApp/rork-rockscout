@@ -7,7 +7,7 @@ import {
   Upload,
   X,
   Loader2,
-  CheckCircle,
+  CheckCircle2,
   MapPin,
   User,
   ExternalLink,
@@ -238,7 +238,7 @@ export default function Scan() {
               <div className="flex h-full w-full flex-col items-center justify-center gap-3 p-6 text-center">
                 {result ? (
                   <>
-                    <CheckCircle className="h-12 w-12" style={{ color: `hsl(${CITRINE_HEX})` }} />
+                    <CheckCircle2 className="h-12 w-12" style={{ color: `hsl(${CITRINE_HEX})` }} />
                     <p className="text-sm font-bold text-foreground">QR Code Found!</p>
                     <p className="text-xs text-muted-foreground">{result.label}</p>
                   </>

@@ -9,13 +9,14 @@ import {
   X,
   MapPin,
   Navigation,
-  Sparkles,
+  Gift,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { SculptedCard, SculptedButton, ScreenScaffold, StatTile } from "@/components/sculpted";
+import { UserAvatar } from "@/components/app/UserAvatar";
 
 const CITRINE_HEX = "36 80% 58%";
 const AQUA_HEX = "20 62% 65%";
@@ -27,6 +28,7 @@ interface Profile {
   id: string;
   display_name: string;
   avatar_emoji: string;
+  avatar_image_path?: string | null;
   level: number;
   is_pro: boolean;
   coarse_lat?: number | null;
@@ -88,7 +90,7 @@ export default function DiscoverHunters() {
       const senderIds = rows.map((r) => r.sender_id);
       const { data: profiles } = await supabase
         .from("rockscout_profiles")
-        .select("id, display_name, avatar_emoji, level, is_pro")
+        .select("id, display_name, avatar_emoji, avatar_image_path, level, is_pro")
         .in("id", senderIds);
       const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
       return rows.map((r) => ({ ...r, sender: profileMap.get(r.sender_id) }));
@@ -103,7 +105,7 @@ export default function DiscoverHunters() {
       if (!user) return [];
       const { data } = await supabase
         .from("rockscout_profiles")
-        .select("id, display_name, avatar_emoji, level, is_pro, coarse_lat, coarse_lng")
+        .select("id, display_name, avatar_emoji, avatar_image_path, level, is_pro, coarse_lat, coarse_lng")
         .neq("id", user.id)
         .order("level", { ascending: false })
         .limit(50);
@@ -120,7 +122,7 @@ export default function DiscoverHunters() {
       if (ids.length === 0) return [];
       const { data } = await supabase
         .from("rockscout_profiles")
-        .select("id, display_name, avatar_emoji, level, is_pro, coarse_lat, coarse_lng")
+        .select("id, display_name, avatar_emoji, avatar_image_path, level, is_pro, coarse_lat, coarse_lng")
         .in("id", ids)
         .order("level", { ascending: false });
       return (data ?? []) as Profile[];
@@ -211,7 +213,7 @@ export default function DiscoverHunters() {
         {/* Tab selector */}
         <div className="flex gap-2">
           {([
-            { key: "discover", label: "Discover", icon: Sparkles },
+            { key: "discover", label: "Discover", icon: Gift },
             { key: "requests", label: `Requests${requests.length > 0 ? ` (${requests.length})` : ""}`, icon: UserPlus },
             { key: "friends", label: `Friends (${connectionIds.size})`, icon: Users },
           ] as const).map((t) => (
@@ -257,12 +259,12 @@ export default function DiscoverHunters() {
                 return (
                   <SculptedCard key={hunter.id} accent="aqua" className="p-3.5">
                     <div className="flex items-center gap-3">
-                      <div
-                        className="glowing-border flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-xl"
-                        style={{ ["--glow-color" as string]: AQUA_HEX }}
-                      >
-                        {hunter.avatar_emoji ?? "🧗"}
-                      </div>
+                      <UserAvatar
+                        imagePath={hunter.avatar_image_path ?? null}
+                        displayName={hunter.display_name || "Unknown hunter"}
+                        size="md"
+                        showName={false}
+                      />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
                           <p className="truncate text-sm font-bold text-foreground">
@@ -326,12 +328,12 @@ export default function DiscoverHunters() {
               {requests.map((req) => (
                 <SculptedCard key={req.id} accent="citrine" className="p-3.5">
                   <div className="flex items-center gap-3">
-                    <div
-                      className="glowing-border flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-xl"
-                      style={{ ["--glow-color" as string]: CITRINE_HEX }}
-                    >
-                      {req.sender?.avatar_emoji ?? "🧗"}
-                    </div>
+                    <UserAvatar
+                      imagePath={req.sender?.avatar_image_path ?? null}
+                      displayName={req.sender?.display_name ?? "Unknown hunter"}
+                      size="md"
+                      showName={false}
+                    />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-bold text-foreground">
                         {req.sender?.display_name ?? "Unknown hunter"}
@@ -375,12 +377,12 @@ export default function DiscoverHunters() {
               {friends.map((friend) => (
                 <SculptedCard key={friend.id} accent="success" className="p-3.5">
                   <div className="flex items-center gap-3">
-                    <div
-                      className="glowing-border flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-xl"
-                      style={{ ["--glow-color" as string]: SUCCESS_HEX }}
-                    >
-                      {friend.avatar_emoji ?? "🧗"}
-                    </div>
+                    <UserAvatar
+                      imagePath={friend.avatar_image_path ?? null}
+                      displayName={friend.display_name ?? "Unknown hunter"}
+                      size="md"
+                      showName={false}
+                    />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-bold text-foreground">
                         {friend.display_name ?? "Unknown hunter"}

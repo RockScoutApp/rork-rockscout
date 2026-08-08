@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, X, Globe } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SculptedCard, ScreenScaffold, TagChip } from "@/components/sculpted";
 

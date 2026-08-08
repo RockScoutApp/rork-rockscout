@@ -9,7 +9,7 @@ import {
   MessageSquare,
   Heart,
   ArrowRightLeft,
-  Sparkles,
+  Gift,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -37,7 +37,7 @@ const NOTIFICATION_ICONS: Record<string, typeof Bell> = {
   friend_request: UserPlus,
   message: MessageSquare,
   trade_interest: ArrowRightLeft,
-  engagement: Sparkles,
+  engagement: Gift,
 };
 
 const formatTime = (iso: string): string => {

@@ -6,8 +6,7 @@ import {
   Plus,
   Trash2,
   X,
-  Sparkles,
-  CheckCircle,
+  CheckCircle2,
   Clock,
   Package,
 } from "lucide-react";
@@ -222,7 +221,7 @@ export default function MyTrades() {
                           color: `hsl(${SUCCESS_HEX})`,
                         }}
                       >
-                        <CheckCircle className="h-3 w-3" />
+                        <CheckCircle2 className="h-3 w-3" />
                         Traded
                       </button>
                       <button
@@ -268,7 +267,7 @@ export default function MyTrades() {
                 <SculptedCard key={listing.id} accent="success" className="overflow-hidden opacity-70">
                   <div className="p-3.5">
                     <div className="flex items-center gap-2">
-                      <CheckCircle className="h-4 w-4" style={{ color: `hsl(${SUCCESS_HEX})` }} />
+                      <CheckCircle2 className="h-4 w-4" style={{ color: `hsl(${SUCCESS_HEX})` }} />
                       <h3 className="truncate text-sm font-bold text-foreground">
                         {listing.specimen_name}
                       </h3>

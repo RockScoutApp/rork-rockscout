@@ -42,7 +42,7 @@ import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -140,6 +140,7 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import com.rork.rockscout.data.GallerySaver
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Report
 import androidx.compose.ui.platform.LocalView
 import com.rork.rockscout.data.ReportRepository
 import com.rork.rockscout.data.ReportScreenshotHelper
@@ -331,7 +332,7 @@ fun TradeBoardScreen(navController: NavController) {
                 accent = Citrine,
                 containerColor = Citrine,
                 textColor = Ink,
-                icon = Icons.Filled.Send,
+                icon = Icons.AutoMirrored.Filled.Send,
                 shape = RoundedCornerShape(16.dp),
                 contentPadding = PaddingValues(horizontal = 32.dp, vertical = 16.dp),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
@@ -642,7 +643,7 @@ internal fun ListingCard(
                 SculptedIconButton(icon = Icons.Filled.Delete, contentDescription = "Delete", onClick = onDelete, accent = Aqua, iconTint = Aqua, size = 34.dp, shadowElevation = 3.dp)
             }
             if (!isMine && ownerId != null) {
-                SculptedIconButton(icon = Icons.Filled.Flag, contentDescription = "Report", onClick = onReport, accent = Danger, iconTint = Danger, size = 34.dp, shadowElevation = 3.dp)
+                SculptedIconButton(icon = Icons.Filled.Report, contentDescription = "Report", onClick = onReport, accent = Danger, iconTint = Danger, size = 34.dp, shadowElevation = 3.dp)
             }
         }
         if (listing.description.isNotBlank()) {
@@ -712,7 +713,7 @@ internal fun ListingCard(
                     accent = Citrine,
                     containerColor = if (alreadyInterested) Color(0xFF3A3830) else Citrine,
                     textColor = if (alreadyInterested) DarkTextMid else Ink,
-                    icon = Icons.Filled.Send,
+                    icon = Icons.AutoMirrored.Filled.Send,
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -726,7 +727,7 @@ internal fun ListingCard(
                     accent = Aqua,
                     containerColor = if (alreadyInterested) Color(0xFF3A3830) else Aqua,
                     textColor = if (alreadyInterested) DarkTextMid else Ink,
-                    icon = Icons.Filled.Send,
+                    icon = Icons.AutoMirrored.Filled.Send,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

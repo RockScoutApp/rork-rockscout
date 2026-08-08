@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, X, Sparkles, ExternalLink } from "lucide-react";
+import { Search, X, Star, ExternalLink } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SculptedCard, ScreenScaffold, TagChip } from "@/components/sculpted";
@@ -121,7 +121,7 @@ export default function AuroraTracker() {
           ].map((source) => (
             <a key={source.name} href={source.url} target="_blank" rel="noopener noreferrer"
               className="sculpted-button sculpted-raised dark-card group flex items-center gap-2 rounded-lg p-3">
-              <Sparkles className="h-4 w-4 shrink-0" style={{ color: `hsl(${CITRINE_HEX})` }} />
+              <Star className="h-4 w-4 shrink-0" style={{ color: `hsl(${CITRINE_HEX})` }} />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-bold text-foreground">{source.name}</p>
                 <p className="truncate text-xs text-[hsl(var(--text-mid))]">{source.desc}</p>

@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Report
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.PersonAdd
@@ -78,8 +79,10 @@ import com.rork.rockscout.data.SessionStatus
 import com.rork.rockscout.data.ChatDraftStore
 import com.rork.rockscout.data.EmailComposerDraftStore
 import com.rork.rockscout.data.SocialRepository
+import com.rork.rockscout.ui.components.AvatarSize
 import com.rork.rockscout.ui.components.CompactSearchPill
 import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.UserAvatar
 import com.rork.rockscout.ui.components.GlobalSearchBar
 import com.rork.rockscout.ui.components.GlobalSearchSection
 import com.rork.rockscout.ui.components.HunterStatusIcon
@@ -855,13 +858,12 @@ private fun ExpandableRequestTile(
     DarkCard(modifier = Modifier.fillMaxWidth(), accent = Citrine) {
         Column(modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded }) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(Citrine.copy(alpha = 0.45f), Aqua.copy(alpha = 0.25f)))),
-                    contentAlignment = Alignment.Center,
-                ) { Text(emoji, style = MaterialTheme.typography.titleMedium) }
+                UserAvatar(
+                    imagePath = null,
+                    displayName = name,
+                    size = AvatarSize.MEDIUM,
+                    showName = false,
+                )
                 Spacer(Modifier.width(12.dp))
                 Column(modifier = Modifier.weight(1f)) {
                     Text(name, style = MaterialTheme.typography.titleMedium, color = DarkTextHigh, fontWeight = FontWeight.Bold)
@@ -1010,7 +1012,7 @@ private fun ExpandableRequestTile(
                     accent = Danger,
                     containerColor = Danger,
                     textColor = Color.White,
-                    icon = Icons.Filled.Flag,
+                    icon = Icons.Filled.Report,
                 )
             },
             dismissButton = {
@@ -1141,14 +1143,13 @@ private fun ConversationTile(
         Row(verticalAlignment = Alignment.CenterVertically) {
             // Avatar with status dot
             Box(contentAlignment = Alignment.BottomEnd) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(Aqua.copy(alpha = 0.40f), Citrine.copy(alpha = 0.20f))))
-                        .clickable(onClick = onAvatarClick),
-                    contentAlignment = Alignment.Center,
-                ) { Text(emoji, style = MaterialTheme.typography.titleMedium) }
+                UserAvatar(
+                    imagePath = null,
+                    displayName = name,
+                    size = AvatarSize.MEDIUM,
+                    showName = false,
+                    onClick = onAvatarClick,
+                )
                 // Status indicator dot
                 Box(
                     modifier = Modifier
@@ -1248,14 +1249,13 @@ private fun FriendCard(
                     )
                     Spacer(Modifier.width(8.dp))
                 }
-                Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(labelColor.copy(alpha = 0.40f), Aqua.copy(alpha = 0.20f))))
-                        .glowingBorder(2.dp, profileBorderColor(status), CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) { Text(friend.avatar_emoji, style = MaterialTheme.typography.titleMedium) }
+                UserAvatar(
+                    imagePath = friend.avatar_image_path,
+                    displayName = friend.display_name,
+                    size = AvatarSize.MEDIUM,
+                    showName = false,
+                    borderColor = labelColor,
+                )
             }
 
             Column(modifier = Modifier.weight(1f)) {

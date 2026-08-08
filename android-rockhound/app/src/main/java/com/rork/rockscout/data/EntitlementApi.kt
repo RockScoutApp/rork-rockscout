@@ -41,17 +41,18 @@ object EntitlementApi {
     )
 
     @Serializable
-    private data class EntitlementResponse(
+    data class EntitlementResponse(
         val ok: Boolean = false,
         val isPremium: Boolean = false,
         val premiumSource: String? = null,
         val supabaseUpdated: Boolean = false,
+        val allowed: Boolean = true,
+        val message: String? = null,
     )
 
     /**
      * Sync the user's RevenueCat entitlement to Supabase.
-     * Silently fails on network errors — this is a best-effort sync.
-     * Returns true if the sync succeeded, false otherwise.
+     * Returns the full EntitlementResponse, or null on network failure.
      *
      * @param premiumSource Pass "apk" for premium-unlocked builds, "revenuecat"
      * for normal RevenueCat-managed subscriptions, or null when unknown.
@@ -60,11 +61,11 @@ object EntitlementApi {
         userId: String,
         forcePremium: Boolean = false,
         premiumSource: String? = null,
-    ): Boolean {
-        if (userId.isBlank()) return false
+    ): EntitlementResponse? {
+        if (userId.isBlank()) return null
         return try {
             val baseUrl = BuildSecrets.resolve("EXPO_PUBLIC_RORK_FUNCTIONS_URL", BuildSecrets.RORK_FUNCTIONS_URL)
-                .ifBlank { null } ?: return false
+                .ifBlank { null } ?: return null
             val appKey = BuildSecrets.resolve("EXPO_PUBLIC_RORK_APP_KEY", BuildSecrets.RORK_APP_KEY)
 
             val source = premiumSource ?: if (forcePremium) "apk" else null
@@ -80,15 +81,14 @@ object EntitlementApi {
             val body = response.body<String>()
             val parsed = json.decodeFromString(EntitlementResponse.serializer(), body)
             if (parsed.ok) {
-                Log.i(TAG, "Entitlement synced for user=$userId: isPremium=${parsed.isPremium}, premiumSource=${parsed.premiumSource}, supabaseUpdated=${parsed.supabaseUpdated}")
-                true
+                Log.i(TAG, "Entitlement synced for user=$userId: isPremium=${parsed.isPremium}, allowed=${parsed.allowed}, message=${parsed.message}")
             } else {
                 Log.w(TAG, "Entitlement sync returned ok=false for user=$userId")
-                false
             }
+            parsed
         } catch (e: Exception) {
             Log.w(TAG, "Entitlement sync failed: ${e.message}")
-            false
+            null
         }
     }
 }

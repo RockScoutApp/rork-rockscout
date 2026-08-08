@@ -27,6 +27,9 @@ import { handleSendErrorEmail } from "./send-error-email";
 import { handleProfanityWarning } from "./profanity-warning";
 import { handleReportNotificationEmail } from "./report-notification-email";
 import { handleTripReminder } from "./trip-reminder";
+import { handleVerifyExpert } from "./verify-expert";
+import { handleExpertReview } from "./expert-review";
+import { handlePremiumAllowlist } from "./premium-allowlist";
 import {
   buildCorsHeaders,
   guardEndpoint,
@@ -411,6 +414,53 @@ export default {
     // CORS preflight for /img
     if (url.pathname === "/img" && request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: buildProxyCors(request) });
+    }
+
+    // Expert verification — user submits qualifications, backend does web search.
+    if (url.pathname === "/verify-expert" && request.method === "POST") {
+      const guard = guardEndpoint(request, env, "/verify-expert", cors, env.RATE_LIMIT_KV);
+      if (guard) return guard;
+      return handleVerifyExpert(
+        request,
+        env as unknown as {
+          EXPO_PUBLIC_TOOLKIT_URL?: string;
+          EXPO_PUBLIC_RORK_TOOLKIT_SECRET_KEY?: string;
+          EXPO_PUBLIC_RORK_APP_KEY?: string;
+          SUPABASE_SERVICE_ROLE_KEY?: string;
+          EXPO_PUBLIC_SUPABASE_URL?: string;
+        },
+        cors,
+      );
+    }
+
+    // Expert review — Dev Console manual review of pending expert verifications.
+    if (url.pathname === "/expert-review" && (request.method === "GET" || request.method === "POST")) {
+      const guard = guardEndpoint(request, env, "/expert-review", cors, env.RATE_LIMIT_KV);
+      if (guard) return guard;
+      return handleExpertReview(
+        request,
+        env as unknown as {
+          EXPO_PUBLIC_RORK_APP_KEY?: string;
+          SUPABASE_SERVICE_ROLE_KEY?: string;
+          EXPO_PUBLIC_SUPABASE_URL?: string;
+        },
+        cors,
+      );
+    }
+
+    // Premium APK allowlist — Dev Console CRUD for email-based premium approval.
+    if (url.pathname === "/premium-allowlist" && (request.method === "GET" || request.method === "POST" || request.method === "DELETE")) {
+      const guard = guardEndpoint(request, env, "/premium-allowlist", cors, env.RATE_LIMIT_KV);
+      if (guard) return guard;
+      return handlePremiumAllowlist(
+        request,
+        env as unknown as {
+          EXPO_PUBLIC_RORK_APP_KEY?: string;
+          SUPABASE_SERVICE_ROLE_KEY?: string;
+          EXPO_PUBLIC_SUPABASE_URL?: string;
+        },
+        cors,
+      );
     }
 
     return new Response("not found", { status: 404, headers: cors });

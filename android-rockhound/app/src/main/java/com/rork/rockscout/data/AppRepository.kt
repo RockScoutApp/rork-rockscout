@@ -117,6 +117,15 @@ data class UserProfile(
     val avatarImagePath: String? = null,
     /** User's profanity filter level: "off", "low" (default), or "strict". Synced via Supabase. */
     val profanityFilterLevel: String = "low",
+    /** Badge flags — computed from user activity and synced to Supabase. */
+    val badgeTopContributor: Boolean = false,
+    val badgeAvidTrader: Boolean = false,
+    val badgeSpecimenContributor: Boolean = false,
+    /** Expert verification fields — user submits qualifications, backend verifies via web search. */
+    val expertQualifications: String? = null,
+    val expertField: String? = null,
+    val expertVerified: Boolean = false,
+    val expertVerificationStatus: String = "none",
 )
 
 /**

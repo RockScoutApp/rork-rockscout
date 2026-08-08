@@ -37,7 +37,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
@@ -1052,7 +1052,7 @@ private fun FloorListingCard(
                                 accent = Citrine,
                                 containerColor = if (alreadyInterested) Color(0xFF3A3830) else Citrine,
                                 textColor = if (alreadyInterested) DarkTextMid else Ink,
-                                icon = Icons.Filled.Send,
+                                icon = Icons.AutoMirrored.Filled.Send,
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                             )
                         } else {
@@ -1063,7 +1063,7 @@ private fun FloorListingCard(
                                 accent = Aqua,
                                 containerColor = if (alreadyInterested) Color(0xFF3A3830) else Aqua,
                                 textColor = if (alreadyInterested) DarkTextMid else Ink,
-                                icon = Icons.Filled.Send,
+                                icon = Icons.AutoMirrored.Filled.Send,
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                             )
                         }
@@ -1357,7 +1357,7 @@ private fun ListingDetailDialog(
                                 accent = Citrine,
                                 containerColor = if (alreadyInterested) Color(0xFF3A3830) else Citrine,
                                 textColor = if (alreadyInterested) DarkTextMid else Ink,
-                                icon = Icons.Filled.Send,
+                                icon = Icons.AutoMirrored.Filled.Send,
                                 modifier = Modifier.weight(1f),
                             )
                         }
@@ -1369,7 +1369,7 @@ private fun ListingDetailDialog(
                             accent = Aqua,
                             containerColor = if (alreadyInterested) Color(0xFF3A3830) else Aqua,
                             textColor = if (alreadyInterested) DarkTextMid else Ink,
-                            icon = Icons.Filled.Send,
+                            icon = Icons.AutoMirrored.Filled.Send,
                             modifier = Modifier.fillMaxWidth(),
                         )
                     }

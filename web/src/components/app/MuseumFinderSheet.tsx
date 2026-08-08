@@ -16,7 +16,7 @@ import {
   MapPin,
   X,
   Phone,
-  Globe,
+  ExternalLink,
   Navigation,
   Mail,
   AlertCircle,
@@ -333,7 +333,7 @@ function MuseumCard({
             className="inline-flex h-9 items-center justify-center rounded-md border border-border bg-card px-3 text-sm text-sky-400 transition-colors hover:bg-muted"
             aria-label="Website"
           >
-            <Globe className="h-4 w-4" />
+            <ExternalLink className="h-4 w-4" />
           </a>
         )}
 

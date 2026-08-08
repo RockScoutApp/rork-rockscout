@@ -62,7 +62,9 @@ import com.rork.rockscout.data.SocialRepository
 import coil3.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
+import com.rork.rockscout.ui.components.AvatarSize
 import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.UserAvatar
 import com.rork.rockscout.ui.components.YooperliteHeart
 import com.rork.rockscout.ui.navigation.Routes
 import com.rork.rockscout.ui.theme.TextLow
@@ -850,16 +852,12 @@ private fun CompactCommunityCard(
             Column(modifier = Modifier.weight(1f)) {
                 // Author row
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape)
-                            .background(Citrine.copy(alpha = 0.18f))
-                            .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), CircleShape),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(authorAvatar, style = MaterialTheme.typography.labelSmall)
-                    }
+                    UserAvatar(
+                        imagePath = null,
+                        displayName = authorName,
+                        size = AvatarSize.THUMBNAIL,
+                        showName = false,
+                    )
                     Spacer(Modifier.width(6.dp))
                     Text(
                         authorName,
@@ -1354,16 +1352,12 @@ private fun GroupChatListingCard(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(20.dp)
-                            .clip(CircleShape)
-                            .background(Aqua.copy(alpha = 0.18f))
-                            .glowingBorder(1.dp, Aqua.copy(alpha = 0.35f), CircleShape),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text("⛏️", style = MaterialTheme.typography.labelSmall)
-                    }
+                    UserAvatar(
+                        imagePath = null,
+                        displayName = creatorName,
+                        size = AvatarSize.THUMBNAIL,
+                        showName = false,
+                    )
                     Spacer(Modifier.width(4.dp))
                     Text(
                         creatorName,

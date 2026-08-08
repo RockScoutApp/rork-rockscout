@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, MapPin, Upload, Loader2, CheckCircle, Image as ImageIcon } from "lucide-react";
+import { X, MapPin, Upload, Loader2, CheckCircle2, Image as ImageIcon } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";

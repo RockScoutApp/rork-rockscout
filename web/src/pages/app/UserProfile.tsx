@@ -36,11 +36,13 @@ import { filterProfanity } from "@/lib/profanity-filter";
 import { useProfanityLevel } from "@/hooks/useProfanityLevel";
 import { isUsernameTaken } from "@/lib/username-resolver";
 import { FUNCTIONS_URL } from "@/lib/config";
+import { UserAvatar, BadgeRow, type BadgeFlags } from "@/components/app/UserAvatar";
 
 interface Profile {
   id: string;
   display_name: string;
   avatar_emoji: string;
+  avatar_image_path?: string | null;
   status: string;
   level: number;
   xp: number;
@@ -48,6 +50,11 @@ interface Profile {
   home_region: string;
   bio: string;
   highlight_color?: string | null;
+  badge_top_contributor?: boolean;
+  badge_avid_trader?: boolean;
+  badge_specimen_contributor?: boolean;
+  expert_verified?: boolean;
+  expert_verification_status?: string;
 }
 
 interface CollectionCount {
@@ -56,7 +63,7 @@ interface CollectionCount {
   favorite_spots_count: number;
 }
 
-const AVATAR_OPTIONS = ["💎", "⛏️", "🏔️", "🪨", "🔮", "🌍", "🦴", "🦈", "🌋", "⭐"];
+
 
 const LEVEL_XP = (level: number) => level * 100;
 const levelProgress = (xp: number, level: number) => {
@@ -343,15 +350,20 @@ export default function UserProfile() {
           borderColor: `${profile.highlight_color}55`,
         } : undefined}
       >
-        <div
-          className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full text-4xl"
-          style={profile.highlight_color ? {
-            background: `radial-gradient(circle, ${profile.highlight_color}40, transparent)`,
-            boxShadow: `0 0 12px ${profile.highlight_color}44`,
-          } : { background: "hsl(var(--primary) / 0.1)" }}
-        >
-          {profile.avatar_emoji}
-        </div>
+        <UserAvatar
+          imagePath={profile.avatar_image_path ?? null}
+          displayName={profile.display_name || "Anonymous Rockhound"}
+          size="lg"
+          showName={false}
+          borderColor={profile.highlight_color ?? undefined}
+          badgeFlags={profile ? {
+            topContributor: profile.badge_top_contributor ?? false,
+            avidTrader: profile.badge_avid_trader ?? false,
+            specimenContributor: profile.badge_specimen_contributor ?? false,
+            expert: profile.expert_verified ?? false,
+            expertAutoVerified: profile.expert_verification_status === "auto_verified",
+          } : null}
+        />
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-center gap-2 sm:justify-start">
             <h1 className="font-display text-xl font-bold text-foreground md:text-2xl">
@@ -446,6 +458,19 @@ export default function UserProfile() {
           )}
         </div>
       </div>
+
+      {/* Badge row */}
+      {profile && (profile.badge_top_contributor || profile.badge_avid_trader || profile.badge_specimen_contributor || profile.expert_verified) && (
+        <div className="mt-3">
+          <BadgeRow flags={{
+            topContributor: profile.badge_top_contributor ?? false,
+            avidTrader: profile.badge_avid_trader ?? false,
+            specimenContributor: profile.badge_specimen_contributor ?? false,
+            expert: profile.expert_verified ?? false,
+            expertAutoVerified: profile.expert_verification_status === "auto_verified",
+          }} />
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
@@ -591,25 +616,6 @@ export default function UserProfile() {
             <DialogTitle>Edit your profile</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label>Avatar emoji</Label>
-              <div className="flex flex-wrap gap-2">
-                {AVATAR_OPTIONS.map((emoji) => (
-                  <button
-                    key={emoji}
-                    onClick={() => setForm((f) => ({ ...f, avatar_emoji: emoji }))}
-                    className={`flex h-10 w-10 items-center justify-center rounded-lg text-xl transition-all ${
-                      form.avatar_emoji === emoji
-                        ? "bg-primary/20 ring-2 ring-primary"
-                        : "bg-muted hover:bg-muted/70"
-                    }`}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <div className="space-y-1.5">
               <Label htmlFor="display-name">Display name</Label>
               <Input

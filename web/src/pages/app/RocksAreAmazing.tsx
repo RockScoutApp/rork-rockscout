@@ -1,4 +1,3 @@
-import { Sparkles } from "lucide-react";
 import { SculptedCard, ScreenScaffold } from "@/components/sculpted";
 
 const CITRINE_HEX = "36 80% 58%";

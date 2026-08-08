@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, Send, Loader2, CheckCircle } from "lucide-react";
+import { AlertTriangle, Send, Loader2, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { SculptedCard, SculptedButton, ScreenScaffold } from "@/components/sculpted";
@@ -46,7 +46,7 @@ export default function AccountDeletedAppeal() {
       <ScreenScaffold title="Appeal Submitted">
         <div className="flex flex-col items-center justify-center gap-4 px-4 py-16 text-center">
           <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15 ring-2 ring-emerald-500/30">
-            <CheckCircle className="h-10 w-10 text-emerald-500" />
+            <CheckCircle2 className="h-10 w-10 text-emerald-500" />
           </div>
           <h2 className="font-display text-xl font-bold text-foreground">
             Appeal Received

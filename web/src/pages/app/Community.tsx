@@ -12,7 +12,7 @@ import {
   Send,
   MessageSquare,
   Group as GroupIcon,
-  Zap,
+
   Share2,
   User as UserIcon,
 } from "lucide-react";
@@ -34,6 +34,7 @@ import { CompactSearchPill } from "@/components/CompactSearchPill";
 import { SculptedCard } from "@/components/sculpted";
 import { filterProfanity } from "@/lib/profanity-filter";
 import { useProfanityLevel } from "@/hooks/useProfanityLevel";
+import { UserAvatar } from "@/components/app/UserAvatar";
 
 interface Post {
   id: string;
@@ -51,6 +52,7 @@ interface Post {
 interface PostWithMeta extends Post {
   owner_emoji: string;
   owner_name: string;
+  owner_avatar_path: string | null;
   like_count: number;
   liked_by_me: boolean;
   comment_count: number;
@@ -64,6 +66,7 @@ interface Comment {
   created_at: string;
   author_emoji: string;
   author_name: string;
+  author_avatar_path: string | null;
 }
 
 interface GroupChat {
@@ -139,7 +142,7 @@ export default function Community() {
       const ownerIds = [...new Set(rows.map((r) => r.user_id))];
       const { data: profiles } = await supabase
         .from("rockscout_profiles")
-        .select("id, display_name, avatar_emoji")
+        .select("id, display_name, avatar_emoji, avatar_image_path")
         .in("id", ownerIds);
       const profileMap = new Map(
         (profiles ?? []).map((p) => [p.id as string, p]),
@@ -173,6 +176,7 @@ export default function Community() {
           ...r,
           owner_emoji: p?.avatar_emoji ?? "💎",
           owner_name: p?.display_name ?? "Rockhound",
+          owner_avatar_path: (p as { avatar_image_path?: string | null })?.avatar_image_path ?? null,
           like_count: likeMap.get(r.id) ?? 0,
           liked_by_me: likedByMe.has(r.id),
           comment_count: commentMap.get(r.id) ?? 0,
@@ -204,7 +208,7 @@ export default function Community() {
       const userIds = [...new Set(rows.map((r) => r.user_id))];
       const { data: profiles } = await supabase
         .from("rockscout_profiles")
-        .select("id, display_name, avatar_emoji")
+        .select("id, display_name, avatar_emoji, avatar_image_path")
         .in("id", userIds);
       const profileMap = new Map(
         (profiles ?? []).map((p) => [p.id as string, p]),
@@ -216,6 +220,7 @@ export default function Community() {
           ...r,
           author_emoji: p?.avatar_emoji ?? "💎",
           author_name: p?.display_name ?? "Rockhound",
+          author_avatar_path: (p as { avatar_image_path?: string | null })?.avatar_image_path ?? null,
         };
       }) as Comment[];
     },
@@ -561,7 +566,12 @@ export default function Community() {
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-2xl">{post.owner_emoji}</span>
+                        <UserAvatar
+                          imagePath={post.owner_avatar_path}
+                          displayName={post.owner_name}
+                          size="sm"
+                          showName={false}
+                        />
                         <div>
                           <button
                             className="text-left text-sm font-semibold text-foreground hover:text-primary hover:underline"
@@ -640,7 +650,12 @@ export default function Community() {
                           <div className="space-y-2">
                             {comments.map((c) => (
                               <div key={c.id} className="flex gap-2">
-                                <span className="text-base">{c.author_emoji}</span>
+                                <UserAvatar
+                                  imagePath={c.author_avatar_path}
+                                  displayName={c.author_name}
+                                  size="xs"
+                                  showName={false}
+                                />
                                 <div className="min-w-0 flex-1">
                                   <p className="text-sm">
                                     <button

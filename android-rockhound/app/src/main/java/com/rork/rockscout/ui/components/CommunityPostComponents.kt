@@ -32,7 +32,7 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
@@ -68,7 +68,9 @@ import com.rork.rockscout.data.ImageReviewRepository
 import com.rork.rockscout.data.ImageUtils
 import com.rork.rockscout.data.ModerationTriState
 import com.rork.rockscout.data.SavedImage
+import com.rork.rockscout.ui.components.AvatarSize
 import com.rork.rockscout.ui.components.SavedImagesPickerDialog
+import com.rork.rockscout.ui.components.UserAvatar
 import com.rork.rockscout.ui.components.processSavedImage
 import kotlinx.coroutines.launch
 import com.rork.rockscout.ui.theme.Aqua
@@ -154,16 +156,12 @@ fun CommunityPostCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(Citrine.copy(alpha = 0.18f))
-                    .glowingBorder(1.dp, Citrine.copy(alpha = 0.35f), CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(authorAvatar, style = MaterialTheme.typography.labelMedium)
-            }
+            UserAvatar(
+                imagePath = null,
+                displayName = authorName,
+                size = AvatarSize.SMALL,
+                showName = false,
+            )
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     authorName,
@@ -793,16 +791,12 @@ private fun CommunityCommentRow(
         verticalAlignment = Alignment.Top,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(
-                modifier = Modifier
-                    .size(26.dp)
-                    .clip(CircleShape)
-                    .background(accent.copy(alpha = 0.25f))
-                    .glowingBorder(1.dp, accent.copy(alpha = 0.35f), CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(if (isMine) "🫵" else "⛏️", style = MaterialTheme.typography.labelSmall)
-            }
+            UserAvatar(
+                imagePath = null,
+                displayName = "Unknown",
+                size = AvatarSize.THUMBNAIL,
+                showName = false,
+            )
             Spacer(Modifier.height(6.dp))
             Row(
                 modifier = Modifier
@@ -1245,7 +1239,7 @@ fun CommunityCommentInputRow(
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    Icons.Filled.Send,
+                    Icons.AutoMirrored.Filled.Send,
                     contentDescription = "Send",
                     tint = if (canSubmit) Ink else DarkTextMid,
                     modifier = Modifier.size(18.dp),

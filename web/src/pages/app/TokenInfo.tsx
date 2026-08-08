@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Coins, Info, Zap, ArrowLeft } from "lucide-react";
+import { Coins, Info, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
@@ -73,7 +73,7 @@ export default function TokenInfo() {
 
       <div className="dark-card sculpted-raised rounded-lg p-4">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Zap className="h-4 w-4 text-primary" />
+          <Coins className="h-4 w-4 text-primary" />
           How to earn more tokens
         </div>
         <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
@@ -98,7 +98,7 @@ export default function TokenInfo() {
           Refer a Friend
         </Button>
         <Button onClick={() => navigate("/app/paywall")} className="gap-2">
-          <Zap className="h-4 w-4" />
+          <Coins className="h-4 w-4" />
           Go Premium
         </Button>
       </div>

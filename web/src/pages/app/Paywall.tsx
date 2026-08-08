@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Crown, Check, Sparkles, Smartphone, Gift } from "lucide-react";
+import { Crown, Check, Smartphone, Gift } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/hooks/useAuth";
 import { syncEntitlement } from "@/lib/entitlement";
@@ -82,7 +82,7 @@ export default function Paywall() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
+              <Crown className="h-5 w-5 text-primary" />
               <h2 className="font-display text-xl font-bold text-foreground">
                 Monthly Premium
               </h2>

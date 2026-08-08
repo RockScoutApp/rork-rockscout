@@ -21,11 +21,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { filterProfanity } from "@/lib/profanity-filter";
 import { useProfanityLevel } from "@/hooks/useProfanityLevel";
+import { UserAvatar } from "@/components/app/UserAvatar";
 
 interface Profile {
   id: string;
   display_name: string;
   avatar_emoji: string;
+  avatar_image_path?: string | null;
   level: number;
   is_pro: boolean;
 }
@@ -114,7 +116,7 @@ export default function Friends() {
       const senderIds = rows.map((r) => r.sender_id);
       const { data: profiles } = await supabase
         .from("rockscout_profiles")
-        .select("id, display_name, avatar_emoji, level, is_pro")
+        .select("id, display_name, avatar_emoji, avatar_image_path, level, is_pro")
         .in("id", senderIds);
       const profileMap = new Map(
         (profiles ?? []).map((p) => [p.id as string, p as Profile]),
@@ -145,7 +147,7 @@ export default function Friends() {
       );
       const { data: profiles } = await supabase
         .from("rockscout_profiles")
-        .select("id, display_name, avatar_emoji, level, is_pro")
+        .select("id, display_name, avatar_emoji, avatar_image_path, level, is_pro")
         .in("id", friendIds);
       const profileMap = new Map(
         (profiles ?? []).map((p) => [p.id as string, p as Profile]),
@@ -207,7 +209,7 @@ export default function Friends() {
       if (otherIds.length > 0) {
         const { data: profiles } = await supabase
           .from("rockscout_profiles")
-          .select("id, display_name, avatar_emoji, level, is_pro")
+          .select("id, display_name, avatar_emoji, avatar_image_path, level, is_pro")
           .in("id", otherIds);
         profileMap = new Map(
           (profiles ?? []).map((p) => [p.id as string, p as Profile]),
@@ -250,7 +252,7 @@ export default function Friends() {
       if (!search.trim() || search.trim().length < 2) return [];
       const { data, error } = await supabase
         .from("rockscout_profiles")
-        .select("id, display_name, avatar_emoji, level, is_pro")
+        .select("id, display_name, avatar_emoji, avatar_image_path, level, is_pro")
         .ilike("display_name", `%${search}%`)
         .neq("id", user?.id ?? "")
         .limit(10);
@@ -460,7 +462,12 @@ export default function Friends() {
                     key={profile.id}
                     className="flex items-center gap-3 dark-card sculpted-raised rounded-lg p-3"
                   >
-                    <span className="text-2xl">{profile.avatar_emoji}</span>
+                    <UserAvatar
+                      imagePath={profile.avatar_image_path ?? null}
+                      displayName={profile.display_name || "Anonymous"}
+                      size="sm"
+                      showName={false}
+                    />
                     <button
                       onClick={() => navigate(`/app/profile/${profile.id}`)}
                       className="min-w-0 flex-1 text-left"
@@ -517,9 +524,12 @@ export default function Friends() {
                     key={conn.id}
                     className="flex items-center gap-3 dark-card sculpted-raised rounded-lg p-3"
                   >
-                    <span className="text-2xl">
-                      {conn.friend?.avatar_emoji ?? "💎"}
-                    </span>
+                    <UserAvatar
+                      imagePath={conn.friend?.avatar_image_path ?? null}
+                      displayName={conn.friend?.display_name ?? "Unknown"}
+                      size="sm"
+                      showName={false}
+                    />
                     <button
                       onClick={() =>
                         navigate(`/app/profile/${conn.friend?.id}`)
@@ -567,9 +577,12 @@ export default function Friends() {
                 key={req.id}
                 className="flex items-center gap-3 dark-card sculpted-raised rounded-lg p-3"
               >
-                <span className="text-2xl">
-                  {req.sender?.avatar_emoji ?? "💎"}
-                </span>
+                <UserAvatar
+                  imagePath={req.sender?.avatar_image_path ?? null}
+                  displayName={req.sender?.display_name ?? "Unknown"}
+                  size="sm"
+                  showName={false}
+                />
                 <button
                   onClick={() => navigate(`/app/profile/${req.sender_id}`)}
                   className="min-w-0 flex-1 text-left"
@@ -632,9 +645,12 @@ export default function Friends() {
                       : "border-border bg-card hover:border-primary/40"
                   }`}
                 >
-                  <span className="text-2xl">
-                    {thread.friend?.avatar_emoji ?? "💎"}
-                  </span>
+                  <UserAvatar
+                    imagePath={thread.friend?.avatar_image_path ?? null}
+                    displayName={thread.friend?.display_name ?? "Unknown"}
+                    size="sm"
+                    showName={false}
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-foreground">
                       {thread.friend?.display_name ?? "Unknown"}

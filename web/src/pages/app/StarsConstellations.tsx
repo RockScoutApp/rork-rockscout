@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, X, Telescope, Star, Globe, Sparkles, ChevronRight } from "lucide-react";
+import { Search, X, Telescope, Star, Globe, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SculptedCard } from "@/components/sculpted";
 
@@ -165,7 +165,7 @@ export default function StarsConstellations() {
         <SculptedCard accent="amethyst" interactive className="overflow-hidden" onClick={() => navigate("/app/deep-sky")}>
           <div className="flex items-center gap-3 p-4">
             <div className="icon-badge flex h-10 w-10 items-center justify-center rounded-xl" style={{ ["--badge-accent" as string]: "265 47% 67%", color: "hsl(265 47% 67%)" }}>
-              <Sparkles className="h-5 w-5" />
+              <Star className="h-5 w-5" />
             </div>
             <div className="flex-1">
               <h3 className="text-sm font-bold text-foreground">Deep Sky Objects</h3>

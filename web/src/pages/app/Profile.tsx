@@ -21,7 +21,7 @@ import {
   Shield,
   ChevronRight,
   Star,
-  Sparkles,
+
   Gift,
   Check,
   Calendar,
@@ -44,6 +44,7 @@ import { toast } from "sonner";
 import { filterProfanity } from "@/lib/profanity-filter";
 import { useProfanityLevel } from "@/hooks/useProfanityLevel";
 import { isUsernameTaken } from "@/lib/username-resolver";
+import { UserAvatar, BadgeRow, type BadgeFlags } from "@/components/app/UserAvatar";
 
 /* ── Constants ── */
 const CITRINE_HEX = "36 80% 58%";
@@ -52,13 +53,6 @@ const CYAN_HEX = "174 100% 45%";
 const AMETHYST_HEX = "265 47% 67%";
 const DANGER_HEX = "4 70% 55%";
 const SUCCESS_HEX = "147 49% 55%";
-
-const AVATAR_OPTIONS = [
-  "🦠", "⛏️", "💎", "🪨", "🔮", "🌋", "🧗", "👨‍🔬", "🌍",
-  "⛰️", "🏔️", "💠", "🔬", "⚒️", "🧭", "🗺️", "🏜️", "🦴",
-  "🐚", "🦈", "🦕", "🦖", "🐌", "🦋", "🐟", "🦞", "🐉",
-  "🦎", "☄️", "✨", "⭐", "🔥", "❄️", "🧊", "🗿",
-];
 
 /** 30 easily-distinguishable colors for the profile highlight picker. */
 const PROFILE_HIGHLIGHT_COLORS = [
@@ -95,6 +89,11 @@ interface ProfileData {
   birthday_private?: boolean;
   favorite_rock?: string;
   highlight_color?: string | null;
+  badge_top_contributor?: boolean;
+  badge_avid_trader?: boolean;
+  badge_specimen_contributor?: boolean;
+  expert_verified?: boolean;
+  expert_verification_status?: string;
 }
 
 const GENDER_OPTIONS = [
@@ -182,7 +181,7 @@ export default function Profile() {
       if (!user) return null;
       const { data } = await supabase
         .from("rockscout_profiles")
-        .select("id, display_name, avatar_emoji, avatar_image_path, status, level, xp, is_pro, pro_badge, tokens, bio, home_region, gender, birthday, birthday_private, favorite_rock, highlight_color")
+        .select("id, display_name, avatar_emoji, avatar_image_path, status, level, xp, is_pro, pro_badge, tokens, bio, home_region, gender, birthday, birthday_private, favorite_rock, highlight_color, badge_top_contributor, badge_avid_trader, badge_specimen_contributor, expert_verified, expert_verification_status")
         .eq("id", user.id)
         .maybeSingle();
       return (data as ProfileData) ?? null;
@@ -488,7 +487,7 @@ export default function Profile() {
               : `linear-gradient(180deg, hsl(${CITRINE_HEX} / 0.25), hsl(${AQUA_HEX} / 0.15), hsl(30 10% 9%))`,
           }}
         >
-          <Sparkles
+          <Crown
             className="absolute left-4 top-4 h-5 w-5"
             style={{ color: profile?.highlight_color ? `${profile.highlight_color}66` : `hsl(${CITRINE_HEX} / 0.4)` }}
           />
@@ -496,9 +495,13 @@ export default function Profile() {
             className="absolute bottom-4 right-4 h-4 w-4"
             style={{ color: `hsl(${AQUA_HEX} / 0.3)` }}
           />
-          <span className="text-5xl" role="img" aria-label="avatar">
-            {profile?.avatar_emoji ?? "⛏️"}
-          </span>
+          <UserAvatar
+            imagePath={profile?.avatar_image_path ?? null}
+            displayName={profile?.display_name ?? "Rockhound"}
+            size="lg"
+            showName={false}
+            borderColor={profile?.highlight_color ?? undefined}
+          />
         </div>
 
         {/* Bottom content zone */}
@@ -506,15 +509,20 @@ export default function Profile() {
           {/* Top row: avatar circle, badges, social settings */}
           <div className="flex items-center gap-3">
             {/* Avatar circle */}
-            <div
-              className="glowing-border flex h-[75px] w-[75px] shrink-0 items-center justify-center rounded-2xl text-3xl"
-              style={{
-                background: `radial-gradient(circle, hsl(${CITRINE_HEX} / 0.3), hsl(${AQUA_HEX} / 0.1))`,
-                ["--glow-color" as string]: CITRINE_HEX,
-              }}
-            >
-              {profile?.avatar_emoji ?? "💎"}
-            </div>
+            <UserAvatar
+              imagePath={profile?.avatar_image_path ?? null}
+              displayName={profile?.display_name ?? "Rockhound"}
+              size="lg"
+              showName={false}
+              borderColor={profile?.highlight_color ?? undefined}
+              badgeFlags={profile ? {
+                topContributor: profile.badge_top_contributor ?? false,
+                avidTrader: profile.badge_avid_trader ?? false,
+                specimenContributor: profile.badge_specimen_contributor ?? false,
+                expert: profile.expert_verified ?? false,
+                expertAutoVerified: profile.expert_verification_status === "auto_verified",
+              } : null}
+            />
 
             {/* Notification & message badges */}
             <button
@@ -570,6 +578,19 @@ export default function Profile() {
               </span>
             )}
           </div>
+
+          {/* Badge row */}
+          {profile && (profile.badge_top_contributor || profile.badge_avid_trader || profile.badge_specimen_contributor || profile.expert_verified) && (
+            <div className="mt-3">
+              <BadgeRow flags={{
+                topContributor: profile.badge_top_contributor ?? false,
+                avidTrader: profile.badge_avid_trader ?? false,
+                specimenContributor: profile.badge_specimen_contributor ?? false,
+                expert: profile.expert_verified ?? false,
+                expertAutoVerified: profile.expert_verification_status === "auto_verified",
+              }} />
+            </div>
+          )}
 
           {/* Status badge */}
           {statusLabel && (
@@ -1159,25 +1180,6 @@ export default function Profile() {
                   e.target.value = "";
                 }}
               />
-              <p className="mb-2 text-xs text-muted-foreground">Or pick an emoji:</p>
-              <div className="grid grid-cols-8 gap-2 sm:grid-cols-10">
-                {AVATAR_OPTIONS.map((emoji) => (
-                  <button
-                    key={emoji}
-                    onClick={() => {
-                      setEditEmoji(emoji);
-                      setEditAvatarImage(null);
-                    }}
-                    className={`flex h-9 w-9 items-center justify-center rounded-lg text-lg transition-all ${
-                      editEmoji === emoji && !editAvatarImage
-                        ? "ring-2 ring-primary"
-                        : "hover:bg-muted/50"
-                    }`}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
             </div>
 
             {/* Display name — mandatory with real-time validation */}

@@ -45,6 +45,7 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Shield
@@ -163,8 +164,12 @@ import com.rork.rockscout.ui.theme.Danger
 import com.rork.rockscout.ui.components.CreatePostButton
 import com.rork.rockscout.ui.components.CreatePostSheet
 import com.rork.rockscout.ui.components.DeleteConfirmDialog
+import com.rork.rockscout.ui.components.AvatarSize
+import com.rork.rockscout.ui.components.BadgeFlags
+import com.rork.rockscout.ui.components.BadgeRow
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.EmptyPostBox
+import com.rork.rockscout.ui.components.UserAvatar
 import com.rork.rockscout.ui.components.SavedImagesPickerDialog
 import com.rork.rockscout.ui.components.HunterStatusDropdown
 import com.rork.rockscout.ui.components.HunterStatusIcon
@@ -450,38 +455,20 @@ fun ProfileScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(72.dp)
-                                            .clip(RoundedCornerShape(16.dp))
-                                            .background(Brush.linearGradient(listOf(Citrine.copy(alpha = 0.5f), Aqua.copy(alpha = 0.3f))))
-                                            .glowingBorder(3.dp, profileBorderColor(profile.hunterStatus), RoundedCornerShape(16.dp)),
-                                        contentAlignment = Alignment.Center,
-                                    ) {
-                                        if (!profile.avatarImagePath.isNullOrBlank()) {
-                                            AsyncImage(
-                                                model = profile.avatarImagePath,
-                                                contentDescription = "Profile picture",
-                                                modifier = Modifier.fillMaxSize(),
-                                                contentScale = ContentScale.Crop,
-                                            )
-                                        } else {
-                                            // Framed question mark fallback
-                                            Box(
-                                                modifier = Modifier
-                                                    .fillMaxSize()
-                                                    .background(Brush.linearGradient(listOf(Citrine.copy(alpha = 0.15f), Aqua.copy(alpha = 0.08f)))),
-                                                contentAlignment = Alignment.Center,
-                                            ) {
-                                                Text(
-                                                    "?",
-                                                    style = MaterialTheme.typography.displayMedium,
-                                                    color = Citrine.copy(alpha = 0.7f),
-                                                    fontWeight = FontWeight.Bold,
-                                                )
-                                            }
-                                        }
-                                    }
+                                    UserAvatar(
+                                        imagePath = profile.avatarImagePath,
+                                        displayName = profile.name,
+                                        size = AvatarSize.LARGE,
+                                        showName = false,
+                                        badgeFlags = BadgeFlags(
+                                            topContributor = profile.badgeTopContributor,
+                                            avidTrader = profile.badgeAvidTrader,
+                                            specimenContributor = profile.badgeSpecimenContributor,
+                                            expert = profile.expertVerified,
+                                            expertAutoVerified = profile.expertVerificationStatus == "auto_verified",
+                                        ),
+                                        borderColor = profileBorderColor(profile.hunterStatus),
+                                    )
                                     BadgeIconButton(
                                         icon = Icons.Filled.Notifications,
                                         contentDescription = "Notifications",
@@ -551,6 +538,19 @@ fun ProfileScreen(
                                     }
                                 }
                                 Spacer(Modifier.height(12.dp))
+                                // Badge row — only show if any badges earned
+                                if (profile.badgeTopContributor || profile.badgeAvidTrader || profile.badgeSpecimenContributor || profile.expertVerified) {
+                                    BadgeRow(
+                                        badgeFlags = BadgeFlags(
+                                            topContributor = profile.badgeTopContributor,
+                                            avidTrader = profile.badgeAvidTrader,
+                                            specimenContributor = profile.badgeSpecimenContributor,
+                                            expert = profile.expertVerified,
+                                            expertAutoVerified = profile.expertVerificationStatus == "auto_verified",
+                                        ),
+                                    )
+                                    Spacer(Modifier.height(12.dp))
+                                }
                                 Text(profile.bio, style = MaterialTheme.typography.bodyMedium, color = DarkTextMid)
                                 Spacer(Modifier.height(8.dp))
                                 // Username + location only — the View all achievements button lives on the level card.
@@ -3608,7 +3608,7 @@ private fun LevelXpCard(
                                 .glowingBorder(1.5.dp, Aqua.copy(alpha = 0.85f), CircleShape),
                             contentAlignment = Alignment.Center,
                         ) {
-                            Icon(Icons.Filled.LocalFireDepartment, contentDescription = null, tint = Aqua, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Filled.TrendingUp, contentDescription = null, tint = Aqua, modifier = Modifier.size(16.dp))
                         }
                         Spacer(Modifier.width(6.dp))
                         Text("$streak", style = MaterialTheme.typography.titleMedium, color = Aqua, fontWeight = FontWeight.Bold)

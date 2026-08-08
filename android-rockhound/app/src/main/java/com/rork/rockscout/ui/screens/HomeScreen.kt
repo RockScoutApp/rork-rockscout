@@ -62,6 +62,11 @@ import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.Nature
 import androidx.compose.material.icons.filled.Park
 import androidx.compose.material.icons.filled.Pets
+import androidx.compose.material.icons.filled.RocketLaunch
+import androidx.compose.material.icons.filled.TravelExplore
+import androidx.compose.material.icons.filled.Landscape
+import androidx.compose.material.icons.filled.TextSnippet
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.HolidayVillage
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.PlayCircle
@@ -172,7 +177,8 @@ import com.rork.rockscout.data.SpecimenImages
 import com.rork.rockscout.data.DinoImageMap
 import com.rork.rockscout.R
 import com.rork.rockscout.ui.components.AdBanner
-import com.rork.rockscout.ui.components.AnimatedAvatarIcon
+import com.rork.rockscout.ui.components.AvatarSize
+import com.rork.rockscout.ui.components.UserAvatar
 import com.rork.rockscout.ui.components.BadgeIconButton
 import com.rork.rockscout.ui.components.CelebrationLevel
 import com.rork.rockscout.ui.components.PinPadOverlay
@@ -328,6 +334,7 @@ fun HomeScreen(navController: NavController) {
     val isPurchasing by purchaseManager.isPurchasing.collectAsStateWithLifecycle()
     val isPremium by purchaseManager.effectiveIsPremium.collectAsStateWithLifecycle()
     val rawIsPremium by purchaseManager.isPremium.collectAsStateWithLifecycle()
+    val allowlistMessage by purchaseManager.allowlistMessage.collectAsStateWithLifecycle()
     val deviceOverLimit by DeviceManager.deviceOverLimit.collectAsStateWithLifecycle()
     val auth = AuthRepository.instance
     val sessionStatus by auth.sessionStatus.collectAsStateWithLifecycle()
@@ -484,7 +491,7 @@ fun HomeScreen(navController: NavController) {
 
     val infoTiles = listOf(
         // 1. Rocks Are Amazing (RAA)
-        HomeTile("Rocks Are Amazing", "${RocksAreAmazingSpecimens.allAmazing.size} wonders · Earth's most stunning formations", Icons.Filled.CollectionsBookmark, Color(0xFF44AACC), Routes.ROCKS_ARE_AMAZING,
+        HomeTile("Rocks Are Amazing", "${RocksAreAmazingSpecimens.allAmazing.size} wonders · Earth's most stunning formations", Icons.Filled.Landscape, Color(0xFF44AACC), Routes.ROCKS_ARE_AMAZING,
             SpecimenImages.urls["bismuth-crystal"]?.firstOrNull()),
         // 2. Artifacts
         HomeTile("Artifacts", "Arrowheads, hand axes, beads & stone tools", Icons.Filled.AccountBalance, Color(0xFFB87333), Routes.ARTIFACTS,
@@ -505,7 +512,7 @@ fun HomeScreen(navController: NavController) {
         HomeTile("Exploring Prehistoric Organisms", "Dinosaurs, birds, ancient flora & more", Icons.Filled.Nature, Color(0xFF8BBF6A), Routes.PREHISTORIC_ORGANISMS,
             SpecimenImages.urls["dinosaur-bone"]?.firstOrNull()),
         // 8. Exploring Paleontology
-        HomeTile("Exploring Paleontology", "Fossils, eras & deep-time history", Icons.Filled.Nature, Color(0xFFC9A87C), Routes.PALEONTOLOGY,
+        HomeTile("Exploring Paleontology", "Fossils, eras & deep-time history", Icons.Filled.Pets, Color(0xFFC9A87C), Routes.PALEONTOLOGY,
             SpecimenImages.urls["ammonite"]?.firstOrNull()),
         // 9. Exploring Geology
         HomeTile("Exploring Geology", "Learn how rocks, minerals & gems form", Icons.Filled.MenuBook, Color(0xFFD9B26A), Routes.ROCK_INFO,
@@ -536,11 +543,11 @@ fun HomeScreen(navController: NavController) {
             FIELD_KIT_TILE_PARKS),
         HomeTile("Campgrounds & Trailheads", "Camp & hike near dig sites", Icons.Filled.HolidayVillage, Color(0xFFE8A33D), Routes.CAMPGROUNDS_TRAILHEADS,
             FIELD_KIT_TILE_TRAIL_CAMP),
-        HomeTile("Finding Meteorites", "How to hunt and identify space rocks", Icons.Filled.Public, Color(0xFFC0C0C0), Routes.METEORITE_HUNTING,
+        HomeTile("Finding Meteorites", "How to hunt and identify space rocks", Icons.Filled.RocketLaunch, Color(0xFFC0C0C0), Routes.METEORITE_HUNTING,
             SpecimenImages.urls["amazing-meteorite-hunting"]?.firstOrNull()),
-        HomeTile("Rock & Gem Resources", "Trusted geology, gem & fossil websites", Icons.Filled.Public, Color(0xFF7CB5EC), Routes.RESOURCE_LINKS,
+        HomeTile("Rock & Gem Resources", "Trusted geology, gem & fossil websites", Icons.Filled.TravelExplore, Color(0xFF7CB5EC), Routes.RESOURCE_LINKS,
             GEM_MINERAL_HERO_URL),
-        HomeTile("Glossary", "Every rock, mineral & space term explained", Icons.Filled.MenuBook, Color(0xFF6FA8C7), Routes.GLOSSARY,
+        HomeTile("Glossary", "Every rock, mineral & space term explained", Icons.Filled.TextSnippet, Color(0xFF6FA8C7), Routes.GLOSSARY,
             SpecimenImages.urls["lapis-lazuli"]?.firstOrNull()),
     )
 
@@ -1160,6 +1167,22 @@ fun HomeScreen(navController: NavController) {
             )
         }
 
+        // Premium APK allowlist message dialog
+        if (allowlistMessage != null) {
+            AlertDialog(
+                onDismissRequest = { /* don't dismiss on outside tap */ },
+                title = { Text("Premium APK Approval", fontWeight = FontWeight.Bold) },
+                text = { Text(allowlistMessage!!) },
+                confirmButton = {
+                    SculptedTextButton(
+                        text = "OK",
+                        onClick = { purchaseManager.clearAllowlistMessage() },
+                        accent = Citrine,
+                    )
+                },
+            )
+        }
+
         // Search Near Me — location permission dialog
         if (showNearMePermissionDialog) {
             AlertDialog(
@@ -1532,51 +1555,13 @@ private fun HomeHeader(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(3.dp),
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(58.dp)
-                        .sculpted(
-                            shape = CircleShape,
-                            accent = Citrine,
-                            shadowElevation = 8.dp,
-                            circular = true,
-                            onClick = onProfileClick,
-                        )
-                        .clip(CircleShape)
-                        .background(
-                            Brush.radialGradient(
-                                listOf(Citrine.copy(alpha = glow), Aqua.copy(alpha = 0.2f), Color.Transparent)
-                            )
-                        )
-                        .glowingBorder(5.dp, Cyan, CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clip(CircleShape)
-                            .background(
-                                Brush.linearGradient(listOf(Citrine.copy(alpha = 0.55f), Aqua.copy(alpha = 0.4f)))
-                            )
-                            .glowingBorder(4.dp, Cyan.copy(alpha = 0.3f), CircleShape),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        if (!avatarImagePath.isNullOrBlank()) {
-                            AsyncImage(
-                                model = avatarImagePath,
-                                contentDescription = "Profile picture",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop,
-                            )
-                        } else {
-                            AnimatedAvatarIcon(
-                                emoji = avatar,
-                                size = 50.dp,
-                                style = MaterialTheme.typography.headlineSmall,
-                            )
-                        }
-                    }
-                }
+                UserAvatar(
+                    imagePath = avatarImagePath,
+                    displayName = "",
+                    size = AvatarSize.MEDIUM,
+                    showName = false,
+                    onClick = onProfileClick,
+                )
 
             }
 
@@ -3829,7 +3814,7 @@ private fun StreakLevelStrip(
                             .glowingBorder(1.dp, Cyan.copy(alpha = 0.20f), RoundedCornerShape(10.dp))
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                     ) {
-                        Icon(Icons.Filled.LocalFireDepartment, contentDescription = null, tint = Aqua, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Filled.TrendingUp, contentDescription = null, tint = Aqua, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(4.dp))
                         Text("$streak", style = MaterialTheme.typography.titleLarge, color = Aqua, fontWeight = FontWeight.Bold)
                     }

@@ -68,6 +68,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Museum
+import androidx.compose.material.icons.filled.Report
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -295,6 +296,9 @@ fun IdentifyScreen(navController: NavController) {
 
     // Ask an Expert — museum finder + reply email dialog (uncertainty card)
     var showMuseumFinder by remember { mutableStateOf(false) }
+    // Report incorrect ID dialog
+    var showReportDialog by remember { mutableStateOf(false) }
+    var reportIsArtifact by remember { mutableStateOf(false) }
     var emailTargetMuseum by remember { mutableStateOf<com.rork.rockscout.data.Museum?>(null) }
     var emailTargetMuseums by remember { mutableStateOf<List<com.rork.rockscout.data.Museum>>(emptyList()) }
 
@@ -1595,6 +1599,49 @@ fun IdentifyScreen(navController: NavController) {
                         }
                     }
                 }
+
+                // Report incorrect ID card — artifact results
+                item {
+                    DarkCard(modifier = Modifier.fillMaxWidth(), accent = Color(0xFFE8A33D)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Filled.Report,
+                                contentDescription = null,
+                                tint = Color(0xFFE8A33D),
+                                modifier = Modifier.size(22.dp),
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    "Think this ID is wrong?",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    "Help us improve the database. Send your photos and the AI's results to our team for manual review.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = DarkTextLow,
+                                    lineHeight = 18.sp,
+                                )
+                                Spacer(Modifier.height(10.dp))
+                                SculptedButton(
+                                    text = "Report incorrect ID",
+                                    onClick = {
+                                        reportIsArtifact = true
+                                        showReportDialog = true
+                                    },
+                                    accent = Color(0xFFE8A33D),
+                                    containerColor = Color(0xFFE8A33D),
+                                    textColor = Color.Black,
+                                    icon = Icons.Filled.Report,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             // Match results
@@ -1704,6 +1751,87 @@ fun IdentifyScreen(navController: NavController) {
                         }
                     }
                 }
+
+                // Report incorrect ID card — rock results
+                item {
+                    DarkCard(modifier = Modifier.fillMaxWidth(), accent = Color(0xFFE8A33D)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Filled.Report,
+                                contentDescription = null,
+                                tint = Color(0xFFE8A33D),
+                                modifier = Modifier.size(22.dp),
+                            )
+                            Spacer(Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    "Think this ID is wrong?",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    "Help us improve the database. Send your photos and the AI's results to our team for manual review.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = DarkTextLow,
+                                    lineHeight = 18.sp,
+                                )
+                                Spacer(Modifier.height(10.dp))
+                                SculptedButton(
+                                    text = "Report incorrect ID",
+                                    onClick = {
+                                        reportIsArtifact = false
+                                        showReportDialog = true
+                                    },
+                                    accent = Color(0xFFE8A33D),
+                                    containerColor = Color(0xFFE8A33D),
+                                    textColor = Color.Black,
+                                    icon = Icons.Filled.Report,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Report incorrect ID dialog
+        if (showReportDialog) {
+            val reportMatchInfo = if (reportIsArtifact && artifactMatches.isNotEmpty()) {
+                val (topArt, topMatch) = artifactMatches.first()
+                ReportMatchInfo(
+                    topMatchName = topArt.name,
+                    topMatchConfidence = topMatch.confidence,
+                    topMatchReasoning = topMatch.reasoning,
+                    allMatchNames = artifactMatches.map { it.first.name },
+                    allMatchConfidences = artifactMatches.map { it.second.confidence },
+                    isArtifact = true,
+                )
+            } else if (matches.isNotEmpty()) {
+                val (topSpec, topMatch) = matches.first()
+                ReportMatchInfo(
+                    topMatchName = topSpec.name,
+                    topMatchConfidence = topMatch.confidence,
+                    topMatchReasoning = topMatch.reasoning,
+                    allMatchNames = matches.map { it.first.name },
+                    allMatchConfidences = matches.map { it.second.confidence },
+                    isArtifact = false,
+                )
+            } else null
+
+            val capturedBitmaps = remember(angleCaptures) {
+                angleCaptures.mapNotNull { it.bitmap }
+            }
+
+            if (reportMatchInfo != null) {
+                ReportIncorrectMatchDialog(
+                    context = context,
+                    matchInfo = reportMatchInfo,
+                    capturedBitmaps = capturedBitmaps,
+                    onDismiss = { showReportDialog = false },
+                )
             }
         }
 

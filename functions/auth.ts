@@ -73,6 +73,9 @@ const RATE_LIMITS: Record<string, RateLimitConfig> = {
   "/settings/restore": { rpm: 10, burst: 3 },
   // Entitlement bridge — called on sign-in + Paywall open (web) and after purchase (Android).
   "/entitlement": { rpm: 10, burst: 3 },
+  "/verify-expert": { rpm: 3, burst: 1 },
+  "/expert-review": { rpm: 10, burst: 3 },
+  "/premium-allowlist": { rpm: 10, burst: 3 },
 };
 
 /** In-memory rate-limit state (per-isolate fallback when KV is absent). */

@@ -32,7 +32,7 @@ import {
   ShieldCheck,
   Monitor,
   Keyboard,
-  Sparkles,
+  Trophy,
   FileText,
   Clock,
   CloudUpload,
@@ -601,7 +601,7 @@ export const HOW_TO_SECTIONS: HowToSection[] = [
     ],
   },
   {
-    icon: Sparkles,
+    icon: Trophy,
     accent: "hsl(48 86% 65%)",
     title: "NEW Badges & Recently Added Specimens",
     shortLabel: "NEW Badge",

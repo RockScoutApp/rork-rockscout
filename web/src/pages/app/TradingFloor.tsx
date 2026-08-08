@@ -9,7 +9,7 @@ import {
   Trash2,
   X,
   Tag,
-  Sparkles,
+  Gift,
   Heart,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -244,7 +244,7 @@ export default function TradingFloor() {
                         background: `radial-gradient(circle, hsl(${listing.type === "HAVE" ? AQUA_HEX : AMETHYST_HEX} / 0.1), transparent)`,
                       }}
                     >
-                      <Sparkles
+                      <Gift
                         className="h-10 w-10"
                         style={{ color: `hsl(${listing.type === "HAVE" ? AQUA_HEX : AMETHYST_HEX} / 0.4)` }}
                       />

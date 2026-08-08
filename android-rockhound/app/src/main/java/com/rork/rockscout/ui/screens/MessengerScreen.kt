@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Report
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Speed
@@ -90,7 +91,9 @@ import com.rork.rockscout.data.SessionStatus
 import com.rork.rockscout.data.ChatDraftStore
 import com.rork.rockscout.data.SocialRepository
 import com.rork.rockscout.data.SupabaseMessagingRepository
+import com.rork.rockscout.ui.components.AvatarSize
 import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.UserAvatar
 import com.rork.rockscout.ui.components.ReportSubmittedDialog
 import com.rork.rockscout.ui.components.ImageSourcePickerDialog
 import com.rork.rockscout.ui.components.SculptedButton
@@ -983,13 +986,12 @@ private fun ThreadView(
                     Icon(Icons.Filled.Close, contentDescription = "Close", tint = DarkTextHigh)
                 }
                 Spacer(Modifier.width(8.dp))
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(Citrine.copy(alpha = 0.45f), Aqua.copy(alpha = 0.25f)))),
-                    contentAlignment = Alignment.Center,
-                ) { Text(otherEmoji, style = MaterialTheme.typography.titleMedium) }
+                UserAvatar(
+                    imagePath = null,
+                    displayName = otherName,
+                    size = AvatarSize.SMALL,
+                    showName = false,
+                )
                 Spacer(Modifier.width(10.dp))
                 Text(
                     otherName,
@@ -1044,7 +1046,7 @@ private fun ThreadView(
                     val reportView = androidx.compose.ui.platform.LocalView.current
                     val reportRepo = AppRepository.instance
                     val myProf by reportRepo.profile.collectAsStateWithLifecycle()
-                    SculptedIconButton(icon = Icons.Filled.Flag, contentDescription = "Report", onClick = { showReportConfirm = true }, accent = Danger, iconTint = DarkTextMid, size = 40.dp, shadowElevation = 3.dp)
+                    SculptedIconButton(icon = Icons.Filled.Report, contentDescription = "Report", onClick = { showReportConfirm = true }, accent = Danger, iconTint = DarkTextMid, size = 40.dp, shadowElevation = 3.dp)
                     if (showReportConfirm) {
                         androidx.compose.material3.AlertDialog(
                             onDismissRequest = { showReportConfirm = false },
@@ -1591,13 +1593,12 @@ private fun ThreadPreviewOverlay(
                     Icon(Icons.Filled.Close, contentDescription = "Close preview", tint = DarkTextHigh)
                 }
                 Spacer(Modifier.width(8.dp))
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(Citrine.copy(alpha = 0.45f), Aqua.copy(alpha = 0.25f)))),
-                    contentAlignment = Alignment.Center,
-                ) { Text(otherEmoji, style = MaterialTheme.typography.titleMedium) }
+                UserAvatar(
+                    imagePath = null,
+                    displayName = otherName,
+                    size = AvatarSize.SMALL,
+                    showName = false,
+                )
                 Spacer(Modifier.width(10.dp))
                 Text(
                     otherName,
@@ -1766,7 +1767,7 @@ fun RequestChatView(
                     modifier = Modifier.weight(1f),
                     accent = Danger,
                     textColor = Danger,
-                    icon = Icons.Filled.Flag,
+                    icon = Icons.Filled.Report,
                 )
                 SculptedButton(
                     text = "Accept",
@@ -1857,7 +1858,7 @@ fun RequestChatView(
                     accent = Danger,
                     containerColor = Danger,
                     textColor = Color.White,
-                    icon = Icons.Filled.Flag,
+                    icon = Icons.Filled.Report,
                 )
             },
             dismissButton = {
@@ -1911,12 +1912,23 @@ fun ChatBubble(
             Column {
                 // Sender name (group chats only, for other users' messages)
                 if (senderName != null && senderEmoji != null) {
-                    Text(
-                        "$senderEmoji $senderName",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Citrine,
-                        fontWeight = FontWeight.Bold,
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        UserAvatar(
+                            imagePath = null,
+                            displayName = senderName,
+                            size = AvatarSize.THUMBNAIL,
+                            showName = false,
+                        )
+                        Text(
+                            senderName,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Citrine,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                     Spacer(Modifier.height(4.dp))
                 }
                 // Reply threading — show original comment above the reply
@@ -2431,15 +2443,12 @@ private fun FriendPickerDialog(
                                     .padding(horizontal = 8.dp, vertical = 10.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(CircleShape)
-                                        .background(Brush.linearGradient(listOf(Citrine.copy(alpha = 0.3f), Aqua.copy(alpha = 0.2f)))),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Text(friend.avatar_emoji, style = MaterialTheme.typography.titleSmall)
-                                }
+                                UserAvatar(
+                                    imagePath = friend.avatar_image_path,
+                                    displayName = friend.display_name,
+                                    size = AvatarSize.SMALL,
+                                    showName = false,
+                                )
                                 Spacer(Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(

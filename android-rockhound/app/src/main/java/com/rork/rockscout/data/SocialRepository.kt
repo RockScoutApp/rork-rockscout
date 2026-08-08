@@ -35,6 +35,7 @@ class SocialRepository private constructor() {
         val id: String,
         val display_name: String,
         val avatar_emoji: String,
+        val avatar_image_path: String? = null,
         val status: String,
         val level: Int = 1,
         val is_premium: Boolean = false,
@@ -50,6 +51,11 @@ class SocialRepository private constructor() {
         val birthday_public: Boolean = false,
         val favorite_rock: String = "",
         val highlight_color: String? = null,
+        val badge_top_contributor: Boolean = false,
+        val badge_avid_trader: Boolean = false,
+        val badge_specimen_contributor: Boolean = false,
+        val expert_verified: Boolean = false,
+        val expert_verification_status: String = "none",
     )
 
     /** Result of a scan: the hunter + coarse distance bucket (mi). */

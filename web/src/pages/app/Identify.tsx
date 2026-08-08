@@ -23,6 +23,8 @@ import { supabase } from "@/lib/supabase";
 import { FUNCTIONS_URL as BACKEND_URL, APP_KEY } from "@/lib/config";
 import { MuseumFinderSheet, type Museum } from "@/components/app/MuseumFinderSheet";
 import { ReplyEmailDialog } from "@/components/app/ReplyEmailDialog";
+import ReportIncorrectMatchDialog from "@/components/app/ReportIncorrectMatchDialog";
+import { Flag } from "lucide-react";
 
 interface Match {
   id: string;
@@ -70,6 +72,7 @@ export default function Identify() {
   const [emailTargetMuseums, setEmailTargetMuseums] = useState<Museum[]>([]);
   const [showReplyEmail, setShowReplyEmail] = useState(false);
   const [showAgateComparison, setShowAgateComparison] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -497,6 +500,30 @@ export default function Identify() {
                 </div>
               </div>
 
+              {/* Report incorrect ID — always available for ALL results */}
+              <div className="dark-card sculpted-raised rounded-lg p-4 border-amber-500/30">
+                <div className="flex items-start gap-3">
+                  <Flag className="mt-0.5 h-5 w-5 shrink-0 text-amber-400" />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      Think this ID is wrong?
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Help us improve the database. Send your photos and the AI's results to our team for manual review.
+                    </p>
+                    <Button
+                      onClick={() => setShowReportDialog(true)}
+                      variant="outline"
+                      size="sm"
+                      className="mt-3 gap-2 border-amber-500/40 text-amber-400 hover:bg-amber-500/10"
+                    >
+                      <Flag className="h-4 w-4" />
+                      Report incorrect ID
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
               {result.matches.length > 1 && (
                 <div>
                   <h4 className="mb-2 text-sm font-medium text-foreground">
@@ -780,6 +807,23 @@ export default function Identify() {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Report incorrect ID dialog */}
+      {showReportDialog && result && result.matches.length > 0 && (
+        <ReportIncorrectMatchDialog
+          open={showReportDialog}
+          matchInfo={{
+            topMatchName: result.matches[0].name,
+            topMatchConfidence: result.matches[0].confidence,
+            topMatchReasoning: result.matches[0].reasoning,
+            allMatchNames: result.matches.map((m) => m.name),
+            allMatchConfidences: result.matches.map((m) => m.confidence),
+            isArtifact: false,
+          }}
+          imagePreview={imagePreview}
+          onDismiss={() => setShowReportDialog(false)}
+        />
       )}
     </div>
   );

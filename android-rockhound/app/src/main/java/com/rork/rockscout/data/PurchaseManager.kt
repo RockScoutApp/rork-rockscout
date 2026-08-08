@@ -50,12 +50,26 @@ sealed class PurchaseResult {
 class PurchaseManager {
 
     private val scope = MainScope()
+    private var appContext: Context? = null
 
     private val _isPremium = MutableStateFlow(false)
     val isPremium: StateFlow<Boolean> = _isPremium.asStateFlow()
 
     /** True if the user has an active Premium subscription (includes legacy Pro). */
     val hasPaidAccess: StateFlow<Boolean> = _isPremium.asStateFlow()
+
+    /** Premium APK allowlist state — true when the backend hasn't confirmed yet. */
+    private val _pendingAllowlistCheck = MutableStateFlow(false)
+    val pendingAllowlistCheck: StateFlow<Boolean> = _pendingAllowlistCheck.asStateFlow()
+
+    /** User-facing message when not on the allowlist. Null = no message to show. */
+    private val _allowlistMessage = MutableStateFlow<String?>(null)
+    val allowlistMessage: StateFlow<String?> = _allowlistMessage.asStateFlow()
+
+    /** Clear the allowlist message after the user dismisses the dialog. */
+    fun clearAllowlistMessage() {
+        _allowlistMessage.value = null
+    }
 
     /**
      * Effective premium state — false when the device is over the 3-device limit.
@@ -145,12 +159,20 @@ class PurchaseManager {
      * Uses the production Android key if available, falls back to Test Store key.
      */
     fun initialize(context: Context) {
-        // Premium-unlocked build variant: permanently force Premium entitlement on.
-        // This bypasses RevenueCat entirely — the user gets all Premium features
-        // without any purchase or server check.
+        appContext = context.applicationContext
+        // Premium-unlocked build variant: do NOT immediately set premium.
+        // Wait for the backend allowlist check before granting premium.
+        // If cached state says approved, grant immediately (for offline use).
         if (com.rork.rockscout.BuildConfig.FORCE_PREMIUM) {
-            setPremium(true)
-            Log.i("PurchaseManager", "FORCE_PREMIUM build — Premium entitlement permanently unlocked")
+            val prefs = context.getSharedPreferences("rockscout_premium", android.content.Context.MODE_PRIVATE)
+            val cachedAllowed = prefs.getBoolean("premium_apk_allowed", false)
+            if (cachedAllowed) {
+                setPremium(true)
+                Log.i("PurchaseManager", "FORCE_PREMIUM build — cached allowlist approval, Premium unlocked")
+            } else {
+                _pendingAllowlistCheck.value = true
+                Log.i("PurchaseManager", "FORCE_PREMIUM build — awaiting allowlist check")
+            }
         }
 
         val apiKey = getRevenueCatApiKey()
@@ -573,8 +595,37 @@ class PurchaseManager {
         val premiumSource = if (forcePremium) "apk" else "revenuecat"
         _syncStatus.value = SyncStatus.SYNCING
         scope.launch {
-            val ok = EntitlementApi.syncEntitlement(userId, forcePremium, premiumSource)
-            if (ok) {
+            val result = EntitlementApi.syncEntitlement(userId, forcePremium, premiumSource)
+            if (result == null) {
+                // Network failure — fail closed unless cached state says approved
+                if (forcePremium) {
+                    val prefs = appContext?.getSharedPreferences("rockscout_premium", android.content.Context.MODE_PRIVATE)
+                    val cachedAllowed = prefs?.getBoolean("premium_apk_allowed", false) ?: false
+                    if (!cachedAllowed) {
+                        setPremium(false)
+                        _pendingAllowlistCheck.value = true
+                    }
+                }
+                _syncStatus.value = SyncStatus.FAILED
+            } else if (result.ok) {
+                if (forcePremium && !result.allowed) {
+                    // Not on allowlist — stay free
+                    setPremium(false)
+                    _pendingAllowlistCheck.value = false
+                    _allowlistMessage.value = "You're not on the Premium APK approval list yet. You'll remain on the free tier until your account is approved."
+                    // Cache the denied state
+                    val prefs = appContext?.getSharedPreferences("rockscout_premium", android.content.Context.MODE_PRIVATE)
+                    prefs?.edit()?.putBoolean("premium_apk_allowed", false)?.apply()
+                } else {
+                    // Allowed or non-force path — grant premium if the backend says so
+                    setPremium(result.isPremium)
+                    _pendingAllowlistCheck.value = false
+                    if (forcePremium && result.allowed) {
+                        // Cache the approved state
+                        val prefs = appContext?.getSharedPreferences("rockscout_premium", android.content.Context.MODE_PRIVATE)
+                        prefs?.edit()?.putBoolean("premium_apk_allowed", true)?.apply()
+                    }
+                }
                 _syncStatus.value = SyncStatus.SYNCED
                 _entitlementSynced.value = true
             } else {

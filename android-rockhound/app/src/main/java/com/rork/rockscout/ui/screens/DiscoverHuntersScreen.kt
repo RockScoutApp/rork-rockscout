@@ -52,7 +52,9 @@ import com.rork.rockscout.data.AuthRepository
 import com.rork.rockscout.data.HunterStatus
 import com.rork.rockscout.data.SessionStatus
 import com.rork.rockscout.data.SocialRepository
+import com.rork.rockscout.ui.components.AvatarSize
 import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.UserAvatar
 import com.rork.rockscout.ui.components.GlobalSearchSection
 import com.rork.rockscout.ui.components.HunterStatusIcon
 import com.rork.rockscout.ui.components.profileBorderColor
@@ -323,20 +325,13 @@ private fun DiscoverableHunterRow(
                 .padding(vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(
-                modifier = Modifier
-                    .size(52.dp)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.linearGradient(
-                            listOf(statusAccent.copy(alpha = 0.45f), Aqua.copy(alpha = 0.20f))
-                        )
-                    )
-                    .glowingBorder(2.dp, profileBorderColor(status), CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(hunter.avatar_emoji, style = MaterialTheme.typography.headlineMedium)
-            }
+            UserAvatar(
+                imagePath = hunter.avatar_image_path,
+                displayName = hunter.display_name,
+                size = AvatarSize.MEDIUM,
+                showName = false,
+                borderColor = statusAccent,
+            )
             Spacer(Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

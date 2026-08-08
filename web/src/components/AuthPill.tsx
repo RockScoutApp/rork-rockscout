@@ -6,7 +6,7 @@ import {
   Loader2,
   LayoutGrid,
   ChevronDown,
-  Sparkles,
+  Star,
   Smartphone,
   Download,
   CheckCircle2,
@@ -102,7 +102,7 @@ export function AuthPill() {
             {isPro ? (
               <Crown className="h-3.5 w-3.5" />
             ) : (
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <Star className="h-3.5 w-3.5 text-primary" />
             )}
             <span className="max-w-[8rem] truncate sm:max-w-none">
               {isPro ? "Premium" : user.email?.split("@")[0] ?? "Account"}
