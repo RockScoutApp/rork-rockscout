@@ -586,6 +586,9 @@ function buildArtifactSystemPrompt(): string {
     "Shell Tools", "Shell Effigies", "Ornaments & Weights",
     "Pipes & Medicine Tubes", "Game Discs", "Pottery",
     "Wooden Artifacts", "Bone Tools",
+    "Civil War Bullets", "Revolutionary War Bullets", "Artillery Projectiles",
+    "Uniform Buttons", "Belt Buckles & Plates", "Edged Weapons & Bayonets",
+    "Military Accoutrements", "Camp Life & Personal Items",
   ];
 
   const sections = families.map((family) => {
@@ -597,7 +600,7 @@ function buildArtifactSystemPrompt(): string {
     return `### ${family}\n${lines.join("\n")}`;
   }).filter((s) => s.length > 0);
 
-  return `You are an expert archaeologist identifying prehistoric artifacts from photographs. The user has confirmed (or suspects) that their photo shows an artifact — a knapped stone tool, point, bead, effigy, pipe, game disc, pottery sherd, or other human-made object of stone, shell, wood, or ceramic.
+  return `You are an expert archaeologist and military historian identifying artifacts and war relics from photographs. The user has confirmed (or suspects) that their photo shows an artifact or war relic — a knapped stone tool, point, bead, effigy, pipe, game disc, pottery sherd, OR a Civil War / Revolutionary War relic such as a lead bullet, Minie ball, musket ball, cannonball, artillery shell, uniform button, belt buckle, bayonet, percussion cap, or other military object.
 
 Here is the complete artifact reference database (${ARTIFACT_DB.length} artifacts across ${families.length} families). Match the user's photo against these entries:
 
@@ -1414,7 +1417,7 @@ Describe in 3-6 sentences using field-geologist vocabulary:
 - For fossils: shape, symmetry, surface texture, skeletal features
 - If the specimen appears to be a multi-mineral assemblage (e.g. granite, schist, gneiss), note the visible component minerals
 
-ALSO determine: does this photo show a prehistoric artifact (knapped stone tool, arrowhead, spear point, hand axe, scraper, drill, bead, effigy, pipe, game disc, pottery sherd, or other human-made object)?
+ALSO determine: does this photo show a prehistoric artifact or war relic (knapped stone tool, arrowhead, spear point, hand axe, scraper, drill, bead, effigy, pipe, game disc, pottery sherd, OR a Civil War / Revolutionary War relic such as a lead bullet, Minie ball, musket ball, cannonball, artillery shell, uniform button, belt buckle, bayonet, percussion cap, or other military object)?
 
 ALSO determine: does the specimen appear to be polished, cut, cabochon, tumbled, or otherwise lapidary-worked (as opposed to rough/natural)?
 
@@ -2564,6 +2567,17 @@ async function fetchArtifactContext(
           "lithiccastinglab.com",
           "indiana.edu",
           "umass.edu",
+          "acwm.org",
+          "civilwarartillery.com",
+          "relicman.com",
+          "amrevmuseum.org",
+          "colonialwilliamsburg.org",
+          "historicjamestowne.org",
+          "americanhistory.si.edu",
+          "americanrevolutioninstitute.org",
+          "cwbullet.org",
+          "columbiariverarsenal.com",
+          "mountvernon.org",
         ],
         contents: {
           text: { maxCharacters: 500 },

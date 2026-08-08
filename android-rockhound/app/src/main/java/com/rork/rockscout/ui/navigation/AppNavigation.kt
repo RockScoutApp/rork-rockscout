@@ -213,6 +213,7 @@ object Routes {
     const val GLOSSARY = "glossary"
     const val ARTIFACTS = "artifacts"
     const val ARTIFACT_DETAIL = "artifact/{artifactId}"
+    const val WAR_RELIC_DETAIL = "war_relic/{relicId}"
     const val NATURAL_WONDERS = "natural_wonders"
     // Stars & Constellations sub-screens
     const val STARS_LANDING = "stars_landing"
@@ -276,6 +277,7 @@ object Routes {
     fun thankYou(tokens: Int, days: Int) = "thank_you/$tokens/$days"
     fun disclaimer(isGate: Boolean) = "disclaimer?isGate=$isGate"
     fun artifactDetail(id: String) = "artifact/$id"
+    fun warRelicDetail(id: String) = "war_relic/$id"
 }
 
 /**
@@ -636,6 +638,15 @@ fun AppNavigation(
             ArtifactDetailScreen(
                 navController = navController,
                 artifactId = entry.arguments?.getString("artifactId").orEmpty(),
+            )
+        }
+        composable(
+            Routes.WAR_RELIC_DETAIL,
+            arguments = listOf(navArgument("relicId") { type = NavType.StringType }),
+        ) { entry ->
+            ArtifactDetailScreen(
+                navController = navController,
+                artifactId = entry.arguments?.getString("relicId").orEmpty(),
             )
         }
         composable(Routes.GEAR_GUIDE) { GearGuideScreen(navController) }

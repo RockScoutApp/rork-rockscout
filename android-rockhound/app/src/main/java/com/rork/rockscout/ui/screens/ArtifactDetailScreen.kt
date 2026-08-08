@@ -51,6 +51,7 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.rork.rockscout.data.AppRepository
 import com.rork.rockscout.data.ArtifactSpecimens
+import com.rork.rockscout.data.WarRelicSpecimens
 import com.rork.rockscout.ui.components.DarkCard
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.StandaloneZoomableImageViewer
@@ -75,7 +76,7 @@ fun ArtifactDetailScreen(
     navController: NavController,
     artifactId: String,
 ) {
-    val artifact = ArtifactSpecimens.byId(artifactId)
+    val artifact = ArtifactSpecimens.byId(artifactId) ?: WarRelicSpecimens.byId(artifactId)
     val repo = AppRepository.instance
     val context = LocalContext.current
 
@@ -166,10 +167,11 @@ fun ArtifactDetailScreen(
                 }
             }
 
-            // Culture & Era
+            // Culture & Era / Origin & Era
             item {
-                SectionCard("Culture & Era", accent = accent) {
-                    StatRow("Culture / Tradition", artifact.tribe, accent = accent)
+                val cultureLabel = if (artifact.domain == "war_relic") "Origin / Side" else "Culture / Tradition"
+                SectionCard(if (artifact.domain == "war_relic") "Origin & Era" else "Culture & Era", accent = accent) {
+                    StatRow(cultureLabel, artifact.tribe, accent = accent)
                     StatRow("Time Period", artifact.timePeriod, accent = accent, showDivider = false)
                 }
             }

@@ -493,8 +493,8 @@ fun HomeScreen(navController: NavController) {
         // 1. Rocks Are Amazing (RAA)
         HomeTile("Rocks Are Amazing", "${RocksAreAmazingSpecimens.allAmazing.size} wonders · Earth's most stunning formations", Icons.Filled.Landscape, Color(0xFF44AACC), Routes.ROCKS_ARE_AMAZING,
             SpecimenImages.urls["bismuth-crystal"]?.firstOrNull()),
-        // 2. Artifacts
-        HomeTile("Artifacts", "Arrowheads, hand axes, beads & stone tools", Icons.Filled.AccountBalance, Color(0xFFB87333), Routes.ARTIFACTS,
+        // 2. Artifacts / Relics
+        HomeTile("Artifacts / Relics", "Arrowheads, hand axes, bullets, buttons & buckles", Icons.Filled.AccountBalance, Color(0xFFB87333), Routes.ARTIFACTS,
             "https://r2-pub.rork.com/projects/jvns5dfy7fpytx79a2tb3/assets/ca44cafb-2e4f-4d3b-9334-174ceedf713b.png"),
         // 3. Natural Wonders
         HomeTile("Natural Wonders", "World-famous geological sites & what to find there", Icons.Filled.Public, Color(0xFF1B3A4B), Routes.NATURAL_WONDERS,
