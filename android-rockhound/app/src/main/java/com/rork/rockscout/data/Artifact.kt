@@ -31,6 +31,8 @@ package com.rork.rockscout.data
  * @param addedAtMs epoch milliseconds when this entry was added to the catalog;
  *   0 means it is a legacy entry (not shown as new). Entries with a timestamp
  *   within the last 7 days display a "NEW" badge in list views.
+ * @param rarity discovery rarity: "Common", "Uncommon", "Rare", "Exceptional",
+ *   or "Museum Grade" — based on how frequently the item is found by collectors.
  */
 data class Artifact(
     val id: String,
@@ -49,6 +51,7 @@ data class Artifact(
     val timePeriod: String,
     val addedAtMs: Long = 0L,
     val domain: String = "prehistoric",
+    val rarity: String = "Common",
 ) {
     /** True when this entry was added to the catalog within the last 7 days. */
     fun isNew(): Boolean {

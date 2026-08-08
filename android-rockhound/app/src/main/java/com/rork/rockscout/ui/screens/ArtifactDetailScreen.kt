@@ -54,10 +54,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.rork.rockscout.data.AppRepository
+import com.rork.rockscout.data.ArtifactRarity
 import com.rork.rockscout.data.ArtifactSpecimens
 import com.rork.rockscout.data.RelicRegions
 import com.rork.rockscout.data.WarRelicSpecimens
 import com.rork.rockscout.ui.components.DarkCard
+import com.rork.rockscout.ui.components.RarityIndicator
 import com.rork.rockscout.ui.components.MapViewLifecycleEffect
 import com.rork.rockscout.ui.components.RockBackground
 import com.rork.rockscout.ui.components.StandaloneZoomableImageViewer
@@ -187,6 +189,14 @@ fun ArtifactDetailScreen(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         TagChip(artifact.family, color = accent)
+                        RarityIndicator(ArtifactRarity.forId(artifact.id), accent = accent)
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         TagChip(artifact.subFamily, color = Aqua)
                     }
                 }

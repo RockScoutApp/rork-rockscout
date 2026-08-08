@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { MapPin, Clock, Hammer, Lightbulb, Users } from "lucide-react";
 import { findArtifactOrRelicById } from "@/data/artifacts";
+import { getArtifactRarity, rarityColor } from "@/data/artifactRarity";
 import { OptimizedImage } from "@/components/OptimizedImage";
 import { SculptedCard, ScreenScaffold, TagChip } from "@/components/sculpted";
 import RelicRegionMap from "@/components/app/RelicRegionMap";
@@ -19,6 +20,8 @@ export default function ArtifactDetail() {
   const isWarRelic = artifact.domain === "war_relic";
   const cultureLabel = isWarRelic ? "Origin / Side" : "Culture / Tradition";
   const eraLabel = isWarRelic ? "Origin & Era" : "Time Period";
+  const rarity = getArtifactRarity(artifact.id);
+  const rColor = rarityColor(rarity);
 
   return (
     <ScreenScaffold title={artifact.name} onBack={() => navigate("/app/artifacts")}>
@@ -41,6 +44,21 @@ export default function ArtifactDetail() {
                   {artifact.family} · {artifact.subFamily}
                 </p>
               </div>
+              {/* Rarity badge */}
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold"
+                style={{
+                  borderColor: `hsl(${rColor} / 0.4)`,
+                  backgroundColor: `hsl(${rColor} / 0.12)`,
+                  color: `hsl(${rColor})`,
+                }}
+              >
+                <span
+                  className="inline-block h-2 w-2 rounded-full"
+                  style={{ backgroundColor: `hsl(${rColor})` }}
+                />
+                {rarity}
+              </span>
             </div>
             <p className="mt-3 text-sm font-bold" style={{ color: `hsl(${CITRINE_HEX})` }}>
               {artifact.tagline}
